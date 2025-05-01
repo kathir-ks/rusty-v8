@@ -2,837 +2,854 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-pub mod loop_unrolling_reducer {
-    use std::{
-        collections::{HashMap, HashSet},
-        fmt,
-        marker::PhantomData,
-        ops::{BitAnd, BitOr, BitXor},
+use std::{
+    collections::{HashMap, HashSet},
+    fmt,
+    ops::{BitAnd, BitOr, BitXor},
+    option,
+    sync::atomic::{AtomicBool, Ordering},
+};
+
+use crate::compiler::turboshaft::index::OpIndex;
+use crate::compiler::turboshaft::loop_finder::LoopFinder;
+
+const TURBOSHAFT_TRACE_UNROLLING: AtomicBool = AtomicBool::new(false); // Equivalent of v8_flags.turboshaft_trace_unrolling
+
+macro_rules! trace {
+    ($($arg:tt)*) => {
+        if TURBOSHAFT_TRACE_UNROLLING.load(Ordering::Relaxed) {
+            println!($($arg)*);
+        }
     };
+}
 
-    //use crate::base::logging;  // Assuming this is custom logging
-    //use crate::compiler::globals; // Assuming these are global constants/flags
-    //use crate::compiler::turboshaft::assembler; // Assuming this is a module for assembling code
-    //use crate::compiler::turboshaft::copying_phase; // Assuming this handles copying phases
-    //use crate::compiler::turboshaft::index; // Assuming this defines an index type
-    //use crate::compiler::turboshaft::loop_finder; // Assuming this module finds loops
-    //use crate::compiler::turboshaft::machine_optimization_reducer; // Assuming this defines a reducer trait
-    //use crate::compiler::turboshaft::operations; // Assuming this defines operation structs
-    //use crate::compiler::turboshaft::phase; // Assuming this defines phase-related types
-
-    // Placeholder types/modules
-    pub type OpIndex = usize;
-    pub type Block = usize;
-    pub type Graph = usize;
-    pub type Zone = usize;
-    pub type AnyOrNone = usize;
-    pub type None = usize;
-    pub type Word = usize;
-    pub type JSHeapBroker = usize;
-
-    #[derive(Debug, PartialEq, Eq, Clone, Copy)]
-    enum Kind {
-        Exact,
-        Approx,
-        Unknown,
-    }
-
-    #[derive(Debug, PartialEq, Eq, Clone, Copy)]
-    pub struct IterationCount {
-        kind_: Kind,
-        count_: usize,
-    }
-
-    impl IterationCount {
-        // Loops with an exact number of iteration could be unrolled.
-        pub fn exact(count: usize) -> Self {
-            IterationCount {
-                kind_: Kind::Exact,
-                count_: count,
-            }
-        }
-        // We can remove stack checks from loops with a small number of iterations.
-        pub fn approx(count: usize) -> Self {
-            IterationCount {
-                kind_: Kind::Approx,
-                count_: count,
-            }
-        }
-        pub fn unknown() -> Self {
-            IterationCount { kind_: Kind::Unknown, count_: 0 }
-        }
-
-        pub fn new() -> Self {
-            IterationCount { kind_: Kind::Unknown, count_: 0 }
-        }
-        pub fn with_kind(kind: Kind) -> Self {
-            assert_ne!(kind, Kind::Exact);
-            IterationCount { kind_: kind, count_: 0 }
-        }
-        pub fn with_kind_and_count(kind: Kind, count: usize) -> Self {
-            assert!(kind == Kind::Exact || kind == Kind::Approx);
-            IterationCount {
-                kind_: kind,
-                count_: count,
+mod base {
+    pub mod bits {
+        pub fn signed_add_overflow_32(x: i32, y: i32, result: &mut i32) -> bool {
+            match x.overflowing_add(y) {
+                (res, overflow) => {
+                    *result = res;
+                    overflow
+                }
             }
         }
 
-        pub fn exact_count(&self) -> usize {
-            assert_eq!(self.kind_, Kind::Exact);
-            self.count_
-        }
-        pub fn approx_count(&self) -> usize {
-            assert_eq!(self.kind_, Kind::Approx);
-            self.count_
-        }
-
-        pub fn is_exact(&self) -> bool {
-            self.kind_ == Kind::Exact
-        }
-        pub fn is_approx(&self) -> bool {
-            self.kind_ == Kind::Approx
-        }
-        pub fn is_unknown(&self) -> bool {
-            self.kind_ == Kind::Unknown
+        pub fn signed_mul_overflow_32(x: i32, y: i32, result: &mut i32) -> bool {
+            match x.overflowing_mul(y) {
+                (res, overflow) => {
+                    *result = res;
+                    overflow
+                }
+            }
         }
 
-        pub fn is_smaller_than(&self, max: usize) -> bool {
-            (self.is_exact() || self.is_approx()) && self.count_ < max
+        pub fn signed_sub_overflow_32(x: i32, y: i32, result: &mut i32) -> bool {
+            match x.overflowing_sub(y) {
+                (res, overflow) => {
+                    *result = res;
+                    overflow
+                }
+            }
         }
-    }
 
-    impl fmt::Display for IterationCount {
-        fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-            match self.kind_ {
-                Kind::Exact => write!(f, "Exact({})", self.count_),
-                Kind::Approx => write!(f, "Approx({})", self.count_),
-                Kind::Unknown => write!(f, "Unknown"),
+        pub fn signed_add_overflow_64(x: i64, y: i64, result: &mut i64) -> bool {
+            match x.overflowing_add(y) {
+                (res, overflow) => {
+                    *result = res;
+                    overflow
+                }
+            }
+        }
+
+        pub fn signed_mul_overflow_64(x: i64, y: i64, result: &mut i64) -> bool {
+            match x.overflowing_mul(y) {
+                (res, overflow) => {
+                    *result = res;
+                    overflow
+                }
+            }
+        }
+
+        pub fn signed_sub_overflow_64(x: i64, y: i64, result: &mut i64) -> bool {
+            match x.overflowing_sub(y) {
+                (res, overflow) => {
+                    *result = res;
+                    overflow
+                }
             }
         }
     }
+}
 
-    // Dummy types for operations
-    pub struct ComparisonOp {
-        pub kind: ComparisonOpKind,
-    }
+mod compiler {
+    pub mod turboshaft {
+        pub mod index {
+            #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+            pub struct OpIndex {
+                id: usize, // Or other appropriate type
+            }
 
-    #[derive(PartialEq, Eq, Copy, Clone)]
-    pub enum ComparisonOpKind {
-        Equal,
-        SignedLessThan,
-        SignedLessThanOrEqual,
-        UnsignedLessThan,
-        UnsignedLessThanOrEqual,
-        SignedGreaterThan,
-        SignedGreaterThanOrEqual,
-        UnsignedGreaterThan,
-        UnsignedGreaterThanOrEqual,
-    }
-
-    pub struct WordBinopOp {
-        pub kind: WordBinopOpKind,
-    }
-
-    #[derive(PartialEq, Eq, Copy, Clone)]
-    pub enum WordBinopOpKind {
-        Add,
-        Mul,
-        Sub,
-        BitwiseAnd,
-        BitwiseOr,
-        BitwiseXor,
-    }
-
-    pub struct OverflowCheckedBinopOp {
-        pub kind: OverflowCheckedBinopOpKind,
-    }
-
-    #[derive(PartialEq, Eq, Copy, Clone)]
-    pub enum OverflowCheckedBinopOpKind {
-        Add,
-        Mul,
-        Sub,
-    }
-
-    pub struct PhiOp {}
-
-    pub struct GotoOp {
-        pub destination: Block,
-        pub is_backedge: bool,
-    }
-    pub struct BranchOp {
-        pub if_true: Block,
-        pub if_false: Block,
-    }
-    pub struct CallOp {}
-    pub struct JSStackCheckOp {
-        pub kind: JSStackCheckOpKind,
-    }
-    #[derive(PartialEq, Eq, Copy, Clone)]
-    pub enum JSStackCheckOpKind {
-        Loop,
-    }
-    pub struct WasmStackCheckOp {
-        pub kind: WasmStackCheckOpKind,
-    }
-    #[derive(PartialEq, Eq, Copy, Clone)]
-    pub enum WasmStackCheckOpKind {
-        Loop,
-    }
-
-    // Dummy types for representation
-    #[derive(PartialEq, Eq, Copy, Clone)]
-    pub enum WordRepresentation {
-        Word32,
-        Word64,
-    }
-
-    pub struct OperationMatcher {}
-
-    impl OperationMatcher {
-        pub fn new() -> Self {
-            OperationMatcher {}
-        }
-        pub fn is_constant(&self, _idx: OpIndex) -> bool {
-            false
-        }
-        pub fn constant_value(&self, _idx: OpIndex) -> u64 {
-            0
+            impl OpIndex {
+                pub fn new(id: usize) -> Self {
+                    OpIndex { id }
+                }
+                pub fn id(&self) -> usize {
+                    self.id
+                }
+            }
         }
 
-        pub fn get_operation(&self, _idx: OpIndex) -> Operation {
-            Operation::Unknown
-        }
-    }
+        pub mod loop_finder {
+            use std::collections::HashMap;
 
-    // Added a generic operation enum to cover possible operation types
-    #[derive(PartialEq, Eq, Copy, Clone)]
-    pub enum Operation {
-        Comparison(ComparisonOp),
-        WordBinop(WordBinopOp),
-        OverflowCheckedBinop(OverflowCheckedBinopOp),
-        Phi(PhiOp),
-        Goto(GotoOp),
-        Branch(BranchOp),
-        Call(CallOp),
-        JSStackCheck(JSStackCheckOp),
-        WasmStackCheck(WasmStackCheckOp),
-        Unknown,
-    }
+            use super::index::OpIndex;
 
-    impl Operation {
-        pub fn try_cast<T>(&self) -> Option<&T> {
-            match self {
-                Operation::Comparison(op) => {
-                    if let Some(x) = any_to_any::downcast_ref::<ComparisonOp, T>(op) {
-                        Some(x)
-                    } else {
-                        None
+            #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+            pub struct BlockId(pub usize);
+
+            #[derive(Debug)]
+            pub struct Block {
+                id: BlockId,
+                is_loop: bool,
+            }
+
+            impl Block {
+                pub fn new(id: BlockId, is_loop: bool) -> Self {
+                    Block { id, is_loop }
+                }
+
+                pub fn id(&self) -> BlockId {
+                    self.id
+                }
+
+                pub fn is_loop(&self) -> bool {
+                    self.is_loop
+                }
+
+                pub fn contains(&self, _op_index: OpIndex) -> bool {
+                    // Simplified placeholder
+                    true
+                }
+
+                pub fn last_operation(&self, _input_graph: &InputGraph) -> LastOperationResult {
+                    // Placeholder for demonstration
+                    LastOperationResult::Branch(BranchOp {
+                        if_true: BlockId(1),
+                        if_false: BlockId(2),
+                        condition: OpIndex::new(10),
+                    })
+                }
+            }
+
+            pub struct LoopFinder {
+                loop_headers: HashMap<Block, LoopInfo>,
+                // ... other fields
+            }
+
+            impl LoopFinder {
+                pub fn new() -> Self {
+                    LoopFinder {
+                        loop_headers: HashMap::new(),
                     }
                 }
-                Operation::WordBinop(op) => {
-                    if let Some(x) = any_to_any::downcast_ref::<WordBinopOp, T>(op) {
-                        Some(x)
-                    } else {
-                        None
-                    }
+
+                pub fn loop_headers(&self) -> &HashMap<Block, LoopInfo> {
+                    &self.loop_headers
                 }
-                Operation::OverflowCheckedBinop(op) => {
-                    if let Some(x) = any_to_any::downcast_ref::<OverflowCheckedBinopOp, T>(op) {
-                        Some(x)
-                    } else {
-                        None
-                    }
+
+                pub fn get_loop_header(&self, block_id: BlockId) -> &Block {
+                    // Placeholder implementation.  Needs proper lookup.
+                    static DUMMY_BLOCK: Block = Block {
+                        id: BlockId(0),
+                        is_loop: true,
+                    };
+                    &DUMMY_BLOCK
                 }
-                Operation::Phi(op) => {
-                    if let Some(x) = any_to_any::downcast_ref::<PhiOp, T>(op) {
-                        Some(x)
-                    } else {
-                        None
-                    }
+            }
+
+            #[derive(Debug)]
+            pub struct LoopInfo {
+                pub start: Block,
+            }
+
+            #[derive(Debug)]
+            pub enum LastOperationResult {
+                Branch(BranchOp),
+                None,
+            }
+
+            #[derive(Debug)]
+            pub struct BranchOp {
+                pub if_true: BlockId,
+                pub if_false: BlockId,
+                pub condition: OpIndex,
+            }
+
+            impl BranchOp {
+                pub fn try_cast<T>(&self) -> &Self {
+                    self
                 }
-                Operation::Goto(op) => {
-                    if let Some(x) = any_to_any::downcast_ref::<GotoOp, T>(op) {
-                        Some(x)
-                    } else {
-                        None
-                    }
-                }
-                Operation::Branch(op) => {
-                    if let Some(x) = any_to_any::downcast_ref::<BranchOp, T>(op) {
-                        Some(x)
-                    } else {
-                        None
-                    }
-                }
-                Operation::Call(op) => {
-                    if let Some(x) = any_to_any::downcast_ref::<CallOp, T>(op) {
-                        Some(x)
-                    } else {
-                        None
-                    }
-                }
-                Operation::JSStackCheck(op) => {
-                    if let Some(x) = any_to_any::downcast_ref::<JSStackCheckOp, T>(op) {
-                        Some(x)
-                    } else {
-                        None
-                    }
-                }
-                Operation::WasmStackCheck(op) => {
-                    if let Some(x) = any_to_any::downcast_ref::<WasmStackCheckOp, T>(op) {
-                        Some(x)
-                    } else {
-                        None
-                    }
-                }
-                _ => None,
             }
-        }
-    }
 
-    mod any_to_any {
-        use std::any::Any;
+            pub struct InputGraph {} // Placeholder, define as needed
 
-        pub fn downcast_ref<T: Any, U: Any>(any: &T) -> Option<&U> {
-            let any: &dyn Any = any;
-            any.downcast_ref::<U>()
-        }
-    }
-
-    pub struct StaticCanonicalForLoopMatcher {
-        matcher_: OperationMatcher,
-    }
-
-    impl StaticCanonicalForLoopMatcher {
-        pub fn new(matcher: &OperationMatcher) -> Self {
-            StaticCanonicalForLoopMatcher {
-                matcher_: matcher.clone(),
-            }
         }
 
-        pub fn get_iter_count_if_static_canonical_for_loop(
-            &self,
-            _header: Block,
-            cond_idx: OpIndex,
-            loop_if_cond_is: bool,
-        ) -> IterationCount {
-            // Placeholder implementation, needs to be properly implemented.
-            // Should actually analyze the loop and calculate iterations
-            if cond_idx == 0 {
-                IterationCount::unknown()
-            } else {
-                IterationCount::approx(5) // some default
-            }
-        }
-
-        pub const fn comparison_kind_to_cmp_op(kind: ComparisonOpKind) -> CmpOp {
-            match kind {
-                ComparisonOpKind::Equal => CmpOp::Equal,
-                ComparisonOpKind::SignedLessThan => CmpOp::SignedLessThan,
-                ComparisonOpKind::SignedLessThanOrEqual => CmpOp::SignedLessThanOrEqual,
-                ComparisonOpKind::UnsignedLessThan => CmpOp::UnsignedLessThan,
-                ComparisonOpKind::UnsignedLessThanOrEqual => CmpOp::UnsignedLessThanOrEqual,
-                ComparisonOpKind::SignedGreaterThan => CmpOp::SignedGreaterThan,
-                ComparisonOpKind::SignedGreaterThanOrEqual => CmpOp::SignedGreaterThanOrEqual,
-                ComparisonOpKind::UnsignedGreaterThan => CmpOp::UnsignedGreaterThan,
-                ComparisonOpKind::UnsignedGreaterThanOrEqual => CmpOp::UnsignedGreaterThanOrEqual,
-            }
-        }
-
-        pub const fn invert_comparison_op(op: CmpOp) -> CmpOp {
-            match op {
-                CmpOp::Equal => CmpOp::Equal,
-                CmpOp::SignedLessThan => CmpOp::SignedGreaterThanOrEqual,
-                CmpOp::SignedLessThanOrEqual => CmpOp::SignedGreaterThan,
-                CmpOp::UnsignedLessThan => CmpOp::UnsignedGreaterThanOrEqual,
-                CmpOp::UnsignedLessThanOrEqual => CmpOp::UnsignedGreaterThan,
-                CmpOp::SignedGreaterThan => CmpOp::SignedLessThanOrEqual,
-                CmpOp::SignedGreaterThanOrEqual => CmpOp::SignedLessThan,
-                CmpOp::UnsignedGreaterThan => CmpOp::UnsignedLessThanOrEqual,
-                CmpOp::UnsignedGreaterThanOrEqual => CmpOp::UnsignedLessThan,
-            }
-        }
-
-        pub const fn binop_from_word_binop_kind(kind: WordBinopOpKind) -> BinOp {
-            match kind {
-                WordBinopOpKind::Add => BinOp::Add,
-                WordBinopOpKind::Mul => BinOp::Mul,
-                WordBinopOpKind::Sub => BinOp::Sub,
-                WordBinopOpKind::BitwiseAnd => BinOp::BitwiseAnd,
-                WordBinopOpKind::BitwiseOr => BinOp::BitwiseOr,
-                WordBinopOpKind::BitwiseXor => BinOp::BitwiseXor,
-            }
-        }
-
-        pub const fn binop_from_overflow_checked_binop_kind(
-            kind: OverflowCheckedBinopOpKind,
-        ) -> BinOp {
-            match kind {
-                OverflowCheckedBinopOpKind::Add => BinOp::OverflowCheckedAdd,
-                OverflowCheckedBinopOpKind::Mul => BinOp::OverflowCheckedMul,
-                OverflowCheckedBinopOpKind::Sub => BinOp::OverflowCheckedSub,
-            }
-        }
-
-        pub const fn binop_kind_is_supported(binop_kind: WordBinopOpKind) -> bool {
-            match binop_kind {
-                WordBinopOpKind::Add
-                | WordBinopOpKind::Mul
-                | WordBinopOpKind::Sub
-                | WordBinopOpKind::BitwiseAnd
-                | WordBinopOpKind::BitwiseOr
-                | WordBinopOpKind::BitwiseXor => true,
-            }
-        }
-
-        fn match_phi_compare_cst(
-            &self,
-            _cond_idx: OpIndex,
-            _cmp_op: &mut CmpOp,
-            _phi: &mut OpIndex,
-            _cst: &mut u64,
-        ) -> bool {
-            // Placeholder implementation, needs to be properly implemented.
-            false
-        }
-
-        fn match_checked_overflow_binop(
-            &self,
-            _idx: OpIndex,
-            _left: &mut usize,
-            _right: &mut usize,
-            _binop_op: &mut BinOp,
-            _binop_rep: &mut WordRepresentation,
-        ) -> bool {
-            // Placeholder implementation, needs to be properly implemented.
-            false
-        }
-
-        fn match_word_binop(
-            &self,
-            _idx: OpIndex,
-            _left: &mut usize,
-            _right: &mut usize,
-            _binop_op: &mut BinOp,
-            _binop_rep: &mut WordRepresentation,
-        ) -> bool {
-            // Placeholder implementation, needs to be properly implemented.
-            false
-        }
-
-        fn count_iterations(
-            &self,
-            _equal_cst: u64,
-            _cmp_op: CmpOp,
-            _initial_input: u64,
-            _binop_cst: u64,
-            _binop_op: BinOp,
-            _binop_rep: WordRepresentation,
-            _loop_if_cond_is: bool,
-        ) -> IterationCount {
-            // Placeholder implementation, needs to be properly implemented.
-            IterationCount::unknown()
-        }
-
-        fn count_iterations_impl<Int: std::ops::Add + std::ops::Sub + std::ops::Mul + std::cmp::PartialOrd + Copy>(
-            &self,
-            init: Int,
-            max: Int,
-            cmp_op: CmpOp,
-            binop_cst: Int,
-            binop_op: BinOp,
-            binop_rep: WordRepresentation,
-            loop_if_cond_is: bool,
-        ) -> IterationCount {
-            // Placeholder implementation, needs to be properly implemented.
-            IterationCount::unknown()
-        }
-
-        const K_MAX_EXACT_ITER: usize = 5;
-    }
-
-    #[derive(Debug, PartialEq, Eq, Copy, Clone)]
-    pub enum CmpOp {
-        Equal,
-        SignedLessThan,
-        SignedLessThanOrEqual,
-        UnsignedLessThan,
-        UnsignedLessThanOrEqual,
-        SignedGreaterThan,
-        SignedGreaterThanOrEqual,
-        UnsignedGreaterThan,
-        UnsignedGreaterThanOrEqual,
-    }
-
-    impl fmt::Display for CmpOp {
-        fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-            match self {
-                CmpOp::Equal => write!(f, "Equal"),
-                CmpOp::SignedLessThan => write!(f, "SignedLessThan"),
-                CmpOp::SignedLessThanOrEqual => write!(f, "SignedLessThanOrEqual"),
-                CmpOp::UnsignedLessThan => write!(f, "UnsignedLessThan"),
-                CmpOp::UnsignedLessThanOrEqual => write!(f, "UnsignedLessThanOrEqual"),
-                CmpOp::SignedGreaterThan => write!(f, "SignedGreaterThan"),
-                CmpOp::SignedGreaterThanOrEqual => write!(f, "SignedGreaterThanOrEqual"),
-                CmpOp::UnsignedGreaterThan => write!(f, "UnsignedGreaterThan"),
-                CmpOp::UnsignedGreaterThanOrEqual => write!(f, "UnsignedGreaterThanOrEqual"),
-            }
-        }
-    }
-
-    #[derive(Debug, PartialEq, Eq, Copy, Clone)]
-    pub enum BinOp {
-        Add,
-        Mul,
-        Sub,
-        BitwiseAnd,
-        BitwiseOr,
-        BitwiseXor,
-        OverflowCheckedAdd,
-        OverflowCheckedMul,
-        OverflowCheckedSub,
-    }
-
-    impl fmt::Display for BinOp {
-        fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-            match self {
-                BinOp::Add => write!(f, "Add"),
-                BinOp::Mul => write!(f, "Mul"),
-                BinOp::Sub => write!(f, "Sub"),
-                BinOp::BitwiseAnd => write!(f, "BitwiseAnd"),
-                BinOp::BitwiseOr => write!(f, "BitwiseOr"),
-                BinOp::BitwiseXor => write!(f, "BitwiseXor"),
-                BinOp::OverflowCheckedAdd => write!(f, "OverflowCheckedAdd"),
-                BinOp::OverflowCheckedMul => write!(f, "OverflowCheckedMul"),
-                BinOp::OverflowCheckedSub => write!(f, "OverflowCheckedSub"),
-            }
-        }
-    }
-
-    pub struct LoopUnrollingAnalyzer {
-        input_graph_: Graph,
-        matcher_: OperationMatcher,
-        loop_finder_: LoopFinder,
-        loop_iteration_count_: HashMap<Block, IterationCount>,
-        canonical_loop_matcher_: StaticCanonicalForLoopMatcher,
-        is_wasm_: bool,
-        stack_checks_to_remove_: HashSet<u32>,
-        k_max_loop_size_for_partial_unrolling: usize,
-        can_unroll_at_least_one_loop_: bool,
-    }
-
-    impl LoopUnrollingAnalyzer {
-        pub fn new(phase_zone: Zone, input_graph: Graph, is_wasm: bool) -> Self {
-            let matcher_ = OperationMatcher::new();
-            let canonical_loop_matcher_ = StaticCanonicalForLoopMatcher::new(&matcher_);
-            let mut analyzer = LoopUnrollingAnalyzer {
-                input_graph_: input_graph,
-                matcher_: matcher_,
-                loop_finder_: LoopFinder::new(phase_zone, input_graph),
-                loop_iteration_count_: HashMap::new(),
-                canonical_loop_matcher_: canonical_loop_matcher_,
-                is_wasm_: is_wasm,
-                stack_checks_to_remove_: HashSet::new(),
-                k_max_loop_size_for_partial_unrolling: if is_wasm {
-                    Self::K_WASM_MAX_LOOP_SIZE_FOR_PARTIAL_UNROLLING
-                } else {
-                    Self::K_JS_MAX_LOOP_SIZE_FOR_PARTIAL_UNROLLING
-                },
-                can_unroll_at_least_one_loop_: false,
+        pub mod loop_unrolling_reducer {
+            use std::{
+                collections::{HashMap, HashSet},
+                fmt,
+                option,
             };
-            analyzer.detect_unrollable_loops();
-            analyzer
-        }
 
-        pub fn should_fully_unroll_loop(&self, loop_header: Block) -> bool {
-            //DCHECK(loop_header.is_loop());
-            let header_info = self.loop_finder_.get_loop_info(loop_header);
-            if header_info.has_inner_loops {
-                return false;
-            }
-            if header_info.op_count > Self::K_MAX_LOOP_SIZE_FOR_FULL_UNROLLING {
-                return false;
-            }
+            use super::{
+                index::OpIndex,
+                loop_finder::{Block, InputGraph, LoopFinder, LoopFinder::LoopInfo},
+            };
 
-            let iter_count = self.get_iteration_count(loop_header);
-            iter_count.is_exact()
-                && iter_count.exact_count() < Self::K_MAX_LOOP_ITERATIONS_FOR_FULL_UNROLLING
-        }
+            const K_MAX_ITER_FOR_STACK_CHECK_REMOVAL: usize = 100;
+            const K_MAX_EXACT_ITER: usize = 10;
 
-        pub fn should_partially_unroll_loop(&self, loop_header: Block) -> bool {
-            //DCHECK(loop_header.is_loop());
-            let info = self.loop_finder_.get_loop_info(loop_header);
-            !info.has_inner_loops && info.op_count < self.k_max_loop_size_for_partial_unrolling
-        }
-
-        // The returned unroll count is the total number of copies of the loop body
-        // in the resulting graph, i.e., an unroll count of N means N-1 copies of the
-        // body which were partially unrolled, and 1 for the original/remaining body.
-        pub fn get_partial_unroll_count(&self, _loop_header: Block) -> usize {
-            // Don't unroll if the function is already huge.
-            // Otherwise we have run into pathological runtimes or large memory usage,
-            // e.g., in register allocation in the past, see https://crbug.com/383661627
-            // for an example / reproducer.
-            // Even though we return an unroll count of one (i.e., don't unroll at all
-            // really), running this phase can speed up subsequent optimizations,
-            // probably because it produces loops in a "compact"/good block order for
-            // analyses, namely <loop header>, <loop body>, <loop exit>, <rest of code>.
-            // In principle, we should fix complexity problems in analyses, make sure
-            // loops are already produced in this order, and not rely on the "unrolling"
-            // here for the order alone, but this is a longer standing issue.
-            // Placeholder implementation, needs to be properly implemented.
-            1
-        }
-
-        pub fn should_remove_loop(&self, loop_header: Block) -> bool {
-            let iter_count = self.get_iteration_count(loop_header);
-            iter_count.is_exact() && iter_count.exact_count() == 0
-        }
-
-        pub fn get_iteration_count(&self, loop_header: Block) -> IterationCount {
-            //DCHECK(loop_header.is_loop());
-            self.loop_iteration_count_
-                .get(&loop_header)
-                .copied()
-                .unwrap_or(IterationCount::unknown())
-        }
-
-        pub fn get_loop_body(&self, loop_header: Block) -> HashSet<Block> {
-            self.loop_finder_.get_loop_body(loop_header)
-        }
-
-        pub fn get_loop_header(&self, block: Block) -> Block {
-            self.loop_finder_.get_loop_header(block)
-        }
-
-        pub fn can_unroll_at_least_one_loop(&self) -> bool {
-            self.can_unroll_at_least_one_loop_
-        }
-
-        const K_MAX_LOOP_SIZE_FOR_FULL_UNROLLING: usize = 150;
-        // This function size limit is quite arbitrary. It is large enough that we
-        // probably never hit it in JavaScript and it is lower than the operation
-        // count we have seen in some huge Wasm functions in the past, e.g., function
-        // #21937 of https://crbug.com/383661627 (1.7M operations, 2.7MB wire bytes).
-        const K_MAX_FUNCTION_SIZE_FOR_PARTIAL_UNROLLING: usize = 1_000_000;
-        const K_JS_MAX_LOOP_SIZE_FOR_PARTIAL_UNROLLING: usize = 50;
-        const K_WASM_MAX_LOOP_SIZE_FOR_PARTIAL_UNROLLING: usize = 80;
-        const K_WASM_MAX_UNROLLED_LOOP_SIZE: usize = 240;
-        const K_MAX_LOOP_ITERATIONS_FOR_FULL_UNROLLING: usize = 4;
-        const K_MAX_PARTIAL_UNROLLING_COUNT: usize = 4;
-        const K_MAX_ITER_FOR_STACK_CHECK_REMOVAL: usize = 5000;
-
-        fn detect_unrollable_loops(&mut self) {
-            // Placeholder implementation, needs to be properly implemented.
-            self.can_unroll_at_least_one_loop_ = false; // Example
-        }
-        fn get_loop_iteration_count(&self, _info: &LoopFinderLoopInfo) -> IterationCount {
-            // Placeholder implementation, needs to be properly implemented.
-            IterationCount::unknown()
-        }
-    }
-
-    #[derive(Clone)]
-    pub struct LoopFinder {
-        // Placeholder fields, add the actual fields needed for the implementation
-    }
-
-    impl LoopFinder {
-        pub fn new(_phase_zone: Zone, _input_graph: Graph) -> Self {
-            // Placeholder implementation, needs to be properly implemented.
-            LoopFinder {}
-        }
-
-        pub fn get_loop_info(&self, _loop_header: Block) -> LoopFinderLoopInfo {
-            // Placeholder implementation, needs to be properly implemented.
-            LoopFinderLoopInfo {
-                has_inner_loops: false,
-                op_count: 0,
-            }
-        }
-
-        pub fn get_loop_body(&self, _loop_header: Block) -> HashSet<Block> {
-            // Placeholder implementation, needs to be properly implemented.
-            HashSet::new()
-        }
-
-        pub fn get_loop_header(&self, _block: Block) -> Block {
-            // Placeholder implementation, needs to be properly implemented.
-            0
-        }
-    }
-
-    #[derive(Clone)]
-    pub struct LoopFinderLoopInfo {
-        pub has_inner_loops: bool,
-        pub op_count: usize,
-    }
-
-    pub struct ZoneUnorderedMap<K, V> {
-        data: HashMap<K, V>,
-    }
-
-    impl<K: Eq + std::hash::Hash + Copy, V: Copy> ZoneUnorderedMap<K, V> {
-        pub fn new(_zone: Zone) -> Self {
-            ZoneUnorderedMap { data: HashMap::new() }
-        }
-
-        pub fn insert(&mut self, key: K, value: V) {
-            self.data.insert(key, value);
-        }
-
-        pub fn get(&self, key: &K) -> Option<&V> {
-            self.data.get(key)
-        }
-    }
-
-    pub struct ZoneAbslFlatHashSet<T> {
-        data: HashSet<T>,
-    }
-
-    impl<T: Eq + std::hash::Hash + Copy> ZoneAbslFlatHashSet<T> {
-        pub fn new(_zone: Zone) -> Self {
-            ZoneAbslFlatHashSet { data: HashSet::new() }
-        }
-
-        pub fn insert(&mut self, value: T) {
-            self.data.insert(value);
-        }
-
-        pub fn contains(&self, value: &T) -> bool {
-            self.data.contains(value)
-        }
-
-        pub fn is_empty(&self) -> bool {
-            self.data.is_empty()
-        }
-    }
-
-    // -------- Reducer Templates --------
-
-    // Boilerplate macro for reducer
-    macro_rules! turboshaft_reducer_boilerplate {
-        ($name:ident) => {
-            pub struct $name<Next> {
-                next: Next,
-                phantom: PhantomData<Next>,
+            #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
+            pub struct IterationCount {
+                kind: IterationCountKind,
+                count: u64,
             }
 
-            impl<Next> $name<Next> {
-                pub fn new(next: Next) -> Self {
-                    $name {
-                        next,
-                        phantom: PhantomData,
+            #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
+            enum IterationCountKind {
+                Unknown,
+                Exact,
+                Approx,
+            }
+
+            impl IterationCount {
+                pub fn unknown() -> Self {
+                    IterationCount {
+                        kind: IterationCountKind::Unknown,
+                        count: 0,
+                    }
+                }
+
+                pub fn exact(count: u64) -> Self {
+                    IterationCount {
+                        kind: IterationCountKind::Exact,
+                        count,
+                    }
+                }
+
+                pub fn approx(count: u64) -> Self {
+                    IterationCount {
+                        kind: IterationCountKind::Approx,
+                        count,
+                    }
+                }
+
+                pub fn is_unknown(&self) -> bool {
+                    self.kind == IterationCountKind::Unknown
+                }
+
+                pub fn is_exact(&self) -> bool {
+                    self.kind == IterationCountKind::Exact
+                }
+
+                pub fn is_approx(&self) -> bool {
+                    self.kind == IterationCountKind::Approx
+                }
+
+                pub fn exact_count(&self) -> u64 {
+                    assert_eq!(self.kind, IterationCountKind::Exact);
+                    self.count
+                }
+
+                pub fn approx_count(&self) -> u64 {
+                    assert_eq!(self.kind, IterationCountKind::Approx);
+                    self.count
+                }
+
+                pub fn is_smaller_than(&self, max: usize) -> bool {
+                    match self.kind {
+                        IterationCountKind::Exact => self.count as usize <= max,
+                        _ => false, // Consider only Exact for this check
                     }
                 }
             }
-        };
-    }
 
-    // Trait to represent the next reducer in the chain
-    pub trait ReducerNext<T> {
-        fn reduce_input_graph_goto(&mut self, ig_idx: T, gto: &GotoOp) -> T;
-        fn reduce_input_graph_branch(&mut self, ig_idx: T, branch: &BranchOp) -> T;
-        fn reduce_input_graph_call(&mut self, ig_idx: T, call: &CallOp) -> T;
-        fn reduce_input_graph_jsstackcheck(&mut self, ig_idx: T, check: &JSStackCheckOp) -> T;
-        fn reduce_input_graph_wasmstackcheck(&mut self, ig_idx: T, check: &WasmStackCheckOp) -> T;
-    }
-
-    // Default implementation for the ReducerNext trait
-    impl<T> ReducerNext<T> for () {
-        fn reduce_input_graph_goto(&mut self, ig_idx: T, gto: &GotoOp) -> T {
-            ig_idx
-        }
-        fn reduce_input_graph_branch(&mut self, ig_idx: T, branch: &BranchOp) -> T {
-            ig_idx
-        }
-        fn reduce_input_graph_call(&mut self, ig_idx: T, call: &CallOp) -> T {
-            ig_idx
-        }
-        fn reduce_input_graph_jsstackcheck(&mut self, ig_idx: T, check: &JSStackCheckOp) -> T {
-            ig_idx
-        }
-        fn reduce_input_graph_wasmstackcheck(&mut self, ig_idx: T, check: &WasmStackCheckOp) -> T {
-            ig_idx
-        }
-    }
-
-    // Dummy functions for macros
-    fn is_running_builtin_pipeline() -> bool {
-        false
-    }
-
-    fn should_skip_optimization_step() -> bool {
-        false
-    }
-
-    fn is_stack_check(_call: &CallOp, _ig: Graph, _broker: JSHeapBroker, _kind: StackCheckKind) -> bool {
-        false
-    }
-
-    #[derive(PartialEq, Eq, Copy, Clone)]
-    pub enum StackCheckKind {
-        kJSIterationBody,
-    }
-
-    //Reducer that removes stack checks from loops with a small number of iterations.
-    turboshaft_reducer_boilerplate!(LoopStackCheckElisionReducer);
-
-    impl<Next: ReducerNext<OpIndex>> LoopStackCheckElisionReducer<Next> {
-        pub fn bind(&mut self, _new_block: Block) {
-            // Placeholder implementation
-        }
-
-        pub fn reduce_input_graph_call(&mut self, ig_idx: OpIndex, call: &CallOp) -> OpIndex {
-            if should_skip_optimization_step() {
-                return self.next.reduce_input_graph_call(ig_idx, call);
+            impl fmt::Display for IterationCount {
+                fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+                    match self.kind {
+                        IterationCountKind::Exact => write!(f, "Exact[{}]", self.count),
+                        IterationCountKind::Approx => write!(f, "Approx[{}]", self.count),
+                        IterationCountKind::Unknown => write!(f, "Unknown"),
+                    }
+                }
             }
 
-            //            if self.skip_next_stack_check_ &&
-            //                call.is_stack_check(__ input_graph(), self.broker_, StackCheckKind::kJSIterationBody) {
-            //                self.skip_next_stack_check_ = false;
-            //                return OpIndex::Invalid();
-            //            }
-            self.next.reduce_input_graph_call(ig_idx, call)
-        }
+            pub struct LoopUnrollingAnalyzer {
+                loop_finder_: LoopFinder,
+                loop_iteration_count_: HashMap<Block, IterationCount>,
+                stack_checks_to_remove_: HashSet<usize>,
+                can_unroll_at_least_one_loop_: bool,
+                canonical_loop_matcher_: StaticCanonicalForLoopMatcher,
+            }
 
-        pub fn reduce_input_graph_jsstackcheck(&mut self, ig_idx: OpIndex, check: &JSStackCheckOp) -> OpIndex {
-            // if self.skip_next_stack_check_ && check.kind == JSStackCheckOpKind::Loop {
-            //     self.skip_next_stack_check_ = false;
-            //     return OpIndex::Invalid();
-            // }
-            self.next.reduce_input_graph_jsstackcheck(ig_idx, check)
-        }
+            impl LoopUnrollingAnalyzer {
+                pub fn new(loop_finder: LoopFinder, matcher: StaticCanonicalForLoopMatcher) -> Self {
+                    LoopUnrollingAnalyzer {
+                        loop_finder_: loop_finder,
+                        loop_iteration_count_: HashMap::new(),
+                        stack_checks_to_remove_: HashSet::new(),
+                        can_unroll_at_least_one_loop_: false,
+                        canonical_loop_matcher_: matcher,
+                    }
+                }
 
-        pub fn reduce_input_graph_wasmstackcheck(&mut self, ig_idx: OpIndex, check: &WasmStackCheckOp) -> OpIndex {
-            // if self.skip_next_stack_check_ && check.kind == WasmStackCheckOpKind::Loop {
-            //     self.skip_next_stack_check_ = false;
-            //     return OpIndex::Invalid();
-            // }
-            self.next.reduce_input_graph_wasmstackcheck(ig_idx, check)
-        }
-    }
+                pub fn detect_unrollable_loops(&mut self) {
+                    for (start, info) in self.loop_finder_.loop_headers() {
+                        let iter_count = self.get_loop_iteration_count(info);
+                        trace!(
+                            "LoopUnrollingAnalyzer: loop at {:?} ==> iter_count={}",
+                            start.id(),
+                            iter_count
+                        );
+                        self.loop_iteration_count_.insert(*start, iter_count);
 
-    impl<Next: ReducerNext<None>> ReducerNext<None> for LoopStackCheckElisionReducer<Next> {
-        fn reduce_input_graph_goto(&mut self, ig_idx: None, gto: &GotoOp) -> None {
-            self.next.reduce_input_graph_goto(ig_idx, gto)
-        }
+                        if self.should_fully_unroll_loop(start) || self.should_partially_unroll_loop(start) {
+                            self.can_unroll_at_least_one_loop_ = true;
+                        }
 
-        fn reduce_input_graph_branch(&mut self, ig_idx: None, branch: &BranchOp) -> None {
-            self.next.reduce_input_graph_branch(ig_idx, branch)
-        }
-        fn reduce_input_graph_call(&mut self, ig_idx: None, call: &CallOp) -> None {
-            self.next.reduce_input_graph_call(ig_idx, call)
-        }
-        fn reduce_input_graph_jsstackcheck(&mut self, ig_idx: None, check: &JSStackCheckOp) -> None {
-            self.next.reduce_input_graph_jsstackcheck(ig_idx, check)
-        }
+                        if iter_count.is_smaller_than(K_MAX_ITER_FOR_STACK_CHECK_REMOVAL) {
+                            self.stack_checks_to_remove_.insert(start.id().0);
+                        }
+                    }
+                }
 
-        fn reduce_input_graph_wasmstackcheck(&mut self, ig_idx: None, check: &WasmStackCheckOp) -> None {
-            self.next.reduce_input_graph_wasmstackcheck(ig_idx, check)
-        }
-    }
+                fn get_loop_iteration_count(
+                    &self,
+                    info: &LoopFinder::LoopInfo,
+                ) -> IterationCount {
+                    let start = &info.start;
+                    assert!(start.is_loop());
 
-    //The LoopUnrollingReducer.
-    turboshaft_reducer_boilerplate!(LoopUnrolling
+                    // Checking that the condition for the loop can be computed statically, and
+                    // that the loop contains no more than kMaxLoopIterationsForFullUnrolling
+                    // iterations.
+                    let branch = match start.last_operation(&InputGraph {}) {
+                        crate::compiler::turboshaft::loop_finder::LastOperationResult::Branch(b) => b,
+                        crate::compiler::turboshaft::loop_finder::LastOperationResult::None => {
+                            return IterationCount::unknown();
+                        }
+                    };
+
+                    // Checking that one of the successor of the loop header is indeed not in the
+                    // loop (otherwise, the Branch that ends the loop header is not the Branch
+                    // that decides to exit the loop).
+                    let if_true_header = self.loop_finder_.get_loop_header(branch.if_true);
+                    let if_false_header = self.loop_finder_.get_loop_header(branch.if_false);
+                    if if_true_header.id() == if_false_header.id() {
+                        return IterationCount::unknown();
+                    }
+
+                    // If {if_true} is in the loop, then we're looping if the condition is true,
+                    // but if {if_false} is in the loop, then we're looping if the condition is
+                    // false.
+                    let loop_if_cond_is = if_true_header.id() == start.id();
+
+                    self.canonical_loop_matcher_.get_iter_count_if_static_canonical_for_loop(
+                        start,
+                        branch.condition,
+                        loop_if_cond_is,
+                    )
+                }
+
+                fn should_fully_unroll_loop(&self, _start: &Block) -> bool {
+                    // Placeholder
+                    false
+                }
+
+                fn should_partially_unroll_loop(&self, _start: &Block) -> bool {
+                    // Placeholder
+                    false
+                }
+            }
+
+            #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+            pub enum CmpOp {
+                Equal,
+                SignedLessThan,
+                SignedLessThanOrEqual,
+                UnsignedLessThan,
+                UnsignedLessThanOrEqual,
+                SignedGreaterThan,
+                SignedGreaterThanOrEqual,
+                UnsignedGreaterThan,
+                UnsignedGreaterThanOrEqual,
+            }
+
+            impl fmt::Display for CmpOp {
+                fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+                    match self {
+                        CmpOp::Equal => write!(f, "=="),
+                        CmpOp::SignedLessThan => write!(f, "<ˢ"),
+                        CmpOp::SignedLessThanOrEqual => write!(f, "<=ˢ"),
+                        CmpOp::UnsignedLessThan => write!(f, "<ᵘ"),
+                        CmpOp::UnsignedLessThanOrEqual => write!(f, "<=ᵘ"),
+                        CmpOp::SignedGreaterThan => write!(f, ">ˢ"),
+                        CmpOp::SignedGreaterThanOrEqual => write!(f, ">=ˢ"),
+                        CmpOp::UnsignedGreaterThan => write!(f, ">ᵘ"),
+                        CmpOp::UnsignedGreaterThanOrEqual => write!(f, ">=ᵘ"),
+                    }
+                }
+            }
+
+            #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+            pub enum BinOp {
+                Add,
+                Mul,
+                Sub,
+                BitwiseAnd,
+                BitwiseOr,
+                BitwiseXor,
+                OverflowCheckedAdd,
+                OverflowCheckedMul,
+                OverflowCheckedSub,
+            }
+
+            impl fmt::Display for BinOp {
+                fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+                    match self {
+                        BinOp::Add => write!(f, "+"),
+                        BinOp::Mul => write!(f, "*"),
+                        BinOp::Sub => write!(f, "-"),
+                        BinOp::BitwiseAnd => write!(f, "&"),
+                        BinOp::BitwiseOr => write!(f, "|"),
+                        BinOp::BitwiseXor => write!(f, "^"),
+                        BinOp::OverflowCheckedAdd => write!(f, "+ᵒ"),
+                        BinOp::OverflowCheckedMul => write!(f, "*ᵒ"),
+                        BinOp::OverflowCheckedSub => write!(f, "-ᵒ"),
+                    }
+                }
+            }
+
+            #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+            pub enum WordRepresentation {
+                Word32,
+                Word64,
+            }
+
+            pub struct StaticCanonicalForLoopMatcher {
+                matcher_: Matcher,
+            }
+
+            impl StaticCanonicalForLoopMatcher {
+                pub fn new(matcher: Matcher) -> Self {
+                    StaticCanonicalForLoopMatcher { matcher_: matcher }
+                }
+
+                // Tries to match `phi cmp cst` (or `cst cmp phi`).
+                fn match_phi_compare_cst(
+                    &self,
+                    cond_idx: OpIndex,
+                    cmp_op: &mut CmpOp,
+                    phi: &mut OpIndex,
+                    cst: &mut u64,
+                ) -> bool {
+                    let cond = self.matcher_.get(cond_idx);
+
+                    if let Some(cmp) = cond.try_cast::<ComparisonOp>() {
+                        *cmp_op = Self::comparison_kind_to_cmp_op(cmp.kind);
+                    } else {
+                        return false;
+                    }
+
+                    let left = cond.input(0);
+                    let right = cond.input(1);
+
+                    if self.matcher_.match_phi(left, 2) {
+                        if self.matcher_.match_unsigned_integral_constant(right, cst) {
+                            *phi = left;
+                            return true;
+                        }
+                    } else if self.matcher_.match_phi(right, 2) {
+                        if self.matcher_.match_unsigned_integral_constant(left, cst) {
+                            *cmp_op = Self::invert_comparison_op(*cmp_op);
+                            *phi = right;
+                            return true;
+                        }
+                    }
+                    false
+                }
+
+                fn match_checked_overflow_binop(
+                    &self,
+                    idx: OpIndex,
+                    left: &mut V<Word>,
+                    right: &mut V<Word>,
+                    binop_op: &mut BinOp,
+                    binop_rep: &mut WordRepresentation,
+                ) -> bool {
+                    if let Some(proj) = self.matcher_.try_cast::<ProjectionOp>(idx) {
+                        if proj.index != OverflowCheckedBinopOp::kValueIndex {
+                            return false;
+                        }
+                        if let Some(binop) =
+                            self.matcher_.try_cast::<OverflowCheckedBinopOp>(proj.input())
+                        {
+                            *left = binop.left();
+                            *right = binop.right();
+                            *binop_op = Self::binop_from_overflow_checked_binop_kind(binop.kind);
+                            *binop_rep = binop.rep;
+                            return true;
+                        }
+                    }
+                    false
+                }
+
+                fn match_word_binop(
+                    &self,
+                    idx: OpIndex,
+                    left: &mut V<Word>,
+                    right: &mut V<Word>,
+                    binop_op: &mut BinOp,
+                    binop_rep: &mut WordRepresentation,
+                ) -> bool {
+                    let mut kind = WordBinopOp::Kind::kAdd; // Dummy init. Value will be overwritten if successful match
+                    if self.matcher_.match_word_binop::<Word>(
+                        idx,
+                        left,
+                        right,
+                        &mut kind,
+                        binop_rep,
+                    ) && Self::binop_kind_is_supported(kind)
+                    {
+                        *binop_op = Self::binop_from_word_binop_kind(kind);
+                        return true;
+                    }
+                    false
+                }
+
+                pub fn get_iter_count_if_static_canonical_for_loop(
+                    &self,
+                    header: &Block,
+                    cond_idx: OpIndex,
+                    loop_if_cond_is: bool,
+                ) -> IterationCount {
+                    let mut cmp_op = CmpOp::Equal; // Dummy init
+                    let mut phi_idx = OpIndex::new(0); // Dummy init
+                    let mut cmp_cst: u64 = 0; // Dummy init
+                    if !self.match_phi_compare_cst(cond_idx, &mut cmp_op, &mut phi_idx, &mut cmp_cst) {
+                        return IterationCount::unknown();
+                    }
+                    if !header.contains(phi_idx) {
+                        // The termination condition for this loop is based on a Phi that is defined
+                        // in another loop.
+                        return IterationCount::unknown();
+                    }
+
+                    let phi = self.matcher_.cast::<PhiOp>(phi_idx);
+
+                    // We have: phi(..., ...) cmp_op cmp_cst
+                    // eg, for (i = ...; i < 42; ...)
+                    let mut phi_cst: u64 = 0; // Dummy init
+                    if self.matcher_.match_unsigned_integral_constant(phi.input(0), &mut phi_cst) {
+                        // We have: phi(phi_cst, ...) cmp_op cmp_cst
+                        // eg, for (i = 0; i < 42; ...)
+                        let mut left = V::new(); // Dummy init
+                        let mut right = V::new(); // Dummy init
+                        let mut binop_op = BinOp::Add; // Dummy init
+                        let mut binop_rep = WordRepresentation::Word32; // Dummy init
+                        if self.match_word_binop(
+                            phi.input(1),
+                            &mut left,
+                            &mut right,
+                            &mut binop_op,
+                            &mut binop_rep,
+                        ) || self.match_checked_overflow_binop(
+                            phi.input(1),
+                            &mut left,
+                            &mut right,
+                            &mut binop_op,
+                            &mut binop_rep,
+                        ) {
+                            // We have: phi(phi_cst, ... binop_op ...) cmp_op cmp_cst
+                            // eg, for (i = 0; i < 42; i = ... + ...)
+                            if left == V::new() { // FIX
+                                // We have: phi(phi_cst, phi binop_op ...) cmp_op cmp_cst
+                                // eg, for (i = 0; i < 42; i = i + ...)
+                                let mut binop_cst: u64 = 0; // Dummy init
+                                if self.matcher_.match_unsigned_integral_constant(right, &mut binop_cst) {
+                                    // We have: phi(phi_cst, phi binop_op binop_cst) cmp_op cmp_cst
+                                    // eg, for (i = 0; i < 42; i = i + 2)
+                                    return self.count_iterations(
+                                        cmp_cst,
+                                        cmp_op,
+                                        phi_cst,
+                                        binop_cst,
+                                        binop_op,
+                                        binop_rep,
+                                        loop_if_cond_is,
+                                    );
+                                }
+                            } else if right == V::new() { // FIX
+                                // We have: phi(phi_cst, ... binop_op phi) cmp_op cmp_cst
+                                // eg, for (i = 0; i < 42; i = ... + i)
+                                let mut binop_cst: u64 = 0; // Dummy init
+                                if self.matcher_.match_unsigned_integral_constant(left, &mut binop_cst) {
+                                    // We have: phi(phi_cst, binop_cst binop_op phi) cmp_op cmp_cst
+                                    // eg, for (i = 0; i < 42; i = 2 + i)
+                                    return self.count_iterations(
+                                        cmp_cst,
+                                        cmp_op,
+                                        phi_cst,
+                                        binop_cst,
+                                        binop_op,
+                                        binop_rep,
+                                        loop_if_cond_is,
+                                    );
+                                }
+                            }
+                        }
+                    }
+
+                    // The condition is not an operation that we support.
+                    IterationCount::unknown()
+                }
+
+                const fn binop_kind_is_supported(binop_kind: WordBinopOp::Kind) -> bool {
+                    match binop_kind {
+                        // This list needs to be kept in sync with the `Next` function that follows.
+                        WordBinopOp::Kind::kAdd => true,
+                        WordBinopOp::Kind::kMul => true,
+                        WordBinopOp::Kind::kSub => true,
+                        WordBinopOp::Kind::kBitwiseAnd => true,
+                        WordBinopOp::Kind::kBitwiseOr => true,
+                        WordBinopOp::Kind::kBitwiseXor => true,
+                        _ => false,
+                    }
+                }
+
+                const fn binop_from_word_binop_kind(kind: WordBinopOp::Kind) -> BinOp {
+                    assert!(Self::binop_kind_is_supported(kind));
+                    match kind {
+                        WordBinopOp::Kind::kAdd => BinOp::Add,
+                        WordBinopOp::Kind::kMul => BinOp::Mul,
+                        WordBinopOp::Kind::kSub => BinOp::Sub,
+                        WordBinopOp::Kind::kBitwiseAnd => BinOp::BitwiseAnd,
+                        WordBinopOp::Kind::kBitwiseOr => BinOp::BitwiseOr,
+                        WordBinopOp::Kind::kBitwiseXor => BinOp::BitwiseXor,
+                    }
+                }
+
+                const fn binop_from_overflow_checked_binop_kind(kind: OverflowCheckedBinopOp::Kind) -> BinOp {
+                    match kind {
+                        OverflowCheckedBinopOp::Kind::kSignedAdd => BinOp::OverflowCheckedAdd,
+                        OverflowCheckedBinopOp::Kind::kSignedMul => BinOp::OverflowCheckedMul,
+                        OverflowCheckedBinopOp::Kind::kSignedSub => BinOp::OverflowCheckedSub,
+                    }
+                }
+
+                // Returns true if the loop
+                // `for (i = initial_input, i cmp_op cmp_cst; i = i binop_op binop_cst)` has
+                // fewer than `max_iter_` iterations.
+                fn count_iterations(
+                    &self,
+                    cmp_cst: u64,
+                    cmp_op: CmpOp,
+                    initial_input: u64,
+                    binop_cst: u64,
+                    binop_op: BinOp,
+                    binop_rep: WordRepresentation,
+                    loop_if_cond_is: bool,
+                ) -> IterationCount {
+                    match cmp_op {
+                        CmpOp::SignedLessThan
+                        | CmpOp::SignedLessThanOrEqual
+                        | CmpOp::SignedGreaterThan
+                        | CmpOp::SignedGreaterThanOrEqual
+                        | CmpOp::Equal => {
+                            if binop_rep == WordRepresentation::Word32 {
+                                self.count_iterations_impl::<i32>(
+                                    initial_input as i32,
+                                    cmp_cst as i32,
+                                    cmp_op,
+                                    binop_cst as i32,
+                                    binop_op,
+                                    binop_rep,
+                                    loop_if_cond_is,
+                                )
+                            } else {
+                                assert_eq!(binop_rep, WordRepresentation::Word64);
+                                self.count_iterations_impl::<i64>(
+                                    initial_input as i64,
+                                    cmp_cst as i64,
+                                    cmp_op,
+                                    binop_cst as i64,
+                                    binop_op,
+                                    binop_rep,
+                                    loop_if_cond_is,
+                                )
+                            }
+                        }
+                        CmpOp::UnsignedLessThan
+                        | CmpOp::UnsignedLessThanOrEqual
+                        | CmpOp::UnsignedGreaterThan
+                        | CmpOp::UnsignedGreaterThanOrEqual => {
+                            if binop_rep == WordRepresentation::Word32 {
+                                self.count_iterations_impl::<u32>(
+                                    initial_input as u32,
+                                    cmp_cst as u32,
+                                    cmp_op,
+                                    binop_cst as u32,
+                                    binop_op,
+                                    binop_rep,
+                                    loop_if_cond_is,
+                                )
+                            } else {
+                                assert_eq!(binop_rep, WordRepresentation::Word64);
+                                self.count_iterations_impl::<u64>(
+                                    initial_input,
+                                    cmp_cst,
+                                    cmp_op,
+                                    binop_cst,
+                                    binop_op,
+                                    binop_rep,
+                                    loop_if_cond_is,
+                                )
+                            }
+                        }
+                    }
+                }
+
+                // Returns true if the loop
+                // `for (i = init, i cmp_op max; i = i binop_op binop_cst)` has fewer than
+                // `max_iter_` iterations.
+                fn count_iterations_impl<Int: Integer>(
+                    &self,
+                    init: Int,
+                    max: Int,
+                    cmp_op: CmpOp,
+                    binop_cst: Int,
+                    binop_op: BinOp,
+                    binop_rep: WordRepresentation,
+                    loop_if_cond_is: bool,
+                ) -> IterationCount {
+                    use std::cmp::Ordering;
+
+                    // It's a bit hard to compute the number of iterations without some kind of
+                    // (simple) SMT solver, especially when taking overflows into account. Thus,
+                    // we just simulate the evolution of the loop counter: we repeatedly compute
+                    // `init binop_op binop_cst`, and compare the result with `max`. This is
+                    // somewhat inefficient, so it should only be done if `kMaxExactIter` is
+                    // small.
+                    assert!(K_MAX_EXACT_ITER <= 10);
+
+                    let mut curr = init;
+                    let mut iter_count: usize = 0;
+                    while iter_count < K_MAX_EXACT_ITER {
+                        if cmp(&curr, &max, cmp_op) != loop_if_cond_is {
+                            return IterationCount::exact(iter_count as u64);
+                        }
+
+                        if let Some(next) = next(curr, binop_cst, binop_op, binop_rep) {
+                            curr = next;
+                        } else {
+                            // There was an overflow, bailing out.
+                            break;
+                        }
+                        iter_count += 1;
+                    }
+
+                    if binop_cst == Int::zero() {
+                        // If {binop_cst} is 0, the loop should either execute a single time or loop
+                        // infinitely (since the increment is in the form of "i = i op binop_cst"
+                        // with op being an arithmetic or bitwise binop). If we didn't detect above
+                        // that it executes a single time, then we are in the latter case.
+                        return IterationCount::unknown();
+                    }
+
+                    // Trying to figure out an approximate number of iterations
+                    if binop_op == BinOp::Add {
+                        if matches!(cmp_op, CmpOp::UnsignedLessThan | CmpOp::UnsignedLessThanOrEqual | CmpOp::SignedLessThan | CmpOp::SignedLessThanOrEqual)
+                            && curr < max
+                            && !sub_will_overflow(max, init)
+                            && loop_if_cond_is
+                        {
+                            // eg, for (int i = 0; i < 42; i += 2)
+                            if binop_cst < Int::zero() {
+                                // Will either loop forever or rely on underflow wrap-around to
+                                // eventually stop.
+                                return IterationCount::unknown();
+                            }
+                            if div_will_overflow(max - init, binop_cst) {
+                                return IterationCount::unknown();
+                            }
+                            let quotient = (max - init) / binop_cst;
+                            assert!(quotient >= Int::zero());
+                            return IterationCount::approx(quotient.to_u64().unwrap());
+                        }
+                        if matches!(cmp_op, CmpOp::UnsignedGreaterThan | CmpOp::UnsignedGreaterThanOrEqual | CmpOp::SignedGreaterThan | CmpOp::SignedGreaterThanOrEqual)
+                            && init > max
+                            && !sub_will_overflow(max, init)
+                            && loop_if_cond_is
+                        {
+                            // eg, for (int i = 42; i > 0; i += -2)
+                            if binop_cst > Int::zero() {
+                                // Will either loop forever or rely on overflow wrap-around to
+                                // eventually stop.
+                                return IterationCount::unknown();
+                            }
+                            if div_will_overflow(max - init, binop_cst) {
+                                return IterationCount::unknown();
+                            }
+                            let quotient = (max - init) / binop_cst;
+                            assert!(quotient >= Int::zero());
+                            return IterationCount::approx(quotient.to_u64().unwrap());
+                        }
+                        if cmp_op == CmpOp::Equal && !sub_will_overflow(max, init) && !loop_if_cond_is {
+                            // eg, for (int i = 0;  i != 42; i += 2)
+                            // or, for (int i = 42; i != 0;  i += -2)
+                            if init < max && binop_cst < Int::zero() {
+                                // Will either loop forever or rely on underflow wrap-around to
+                                // eventually stop.
+                                return IterationCount::unknown();
+                            }
+                            if init > max && binop_cst > Int::zero() {
+                                // Will either loop forever or rely on overflow wrap-around to
+                                // eventually stop.
+                                return IterationCount::unknown();
+                            }
+
+                            let remainder = (max - init) % binop_cst;
+                            if remainder != Int::zero() {
+                                // Will loop forever or rely on over/underflow wrap-around to eventually
+                                // stop.
+                                return IterationCount::unknown();
+                            }
+
+                            let quotient = (max - init) / binop_cst;
+                            assert!(quotient >= Int::zero());
+                            return IterationCount::approx(quotient.to_u64().unwrap());
+                        }
+                    }
+
+                    IterationCount::unknown()
+                }
+
+                const fn comparison_kind_to_cmp_op(kind: ComparisonOp::Kind) -> CmpOp {
+                    match kind {
+                        ComparisonOp::Kind::kEqual => CmpOp::Equal,
+                        ComparisonOp::Kind::kSignedLessThan => CmpOp::SignedLessThan,
+                        ComparisonOp::Kind::kSignedLessThanOrEqual => CmpOp::SignedLessThanOrEqual,
+                        ComparisonOp::Kind::kUnsignedLessThan => CmpOp::UnsignedLessThan,
+                        ComparisonOp::Kind::kUnsignedLessThanOrEqual => CmpOp::UnsignedLessThanOrEqual,
+                    }
+                }
+
+                const fn invert_comparison_op(op: CmpOp) -> CmpOp {
+                    match op {
+                        CmpOp::Equal => CmpOp::Equal,
+                        CmpOp::SignedLessThan => CmpOp::SignedGreaterThan,
+                        CmpOp::SignedLessThanOrEqual => CmpOp::SignedGreaterThanOrEqual,
+                        CmpOp::UnsignedLessThan => CmpOp::UnsignedGreaterThan,
+                        CmpOp::UnsignedLessThanOrEqual => CmpOp::UnsignedGreaterThanOrEqual,
+                        CmpOp::SignedGreaterThan => CmpOp::SignedLessThan

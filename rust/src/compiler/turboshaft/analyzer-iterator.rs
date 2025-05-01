@@ -3,232 +3,217 @@
 // found in the LICENSE file.
 
 mod turboshaft {
-    use std::cell::RefCell;
-    use std::rc::Rc;
-    use std::ops::Index;
+    use std::collections::VecDeque;
 
-    /// Dummy struct for Zone (replace with appropriate Rust type)
-    pub struct Zone {}
-
-    /// Dummy trait for Graph (replace with appropriate Rust type)
-    pub trait GraphLike {
-        fn start_block(&self) -> &Block;
-        fn block_count(&self) -> usize;
-    }
-
-    /// Dummy struct for Graph (replace with appropriate Rust type)
+    // Placeholder for Graph and other related types.  These need to be defined
+    // based on the broader V8 codebase context.
     pub struct Graph {}
-
-    impl GraphLike for Graph {
-        fn start_block(&self) -> &Block {
-            unimplemented!()
-        }
-        fn block_count(&self) -> usize {
-            unimplemented!()
-        }
-    }
-
-    /// Dummy struct for Block (replace with appropriate Rust type)
-    #[derive(Clone, Copy)]
     pub struct Block {
         index: usize,
+        children: Vec<*mut Block>, // Raw pointers to children - needs proper management
     }
-
     impl Block {
         pub fn index(&self) -> usize {
             self.index
         }
-    }
 
-    /// Dummy struct for LoopFinder (replace with appropriate Rust type)
-    pub struct LoopFinder {}
+        pub fn is_loop(&self) -> bool {
+            // Placeholder - implement actual logic
+            false
+        }
 
-    // Dummy struct for Operations
-    pub struct Operations {}
+        pub fn last_child(&self) -> Option<*mut Block> {
+            self.children.last().map(|&child| child)
+        }
 
-    // Dummy struct for Index
-    pub struct Index {}
-
-    /// Dummy struct for Sidetable (replace with appropriate Rust type)
-    pub struct FixedBlockSidetable<T> {
-        data: Vec<T>,
-    }
-
-    impl<T: Copy + Clone> FixedBlockSidetable<T> {
-        pub fn new(size: usize, default_value: T) -> Self {
-            FixedBlockSidetable {
-                data: vec![default_value; size],
+        pub fn neighboring_child(&self, current: *mut Block) -> Option<*mut Block> {
+            // Find the index of 'current' in the children vector
+            if let Some(index) = self.children.iter().position(|&child| child == current) {
+                // Return the pointer to the next child in the vector, if there is one
+                if index + 1 < self.children.len() {
+                    return Some(self.children[index + 1]);
+                }
             }
+            None // Return None if 'current' is not found or there's no next child
+        }
+
+        pub fn has_backedge(&self, _graph: &Graph) -> bool {
+            // Placeholder - implement actual logic, requires access to Graph
+            false
+        }
+
+        pub fn last_operation(&self, _graph: &Graph) -> GotoOp {
+            // Placeholder - implement actual logic, requires access to Graph
+            GotoOp {}
+        }
+    }
+    
+    pub struct GotoOp { }
+    impl GotoOp {
+        pub fn destination(&self) -> *const Block {
+            //Placeholder, need destination block
+            std::ptr::null()
+        }
+        pub fn cast<T>(&self) -> &Self {
+            //Placeholder, needs casting logic if necessary
+            self
         }
     }
 
-    impl<T> Index<usize> for FixedBlockSidetable<T> {
-        type Output = T;
 
-        fn index(&self, index: usize) -> &Self::Output {
-            &self.data[index]
+    struct BlockAndGeneration {
+        block: *const Block, // Needs proper memory management!
+        generation: usize,
+    }
+
+    pub struct LoopFinder {}
+    impl LoopFinder {
+        pub fn get_loop_header(&self, _block: *const Block) -> *const Block {
+            // Placeholder implementation: Implement actual logic based on broader context
+            std::ptr::null()
         }
     }
 
-    impl<T> Index<usize> for RefCell<FixedBlockSidetable<T>> {
-        type Output = T;
+    const K_NOT_VISITED_GENERATION: usize = 0;
 
-        fn index(&self, index: usize) -> &Self::Output {
-            &self.borrow().data[index]
-        }
-    }
-
-    /// AnalyzerIterator provides methods to iterate forward a Graph in a way that is
-    /// efficient for the SnapshotTable: blocks that are close in the graphs will be
-    /// visited somewhat consecutively (which means that the SnapshotTable shouldn't
-    /// have to travel far).
-    ///
-    /// To understand why this is important, consider the following graph:
-    ///
-    ///                          B1 <------
-    ///                          |\       |
-    ///                          | \      |
-    ///                          |  v     |
-    ///                          |   B27---
-    ///                          v
-    ///                          B2 <------
-    ///                          |\       |
-    ///                          | \      |
-    ///                          |  v     |
-    ///                          |   B26---
-    ///                          v
-    ///                          B3 <------
-    ///                          |\       |
-    ///                          | \      |
-    ///                          |  v     |
-    ///                          |   B25---
-    ///                          v
-    ///                         ...
-    ///
-    /// If we iterate its blocks in increasing ID order, then we'll visit B1, B2,
-    /// B3... and only afterwards will we visit the Backedges. If said backedges can
-    /// update the loop headers snapshots, then when visiting B25, we'll decide to
-    /// revisit starting from B3, and will revisit everything after, then same thing
-    /// for B26 after which we'll start over from B2 (and thus even revisit B3 and
-    /// B25), etc, leading to a quadratic (in the number of blocks) analysis.
-    ///
-    /// Instead, the visitation order offered by AnalyzerIterator is a BFS in the
-    /// dominator tree (ie, after visiting a node, AnalyzerIterator visit the nodes
-    /// it dominates), with an subtlety for loops: when a node dominates multiple
-    /// nodes, successors that are in the same loop as the current node are visited
-    /// before nodes that are in outer loops.
-    /// In the example above, the visitation order would thus be B1, B27, B2, B26,
-    /// B3, B25.
-    ///
-    /// The MarkLoopForRevisit method can be used when visiting a backedge to
-    /// instruct AnalyzerIterator that the loop to which this backedge belongs should
-    /// be revisited. All of the blocks of this loop will then be revisited.
-    ///
-    /// Implementation details for revisitation of loops:
-    ///
-    /// In order to avoid visiting loop exits (= blocks whose dominator is in a loop
-    /// but which aren't themselves in the loop) multiple times, the stack of Blocks
-    /// to visit contains pairs of "block, generation". Additionally, we have a
-    /// global {current_generation_} counter, which is incremented when we revisit a
-    /// loop. When visiting a block, we record in {visited_} that it has been visited
-    /// at {current_generation_}. When we pop a block from the stack and its
-    /// "generation" field is less than what is recorded in {visited_}, then we skip
-    /// it. On the other hand, if its "generation" field is greater than the one
-    /// recorded in {visited_}, it means that we've revisited a loop since the last
-    /// time we visited this block, so we should revisit it as well.
     pub struct AnalyzerIterator<'a> {
+        stack_: Vec<BlockAndGeneration>,
+        visited_: Vec<usize>,
+        current_generation_: usize,
+        curr_: BlockAndGeneration,
         graph_: &'a Graph,
-        loop_finder_: &'a LoopFinder,
-        visited_: RefCell<FixedBlockSidetable<u64>>,
-        stack_: RefCell<Vec<StackNode<'a>>>,
-        current_generation_: u64,
-        curr_: StackNode<'a>,
+        loop_finder_: LoopFinder,
     }
 
     impl<'a> AnalyzerIterator<'a> {
-        pub fn new(phase_zone: &Zone, graph: &'a Graph, loop_finder: &'a LoopFinder) -> Self {
-            let start_block = graph.start_block();
-            let mut visited_table = FixedBlockSidetable::new(graph.block_count(), Self::K_NOT_VISITED_GENERATION);
-
-            let mut stack = Vec::new();
-            stack.push(StackNode {
-                block: start_block,
-                generation: Self::K_GENERATION_FOR_FIRST_VISIT,
-            });
-            AnalyzerIterator {
+        pub fn new(start_block: *const Block, graph: &'a Graph, num_blocks: usize) -> Self {
+            let mut iterator = Self {
+                stack_: Vec::new(),
+                visited_: vec![K_NOT_VISITED_GENERATION; num_blocks],
+                current_generation_: 1,
+                curr_: BlockAndGeneration {
+                    block: std::ptr::null(),
+                    generation: K_NOT_VISITED_GENERATION,
+                },
                 graph_: graph,
-                loop_finder_: loop_finder,
-                visited_: RefCell::new(visited_table),
-                stack_: RefCell::new(stack),
-                current_generation_: Self::K_GENERATION_FOR_FIRST_VISIT,
-                curr_: StackNode { block: start_block, generation: 0 }, // Initialize curr_ with a default value
-            }
+                loop_finder_: LoopFinder {},
+            };
+            iterator.stack_.push(BlockAndGeneration {
+                block: start_block,
+                generation: iterator.current_generation_,
+            });
+            iterator
         }
 
-        pub fn has_next(&self) -> bool {
-            if !self.stack_.borrow().is_empty() {
-                debug_assert!(!self.is_outdated(self.stack_.borrow().last().unwrap().clone()));
-            }
-            !self.stack_.borrow().is_empty()
+        fn is_outdated(&self, block_and_generation: &BlockAndGeneration) -> bool {
+            let block_index = unsafe { (*block_and_generation.block).index() };
+            self.visited_[block_index] >= block_and_generation.generation
         }
 
-        pub fn next(&self) -> Option<&Block> {
-            if self.stack_.borrow().is_empty() {
-                return None;
-            }
-
-            self.pop_outdated();
-
-            let mut stack = self.stack_.borrow_mut();
-            let stack_node = stack.pop().unwrap();
-
-            let block = stack_node.block;
-            let generation = stack_node.generation;
-
-            self.curr_ = StackNode { block, generation };
-            self.visited_.borrow_mut().data[block.index()] = self.current_generation_;
-
-            Some(block)
-        }
-
-        pub fn mark_loop_for_revisit(&self) {
-            // Placeholder: Implementation requires more context about the Graph and LoopFinder
-            // to determine the loop associated with the current block.
-            // This function would typically manipulate the stack_ to schedule the
-            // loop's blocks for revisitation.
-            unimplemented!()
-        }
-
-        pub fn mark_loop_for_revisit_skip_header(&self) {
-            // Placeholder: Implementation requires more context about the Graph and LoopFinder
-            // to determine the loop associated with the current block and skip its header.
-            // This function would typically manipulate the stack_ to schedule the
-            // loop's blocks (excluding the header) for revisitation.
-            unimplemented!()
-        }
-
-        fn pop_outdated(&self) {
-            let mut stack = self.stack_.borrow_mut();
-            while let Some(node) = stack.last() {
-                if self.is_outdated(node.clone()) {
-                    stack.pop();
+        fn pop_outdated(&mut self) {
+            while !self.stack_.is_empty() {
+                if self.is_outdated(self.stack_.last().unwrap()) {
+                    self.stack_.pop();
                 } else {
-                    break;
+                    return;
                 }
             }
         }
 
-        fn is_outdated(&self, node: StackNode<'a>) -> bool {
-            self.visited_.borrow().data[node.block.index()] >= node.generation
+        pub fn has_next(&self) -> bool {
+            !self.stack_.is_empty()
         }
 
-        const K_NOT_VISITED_GENERATION: u64 = 0;
-        const K_GENERATION_FOR_FIRST_VISIT: u64 = 1;
-    }
+        pub fn next(&mut self) -> *const Block {
+            debug_assert!(self.has_next());
+            debug_assert!(!self.is_outdated(self.stack_.last().unwrap()));
 
-    #[derive(Clone)]
-    struct StackNode<'a> {
-        block: &'a Block,
-        generation: u64,
+            self.curr_ = self.stack_.pop().unwrap();
+            let curr_block = self.curr_.block;
+
+            let curr_header = unsafe {
+                if (*curr_block).is_loop() {
+                    curr_block
+                } else {
+                    self.loop_finder_.get_loop_header(curr_block)
+                }
+            };
+
+            // Pushing on the stack the children that are not in the same loop as Next
+            // (remember that since we're doing a DFS with a Last-In-First-Out stack,
+            // pushing them first on the stack means that they will be visited last).
+            unsafe {
+                let mut child = (*curr_block).last_child();
+                while let Some(raw_child) = child {
+                    if self.loop_finder_.get_loop_header(raw_child) != curr_header {
+                        self.stack_.push(BlockAndGeneration {
+                            block: raw_child,
+                            generation: self.current_generation_,
+                        });
+                    }
+                    child = (*curr_block).neighboring_child(raw_child);
+                }
+            }
+
+            // Pushing on the stack the children that are in the same loop as Next (they
+            // are pushed last, so that they will be visited first).
+            unsafe {
+                let mut child = (*curr_block).last_child();
+                while let Some(raw_child) = child {
+                    if self.loop_finder_.get_loop_header(raw_child) == curr_header {
+                        self.stack_.push(BlockAndGeneration {
+                            block: raw_child,
+                            generation: self.current_generation_,
+                        });
+                    }
+                    child = (*curr_block).neighboring_child(raw_child);
+                }
+            }
+
+            unsafe {
+                self.visited_[(*curr_block).index()] = self.current_generation_;
+            }
+
+            // Note that PopOutdated must be called after updating {visited_}, because
+            // this way, if the stack contained initially [{Bx, 1}, {Bx, 2}] (where `Bx`
+            // is the same block both time and it hasn't been visited before), then we
+            // popped the second entry at the begining of this function, but if we call
+            // PopOutdate before updating {visited_}, then it won't pop the first entry.
+            self.pop_outdated();
+
+            curr_block
+        }
+
+        pub fn mark_loop_for_revisit(&mut self) {
+            assert!(!self.curr_.block.is_null());
+            assert_ne!(self.curr_.generation, K_NOT_VISITED_GENERATION);
+            unsafe {
+              assert!((*self.curr_.block).has_backedge(self.graph_));
+              let header = (*self.curr_.block).last_operation(self.graph_).destination();
+              self.stack_.push(BlockAndGeneration {
+                  block: header,
+                  generation: self.current_generation_ + 1,
+              });
+              self.current_generation_ += 1;
+            }
+        }
+
+        pub fn mark_loop_for_revisit_skip_header(&mut self) {
+            assert!(!self.curr_.block.is_null());
+            assert_ne!(self.curr_.generation, K_NOT_VISITED_GENERATION);
+            unsafe {
+                assert!((*self.curr_.block).has_backedge(self.graph_));
+                let header = (*self.curr_.block).last_operation(self.graph_).destination();
+                let mut child = (*header).last_child();
+                while let Some(raw_child) = child {
+                    self.current_generation_ += 1;
+                    self.stack_.push(BlockAndGeneration {
+                        block: raw_child,
+                        generation: self.current_generation_,
+                    });
+                    child = (*header).neighboring_child(raw_child);
+                }
+            }
+        }
     }
 }
