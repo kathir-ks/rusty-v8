@@ -1,0 +1,71 @@
+{
+  "file_path": "/home/kathirks_gc/v8_go/codebase/src/extensions/vtunedomain-support-extension.cc",
+  "imports": [
+    "src/extensions/vtunedomain-support-extension.h",
+    "string",
+    "vector",
+    "include/v8-isolate.h",
+    "include/v8-template.h"
+  ],
+  "classes": [
+    {
+      "name": "VTuneDomainSupportExtension",
+      "properties": [],
+      "methods": [
+        {
+          "name": "GetNativeFunctionTemplate",
+          "parameters": [
+            "v8::Isolate* isolate",
+            "v8::Local<v8::String> str"
+          ],
+          "return_type": "v8::Local<v8::FunctionTemplate>",
+          "logic": "Creates and returns a FunctionTemplate for the VTuneDomainSupportExtension::Mark function.  This template is used to expose the native function to JavaScript."
+        },
+        {
+          "name": "Mark",
+          "parameters": [
+            "const v8::FunctionCallbackInfo<v8::Value>& info"
+          ],
+          "return_type": "void",
+          "logic": "This function is called from JavaScript. It receives the domain name, task name, and action (start/end) as string arguments. It constructs a parameter string and calls the libvtune::invoke function to execute the corresponding VTune action. It also performs input validation, checking for the correct number and type of arguments, and throws an error to JavaScript if the input is invalid or if the VTune operation fails."
+        }
+      ]
+    }
+  ],
+  "functions": [
+    {
+      "name": "startTask",
+      "parameters": [
+        "const std::vector<std::string>& vparams"
+      ],
+      "return_type": "int",
+      "logic": "Starts a VTune task. It retrieves the domain and task names from the input vector `vparams`, creates a `VTuneDomain` object, and then calls the `beginTask` method of the domain. Returns an error code if the domain cannot be created or if `beginTask` fails. Parameter at index 1 is expected to be domain name and index 2 is task name."
+    },
+    {
+      "name": "endTask",
+      "parameters": [
+        "const std::vector<std::string>& vparams"
+      ],
+      "return_type": "int",
+      "logic": "Ends a VTune task. It retrieves the domain name from the input vector `vparams`, creates a `VTuneDomain` object, and then calls the `endTask` method of the domain. Returns an error code if the domain cannot be created. Parameter at index 1 is expected to be the domain name."
+    },
+    {
+      "name": "split",
+      "parameters": [
+        "const std::string& str",
+        "char delimiter",
+        "std::vector<std::string>* vparams"
+      ],
+      "return_type": "void",
+      "logic": "Splits the input string `str` into a vector of strings `vparams` using the specified `delimiter`."
+    },
+    {
+      "name": "invoke",
+      "parameters": [
+        "const char* params"
+      ],
+      "return_type": "int",
+      "logic": "Parses the input string `params` into a vector of strings, uses the first element as a key to look up a function pointer from the `function_map`, and invokes the function pointer with the parameters. Returns an error code if the function is not found."
+    }
+  ]
+}

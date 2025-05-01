@@ -1,0 +1,217 @@
+{
+  "file_path": "/home/kathirks_gc/v8_go/codebase/src/compiler/backend/register-allocator-verifier.cc",
+  "imports": [
+    "src/compiler/backend/register-allocator-verifier.h",
+    "<optional>",
+    "src/compiler/backend/instruction.h",
+    "src/utils/bit-vector.h",
+    "src/utils/ostreams.h"
+  ],
+  "classes": [
+    {
+      "name": "RegisterAllocatorVerifier",
+      "properties": [
+        "zone_",
+        "config_",
+        "sequence_",
+        "constraints_",
+        "assessments_",
+        "outstanding_assessments_",
+        "spill_slot_delta_",
+        "caller_info_"
+      ],
+      "methods": [
+        {
+          "name": "RegisterAllocatorVerifier",
+          "parameters": [
+            "Zone* zone",
+            "const RegisterConfiguration* config",
+            "const InstructionSequence* sequence",
+            "const Frame* frame"
+          ],
+          "return_type": "void",
+          "logic": "Constructor for the RegisterAllocatorVerifier class. Initializes the verifier with the given zone, register configuration, instruction sequence, and frame.  It constructs OperandConstraints for all InstructionOperands, eliminating kSameAsInput along the way and performs initial checks on gap moves. Creates data structures to hold constraints, assessments and outstanding assessments."
+        },
+        {
+          "name": "VerifyInput",
+          "parameters": [
+            "const OperandConstraint& constraint"
+          ],
+          "return_type": "void",
+          "logic": "Verifies the constraints for an input operand. Checks that it is not kSameAsInput and that it has a valid virtual register (if not an immediate)."
+        },
+        {
+          "name": "VerifyTemp",
+          "parameters": [
+            "const OperandConstraint& constraint"
+          ],
+          "return_type": "void",
+          "logic": "Verifies the constraints for a temporary operand. Checks that it is not kSameAsInput, kImmediate, or kConstant."
+        },
+        {
+          "name": "VerifyOutput",
+          "parameters": [
+            "const OperandConstraint& constraint"
+          ],
+          "return_type": "void",
+          "logic": "Verifies the constraints for an output operand. Checks that it is not kImmediate and that it has a valid virtual register."
+        },
+        {
+          "name": "VerifyAssignment",
+          "parameters": [
+            "const char* caller_info"
+          ],
+          "return_type": "void",
+          "logic": "Verifies the register assignment for the instruction sequence.  Iterates through the instructions and checks that the assigned locations satisfy the constraints. It also verifies gap moves are allocated at this point."
+        },
+        {
+          "name": "BuildConstraint",
+          "parameters": [
+            "const InstructionOperand* op",
+            "OperandConstraint* constraint"
+          ],
+          "return_type": "void",
+          "logic": "Builds an OperandConstraint for a given InstructionOperand. Determines the constraint type (kConstant, kImmediate, kFixedSlot, kRegisterOrSlot, etc.) based on the operand's properties and sets the appropriate fields in the constraint."
+        },
+        {
+          "name": "CheckConstraint",
+          "parameters": [
+            "const InstructionOperand* op",
+            "const OperandConstraint* constraint"
+          ],
+          "return_type": "void",
+          "logic": "Checks if the given InstructionOperand satisfies the given OperandConstraint.  Verifies that the operand's type (register, stack slot, constant, immediate) and value (register code, stack slot index, constant value, immediate value) match the constraint."
+        },
+        {
+          "name": "CreateForBlock",
+          "parameters": [
+            "const InstructionBlock* block"
+          ],
+          "return_type": "BlockAssessments*",
+          "logic": "Creates BlockAssessments for a given instruction block. Initializes the assessments based on the predecessor blocks. If the block is a loop header, it skips the loopback arc."
+        },
+        {
+          "name": "ValidatePendingAssessment",
+          "parameters": [
+            "RpoNumber block_id",
+            "InstructionOperand op",
+            "const BlockAssessments* current_assessments",
+            "PendingAssessment* const assessment",
+            "int virtual_register"
+          ],
+          "return_type": "void",
+          "logic": "Validates a pending assessment for an operand. It checks that the operand has the expected virtual register on all incoming paths.  It uses a worklist and seen set to avoid recursion and cycles."
+        },
+        {
+          "name": "ValidateUse",
+          "parameters": [
+            "RpoNumber block_id",
+            "BlockAssessments* current_assessments",
+            "InstructionOperand op",
+            "int virtual_register"
+          ],
+          "return_type": "void",
+          "logic": "Validates the use of an operand in a block. Checks if the operand has the expected virtual register based on its assessment (Final or Pending). Also, checks if the operand is not a stale reference stack slot."
+        },
+        {
+          "name": "VerifyGapMoves",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Verifies the correctness of gap moves during register allocation. It iterates through the instruction blocks, performs the gap moves using BlockAssessments, validates the inputs, drops temporary registers, handles calls, checks reference maps, and adds definitions for outputs. It tracks the outstanding assessments during loop headers."
+        }
+      ]
+    },
+    {
+      "name": "BlockAssessments",
+      "properties": [
+        "map_",
+        "map_for_moves_",
+        "stale_ref_stack_slots_",
+        "spill_slot_delta_",
+        "sequence_"
+      ],
+      "methods": [
+        {
+          "name": "PerformMoves",
+          "parameters": [
+            "const Instruction* instruction"
+          ],
+          "return_type": "void",
+          "logic": "Performs parallel moves associated with a given instruction. It calls PerformParallelMoves for both start and end gap positions."
+        },
+        {
+          "name": "PerformParallelMoves",
+          "parameters": [
+            "const ParallelMove* moves"
+          ],
+          "return_type": "void",
+          "logic": "Performs parallel moves associated with a given ParallelMove object. Copies assessments from source to destination for each move, updates the map, and removes stale references."
+        },
+        {
+          "name": "DropRegisters",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Removes all register assignments from the assessment map. Used after a call instruction."
+        },
+        {
+          "name": "CheckReferenceMap",
+          "parameters": [
+            "const ReferenceMap* reference_map"
+          ],
+          "return_type": "void",
+          "logic": "Checks the reference map against the current block assessments. Marks stack slots as stale if they are not present in the reference map."
+        },
+        {
+          "name": "IsStaleReferenceStackSlot",
+          "parameters": [
+            "InstructionOperand op",
+            "std::optional<int> vreg"
+          ],
+          "return_type": "bool",
+          "logic": "Checks if a given stack slot operand is a stale reference. Considers if the virtual register associated with the operand is of a reference type. Checks whether an operand is present in the stale reference stack slots set."
+        },
+        {
+          "name": "Print",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Prints the contents of the assessment map to standard output."
+        }
+      ]
+    }
+  ],
+  "functions": [
+    {
+      "name": "OperandCount",
+      "parameters": [
+        "const Instruction* instr"
+      ],
+      "return_type": "size_t",
+      "logic": "Calculates the total number of operands (inputs, outputs, and temps) for a given instruction."
+    },
+    {
+      "name": "VerifyEmptyGaps",
+      "parameters": [
+        "const Instruction* instr"
+      ],
+      "return_type": "void",
+      "logic": "Verifies that all gap positions (start, end) in the instruction do not have any parallel moves assigned."
+    },
+    {
+      "name": "VerifyAllocatedGaps",
+      "parameters": [
+        "const Instruction* instr",
+        "const char* caller_info"
+      ],
+      "return_type": "void",
+      "logic": "Verifies that all gap positions (start, end) in the instruction have parallel moves assigned, and that all source and destination operands in these moves are allocated registers or constants."
+    },
+    {
+      "name": "GetValue",
+      "parameters": [
+        "const ImmediateOperand* imm"
+      ],
+      "return_type": "int",
+      "logic": "Extracts the integer value from an ImmediateOperand, handling different immediate operand types (INLINE_INT32, INLINE_INT64, INDEXED_RPO, INDEXED_IMM)."
+    }
+  ]
+}

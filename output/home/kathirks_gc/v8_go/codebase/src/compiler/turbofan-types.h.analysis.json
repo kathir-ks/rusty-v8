@@ -1,0 +1,650 @@
+{
+  "file_path": "/home/kathirks_gc/v8_go/codebase/src/compiler/turbofan-types.h",
+  "imports": [
+    "src/base/compiler-specific.h",
+    "src/common/globals.h",
+    "src/compiler/heap-refs.h",
+    "src/handles/handles.h",
+    "src/numbers/conversions.h",
+    "src/objects/objects.h",
+    "src/utils/ostreams.h",
+    "src/wasm/value-type.h"
+  ],
+  "classes": [
+    {
+      "name": "BitsetType",
+      "properties": [],
+      "methods": [
+        {
+          "name": "SignedSmall",
+          "parameters": [],
+          "return_type": "bitset",
+          "logic": "Returns the bitset representing signed small integers."
+        },
+        {
+          "name": "UnsignedSmall",
+          "parameters": [],
+          "return_type": "bitset",
+          "logic": "Returns the bitset representing unsigned small integers."
+        },
+        {
+          "name": "IsNone",
+          "parameters": [
+            "bitset bits"
+          ],
+          "return_type": "bool",
+          "logic": "Checks if the given bitset represents the 'None' type."
+        },
+        {
+          "name": "Is",
+          "parameters": [
+            "bitset bits1",
+            "bitset bits2"
+          ],
+          "return_type": "bool",
+          "logic": "Checks if bitset 'bits1' is a subtype of bitset 'bits2' (i.e., bits1 <= bits2)."
+        },
+        {
+          "name": "Min",
+          "parameters": [
+            "bitset bits"
+          ],
+          "return_type": "double",
+          "logic": "Returns the minimum value represented by the given bitset type."
+        },
+        {
+          "name": "Max",
+          "parameters": [
+            "bitset bits"
+          ],
+          "return_type": "double",
+          "logic": "Returns the maximum value represented by the given bitset type."
+        },
+        {
+          "name": "Glb",
+          "parameters": [
+            "double min",
+            "double max"
+          ],
+          "return_type": "bitset",
+          "logic": "Computes the Greatest Lower Bound (GLB) bitset for a given range [min, max]."
+        },
+        {
+          "name": "Lub",
+          "parameters": [
+            "HeapObjectType const& type",
+            "JSHeapBroker* broker"
+          ],
+          "return_type": "bitset",
+          "logic": "Computes the Least Upper Bound (LUB) bitset for a given HeapObjectType and JSHeapBroker (specialized template)."
+        },
+        {
+          "name": "Lub",
+          "parameters": [
+            "MapRef map",
+            "JSHeapBroker* broker"
+          ],
+          "return_type": "bitset",
+          "logic": "Computes the Least Upper Bound (LUB) bitset for a given MapRef and JSHeapBroker (specialized template)."
+        },
+        {
+          "name": "Lub",
+          "parameters": [
+            "double value"
+          ],
+          "return_type": "bitset",
+          "logic": "Computes the Least Upper Bound (LUB) bitset for a given double value."
+        },
+        {
+          "name": "Lub",
+          "parameters": [
+            "double min",
+            "double max"
+          ],
+          "return_type": "bitset",
+          "logic": "Computes the Least Upper Bound (LUB) bitset for a given range [min, max]."
+        },
+        {
+          "name": "ExpandInternals",
+          "parameters": [
+            "bitset bits"
+          ],
+          "return_type": "bitset",
+          "logic": "Expands internal bitset types to their externally visible representation."
+        },
+        {
+          "name": "Name",
+          "parameters": [
+            "bitset"
+          ],
+          "return_type": "const char*",
+          "logic": "Returns the name of the bitset."
+        },
+        {
+          "name": "Print",
+          "parameters": [
+            "std::ostream& os",
+            "bitset"
+          ],
+          "return_type": "void",
+          "logic": "Prints the bitset to the output stream."
+        },
+        {
+          "name": "Print",
+          "parameters": [
+            "bitset"
+          ],
+          "return_type": "void",
+          "logic": "Prints the bitset (DEBUG only)."
+        },
+        {
+          "name": "NumberBits",
+          "parameters": [
+            "bitset bits"
+          ],
+          "return_type": "bitset",
+          "logic": "Extracts the number-related bits from a bitset."
+        }
+      ]
+    },
+    {
+      "name": "TypeBase",
+      "properties": [],
+      "methods": [
+        {
+          "name": "kind",
+          "parameters": [],
+          "return_type": "Kind",
+          "logic": "Returns the kind of the TypeBase object."
+        },
+        {
+          "name": "IsKind",
+          "parameters": [
+            "Type type",
+            "Kind kind"
+          ],
+          "return_type": "bool",
+          "logic": "Checks if a given Type is of a specific Kind."
+        }
+      ]
+    },
+    {
+      "name": "RangeType",
+      "properties": [],
+      "methods": [
+        {
+          "name": "Min",
+          "parameters": [],
+          "return_type": "double",
+          "logic": "Returns the minimum value of the range."
+        },
+        {
+          "name": "Max",
+          "parameters": [],
+          "return_type": "double",
+          "logic": "Returns the maximum value of the range."
+        },
+        {
+          "name": "IsInteger",
+          "parameters": [
+            "double x"
+          ],
+          "return_type": "bool",
+          "logic": "Checks if a double value is an integer."
+        }
+      ]
+    },
+    {
+      "name": "WasmType",
+      "properties": [],
+      "methods": [
+        {
+          "name": "value_type",
+          "parameters": [],
+          "return_type": "wasm::ValueType",
+          "logic": "Returns the WebAssembly value type."
+        },
+        {
+          "name": "module",
+          "parameters": [],
+          "return_type": "const wasm::WasmModule*",
+          "logic": "Returns the WebAssembly module associated with the type."
+        }
+      ]
+    },
+    {
+      "name": "Type",
+      "properties": [],
+      "methods": [
+        {
+          "name": "SignedSmall",
+          "parameters": [],
+          "return_type": "Type",
+          "logic": "Returns a Type representing signed small integers."
+        },
+        {
+          "name": "UnsignedSmall",
+          "parameters": [],
+          "return_type": "Type",
+          "logic": "Returns a Type representing unsigned small integers."
+        },
+        {
+          "name": "Constant",
+          "parameters": [
+            "JSHeapBroker* broker",
+            "Handle<i::Object> value",
+            "Zone* zone"
+          ],
+          "return_type": "Type",
+          "logic": "Creates a Type representing a constant value (from a handle)."
+        },
+        {
+          "name": "Constant",
+          "parameters": [
+            "JSHeapBroker* broker",
+            "ObjectRef value",
+            "Zone* zone"
+          ],
+          "return_type": "Type",
+          "logic": "Creates a Type representing a constant value (from a ref)."
+        },
+        {
+          "name": "Constant",
+          "parameters": [
+            "double value",
+            "Zone* zone"
+          ],
+          "return_type": "Type",
+          "logic": "Creates a Type representing a constant double value."
+        },
+        {
+          "name": "Range",
+          "parameters": [
+            "double min",
+            "double max",
+            "Zone* zone"
+          ],
+          "return_type": "Type",
+          "logic": "Creates a Type representing a range of numbers."
+        },
+        {
+          "name": "Tuple",
+          "parameters": [
+            "Type first",
+            "Type second",
+            "Type third",
+            "Zone* zone"
+          ],
+          "return_type": "Type",
+          "logic": "Creates a Type representing a tuple (3 elements)."
+        },
+        {
+          "name": "Tuple",
+          "parameters": [
+            "Type first",
+            "Type second",
+            "Zone* zone"
+          ],
+          "return_type": "Type",
+          "logic": "Creates a Type representing a tuple (2 elements)."
+        },
+        {
+          "name": "Union",
+          "parameters": [
+            "Type type1",
+            "Type type2",
+            "Zone* zone"
+          ],
+          "return_type": "Type",
+          "logic": "Creates a Type representing the union of two types."
+        },
+        {
+          "name": "Intersect",
+          "parameters": [
+            "Type type1",
+            "Type type2",
+            "Zone* zone"
+          ],
+          "return_type": "Type",
+          "logic": "Creates a Type representing the intersection of two types."
+        },
+        {
+          "name": "Wasm",
+          "parameters": [
+            "wasm::ValueType value_type",
+            "const wasm::WasmModule* module",
+            "Zone* zone"
+          ],
+          "return_type": "Type",
+          "logic": "Creates a Type representing a WebAssembly value type (with module)."
+        },
+        {
+          "name": "Wasm",
+          "parameters": [
+            "wasm::TypeInModule type_in_module",
+            "Zone* zone"
+          ],
+          "return_type": "Type",
+          "logic": "Creates a Type representing a WebAssembly value type (with TypeInModule)."
+        },
+        {
+          "name": "For",
+          "parameters": [
+            "MapRef type",
+            "JSHeapBroker* broker"
+          ],
+          "return_type": "Type",
+          "logic": "Creates a type based on the given map reference."
+        },
+        {
+          "name": "IsNone",
+          "parameters": [],
+          "return_type": "bool",
+          "logic": "Checks if the type is None."
+        },
+        {
+          "name": "IsInvalid",
+          "parameters": [],
+          "return_type": "bool",
+          "logic": "Checks if the type is Invalid."
+        },
+        {
+          "name": "Is",
+          "parameters": [
+            "Type that"
+          ],
+          "return_type": "bool",
+          "logic": "Checks if this type is a subtype of 'that' type."
+        },
+        {
+          "name": "Maybe",
+          "parameters": [
+            "Type that"
+          ],
+          "return_type": "bool",
+          "logic": "Checks if this type overlaps with 'that' type."
+        },
+        {
+          "name": "Equals",
+          "parameters": [
+            "Type that"
+          ],
+          "return_type": "bool",
+          "logic": "Checks if this type is equal to 'that' type."
+        },
+        {
+          "name": "IsBitset",
+          "parameters": [],
+          "return_type": "bool",
+          "logic": "Checks if the type is a bitset type."
+        },
+        {
+          "name": "IsRange",
+          "parameters": [],
+          "return_type": "bool",
+          "logic": "Checks if the type is a range type."
+        },
+        {
+          "name": "IsHeapConstant",
+          "parameters": [],
+          "return_type": "bool",
+          "logic": "Checks if the type is a heap constant type."
+        },
+        {
+          "name": "IsOtherNumberConstant",
+          "parameters": [],
+          "return_type": "bool",
+          "logic": "Checks if the type is an other number constant type."
+        },
+        {
+          "name": "IsTuple",
+          "parameters": [],
+          "return_type": "bool",
+          "logic": "Checks if the type is a tuple type."
+        },
+        {
+          "name": "IsWasm",
+          "parameters": [],
+          "return_type": "bool",
+          "logic": "Checks if the type is a wasm type."
+        },
+        {
+          "name": "IsSingleton",
+          "parameters": [],
+          "return_type": "bool",
+          "logic": "Checks if the type is a singleton type (Null, Undefined, etc.)."
+        },
+        {
+          "name": "CanBeAsserted",
+          "parameters": [],
+          "return_type": "bool",
+          "logic": "Checks if the type can be asserted (i.e., is NonInternal)."
+        },
+        {
+          "name": "AllocateOnHeap",
+          "parameters": [
+            "Factory* factory"
+          ],
+          "return_type": "Handle<TurbofanType>",
+          "logic": "Allocates the type on the heap."
+        },
+        {
+          "name": "AsHeapConstant",
+          "parameters": [],
+          "return_type": "const HeapConstantType*",
+          "logic": "Casts the type to a HeapConstantType."
+        },
+        {
+          "name": "AsOtherNumberConstant",
+          "parameters": [],
+          "return_type": "const OtherNumberConstantType*",
+          "logic": "Casts the type to an OtherNumberConstantType."
+        },
+        {
+          "name": "AsRange",
+          "parameters": [],
+          "return_type": "const RangeType*",
+          "logic": "Casts the type to a RangeType."
+        },
+        {
+          "name": "AsTuple",
+          "parameters": [],
+          "return_type": "const TupleType*",
+          "logic": "Casts the type to a TupleType."
+        },
+        {
+          "name": "AsWasm",
+          "parameters": [],
+          "return_type": "wasm::TypeInModule",
+          "logic": "Casts the type to a Wasm type."
+        },
+        {
+          "name": "Min",
+          "parameters": [],
+          "return_type": "double",
+          "logic": "Returns the minimum value of the type (if it's a number)."
+        },
+        {
+          "name": "Max",
+          "parameters": [],
+          "return_type": "double",
+          "logic": "Returns the maximum value of the type (if it's a number)."
+        },
+        {
+          "name": "GetRange",
+          "parameters": [],
+          "return_type": "Type",
+          "logic": "Extracts a range from the type (if present)."
+        },
+        {
+          "name": "NumConstants",
+          "parameters": [],
+          "return_type": "int",
+          "logic": "Returns the number of constants in the type."
+        },
+        {
+          "name": "PrintTo",
+          "parameters": [
+            "std::ostream& os"
+          ],
+          "return_type": "void",
+          "logic": "Prints the type to the output stream."
+        },
+        {
+          "name": "Print",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Prints the type (DEBUG only)."
+        },
+        {
+          "name": "IsUnionForTesting",
+          "parameters": [],
+          "return_type": "bool",
+          "logic": "Helper for testing to check if type is a union."
+        },
+        {
+          "name": "AsBitsetForTesting",
+          "parameters": [],
+          "return_type": "bitset",
+          "logic": "Helper for testing to get bitset of type."
+        },
+        {
+          "name": "AsUnionForTesting",
+          "parameters": [],
+          "return_type": "const UnionType*",
+          "logic": "Helper for testing to get union type."
+        },
+        {
+          "name": "BitsetGlbForTesting",
+          "parameters": [],
+          "return_type": "Type",
+          "logic": "Helper for testing to compute GLB."
+        },
+        {
+          "name": "BitsetLubForTesting",
+          "parameters": [],
+          "return_type": "Type",
+          "logic": "Helper for testing to compute LUB."
+        }
+      ]
+    },
+    {
+      "name": "OtherNumberConstantType",
+      "properties": [],
+      "methods": [
+        {
+          "name": "Value",
+          "parameters": [],
+          "return_type": "double",
+          "logic": "Returns the constant value."
+        },
+        {
+          "name": "IsOtherNumberConstant",
+          "parameters": [
+            "double value"
+          ],
+          "return_type": "bool",
+          "logic": "Checks if a double value is an OtherNumberConstant."
+        }
+      ]
+    },
+    {
+      "name": "HeapConstantType",
+      "properties": [],
+      "methods": [
+        {
+          "name": "Value",
+          "parameters": [],
+          "return_type": "Handle<HeapObject>",
+          "logic": "Returns the constant HeapObject value."
+        },
+        {
+          "name": "Ref",
+          "parameters": [],
+          "return_type": "HeapObjectRef",
+          "logic": "Returns the HeapObjectRef of the constant."
+        }
+      ]
+    },
+    {
+      "name": "StructuralType",
+      "properties": [],
+      "methods": [
+        {
+          "name": "LengthForTesting",
+          "parameters": [],
+          "return_type": "int",
+          "logic": "Expose the length to testing."
+        },
+        {
+          "name": "Length",
+          "parameters": [],
+          "return_type": "int",
+          "logic": "Returns the length of the structure."
+        },
+        {
+          "name": "Get",
+          "parameters": [
+            "int i"
+          ],
+          "return_type": "Type",
+          "logic": "Returns the type at the specified index."
+        },
+        {
+          "name": "Set",
+          "parameters": [
+            "int i",
+            "Type type"
+          ],
+          "return_type": "void",
+          "logic": "Sets the type at the specified index."
+        },
+        {
+          "name": "Shrink",
+          "parameters": [
+            "int length"
+          ],
+          "return_type": "void",
+          "logic": "Shrinks the length of the type."
+        }
+      ]
+    },
+    {
+      "name": "TupleType",
+      "properties": [],
+      "methods": [
+        {
+          "name": "Arity",
+          "parameters": [],
+          "return_type": "int",
+          "logic": "Returns the arity of the tuple (number of elements)."
+        },
+        {
+          "name": "Element",
+          "parameters": [
+            "int i"
+          ],
+          "return_type": "Type",
+          "logic": "Returns the element at the specified index."
+        },
+        {
+          "name": "InitElement",
+          "parameters": [
+            "int i",
+            "Type type"
+          ],
+          "return_type": "void",
+          "logic": "Initializes element at the specified index."
+        }
+      ]
+    },
+    {
+      "name": "UnionType",
+      "properties": [],
+      "methods": [],
+      "logic": "Represents union types."
+    }
+  ],
+  "functions": [],
+  "enums": []
+}

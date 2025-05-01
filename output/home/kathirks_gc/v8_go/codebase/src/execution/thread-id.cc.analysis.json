@@ -1,0 +1,45 @@
+{
+  "file_path": "/home/kathirks_gc/v8_go/codebase/src/execution/thread-id.cc",
+  "imports": [
+    "src/execution/thread-id.h",
+    "src/base/lazy-instance.h",
+    "src/base/platform/platform.h"
+  ],
+  "classes": [
+    {
+      "name": "ThreadId",
+      "properties": [],
+      "methods": [
+        {
+          "name": "TryGetCurrent",
+          "parameters": [],
+          "return_type": "ThreadId",
+          "logic": "Tries to get the current thread ID. If the thread ID is 0 (meaning it hasn't been initialized), it returns an invalid ThreadId. Otherwise, it returns a ThreadId object containing the current thread ID."
+        },
+        {
+          "name": "GetCurrentThreadId",
+          "parameters": [],
+          "return_type": "int",
+          "logic": "Gets the current thread ID. If the thread ID is 0 (meaning it hasn't been initialized), it atomically fetches the next available thread ID, assigns it to the thread-local variable, and returns the new ID.  If the thread ID is already initialized, it simply returns the existing ID. It also checks that the thread id is greater than or equal to 1."
+        }
+      ]
+    }
+  ],
+  "functions": [],
+  "global_variables": [
+    {
+      "name": "thread_id",
+      "type": "thread_local int",
+      "namespace": "anonymous",
+      "initial_value": "0",
+      "description": "A thread-local variable that stores the ID of the current thread."
+    },
+    {
+      "name": "next_thread_id",
+      "type": "std::atomic<int>",
+      "namespace": "anonymous",
+      "initial_value": "1",
+      "description": "An atomic integer that stores the next available thread ID, ensuring thread-safe incrementing."
+    }
+  ]
+}

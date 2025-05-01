@@ -1,0 +1,48 @@
+{
+  "file_path": "/home/kathirks_gc/v8_go/codebase/include/cppgc/prefinalizer.h",
+  "imports": [
+    "cppgc/internal/compiler-specific.h",
+    "cppgc/liveness-broker.h"
+  ],
+  "classes": [
+    {
+      "name": "cppgc::internal::PrefinalizerRegistration",
+      "properties": [],
+      "methods": [
+        {
+          "name": "PrefinalizerRegistration",
+          "parameters": [
+            "void*",
+            "Callback"
+          ],
+          "return_type": "N/A (Constructor)",
+          "logic": "Constructor for PrefinalizerRegistration. It likely registers a prefinalization callback with the garbage collector. The callback is a function pointer that takes a LivenessBroker and a void* as arguments and returns a bool."
+        },
+        {
+          "name": "operator new",
+          "parameters": [
+            "size_t",
+            "void*"
+          ],
+          "return_type": "void*",
+          "logic": "Deleted operator new to prevent placement new usage.  This likely indicates that instances of this class are not intended to be created using placement new."
+        },
+        {
+          "name": "operator new",
+          "parameters": [
+            "size_t"
+          ],
+          "return_type": "void*",
+          "logic": "Deleted operator new to prevent dynamic allocation. This enforces that instances of this class cannot be allocated using the standard `new` operator."
+        }
+      ]
+    }
+  ],
+  "functions": [],
+  "macros": [
+    {
+      "name": "CPPGC_USING_PRE_FINALIZER",
+      "logic": "This macro defines a prefinalizer for a garbage-collected class. It creates a static method `InvokePreFinalizer` which checks if the object is still alive and, if not, calls the class's `PreFinalizer` method. It also creates a member `prefinalizer_dummy_` of type `PrefinalizerRegistration` which registers the `InvokePreFinalizer` with the garbage collector. This ensures that the prefinalizer is called when the garbage collector determines the object is dead, but before its destructor."
+    }
+  ]
+}

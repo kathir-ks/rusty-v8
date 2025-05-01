@@ -1,0 +1,355 @@
+{
+  "file_path": "/home/kathirks_gc/v8_go/codebase/include/cppgc/internal/persistent-node.h",
+  "imports": [
+    "<array>",
+    "<memory>",
+    "<vector>",
+    "cppgc/internal/logging.h",
+    "cppgc/trace-trait.h",
+    "v8config.h"
+  ],
+  "classes": [
+    {
+      "name": "PersistentNode",
+      "properties": [
+        "owner_",
+        "next_",
+        "trace_"
+      ],
+      "methods": [
+        {
+          "name": "PersistentNode",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Default constructor"
+        },
+        {
+          "name": "PersistentNode",
+          "parameters": [
+            "const PersistentNode&"
+          ],
+          "return_type": "deleted",
+          "logic": "Deleted copy constructor"
+        },
+        {
+          "name": "operator=",
+          "parameters": [
+            "const PersistentNode&"
+          ],
+          "return_type": "PersistentNode&",
+          "logic": "Deleted copy assignment operator"
+        },
+        {
+          "name": "InitializeAsUsedNode",
+          "parameters": [
+            "void* owner",
+            "TraceRootCallback trace"
+          ],
+          "return_type": "void",
+          "logic": "Initializes the node as a used node, storing the owner and trace callback."
+        },
+        {
+          "name": "InitializeAsFreeNode",
+          "parameters": [
+            "PersistentNode* next"
+          ],
+          "return_type": "void",
+          "logic": "Initializes the node as a free node, storing the next free node."
+        },
+        {
+          "name": "UpdateOwner",
+          "parameters": [
+            "void* owner"
+          ],
+          "return_type": "void",
+          "logic": "Updates the owner of a used node."
+        },
+        {
+          "name": "FreeListNext",
+          "parameters": [],
+          "return_type": "PersistentNode*",
+          "logic": "Returns the next free node in the freelist."
+        },
+        {
+          "name": "Trace",
+          "parameters": [
+            "RootVisitor& root_visitor"
+          ],
+          "return_type": "void",
+          "logic": "Traces the object by calling the trace callback."
+        },
+        {
+          "name": "IsUsed",
+          "parameters": [],
+          "return_type": "bool",
+          "logic": "Checks if the node is currently in use (not free)."
+        },
+        {
+          "name": "owner",
+          "parameters": [],
+          "return_type": "void*",
+          "logic": "Returns the owner of the node."
+        }
+      ]
+    },
+    {
+      "name": "PersistentRegionBase",
+      "properties": [
+        "nodes_",
+        "free_list_head_",
+        "nodes_in_use_",
+        "oom_handler_"
+      ],
+      "methods": [
+        {
+          "name": "~PersistentRegionBase",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Destructor that clears Persistent fields."
+        },
+        {
+          "name": "PersistentRegionBase",
+          "parameters": [
+            "const PersistentRegionBase&"
+          ],
+          "return_type": "deleted",
+          "logic": "Deleted copy constructor"
+        },
+        {
+          "name": "operator=",
+          "parameters": [
+            "const PersistentRegionBase&"
+          ],
+          "return_type": "PersistentRegionBase&",
+          "logic": "Deleted copy assignment operator"
+        },
+        {
+          "name": "Iterate",
+          "parameters": [
+            "RootVisitor&"
+          ],
+          "return_type": "void",
+          "logic": "Iterates over all the Persistent nodes in the region."
+        },
+        {
+          "name": "NodesInUse",
+          "parameters": [],
+          "return_type": "size_t",
+          "logic": "Returns the number of nodes currently in use."
+        },
+        {
+          "name": "ClearAllUsedNodes",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Clears all used nodes in the region."
+        },
+        {
+          "name": "PersistentRegionBase",
+          "parameters": [
+            "const FatalOutOfMemoryHandler& oom_handler"
+          ],
+          "return_type": "void",
+          "logic": "Constructor"
+        },
+        {
+          "name": "TryAllocateNodeFromFreeList",
+          "parameters": [
+            "void* owner",
+            "TraceRootCallback trace"
+          ],
+          "return_type": "PersistentNode*",
+          "logic": "Tries to allocate a node from the free list. Returns nullptr if the free list is empty."
+        },
+        {
+          "name": "FreeNode",
+          "parameters": [
+            "PersistentNode* node"
+          ],
+          "return_type": "void",
+          "logic": "Frees a node by adding it to the free list."
+        },
+        {
+          "name": "RefillFreeListAndAllocateNode",
+          "parameters": [
+            "void* owner",
+            "TraceRootCallback trace"
+          ],
+          "return_type": "PersistentNode*",
+          "logic": "Refills the freelist (allocates a new PersistentNodeSlots) and then allocates a PersistentNode from the freelist. This is the slow path"
+        },
+        {
+          "name": "ClearAllUsedNodes",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Clears all used nodes."
+        },
+        {
+          "name": "RefillFreeList",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Refills the free list with new PersistentNodeSlots."
+        }
+      ]
+    },
+    {
+      "name": "PersistentRegion",
+      "properties": [
+        "heap_"
+      ],
+      "methods": [
+        {
+          "name": "PersistentRegion",
+          "parameters": [
+            "const HeapBase& heap",
+            "const FatalOutOfMemoryHandler& oom_handler"
+          ],
+          "return_type": "void",
+          "logic": "Constructor that takes a HeapBase reference and a FatalOutOfMemoryHandler reference."
+        },
+        {
+          "name": "~PersistentRegion",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Destructor"
+        },
+        {
+          "name": "PersistentRegion",
+          "parameters": [
+            "const PersistentRegion&"
+          ],
+          "return_type": "deleted",
+          "logic": "Deleted copy constructor"
+        },
+        {
+          "name": "operator=",
+          "parameters": [
+            "const PersistentRegion&"
+          ],
+          "return_type": "PersistentRegion&",
+          "logic": "Deleted copy assignment operator"
+        },
+        {
+          "name": "AllocateNode",
+          "parameters": [
+            "void* owner",
+            "TraceRootCallback trace"
+          ],
+          "return_type": "PersistentNode*",
+          "logic": "Allocates a node from the region. First tries the free list, then refills it if necessary."
+        },
+        {
+          "name": "FreeNode",
+          "parameters": [
+            "PersistentNode* node"
+          ],
+          "return_type": "void",
+          "logic": "Frees a node in the region."
+        },
+        {
+          "name": "IsCreationThread",
+          "parameters": [],
+          "return_type": "bool",
+          "logic": "Check if is creation thread"
+        }
+      ]
+    },
+    {
+      "name": "PersistentRegionLock",
+      "properties": [],
+      "methods": [
+        {
+          "name": "PersistentRegionLock",
+          "parameters": [],
+          "return_type": null,
+          "logic": "Constructor"
+        },
+        {
+          "name": "~PersistentRegionLock",
+          "parameters": [],
+          "return_type": null,
+          "logic": "Destructor"
+        },
+        {
+          "name": "AssertLocked",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Asserts that the lock is currently held."
+        }
+      ]
+    },
+    {
+      "name": "CrossThreadPersistentRegion",
+      "properties": [],
+      "methods": [
+        {
+          "name": "CrossThreadPersistentRegion",
+          "parameters": [
+            "const FatalOutOfMemoryHandler&"
+          ],
+          "return_type": null,
+          "logic": "Constructor"
+        },
+        {
+          "name": "~CrossThreadPersistentRegion",
+          "parameters": [],
+          "return_type": null,
+          "logic": "Destructor"
+        },
+        {
+          "name": "CrossThreadPersistentRegion",
+          "parameters": [
+            "const CrossThreadPersistentRegion&"
+          ],
+          "return_type": "deleted",
+          "logic": "Deleted copy constructor"
+        },
+        {
+          "name": "operator=",
+          "parameters": [
+            "const CrossThreadPersistentRegion&"
+          ],
+          "return_type": "CrossThreadPersistentRegion&",
+          "logic": "Deleted copy assignment operator"
+        },
+        {
+          "name": "AllocateNode",
+          "parameters": [
+            "void* owner",
+            "TraceRootCallback trace"
+          ],
+          "return_type": "PersistentNode*",
+          "logic": "Allocates a node from the cross-thread region. Asserts that the lock is held."
+        },
+        {
+          "name": "FreeNode",
+          "parameters": [
+            "PersistentNode* node"
+          ],
+          "return_type": "void",
+          "logic": "Frees a node in the cross-thread region. Asserts that the lock is held."
+        },
+        {
+          "name": "Iterate",
+          "parameters": [
+            "RootVisitor&"
+          ],
+          "return_type": "void",
+          "logic": "Iterates over the nodes in the CrossThreadPersistentRegion."
+        },
+        {
+          "name": "NodesInUse",
+          "parameters": [],
+          "return_type": "size_t",
+          "logic": "Gets the number of nodes in use in the CrossThreadPersistentRegion."
+        },
+        {
+          "name": "ClearAllUsedNodes",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Clears all used nodes in the CrossThreadPersistentRegion."
+        }
+      ]
+    }
+  ],
+  "functions": []
+}

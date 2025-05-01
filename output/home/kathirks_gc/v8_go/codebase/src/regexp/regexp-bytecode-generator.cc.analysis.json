@@ -1,0 +1,438 @@
+{
+  "file_path": "/home/kathirks_gc/v8_go/codebase/src/regexp/regexp-bytecode-generator.cc",
+  "imports": [
+    "src/regexp/regexp-bytecode-generator.h",
+    "src/ast/ast.h",
+    "src/objects/fixed-array-inl.h",
+    "src/regexp/regexp-bytecode-generator-inl.h",
+    "src/regexp/regexp-bytecode-peephole.h",
+    "src/regexp/regexp-bytecodes.h",
+    "src/regexp/regexp-macro-assembler.h"
+  ],
+  "classes": [
+    {
+      "name": "RegExpBytecodeGenerator",
+      "properties": [
+        "buffer_",
+        "pc_",
+        "advance_current_end_",
+        "jump_edges_",
+        "isolate_",
+        "backtrack_",
+        "advance_current_start_",
+        "advance_current_offset_"
+      ],
+      "methods": [
+        {
+          "name": "RegExpBytecodeGenerator",
+          "parameters": [
+            "Isolate* isolate",
+            "Zone* zone"
+          ],
+          "return_type": "",
+          "logic": "Constructor. Initializes the bytecode generator with an isolate and zone, setting up internal state such as the buffer, program counter, jump edges, and backtrack label."
+        },
+        {
+          "name": "~RegExpBytecodeGenerator",
+          "parameters": [],
+          "return_type": "",
+          "logic": "Destructor. Unuses the backtrack label if it's linked."
+        },
+        {
+          "name": "Implementation",
+          "parameters": [],
+          "return_type": "IrregexpImplementation",
+          "logic": "Returns the implementation type, which is bytecode in this case."
+        },
+        {
+          "name": "Bind",
+          "parameters": [
+            "Label* l"
+          ],
+          "return_type": "void",
+          "logic": "Binds a label to the current program counter (pc).  If the label was linked before, it resolves the forward jumps associated with that label by patching the bytecode buffer with the current pc and storing edge information. Resets `advance_current_end_`."
+        },
+        {
+          "name": "EmitOrLink",
+          "parameters": [
+            "Label* l"
+          ],
+          "return_type": "void",
+          "logic": "Emits a 32-bit value representing either a bound label's position or links a label if it's not yet bound. Used for forward jumps. If l is null, it defaults to the backtrack label."
+        },
+        {
+          "name": "PopRegister",
+          "parameters": [
+            "int register_index"
+          ],
+          "return_type": "void",
+          "logic": "Emits a bytecode instruction to pop a value from the stack into the specified register."
+        },
+        {
+          "name": "PushRegister",
+          "parameters": [
+            "int register_index",
+            "StackCheckFlag check_stack_limit"
+          ],
+          "return_type": "void",
+          "logic": "Emits a bytecode instruction to push the value of the specified register onto the stack."
+        },
+        {
+          "name": "WriteCurrentPositionToRegister",
+          "parameters": [
+            "int register_index",
+            "int cp_offset"
+          ],
+          "return_type": "void",
+          "logic": "Emits a bytecode instruction to write the current position plus an offset to a register."
+        },
+        {
+          "name": "ClearRegisters",
+          "parameters": [
+            "int reg_from",
+            "int reg_to"
+          ],
+          "return_type": "void",
+          "logic": "Sets the values of a range of registers to -1."
+        },
+        {
+          "name": "ReadCurrentPositionFromRegister",
+          "parameters": [
+            "int register_index"
+          ],
+          "return_type": "void",
+          "logic": "Emits a bytecode instruction to read the current position from the specified register."
+        },
+        {
+          "name": "WriteStackPointerToRegister",
+          "parameters": [
+            "int register_index"
+          ],
+          "return_type": "void",
+          "logic": "Emits a bytecode instruction to write the current stack pointer to the specified register."
+        },
+        {
+          "name": "ReadStackPointerFromRegister",
+          "parameters": [
+            "int register_index"
+          ],
+          "return_type": "void",
+          "logic": "Emits a bytecode instruction to read the stack pointer from the specified register."
+        },
+        {
+          "name": "SetCurrentPositionFromEnd",
+          "parameters": [
+            "int by"
+          ],
+          "return_type": "void",
+          "logic": "Emits a bytecode instruction to set the current position from the end of the input string by a given offset."
+        },
+        {
+          "name": "SetRegister",
+          "parameters": [
+            "int register_index",
+            "int to"
+          ],
+          "return_type": "void",
+          "logic": "Emits a bytecode instruction to set a register to a specific value."
+        },
+        {
+          "name": "AdvanceRegister",
+          "parameters": [
+            "int register_index",
+            "int by"
+          ],
+          "return_type": "void",
+          "logic": "Emits a bytecode instruction to advance a register by a given offset."
+        },
+        {
+          "name": "PopCurrentPosition",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Emits a bytecode instruction to pop the current position from the stack."
+        },
+        {
+          "name": "PushCurrentPosition",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Emits a bytecode instruction to push the current position onto the stack."
+        },
+        {
+          "name": "Backtrack",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Emits a bytecode instruction to backtrack, which either fails the matching or falls back to the experimental regexp engine."
+        },
+        {
+          "name": "GoTo",
+          "parameters": [
+            "Label* l"
+          ],
+          "return_type": "void",
+          "logic": "Emits a bytecode instruction to unconditionally jump to a label. Combines with advance current position if possible for peephole optimization."
+        },
+        {
+          "name": "PushBacktrack",
+          "parameters": [
+            "Label* l"
+          ],
+          "return_type": "void",
+          "logic": "Emits a bytecode instruction to push a backtrack point onto the stack and jump to a label if the current path fails."
+        },
+        {
+          "name": "Succeed",
+          "parameters": [],
+          "return_type": "bool",
+          "logic": "Emits a bytecode instruction to indicate successful matching. Returns false, as global regexp is not supported."
+        },
+        {
+          "name": "Fail",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Emits a bytecode instruction to indicate matching failure."
+        },
+        {
+          "name": "AdvanceCurrentPosition",
+          "parameters": [
+            "int by"
+          ],
+          "return_type": "void",
+          "logic": "Emits a bytecode instruction to advance the current position by a given offset."
+        },
+        {
+          "name": "CheckGreedyLoop",
+          "parameters": [
+            "Label* on_tos_equals_current_position"
+          ],
+          "return_type": "void",
+          "logic": "Emits a bytecode instruction to check for greedy loop behavior and jumps to a label if the top of stack is equal to the current position."
+        },
+        {
+          "name": "LoadCurrentCharacterImpl",
+          "parameters": [
+            "int cp_offset",
+            "Label* on_failure",
+            "bool check_bounds",
+            "int characters",
+            "int eats_at_least"
+          ],
+          "return_type": "void",
+          "logic": "Emits a bytecode instruction to load characters from the input string at the current position plus an offset. It can optionally check bounds before loading."
+        },
+        {
+          "name": "CheckCharacterLT",
+          "parameters": [
+            "base::uc16 limit",
+            "Label* on_less"
+          ],
+          "return_type": "void",
+          "logic": "Emits a bytecode instruction to check if the current character is less than a limit and jumps to a label if it is."
+        },
+        {
+          "name": "CheckCharacterGT",
+          "parameters": [
+            "base::uc16 limit",
+            "Label* on_greater"
+          ],
+          "return_type": "void",
+          "logic": "Emits a bytecode instruction to check if the current character is greater than a limit and jumps to a label if it is."
+        },
+        {
+          "name": "CheckCharacter",
+          "parameters": [
+            "uint32_t c",
+            "Label* on_equal"
+          ],
+          "return_type": "void",
+          "logic": "Emits a bytecode instruction to check if the current character is equal to a given character and jumps to a label if it is."
+        },
+        {
+          "name": "CheckAtStart",
+          "parameters": [
+            "int cp_offset",
+            "Label* on_at_start"
+          ],
+          "return_type": "void",
+          "logic": "Emits a bytecode instruction to check if the current position is at the start of the input and jumps to a label if it is."
+        },
+        {
+          "name": "CheckNotAtStart",
+          "parameters": [
+            "int cp_offset",
+            "Label* on_not_at_start"
+          ],
+          "return_type": "void",
+          "logic": "Emits a bytecode instruction to check if the current position is not at the start of the input and jumps to a label if it is not."
+        },
+        {
+          "name": "CheckNotCharacter",
+          "parameters": [
+            "uint32_t c",
+            "Label* on_not_equal"
+          ],
+          "return_type": "void",
+          "logic": "Emits a bytecode instruction to check if the current character is not equal to a given character and jumps to a label if it is not."
+        },
+        {
+          "name": "CheckCharacterAfterAnd",
+          "parameters": [
+            "uint32_t c",
+            "uint32_t mask",
+            "Label* on_equal"
+          ],
+          "return_type": "void",
+          "logic": "Emits a bytecode instruction to check if the current character, after applying a bitwise AND with a mask, is equal to a given character and jumps to a label if it is."
+        },
+        {
+          "name": "CheckNotCharacterAfterAnd",
+          "parameters": [
+            "uint32_t c",
+            "uint32_t mask",
+            "Label* on_not_equal"
+          ],
+          "return_type": "void",
+          "logic": "Emits a bytecode instruction to check if the current character, after applying a bitwise AND with a mask, is not equal to a given character and jumps to a label if it is not."
+        },
+        {
+          "name": "CheckNotCharacterAfterMinusAnd",
+          "parameters": [
+            "base::uc16 c",
+            "base::uc16 minus",
+            "base::uc16 mask",
+            "Label* on_not_equal"
+          ],
+          "return_type": "void",
+          "logic": "Emits a bytecode instruction to check if the current character, after subtracting `minus` and applying a bitwise AND with a mask, is not equal to `c`. It jumps to `on_not_equal` if the condition is met."
+        },
+        {
+          "name": "CheckCharacterInRange",
+          "parameters": [
+            "base::uc16 from",
+            "base::uc16 to",
+            "Label* on_in_range"
+          ],
+          "return_type": "void",
+          "logic": "Emits a bytecode instruction to check if the current character is within a given range (inclusive) and jumps to a label if it is."
+        },
+        {
+          "name": "CheckCharacterNotInRange",
+          "parameters": [
+            "base::uc16 from",
+            "base::uc16 to",
+            "Label* on_not_in_range"
+          ],
+          "return_type": "void",
+          "logic": "Emits a bytecode instruction to check if the current character is not within a given range and jumps to a label if it is not."
+        },
+        {
+          "name": "EmitSkipTable",
+          "parameters": [
+            "DirectHandle<ByteArray> table"
+          ],
+          "return_type": "void",
+          "logic": "Emits a skip table as a sequence of bytes based on the provided bit-packed ByteArray."
+        },
+        {
+          "name": "CheckBitInTable",
+          "parameters": [
+            "Handle<ByteArray> table",
+            "Label* on_bit_set"
+          ],
+          "return_type": "void",
+          "logic": "Emits a bytecode instruction to check if a bit is set in a given table and jumps to a label if it is. Includes the table."
+        },
+        {
+          "name": "SkipUntilBitInTable",
+          "parameters": [
+            "int cp_offset",
+            "Handle<ByteArray> table",
+            "Handle<ByteArray> nibble_table",
+            "int advance_by"
+          ],
+          "return_type": "void",
+          "logic": "Emits bytecode to skip characters until a bit is set in the given table. This function is used for character class matching with a skip table optimization."
+        },
+        {
+          "name": "CheckNotBackReference",
+          "parameters": [
+            "int start_reg",
+            "bool read_backward",
+            "Label* on_not_equal"
+          ],
+          "return_type": "void",
+          "logic": "Emits a bytecode instruction to check if the current substring does not match a previous capture (backreference) and jumps to a label if it is not."
+        },
+        {
+          "name": "CheckNotBackReferenceIgnoreCase",
+          "parameters": [
+            "int start_reg",
+            "bool read_backward",
+            "bool unicode",
+            "Label* on_not_equal"
+          ],
+          "return_type": "void",
+          "logic": "Emits a bytecode instruction to check if the current substring does not match a previous capture (backreference), ignoring case, and jumps to a label if it is not."
+        },
+        {
+          "name": "IfRegisterLT",
+          "parameters": [
+            "int register_index",
+            "int comparand",
+            "Label* on_less_than"
+          ],
+          "return_type": "void",
+          "logic": "Emits a bytecode instruction to check if a register value is less than a comparand and jumps to a label if it is."
+        },
+        {
+          "name": "IfRegisterGE",
+          "parameters": [
+            "int register_index",
+            "int comparand",
+            "Label* on_greater_or_equal"
+          ],
+          "return_type": "void",
+          "logic": "Emits a bytecode instruction to check if a register value is greater than or equal to a comparand and jumps to a label if it is."
+        },
+        {
+          "name": "IfRegisterEqPos",
+          "parameters": [
+            "int register_index",
+            "Label* on_eq"
+          ],
+          "return_type": "void",
+          "logic": "Emits a bytecode instruction to check if a register's value is equal to the current position and jumps to a label if it is."
+        },
+        {
+          "name": "GetCode",
+          "parameters": [
+            "DirectHandle<String> source",
+            "RegExpFlags flags"
+          ],
+          "return_type": "DirectHandle<HeapObject>",
+          "logic": "Finalizes the bytecode generation, potentially applies peephole optimizations, creates a ByteArray from the buffer, and returns a DirectHandle to the HeapObject representing the generated code."
+        },
+        {
+          "name": "length",
+          "parameters": [],
+          "return_type": "int",
+          "logic": "Returns the current length of the generated bytecode (pc)."
+        },
+        {
+          "name": "Copy",
+          "parameters": [
+            "uint8_t* a"
+          ],
+          "return_type": "void",
+          "logic": "Copies the contents of the internal buffer to a given memory location."
+        },
+        {
+          "name": "ExpandBuffer",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Expands the internal bytecode buffer to accommodate more instructions."
+        }
+      ]
+    }
+  ],
+  "functions": []
+}

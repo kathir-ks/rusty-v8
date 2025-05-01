@@ -1,0 +1,951 @@
+{
+  "file_path": "/home/kathirks_gc/v8_go/codebase/src/compiler/js-call-reducer.cc",
+  "imports": [
+    "src/compiler/js-call-reducer.h",
+    "functional",
+    "optional",
+    "src/base/container-utils.h",
+    "src/base/small-vector.h",
+    "src/builtins/builtins-promise.h",
+    "src/builtins/builtins-utils.h",
+    "src/codegen/code-factory.h",
+    "src/codegen/tnode.h",
+    "src/compiler/access-builder.h",
+    "src/compiler/access-info.h",
+    "src/compiler/allocation-builder-inl.h",
+    "src/compiler/allocation-builder.h",
+    "src/compiler/common-operator.h",
+    "src/compiler/compilation-dependencies.h",
+    "src/compiler/fast-api-calls.h",
+    "src/compiler/feedback-source.h",
+    "src/compiler/graph-assembler.h",
+    "src/compiler/heap-refs.h",
+    "src/compiler/js-graph.h",
+    "src/compiler/js-operator.h",
+    "src/compiler/linkage.h",
+    "src/compiler/map-inference.h",
+    "src/compiler/node-matchers.h",
+    "src/compiler/opcodes.h",
+    "src/compiler/simplified-operator.h",
+    "src/compiler/state-values-utils.h",
+    "src/compiler/type-cache.h",
+    "src/compiler/use-info.h",
+    "src/flags/flags.h",
+    "src/ic/call-optimization.h",
+    "src/objects/elements-kind.h",
+    "src/objects/instance-type.h",
+    "src/objects/js-function.h",
+    "src/objects/objects-inl.h",
+    "src/objects/ordered-hash-table.h",
+    "src/utils/utils.h",
+    "src/objects/intl-objects.h"
+  ],
+  "classes": [
+    {
+      "name": "JSCallReducerAssembler",
+      "properties": [
+        "dependencies_",
+        "node_"
+      ],
+      "methods": [
+        {
+          "name": "JSCallReducerAssembler",
+          "parameters": [
+            "reducer",
+            "node",
+            "effect",
+            "control"
+          ],
+          "return_type": "JSCallReducerAssembler",
+          "logic": "Constructor for the JSCallReducerAssembler class, initializes the JSGraphAssembler and relevant fields."
+        },
+        {
+          "name": "ReduceJSCallWithArrayLikeOrSpreadOfEmpty",
+          "parameters": [
+            "generated_calls_with_array_like_or_spread"
+          ],
+          "return_type": "TNode<Object>",
+          "logic": "Reduces JS calls involving array-like objects or spreads of empty arrays."
+        },
+        {
+          "name": "ReduceMathUnary",
+          "parameters": [
+            "op"
+          ],
+          "return_type": "TNode<Object>",
+          "logic": "Reduces calls to unary Math functions."
+        },
+        {
+          "name": "ReduceMathBinary",
+          "parameters": [
+            "op"
+          ],
+          "return_type": "TNode<Object>",
+          "logic": "Reduces calls to binary Math functions."
+        },
+        {
+          "name": "ReduceStringPrototypeSubstring",
+          "parameters": [],
+          "return_type": "TNode<String>",
+          "logic": "Reduces calls to String.prototype.substring."
+        },
+        {
+          "name": "ReduceStringPrototypeStartsWith",
+          "parameters": [],
+          "return_type": "TNode<Boolean>",
+          "logic": "Reduces calls to String.prototype.startsWith."
+        },
+        {
+          "name": "ReduceStringPrototypeStartsWith",
+          "parameters": [
+            "search_element_string"
+          ],
+          "return_type": "TNode<Boolean>",
+          "logic": "Reduces calls to String.prototype.startsWith with a known search string."
+        },
+        {
+          "name": "ReduceStringPrototypeEndsWith",
+          "parameters": [],
+          "return_type": "TNode<Boolean>",
+          "logic": "Reduces calls to String.prototype.endsWith."
+        },
+        {
+          "name": "ReduceStringPrototypeEndsWith",
+          "parameters": [
+            "search_element_string"
+          ],
+          "return_type": "TNode<Boolean>",
+          "logic": "Reduces calls to String.prototype.endsWith with a known search string."
+        },
+        {
+          "name": "ReduceStringPrototypeCharAt",
+          "parameters": [],
+          "return_type": "TNode<String>",
+          "logic": "Reduces calls to String.prototype.charAt."
+        },
+        {
+          "name": "ReduceStringPrototypeCharAt",
+          "parameters": [
+            "s",
+            "index"
+          ],
+          "return_type": "TNode<String>",
+          "logic": "Reduces calls to String.prototype.charAt with a known string and index."
+        },
+        {
+          "name": "ReduceStringPrototypeSlice",
+          "parameters": [],
+          "return_type": "TNode<String>",
+          "logic": "Reduces calls to String.prototype.slice."
+        },
+        {
+          "name": "ReduceJSCallMathMinMaxWithArrayLike",
+          "parameters": [
+            "builtin"
+          ],
+          "return_type": "TNode<Object>",
+          "logic": "Reduces calls to Math.min/max with array-like arguments."
+        },
+        {
+          "name": "TargetInput",
+          "parameters": [],
+          "return_type": "TNode<Object>",
+          "logic": "Returns the target input node of the JS call."
+        },
+        {
+          "name": "ReceiverInputAs",
+          "parameters": [],
+          "return_type": "TNode<T>",
+          "logic": "Returns the receiver input node of the JS call, cast to a specific type."
+        },
+        {
+          "name": "ReceiverInput",
+          "parameters": [],
+          "return_type": "TNode<Object>",
+          "logic": "Returns the receiver input node of the JS call."
+        },
+        {
+          "name": "node_ptr",
+          "parameters": [],
+          "return_type": "Node*",
+          "logic": "Returns the underlying Node pointer."
+        },
+        {
+          "name": "SpeculativeToNumber",
+          "parameters": [
+            "value",
+            "hint"
+          ],
+          "return_type": "TNode<Number>",
+          "logic": "Performs speculative conversion to a number."
+        },
+        {
+          "name": "CheckSmi",
+          "parameters": [
+            "value"
+          ],
+          "return_type": "TNode<Smi>",
+          "logic": "Checks if a value is a smi."
+        },
+        {
+          "name": "CheckNumber",
+          "parameters": [
+            "value"
+          ],
+          "return_type": "TNode<Number>",
+          "logic": "Checks if a value is a number."
+        },
+        {
+          "name": "CheckString",
+          "parameters": [
+            "value"
+          ],
+          "return_type": "TNode<String>",
+          "logic": "Checks if a value is a string."
+        },
+        {
+          "name": "CheckBounds",
+          "parameters": [
+            "value",
+            "limit",
+            "flags"
+          ],
+          "return_type": "TNode<Number>",
+          "logic": "Checks if a number is within bounds."
+        },
+        {
+          "name": "TypeGuardUnsignedSmall",
+          "parameters": [
+            "value"
+          ],
+          "return_type": "TNode<Smi>",
+          "logic": "Applies a type guard to ensure a value is an unsigned small integer."
+        },
+        {
+          "name": "TypeGuardNonInternal",
+          "parameters": [
+            "value"
+          ],
+          "return_type": "TNode<Object>",
+          "logic": "Applies a type guard to ensure a value is non-internal."
+        },
+        {
+          "name": "TypeGuardFixedArrayLength",
+          "parameters": [
+            "value"
+          ],
+          "return_type": "TNode<Number>",
+          "logic": "Applies a type guard to ensure a value is the length of a FixedArray."
+        },
+        {
+          "name": "Call4",
+          "parameters": [
+            "callable",
+            "context",
+            "arg0",
+            "arg1",
+            "arg2",
+            "arg3"
+          ],
+          "return_type": "TNode<Object>",
+          "logic": "Calls a callable object with four arguments."
+        },
+        {
+          "name": "JSCall3",
+          "parameters": [
+            "function",
+            "this_arg",
+            "arg0",
+            "arg1",
+            "arg2",
+            "frame_state"
+          ],
+          "return_type": "TNode<Object>",
+          "logic": "Performs a JS call with three arguments."
+        },
+        {
+          "name": "JSCall4",
+          "parameters": [
+            "function",
+            "this_arg",
+            "arg0",
+            "arg1",
+            "arg2",
+            "arg3",
+            "frame_state"
+          ],
+          "return_type": "TNode<Object>",
+          "logic": "Performs a JS call with four arguments."
+        },
+        {
+          "name": "CopyNode",
+          "parameters": [],
+          "return_type": "TNode<Object>",
+          "logic": "Copies the current node."
+        },
+        {
+          "name": "CreateArrayNoThrow",
+          "parameters": [
+            "ctor",
+            "size",
+            "frame_state"
+          ],
+          "return_type": "TNode<JSArray>",
+          "logic": "Creates an array without throwing an exception."
+        },
+        {
+          "name": "AllocateEmptyJSArray",
+          "parameters": [
+            "kind",
+            "native_context"
+          ],
+          "return_type": "TNode<JSArray>",
+          "logic": "Allocates an empty JS array of a specific kind."
+        },
+        {
+          "name": "NumberInc",
+          "parameters": [
+            "value"
+          ],
+          "return_type": "TNode<Number>",
+          "logic": "Increments a number."
+        },
+        {
+          "name": "LoadMapElementsKind",
+          "parameters": [
+            "map"
+          ],
+          "return_type": "TNode<Number>",
+          "logic": "Loads the elements kind from a map."
+        },
+        {
+          "name": "EnterMachineGraph",
+          "parameters": [
+            "input",
+            "use_info"
+          ],
+          "return_type": "TNode<T>",
+          "logic": "Enters a machine graph region."
+        },
+        {
+          "name": "ExitMachineGraph",
+          "parameters": [
+            "input",
+            "output_representation",
+            "output_type"
+          ],
+          "return_type": "TNode<T>",
+          "logic": "Exits a machine graph region."
+        },
+        {
+          "name": "MaybeInsertMapChecks",
+          "parameters": [
+            "inference",
+            "has_stability_dependency"
+          ],
+          "return_type": "void",
+          "logic": "Inserts map checks based on type inference and stability."
+        },
+        {
+          "name": "ConvertHoleToUndefined",
+          "parameters": [
+            "value",
+            "kind"
+          ],
+          "return_type": "TNode<Object>",
+          "logic": "Converts a hole value to undefined."
+        },
+        {
+          "name": "Try",
+          "parameters": [
+            "try_body"
+          ],
+          "return_type": "TryCatchBuilder0",
+          "logic": "Starts a try-catch block."
+        },
+        {
+          "name": "ForZeroUntil",
+          "parameters": [
+            "excluded_limit"
+          ],
+          "return_type": "ForBuilder0",
+          "logic": "Starts a for loop that iterates from zero until an excluded limit."
+        },
+        {
+          "name": "Forever",
+          "parameters": [
+            "initial_value",
+            "step"
+          ],
+          "return_type": "ForBuilder0",
+          "logic": "Starts an infinite for loop."
+        },
+        {
+          "name": "For1",
+          "parameters": [
+            "initial_value",
+            "cond",
+            "step",
+            "initial_arg0"
+          ],
+          "return_type": "ForBuilder1",
+          "logic": "Starts a for loop that takes initial argument."
+        },
+        {
+          "name": "For1ZeroUntil",
+          "parameters": [
+            "excluded_limit",
+            "initial_arg0"
+          ],
+          "return_type": "ForBuilder1",
+          "logic": "Starts a for loop that iterates from zero until an excluded limit, taking initial argument."
+        },
+        {
+          "name": "ThrowIfNotCallable",
+          "parameters": [
+            "maybe_callable",
+            "frame_state"
+          ],
+          "return_type": "void",
+          "logic": "Throws a TypeError if the input is not callable."
+        },
+        {
+          "name": "feedback",
+          "parameters": [],
+          "return_type": "const FeedbackSource&",
+          "logic": "Gets the feedback source for the call."
+        },
+        {
+          "name": "ArgumentCount",
+          "parameters": [],
+          "return_type": "int",
+          "logic": "Gets the number of arguments to the call."
+        },
+        {
+          "name": "Argument",
+          "parameters": [
+            "index"
+          ],
+          "return_type": "TNode<Object>",
+          "logic": "Gets an argument to the call at the specified index."
+        },
+        {
+          "name": "ArgumentAs",
+          "parameters": [
+            "index"
+          ],
+          "return_type": "TNode<T>",
+          "logic": "Gets an argument to the call at the specified index, cast to a specific type."
+        },
+        {
+          "name": "ArgumentOrNaN",
+          "parameters": [
+            "index"
+          ],
+          "return_type": "TNode<Object>",
+          "logic": "Gets an argument or NaN if the index is out of bounds."
+        },
+        {
+          "name": "ArgumentOrUndefined",
+          "parameters": [
+            "index"
+          ],
+          "return_type": "TNode<Object>",
+          "logic": "Gets an argument or undefined if the index is out of bounds."
+        },
+        {
+          "name": "ArgumentOrZero",
+          "parameters": [
+            "index"
+          ],
+          "return_type": "TNode<Number>",
+          "logic": "Gets an argument or zero if the index is out of bounds."
+        },
+        {
+          "name": "ContextInput",
+          "parameters": [],
+          "return_type": "TNode<Context>",
+          "logic": "Gets the context input."
+        },
+        {
+          "name": "FrameStateInput",
+          "parameters": [],
+          "return_type": "FrameState",
+          "logic": "Gets the frame state input."
+        },
+        {
+          "name": "dependencies",
+          "parameters": [],
+          "return_type": "CompilationDependencies*",
+          "logic": "Gets the compilation dependencies."
+        }
+      ]
+    },
+    {
+      "name": "IteratingArrayBuiltinReducerAssembler",
+      "properties": [],
+      "methods": [
+        {
+          "name": "IteratingArrayBuiltinReducerAssembler",
+          "parameters": [
+            "reducer",
+            "node"
+          ],
+          "return_type": "IteratingArrayBuiltinReducerAssembler",
+          "logic": "Constructor for the IteratingArrayBuiltinReducerAssembler class, initializes the JSCallReducerAssembler."
+        },
+        {
+          "name": "ReduceArrayPrototypeForEach",
+          "parameters": [
+            "inference",
+            "has_stability_dependency",
+            "kind",
+            "shared"
+          ],
+          "return_type": "TNode<Object>",
+          "logic": "Reduces calls to Array.prototype.forEach."
+        },
+        {
+          "name": "ReduceArrayPrototypeReduce",
+          "parameters": [
+            "inference",
+            "has_stability_dependency",
+            "kind",
+            "direction",
+            "shared"
+          ],
+          "return_type": "TNode<Object>",
+          "logic": "Reduces calls to Array.prototype.reduce."
+        },
+        {
+          "name": "ReduceArrayPrototypeMap",
+          "parameters": [
+            "inference",
+            "has_stability_dependency",
+            "kind",
+            "shared",
+            "native_context"
+          ],
+          "return_type": "TNode<JSArray>",
+          "logic": "Reduces calls to Array.prototype.map."
+        },
+        {
+          "name": "ReduceArrayPrototypeFilter",
+          "parameters": [
+            "inference",
+            "has_stability_dependency",
+            "kind",
+            "shared",
+            "native_context"
+          ],
+          "return_type": "TNode<JSArray>",
+          "logic": "Reduces calls to Array.prototype.filter."
+        },
+        {
+          "name": "ReduceArrayPrototypeFind",
+          "parameters": [
+            "inference",
+            "has_stability_dependency",
+            "kind",
+            "shared",
+            "native_context",
+            "variant"
+          ],
+          "return_type": "TNode<Object>",
+          "logic": "Reduces calls to Array.prototype.find/findIndex."
+        },
+        {
+          "name": "ReduceArrayPrototypeEverySome",
+          "parameters": [
+            "inference",
+            "has_stability_dependency",
+            "kind",
+            "shared",
+            "native_context",
+            "variant"
+          ],
+          "return_type": "TNode<Boolean>",
+          "logic": "Reduces calls to Array.prototype.every/some."
+        },
+        {
+          "name": "ReduceArrayPrototypeAt",
+          "parameters": [
+            "kinds",
+            "needs_fallback_builtin_call"
+          ],
+          "return_type": "TNode<Object>",
+          "logic": "Reduces calls to Array.prototype.at."
+        },
+        {
+          "name": "ReduceArrayPrototypeIndexOfIncludes",
+          "parameters": [
+            "kind",
+            "variant"
+          ],
+          "return_type": "TNode<Object>",
+          "logic": "Reduces calls to Array.prototype.indexOf/includes."
+        },
+        {
+          "name": "ReduceArrayPrototypePush",
+          "parameters": [
+            "inference"
+          ],
+          "return_type": "TNode<Number>",
+          "logic": "Reduces calls to Array.prototype.push."
+        },
+        {
+          "name": "SafeLoadElement",
+          "parameters": [
+            "kind",
+            "o",
+            "index"
+          ],
+          "return_type": "std::pair<TNode<Number>, TNode<Object>>",
+          "logic": "Safely loads an element from an array, checking for bounds and potential reallocations."
+        },
+        {
+          "name": "MaybeSkipHole",
+          "parameters": [
+            "o",
+            "kind",
+            "continue_label",
+            "vars"
+          ],
+          "return_type": "TNode<Object>",
+          "logic": "Skips holes in arrays during iteration, ensuring no 'hole' values leak into user JavaScript."
+        },
+        {
+          "name": "LoadJSArrayLength",
+          "parameters": [
+            "array",
+            "kind"
+          ],
+          "return_type": "TNode<Smi>",
+          "logic": "Loads the length of a JS array."
+        },
+        {
+          "name": "StoreJSArrayLength",
+          "parameters": [
+            "array",
+            "value",
+            "kind"
+          ],
+          "return_type": "void",
+          "logic": "Stores the length of a JS array."
+        },
+        {
+          "name": "StoreFixedArrayBaseElement",
+          "parameters": [
+            "o",
+            "index",
+            "v",
+            "kind"
+          ],
+          "return_type": "void",
+          "logic": "Stores an element in a FixedArrayBase."
+        },
+        {
+          "name": "LoadElements",
+          "parameters": [
+            "o"
+          ],
+          "return_type": "TNode<FixedArrayBase>",
+          "logic": "Loads the elements of a JS object."
+        },
+        {
+          "name": "LoadFixedArrayBaseLength",
+          "parameters": [
+            "o"
+          ],
+          "return_type": "TNode<Smi>",
+          "logic": "Loads the length of a FixedArrayBase."
+        },
+        {
+          "name": "HoleCheck",
+          "parameters": [
+            "kind",
+            "v"
+          ],
+          "return_type": "TNode<Boolean>",
+          "logic": "Checks if a value is a hole in an array."
+        }
+      ]
+    },
+    {
+      "name": "PromiseBuiltinReducerAssembler",
+      "properties": [],
+      "methods": [
+        {
+          "name": "PromiseBuiltinReducerAssembler",
+          "parameters": [
+            "reducer",
+            "node"
+          ],
+          "return_type": "PromiseBuiltinReducerAssembler",
+          "logic": "Constructor for the PromiseBuiltinReducerAssembler class, initializes the JSCallReducerAssembler."
+        },
+        {
+          "name": "ReducePromiseConstructor",
+          "parameters": [
+            "native_context"
+          ],
+          "return_type": "TNode<Object>",
+          "logic": "Reduces calls to the Promise constructor."
+        },
+        {
+          "name": "ConstructArity",
+          "parameters": [],
+          "return_type": "int",
+          "logic": "Gets the arity of the construct call."
+        },
+        {
+          "name": "TargetInput",
+          "parameters": [],
+          "return_type": "TNode<Object>",
+          "logic": "Gets the target input node."
+        },
+        {
+          "name": "NewTargetInput",
+          "parameters": [],
+          "return_type": "TNode<Object>",
+          "logic": "Gets the new target input node."
+        },
+        {
+          "name": "CreatePromise",
+          "parameters": [
+            "context"
+          ],
+          "return_type": "TNode<JSPromise>",
+          "logic": "Creates a new promise."
+        },
+        {
+          "name": "CreateFunctionContext",
+          "parameters": [
+            "native_context",
+            "outer_context",
+            "slot_count"
+          ],
+          "return_type": "TNode<Context>",
+          "logic": "Creates a new function context."
+        },
+        {
+          "name": "StoreContextSlot",
+          "parameters": [
+            "context",
+            "slot_index",
+            "value"
+          ],
+          "return_type": "void",
+          "logic": "Stores a value into a context slot."
+        },
+        {
+          "name": "CreateClosureFromBuiltinSharedFunctionInfo",
+          "parameters": [
+            "shared",
+            "context"
+          ],
+          "return_type": "TNode<JSFunction>",
+          "logic": "Creates a closure from a shared function info."
+        },
+        {
+          "name": "CallPromiseExecutor",
+          "parameters": [
+            "executor",
+            "resolve",
+            "reject",
+            "frame_state"
+          ],
+          "return_type": "void",
+          "logic": "Calls the promise executor function."
+        },
+        {
+          "name": "CallPromiseReject",
+          "parameters": [
+            "reject",
+            "exception",
+            "frame_state"
+          ],
+          "return_type": "void",
+          "logic": "Calls the promise reject function."
+        }
+      ]
+    },
+    {
+      "name": "FastApiCallReducerAssembler",
+      "properties": [
+        "c_function_",
+        "function_template_info_",
+        "receiver_",
+        "shared_",
+        "target_",
+        "arity_"
+      ],
+      "methods": [
+        {
+          "name": "FastApiCallReducerAssembler",
+          "parameters": [
+            "reducer",
+            "node",
+            "function_template_info",
+            "c_function",
+            "receiver",
+            "shared",
+            "target",
+            "arity",
+            "effect"
+          ],
+          "return_type": "FastApiCallReducerAssembler",
+          "logic": "Constructor for the FastApiCallReducerAssembler class."
+        },
+        {
+          "name": "ReduceFastApiCall",
+          "parameters": [],
+          "return_type": "TNode<Object>",
+          "logic": "Reduces a fast API call."
+        },
+        {
+          "name": "FastApiCall",
+          "parameters": [
+            "descriptor",
+            "inputs",
+            "inputs_size"
+          ],
+          "return_type": "TNode<Object>",
+          "logic": "Creates a FastApiCall node."
+        }
+      ]
+    },
+    {
+      "name": "TryCatchBuilder0",
+      "properties": [
+        "gasm_",
+        "try_body_"
+      ],
+      "methods": [
+        {
+          "name": "TryCatchBuilder0",
+          "parameters": [
+            "gasm",
+            "try_body"
+          ],
+          "return_type": "TryCatchBuilder0",
+          "logic": "Constructor for TryCatchBuilder0 class."
+        },
+        {
+          "name": "Catch",
+          "parameters": [
+            "catch_body"
+          ],
+          "return_type": "void",
+          "logic": "Defines catch block to handle exceptions. "
+        }
+      ]
+    },
+    {
+      "name": "ForBuilder0",
+      "properties": [
+        "gasm_",
+        "initial_value_",
+        "cond_",
+        "step_"
+      ],
+      "methods": [
+        {
+          "name": "ForBuilder0",
+          "parameters": [
+            "gasm",
+            "initial_value",
+            "cond",
+            "step"
+          ],
+          "return_type": "ForBuilder0",
+          "logic": "Constructor for the ForBuilder0 class."
+        },
+        {
+          "name": "Do",
+          "parameters": [
+            "body"
+          ],
+          "return_type": "void",
+          "logic": "Executes loop body."
+        }
+      ]
+    },
+    {
+      "name": "ForBuilder1",
+      "properties": [
+        "gasm_",
+        "initial_value_",
+        "cond_",
+        "step_",
+        "body_",
+        "initial_arg0_"
+      ],
+      "methods": [
+        {
+          "name": "ForBuilder1",
+          "parameters": [
+            "gasm",
+            "initial_value",
+            "cond",
+            "step",
+            "initial_arg0"
+          ],
+          "return_type": "ForBuilder1",
+          "logic": "Constructor for the ForBuilder1 class."
+        },
+        {
+          "name": "Do",
+          "parameters": [
+            "body"
+          ],
+          "return_type": "ForBuilder1&",
+          "logic": "Sets loop body and returns the builder object."
+        },
+        {
+          "name": "Value",
+          "parameters": [],
+          "return_type": "TNode<Object>",
+          "logic": "Executes for loop and returns result of accumulating argument."
+        },
+        {
+          "name": "ValueIsUnused",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Executes the ForLoop, but the return value from Value is unused, effectively only used for it's effects."
+        }
+      ]
+    }
+  ],
+  "functions": [],
+  "enums": [
+    {
+      "name": "ArrayReduceDirection",
+      "values": [
+        "kLeft",
+        "kRight"
+      ]
+    },
+    {
+      "name": "ArrayFindVariant",
+      "values": [
+        "kFind",
+        "kFindIndex"
+      ]
+    },
+    {
+      "name": "ArrayEverySomeVariant",
+      "values": [
+        "kEvery",
+        "kSome"
+      ]
+    },
+    {
+      "name": "ArrayIndexOfIncludesVariant",
+      "values": [
+        "kIncludes",
+        "kIndexOf"
+      ]
+    }
+  ]
+}

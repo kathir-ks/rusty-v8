@@ -1,0 +1,305 @@
+{
+  "file_path": "/home/kathirks_gc/v8_go/codebase/src/compiler/backend/x64/instruction-selector-x64.cc",
+  "imports": [
+    "<algorithm>",
+    "<cstdint>",
+    "<limits>",
+    "<optional>",
+    "src/base/bounds.h",
+    "src/base/iterator.h",
+    "src/base/logging.h",
+    "src/base/overflowing-math.h",
+    "src/codegen/cpu-features.h",
+    "src/codegen/machine-type.h",
+    "src/common/assert-scope.h",
+    "src/common/globals.h",
+    "src/compiler/backend/instruction-codes.h",
+    "src/compiler/backend/instruction-selector-adapter.h",
+    "src/compiler/backend/instruction-selector-impl.h",
+    "src/compiler/backend/instruction-selector.h",
+    "src/compiler/backend/instruction.h",
+    "src/compiler/machine-operator.h",
+    "src/compiler/turboshaft/load-store-simplification-reducer.h",
+    "src/compiler/turboshaft/operations.h",
+    "src/compiler/turboshaft/opmasks.h",
+    "src/compiler/turboshaft/representations.h",
+    "src/handles/handles-inl.h",
+    "src/objects/slots-inl.h",
+    "src/roots/roots-inl.h",
+    "src/wasm/simd-shuffle.h"
+  ],
+  "classes": [
+    {
+      "name": "X64OperandGeneratorT",
+      "properties": [],
+      "methods": [
+        {
+          "name": "X64OperandGeneratorT",
+          "parameters": [
+            "InstructionSelectorT* selector"
+          ],
+          "return_type": "",
+          "logic": "Constructor for X64OperandGeneratorT, initializes the base class OperandGeneratorT."
+        },
+        {
+          "name": "CanBeImmediate",
+          "parameters": [
+            "OpIndex node"
+          ],
+          "return_type": "bool",
+          "logic": "Checks if a node can be represented as an immediate value on x64 architecture."
+        },
+        {
+          "name": "GetImmediateIntegerValue",
+          "parameters": [
+            "OpIndex node"
+          ],
+          "return_type": "int32_t",
+          "logic": "Retrieves the integer value of an immediate operand node."
+        },
+        {
+          "name": "CanBeMemoryOperand",
+          "parameters": [
+            "InstructionCode opcode",
+            "OpIndex node",
+            "OpIndex input",
+            "int effect_level"
+          ],
+          "return_type": "bool",
+          "logic": "Determines whether a specific input can be used as a memory operand based on the opcode, node and input type and effect levels"
+        },
+        {
+          "name": "IsZeroIntConstant",
+          "parameters": [
+            "OpIndex node"
+          ],
+          "return_type": "bool",
+          "logic": "Checks whether a given node represents a zero integer constant."
+        },
+        {
+          "name": "GenerateMemoryOperandInputs",
+          "parameters": [
+            "OptionalOpIndex index",
+            "int scale_exponent",
+            "OpIndex base",
+            "int64_t displacement",
+            "DisplacementMode displacement_mode",
+            "InstructionOperand inputs[]",
+            "size_t* input_count",
+            "RegisterUseKind reg_kind"
+          ],
+          "return_type": "AddressingMode",
+          "logic": "Generates the necessary inputs for a memory operand, considering base, index, scale, and displacement."
+        },
+        {
+          "name": "GetEffectiveAddressMemoryOperand",
+          "parameters": [
+            "OpIndex operand",
+            "InstructionOperand inputs[]",
+            "size_t* input_count",
+            "RegisterUseKind reg_kind"
+          ],
+          "return_type": "AddressingMode",
+          "logic": "Retrieves effective addressing for memory operands."
+        },
+        {
+          "name": "GetEffectiveIndexOperand",
+          "parameters": [
+            "OpIndex index",
+            "AddressingMode* mode"
+          ],
+          "return_type": "InstructionOperand",
+          "logic": "Gets the effective index operand with addressing mode."
+        },
+        {
+          "name": "CanBeBetterLeftOperand",
+          "parameters": [
+            "OpIndex node"
+          ],
+          "return_type": "bool",
+          "logic": "Determines if a node can be a better left operand based on liveness."
+        }
+      ]
+    }
+  ],
+  "functions": [
+    {
+      "name": "IsCompressed",
+      "parameters": [
+        "InstructionSelectorT* selector",
+        "OpIndex node"
+      ],
+      "return_type": "bool",
+      "logic": "Checks if the node represents a compressed value (either load or phi)."
+    },
+    {
+      "name": "LhsIsNotOnlyConstant",
+      "parameters": [
+        "Graph* graph",
+        "OpIndex left_idx",
+        "OpIndex right_idx"
+      ],
+      "return_type": "bool",
+      "logic": "Checks if the left hand side is not the only constant operand to commutative operations. Used only in debug builds."
+    },
+    {
+      "name": "ValueFitsIntoImmediate",
+      "parameters": [
+        "int64_t value"
+      ],
+      "return_type": "bool",
+      "logic": "Checks if a 64-bit value fits into a 32-bit immediate value, excluding int32_min."
+    },
+    {
+      "name": "CanBeImmediate",
+      "parameters": [
+        "InstructionSelectorT* selector",
+        "OpIndex node"
+      ],
+      "return_type": "bool",
+      "logic": "Determines if the given node can be encoded as an immediate value. Handles several constant types, like Word32, Word64, Smi, and Number."
+    },
+    {
+      "name": "GetImmediateIntegerValue",
+      "parameters": [
+        "InstructionSelectorT* selector",
+        "OpIndex node"
+      ],
+      "return_type": "int32_t",
+      "logic": "Retrieves the 32-bit integer value of a constant node."
+    },
+    {
+      "name": "MatchScaledIndex",
+      "parameters": [
+        "InstructionSelectorT* selector",
+        "OpIndex node",
+        "OpIndex* index",
+        "int* scale",
+        "bool* power_of_two_plus_one"
+      ],
+      "return_type": "bool",
+      "logic": "Attempts to match a scaled index pattern (index * scale or index << scale), placing the result to 'index' and 'scale' parameters"
+    },
+    {
+      "name": "TryMatchScaledIndex",
+      "parameters": [
+        "InstructionSelectorT* selector",
+        "OpIndex node",
+        "bool allow_power_of_two_plus_one"
+      ],
+      "return_type": "std::optional<ScaledIndexMatch>",
+      "logic": "Tries to match a scaled index and return structure with matched data or nullopt"
+    },
+    {
+      "name": "TryMatchScaledIndex32",
+      "parameters": [
+        "InstructionSelectorT* selector",
+        "OpIndex node",
+        "bool allow_power_of_two_plus_one"
+      ],
+      "return_type": "std::optional<ScaledIndexMatch>",
+      "logic": "Tries to match a 32-bit scaled index."
+    },
+    {
+      "name": "TryMatchScaledIndex64",
+      "parameters": [
+        "InstructionSelectorT* selector",
+        "OpIndex node",
+        "bool allow_power_of_two_plus_one"
+      ],
+      "return_type": "std::optional<ScaledIndexMatch>",
+      "logic": "Tries to match a 64-bit scaled index."
+    },
+    {
+      "name": "TryMatchBaseWithScaledIndexAndDisplacement64ForWordBinop",
+      "parameters": [
+        "InstructionSelectorT* selector",
+        "OpIndex left",
+        "OpIndex right",
+        "bool is_commutative"
+      ],
+      "return_type": "std::optional<BaseWithScaledIndexAndDisplacementMatch>",
+      "logic": "Helper function to MatchBaseWithScaledIndexAndDisplacement64, match the case where the operation is `left binop right`"
+    },
+    {
+      "name": "TryMatchBaseWithScaledIndexAndDisplacement64",
+      "parameters": [
+        "InstructionSelectorT* selector",
+        "OpIndex node"
+      ],
+      "return_type": "std::optional<BaseWithScaledIndexAndDisplacementMatch>",
+      "logic": "Tries to match complex memory access patterns like (base + index * scale + displacement) for 64bit values."
+    },
+    {
+      "name": "TryMatchBaseWithScaledIndexAndDisplacement32",
+      "parameters": [
+        "InstructionSelectorT* selector",
+        "OpIndex node"
+      ],
+      "return_type": "std::optional<BaseWithScaledIndexAndDisplacementMatch>",
+      "logic": "Tries to match complex memory access patterns for 32bit values."
+    },
+    {
+      "name": "GetLoadOpcode",
+      "parameters": [
+        "MemoryRepresentation loaded_rep",
+        "RegisterRepresentation result_rep"
+      ],
+      "return_type": "ArchOpcode",
+      "logic": "Returns the appropriate load opcode based on memory and register representations."
+    },
+    {
+      "name": "GetLoadOpcode",
+      "parameters": [
+        "LoadRepresentation load_rep"
+      ],
+      "return_type": "ArchOpcode",
+      "logic": "Returns the appropriate load opcode based on the load representation."
+    },
+    {
+      "name": "GetStoreOpcode",
+      "parameters": [
+        "MemoryRepresentation stored_rep"
+      ],
+      "return_type": "ArchOpcode",
+      "logic": "Returns the correct store opcode based on the given memory representation."
+    },
+    {
+      "name": "GetSeqCstStoreOpcode",
+      "parameters": [
+        "StoreRepresentation store_rep"
+      ],
+      "return_type": "ArchOpcode",
+      "logic": "Determines the appropriate opcode for a sequentially consistent store operation based on the stored representation."
+    },
+    {
+      "name": "VisitMinOrMax",
+      "parameters": [
+        "InstructionSelectorT* selector",
+        "OpIndex node",
+        "ArchOpcode opcode",
+        "bool flip_inputs"
+      ],
+      "return_type": "void",
+      "logic": "Emit instruction for pmin/pmax."
+    },
+    {
+      "name": "AddDisplacementToAddressingMode",
+      "parameters": [
+        "AddressingMode mode"
+      ],
+      "return_type": "AddressingMode",
+      "logic": "Takes an AddressingMode and returns a variant with a displacement."
+    },
+    {
+      "name": "TryEmitLoadForLoadWord64AndShiftRight",
+      "parameters": [
+        "InstructionSelectorT* selector",
+        "OpIndex node",
+        "InstructionCode opcode"
+      ],
+      "return_type": "bool",
+      "logic": "Tries to emit load instruction for the operation of loading Word64 and shifts it by 32 bit."
+    }
+  ]
+}

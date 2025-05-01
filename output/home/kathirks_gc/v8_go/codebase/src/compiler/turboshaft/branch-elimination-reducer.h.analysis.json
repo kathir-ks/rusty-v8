@@ -1,0 +1,134 @@
+{
+  "file_path": "/home/kathirks_gc/v8_go/codebase/src/compiler/turboshaft/branch-elimination-reducer.h",
+  "imports": [
+    "<optional>",
+    "src/base/bits.h",
+    "src/base/logging.h",
+    "src/compiler/turboshaft/assembler.h",
+    "src/compiler/turboshaft/index.h",
+    "src/compiler/turboshaft/layered-hash-map.h",
+    "src/compiler/turboshaft/operations.h",
+    "src/utils/utils.h"
+  ],
+  "classes": [
+    {
+      "name": "VariableReducer",
+      "properties": [],
+      "methods": []
+    },
+    {
+      "name": "BranchEliminationReducer",
+      "properties": [
+        "ZoneVector<Block*> dominator_path_",
+        "LayeredHashMap<V<Word32>, bool> known_conditions_"
+      ],
+      "methods": [
+        {
+          "name": "Bind",
+          "parameters": [
+            "Block* new_block"
+          ],
+          "return_type": "void",
+          "logic": "Updates the known conditions based on the current block's position in the dominator tree. Specifically, adds the condition of a branch to known conditions if the block is a branch target.  Resets and replays missing predecessors to maintain accurate condition tracking after control flow changes."
+        },
+        {
+          "name": "REDUCE(Branch)",
+          "parameters": [
+            "V<Word32> cond",
+            "Block* if_true",
+            "Block* if_false",
+            "BranchHint hint"
+          ],
+          "return_type": "V<None>",
+          "logic": "Attempts to eliminate branches based on known conditions. If the condition is known, the branch is replaced with a goto to the appropriate target block. Also, attempts to replace empty branches going to the same destination with a simple Goto."
+        },
+        {
+          "name": "REDUCE(Select)",
+          "parameters": [
+            "V<Word32> cond",
+            "V<Any> vtrue",
+            "V<Any> vfalse",
+            "RegisterRepresentation rep",
+            "BranchHint hint",
+            "SelectOp::Implementation implem"
+          ],
+          "return_type": "V<Any>",
+          "logic": "Replaces select operations with either the true or false value if the condition is known."
+        },
+        {
+          "name": "REDUCE(Goto)",
+          "parameters": [
+            "Block* destination",
+            "bool is_backedge"
+          ],
+          "return_type": "V<None>",
+          "logic": "Attempts to optimize goto operations by cloning the destination block and inlining it if it ends with a branch whose condition is known or can be constant-folded. Also handles inlining destination blocks ending with ReturnOp."
+        },
+        {
+          "name": "REDUCE(DeoptimizeIf)",
+          "parameters": [
+            "V<Word32> condition",
+            "V<FrameState> frame_state",
+            "bool negated",
+            "const DeoptimizeParameters* parameters"
+          ],
+          "return_type": "V<None>",
+          "logic": "If the condition of a deoptimize is statically known, either eliminates the deoptimize or replaces it with a unconditional deoptimize."
+        },
+        {
+          "name": "REDUCE(TrapIf)",
+          "parameters": [
+            "V<Word32> condition",
+            "OptionalV<FrameState> frame_state",
+            "bool negated",
+            "const TrapId trap_id"
+          ],
+          "return_type": "V<None>",
+          "logic": "If the condition of a trap is statically known, either eliminates the trap or replaces it with a unconditional trap."
+        },
+        {
+          "name": "ResetToBlock",
+          "parameters": [
+            "Block* block"
+          ],
+          "return_type": "void",
+          "logic": "Resets the known_conditions_ and dominator_path_ to the first dominator of block that they contain."
+        },
+        {
+          "name": "ClearCurrentEntries",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Removes the latest entry in known_conditions_ and dominator_path_."
+        },
+        {
+          "name": "StartLayer",
+          "parameters": [
+            "Block* block"
+          ],
+          "return_type": "void",
+          "logic": "Starts a new layer in known_conditions_ and adds the block to the dominator_path_."
+        },
+        {
+          "name": "ReplayMissingPredecessors",
+          "parameters": [
+            "Block* new_block"
+          ],
+          "return_type": "void",
+          "logic": "Adds the missing predecessors of the current block to the known_conditions_ and dominator_path_.  This is needed when control flow changes during the CopyingPhase."
+        },
+        {
+          "name": "CanBeConstantFolded",
+          "parameters": [
+            "OpIndex idx",
+            "const Block* cond_input_block",
+            "bool has_phi",
+            "int depth"
+          ],
+          "return_type": "bool",
+          "logic": "Checks if the given operation index can be constant folded, meaning that it only depends on constants or phis with constant inputs from the current block. Used to determine if cloning a block is beneficial for branch elimination."
+        }
+      ]
+    }
+  ],
+  "functions": []
+}

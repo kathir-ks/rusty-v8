@@ -1,0 +1,507 @@
+{
+  "file_path": "/home/kathirks_gc/v8_go/codebase/src/compiler/raw-machine-assembler.cc",
+  "imports": [
+    "src/compiler/raw-machine-assembler.h",
+    "optional",
+    "src/base/small-vector.h",
+    "src/compiler/compiler-source-position-table.h",
+    "src/compiler/node-properties.h",
+    "src/compiler/scheduler.h",
+    "src/heap/factory-inl.h"
+  ],
+  "classes": [
+    {
+      "name": "RawMachineAssembler",
+      "properties": [
+        "isolate_",
+        "graph_",
+        "schedule_",
+        "source_positions_",
+        "machine_",
+        "common_",
+        "simplified_",
+        "call_descriptor_",
+        "dynamic_js_parameter_count_",
+        "target_parameter_",
+        "parameters_",
+        "current_block_"
+      ],
+      "methods": [
+        {
+          "name": "RawMachineAssembler",
+          "parameters": [
+            "Isolate* isolate",
+            "TFGraph* graph",
+            "CallDescriptor* call_descriptor",
+            "MachineRepresentation word",
+            "MachineOperatorBuilder::Flags flags",
+            "MachineOperatorBuilder::AlignmentRequirements alignment_requirements"
+          ],
+          "return_type": "void",
+          "logic": "Constructor for RawMachineAssembler. Initializes members, sets up the start and end nodes in the graph, and creates parameter nodes."
+        },
+        {
+          "name": "SetCurrentExternalSourcePosition",
+          "parameters": [
+            "FileAndLine file_and_line"
+          ],
+          "return_type": "void",
+          "logic": "Sets the current source position based on the provided file and line information."
+        },
+        {
+          "name": "GetCurrentExternalSourcePosition",
+          "parameters": [],
+          "return_type": "FileAndLine",
+          "logic": "Retrieves the current source position as a file and line pair."
+        },
+        {
+          "name": "NullConstant",
+          "parameters": [],
+          "return_type": "Node*",
+          "logic": "Returns a node representing the null constant."
+        },
+        {
+          "name": "UndefinedConstant",
+          "parameters": [],
+          "return_type": "Node*",
+          "logic": "Returns a node representing the undefined constant."
+        },
+        {
+          "name": "RelocatableIntPtrConstant",
+          "parameters": [
+            "intptr_t value",
+            "RelocInfo::Mode rmode"
+          ],
+          "return_type": "Node*",
+          "logic": "Returns a node representing a relocatable integer constant. Chooses between 32 or 64 bit based on system pointer size."
+        },
+        {
+          "name": "OptimizedAllocate",
+          "parameters": [
+            "Node* size",
+            "AllocationType allocation"
+          ],
+          "return_type": "Node*",
+          "logic": "Returns a node representing an optimized allocation operation."
+        },
+        {
+          "name": "ExportForTest",
+          "parameters": [],
+          "return_type": "Schedule*",
+          "logic": "Exports the schedule for testing purposes. Computes code generation order and invalidates RawMachineAssembler."
+        },
+        {
+          "name": "ExportForOptimization",
+          "parameters": [],
+          "return_type": "TFGraph*",
+          "logic": "Exports the graph for optimization. Optimizes control flow and invalidates RawMachineAssembler."
+        },
+        {
+          "name": "OptimizeControlFlow",
+          "parameters": [
+            "Schedule* schedule",
+            "TFGraph* graph",
+            "CommonOperatorBuilder* common"
+          ],
+          "return_type": "void",
+          "logic": "Performs control flow optimizations on the schedule, such as short-circuiting gotos and block cloning."
+        },
+        {
+          "name": "MakeReschedulable",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Restructures the graph to make it reschedulable. Inserts merge nodes and effect phis."
+        },
+        {
+          "name": "CreateNodeFromPredecessors",
+          "parameters": [
+            "const std::vector<BasicBlock*>& predecessors",
+            "const std::vector<Node*>& sidetable",
+            "const Operator* op",
+            "const std::vector<Node*>& additional_inputs"
+          ],
+          "return_type": "Node*",
+          "logic": "Creates a node from a set of predecessors. Used for creating merge and phi nodes."
+        },
+        {
+          "name": "MakePhiBinary",
+          "parameters": [
+            "Node* phi",
+            "int split_point",
+            "Node* left_control",
+            "Node* right_control"
+          ],
+          "return_type": "void",
+          "logic": "Transforms a phi node with multiple inputs into a binary phi node by splitting the inputs and creating intermediate phi nodes."
+        },
+        {
+          "name": "MarkControlDeferred",
+          "parameters": [
+            "Node* control_node"
+          ],
+          "return_type": "void",
+          "logic": "Marks a control node as deferred, preventing it from being eagerly scheduled."
+        },
+        {
+          "name": "TargetParameter",
+          "parameters": [],
+          "return_type": "Node*",
+          "logic": "Returns the JSFunction target parameter node."
+        },
+        {
+          "name": "Parameter",
+          "parameters": [
+            "size_t index"
+          ],
+          "return_type": "Node*",
+          "logic": "Returns the parameter node at the specified index."
+        },
+        {
+          "name": "Goto",
+          "parameters": [
+            "RawMachineLabel* label"
+          ],
+          "return_type": "void",
+          "logic": "Adds a goto edge from the current block to the specified label."
+        },
+        {
+          "name": "Branch",
+          "parameters": [
+            "Node* condition",
+            "RawMachineLabel* true_val",
+            "RawMachineLabel* false_val",
+            "BranchHint branch_hint"
+          ],
+          "return_type": "void",
+          "logic": "Adds a branch instruction to the current block, based on the given condition. Creates two new basic blocks for the true and false cases."
+        },
+        {
+          "name": "Continuations",
+          "parameters": [
+            "Node* call",
+            "RawMachineLabel* if_success",
+            "RawMachineLabel* if_exception"
+          ],
+          "return_type": "void",
+          "logic": "Adds a call to the current block with success and exception continuations (labels)."
+        },
+        {
+          "name": "Switch",
+          "parameters": [
+            "Node* index",
+            "RawMachineLabel* default_label",
+            "const int32_t* case_values",
+            "RawMachineLabel** case_labels",
+            "size_t case_count"
+          ],
+          "return_type": "void",
+          "logic": "Adds a switch instruction to the current block, branching based on the index and case values."
+        },
+        {
+          "name": "Return",
+          "parameters": [
+            "Node* value"
+          ],
+          "return_type": "void",
+          "logic": "Adds a return instruction to the current block with one return value."
+        },
+        {
+          "name": "Return",
+          "parameters": [
+            "Node* v1",
+            "Node* v2"
+          ],
+          "return_type": "void",
+          "logic": "Adds a return instruction to the current block with two return values."
+        },
+        {
+          "name": "Return",
+          "parameters": [
+            "Node* v1",
+            "Node* v2",
+            "Node* v3"
+          ],
+          "return_type": "void",
+          "logic": "Adds a return instruction to the current block with three return values."
+        },
+        {
+          "name": "Return",
+          "parameters": [
+            "Node* v1",
+            "Node* v2",
+            "Node* v3",
+            "Node* v4"
+          ],
+          "return_type": "void",
+          "logic": "Adds a return instruction to the current block with four return values."
+        },
+        {
+          "name": "Return",
+          "parameters": [
+            "int count",
+            "Node* vs[]"
+          ],
+          "return_type": "void",
+          "logic": "Adds a return instruction to the current block with a variable number of return values."
+        },
+        {
+          "name": "PopAndReturn",
+          "parameters": [
+            "Node* pop",
+            "Node* value"
+          ],
+          "return_type": "void",
+          "logic": "Adds a return instruction to the current block, popping a specified number of arguments from the stack and returning a single value. Only applicable to CSA/Torque builtins."
+        },
+        {
+          "name": "PopAndReturn",
+          "parameters": [
+            "Node* pop",
+            "Node* v1",
+            "Node* v2"
+          ],
+          "return_type": "void",
+          "logic": "Adds a return instruction to the current block, popping a specified number of arguments from the stack and returning two values. Only applicable to CSA/Torque builtins."
+        },
+        {
+          "name": "PopAndReturn",
+          "parameters": [
+            "Node* pop",
+            "Node* v1",
+            "Node* v2",
+            "Node* v3"
+          ],
+          "return_type": "void",
+          "logic": "Adds a return instruction to the current block, popping a specified number of arguments from the stack and returning three values. Only applicable to CSA/Torque builtins."
+        },
+        {
+          "name": "PopAndReturn",
+          "parameters": [
+            "Node* pop",
+            "Node* v1",
+            "Node* v2",
+            "Node* v3",
+            "Node* v4"
+          ],
+          "return_type": "void",
+          "logic": "Adds a return instruction to the current block, popping a specified number of arguments from the stack and returning four values. Only applicable to CSA/Torque builtins."
+        },
+        {
+          "name": "AbortCSADcheck",
+          "parameters": [
+            "Node* message"
+          ],
+          "return_type": "void",
+          "logic": "Adds an abort instruction to the current block based on a CSA check."
+        },
+        {
+          "name": "DebugBreak",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Adds a debug break instruction to the current block."
+        },
+        {
+          "name": "Unreachable",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Adds an unreachable instruction to the current block."
+        },
+        {
+          "name": "Comment",
+          "parameters": [
+            "const std::string& msg"
+          ],
+          "return_type": "void",
+          "logic": "Adds a comment instruction to the current block."
+        },
+        {
+          "name": "StaticAssert",
+          "parameters": [
+            "Node* value",
+            "const char* source"
+          ],
+          "return_type": "void",
+          "logic": "Adds a static assert instruction to the current block. "
+        },
+        {
+          "name": "CallN",
+          "parameters": [
+            "CallDescriptor* call_descriptor",
+            "int input_count",
+            "Node* const* inputs"
+          ],
+          "return_type": "Node*",
+          "logic": "Adds a call instruction with N inputs to the current block."
+        },
+        {
+          "name": "CallNWithFrameState",
+          "parameters": [
+            "CallDescriptor* call_descriptor",
+            "int input_count",
+            "Node* const* inputs"
+          ],
+          "return_type": "Node*",
+          "logic": "Adds a call instruction with N inputs and a frame state to the current block."
+        },
+        {
+          "name": "TailCallN",
+          "parameters": [
+            "CallDescriptor* call_descriptor",
+            "int input_count",
+            "Node* const* inputs"
+          ],
+          "return_type": "void",
+          "logic": "Adds a tail call instruction with N inputs to the current block."
+        },
+        {
+          "name": "CallCFunction",
+          "parameters": [
+            "Node* function",
+            "std::optional<MachineType> return_type",
+            "std::initializer_list<RawMachineAssembler::CFunctionArg> args"
+          ],
+          "return_type": "Node*",
+          "logic": "Calls a C function with the specified function node, return type, and arguments using the standard calling convention."
+        },
+        {
+          "name": "CallCFunctionWithoutFunctionDescriptor",
+          "parameters": [
+            "Node* function",
+            "MachineType return_type",
+            "std::initializer_list<RawMachineAssembler::CFunctionArg> args"
+          ],
+          "return_type": "Node*",
+          "logic": "Calls a C function without using a function descriptor. This reduces the metadata passed to the call."
+        },
+        {
+          "name": "CallCFunctionWithCallerSavedRegisters",
+          "parameters": [
+            "Node* function",
+            "MachineType return_type",
+            "SaveFPRegsMode mode",
+            "std::initializer_list<RawMachineAssembler::CFunctionArg> args"
+          ],
+          "return_type": "Node*",
+          "logic": "Calls a C function with caller-saved registers, indicating that certain registers need to be saved and restored by the caller or the callee depending on the platform and ABI conventions."
+        },
+        {
+          "name": "Use",
+          "parameters": [
+            "RawMachineLabel* label"
+          ],
+          "return_type": "BasicBlock*",
+          "logic": "Marks the label as used and returns the corresponding basic block."
+        },
+        {
+          "name": "EnsureBlock",
+          "parameters": [
+            "RawMachineLabel* label"
+          ],
+          "return_type": "BasicBlock*",
+          "logic": "Ensures that a basic block exists for the given label. Creates one if it doesn't exist."
+        },
+        {
+          "name": "Bind",
+          "parameters": [
+            "RawMachineLabel* label"
+          ],
+          "return_type": "void",
+          "logic": "Binds the current block to the specified label."
+        },
+        {
+          "name": "Bind",
+          "parameters": [
+            "RawMachineLabel* label",
+            "AssemblerDebugInfo info"
+          ],
+          "return_type": "void",
+          "logic": "Binds the current block to the specified label and sets debug information."
+        },
+        {
+          "name": "InsideBlock",
+          "parameters": [],
+          "return_type": "bool",
+          "logic": "Checks if the assembler is currently inside a block."
+        },
+        {
+          "name": "CurrentBlock",
+          "parameters": [],
+          "return_type": "BasicBlock*",
+          "logic": "Returns the current basic block."
+        },
+        {
+          "name": "Phi",
+          "parameters": [
+            "MachineRepresentation rep",
+            "int input_count",
+            "Node* const* inputs"
+          ],
+          "return_type": "Node*",
+          "logic": "Creates a Phi node with the given representation, input count, and inputs."
+        },
+        {
+          "name": "AppendPhiInput",
+          "parameters": [
+            "Node* phi",
+            "Node* new_input"
+          ],
+          "return_type": "void",
+          "logic": "Appends a new input to a Phi node. Resizes the Phi node accordingly."
+        },
+        {
+          "name": "AddNode",
+          "parameters": [
+            "const Operator* op",
+            "int input_count",
+            "Node* const* inputs"
+          ],
+          "return_type": "Node*",
+          "logic": "Adds a new node with the specified operator and inputs to the current block."
+        },
+        {
+          "name": "MakeNode",
+          "parameters": [
+            "const Operator* op",
+            "int input_count",
+            "Node* const* inputs"
+          ],
+          "return_type": "Node*",
+          "logic": "Creates a new node with the specified operator and inputs."
+        }
+      ]
+    },
+    {
+      "name": "RawMachineLabel",
+      "properties": [
+        "block_",
+        "bound_",
+        "used_",
+        "deferred_"
+      ],
+      "methods": [
+        {
+          "name": "~RawMachineLabel",
+          "parameters": [],
+          "return_type": "n/a",
+          "logic": "Destructor for RawMachineLabel. Checks that label is bound if used and vice versa."
+        }
+      ]
+    }
+  ],
+  "functions": [
+    {
+      "name": "CallCFunctionImpl",
+      "parameters": [
+        "RawMachineAssembler* rasm",
+        "Node* function",
+        "std::optional<MachineType> return_type",
+        "std::initializer_list<RawMachineAssembler::CFunctionArg> args",
+        "bool caller_saved_regs",
+        "SaveFPRegsMode mode",
+        "FunctionDescriptorMode no_function_descriptor"
+      ],
+      "return_type": "Node*",
+      "logic": "Helper function to handle the common logic for calling C functions with different options."
+    }
+  ]
+}

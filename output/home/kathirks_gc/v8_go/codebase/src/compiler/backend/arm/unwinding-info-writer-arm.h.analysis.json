@@ -1,0 +1,130 @@
+{
+  "file_path": "/home/kathirks_gc/v8_go/codebase/src/compiler/backend/arm/unwinding-info-writer-arm.h",
+  "imports": [
+    "src/diagnostics/eh-frame.h",
+    "src/flags/flags.h"
+  ],
+  "classes": [
+    {
+      "name": "UnwindingInfoWriter",
+      "properties": [
+        "zone_",
+        "eh_frame_writer_",
+        "saved_lr_",
+        "block_will_exit_",
+        "block_initial_states_"
+      ],
+      "methods": [
+        {
+          "name": "UnwindingInfoWriter",
+          "parameters": [
+            "Zone* zone"
+          ],
+          "return_type": "explicit UnwindingInfoWriter",
+          "logic": "Constructor. Initializes the EhFrameWriter and other internal state based on whether unwinding info generation is enabled via a flag."
+        },
+        {
+          "name": "SetNumberOfInstructionBlocks",
+          "parameters": [
+            "int number"
+          ],
+          "return_type": "void",
+          "logic": "Resizes the block_initial_states_ vector based on the provided number of instruction blocks if unwinding information generation is enabled."
+        },
+        {
+          "name": "BeginInstructionBlock",
+          "parameters": [
+            "int pc_offset",
+            "const InstructionBlock* block"
+          ],
+          "return_type": "void",
+          "logic": "Marks the beginning of an instruction block.  The actual implementation likely resides in the corresponding `.cc` file, but the purpose is to record initial state for the block for unwinding."
+        },
+        {
+          "name": "EndInstructionBlock",
+          "parameters": [
+            "const InstructionBlock* block"
+          ],
+          "return_type": "void",
+          "logic": "Marks the end of an instruction block.  The actual implementation likely resides in the corresponding `.cc` file, but the purpose is to finalize any unwinding information recorded for that block."
+        },
+        {
+          "name": "MarkLinkRegisterOnTopOfStack",
+          "parameters": [
+            "int pc_offset"
+          ],
+          "return_type": "void",
+          "logic": "Marks that the link register (LR) has been pushed onto the stack at a given program counter offset. This is crucial for unwinding as it indicates how to return from a function."
+        },
+        {
+          "name": "MarkPopLinkRegisterFromTopOfStack",
+          "parameters": [
+            "int pc_offset"
+          ],
+          "return_type": "void",
+          "logic": "Marks that the link register (LR) is being popped from the stack at a given program counter offset, indicating a function return is occurring."
+        },
+        {
+          "name": "MarkFrameConstructed",
+          "parameters": [
+            "int at_pc"
+          ],
+          "return_type": "void",
+          "logic": "Marks that a stack frame has been constructed at a specific program counter value. Useful for debugging and unwinding."
+        },
+        {
+          "name": "MarkFrameDeconstructed",
+          "parameters": [
+            "int at_pc"
+          ],
+          "return_type": "void",
+          "logic": "Marks that a stack frame has been deconstructed at a specific program counter value."
+        },
+        {
+          "name": "MarkBlockWillExit",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Indicates that the current instruction block will exit, potentially requiring special unwinding handling."
+        },
+        {
+          "name": "Finish",
+          "parameters": [
+            "int code_size"
+          ],
+          "return_type": "void",
+          "logic": "Finalizes the writing of unwinding information to the eh_frame.  It takes the code size as an argument and calls the eh_frame_writer_ Finish method."
+        },
+        {
+          "name": "eh_frame_writer",
+          "parameters": [],
+          "return_type": "EhFrameWriter*",
+          "logic": "Returns a pointer to the EhFrameWriter object if unwinding information generation is enabled, otherwise returns nullptr."
+        },
+        {
+          "name": "enabled",
+          "parameters": [],
+          "return_type": "bool",
+          "logic": "Checks if unwinding information generation is enabled via the v8_flags.perf_prof_unwinding_info flag."
+        }
+      ]
+    },
+    {
+      "name": "BlockInitialState",
+      "properties": [
+        "saved_lr_"
+      ],
+      "methods": [
+        {
+          "name": "BlockInitialState",
+          "parameters": [
+            "bool saved_lr"
+          ],
+          "return_type": "explicit BlockInitialState",
+          "logic": "Constructor.  Records whether the link register was saved at the start of this instruction block."
+        }
+      ]
+    }
+  ],
+  "functions": [],
+  "notes": "The implementation of `BeginInstructionBlock` and `EndInstructionBlock` are not provided in the header file and likely reside in a corresponding `.cc` file."
+}

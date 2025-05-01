@@ -1,0 +1,98 @@
+{
+  "file_path": "/home/kathirks_gc/v8_go/codebase/src/torque/server-data.h",
+  "imports": [
+    "<map>",
+    "<memory>",
+    "<optional>",
+    "<vector>",
+    "src/base/macros.h",
+    "src/torque/declarable.h",
+    "src/torque/global-context.h",
+    "src/torque/source-positions.h",
+    "src/torque/type-oracle.h"
+  ],
+  "classes": [
+    {
+      "name": "LanguageServerData",
+      "properties": [
+        "definitions_map_",
+        "symbols_map_",
+        "global_context_",
+        "type_oracle_"
+      ],
+      "methods": [
+        {
+          "name": "AddDefinition",
+          "parameters": [
+            "SourcePosition token",
+            "SourcePosition definition"
+          ],
+          "return_type": "void",
+          "logic": "Adds a definition mapping to the internal storage.  Relates a token's source position to the source position of its definition."
+        },
+        {
+          "name": "FindDefinition",
+          "parameters": [
+            "SourceId source",
+            "LineAndColumn pos"
+          ],
+          "return_type": "std::optional<SourcePosition>",
+          "logic": "Finds the definition of a token at a given position within a given source file. Returns an optional SourcePosition."
+        },
+        {
+          "name": "SetGlobalContext",
+          "parameters": [
+            "GlobalContext global_context"
+          ],
+          "return_type": "void",
+          "logic": "Sets the global context for the LanguageServerData. This context contains information about the Torque environment. It also calls PrepareAllDeclarableSymbols to populate symbols after setting the global context."
+        },
+        {
+          "name": "SetTypeOracle",
+          "parameters": [
+            "TypeOracle type_oracle"
+          ],
+          "return_type": "void",
+          "logic": "Sets the type oracle for the LanguageServerData.  The type oracle provides information about types used in the Torque language."
+        },
+        {
+          "name": "SymbolsForSourceId",
+          "parameters": [
+            "SourceId id"
+          ],
+          "return_type": "const Symbols&",
+          "logic": "Returns a constant reference to the Symbols (declarables) associated with the given SourceId. Used for document-scoped searches."
+        },
+        {
+          "name": "PrepareAllDeclarableSymbols",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Splits all declarables from the global context by SourceId and filters out auto-generated ones.  This populates the `symbols_map_` member."
+        }
+      ]
+    }
+  ],
+  "functions": [],
+  "typedefs": [
+    {
+      "name": "DefinitionMapping",
+      "type": "std::pair<SourcePosition, SourcePosition>"
+    },
+    {
+      "name": "Definitions",
+      "type": "std::vector<DefinitionMapping>"
+    },
+    {
+      "name": "DefinitionsMap",
+      "type": "std::map<SourceId, Definitions>"
+    },
+    {
+      "name": "Symbols",
+      "type": "std::vector<Declarable*>"
+    },
+    {
+      "name": "SymbolsMap",
+      "type": "std::map<SourceId, Symbols>"
+    }
+  ]
+}

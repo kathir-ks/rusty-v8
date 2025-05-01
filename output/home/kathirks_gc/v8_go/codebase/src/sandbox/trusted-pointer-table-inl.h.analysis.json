@@ -1,0 +1,211 @@
+{
+  "file_path": "/home/kathirks_gc/v8_go/codebase/src/sandbox/trusted-pointer-table-inl.h",
+  "imports": [
+    "src/sandbox/external-entity-table-inl.h",
+    "src/sandbox/sandbox.h",
+    "src/sandbox/trusted-pointer-scope.h",
+    "src/sandbox/trusted-pointer-table.h"
+  ],
+  "classes": [
+    {
+      "name": "TrustedPointerTableEntry",
+      "properties": [
+        "payload_"
+      ],
+      "methods": [
+        {
+          "name": "MakeTrustedPointerEntry",
+          "parameters": [
+            "Address pointer",
+            "IndirectPointerTag tag",
+            "bool mark_as_alive"
+          ],
+          "return_type": "void",
+          "logic": "Creates a trusted pointer entry in the payload_ with the given pointer and tag. Sets the mark bit if requested."
+        },
+        {
+          "name": "MakeFreelistEntry",
+          "parameters": [
+            "uint32_t next_entry_index"
+          ],
+          "return_type": "void",
+          "logic": "Creates a freelist entry in the payload_ with the given index."
+        },
+        {
+          "name": "MakeZappedEntry",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Creates a zapped entry in the payload_ indicating that the entry is no longer valid."
+        },
+        {
+          "name": "GetPointer",
+          "parameters": [
+            "IndirectPointerTag tag"
+          ],
+          "return_type": "Address",
+          "logic": "Retrieves the pointer from the payload_ after untagging it with the given tag. Asserts that it is not a freelist entry."
+        },
+        {
+          "name": "SetPointer",
+          "parameters": [
+            "Address pointer",
+            "IndirectPointerTag tag"
+          ],
+          "return_type": "void",
+          "logic": "Sets the pointer in the payload_ with the given pointer and tag. Asserts that it is not a freelist entry and the mark bit is not set on the old entry.  If the marking state changes this requires updates."
+        },
+        {
+          "name": "HasPointer",
+          "parameters": [
+            "IndirectPointerTag tag"
+          ],
+          "return_type": "bool",
+          "logic": "Checks if the payload_ contains a pointer and if its tag matches the given tag (or if the tag is unknown)."
+        },
+        {
+          "name": "OverwriteTag",
+          "parameters": [
+            "IndirectPointerTag tag"
+          ],
+          "return_type": "void",
+          "logic": "Overwrites the tag of the pointer entry with the new tag. It is guarded to prevent misuse and currently only supports setting the tag to kUnpublishedIndirectPointerTag."
+        },
+        {
+          "name": "IsFreelistEntry",
+          "parameters": [],
+          "return_type": "bool",
+          "logic": "Checks if the payload_ contains a freelist link, indicating that it is a freelist entry."
+        },
+        {
+          "name": "GetNextFreelistEntryIndex",
+          "parameters": [],
+          "return_type": "uint32_t",
+          "logic": "Retrieves the index of the next freelist entry from the payload_."
+        },
+        {
+          "name": "Mark",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Sets the mark bit in the payload_, indicating that the entry is alive during garbage collection."
+        },
+        {
+          "name": "Unmark",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Clears the mark bit in the payload_."
+        },
+        {
+          "name": "IsMarked",
+          "parameters": [],
+          "return_type": "bool",
+          "logic": "Checks if the mark bit is set in the payload_."
+        }
+      ]
+    },
+    {
+      "name": "TrustedPointerTable",
+      "properties": [],
+      "methods": [
+        {
+          "name": "IsUnpublished",
+          "parameters": [
+            "TrustedPointerHandle handle"
+          ],
+          "return_type": "bool",
+          "logic": "Checks if the pointer associated with the given handle is unpublished."
+        },
+        {
+          "name": "Get",
+          "parameters": [
+            "TrustedPointerHandle handle",
+            "IndirectPointerTag tag"
+          ],
+          "return_type": "Address",
+          "logic": "Retrieves the pointer associated with the given handle and tag. Performs a check in ASan builds to ensure the entry is tagged with the expected tag."
+        },
+        {
+          "name": "GetMaybeUnpublished",
+          "parameters": [
+            "TrustedPointerHandle handle",
+            "IndirectPointerTag tag"
+          ],
+          "return_type": "Address",
+          "logic": "Retrieves the pointer associated with the given handle and tag. First attempts to retrieve it with kUnpublishedIndirectPointerTag, then falls back to the specified tag. Performs a check in ASan builds to ensure the entry is tagged with the expected tag."
+        },
+        {
+          "name": "Set",
+          "parameters": [
+            "TrustedPointerHandle handle",
+            "Address pointer",
+            "IndirectPointerTag tag"
+          ],
+          "return_type": "void",
+          "logic": "Sets the pointer associated with the given handle to the given pointer and tag."
+        },
+        {
+          "name": "AllocateAndInitializeEntry",
+          "parameters": [
+            "Space* space",
+            "Address pointer",
+            "IndirectPointerTag tag",
+            "TrustedPointerPublishingScope* scope"
+          ],
+          "return_type": "TrustedPointerHandle",
+          "logic": "Allocates a new entry in the table and initializes it with the given pointer and tag. Returns the handle to the new entry."
+        },
+        {
+          "name": "Mark",
+          "parameters": [
+            "Space* space",
+            "TrustedPointerHandle handle"
+          ],
+          "return_type": "void",
+          "logic": "Marks the entry associated with the given handle as alive during garbage collection."
+        },
+        {
+          "name": "Zap",
+          "parameters": [
+            "TrustedPointerHandle handle"
+          ],
+          "return_type": "void",
+          "logic": "Zaps the entry associated with the given handle, making it invalid."
+        },
+        {
+          "name": "IterateActiveEntriesIn",
+          "parameters": [
+            "Space* space",
+            "Callback callback"
+          ],
+          "return_type": "void",
+          "logic": "Iterates over all active (non-freelist) entries in the given space and calls the provided callback with the handle and pointer for each entry."
+        },
+        {
+          "name": "HandleToIndex",
+          "parameters": [
+            "TrustedPointerHandle handle"
+          ],
+          "return_type": "uint32_t",
+          "logic": "Converts a TrustedPointerHandle to an index."
+        },
+        {
+          "name": "IndexToHandle",
+          "parameters": [
+            "uint32_t index"
+          ],
+          "return_type": "TrustedPointerHandle",
+          "logic": "Converts an index to a TrustedPointerHandle."
+        },
+        {
+          "name": "Validate",
+          "parameters": [
+            "Address pointer",
+            "IndirectPointerTag tag"
+          ],
+          "return_type": "void",
+          "logic": "Validates that the given pointer is not inside the sandbox and that the tag is valid (related to trusted space migration)."
+        }
+      ]
+    }
+  ],
+  "functions": []
+}

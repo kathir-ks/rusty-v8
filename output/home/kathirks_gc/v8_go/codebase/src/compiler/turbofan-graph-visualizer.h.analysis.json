@@ -1,0 +1,633 @@
+{
+  "file_path": "/home/kathirks_gc/v8_go/codebase/src/compiler/turbofan-graph-visualizer.h",
+  "imports": [
+    "stdio.h",
+    "fstream",
+    "iosfwd",
+    "memory",
+    "optional",
+    "vector",
+    "src/common/globals.h",
+    "src/handles/handles.h",
+    "src/objects/code.h"
+  ],
+  "classes": [
+    {
+      "name": "JSONEscaped",
+      "properties": [
+        "std::string str_"
+      ],
+      "methods": [
+        {
+          "name": "JSONEscaped",
+          "parameters": [
+            "const T& value"
+          ],
+          "return_type": "constructor",
+          "logic": "Constructor that takes a value of any type, converts it to a string, and escapes JSON special characters."
+        },
+        {
+          "name": "JSONEscaped",
+          "parameters": [
+            "std::string str"
+          ],
+          "return_type": "constructor",
+          "logic": "Constructor that takes a string and escapes JSON special characters."
+        },
+        {
+          "name": "JSONEscaped",
+          "parameters": [
+            "const std::ostringstream& os"
+          ],
+          "return_type": "constructor",
+          "logic": "Constructor that takes a stringstream and escapes JSON special characters."
+        },
+        {
+          "name": "operator<<",
+          "parameters": [
+            "std::ostream& os",
+            "const JSONEscaped& e"
+          ],
+          "return_type": "std::ostream&",
+          "logic": "Overloads the output stream operator to output the escaped string. Iterates through the string and pipes each character to PipeCharacter to handle escaping."
+        },
+        {
+          "name": "PipeCharacter",
+          "parameters": [
+            "std::ostream& os",
+            "char c"
+          ],
+          "return_type": "std::ostream&",
+          "logic": "Static helper function that escapes individual characters for JSON output."
+        }
+      ]
+    },
+    {
+      "name": "TurboJsonFile",
+      "properties": [],
+      "methods": [
+        {
+          "name": "TurboJsonFile",
+          "parameters": [
+            "OptimizedCompilationInfo* info",
+            "std::ios_base::openmode mode"
+          ],
+          "return_type": "constructor",
+          "logic": "Constructor for the TurboJsonFile class, inheriting from std::ofstream, used for writing JSON data related to Turbofan compilation."
+        },
+        {
+          "name": "~TurboJsonFile",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Destructor for the TurboJsonFile class."
+        }
+      ]
+    },
+    {
+      "name": "TurboCfgFile",
+      "properties": [],
+      "methods": [
+        {
+          "name": "TurboCfgFile",
+          "parameters": [
+            "Isolate* isolate = nullptr"
+          ],
+          "return_type": "constructor",
+          "logic": "Constructor for the TurboCfgFile class, inheriting from std::ofstream, used for writing CFG (Control Flow Graph) data related to Turbofan compilation."
+        },
+        {
+          "name": "~TurboCfgFile",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Destructor for the TurboCfgFile class."
+        }
+      ]
+    },
+    {
+      "name": "SourcePositionAsJSON",
+      "properties": [
+        "const SourcePosition& sp"
+      ],
+      "methods": [
+        {
+          "name": "SourcePositionAsJSON",
+          "parameters": [
+            "const SourcePosition& sp"
+          ],
+          "return_type": "constructor",
+          "logic": "Constructor that wraps a SourcePosition object to provide custom JSON formatting."
+        }
+      ]
+    },
+    {
+      "name": "NodeOriginAsJSON",
+      "properties": [
+        "const NodeOrigin& no"
+      ],
+      "methods": [
+        {
+          "name": "NodeOriginAsJSON",
+          "parameters": [
+            "const NodeOrigin& no"
+          ],
+          "return_type": "constructor",
+          "logic": "Constructor that wraps a NodeOrigin object to provide custom JSON formatting."
+        }
+      ]
+    },
+    {
+      "name": "SourceIdAssigner",
+      "properties": [
+        "std::vector<Handle<SharedFunctionInfo>> printed_",
+        "std::vector<int> source_ids_"
+      ],
+      "methods": [
+        {
+          "name": "SourceIdAssigner",
+          "parameters": [
+            "size_t size"
+          ],
+          "return_type": "constructor",
+          "logic": "Constructor that initializes the printed_ and source_ids_ vectors with a given size."
+        },
+        {
+          "name": "GetIdFor",
+          "parameters": [
+            "Handle<SharedFunctionInfo> shared"
+          ],
+          "return_type": "int",
+          "logic": "Assigns a unique ID to a SharedFunctionInfo. If the SFI has already been printed, returns its assigned ID. Otherwise, assigns a new ID and stores the SFI and its ID in the internal vectors."
+        },
+        {
+          "name": "GetIdAt",
+          "parameters": [
+            "size_t pos"
+          ],
+          "return_type": "int",
+          "logic": "Returns the ID of the SharedFunctionInfo at the given position in the source_ids_ vector."
+        }
+      ]
+    },
+    {
+      "name": "JSONGraphWriter",
+      "properties": [
+        "std::ostream& os_",
+        "Zone* zone_",
+        "const TFGraph* graph_",
+        "const SourcePositionTable* positions_",
+        "const NodeOriginTable* origins_",
+        "bool first_node_",
+        "bool first_edge_"
+      ],
+      "methods": [
+        {
+          "name": "JSONGraphWriter",
+          "parameters": [
+            "std::ostream& os",
+            "const TFGraph* graph",
+            "const SourcePositionTable* positions",
+            "const NodeOriginTable* origins"
+          ],
+          "return_type": "constructor",
+          "logic": "Constructor to initialize JSONGraphWriter with output stream, graph, position table, and origin table.  Used to write a Turbofan graph as JSON."
+        },
+        {
+          "name": "PrintPhase",
+          "parameters": [
+            "const char* phase_name"
+          ],
+          "return_type": "void",
+          "logic": "Prints the beginning of the phase with the given name to the output stream."
+        },
+        {
+          "name": "Print",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Prints the entire graph to the output stream."
+        },
+        {
+          "name": "PrintNode",
+          "parameters": [
+            "Node* node",
+            "bool is_live"
+          ],
+          "return_type": "void",
+          "logic": "Prints a single node in the graph to the output stream."
+        },
+        {
+          "name": "PrintEdges",
+          "parameters": [
+            "Node* node"
+          ],
+          "return_type": "void",
+          "logic": "Prints the edges of a single node to the output stream."
+        },
+        {
+          "name": "PrintEdge",
+          "parameters": [
+            "Node* from",
+            "int index",
+            "Node* to"
+          ],
+          "return_type": "void",
+          "logic": "Prints a single edge from one node to another to the output stream."
+        },
+        {
+          "name": "GetType",
+          "parameters": [
+            "Node* node"
+          ],
+          "return_type": "std::optional<Type>",
+          "logic": "Returns the Type of the specified node. (Virtual function to be overwritten in derived classes)"
+        }
+      ]
+    },
+    {
+      "name": "GraphAsJSON",
+      "properties": [
+        "const TFGraph& graph",
+        "const SourcePositionTable* positions",
+        "const NodeOriginTable* origins"
+      ],
+      "methods": [
+        {
+          "name": "GraphAsJSON",
+          "parameters": [
+            "const TFGraph& g",
+            "SourcePositionTable* p",
+            "NodeOriginTable* o"
+          ],
+          "return_type": "constructor",
+          "logic": "Constructor to wrap a TFGraph, SourcePositionTable, and NodeOriginTable for custom JSON formatting."
+        }
+      ]
+    },
+    {
+      "name": "AsRPO",
+      "properties": [
+        "const TFGraph& graph"
+      ],
+      "methods": [
+        {
+          "name": "AsRPO",
+          "parameters": [
+            "const TFGraph& g"
+          ],
+          "return_type": "constructor",
+          "logic": "Constructor to wrap a TFGraph for reverse postorder printing."
+        }
+      ]
+    },
+    {
+      "name": "AsC1VCompilation",
+      "properties": [
+        "const OptimizedCompilationInfo* info_"
+      ],
+      "methods": [
+        {
+          "name": "AsC1VCompilation",
+          "parameters": [
+            "const OptimizedCompilationInfo* info"
+          ],
+          "return_type": "constructor",
+          "logic": "Constructor to wrap an OptimizedCompilationInfo for C1 visualizer."
+        }
+      ]
+    },
+    {
+      "name": "AsScheduledGraph",
+      "properties": [
+        "const Schedule* schedule"
+      ],
+      "methods": [
+        {
+          "name": "AsScheduledGraph",
+          "parameters": [
+            "const Schedule* schedule"
+          ],
+          "return_type": "constructor",
+          "logic": "Constructor that wraps a Schedule for custom output formatting."
+        }
+      ]
+    },
+    {
+      "name": "AsC1V",
+      "properties": [
+        "const Schedule* schedule_",
+        "const InstructionSequence* instructions_",
+        "const SourcePositionTable* positions_",
+        "const char* phase_"
+      ],
+      "methods": [
+        {
+          "name": "AsC1V",
+          "parameters": [
+            "const char* phase",
+            "const Schedule* schedule",
+            "const SourcePositionTable* positions = nullptr",
+            "const InstructionSequence* instructions = nullptr"
+          ],
+          "return_type": "constructor",
+          "logic": "Constructor that wraps Schedule, Instructions and positions for custom JSON formatting for the C1 visualizer."
+        }
+      ]
+    },
+    {
+      "name": "AsC1VRegisterAllocationData",
+      "properties": [
+        "const char* phase_",
+        "const RegisterAllocationData* data_"
+      ],
+      "methods": [
+        {
+          "name": "AsC1VRegisterAllocationData",
+          "parameters": [
+            "const char* phase",
+            "const RegisterAllocationData* data = nullptr"
+          ],
+          "return_type": "constructor",
+          "logic": "Constructor that wraps RegisterAllocationData for custom JSON formatting for the C1 visualizer."
+        }
+      ]
+    },
+    {
+      "name": "LiveRangeAsJSON",
+      "properties": [
+        "const LiveRange& range_",
+        "const InstructionSequence& code_"
+      ]
+    },
+    {
+      "name": "TopLevelLiveRangeAsJSON",
+      "properties": [
+        "const TopLevelLiveRange& range_",
+        "const InstructionSequence& code_"
+      ]
+    },
+    {
+      "name": "RegisterAllocationDataAsJSON",
+      "properties": [
+        "const RegisterAllocationData& data_",
+        "const InstructionSequence& code_"
+      ]
+    },
+    {
+      "name": "InstructionOperandAsJSON",
+      "properties": [
+        "const InstructionOperand* op_",
+        "const InstructionSequence* code_"
+      ]
+    },
+    {
+      "name": "InstructionAsJSON",
+      "properties": [
+        "int index_",
+        "const Instruction* instr_",
+        "const InstructionSequence* code_"
+      ]
+    },
+    {
+      "name": "InstructionBlockAsJSON",
+      "properties": [
+        "const InstructionBlock* block_",
+        "const InstructionSequence* code_"
+      ]
+    },
+    {
+      "name": "InstructionSequenceAsJSON",
+      "properties": [
+        "const InstructionSequence* sequence_"
+      ]
+    }
+  ],
+  "functions": [
+    {
+      "name": "AsJSON",
+      "parameters": [
+        "const SourcePosition& sp"
+      ],
+      "return_type": "SourcePositionAsJSON",
+      "logic": "Creates a SourcePositionAsJSON object from a SourcePosition object."
+    },
+    {
+      "name": "AsJSON",
+      "parameters": [
+        "const NodeOrigin& no"
+      ],
+      "return_type": "NodeOriginAsJSON",
+      "logic": "Creates a NodeOriginAsJSON object from a NodeOrigin object."
+    },
+    {
+      "name": "operator<<",
+      "parameters": [
+        "std::ostream& out",
+        "const SourcePositionAsJSON& pos"
+      ],
+      "return_type": "std::ostream&",
+      "logic": "Overloads the output stream operator to output SourcePosition as JSON. The implementation is not provided in the header."
+    },
+    {
+      "name": "operator<<",
+      "parameters": [
+        "std::ostream& out",
+        "const NodeOriginAsJSON& asJSON"
+      ],
+      "return_type": "std::ostream&",
+      "logic": "Overloads the output stream operator to output NodeOrigin as JSON. The implementation is not provided in the header."
+    },
+    {
+      "name": "JsonPrintAllBytecodeSources",
+      "parameters": [
+        "std::ostream& os",
+        "OptimizedCompilationInfo* info"
+      ],
+      "return_type": "void",
+      "logic": "Prints all bytecode sources in JSON format to the output stream, using information from the OptimizedCompilationInfo."
+    },
+    {
+      "name": "JsonPrintBytecodeSource",
+      "parameters": [
+        "std::ostream& os",
+        "int source_id",
+        "std::unique_ptr<char[]> function_name",
+        "DirectHandle<BytecodeArray> bytecode_array",
+        "Tagged<FeedbackVector> feedback_vector = {}"
+      ],
+      "return_type": "void",
+      "logic": "Prints a single bytecode source in JSON format to the output stream, using provided parameters."
+    },
+    {
+      "name": "JsonPrintAllSourceWithPositions",
+      "parameters": [
+        "std::ostream& os",
+        "OptimizedCompilationInfo* info",
+        "Isolate* isolate"
+      ],
+      "return_type": "void",
+      "logic": "Prints all sources with their corresponding positions in JSON format to the output stream, using information from the OptimizedCompilationInfo and Isolate."
+    },
+    {
+      "name": "JsonPrintAllSourceWithPositionsWasm",
+      "parameters": [
+        "std::ostream& os",
+        "const wasm::WasmModule* module",
+        "const wasm::WireBytesStorage* wire_bytes",
+        "base::Vector<WasmInliningPosition> positions"
+      ],
+      "return_type": "void",
+      "logic": "Prints all wasm sources with their positions to the output stream in JSON format, using the provided wasm module, wire bytes storage, and positions."
+    },
+    {
+      "name": "JsonPrintFunctionSource",
+      "parameters": [
+        "std::ostream& os",
+        "int source_id",
+        "std::unique_ptr<char[]> function_name",
+        "DirectHandle<Script> script",
+        "Isolate* isolate",
+        "DirectHandle<SharedFunctionInfo> shared",
+        "bool with_key = false"
+      ],
+      "return_type": "void",
+      "logic": "Prints a function source in JSON format to the output stream, using provided parameters."
+    },
+    {
+      "name": "GetVisualizerLogFileName",
+      "parameters": [
+        "OptimizedCompilationInfo* info",
+        "const char* optional_base_dir",
+        "const char* phase",
+        "const char* suffix"
+      ],
+      "return_type": "std::unique_ptr<char[]>",
+      "logic": "Generates a filename for the visualizer log file based on the provided information."
+    },
+    {
+      "name": "AsJSON",
+      "parameters": [
+        "const TFGraph& g",
+        "SourcePositionTable* p",
+        "NodeOriginTable* o"
+      ],
+      "return_type": "GraphAsJSON",
+      "logic": "Creates a GraphAsJSON object to wrap the TFGraph, SourcePositionTable and NodeOriginTable"
+    },
+    {
+      "name": "operator<<",
+      "parameters": [
+        "std::ostream& os",
+        "const GraphAsJSON& ad"
+      ],
+      "return_type": "std::ostream&",
+      "logic": "Overloads the output stream operator to output GraphAsJSON in JSON. Implementation not provided in the header."
+    },
+    {
+      "name": "operator<<",
+      "parameters": [
+        "std::ostream& os",
+        "const AsRPO& ad"
+      ],
+      "return_type": "std::ostream&",
+      "logic": "Overloads the output stream operator to output AsRPO in the desired format.  Implementation is not provided in the header file."
+    },
+    {
+      "name": "operator<<",
+      "parameters": [
+        "std::ostream& os",
+        "const AsScheduledGraph& scheduled"
+      ],
+      "return_type": "std::ostream&",
+      "logic": "Overloads the output stream operator to output a scheduled graph. Implementation is not provided in the header file."
+    },
+    {
+      "name": "operator<<",
+      "parameters": [
+        "std::ostream& os",
+        "const AsC1VCompilation& ac"
+      ],
+      "return_type": "std::ostream&",
+      "logic": "Overloads the output stream operator to output AsC1VCompilation in the desired format.  Implementation is not provided in the header file."
+    },
+    {
+      "name": "operator<<",
+      "parameters": [
+        "std::ostream& os",
+        "const AsC1V& ac"
+      ],
+      "return_type": "std::ostream&",
+      "logic": "Overloads the output stream operator to output AsC1V in the desired format. Implementation is not provided in the header file."
+    },
+    {
+      "name": "operator<<",
+      "parameters": [
+        "std::ostream& os",
+        "const AsC1VRegisterAllocationData& ac"
+      ],
+      "return_type": "std::ostream&",
+      "logic": "Overloads the output stream operator to output AsC1VRegisterAllocationData.  Implementation is not provided in the header file."
+    },
+    {
+      "name": "operator<<",
+      "parameters": [
+        "std::ostream& os",
+        "const LiveRangeAsJSON& live_range_json"
+      ],
+      "return_type": "std::ostream&",
+      "logic": "Overloads the output stream operator to output a LiveRange as JSON. Implementation not provided in header."
+    },
+    {
+      "name": "operator<<",
+      "parameters": [
+        "std::ostream& os",
+        "const TopLevelLiveRangeAsJSON& top_level_live_range_json"
+      ],
+      "return_type": "std::ostream&",
+      "logic": "Overloads the output stream operator to output a TopLevelLiveRange as JSON. Implementation not provided in header."
+    },
+    {
+      "name": "operator<<",
+      "parameters": [
+        "std::ostream& os",
+        "const RegisterAllocationDataAsJSON& ac"
+      ],
+      "return_type": "std::ostream&",
+      "logic": "Overloads the output stream operator to output RegisterAllocationData as JSON.  Implementation not provided in header."
+    },
+    {
+      "name": "operator<<",
+      "parameters": [
+        "std::ostream& os",
+        "const InstructionOperandAsJSON& o"
+      ],
+      "return_type": "std::ostream&",
+      "logic": "Overloads the output stream operator to output an InstructionOperand as JSON. Implementation not provided in header."
+    },
+    {
+      "name": "operator<<",
+      "parameters": [
+        "std::ostream& os",
+        "const InstructionAsJSON& i"
+      ],
+      "return_type": "std::ostream&",
+      "logic": "Overloads the output stream operator to output an Instruction as JSON. Implementation not provided in header."
+    },
+    {
+      "name": "operator<<",
+      "parameters": [
+        "std::ostream& os",
+        "const InstructionBlockAsJSON& b"
+      ],
+      "return_type": "std::ostream&",
+      "logic": "Overloads the output stream operator to output an InstructionBlock as JSON. Implementation not provided in header."
+    },
+    {
+      "name": "operator<<",
+      "parameters": [
+        "std::ostream& os",
+        "const InstructionSequenceAsJSON& s"
+      ],
+      "return_type": "std::ostream&",
+      "logic": "Overloads the output stream operator to output an InstructionSequence as JSON. Implementation not provided in header."
+    }
+  ]
+}

@@ -1,0 +1,75 @@
+{
+  "file_path": "/home/kathirks_gc/v8_go/codebase/src/extensions/statistics-extension.cc",
+  "imports": [
+    "src/extensions/statistics-extension.h",
+    "include/v8-template.h",
+    "src/common/assert-scope.h",
+    "src/execution/isolate.h",
+    "src/heap/heap-inl.h",
+    "src/logging/counters.h",
+    "src/objects/tagged.h",
+    "src/roots/roots.h"
+  ],
+  "classes": [
+    {
+      "name": "StatisticsExtension",
+      "properties": [
+        "kSource"
+      ],
+      "methods": [
+        {
+          "name": "GetNativeFunctionTemplate",
+          "parameters": [
+            "v8::Isolate* isolate",
+            "v8::Local<v8::String> str"
+          ],
+          "return_type": "v8::Local<v8::FunctionTemplate>",
+          "logic": "Creates a native function template for the 'getV8Statistics' function."
+        },
+        {
+          "name": "GetCounters",
+          "parameters": [
+            "const v8::FunctionCallbackInfo<v8::Value>& info"
+          ],
+          "return_type": "void",
+          "logic": "Gathers various V8 statistics counters and memory usage information and returns them as a JavaScript object.  Optionally triggers a garbage collection if the first argument is a boolean true."
+        }
+      ]
+    }
+  ],
+  "functions": [
+    {
+      "name": "AddCounter",
+      "parameters": [
+        "v8::Isolate* isolate",
+        "v8::Local<v8::Object> object",
+        "StatsCounter* counter",
+        "const char* name"
+      ],
+      "return_type": "void",
+      "logic": "Adds a statistics counter's value to a JavaScript object."
+    },
+    {
+      "name": "AddNumber",
+      "parameters": [
+        "v8::Isolate* isolate",
+        "v8::Local<v8::Object> object",
+        "double value",
+        "const char* name"
+      ],
+      "return_type": "void",
+      "logic": "Adds a number to a JavaScript object."
+    },
+    {
+      "name": "AddNumber64",
+      "parameters": [
+        "v8::Isolate* isolate",
+        "v8::Local<v8::Object> object",
+        "int64_t value",
+        "const char* name"
+      ],
+      "return_type": "void",
+      "logic": "Adds a 64-bit integer as a number to a JavaScript object."
+    }
+  ]
+}

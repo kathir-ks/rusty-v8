@@ -1,0 +1,72 @@
+{
+  "file_path": "/home/kathirks_gc/v8_go/codebase/src/compiler/turboshaft/late-escape-analysis-reducer.cc",
+  "imports": [
+    "src/compiler/turboshaft/late-escape-analysis-reducer.h"
+  ],
+  "classes": [
+    {
+      "name": "LateEscapeAnalysisAnalyzer",
+      "properties": [
+        "alloc_uses_",
+        "allocs_",
+        "graph_",
+        "phase_zone_"
+      ],
+      "methods": [
+        {
+          "name": "Run",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Orchestrates the escape analysis process. It first collects uses and allocations, and then finds removable allocations."
+        },
+        {
+          "name": "RecordAllocateUse",
+          "parameters": [
+            "OpIndex alloc",
+            "OpIndex use"
+          ],
+          "return_type": "void",
+          "logic": "Records that a specific operation `use` is using the result of an allocation operation `alloc`. Stores the uses of allocations in `alloc_uses_`."
+        },
+        {
+          "name": "CollectUsesAndAllocations",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Iterates through all operations in the graph, identifies AllocateOps and their uses, and populates the `alloc_uses_` and `allocs_` data structures.  It skips operations that `ShouldSkipOperation` indicates shouldn't be considered."
+        },
+        {
+          "name": "FindRemovableAllocations",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Iteratively processes allocation operations. If an allocation is determined not to be escaping (based on `AllocationIsEscaping`), it's marked for removal (`MarkToRemove`)."
+        },
+        {
+          "name": "AllocationIsEscaping",
+          "parameters": [
+            "OpIndex alloc"
+          ],
+          "return_type": "bool",
+          "logic": "Checks if a given allocation `alloc` is escaping. It iterates through all uses of the allocation and returns `true` if any of the uses cause it to escape (based on `EscapesThroughUse`).  Returns `false` if there are no uses for the given allocation."
+        },
+        {
+          "name": "EscapesThroughUse",
+          "parameters": [
+            "OpIndex alloc",
+            "OpIndex using_op_idx"
+          ],
+          "return_type": "bool",
+          "logic": "Determines if a specific use of an allocation causes it to escape. Specifically, a StoreOp only makes the allocation escape if the allocation is the value being stored, not the memory location being written to. Returns true for other uses."
+        },
+        {
+          "name": "MarkToRemove",
+          "parameters": [
+            "OpIndex alloc"
+          ],
+          "return_type": "void",
+          "logic": "Marks an allocation `alloc` for removal by killing the operation in the graph. Also removes the uses of this allocation and checks if the allocations used in the stores which are being removed can also be removed. It skips if `ShouldSkipOptimizationStep` returns true."
+        }
+      ]
+    }
+  ],
+  "functions": []
+}

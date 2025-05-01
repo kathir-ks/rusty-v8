@@ -1,0 +1,37 @@
+{
+  "file_path": "/home/kathirks_gc/v8_go/codebase/src/compiler/c-linkage.cc",
+  "imports": [
+    "src/codegen/assembler-inl.h",
+    "src/codegen/macro-assembler.h",
+    "src/compiler/globals.h",
+    "src/compiler/linkage.h",
+    "src/zone/zone.h"
+  ],
+  "classes": [],
+  "functions": [
+    {
+      "name": "BuildParameterLocations",
+      "parameters": [
+        "const MachineSignature* msig",
+        "size_t kFPParamRegisterCount",
+        "size_t kParamRegisterCount",
+        "const DoubleRegister* kFPParamRegisters",
+        "const v8::internal::Register* kParamRegisters",
+        "LocationSignature::Builder* out_locations"
+      ],
+      "return_type": "void",
+      "logic": "Builds a `LocationSignature` object that describes where the parameters of a C function call should be placed (registers or stack).  The implementation varies depending on the target architecture and operating system, particularly Windows x64 and LoongArch, where GP registers are used for FP params. It iterates through the parameters defined in `msig` and assigns them to either registers or stack slots based on the parameter type (floating-point or general purpose) and the available registers."
+    },
+    {
+      "name": "Linkage::GetSimplifiedCDescriptor",
+      "parameters": [
+        "Zone* zone",
+        "const MachineSignature* msig",
+        "CallDescriptor::Flags flags",
+        "Operator::Properties properties"
+      ],
+      "return_type": "CallDescriptor*",
+      "logic": "Creates a `CallDescriptor` object for C function calls.  The `CallDescriptor` describes the calling convention, including the location of parameters and return values, and the callee-saved registers. The method retrieves parameter locations via `BuildParameterLocations` and configures the return value register.  It also sets up the callee-saved registers, the target type, and other call descriptor flags."
+    }
+  ]
+}

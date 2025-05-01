@@ -1,0 +1,1110 @@
+{
+  "file_path": "/home/kathirks_gc/v8_go/codebase/src/torque/implementation-visitor.h",
+  "imports": [
+    "<memory>",
+    "<optional>",
+    "<string>",
+    "src/base/macros.h",
+    "src/torque/ast.h",
+    "src/torque/cfg.h",
+    "src/torque/cpp-builder.h",
+    "src/torque/declarations.h",
+    "src/torque/global-context.h",
+    "src/torque/type-oracle.h",
+    "src/torque/types.h",
+    "src/torque/utils.h"
+  ],
+  "classes": [
+    {
+      "name": "LocationReference",
+      "properties": [
+        "std::optional<VisitResult> variable_",
+        "std::optional<VisitResult> temporary_",
+        "std::optional<std::string> temporary_description_",
+        "std::optional<VisitResult> heap_reference_",
+        "FieldSynchronization heap_reference_synchronization_",
+        "std::optional<VisitResult> heap_slice_",
+        "std::optional<std::string> eval_function_",
+        "std::optional<std::string> assign_function_",
+        "VisitResultVector call_arguments_",
+        "std::optional<Binding<LocalValue>*> binding_",
+        "std::shared_ptr<const LocationReference> bit_field_struct_",
+        "std::optional<BitField> bit_field_"
+      ],
+      "methods": [
+        {
+          "name": "VariableAccess",
+          "parameters": [
+            "VisitResult variable",
+            "std::optional<Binding<LocalValue>*> binding = std::nullopt"
+          ],
+          "return_type": "LocationReference",
+          "logic": "Creates a LocationReference representing an assignable stack range (variable access)."
+        },
+        {
+          "name": "Temporary",
+          "parameters": [
+            "VisitResult temporary",
+            "std::string description"
+          ],
+          "return_type": "LocationReference",
+          "logic": "Creates a LocationReference representing an unassignable temporary value."
+        },
+        {
+          "name": "HeapReference",
+          "parameters": [
+            "VisitResult heap_reference",
+            "FieldSynchronization synchronization = FieldSynchronization::kNone"
+          ],
+          "return_type": "LocationReference",
+          "logic": "Creates a LocationReference representing a heap reference (tagged value with an offset)."
+        },
+        {
+          "name": "HeapSlice",
+          "parameters": [
+            "VisitResult heap_slice"
+          ],
+          "return_type": "LocationReference",
+          "logic": "Creates a LocationReference representing an array slice on the heap."
+        },
+        {
+          "name": "ArrayAccess",
+          "parameters": [
+            "VisitResult base",
+            "VisitResult offset"
+          ],
+          "return_type": "LocationReference",
+          "logic": "Creates a LocationReference representing access to an array element."
+        },
+        {
+          "name": "FieldAccess",
+          "parameters": [
+            "VisitResult object",
+            "std::string fieldname"
+          ],
+          "return_type": "LocationReference",
+          "logic": "Creates a LocationReference representing access to a field of an object."
+        },
+        {
+          "name": "BitFieldAccess",
+          "parameters": [
+            "const LocationReference& object",
+            "BitField field"
+          ],
+          "return_type": "LocationReference",
+          "logic": "Creates a LocationReference representing access to a bitfield."
+        },
+        {
+          "name": "IsConst",
+          "parameters": [],
+          "return_type": "bool",
+          "logic": "Checks if the LocationReference represents a constant value (either a constant heap reference or a temporary)."
+        },
+        {
+          "name": "IsVariableAccess",
+          "parameters": [],
+          "return_type": "bool",
+          "logic": "Checks if the LocationReference represents a variable access."
+        },
+        {
+          "name": "variable",
+          "parameters": [],
+          "return_type": "const VisitResult&",
+          "logic": "Returns the VisitResult associated with the variable access (only if IsVariableAccess returns true)."
+        },
+        {
+          "name": "IsTemporary",
+          "parameters": [],
+          "return_type": "bool",
+          "logic": "Checks if the LocationReference represents a temporary value."
+        },
+        {
+          "name": "temporary",
+          "parameters": [],
+          "return_type": "const VisitResult&",
+          "logic": "Returns the VisitResult associated with the temporary value (only if IsTemporary returns true)."
+        },
+        {
+          "name": "IsHeapReference",
+          "parameters": [],
+          "return_type": "bool",
+          "logic": "Checks if the LocationReference represents a heap reference."
+        },
+        {
+          "name": "heap_reference",
+          "parameters": [],
+          "return_type": "const VisitResult&",
+          "logic": "Returns the VisitResult associated with the heap reference (only if IsHeapReference returns true)."
+        },
+        {
+          "name": "heap_reference_synchronization",
+          "parameters": [],
+          "return_type": "FieldSynchronization",
+          "logic": "Returns the synchronization type associated with the heap reference (only if IsHeapReference returns true)."
+        },
+        {
+          "name": "IsHeapSlice",
+          "parameters": [],
+          "return_type": "bool",
+          "logic": "Checks if the LocationReference represents a heap slice."
+        },
+        {
+          "name": "heap_slice",
+          "parameters": [],
+          "return_type": "const VisitResult&",
+          "logic": "Returns the VisitResult associated with the heap slice (only if IsHeapSlice returns true)."
+        },
+        {
+          "name": "IsBitFieldAccess",
+          "parameters": [],
+          "return_type": "bool",
+          "logic": "Checks if the LocationReference is a bitfield access."
+        },
+        {
+          "name": "bit_field_struct_location",
+          "parameters": [],
+          "return_type": "const LocationReference&",
+          "logic": "Returns the LocationReference of the struct containing the bitfield."
+        },
+        {
+          "name": "bit_field",
+          "parameters": [],
+          "return_type": "const BitField&",
+          "logic": "Returns the BitField object representing the bitfield."
+        },
+        {
+          "name": "ReferencedType",
+          "parameters": [],
+          "return_type": "std::optional<const Type*>",
+          "logic": "Returns the type of the value referenced by the LocationReference, if any."
+        },
+        {
+          "name": "GetVisitResult",
+          "parameters": [],
+          "return_type": "const VisitResult&",
+          "logic": "Returns the VisitResult associated with the LocationReference (either variable, heap_slice, or temporary)."
+        },
+        {
+          "name": "temporary_description",
+          "parameters": [],
+          "return_type": "const std::string&",
+          "logic": "Returns the description of the temporary value (only if IsTemporary returns true)."
+        },
+        {
+          "name": "IsCallAccess",
+          "parameters": [],
+          "return_type": "bool",
+          "logic": "Checks if the LocationReference is the result of a function call."
+        },
+        {
+          "name": "call_arguments",
+          "parameters": [],
+          "return_type": "const VisitResultVector&",
+          "logic": "Returns the arguments of the function call represented by the LocationReference."
+        },
+        {
+          "name": "eval_function",
+          "parameters": [],
+          "return_type": "const std::string&",
+          "logic": "Returns the name of the eval function."
+        },
+        {
+          "name": "assign_function",
+          "parameters": [],
+          "return_type": "const std::string&",
+          "logic": "Returns the function used for assignment."
+        },
+        {
+          "name": "binding",
+          "parameters": [],
+          "return_type": "std::optional<Binding<LocalValue>*>",
+          "logic": "Returns the binding of the local value."
+        }
+      ]
+    },
+    {
+      "name": "BindingsManager",
+      "properties": [
+        "std::unordered_map<std::string, std::optional<Binding<T>*>> current_bindings_"
+      ],
+      "methods": [
+        {
+          "name": "TryLookup",
+          "parameters": [
+            "const std::string& name"
+          ],
+          "return_type": "std::optional<Binding<T>*>",
+          "logic": "Attempts to find a binding with the given name. If found, it marks the binding as used."
+        }
+      ]
+    },
+    {
+      "name": "Binding",
+      "properties": [
+        "BindingsManager<T>* manager_",
+        "const std::string name_",
+        "std::optional<Binding*> previous_binding_",
+        "SourcePosition declaration_position_",
+        "bool used_",
+        "bool written_",
+        "uint64_t unique_index_"
+      ],
+      "methods": [
+        {
+          "name": "BindingTypeString",
+          "parameters": [],
+          "return_type": "std::string",
+          "logic": "Returns a string describing the type of binding."
+        },
+        {
+          "name": "CheckWritten",
+          "parameters": [],
+          "return_type": "bool",
+          "logic": "Determines if the Binding needs to be checked if its Written flag is set."
+        },
+        {
+          "name": "name",
+          "parameters": [],
+          "return_type": "const std::string&",
+          "logic": "Returns the name of the binding."
+        },
+        {
+          "name": "declaration_position",
+          "parameters": [],
+          "return_type": "SourcePosition",
+          "logic": "Returns the source code position where the binding was declared."
+        },
+        {
+          "name": "Used",
+          "parameters": [],
+          "return_type": "bool",
+          "logic": "Returns whether the binding has been used."
+        },
+        {
+          "name": "SetUsed",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Marks the binding as used."
+        },
+        {
+          "name": "Written",
+          "parameters": [],
+          "return_type": "bool",
+          "logic": "Returns whether the binding has been written to."
+        },
+        {
+          "name": "SetWritten",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Marks the binding as written to."
+        },
+        {
+          "name": "unique_index",
+          "parameters": [],
+          "return_type": "uint64_t",
+          "logic": "Returns a unique index of this binding"
+        }
+      ]
+    },
+    {
+      "name": "BlockBindings",
+      "properties": [
+        "BindingsManager<T>* manager_",
+        "std::vector<std::unique_ptr<Binding<T>>> bindings_"
+      ],
+      "methods": [
+        {
+          "name": "Add",
+          "parameters": [
+            "std::string name",
+            "T value",
+            "bool mark_as_used = false"
+          ],
+          "return_type": "Binding<T>*",
+          "logic": "Adds a new binding to the current block."
+        },
+        {
+          "name": "Add",
+          "parameters": [
+            "const Identifier* name",
+            "T value",
+            "bool mark_as_used = false"
+          ],
+          "return_type": "Binding<T>*",
+          "logic": "Adds a new binding to the current block using an Identifier."
+        },
+        {
+          "name": "bindings",
+          "parameters": [],
+          "return_type": "std::vector<Binding<T>*>",
+          "logic": "Returns all of the bindings managed by this BlockBindings object."
+        }
+      ]
+    },
+    {
+      "name": "LocalValue",
+      "properties": [
+        "std::optional<LocationReference> value",
+        "std::optional<std::function<LocationReference()>> lazy",
+        "std::string inaccessible_explanation"
+      ],
+      "methods": [
+        {
+          "name": "GetLocationReference",
+          "parameters": [
+            "Binding<LocalValue>* binding"
+          ],
+          "return_type": "LocationReference",
+          "logic": "Returns the LocationReference associated with the LocalValue."
+        },
+        {
+          "name": "IsAccessibleNonLazy",
+          "parameters": [],
+          "return_type": "bool",
+          "logic": "Checks if the LocalValue is directly accessible (non-lazy)."
+        }
+      ]
+    },
+    {
+      "name": "LocalLabel",
+      "properties": [
+        "Block* block",
+        "std::vector<const Type*> parameter_types"
+      ],
+      "methods": []
+    },
+    {
+      "name": "Arguments",
+      "properties": [
+        "VisitResultVector parameters",
+        "std::vector<Binding<LocalLabel>*> labels"
+      ],
+      "methods": []
+    },
+    {
+      "name": "ImplementationVisitor",
+      "properties": [
+        "std::optional<CfgAssembler> assembler_",
+        "NullOStream null_stream_",
+        "bool is_dry_run_",
+        "std::unordered_map<const Expression*, const Identifier*> bitfield_expressions_",
+        "std::unordered_set<const Macro*> inlining_macros_",
+        "std::stringstream debug_macros_cc_",
+        "std::stringstream debug_macros_h_",
+        "OutputType output_type_"
+      ],
+      "methods": [
+        {
+          "name": "GenerateBuiltinDefinitionsAndInterfaceDescriptors",
+          "parameters": [
+            "const std::string& output_directory"
+          ],
+          "return_type": "void",
+          "logic": "Generates builtin definitions and interface descriptors."
+        },
+        {
+          "name": "GenerateVisitorLists",
+          "parameters": [
+            "const std::string& output_directory"
+          ],
+          "return_type": "void",
+          "logic": "Generates visitor lists."
+        },
+        {
+          "name": "GenerateBitFields",
+          "parameters": [
+            "const std::string& output_directory"
+          ],
+          "return_type": "void",
+          "logic": "Generates bit fields definitions."
+        },
+        {
+          "name": "GeneratePrintDefinitions",
+          "parameters": [
+            "const std::string& output_directory"
+          ],
+          "return_type": "void",
+          "logic": "Generates print definitions."
+        },
+        {
+          "name": "GenerateClassDefinitions",
+          "parameters": [
+            "const std::string& output_directory"
+          ],
+          "return_type": "void",
+          "logic": "Generates class definitions."
+        },
+        {
+          "name": "GenerateBodyDescriptors",
+          "parameters": [
+            "const std::string& output_directory"
+          ],
+          "return_type": "void",
+          "logic": "Generates body descriptors."
+        },
+        {
+          "name": "GenerateInstanceTypes",
+          "parameters": [
+            "const std::string& output_directory"
+          ],
+          "return_type": "void",
+          "logic": "Generates instance types."
+        },
+        {
+          "name": "GenerateClassVerifiers",
+          "parameters": [
+            "const std::string& output_directory"
+          ],
+          "return_type": "void",
+          "logic": "Generates class verifiers."
+        },
+        {
+          "name": "GenerateEnumVerifiers",
+          "parameters": [
+            "const std::string& output_directory"
+          ],
+          "return_type": "void",
+          "logic": "Generates enum verifiers."
+        },
+        {
+          "name": "GenerateClassDebugReaders",
+          "parameters": [
+            "const std::string& output_directory"
+          ],
+          "return_type": "void",
+          "logic": "Generates class debug readers."
+        },
+        {
+          "name": "GenerateExportedMacrosAssembler",
+          "parameters": [
+            "const std::string& output_directory"
+          ],
+          "return_type": "void",
+          "logic": "Generates exported macros assembler."
+        },
+        {
+          "name": "GenerateCSATypes",
+          "parameters": [
+            "const std::string& output_directory"
+          ],
+          "return_type": "void",
+          "logic": "Generates CSA types."
+        },
+        {
+          "name": "Visit",
+          "parameters": [
+            "Expression* expr"
+          ],
+          "return_type": "VisitResult",
+          "logic": "Visits an expression and returns the result."
+        },
+        {
+          "name": "Visit",
+          "parameters": [
+            "Statement* stmt"
+          ],
+          "return_type": "const Type*",
+          "logic": "Visits a statement and returns the type."
+        },
+        {
+          "name": "CheckInitializersWellformed",
+          "parameters": [
+            "const std::string& aggregate_name",
+            "const std::vector<T>& aggregate_fields",
+            "const std::vector<NameAndExpression>& initializers",
+            "bool ignore_first_field = false"
+          ],
+          "return_type": "void",
+          "logic": "Checks that struct initializers match expected names and count."
+        },
+        {
+          "name": "VisitInitializerResults",
+          "parameters": [
+            "const ClassType* class_type",
+            "const std::vector<NameAndExpression>& expressions"
+          ],
+          "return_type": "InitializerResults",
+          "logic": "Visits expressions used to initialize fields, and returns the identifiers and associated VisitResults"
+        },
+        {
+          "name": "GenerateFieldReference",
+          "parameters": [
+            "VisitResult object",
+            "const Field& field",
+            "const ClassType* class_type",
+            "bool treat_optional_as_indexed = false"
+          ],
+          "return_type": "LocationReference",
+          "logic": "Generates the LocationReference for a field access."
+        },
+        {
+          "name": "GenerateFieldReferenceForInit",
+          "parameters": [
+            "VisitResult object",
+            "const Field& field",
+            "const LayoutForInitialization& layout"
+          ],
+          "return_type": "LocationReference",
+          "logic": "Generates the LocationReference for initializing a field."
+        },
+        {
+          "name": "GenerateArrayLength",
+          "parameters": [
+            "Expression* array_length",
+            "Namespace* nspace",
+            "const std::map<std::string, LocalValue>& bindings"
+          ],
+          "return_type": "VisitResult",
+          "logic": "Generates code for obtaining an array length from an expression."
+        },
+        {
+          "name": "GenerateArrayLength",
+          "parameters": [
+            "VisitResult object",
+            "const Field& field"
+          ],
+          "return_type": "VisitResult",
+          "logic": "Generates code for obtaining an array length from an object field."
+        },
+        {
+          "name": "GenerateArrayLength",
+          "parameters": [
+            "const ClassType* class_type",
+            "const InitializerResults& initializer_results",
+            "const Field& field"
+          ],
+          "return_type": "VisitResult",
+          "logic": "Generates code for obtaining the length of an array from class initialization results."
+        },
+        {
+          "name": "GenerateLayoutForInitialization",
+          "parameters": [
+            "const ClassType* class_type",
+            "const InitializerResults& initializer_results"
+          ],
+          "return_type": "LayoutForInitialization",
+          "logic": "Generates layout information (array lengths, offsets, size) for class initialization."
+        },
+        {
+          "name": "InitializeClass",
+          "parameters": [
+            "const ClassType* class_type",
+            "VisitResult allocate_result",
+            "const InitializerResults& initializer_results",
+            "const LayoutForInitialization& layout"
+          ],
+          "return_type": "void",
+          "logic": "Initializes a class instance by setting its fields based on initializer results and layout."
+        },
+        {
+          "name": "Visit",
+          "parameters": [
+            "StructExpression* decl"
+          ],
+          "return_type": "VisitResult",
+          "logic": "Visits a struct expression."
+        },
+        {
+          "name": "GetLocationReference",
+          "parameters": [
+            "Expression* location"
+          ],
+          "return_type": "LocationReference",
+          "logic": "Gets the LocationReference for a given expression."
+        },
+        {
+          "name": "LookupLocalValue",
+          "parameters": [
+            "const std::string& name"
+          ],
+          "return_type": "LocationReference",
+          "logic": "Looks up a local value by name and returns its LocationReference."
+        },
+        {
+          "name": "GetLocationReference",
+          "parameters": [
+            "IdentifierExpression* expr"
+          ],
+          "return_type": "LocationReference",
+          "logic": "Gets the LocationReference for an identifier expression."
+        },
+        {
+          "name": "GetLocationReference",
+          "parameters": [
+            "DereferenceExpression* expr"
+          ],
+          "return_type": "LocationReference",
+          "logic": "Gets the LocationReference for a dereference expression."
+        },
+        {
+          "name": "GetLocationReference",
+          "parameters": [
+            "FieldAccessExpression* expr"
+          ],
+          "return_type": "LocationReference",
+          "logic": "Gets the LocationReference for a field access expression."
+        },
+        {
+          "name": "GenerateFieldAccess",
+          "parameters": [
+            "LocationReference reference",
+            "const std::string& fieldname",
+            "bool ignore_stuct_field_constness = false",
+            "std::optional<SourcePosition> pos = {}"
+          ],
+          "return_type": "LocationReference",
+          "logic": "Generates code for accessing a field of a structure."
+        },
+        {
+          "name": "GetLocationReference",
+          "parameters": [
+            "ElementAccessExpression* expr"
+          ],
+          "return_type": "LocationReference",
+          "logic": "Gets the LocationReference for an element access expression."
+        },
+        {
+          "name": "GenerateReferenceToItemInHeapSlice",
+          "parameters": [
+            "LocationReference slice",
+            "VisitResult index"
+          ],
+          "return_type": "LocationReference",
+          "logic": "Generates a reference to a single item within a heap-allocated slice."
+        },
+        {
+          "name": "GenerateFetchFromLocation",
+          "parameters": [
+            "const LocationReference& reference"
+          ],
+          "return_type": "VisitResult",
+          "logic": "Generates code to fetch the value from a given location reference."
+        },
+        {
+          "name": "GetBuiltinCode",
+          "parameters": [
+            "Builtin* builtin"
+          ],
+          "return_type": "VisitResult",
+          "logic": "Gets the code for a builtin function."
+        },
+        {
+          "name": "Visit",
+          "parameters": [
+            "LocationExpression* expr"
+          ],
+          "return_type": "VisitResult",
+          "logic": "Visits a location expression."
+        },
+        {
+          "name": "Visit",
+          "parameters": [
+            "FieldAccessExpression* expr"
+          ],
+          "return_type": "VisitResult",
+          "logic": "Visits a field access expression."
+        },
+        {
+          "name": "VisitAllDeclarables",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Visits all declarables in the program."
+        },
+        {
+          "name": "Visit",
+          "parameters": [
+            "Declarable* delarable",
+            "std::optional<SourceId> file = {}"
+          ],
+          "return_type": "void",
+          "logic": "Visits a declarable."
+        },
+        {
+          "name": "Visit",
+          "parameters": [
+            "TypeAlias* decl"
+          ],
+          "return_type": "void",
+          "logic": "Visits a type alias declaration."
+        },
+        {
+          "name": "InlineMacro",
+          "parameters": [
+            "Macro* macro",
+            "std::optional<LocationReference> this_reference",
+            "const std::vector<VisitResult>& arguments",
+            "const std::vector<Block*> label_blocks"
+          ],
+          "return_type": "VisitResult",
+          "logic": "Inlines a macro."
+        },
+        {
+          "name": "VisitMacroCommon",
+          "parameters": [
+            "Macro* macro"
+          ],
+          "return_type": "void",
+          "logic": "Visits a macro in a common way."
+        },
+        {
+          "name": "Visit",
+          "parameters": [
+            "ExternMacro* macro"
+          ],
+          "return_type": "void",
+          "logic": "Visits an external macro."
+        },
+        {
+          "name": "Visit",
+          "parameters": [
+            "TorqueMacro* macro"
+          ],
+          "return_type": "void",
+          "logic": "Visits a Torque macro."
+        },
+        {
+          "name": "Visit",
+          "parameters": [
+            "Method* macro"
+          ],
+          "return_type": "void",
+          "logic": "Visits a method."
+        },
+        {
+          "name": "Visit",
+          "parameters": [
+            "Builtin* builtin"
+          ],
+          "return_type": "void",
+          "logic": "Visits a builtin function."
+        },
+        {
+          "name": "Visit",
+          "parameters": [
+            "NamespaceConstant* decl"
+          ],
+          "return_type": "void",
+          "logic": "Visits a namespace constant declaration."
+        },
+        {
+          "name": "Visit",
+          "parameters": [
+            "CallExpression* expr",
+            "bool is_tail = false"
+          ],
+          "return_type": "VisitResult",
+          "logic": "Visits a call expression."
+        },
+        {
+          "name": "Visit",
+          "parameters": [
+            "CallMethodExpression* expr"
+          ],
+          "return_type": "VisitResult",
+          "logic": "Visits a call method expression."
+        },
+        {
+          "name": "Visit",
+          "parameters": [
+            "IntrinsicCallExpression* intrinsic"
+          ],
+          "return_type": "VisitResult",
+          "logic": "Visits an intrinsic call expression."
+        },
+        {
+          "name": "Visit",
+          "parameters": [
+            "TailCallStatement* stmt"
+          ],
+          "return_type": "const Type*",
+          "logic": "Visits a tail call statement."
+        },
+        {
+          "name": "Visit",
+          "parameters": [
+            "ConditionalExpression* expr"
+          ],
+          "return_type": "VisitResult",
+          "logic": "Visits a conditional expression."
+        },
+        {
+          "name": "Visit",
+          "parameters": [
+            "LogicalOrExpression* expr"
+          ],
+          "return_type": "VisitResult",
+          "logic": "Visits a logical OR expression."
+        },
+        {
+          "name": "Visit",
+          "parameters": [
+            "LogicalAndExpression* expr"
+          ],
+          "return_type": "VisitResult",
+          "logic": "Visits a logical AND expression."
+        },
+        {
+          "name": "Visit",
+          "parameters": [
+            "IncrementDecrementExpression* expr"
+          ],
+          "return_type": "VisitResult",
+          "logic": "Visits an increment/decrement expression."
+        },
+        {
+          "name": "Visit",
+          "parameters": [
+            "AssignmentExpression* expr"
+          ],
+          "return_type": "VisitResult",
+          "logic": "Visits an assignment expression."
+        },
+        {
+          "name": "Visit",
+          "parameters": [
+            "StringLiteralExpression* expr"
+          ],
+          "return_type": "VisitResult",
+          "logic": "Visits a string literal expression."
+        },
+        {
+          "name": "Visit",
+          "parameters": [
+            "FloatingPointLiteralExpression* expr"
+          ],
+          "return_type": "VisitResult",
+          "logic": "Visits a floating-point literal expression."
+        },
+        {
+          "name": "Visit",
+          "parameters": [
+            "IntegerLiteralExpression* expr"
+          ],
+          "return_type": "VisitResult",
+          "logic": "Visits an integer literal expression."
+        },
+        {
+          "name": "Visit",
+          "parameters": [
+            "AssumeTypeImpossibleExpression* expr"
+          ],
+          "return_type": "VisitResult",
+          "logic": "Visits an assume type impossible expression."
+        },
+        {
+          "name": "Visit",
+          "parameters": [
+            "TryLabelExpression* expr"
+          ],
+          "return_type": "VisitResult",
+          "logic": "Visits a try label expression."
+        },
+        {
+          "name": "Visit",
+          "parameters": [
+            "StatementExpression* expr"
+          ],
+          "return_type": "VisitResult",
+          "logic": "Visits a statement expression."
+        },
+        {
+          "name": "Visit",
+          "parameters": [
+            "NewExpression* expr"
+          ],
+          "return_type": "VisitResult",
+          "logic": "Visits a new expression."
+        },
+        {
+          "name": "Visit",
+          "parameters": [
+            "SpreadExpression* expr"
+          ],
+          "return_type": "VisitResult",
+          "logic": "Visits a spread expression."
+        },
+        {
+          "name": "Visit",
+          "parameters": [
+            "ReturnStatement* stmt"
+          ],
+          "return_type": "const Type*",
+          "logic": "Visits a return statement."
+        },
+        {
+          "name": "Visit",
+          "parameters": [
+            "GotoStatement* stmt"
+          ],
+          "return_type": "const Type*",
+          "logic": "Visits a goto statement."
+        },
+        {
+          "name": "Visit",
+          "parameters": [
+            "IfStatement* stmt"
+          ],
+          "return_type": "const Type*",
+          "logic": "Visits an if statement."
+        },
+        {
+          "name": "Visit",
+          "parameters": [
+            "WhileStatement* stmt"
+          ],
+          "return_type": "const Type*",
+          "logic": "Visits a while statement."
+        },
+        {
+          "name": "Visit",
+          "parameters": [
+            "BreakStatement* stmt"
+          ],
+          "return_type": "const Type*",
+          "logic": "Visits a break statement."
+        },
+        {
+          "name": "Visit",
+          "parameters": [
+            "ContinueStatement* stmt"
+          ],
+          "return_type": "const Type*",
+          "logic": "Visits a continue statement."
+        },
+        {
+          "name": "Visit",
+          "parameters": [
+            "ForLoopStatement* stmt"
+          ],
+          "return_type": "const Type*",
+          "logic": "Visits a for loop statement."
+        },
+        {
+          "name": "Visit",
+          "parameters": [
+            "VarDeclarationStatement* stmt"
+          ],
+          "return_type": "const Type*",
+          "logic": "Visits a variable declaration statement."
+        },
+        {
+          "name": "Visit",
+          "parameters": [
+            "VarDeclarationStatement* stmt",
+            "BlockBindings<LocalValue>* block_bindings"
+          ],
+          "return_type": "const Type*",
+          "logic": "Visits a variable declaration statement with block bindings."
+        },
+        {
+          "name": "Visit",
+          "parameters": [
+            "BlockStatement* block"
+          ],
+          "return_type": "const Type*",
+          "logic": "Visits a block statement."
+        },
+        {
+          "name": "Visit",
+          "parameters": [
+            "ExpressionStatement* stmt"
+          ],
+          "return_type": "const Type*",
+          "logic": "Visits an expression statement."
+        },
+        {
+          "name": "Visit",
+          "parameters": [
+            "DebugStatement* stmt"
+          ],
+          "return_type": "const Type*",
+          "logic": "Visits a debug statement."
+        },
+        {
+          "name": "Visit",
+          "parameters": [
+            "AssertStatement* stmt"
+          ],
+          "return_type": "const Type*",
+          "logic": "Visits an assert statement."
+        },
+        {
+          "name": "BeginGeneratedFiles",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Begin generating files."
+        },
+        {
+          "name": "EndGeneratedFiles",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "End generating files."
+        },
+        {
+          "name": "BeginDebugMacrosFile",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Begin debug macros file."
+        },
+        {
+          "name": "EndDebugMacrosFile",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "End debug macros file."
+        },
+        {
+          "name": "GenerateImplementation",
+          "parameters": [
+            "const std::string& dir"
+          ],
+          "return_type": "void",
+          "logic": "Generates the implementation code."
+        },
+        {
+          "name": "SetDryRun",
+          "parameters": [
+            "bool is_dry_run"
+          ],
+          "return_type": "void",
+          "logic": "Sets whether this is a dry run (no files are written)."
+        },
+        {
+          "name": "WriteFile",
+          "parameters": [
+            "const std::string& file",
+            "const std::string& content"
+          ],
+          "return_type": "void",
+          "logic": "Writes the content to the file."
+        },
+        {
+          "name": "PropagateBitfieldMark",
+          "parameters": [
+            "const Expression* original",
+            "const Expression* derived"
+          ],
+          "return_type": "void",
+          "logic": "Propagates the bitfield mark from the original expression to the derived expression."
+        }
+      ]
+    }
+  ],
+  "functions": [
+    {
+      "name": "IsCompatibleSignature",
+      "parameters": [
+        "const Signature& sig",
+        "const TypeVector& types",
+        "size_t label_count"
+      ],
+      "return_type": "bool",
+      "logic": "Determines if a callable's signature is compatible with the given argument types and label count, implying it can be used as an overload."
+    },
+    {
+      "name": "ReportAllUnusedMacros",
+      "parameters": [],
+      "return_type": "void",
+      "logic": "Reports all unused macros."
+    }
+  ]
+}

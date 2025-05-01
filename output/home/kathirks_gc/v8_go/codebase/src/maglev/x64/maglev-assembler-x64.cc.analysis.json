@@ -1,0 +1,191 @@
+{
+  "file_path": "/home/kathirks_gc/v8_go/codebase/src/maglev/x64/maglev-assembler-x64.cc",
+  "imports": [
+    "src/base/logging.h",
+    "src/codegen/interface-descriptors-inl.h",
+    "src/common/globals.h",
+    "src/compiler/backend/instruction.h",
+    "src/interpreter/bytecode-flags-and-tokens.h",
+    "src/maglev/maglev-assembler-inl.h",
+    "src/maglev/maglev-assembler.h",
+    "src/maglev/maglev-graph.h",
+    "src/maglev/maglev-ir.h",
+    "src/objects/heap-number.h",
+    "src/objects/instance-type-inl.h"
+  ],
+  "classes": [
+    {
+      "name": "MaglevAssembler",
+      "properties": [],
+      "methods": [
+        {
+          "name": "Allocate",
+          "parameters": [
+            "RegisterSnapshot register_snapshot",
+            "Register object",
+            "int size_in_bytes",
+            "AllocationType alloc_type",
+            "AllocationAlignment alignment"
+          ],
+          "return_type": "void",
+          "logic": "Allocates a raw memory block of a specified size and type using AllocateRaw."
+        },
+        {
+          "name": "Allocate",
+          "parameters": [
+            "RegisterSnapshot register_snapshot",
+            "Register object",
+            "Register size_in_bytes",
+            "AllocationType alloc_type",
+            "AllocationAlignment alignment"
+          ],
+          "return_type": "void",
+          "logic": "Allocates a raw memory block of a specified size and type using AllocateRaw. Takes size as a register."
+        },
+        {
+          "name": "LoadSingleCharacterString",
+          "parameters": [
+            "Register result",
+            "Register char_code",
+            "Register scratch"
+          ],
+          "return_type": "void",
+          "logic": "Loads a single character string from the single character string table based on the given char code."
+        },
+        {
+          "name": "StringFromCharCode",
+          "parameters": [
+            "RegisterSnapshot register_snapshot",
+            "Label* char_code_fits_one_byte",
+            "Register result",
+            "Register char_code",
+            "Register scratch",
+            "CharCodeMaskMode mask_mode"
+          ],
+          "return_type": "void",
+          "logic": "Creates a string from a character code. It checks if the code is a one-byte character and handles two-byte characters using AllocateTwoByteString if the character code exceeds the maximum one byte character code. Includes a deferred path for two-byte string creation."
+        },
+        {
+          "name": "StringCharCodeOrCodePointAt",
+          "parameters": [
+            "BuiltinStringPrototypeCharCodeOrCodePointAt::Mode mode",
+            "RegisterSnapshot& register_snapshot",
+            "Register result",
+            "Register string",
+            "Register index",
+            "Register scratch1",
+            "Register scratch2",
+            "Label* result_fits_one_byte"
+          ],
+          "return_type": "void",
+          "logic": "Implements String.charCodeAt or String.codePointAt.  It handles various string types (SeqString, ConsString, SlicedString, ThinString) and determines the character code at a given index, using runtime fallback for complex cases and surrogate pair handling for codePointAt."
+        },
+        {
+          "name": "TruncateDoubleToInt32",
+          "parameters": [
+            "Register dst",
+            "DoubleRegister src"
+          ],
+          "return_type": "void",
+          "logic": "Truncates a double value to a 32-bit integer. It uses the cvttsd2siq instruction for conversion and handles overflow by calling the DoubleToI builtin. It zero extends the converted value."
+        },
+        {
+          "name": "TryTruncateDoubleToInt32",
+          "parameters": [
+            "Register dst",
+            "DoubleRegister src",
+            "Label* fail"
+          ],
+          "return_type": "void",
+          "logic": "Tries to truncate a double to int32.  Checks for truncation and -0. Jumps to fail label on failure"
+        },
+        {
+          "name": "TryTruncateDoubleToUint32",
+          "parameters": [
+            "Register dst",
+            "DoubleRegister src",
+            "Label* fail"
+          ],
+          "return_type": "void",
+          "logic": "Tries to truncate a double to uint32.  Checks for truncation and -0. Jumps to fail label on failure"
+        },
+        {
+          "name": "TryChangeFloat64ToIndex",
+          "parameters": [
+            "Register result",
+            "DoubleRegister value",
+            "Label* success",
+            "Label* fail"
+          ],
+          "return_type": "void",
+          "logic": "Tries to convert a double value to an index. Checks for truncation. Jumps to success/fail accordingly."
+        },
+        {
+          "name": "OSRPrologue",
+          "parameters": [
+            "Graph* graph"
+          ],
+          "return_type": "void",
+          "logic": "Emits the prologue for On-Stack Replacement (OSR). It verifies the stack size and grows the frame if necessary to match the target frame size."
+        },
+        {
+          "name": "Prologue",
+          "parameters": [
+            "Graph* graph"
+          ],
+          "return_type": "void",
+          "logic": "Emits the function prologue, including tiering support and frame setup."
+        },
+        {
+          "name": "MaybeEmitDeoptBuiltinsCall",
+          "parameters": [
+            "size_t eager_deopt_count",
+            "Label* eager_deopt_entry",
+            "size_t lazy_deopt_count",
+            "Label* lazy_deopt_entry"
+          ],
+          "return_type": "void",
+          "logic": "Potentially emits calls to deoptimization builtins (currently empty implementation)."
+        }
+      ]
+    }
+  ],
+  "functions": [
+    {
+      "name": "LoadNewAllocationTop",
+      "parameters": [
+        "MaglevAssembler* masm",
+        "Register new_top",
+        "Register object",
+        "int size_in_bytes"
+      ],
+      "return_type": "void",
+      "logic": "Calculates the new allocation top by adding a fixed size to the object pointer."
+    },
+    {
+      "name": "LoadNewAllocationTop",
+      "parameters": [
+        "MaglevAssembler* masm",
+        "Register new_top",
+        "Register object",
+        "Register size_in_bytes"
+      ],
+      "return_type": "void",
+      "logic": "Calculates the new allocation top by adding a register containing size to the object pointer."
+    },
+    {
+      "name": "AllocateRaw",
+      "parameters": [
+        "MaglevAssembler* masm",
+        "Isolate* isolate",
+        "RegisterSnapshot register_snapshot",
+        "Register object",
+        "T size_in_bytes",
+        "AllocationType alloc_type",
+        "AllocationAlignment alignment"
+      ],
+      "return_type": "void",
+      "logic": "Allocates raw memory. It checks if there is enough space in the allocation space and calls the runtime if necessary. Updates the allocation top and tags the object."
+    }
+  ]
+}

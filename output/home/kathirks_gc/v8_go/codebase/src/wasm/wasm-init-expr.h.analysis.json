@@ -1,0 +1,218 @@
+{
+  "file_path": "/home/kathirks_gc/v8_go/codebase/src/wasm/wasm-init-expr.h",
+  "imports": [
+    "<memory>",
+    "src/wasm/value-type.h",
+    "src/zone/zone-containers.h"
+  ],
+  "classes": [
+    {
+      "name": "WasmInitExpr",
+      "properties": [
+        "immediate_",
+        "kind_",
+        "operands_"
+      ],
+      "methods": [
+        {
+          "name": "WasmInitExpr",
+          "parameters": [
+            "int32_t v"
+          ],
+          "return_type": "WasmInitExpr",
+          "logic": "Constructor that initializes the expression as an i32 constant with the given value."
+        },
+        {
+          "name": "WasmInitExpr",
+          "parameters": [
+            "int64_t v"
+          ],
+          "return_type": "WasmInitExpr",
+          "logic": "Constructor that initializes the expression as an i64 constant with the given value."
+        },
+        {
+          "name": "WasmInitExpr",
+          "parameters": [
+            "float v"
+          ],
+          "return_type": "WasmInitExpr",
+          "logic": "Constructor that initializes the expression as an f32 constant with the given value."
+        },
+        {
+          "name": "WasmInitExpr",
+          "parameters": [
+            "double v"
+          ],
+          "return_type": "WasmInitExpr",
+          "logic": "Constructor that initializes the expression as an f64 constant with the given value."
+        },
+        {
+          "name": "WasmInitExpr",
+          "parameters": [
+            "uint8_t v[kSimd128Size]"
+          ],
+          "return_type": "WasmInitExpr",
+          "logic": "Constructor that initializes the expression as a s128 constant with the given value."
+        },
+        {
+          "name": "heap_type",
+          "parameters": [],
+          "return_type": "HeapType",
+          "logic": "Returns the HeapType from the immediate value.  Used for RefNullConst."
+        },
+        {
+          "name": "Binop",
+          "parameters": [
+            "Zone* zone",
+            "Operator op",
+            "WasmInitExpr lhs",
+            "WasmInitExpr rhs"
+          ],
+          "return_type": "WasmInitExpr",
+          "logic": "Creates a binary operation expression (e.g., addition, subtraction, multiplication) with the specified operator and operands."
+        },
+        {
+          "name": "GlobalGet",
+          "parameters": [
+            "uint32_t index"
+          ],
+          "return_type": "WasmInitExpr",
+          "logic": "Creates an expression that retrieves the value of a global variable at the given index."
+        },
+        {
+          "name": "RefFuncConst",
+          "parameters": [
+            "uint32_t index"
+          ],
+          "return_type": "WasmInitExpr",
+          "logic": "Creates an expression that represents a reference to a function at the given index."
+        },
+        {
+          "name": "RefNullConst",
+          "parameters": [
+            "HeapType heap_type"
+          ],
+          "return_type": "WasmInitExpr",
+          "logic": "Creates an expression that represents a null reference of the given heap type."
+        },
+        {
+          "name": "StructNew",
+          "parameters": [
+            "ModuleTypeIndex index",
+            "ZoneVector<WasmInitExpr>* elements"
+          ],
+          "return_type": "WasmInitExpr",
+          "logic": "Creates a new struct expression initialized with the provided elements."
+        },
+        {
+          "name": "StructNewDefault",
+          "parameters": [
+            "ModuleTypeIndex index"
+          ],
+          "return_type": "WasmInitExpr",
+          "logic": "Creates a new struct expression initialized with default values."
+        },
+        {
+          "name": "ArrayNew",
+          "parameters": [
+            "Zone* zone",
+            "ModuleTypeIndex index",
+            "WasmInitExpr initial",
+            "WasmInitExpr length"
+          ],
+          "return_type": "WasmInitExpr",
+          "logic": "Creates a new array expression initialized with a given initial value and length."
+        },
+        {
+          "name": "ArrayNewDefault",
+          "parameters": [
+            "Zone* zone",
+            "ModuleTypeIndex index",
+            "WasmInitExpr length"
+          ],
+          "return_type": "WasmInitExpr",
+          "logic": "Creates a new array expression initialized with default values and a given length."
+        },
+        {
+          "name": "ArrayNewFixed",
+          "parameters": [
+            "ModuleTypeIndex index",
+            "ZoneVector<WasmInitExpr>* elements"
+          ],
+          "return_type": "WasmInitExpr",
+          "logic": "Creates a new fixed-size array expression initialized with the provided elements."
+        },
+        {
+          "name": "RefI31",
+          "parameters": [
+            "Zone* zone",
+            "WasmInitExpr value"
+          ],
+          "return_type": "WasmInitExpr",
+          "logic": "Creates an expression for i31 references."
+        },
+        {
+          "name": "StringConst",
+          "parameters": [
+            "uint32_t index"
+          ],
+          "return_type": "WasmInitExpr",
+          "logic": "Creates an expression that represents a constant string at the given index."
+        },
+        {
+          "name": "AnyConvertExtern",
+          "parameters": [
+            "Zone* zone",
+            "WasmInitExpr arg"
+          ],
+          "return_type": "WasmInitExpr",
+          "logic": "Creates an expression to convert Any to Extern."
+        },
+        {
+          "name": "ExternConvertAny",
+          "parameters": [
+            "Zone* zone",
+            "WasmInitExpr arg"
+          ],
+          "return_type": "WasmInitExpr",
+          "logic": "Creates an expression to convert Extern to Any."
+        },
+        {
+          "name": "immediate",
+          "parameters": [],
+          "return_type": "Immediate",
+          "logic": "Returns the immediate value associated with this expression."
+        },
+        {
+          "name": "kind",
+          "parameters": [],
+          "return_type": "Operator",
+          "logic": "Returns the operator kind of this expression."
+        },
+        {
+          "name": "operands",
+          "parameters": [],
+          "return_type": "const ZoneVector<WasmInitExpr>*",
+          "logic": "Returns the operands of this expression (if any)."
+        },
+        {
+          "name": "operator==",
+          "parameters": [
+            "const WasmInitExpr& other"
+          ],
+          "return_type": "bool",
+          "logic": "Compares two WasmInitExpr objects for equality."
+        },
+        {
+          "name": "DefaultValue",
+          "parameters": [
+            "ValueType type"
+          ],
+          "return_type": "WasmInitExpr",
+          "logic": "Creates a WasmInitExpr representing the default value for a given ValueType."
+        }
+      ]
+    }
+  ],
+  "functions": []
+}

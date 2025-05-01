@@ -1,0 +1,106 @@
+{
+  "file_path": "/home/kathirks_gc/v8_go/codebase/src/compiler/node-cache.h",
+  "imports": [
+    "src/base/export-template.h",
+    "src/base/hashing.h",
+    "src/base/macros.h",
+    "src/zone/zone-containers.h"
+  ],
+  "classes": [
+    {
+      "name": "NodeCache",
+      "properties": [
+        "map_"
+      ],
+      "methods": [
+        {
+          "name": "NodeCache",
+          "parameters": [
+            "Zone* zone"
+          ],
+          "return_type": "explicit NodeCache",
+          "logic": "Constructor that initializes the map_ member with the given zone."
+        },
+        {
+          "name": "~NodeCache",
+          "parameters": [],
+          "return_type": "",
+          "logic": "Default destructor."
+        },
+        {
+          "name": "NodeCache",
+          "parameters": [
+            "const NodeCache&"
+          ],
+          "return_type": "",
+          "logic": "Deleted copy constructor."
+        },
+        {
+          "name": "operator=",
+          "parameters": [
+            "const NodeCache&"
+          ],
+          "return_type": "NodeCache&",
+          "logic": "Deleted copy assignment operator."
+        },
+        {
+          "name": "Find",
+          "parameters": [
+            "Key key"
+          ],
+          "return_type": "Node**",
+          "logic": "Finds the node associated with the given key in the cache. Returns a pointer to the memory location where the node is stored. If the node is not found, the memory location will contain a nullptr and it's the caller's responsibility to create and store a new node there."
+        },
+        {
+          "name": "GetCachedNodes",
+          "parameters": [
+            "ZoneVector<Node*>* nodes"
+          ],
+          "return_type": "void",
+          "logic": "Appends all nodes from this cache to the provided ZoneVector."
+        }
+      ]
+    }
+  ],
+  "functions": [],
+  "typedefs": [
+    {
+      "name": "Int32NodeCache",
+      "type": "NodeCache<int32_t>"
+    },
+    {
+      "name": "Int64NodeCache",
+      "type": "NodeCache<int64_t>"
+    },
+    {
+      "name": "RelocInfoMode",
+      "type": "char"
+    },
+    {
+      "name": "RelocInt32Key",
+      "type": "std::pair<int32_t, RelocInfoMode>"
+    },
+    {
+      "name": "RelocInt64Key",
+      "type": "std::pair<int64_t, RelocInfoMode>"
+    },
+    {
+      "name": "RelocInt32NodeCache",
+      "type": "NodeCache<RelocInt32Key>"
+    },
+    {
+      "name": "RelocInt64NodeCache",
+      "type": "NodeCache<RelocInt64Key>"
+    },
+    {
+      "name": "IntPtrNodeCache",
+      "type": "Int32NodeCache",
+      "condition": "V8_HOST_ARCH_32_BIT"
+    },
+    {
+      "name": "IntPtrNodeCache",
+      "type": "Int64NodeCache",
+      "condition": "else"
+    }
+  ]
+}

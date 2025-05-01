@@ -1,0 +1,120 @@
+{
+  "file_path": "/home/kathirks_gc/v8_go/codebase/src/compiler/feedback-source.h",
+  "imports": [
+    "src/compiler/heap-refs.h",
+    "src/objects/feedback-vector.h"
+  ],
+  "classes": [
+    {
+      "name": "FeedbackSource",
+      "properties": [
+        "vector",
+        "slot"
+      ],
+      "methods": [
+        {
+          "name": "FeedbackSource",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Default constructor. It asserts that the FeedbackSource is not valid upon creation, likely for debugging purposes."
+        },
+        {
+          "name": "FeedbackSource",
+          "parameters": [
+            "IndirectHandle<FeedbackVector> vector_",
+            "FeedbackSlot slot_"
+          ],
+          "return_type": "FeedbackSource",
+          "logic": "Constructor that takes an indirect handle to a FeedbackVector and a FeedbackSlot. This creates a FeedbackSource object."
+        },
+        {
+          "name": "FeedbackSource",
+          "parameters": [
+            "FeedbackVectorRef vector_",
+            "FeedbackSlot slot_"
+          ],
+          "return_type": "FeedbackSource",
+          "logic": "Constructor that takes a FeedbackVectorRef and a FeedbackSlot. This creates a FeedbackSource object."
+        },
+        {
+          "name": "IsValid",
+          "parameters": [],
+          "return_type": "bool",
+          "logic": "Checks if the FeedbackSource is valid, meaning the vector is not null and the slot is not invalid."
+        },
+        {
+          "name": "index",
+          "parameters": [],
+          "return_type": "int",
+          "logic": "Returns the index of the feedback slot within the feedback vector. Implementation is not provided in the header."
+        }
+      ]
+    },
+    {
+      "name": "FeedbackSource::Hash",
+      "properties": [],
+      "methods": [
+        {
+          "name": "operator()",
+          "parameters": [
+            "FeedbackSource const& source"
+          ],
+          "return_type": "size_t",
+          "logic": "Functor (function object) to compute the hash value of a FeedbackSource object. It uses base::hash_combine to combine the address of the FeedbackVector and the FeedbackSlot into a single hash value."
+        }
+      ]
+    },
+    {
+      "name": "FeedbackSource::Equal",
+      "properties": [],
+      "methods": [
+        {
+          "name": "operator()",
+          "parameters": [
+            "FeedbackSource const& lhs",
+            "FeedbackSource const& rhs"
+          ],
+          "return_type": "bool",
+          "logic": "Functor (function object) to compare two FeedbackSource objects for equality. It checks if the FeedbackVector handles are equal and if the FeedbackSlots are equal."
+        }
+      ]
+    }
+  ],
+  "functions": [
+    {
+      "name": "operator==",
+      "parameters": [
+        "FeedbackSource const&",
+        "FeedbackSource const&"
+      ],
+      "return_type": "bool",
+      "logic": "Overloads the equality operator for FeedbackSource objects.  Implementation not provided in header but likely performs the same check as FeedbackSource::Equal."
+    },
+    {
+      "name": "operator!=",
+      "parameters": [
+        "FeedbackSource const&",
+        "FeedbackSource const&"
+      ],
+      "return_type": "bool",
+      "logic": "Overloads the inequality operator for FeedbackSource objects. Implementation not provided in header but likely the negation of operator==."
+    },
+    {
+      "name": "operator<<",
+      "parameters": [
+        "std::ostream& os",
+        "FeedbackSource const&"
+      ],
+      "return_type": "std::ostream&",
+      "logic": "Overloads the output stream operator for FeedbackSource objects. Implementation not provided in header; likely outputs the contents of the FeedbackSource to the stream."
+    },
+    {
+      "name": "hash_value",
+      "parameters": [
+        "const FeedbackSource& value"
+      ],
+      "return_type": "size_t",
+      "logic": "Computes a hash value for the FeedbackSource using the FeedbackSource::Hash functor."
+    }
+  ]
+}

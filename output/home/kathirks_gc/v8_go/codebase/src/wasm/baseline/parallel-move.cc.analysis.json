@@ -1,0 +1,38 @@
+{
+  "file_path": "/home/kathirks_gc/v8_go/codebase/src/wasm/baseline/parallel-move.cc",
+  "imports": [
+    "src/wasm/baseline/parallel-move.h",
+    "src/wasm/baseline/liftoff-assembler-inl.h"
+  ],
+  "classes": [
+    {
+      "name": "ParallelMove",
+      "properties": [],
+      "methods": [
+        {
+          "name": "TransferToStack",
+          "parameters": [
+            "int dst_offset",
+            "const VarState& src"
+          ],
+          "return_type": "void",
+          "logic": "Transfers a value from a source (register, stack, or constant) to a specified stack offset. It handles different source locations and performs checks to ensure no conflicts with pending register loads from the stack at the destination offset.  If the source is already at the destination stack offset, nothing happens. If the source is a register, it spills the register to the stack. If the source is a constant, it spills the constant value to the stack."
+        },
+        {
+          "name": "ExecuteMoves",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Executes all moves required to transfer values between registers, handling dependencies and cycles. It first executes moves where the destination register isn't being used as a source in another move. For moves involved in cycles, it spills one register in the cycle to the stack, loads the spilled value later, and then clears the executed move.  This breaks the cycle."
+        },
+        {
+          "name": "ExecuteLoads",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Executes all loads required to move values from stack slots or constants into registers. It iterates through the load instructions and calls the appropriate `LiftoffAssembler` methods to perform the loads. Handles loading constants, values from the stack, and low/high halves of 64-bit values from the stack."
+        }
+      ]
+    }
+  ],
+  "functions": [],
+  "namespace": "v8::internal::wasm"
+}

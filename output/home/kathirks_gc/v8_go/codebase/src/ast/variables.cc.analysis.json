@@ -1,0 +1,61 @@
+{
+  "file_path": "/home/kathirks_gc/v8_go/codebase/src/ast/variables.cc",
+  "imports": [
+    "src/ast/variables.h",
+    "src/ast/scopes.h",
+    "src/common/globals.h"
+  ],
+  "classes": [
+    {
+      "name": "Variable",
+      "properties": [
+        "scope_",
+        "name_",
+        "local_if_not_shadowed_",
+        "next_",
+        "index_",
+        "initializer_position_",
+        "bit_field_",
+        "hole_check_analysis_bit_field_"
+      ],
+      "methods": [
+        {
+          "name": "Variable",
+          "parameters": [
+            "Variable* other"
+          ],
+          "return_type": "void",
+          "logic": "Copy constructor. Initializes the new Variable object with the values from another Variable object."
+        },
+        {
+          "name": "IsGlobalObjectProperty",
+          "parameters": [],
+          "return_type": "bool",
+          "logic": "Checks if the variable is a property of the global object. It returns true if the variable is dynamic or var mode, and the scope is a script scope."
+        },
+        {
+          "name": "IsReplGlobal",
+          "parameters": [],
+          "return_type": "bool",
+          "logic": "Checks if the variable is a global in REPL mode (Read-Eval-Print Loop).  It determines if the variable should be treated as a global variable within the REPL environment based on the variable mode and scope."
+        },
+        {
+          "name": "RewriteLocationForRepl",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Rewrites the location of the variable to be a REPL global.  This is done when a let/const/using/await using variable is declared in a REPL scope, changing its location to REPL_GLOBAL."
+        },
+        {
+          "name": "AssignHoleCheckBitmapIndex",
+          "parameters": [
+            "ZoneVector<Variable*>& list",
+            "uint8_t next_index"
+          ],
+          "return_type": "void",
+          "logic": "Assigns a hole check bitmap index to the variable. This index is used during hole check analysis to determine if the variable needs to be checked for holes (uninitialized values). It adds the variable to a list of variables requiring hole checks."
+        }
+      ]
+    }
+  ],
+  "functions": []
+}

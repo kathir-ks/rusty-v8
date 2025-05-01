@@ -1,0 +1,108 @@
+{
+  "file_path": "/home/kathirks_gc/v8_go/codebase/src/snapshot/shared-heap-serializer.h",
+  "imports": [
+    "src/snapshot/roots-serializer.h"
+  ],
+  "classes": [
+    {
+      "name": "SharedHeapSerializer",
+      "properties": [
+        "#ifdef DEBUG IdentityMap<int, base::DefaultAllocationPolicy> serialized_objects_; #endif"
+      ],
+      "methods": [
+        {
+          "name": "SharedHeapSerializer",
+          "parameters": [
+            "Isolate* isolate",
+            "Snapshot::SerializerFlags flags"
+          ],
+          "return_type": "void",
+          "logic": "Constructor for the SharedHeapSerializer. Likely initializes the serializer with the isolate and flags."
+        },
+        {
+          "name": "~SharedHeapSerializer",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Destructor for the SharedHeapSerializer."
+        },
+        {
+          "name": "SharedHeapSerializer",
+          "parameters": [
+            "const SharedHeapSerializer&"
+          ],
+          "return_type": "SharedHeapSerializer&",
+          "logic": "Deleted copy constructor."
+        },
+        {
+          "name": "operator=",
+          "parameters": [
+            "const SharedHeapSerializer&"
+          ],
+          "return_type": "SharedHeapSerializer&",
+          "logic": "Deleted assignment operator."
+        },
+        {
+          "name": "FinalizeSerialization",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Terminates the shared heap object cache and serializes the string table. This is the final step of serialization."
+        },
+        {
+          "name": "SerializeUsingSharedHeapObjectCache",
+          "parameters": [
+            "SnapshotByteSink* sink",
+            "Handle<HeapObject> obj"
+          ],
+          "return_type": "bool",
+          "logic": "Attempts to serialize an object using the shared heap object cache. If the object can be serialized, it's added to the cache and a SharedHeapObjectCache bytecode is emitted. Returns whether the operation was successful."
+        },
+        {
+          "name": "CanBeInSharedOldSpace",
+          "parameters": [
+            "Tagged<HeapObject> obj"
+          ],
+          "return_type": "static bool",
+          "logic": "Determines if an object can be located in the shared old space."
+        },
+        {
+          "name": "ShouldBeInSharedHeapObjectCache",
+          "parameters": [
+            "Tagged<HeapObject> obj"
+          ],
+          "return_type": "static bool",
+          "logic": "Determines if an object should be placed into the shared heap object cache."
+        },
+        {
+          "name": "ShouldReconstructSharedHeapObjectCacheForTesting",
+          "parameters": [],
+          "return_type": "bool",
+          "logic": "Determines whether the shared heap object cache needs to be reconstructed for testing purposes."
+        },
+        {
+          "name": "ReconstructSharedHeapObjectCacheForTesting",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Reconstructs the shared heap object cache for testing."
+        },
+        {
+          "name": "SerializeStringTable",
+          "parameters": [
+            "StringTable* string_table"
+          ],
+          "return_type": "void",
+          "logic": "Serializes the string table."
+        },
+        {
+          "name": "SerializeObjectImpl",
+          "parameters": [
+            "Handle<HeapObject> obj",
+            "SlotType slot_type"
+          ],
+          "return_type": "void",
+          "logic": "Serializes a HeapObject based on its slot type.  This is an override of a method from the base class."
+        }
+      ]
+    }
+  ],
+  "functions": []
+}

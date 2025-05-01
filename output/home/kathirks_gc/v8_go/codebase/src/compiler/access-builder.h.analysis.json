@@ -1,0 +1,835 @@
+{
+  "file_path": "/home/kathirks_gc/v8_go/codebase/src/compiler/access-builder.h",
+  "imports": [
+    "src/base/compiler-specific.h",
+    "src/compiler/js-operator.h",
+    "src/compiler/simplified-operator.h",
+    "src/compiler/write-barrier-kind.h",
+    "src/objects/elements-kind.h",
+    "src/objects/js-objects.h"
+  ],
+  "classes": [
+    {
+      "name": "AccessBuilder",
+      "properties": [],
+      "methods": [
+        {
+          "name": "ForExternalIntPtr",
+          "parameters": [],
+          "return_type": "FieldAccess",
+          "logic": "Provides access to an IntPtr field identified by an external reference."
+        },
+        {
+          "name": "ForMap",
+          "parameters": [
+            "WriteBarrierKind write_barrier = kMapWriteBarrier"
+          ],
+          "return_type": "FieldAccess",
+          "logic": "Provides access to HeapObject::map() field."
+        },
+        {
+          "name": "ForHeapNumberValue",
+          "parameters": [],
+          "return_type": "FieldAccess",
+          "logic": "Provides access to HeapNumber::value() field."
+        },
+        {
+          "name": "ForHeapInt32Value",
+          "parameters": [],
+          "return_type": "FieldAccess",
+          "logic": "Provides access to HeapInt32::value() field."
+        },
+        {
+          "name": "ForHeapInt32UpperValue",
+          "parameters": [],
+          "return_type": "FieldAccess",
+          "logic": "Provides access to HeapInt32::UpperValue() field."
+        },
+        {
+          "name": "ForHeapNumberOrOddballOrHoleValue",
+          "parameters": [],
+          "return_type": "FieldAccess",
+          "logic": "Provides access to HeapNumber::value() and Oddball::to_number_raw() fields."
+        },
+        {
+          "name": "ForBigIntBitfield",
+          "parameters": [],
+          "return_type": "FieldAccess",
+          "logic": "Provides access to BigInt's bit field."
+        },
+        {
+          "name": "ForBigIntOptionalPadding",
+          "parameters": [],
+          "return_type": "FieldAccess",
+          "logic": "Provides access to BigInt's 32 bit padding (if BIGINT_NEEDS_PADDING is defined)."
+        },
+        {
+          "name": "ForBigIntLeastSignificantDigit64",
+          "parameters": [],
+          "return_type": "FieldAccess",
+          "logic": "Provides access to BigInt's least significant digit on 64 bit architectures."
+        },
+        {
+          "name": "ForJSObjectPropertiesOrHash",
+          "parameters": [],
+          "return_type": "FieldAccess",
+          "logic": "Provides access to JSObject::properties() field."
+        },
+        {
+          "name": "ForJSObjectPropertiesOrHashKnownPointer",
+          "parameters": [],
+          "return_type": "FieldAccess",
+          "logic": "Provides access to JSObject::properties() field for known pointers."
+        },
+        {
+          "name": "ForJSObjectElements",
+          "parameters": [],
+          "return_type": "FieldAccess",
+          "logic": "Provides access to JSObject::elements() field."
+        },
+        {
+          "name": "ForJSObjectInObjectProperty",
+          "parameters": [
+            "MapRef map",
+            "int index",
+            "MachineType machine_type = MachineType::AnyTagged()"
+          ],
+          "return_type": "FieldAccess",
+          "logic": "Provides access to JSObject inobject property fields."
+        },
+        {
+          "name": "ForJSObjectOffset",
+          "parameters": [
+            "int offset",
+            "WriteBarrierKind write_barrier_kind = kFullWriteBarrier"
+          ],
+          "return_type": "FieldAccess",
+          "logic": "Provides access to JSObject at given offset."
+        },
+        {
+          "name": "ForJSCollectionTable",
+          "parameters": [],
+          "return_type": "FieldAccess",
+          "logic": "Provides access to JSCollecton::table() field."
+        },
+        {
+          "name": "ForJSCollectionIteratorTable",
+          "parameters": [],
+          "return_type": "FieldAccess",
+          "logic": "Provides access to JSCollectionIterator::table() field."
+        },
+        {
+          "name": "ForJSCollectionIteratorIndex",
+          "parameters": [],
+          "return_type": "FieldAccess",
+          "logic": "Provides access to JSCollectionIterator::index() field."
+        },
+        {
+          "name": "ForJSExternalObjectValue",
+          "parameters": [],
+          "return_type": "FieldAccess",
+          "logic": "Provides access to an ExternalPointer through the JSExternalObject::value() field."
+        },
+        {
+          "name": "ForJSExternalObjectPointerHandle",
+          "parameters": [],
+          "return_type": "FieldAccess",
+          "logic": "Provides access to JSExternalObject::value() field (V8_ENABLE_SANDBOX)."
+        },
+        {
+          "name": "ForJSFunctionPrototypeOrInitialMap",
+          "parameters": [],
+          "return_type": "FieldAccess",
+          "logic": "Provides access to JSFunction::prototype_or_initial_map() field."
+        },
+        {
+          "name": "ForJSFunctionContext",
+          "parameters": [],
+          "return_type": "FieldAccess",
+          "logic": "Provides access to JSFunction::context() field."
+        },
+        {
+          "name": "ForJSFunctionSharedFunctionInfo",
+          "parameters": [],
+          "return_type": "FieldAccess",
+          "logic": "Provides access to JSFunction::shared() field."
+        },
+        {
+          "name": "ForJSFunctionFeedbackCell",
+          "parameters": [],
+          "return_type": "FieldAccess",
+          "logic": "Provides access to JSFunction::feedback_cell() field."
+        },
+        {
+          "name": "ForJSFunctionDispatchHandleNoWriteBarrier",
+          "parameters": [],
+          "return_type": "FieldAccess",
+          "logic": "Provides access to JSFunction::dispatch_handle() field. (V8_ENABLE_LEAPTIERING)"
+        },
+        {
+          "name": "ForJSFunctionCode",
+          "parameters": [],
+          "return_type": "FieldAccess",
+          "logic": "Provides access to JSFunction::code() field. (!V8_ENABLE_LEAPTIERING)"
+        },
+        {
+          "name": "ForJSBoundFunctionBoundTargetFunction",
+          "parameters": [],
+          "return_type": "FieldAccess",
+          "logic": "Provides access to JSBoundFunction::bound_target_function() field."
+        },
+        {
+          "name": "ForJSBoundFunctionBoundThis",
+          "parameters": [],
+          "return_type": "FieldAccess",
+          "logic": "Provides access to JSBoundFunction::bound_this() field."
+        },
+        {
+          "name": "ForJSBoundFunctionBoundArguments",
+          "parameters": [],
+          "return_type": "FieldAccess",
+          "logic": "Provides access to JSBoundFunction::bound_arguments() field."
+        },
+        {
+          "name": "ForJSGeneratorObjectContext",
+          "parameters": [],
+          "return_type": "FieldAccess",
+          "logic": "Provides access to JSGeneratorObject::context() field."
+        },
+        {
+          "name": "ForJSGeneratorObjectContinuation",
+          "parameters": [],
+          "return_type": "FieldAccess",
+          "logic": "Provides access to JSGeneratorObject::continuation() field."
+        },
+        {
+          "name": "ForJSGeneratorObjectInputOrDebugPos",
+          "parameters": [],
+          "return_type": "FieldAccess",
+          "logic": "Provides access to JSGeneratorObject::input_or_debug_pos() field."
+        },
+        {
+          "name": "ForJSGeneratorObjectParametersAndRegisters",
+          "parameters": [],
+          "return_type": "FieldAccess",
+          "logic": "Provides access to JSGeneratorObject::parameters_and_registers() field."
+        },
+        {
+          "name": "ForJSGeneratorObjectFunction",
+          "parameters": [],
+          "return_type": "FieldAccess",
+          "logic": "Provides access to JSGeneratorObject::function() field."
+        },
+        {
+          "name": "ForJSGeneratorObjectReceiver",
+          "parameters": [],
+          "return_type": "FieldAccess",
+          "logic": "Provides access to JSGeneratorObject::receiver() field."
+        },
+        {
+          "name": "ForJSGeneratorObjectResumeMode",
+          "parameters": [],
+          "return_type": "FieldAccess",
+          "logic": "Provides access to JSGeneratorObject::resume_mode() field."
+        },
+        {
+          "name": "ForJSAsyncFunctionObjectPromise",
+          "parameters": [],
+          "return_type": "FieldAccess",
+          "logic": "Provides access to JSAsyncFunctionObject::promise() field."
+        },
+        {
+          "name": "ForJSAsyncGeneratorObjectQueue",
+          "parameters": [],
+          "return_type": "FieldAccess",
+          "logic": "Provides access to JSAsyncGeneratorObject::queue() field."
+        },
+        {
+          "name": "ForJSAsyncGeneratorObjectIsAwaiting",
+          "parameters": [],
+          "return_type": "FieldAccess",
+          "logic": "Provides access to JSAsyncGeneratorObject::is_awaiting() field."
+        },
+        {
+          "name": "ForJSArrayLength",
+          "parameters": [
+            "ElementsKind elements_kind"
+          ],
+          "return_type": "FieldAccess",
+          "logic": "Provides access to JSArray::length() field."
+        },
+        {
+          "name": "ForJSArrayBufferBitField",
+          "parameters": [],
+          "return_type": "FieldAccess",
+          "logic": "Provides access to JSArrayBuffer::bit_field() field."
+        },
+        {
+          "name": "ForJSArrayBufferByteLength",
+          "parameters": [],
+          "return_type": "FieldAccess",
+          "logic": "Provides access to JSArrayBuffer::byteLength() field."
+        },
+        {
+          "name": "ForJSArrayBufferViewBuffer",
+          "parameters": [],
+          "return_type": "FieldAccess",
+          "logic": "Provides access to JSArrayBufferView::buffer() field."
+        },
+        {
+          "name": "ForJSArrayBufferViewByteLength",
+          "parameters": [],
+          "return_type": "FieldAccess",
+          "logic": "Provides access to JSArrayBufferView::byteLength() field."
+        },
+        {
+          "name": "ForJSArrayBufferViewByteOffset",
+          "parameters": [],
+          "return_type": "FieldAccess",
+          "logic": "Provides access to JSArrayBufferView::byteOffset() field."
+        },
+        {
+          "name": "ForJSArrayBufferViewBitField",
+          "parameters": [],
+          "return_type": "FieldAccess",
+          "logic": "Provides access to JSArrayBufferView::bitfield() field"
+        },
+        {
+          "name": "ForJSTypedArrayLength",
+          "parameters": [],
+          "return_type": "FieldAccess",
+          "logic": "Provides access to JSTypedArray::length() field."
+        },
+        {
+          "name": "ForJSTypedArrayByteLength",
+          "parameters": [],
+          "return_type": "FieldAccess",
+          "logic": "Provides access to JSTypedArray::byteLength() field."
+        },
+        {
+          "name": "ForJSTypedArrayBasePointer",
+          "parameters": [],
+          "return_type": "FieldAccess",
+          "logic": "Provides access to JSTypedArray::base_pointer() field."
+        },
+        {
+          "name": "ForJSTypedArrayExternalPointer",
+          "parameters": [],
+          "return_type": "FieldAccess",
+          "logic": "Provides access to JSTypedArray::external_pointer() field."
+        },
+        {
+          "name": "ForJSDataViewDataPointer",
+          "parameters": [],
+          "return_type": "FieldAccess",
+          "logic": "Provides access to JSDataView::data_pointer() field."
+        },
+        {
+          "name": "ForJSDataViewByteLength",
+          "parameters": [],
+          "return_type": "FieldAccess",
+          "logic": "Provides access to JSDataView::byteLength() field."
+        },
+        {
+          "name": "ForJSDateValue",
+          "parameters": [],
+          "return_type": "FieldAccess",
+          "logic": "Provides access to JSDate::value() field."
+        },
+        {
+          "name": "ForJSDateField",
+          "parameters": [
+            "JSDate::FieldIndex index"
+          ],
+          "return_type": "FieldAccess",
+          "logic": "Provides access to JSDate fields."
+        },
+        {
+          "name": "ForJSIteratorResultDone",
+          "parameters": [],
+          "return_type": "FieldAccess",
+          "logic": "Provides access to JSIteratorResult::done() field."
+        },
+        {
+          "name": "ForJSIteratorResultValue",
+          "parameters": [],
+          "return_type": "FieldAccess",
+          "logic": "Provides access to JSIteratorResult::value() field."
+        },
+        {
+          "name": "ForJSPrimitiveWrapperValue",
+          "parameters": [],
+          "return_type": "FieldAccess",
+          "logic": "Provides access to JSPrimitiveWrapper's value field."
+        },
+        {
+          "name": "ForJSRegExpData",
+          "parameters": [],
+          "return_type": "FieldAccess",
+          "logic": "Provides access to JSRegExp::data() field."
+        },
+        {
+          "name": "ForJSRegExpFlags",
+          "parameters": [],
+          "return_type": "FieldAccess",
+          "logic": "Provides access to JSRegExp::flags() field."
+        },
+        {
+          "name": "ForJSRegExpLastIndex",
+          "parameters": [],
+          "return_type": "FieldAccess",
+          "logic": "Provides access to JSRegExp::last_index() field."
+        },
+        {
+          "name": "ForJSRegExpSource",
+          "parameters": [],
+          "return_type": "FieldAccess",
+          "logic": "Provides access to JSRegExp::source() field."
+        },
+        {
+          "name": "ForFixedArrayLength",
+          "parameters": [],
+          "return_type": "FieldAccess",
+          "logic": "Provides access to FixedArray::length() field."
+        },
+        {
+          "name": "ForWeakFixedArrayLength",
+          "parameters": [],
+          "return_type": "FieldAccess",
+          "logic": "Provides access to WeakFixedArray::length() field."
+        },
+        {
+          "name": "ForSloppyArgumentsElementsContext",
+          "parameters": [],
+          "return_type": "FieldAccess",
+          "logic": "Provides access to SloppyArgumentsElements::context() field."
+        },
+        {
+          "name": "ForSloppyArgumentsElementsArguments",
+          "parameters": [],
+          "return_type": "FieldAccess",
+          "logic": "Provides access to SloppyArgumentsElements::arguments() field."
+        },
+        {
+          "name": "ForPropertyArrayLengthAndHash",
+          "parameters": [],
+          "return_type": "FieldAccess",
+          "logic": "Provides access to PropertyArray::length() field."
+        },
+        {
+          "name": "ForDescriptorArrayEnumCache",
+          "parameters": [],
+          "return_type": "FieldAccess",
+          "logic": "Provides access to DescriptorArray::enum_cache() field."
+        },
+        {
+          "name": "ForMapBitField",
+          "parameters": [],
+          "return_type": "FieldAccess",
+          "logic": "Provides access to Map::bit_field() byte."
+        },
+        {
+          "name": "ForMapBitField2",
+          "parameters": [],
+          "return_type": "FieldAccess",
+          "logic": "Provides access to Map::bit_field2() byte."
+        },
+        {
+          "name": "ForMapBitField3",
+          "parameters": [],
+          "return_type": "FieldAccess",
+          "logic": "Provides access to Map::bit_field3() field."
+        },
+        {
+          "name": "ForMapDescriptors",
+          "parameters": [],
+          "return_type": "FieldAccess",
+          "logic": "Provides access to Map::descriptors() field."
+        },
+        {
+          "name": "ForMapInstanceType",
+          "parameters": [],
+          "return_type": "FieldAccess",
+          "logic": "Provides access to Map::instance_type() field."
+        },
+        {
+          "name": "ForMapPrototype",
+          "parameters": [],
+          "return_type": "FieldAccess",
+          "logic": "Provides access to Map::prototype() field."
+        },
+        {
+          "name": "ForMapNativeContext",
+          "parameters": [],
+          "return_type": "FieldAccess",
+          "logic": "Provides access to Map::native_context() field."
+        },
+        {
+          "name": "ForModuleRegularExports",
+          "parameters": [],
+          "return_type": "FieldAccess",
+          "logic": "Provides access to Module::regular_exports() field."
+        },
+        {
+          "name": "ForModuleRegularImports",
+          "parameters": [],
+          "return_type": "FieldAccess",
+          "logic": "Provides access to Module::regular_imports() field."
+        },
+        {
+          "name": "ForNameRawHashField",
+          "parameters": [],
+          "return_type": "FieldAccess",
+          "logic": "Provides access to Name::raw_hash_field() field."
+        },
+        {
+          "name": "ForFreeSpaceSize",
+          "parameters": [],
+          "return_type": "FieldAccess",
+          "logic": "Provides access to FreeSpace::size() field"
+        },
+        {
+          "name": "ForStringLength",
+          "parameters": [],
+          "return_type": "FieldAccess",
+          "logic": "Provides access to String::length() field."
+        },
+        {
+          "name": "ForConsStringFirst",
+          "parameters": [],
+          "return_type": "FieldAccess",
+          "logic": "Provides access to ConsString::first() field."
+        },
+        {
+          "name": "ForConsStringSecond",
+          "parameters": [],
+          "return_type": "FieldAccess",
+          "logic": "Provides access to ConsString::second() field."
+        },
+        {
+          "name": "ForThinStringActual",
+          "parameters": [],
+          "return_type": "FieldAccess",
+          "logic": "Provides access to ThinString::actual() field."
+        },
+        {
+          "name": "ForSlicedStringOffset",
+          "parameters": [],
+          "return_type": "FieldAccess",
+          "logic": "Provides access to SlicedString::offset() field."
+        },
+        {
+          "name": "ForSlicedStringParent",
+          "parameters": [],
+          "return_type": "FieldAccess",
+          "logic": "Provides access to SlicedString::parent() field."
+        },
+        {
+          "name": "ForExternalStringResourceData",
+          "parameters": [],
+          "return_type": "FieldAccess",
+          "logic": "Provides access to ExternalString::resource_data() field."
+        },
+        {
+          "name": "ForSeqOneByteStringCharacter",
+          "parameters": [],
+          "return_type": "ElementAccess",
+          "logic": "Provides access to SeqOneByteString characters."
+        },
+        {
+          "name": "ForSeqTwoByteStringCharacter",
+          "parameters": [],
+          "return_type": "ElementAccess",
+          "logic": "Provides access to SeqTwoByteString characters."
+        },
+        {
+          "name": "ForJSArrayIteratorIteratedObject",
+          "parameters": [],
+          "return_type": "FieldAccess",
+          "logic": "Provides access to JSArrayIterator::iterated_object() field."
+        },
+        {
+          "name": "ForJSArrayIteratorNextIndex",
+          "parameters": [],
+          "return_type": "FieldAccess",
+          "logic": "Provides access to JSArrayIterator::next_index() field."
+        },
+        {
+          "name": "ForJSArrayIteratorKind",
+          "parameters": [],
+          "return_type": "FieldAccess",
+          "logic": "Provides access to JSArrayIterator::kind() field."
+        },
+        {
+          "name": "ForJSStringIteratorString",
+          "parameters": [],
+          "return_type": "FieldAccess",
+          "logic": "Provides access to JSStringIterator::string() field."
+        },
+        {
+          "name": "ForJSStringIteratorIndex",
+          "parameters": [],
+          "return_type": "FieldAccess",
+          "logic": "Provides access to JSStringIterator::index() field."
+        },
+        {
+          "name": "ForCellValue",
+          "parameters": [],
+          "return_type": "FieldAccess",
+          "logic": "Provides access to Cell::value() field."
+        },
+        {
+          "name": "ForArgumentsLength",
+          "parameters": [],
+          "return_type": "FieldAccess",
+          "logic": "Provides access to arguments object length field."
+        },
+        {
+          "name": "ForArgumentsCallee",
+          "parameters": [],
+          "return_type": "FieldAccess",
+          "logic": "Provides access to arguments object callee field."
+        },
+        {
+          "name": "ForFixedArraySlot",
+          "parameters": [
+            "size_t index",
+            "WriteBarrierKind write_barrier_kind = kFullWriteBarrier"
+          ],
+          "return_type": "FieldAccess",
+          "logic": "Provides access to FixedArray slots."
+        },
+        {
+          "name": "ForFeedbackVectorSlot",
+          "parameters": [
+            "int index"
+          ],
+          "return_type": "FieldAccess",
+          "logic": "Provides access to FeedbackVector slots."
+        },
+        {
+          "name": "ForPropertyArraySlot",
+          "parameters": [
+            "int index"
+          ],
+          "return_type": "FieldAccess",
+          "logic": "Provides access to PropertyArray slots."
+        },
+        {
+          "name": "ForScopeInfoFlags",
+          "parameters": [],
+          "return_type": "FieldAccess",
+          "logic": "Provides access to ScopeInfo flags."
+        },
+        {
+          "name": "ForContextSlot",
+          "parameters": [
+            "size_t index"
+          ],
+          "return_type": "FieldAccess",
+          "logic": "Provides access to Context slots."
+        },
+        {
+          "name": "ForContextSlotKnownPointer",
+          "parameters": [
+            "size_t index"
+          ],
+          "return_type": "FieldAccess",
+          "logic": "Provides access to Context slots that are known to be pointers."
+        },
+        {
+          "name": "ForContextSlotSmi",
+          "parameters": [
+            "size_t index"
+          ],
+          "return_type": "FieldAccess",
+          "logic": "Provides access to Context slots that are known to be Smis."
+        },
+        {
+          "name": "ForWeakFixedArrayElement",
+          "parameters": [],
+          "return_type": "ElementAccess",
+          "logic": "Provides access to WeakFixedArray elements."
+        },
+        {
+          "name": "ForWeakFixedArraySlot",
+          "parameters": [
+            "int index"
+          ],
+          "return_type": "FieldAccess",
+          "logic": "Provides access to WeakFixedArray slots."
+        },
+        {
+          "name": "ForFixedArrayElement",
+          "parameters": [],
+          "return_type": "ElementAccess",
+          "logic": "Provides access to FixedArray elements."
+        },
+        {
+          "name": "ForFixedArrayElement",
+          "parameters": [
+            "ElementsKind kind"
+          ],
+          "return_type": "ElementAccess",
+          "logic": "Provides access to FixedArray elements with given ElementsKind."
+        },
+        {
+          "name": "ForSloppyArgumentsElementsMappedEntry",
+          "parameters": [],
+          "return_type": "ElementAccess",
+          "logic": "Provides access to SloppyArgumentsElements elements."
+        },
+        {
+          "name": "ForFixedDoubleArrayElement",
+          "parameters": [],
+          "return_type": "ElementAccess",
+          "logic": "Provides access to FixedDoubleArray elements."
+        },
+        {
+          "name": "ForEnumCacheKeys",
+          "parameters": [],
+          "return_type": "FieldAccess",
+          "logic": "Provides access to EnumCache::keys() field."
+        },
+        {
+          "name": "ForEnumCacheIndices",
+          "parameters": [],
+          "return_type": "FieldAccess",
+          "logic": "Provides access to EnumCache::indices() field."
+        },
+        {
+          "name": "ForTypedArrayElement",
+          "parameters": [
+            "ExternalArrayType type",
+            "bool is_external"
+          ],
+          "return_type": "ElementAccess",
+          "logic": "Provides access to Fixed{type}TypedArray and External{type}Array elements."
+        },
+        {
+          "name": "ForJSForInCacheArrayElement",
+          "parameters": [
+            "ForInMode mode"
+          ],
+          "return_type": "ElementAccess",
+          "logic": "Provides access to the for-in cache array."
+        },
+        {
+          "name": "ForHashTableBaseNumberOfElements",
+          "parameters": [],
+          "return_type": "FieldAccess",
+          "logic": "Provides access to HashTableBase::number_of_elements() field."
+        },
+        {
+          "name": "ForHashTableBaseNumberOfDeletedElement",
+          "parameters": [],
+          "return_type": "FieldAccess",
+          "logic": "Provides access to HashTableBase::number_of_deleted_elements() field."
+        },
+        {
+          "name": "ForHashTableBaseCapacity",
+          "parameters": [],
+          "return_type": "FieldAccess",
+          "logic": "Provides access to HashTableBase::capacity() field."
+        },
+        {
+          "name": "ForOrderedHashMapOrSetNextTable",
+          "parameters": [],
+          "return_type": "FieldAccess",
+          "logic": "Provides access to OrderedHashMapOrSet::next_table() field."
+        },
+        {
+          "name": "ForOrderedHashMapOrSetNumberOfBuckets",
+          "parameters": [],
+          "return_type": "FieldAccess",
+          "logic": "Provides access to OrderedHashMapOrSet::number_of_buckets() field."
+        },
+        {
+          "name": "ForOrderedHashMapOrSetNumberOfElements",
+          "parameters": [],
+          "return_type": "FieldAccess",
+          "logic": "Provides access to OrderedHashMapOrSet::number_of_elements() field."
+        },
+        {
+          "name": "ForOrderedHashMapOrSetNumberOfDeletedElements",
+          "parameters": [],
+          "return_type": "FieldAccess",
+          "logic": "Provides access to OrderedHashMapOrSet::number_of_deleted_elements() field."
+        },
+        {
+          "name": "ForOrderedHashMapEntryValue",
+          "parameters": [],
+          "return_type": "ElementAccess",
+          "logic": "Provides access to OrderedHashMap entry value."
+        },
+        {
+          "name": "ForDictionaryNextEnumerationIndex",
+          "parameters": [],
+          "return_type": "FieldAccess",
+          "logic": "Provides access to Dictionary::next_enumeration_index() field."
+        },
+        {
+          "name": "ForDictionaryObjectHashIndex",
+          "parameters": [],
+          "return_type": "FieldAccess",
+          "logic": "Provides access to Dictionary::object_hash_index() field."
+        },
+        {
+          "name": "ForNameDictionaryFlagsIndex",
+          "parameters": [],
+          "return_type": "FieldAccess",
+          "logic": "Provides access to NameDictionary::flags_index() field."
+        },
+        {
+          "name": "ForFeedbackCellInterruptBudget",
+          "parameters": [],
+          "return_type": "FieldAccess",
+          "logic": "Provides access to FeedbackCell::interrupt_budget() field."
+        },
+        {
+          "name": "ForFeedbackCellDispatchHandleNoWriteBarrier",
+          "parameters": [],
+          "return_type": "FieldAccess",
+          "logic": "Provides access to FeedbackCell::dispatch_handle() field (V8_ENABLE_LEAPTIERING)"
+        },
+        {
+          "name": "ForFeedbackVectorInvocationCount",
+          "parameters": [],
+          "return_type": "FieldAccess",
+          "logic": "Provides access to FeedbackVector::invocation_count() field."
+        },
+        {
+          "name": "ForFeedbackVectorFlags",
+          "parameters": [],
+          "return_type": "FieldAccess",
+          "logic": "Provides access to FeedbackVector::flags() field."
+        },
+        {
+          "name": "ForFeedbackVectorClosureFeedbackCellArray",
+          "parameters": [],
+          "return_type": "FieldAccess",
+          "logic": "Provides access to FeedbackVector::closure_feedback_cell_array() field."
+        },
+        {
+          "name": "ForWasmArrayLength",
+          "parameters": [],
+          "return_type": "FieldAccess",
+          "logic": "Provides access to WasmArray::length() field. (V8_ENABLE_WEBASSEMBLY)"
+        },
+        {
+          "name": "ForWasmDispatchTableLength",
+          "parameters": [],
+          "return_type": "FieldAccess",
+          "logic": "Provides access to WasmDispatchTable::length() field. (V8_ENABLE_WEBASSEMBLY)"
+        },
+        {
+          "name": "ForContextSideProperty",
+          "parameters": [],
+          "return_type": "FieldAccess",
+          "logic": "Provides access to a ContextSideProperty"
+        }
+      ]
+    }
+  ],
+  "functions": []
+}

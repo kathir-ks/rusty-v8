@@ -1,0 +1,35 @@
+{
+  "file_path": "/home/kathirks_gc/v8_go/codebase/include/cppgc/internal/atomic-entry-flag.h",
+  "imports": [
+    "<atomic>"
+  ],
+  "classes": [
+    {
+      "name": "AtomicEntryFlag",
+      "properties": [
+        "std::atomic_int entries_"
+      ],
+      "methods": [
+        {
+          "name": "Enter",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Atomically increments the 'entries_' counter using relaxed memory ordering.  This signifies that a scope guarded by this flag has been entered."
+        },
+        {
+          "name": "Exit",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Atomically decrements the 'entries_' counter using relaxed memory ordering. This signifies that a scope guarded by this flag has been exited."
+        },
+        {
+          "name": "MightBeEntered",
+          "parameters": [],
+          "return_type": "bool",
+          "logic": "Atomically loads the value of the 'entries_' counter using relaxed memory ordering and returns true if it is non-zero, and false otherwise. This indicates whether the guarded scope *might* be entered (but could have false positives)."
+        }
+      ]
+    }
+  ],
+  "functions": []
+}

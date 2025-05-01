@@ -1,0 +1,315 @@
+{
+  "file_path": "/home/kathirks_gc/v8_go/codebase/src/wasm/module-decoder.cc",
+  "imports": [
+    "src/wasm/module-decoder.h",
+    "src/logging/metrics.h",
+    "src/tracing/trace-event.h",
+    "src/wasm/constant-expression.h",
+    "src/wasm/decoder.h",
+    "src/wasm/module-decoder-impl.h",
+    "src/wasm/struct-types.h",
+    "src/wasm/wasm-constants.h",
+    "src/wasm/wasm-engine.h",
+    "src/wasm/wasm-limits.h",
+    "src/wasm/wasm-opcodes-inl.h"
+  ],
+  "classes": [
+    {
+      "name": "ModuleDecoder",
+      "properties": [
+        "impl_"
+      ],
+      "methods": [
+        {
+          "name": "ModuleDecoder",
+          "parameters": [
+            "WasmEnabledFeatures enabled_features",
+            "WasmDetectedFeatures* detected_features"
+          ],
+          "return_type": "void",
+          "logic": "Constructor for ModuleDecoder. Initializes the ModuleDecoderImpl."
+        },
+        {
+          "name": "~ModuleDecoder",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Default destructor for ModuleDecoder."
+        },
+        {
+          "name": "shared_module",
+          "parameters": [],
+          "return_type": "const std::shared_ptr<WasmModule>&",
+          "logic": "Returns the shared module."
+        },
+        {
+          "name": "DecodeModuleHeader",
+          "parameters": [
+            "base::Vector<const uint8_t> bytes"
+          ],
+          "return_type": "void",
+          "logic": "Decodes the module header."
+        },
+        {
+          "name": "DecodeSection",
+          "parameters": [
+            "SectionCode section_code",
+            "base::Vector<const uint8_t> bytes",
+            "uint32_t offset"
+          ],
+          "return_type": "void",
+          "logic": "Decodes a section of the module."
+        },
+        {
+          "name": "DecodeFunctionBody",
+          "parameters": [
+            "uint32_t index",
+            "uint32_t length",
+            "uint32_t offset"
+          ],
+          "return_type": "void",
+          "logic": "Decodes a function body."
+        },
+        {
+          "name": "StartCodeSection",
+          "parameters": [
+            "WireBytesRef section_bytes"
+          ],
+          "return_type": "void",
+          "logic": "Starts the code section decoding process."
+        },
+        {
+          "name": "CheckFunctionsCount",
+          "parameters": [
+            "uint32_t functions_count",
+            "uint32_t error_offset"
+          ],
+          "return_type": "bool",
+          "logic": "Checks if the functions count is valid."
+        },
+        {
+          "name": "FinishDecoding",
+          "parameters": [],
+          "return_type": "ModuleResult",
+          "logic": "Finishes the decoding process."
+        },
+        {
+          "name": "IdentifyUnknownSection",
+          "parameters": [
+            "ModuleDecoder* decoder",
+            "base::Vector<const uint8_t> bytes",
+            "uint32_t offset",
+            "SectionCode* result"
+          ],
+          "return_type": "size_t",
+          "logic": "Identifies an unknown section in the module."
+        },
+        {
+          "name": "ok",
+          "parameters": [],
+          "return_type": "bool",
+          "logic": "Checks if the decoder is in a good state (no errors)."
+        }
+      ]
+    },
+    {
+      "name": "ValidateFunctionsTask",
+      "properties": [],
+      "methods": [
+        {
+          "name": "ValidateFunctionsTask",
+          "parameters": [
+            "base::Vector<const uint8_t> wire_bytes",
+            "const WasmModule* module",
+            "WasmEnabledFeatures enabled_features",
+            "std::function<bool(int)> filter",
+            "WasmError* error_out",
+            "std::atomic<WasmDetectedFeatures>* detected_features"
+          ],
+          "return_type": "void",
+          "logic": "Constructor for the ValidateFunctionsTask. Initializes the task with the provided parameters."
+        },
+        {
+          "name": "Run",
+          "parameters": [
+            "JobDelegate* delegate"
+          ],
+          "return_type": "void",
+          "logic": "Validates function bodies in parallel.  It retrieves the next function, validates it and updates the error if found, stopping if ShouldYield returns true or an error has been found."
+        },
+        {
+          "name": "GetMaxConcurrency",
+          "parameters": [
+            "size_t worker_count"
+          ],
+          "return_type": "size_t",
+          "logic": "Determines the maximum concurrency for the validation task."
+        }
+      ]
+    },
+    {
+      "name": "DecodedNameSection",
+      "properties": [
+        "local_names_",
+        "label_names_",
+        "type_names_",
+        "table_names_",
+        "memory_names_",
+        "global_names_",
+        "element_segment_names_",
+        "data_segment_names_",
+        "field_names_",
+        "tag_names_"
+      ],
+      "methods": [
+        {
+          "name": "DecodedNameSection",
+          "parameters": [
+            "base::Vector<const uint8_t> wire_bytes",
+            "WireBytesRef name_section"
+          ],
+          "return_type": "void",
+          "logic": "Parses various subsections from the WebAssembly name section."
+        }
+      ]
+    }
+  ],
+  "functions": [
+    {
+      "name": "SectionName",
+      "parameters": [
+        "SectionCode code"
+      ],
+      "return_type": "const char*",
+      "logic": "Returns the name of a given section code as a string."
+    },
+    {
+      "name": "DecodeWasmModule",
+      "parameters": [
+        "WasmEnabledFeatures enabled_features",
+        "base::Vector<const uint8_t> wire_bytes",
+        "bool validate_functions",
+        "ModuleOrigin origin",
+        "Counters* counters",
+        "std::shared_ptr<metrics::Recorder> metrics_recorder",
+        "v8::metrics::Recorder::ContextId context_id",
+        "DecodingMethod decoding_method",
+        "WasmDetectedFeatures* detected_features"
+      ],
+      "return_type": "ModuleResult",
+      "logic": "Decodes a WebAssembly module and records metrics related to the decoding process. It includes measurements like wall-clock duration, module size, function count, and success/failure. It also logs those events using the metrics recorder."
+    },
+    {
+      "name": "DecodeWasmModule",
+      "parameters": [
+        "WasmEnabledFeatures enabled_features",
+        "base::Vector<const uint8_t> wire_bytes",
+        "bool validate_functions",
+        "ModuleOrigin origin",
+        "WasmDetectedFeatures* detected_features"
+      ],
+      "return_type": "ModuleResult",
+      "logic": "Decodes a WebAssembly module using ModuleDecoderImpl."
+    },
+    {
+      "name": "DecodeWasmModuleForDisassembler",
+      "parameters": [
+        "base::Vector<const uint8_t> wire_bytes",
+        "ITracer* tracer"
+      ],
+      "return_type": "ModuleResult",
+      "logic": "Decodes a WebAssembly module for disassembling purposes, disabling function validation."
+    },
+    {
+      "name": "DecodeWasmSignatureForTesting",
+      "parameters": [
+        "WasmEnabledFeatures enabled_features",
+        "Zone* zone",
+        "base::Vector<const uint8_t> bytes"
+      ],
+      "return_type": "Result<const FunctionSig*>",
+      "logic": "Decodes a WebAssembly function signature for testing purposes."
+    },
+    {
+      "name": "DecodeWasmInitExprForTesting",
+      "parameters": [
+        "WasmEnabledFeatures enabled_features",
+        "base::Vector<const uint8_t> bytes",
+        "ValueType expected"
+      ],
+      "return_type": "ConstantExpression",
+      "logic": "Decodes a WebAssembly initialization expression for testing purposes."
+    },
+    {
+      "name": "DecodeWasmFunctionForTesting",
+      "parameters": [
+        "WasmEnabledFeatures enabled_features",
+        "Zone* zone",
+        "ModuleWireBytes wire_bytes",
+        "const WasmModule* module",
+        "base::Vector<const uint8_t> function_bytes"
+      ],
+      "return_type": "FunctionResult",
+      "logic": "Decodes a single WebAssembly function for testing purposes."
+    },
+    {
+      "name": "DecodeAsmJsOffsets",
+      "parameters": [
+        "base::Vector<const uint8_t> encoded_offsets"
+      ],
+      "return_type": "AsmJsOffsetsResult",
+      "logic": "Decodes asm.js offsets from the encoded data."
+    },
+    {
+      "name": "DecodeCustomSections",
+      "parameters": [
+        "base::Vector<const uint8_t> bytes"
+      ],
+      "return_type": "std::vector<CustomSectionOffset>",
+      "logic": "Decodes custom sections from the WebAssembly module."
+    },
+    {
+      "name": "DecodeFunctionNames",
+      "parameters": [
+        "base::Vector<const uint8_t> wire_bytes",
+        "NameMap& names"
+      ],
+      "return_type": "void",
+      "logic": "Decodes function names from the name section of the WebAssembly module."
+    },
+    {
+      "name": "DecodeCanonicalTypeNames",
+      "parameters": [
+        "base::Vector<const uint8_t> wire_bytes",
+        "const WasmModule* module",
+        "std::vector<base::OwnedVector<char>>& typenames",
+        "std::map<uint32_t, std::vector<base::OwnedVector<char>>>& fieldnames",
+        "size_t* total_allocated_size"
+      ],
+      "return_type": "void",
+      "logic": "Decodes canonical type names from the name section of a WebAssembly module."
+    },
+    {
+      "name": "ValidateFunctions",
+      "parameters": [
+        "const WasmModule* module",
+        "WasmEnabledFeatures enabled_features",
+        "base::Vector<const uint8_t> wire_bytes",
+        "std::function<bool(int)> filter",
+        "WasmDetectedFeatures* detected_features_out"
+      ],
+      "return_type": "WasmError",
+      "logic": "Validates WebAssembly function bodies in parallel."
+    },
+    {
+      "name": "GetWasmErrorWithName",
+      "parameters": [
+        "base::Vector<const uint8_t> wire_bytes",
+        "int func_index",
+        "const WasmModule* module",
+        "WasmError error"
+      ],
+      "return_type": "WasmError",
+      "logic": "Adds function name information to a WasmError."
+    }
+  ]
+}

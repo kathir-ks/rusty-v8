@@ -1,0 +1,209 @@
+{
+  "file_path": "/home/kathirks_gc/v8_go/codebase/src/compiler/dead-code-elimination.h",
+  "imports": [
+    "src/base/compiler-specific.h",
+    "src/codegen/machine-type.h",
+    "src/compiler/graph-reducer.h"
+  ],
+  "classes": [
+    {
+      "name": "DeadCodeElimination",
+      "properties": [
+        "graph_",
+        "common_",
+        "dead_",
+        "zone_"
+      ],
+      "methods": [
+        {
+          "name": "DeadCodeElimination",
+          "parameters": [
+            "Editor* editor",
+            "TFGraph* graph",
+            "CommonOperatorBuilder* common",
+            "Zone* temp_zone"
+          ],
+          "return_type": "void",
+          "logic": "Constructor for the DeadCodeElimination class, initializes the reducer with the provided graph editor, graph, common operator builder, and temporary zone."
+        },
+        {
+          "name": "~DeadCodeElimination",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Destructor for the DeadCodeElimination class."
+        },
+        {
+          "name": "operator=",
+          "parameters": [
+            "const DeadCodeElimination&"
+          ],
+          "return_type": "DeadCodeElimination&",
+          "logic": "Deleted copy assignment operator."
+        },
+        {
+          "name": "DeadCodeElimination",
+          "parameters": [
+            "const DeadCodeElimination&"
+          ],
+          "return_type": "void",
+          "logic": "Deleted copy constructor."
+        },
+        {
+          "name": "reducer_name",
+          "parameters": [],
+          "return_type": "const char*",
+          "logic": "Returns the name of the reducer, which is \"DeadCodeElimination\"."
+        },
+        {
+          "name": "Reduce",
+          "parameters": [
+            "Node* node"
+          ],
+          "return_type": "Reduction",
+          "logic": "The main reduction method for the DeadCodeElimination reducer. It is called for each node in the graph and delegates to more specific reduction methods based on the node's type."
+        },
+        {
+          "name": "ReduceEnd",
+          "parameters": [
+            "Node* node"
+          ],
+          "return_type": "Reduction",
+          "logic": "Reduces the end node of the graph."
+        },
+        {
+          "name": "ReduceLoopOrMerge",
+          "parameters": [
+            "Node* node"
+          ],
+          "return_type": "Reduction",
+          "logic": "Reduces loop or merge nodes."
+        },
+        {
+          "name": "ReduceLoopExit",
+          "parameters": [
+            "Node* node"
+          ],
+          "return_type": "Reduction",
+          "logic": "Reduces loop exit nodes."
+        },
+        {
+          "name": "ReduceNode",
+          "parameters": [
+            "Node* node"
+          ],
+          "return_type": "Reduction",
+          "logic": "Reduces general nodes."
+        },
+        {
+          "name": "ReducePhi",
+          "parameters": [
+            "Node* node"
+          ],
+          "return_type": "Reduction",
+          "logic": "Reduces phi nodes, which combine values from different control flow paths."
+        },
+        {
+          "name": "ReduceEffectPhi",
+          "parameters": [
+            "Node* node"
+          ],
+          "return_type": "Reduction",
+          "logic": "Reduces effect phi nodes, which combine effects from different control flow paths."
+        },
+        {
+          "name": "ReducePureNode",
+          "parameters": [
+            "Node* node"
+          ],
+          "return_type": "Reduction",
+          "logic": "Reduces pure nodes (nodes without side effects). If inputs are DeadValue, replaces the node with DeadValue."
+        },
+        {
+          "name": "ReduceUnreachableOrIfException",
+          "parameters": [
+            "Node* node"
+          ],
+          "return_type": "Reduction",
+          "logic": "Reduces unreachable or IfException nodes.  Collapses effect chain for unreachable."
+        },
+        {
+          "name": "ReduceEffectNode",
+          "parameters": [
+            "Node* node"
+          ],
+          "return_type": "Reduction",
+          "logic": "Reduces effect nodes, propagating effects like memory access or control flow changes."
+        },
+        {
+          "name": "ReduceDeoptimizeOrReturnOrTerminateOrTailCall",
+          "parameters": [
+            "Node* node"
+          ],
+          "return_type": "Reduction",
+          "logic": "Reduces deoptimize, return, terminate, and tail call nodes."
+        },
+        {
+          "name": "ReduceBranchOrSwitch",
+          "parameters": [
+            "Node* node"
+          ],
+          "return_type": "Reduction",
+          "logic": "Reduces branch or switch nodes, which control the flow of execution based on a condition or value."
+        },
+        {
+          "name": "RemoveLoopExit",
+          "parameters": [
+            "Node* node"
+          ],
+          "return_type": "Reduction",
+          "logic": "Removes loop exit nodes."
+        },
+        {
+          "name": "PropagateDeadControl",
+          "parameters": [
+            "Node* node"
+          ],
+          "return_type": "Reduction",
+          "logic": "Propagates dead control flow to other nodes."
+        },
+        {
+          "name": "TrimMergeOrPhi",
+          "parameters": [
+            "Node* node",
+            "int size"
+          ],
+          "return_type": "void",
+          "logic": "Trims a merge or phi node to a specified size."
+        },
+        {
+          "name": "DeadValue",
+          "parameters": [
+            "Node* none_node",
+            "MachineRepresentation rep"
+          ],
+          "return_type": "Node*",
+          "logic": "Creates a 'DeadValue' node, representing a value that will never be used because the corresponding code is unreachable. Takes a node of Type::None() as input."
+        },
+        {
+          "name": "graph",
+          "parameters": [],
+          "return_type": "TFGraph*",
+          "logic": "Returns the graph associated with the reducer."
+        },
+        {
+          "name": "common",
+          "parameters": [],
+          "return_type": "CommonOperatorBuilder*",
+          "logic": "Returns the common operator builder."
+        },
+        {
+          "name": "dead",
+          "parameters": [],
+          "return_type": "Node*",
+          "logic": "Returns the 'dead' node."
+        }
+      ]
+    }
+  ],
+  "functions": []
+}

@@ -1,0 +1,43 @@
+{
+  "file_path": "/home/kathirks_gc/v8_go/codebase/src/extensions/ignition-statistics-extension.cc",
+  "imports": [
+    "src/extensions/ignition-statistics-extension.h",
+    "include/v8-template.h",
+    "src/api/api-inl.h",
+    "src/base/logging.h",
+    "src/execution/isolate.h",
+    "src/interpreter/bytecodes.h",
+    "src/interpreter/interpreter.h"
+  ],
+  "classes": [
+    {
+      "name": "IgnitionStatisticsExtension",
+      "properties": [
+        "kSource"
+      ],
+      "methods": [
+        {
+          "name": "GetNativeFunctionTemplate",
+          "parameters": [
+            "v8::Isolate* isolate",
+            "v8::Local<v8::String> name"
+          ],
+          "return_type": "v8::Local<v8::FunctionTemplate>",
+          "logic": "Creates a native function template for the 'getIgnitionDispatchCounters' function, which is the entry point to access Ignition dispatch counters from JavaScript.  It checks the name of the requested function and, if it matches, creates a template bound to the GetIgnitionDispatchCounters callback."
+        },
+        {
+          "name": "GetIgnitionDispatchCounters",
+          "parameters": [
+            "const v8::FunctionCallbackInfo<v8::Value>& info"
+          ],
+          "return_type": "void",
+          "logic": "Retrieves the Ignition dispatch counters object from the isolate's interpreter and returns it to the JavaScript caller. It first validates the callback info and then accesses the interpreter to get the dispatch counters. The counters are then converted to a v8 object and returned."
+        }
+      ]
+    }
+  ],
+  "functions": [],
+  "property_values": {
+    "IgnitionStatisticsExtension::kSource": "native function getIgnitionDispatchCounters();"
+  }
+}

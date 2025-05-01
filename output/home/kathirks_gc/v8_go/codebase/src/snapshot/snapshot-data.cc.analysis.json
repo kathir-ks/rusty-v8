@@ -1,0 +1,58 @@
+{
+  "file_path": "/home/kathirks_gc/v8_go/codebase/src/snapshot/snapshot-data.cc",
+  "imports": [
+    "src/snapshot/snapshot-data.h",
+    "src/common/assert-scope.h",
+    "src/snapshot/serializer.h"
+  ],
+  "classes": [
+    {
+      "name": "SerializedData",
+      "properties": [
+        "data_",
+        "size_",
+        "owns_data_",
+        "kMagicNumber"
+      ],
+      "methods": [
+        {
+          "name": "AllocateData",
+          "parameters": [
+            "uint32_t size"
+          ],
+          "return_type": "void",
+          "logic": "Allocates memory for the serialized data. It checks if the data is already owned, allocates a new array of bytes with the given size, updates the size member, and sets the owns_data_ flag to true."
+        }
+      ]
+    },
+    {
+      "name": "SnapshotData",
+      "properties": [],
+      "methods": [
+        {
+          "name": "SnapshotData",
+          "parameters": [
+            "const Serializer* serializer"
+          ],
+          "return_type": "SnapshotData",
+          "logic": "Constructor for the SnapshotData class. It retrieves the payload from the serializer, calculates the total size needed (header + payload), allocates the memory using AllocateData, sets the magic number and payload length in the header, and copies the serialized data into the allocated memory."
+        },
+        {
+          "name": "Payload",
+          "parameters": [],
+          "return_type": "base::Vector<const uint8_t>",
+          "logic": "Returns a read-only vector of the payload data. It calculates the starting address of the payload by adding the header size to the data pointer, gets the length of the payload from the header, performs a consistency check, and constructs a base::Vector representing the payload."
+        }
+      ]
+    }
+  ],
+  "functions": [],
+  "constants": [
+    {
+      "name": "kMagicNumber",
+      "class": "SerializedData",
+      "type": "uint32_t",
+      "value": "constexpr"
+    }
+  ]
+}

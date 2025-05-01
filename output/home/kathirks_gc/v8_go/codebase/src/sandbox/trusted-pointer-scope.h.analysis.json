@@ -1,0 +1,79 @@
+{
+  "file_path": "/home/kathirks_gc/v8_go/codebase/src/sandbox/trusted-pointer-scope.h",
+  "imports": [
+    "src/sandbox/isolate.h"
+  ],
+  "classes": [
+    {
+      "name": "TrustedPointerPublishingScope",
+      "properties": [
+        "state_",
+        "storage_",
+        "singleton_",
+        "vector_",
+        "isolate_"
+      ],
+      "methods": [
+        {
+          "name": "TrustedPointerPublishingScope",
+          "parameters": [
+            "Isolate* isolate",
+            "const DisallowJavascriptExecution& no_js"
+          ],
+          "return_type": "constructor",
+          "logic": "Constructor. Initializes the scope, potentially disabling it based on sandbox settings. In non-sandbox mode, does nothing."
+        },
+        {
+          "name": "~TrustedPointerPublishingScope",
+          "parameters": [],
+          "return_type": "destructor",
+          "logic": "Destructor.  If sandbox is enabled and the scope is tracking pointers and has failed, it will free the tracked pointers. In non-sandbox mode, does nothing."
+        },
+        {
+          "name": "MarkSuccess",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Marks the tracked pointers as successfully initialized, preventing them from being discarded in the destructor.  Only effective when sandboxing is enabled."
+        },
+        {
+          "name": "MarkFailure",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Marks the tracked pointers as failed, causing them to be discarded (effectively neutered) in the destructor if sandboxing is enabled."
+        },
+        {
+          "name": "TrackPointer",
+          "parameters": [
+            "TrustedPointerTableEntry* entry"
+          ],
+          "return_type": "void",
+          "logic": "Tracks a newly created TrustedPointerTableEntry. Manages the storage for the tracked pointers (singleton or vector).  Only effective when sandboxing is enabled."
+        }
+      ]
+    },
+    {
+      "name": "DisableTrustedPointerPublishingScope",
+      "properties": [
+        "isolate_",
+        "saved_"
+      ],
+      "methods": [
+        {
+          "name": "DisableTrustedPointerPublishingScope",
+          "parameters": [
+            "Isolate* isolate"
+          ],
+          "return_type": "constructor",
+          "logic": "Constructor. Temporarily disables the TrustedPointerPublishingScope for the current isolate.  Saves the current scope if it exists so that it can be re-enabled in the destructor. In non-sandbox mode, does nothing."
+        },
+        {
+          "name": "~DisableTrustedPointerPublishingScope",
+          "parameters": [],
+          "return_type": "destructor",
+          "logic": "Destructor. Re-enables the previously disabled TrustedPointerPublishingScope by restoring the saved pointer to the isolate.  In non-sandbox mode, does nothing."
+        }
+      ]
+    }
+  ],
+  "functions": []
+}

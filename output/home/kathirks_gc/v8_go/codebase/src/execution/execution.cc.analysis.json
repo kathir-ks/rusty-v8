@@ -1,0 +1,243 @@
+{
+  "file_path": "/home/kathirks_gc/v8_go/codebase/src/execution/execution.cc",
+  "imports": [
+    "src/execution/execution.h",
+    "src/api/api-inl.h",
+    "src/debug/debug.h",
+    "src/execution/frames.h",
+    "src/execution/isolate-inl.h",
+    "src/execution/vm-state-inl.h",
+    "src/logging/runtime-call-stats-scope.h",
+    "src/compiler/wasm-compiler.h",
+    "src/wasm/code-space-access.h",
+    "src/wasm/wasm-engine.h"
+  ],
+  "classes": [
+    {
+      "name": "InvokeParams",
+      "properties": [
+        "target",
+        "receiver",
+        "args",
+        "new_target",
+        "microtask_queue",
+        "message_handling",
+        "exception_out",
+        "is_construct",
+        "execution_target"
+      ],
+      "methods": [
+        {
+          "name": "SetUpForNew",
+          "parameters": [
+            "Isolate* isolate",
+            "DirectHandle<Object> constructor",
+            "DirectHandle<Object> new_target",
+            "base::Vector<const DirectHandle<Object>> args"
+          ],
+          "return_type": "InvokeParams",
+          "logic": "Sets up the InvokeParams struct for a constructor call (new keyword)."
+        },
+        {
+          "name": "SetUpForCall",
+          "parameters": [
+            "Isolate* isolate",
+            "DirectHandle<Object> callable",
+            "DirectHandle<Object> receiver",
+            "base::Vector<const DirectHandle<Object>> args"
+          ],
+          "return_type": "InvokeParams",
+          "logic": "Sets up the InvokeParams struct for a regular function call."
+        },
+        {
+          "name": "SetUpForTryCall",
+          "parameters": [
+            "Isolate* isolate",
+            "DirectHandle<Object> callable",
+            "DirectHandle<Object> receiver",
+            "base::Vector<const DirectHandle<Object>> args",
+            "Execution::MessageHandling message_handling",
+            "MaybeDirectHandle<Object>* exception_out"
+          ],
+          "return_type": "InvokeParams",
+          "logic": "Sets up the InvokeParams struct for a function call within a try-catch block."
+        },
+        {
+          "name": "SetUpForRunMicrotasks",
+          "parameters": [
+            "Isolate* isolate",
+            "MicrotaskQueue* microtask_queue"
+          ],
+          "return_type": "InvokeParams",
+          "logic": "Sets up InvokeParams to run microtasks."
+        },
+        {
+          "name": "IsScript",
+          "parameters": [],
+          "return_type": "bool",
+          "logic": "Checks if the target is a JSFunction and if the function's SharedFunctionInfo indicates it's a script."
+        },
+        {
+          "name": "GetAndResetHostDefinedOptions",
+          "parameters": [],
+          "return_type": "DirectHandle<FixedArray>",
+          "logic": "Retrieves the host-defined options (FixedArray) for a script and then resets the args field to be empty. Used during script execution."
+        }
+      ]
+    },
+    {
+      "name": "Execution",
+      "properties": [],
+      "methods": [
+        {
+          "name": "Call",
+          "parameters": [
+            "Isolate* isolate",
+            "DirectHandle<Object> callable",
+            "DirectHandle<Object> receiver",
+            "base::Vector<const DirectHandle<Object>> args"
+          ],
+          "return_type": "MaybeHandle<Object>",
+          "logic": "Calls a callable object with a receiver and arguments."
+        },
+        {
+          "name": "CallScript",
+          "parameters": [
+            "Isolate* isolate",
+            "DirectHandle<JSFunction> script_function",
+            "DirectHandle<Object> receiver",
+            "DirectHandle<Object> host_defined_options"
+          ],
+          "return_type": "MaybeHandle<Object>",
+          "logic": "Calls a JavaScript script function with a receiver and host-defined options."
+        },
+        {
+          "name": "CallBuiltin",
+          "parameters": [
+            "Isolate* isolate",
+            "DirectHandle<JSFunction> builtin",
+            "DirectHandle<Object> receiver",
+            "base::Vector<const DirectHandle<Object>> args"
+          ],
+          "return_type": "MaybeHandle<Object>",
+          "logic": "Calls a JavaScript built-in function with a receiver and arguments."
+        },
+        {
+          "name": "New",
+          "parameters": [
+            "Isolate* isolate",
+            "DirectHandle<Object> constructor",
+            "base::Vector<const DirectHandle<Object>> args"
+          ],
+          "return_type": "MaybeDirectHandle<JSReceiver>",
+          "logic": "Creates a new JavaScript object by calling a constructor function with arguments."
+        },
+        {
+          "name": "New",
+          "parameters": [
+            "Isolate* isolate",
+            "DirectHandle<Object> constructor",
+            "DirectHandle<Object> new_target",
+            "base::Vector<const DirectHandle<Object>> args"
+          ],
+          "return_type": "MaybeDirectHandle<JSReceiver>",
+          "logic": "Creates a new JavaScript object by calling a constructor function with a specific `new.target` and arguments."
+        },
+        {
+          "name": "TryCallScript",
+          "parameters": [
+            "Isolate* isolate",
+            "DirectHandle<JSFunction> script_function",
+            "DirectHandle<Object> receiver",
+            "DirectHandle<FixedArray> host_defined_options"
+          ],
+          "return_type": "MaybeDirectHandle<Object>",
+          "logic": "Calls a JavaScript script function within a try-catch block, handling potential exceptions, with host-defined options."
+        },
+        {
+          "name": "TryCall",
+          "parameters": [
+            "Isolate* isolate",
+            "DirectHandle<Object> callable",
+            "DirectHandle<Object> receiver",
+            "base::Vector<const DirectHandle<Object>> args",
+            "Execution::MessageHandling message_handling",
+            "MaybeDirectHandle<Object>* exception_out"
+          ],
+          "return_type": "MaybeDirectHandle<Object>",
+          "logic": "Calls a callable object within a try-catch block, capturing potential exceptions and controlling message handling."
+        },
+        {
+          "name": "TryRunMicrotasks",
+          "parameters": [
+            "Isolate* isolate",
+            "MicrotaskQueue* microtask_queue"
+          ],
+          "return_type": "MaybeDirectHandle<Object>",
+          "logic": "Runs microtasks within a try-catch block to handle potential exceptions."
+        },
+        {
+          "name": "CallWasm",
+          "parameters": [
+            "Isolate* isolate",
+            "DirectHandle<Code> wrapper_code",
+            "WasmCodePointer wasm_call_target",
+            "DirectHandle<Object> object_ref",
+            "Address packed_args"
+          ],
+          "return_type": "void",
+          "logic": "Calls a WebAssembly function. This is only defined if V8_ENABLE_WEBASSEMBLY is enabled."
+        }
+      ]
+    }
+  ],
+  "functions": [
+    {
+      "name": "NormalizeReceiver",
+      "parameters": [
+        "Isolate* isolate",
+        "DirectHandle<Object> receiver"
+      ],
+      "return_type": "DirectHandle<Object>",
+      "logic": "Normalizes the receiver object. If the receiver is a JSGlobalObject, it's converted to the global proxy to avoid direct references to global objects."
+    },
+    {
+      "name": "JSEntry",
+      "parameters": [
+        "Isolate* isolate",
+        "Execution::Target execution_target",
+        "bool is_construct"
+      ],
+      "return_type": "DirectHandle<Code>",
+      "logic": "Returns the appropriate JSEntry builtin code based on the execution target and whether it's a constructor call or regular call/microtask execution."
+    },
+    {
+      "name": "NewScriptContext",
+      "parameters": [
+        "Isolate* isolate",
+        "DirectHandle<JSFunction> function",
+        "DirectHandle<FixedArray> host_defined_options"
+      ],
+      "return_type": "MaybeDirectHandle<Context>",
+      "logic": "Creates a new script context for a given script function.  It handles name clashes and ensures proper scoping."
+    },
+    {
+      "name": "Invoke",
+      "parameters": [
+        "Isolate* isolate",
+        "const InvokeParams& params"
+      ],
+      "return_type": "MaybeHandle<Object>",
+      "logic": "The central function that performs the actual JavaScript execution. It handles API function calls, script context setup, stack overflow checks, and execution through JSEntry stubs."
+    },
+    {
+      "name": "InvokeWithTryCatch",
+      "parameters": [
+        "Isolate* isolate",
+        "const InvokeParams& params"
+      ],
+      "return_type": "MaybeDirectHandle<Object>",
+      "logic": "Calls the Invoke function within a try-catch block to handle potential exceptions. It is used for functions that require exception handling."
+    }
+  ]
+}

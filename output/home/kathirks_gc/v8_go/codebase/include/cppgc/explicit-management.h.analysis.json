@@ -1,0 +1,60 @@
+{
+  "file_path": "/home/kathirks_gc/v8_go/codebase/include/cppgc/explicit-management.h",
+  "imports": [
+    "<cstddef>",
+    "cppgc/allocation.h",
+    "cppgc/internal/logging.h",
+    "cppgc/type-traits.h"
+  ],
+  "classes": [
+    {
+      "name": "HeapHandle",
+      "properties": [],
+      "methods": []
+    },
+    {
+      "name": "internal::ExplicitManagementImpl",
+      "properties": [],
+      "methods": [
+        {
+          "name": "FreeUnreferencedObject",
+          "parameters": [
+            "HeapHandle&",
+            "void*"
+          ],
+          "return_type": "void",
+          "logic": "A static method (declared as V8_EXPORT) that is the actual implementation of freeing an unreferenced object. It takes a heap handle and a pointer to the object to free."
+        },
+        {
+          "name": "Resize",
+          "parameters": [
+            "void*",
+            "size_t"
+          ],
+          "return_type": "bool",
+          "logic": "A static method (declared as V8_EXPORT) that is the actual implementation of resizing an object. It takes a pointer to the object and the new size. It returns true if the resize was successful, false otherwise."
+        }
+      ]
+    }
+  ],
+  "functions": [
+    {
+      "name": "subtle::FreeUnreferencedObject",
+      "parameters": [
+        "HeapHandle& heap_handle",
+        "T& object"
+      ],
+      "return_type": "void",
+      "logic": "Informs the garbage collector that `object` can be immediately reclaimed.  It takes a heap handle and a reference to the object to be freed.  It asserts that the object is of type `GarbageCollected` and then calls the internal implementation."
+    },
+    {
+      "name": "subtle::Resize",
+      "parameters": [
+        "T& object",
+        "AdditionalBytes additional_bytes"
+      ],
+      "return_type": "bool",
+      "logic": "Tries to resize `object` of type `T` with additional bytes on top of sizeof(T). Resizing is only useful with trailing inlined storage. It asserts that the object is of type `GarbageCollected` and then calls the internal implementation."
+    }
+  ]
+}

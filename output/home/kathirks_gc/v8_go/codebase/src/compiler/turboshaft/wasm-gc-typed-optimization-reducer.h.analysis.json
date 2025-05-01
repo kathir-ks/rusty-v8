@@ -1,0 +1,382 @@
+{
+  "file_path": "/home/kathirks_gc/v8_go/codebase/src/compiler/turboshaft/wasm-gc-typed-optimization-reducer.h",
+  "imports": [
+    "src/compiler/turboshaft/assembler.h",
+    "src/compiler/turboshaft/operations.h",
+    "src/compiler/turboshaft/phase.h",
+    "src/compiler/turboshaft/snapshot-table-opindex.h",
+    "src/compiler/wasm-graph-assembler.h",
+    "src/wasm/wasm-subtyping.h"
+  ],
+  "classes": [
+    {
+      "name": "WasmGCTypeAnalyzer",
+      "properties": [
+        "data_",
+        "graph_",
+        "phase_zone_",
+        "module_",
+        "signature_",
+        "types_table_",
+        "block_to_snapshot_",
+        "block_is_unreachable_",
+        "current_block_",
+        "input_type_map_",
+        "is_first_loop_header_evaluation_"
+      ],
+      "methods": [
+        {
+          "name": "WasmGCTypeAnalyzer",
+          "parameters": [
+            "PipelineData* data",
+            "Graph& graph",
+            "Zone* zone"
+          ],
+          "return_type": "void",
+          "logic": "Constructor for the class. Initializes the member variables and asserts that the signature is not null."
+        },
+        {
+          "name": "Run",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "The main entry point for the analysis. Performs the type analysis of the graph."
+        },
+        {
+          "name": "GetInputTypeOrSentinelType",
+          "parameters": [
+            "OpIndex op"
+          ],
+          "return_type": "wasm::ValueType",
+          "logic": "Returns the inferred input type for the operation, or a sentinel type (bottom) if the operation should always trap."
+        },
+        {
+          "name": "StartNewSnapshotFor",
+          "parameters": [
+            "const Block& block"
+          ],
+          "return_type": "void",
+          "logic": "Starts a new snapshot for a given block."
+        },
+        {
+          "name": "ProcessOperations",
+          "parameters": [
+            "const Block& block"
+          ],
+          "return_type": "void",
+          "logic": "Processes all operations in a given block."
+        },
+        {
+          "name": "ProcessBlock",
+          "parameters": [
+            "const Block& block"
+          ],
+          "return_type": "void",
+          "logic": "Processes a given block."
+        },
+        {
+          "name": "ProcessBranchOnTarget",
+          "parameters": [
+            "const BranchOp& branch",
+            "const Block& target"
+          ],
+          "return_type": "void",
+          "logic": "Processes a branch operation on a target block."
+        },
+        {
+          "name": "ProcessTypeCast",
+          "parameters": [
+            "const WasmTypeCastOp& type_cast"
+          ],
+          "return_type": "void",
+          "logic": "Processes a Wasm type cast operation."
+        },
+        {
+          "name": "ProcessTypeCheck",
+          "parameters": [
+            "const WasmTypeCheckOp& type_check"
+          ],
+          "return_type": "void",
+          "logic": "Processes a Wasm type check operation."
+        },
+        {
+          "name": "ProcessAssertNotNull",
+          "parameters": [
+            "const AssertNotNullOp& type_cast"
+          ],
+          "return_type": "void",
+          "logic": "Processes an AssertNotNull operation."
+        },
+        {
+          "name": "ProcessNull",
+          "parameters": [
+            "const NullOp& null"
+          ],
+          "return_type": "void",
+          "logic": "Processes a Null operation."
+        },
+        {
+          "name": "ProcessIsNull",
+          "parameters": [
+            "const IsNullOp& is_null"
+          ],
+          "return_type": "void",
+          "logic": "Processes an IsNull operation."
+        },
+        {
+          "name": "ProcessParameter",
+          "parameters": [
+            "const ParameterOp& parameter"
+          ],
+          "return_type": "void",
+          "logic": "Processes a Parameter operation."
+        },
+        {
+          "name": "ProcessStructGet",
+          "parameters": [
+            "const StructGetOp& struct_get"
+          ],
+          "return_type": "void",
+          "logic": "Processes a StructGet operation."
+        },
+        {
+          "name": "ProcessStructSet",
+          "parameters": [
+            "const StructSetOp& struct_set"
+          ],
+          "return_type": "void",
+          "logic": "Processes a StructSet operation."
+        },
+        {
+          "name": "ProcessArrayGet",
+          "parameters": [
+            "const ArrayGetOp& array_get"
+          ],
+          "return_type": "void",
+          "logic": "Processes an ArrayGet operation."
+        },
+        {
+          "name": "ProcessArrayLength",
+          "parameters": [
+            "const ArrayLengthOp& array_length"
+          ],
+          "return_type": "void",
+          "logic": "Processes an ArrayLength operation."
+        },
+        {
+          "name": "ProcessGlobalGet",
+          "parameters": [
+            "const GlobalGetOp& global_get"
+          ],
+          "return_type": "void",
+          "logic": "Processes a GlobalGet operation."
+        },
+        {
+          "name": "ProcessRefFunc",
+          "parameters": [
+            "const WasmRefFuncOp& ref_func"
+          ],
+          "return_type": "void",
+          "logic": "Processes a RefFunc operation."
+        },
+        {
+          "name": "ProcessAllocateArray",
+          "parameters": [
+            "const WasmAllocateArrayOp& allocate_array"
+          ],
+          "return_type": "void",
+          "logic": "Processes an AllocateArray operation."
+        },
+        {
+          "name": "ProcessAllocateStruct",
+          "parameters": [
+            "const WasmAllocateStructOp& allocate_struct"
+          ],
+          "return_type": "void",
+          "logic": "Processes an AllocateStruct operation."
+        },
+        {
+          "name": "ProcessPhi",
+          "parameters": [
+            "const PhiOp& phi"
+          ],
+          "return_type": "void",
+          "logic": "Processes a Phi operation."
+        },
+        {
+          "name": "ProcessTypeAnnotation",
+          "parameters": [
+            "const WasmTypeAnnotationOp& type_annotation"
+          ],
+          "return_type": "void",
+          "logic": "Processes a type annotation operation."
+        },
+        {
+          "name": "GetTypeForPhiInput",
+          "parameters": [
+            "const PhiOp& phi",
+            "int input_index"
+          ],
+          "return_type": "wasm::ValueType",
+          "logic": "Gets the type of a Phi input."
+        },
+        {
+          "name": "CreateMergeSnapshot",
+          "parameters": [
+            "const Block& block"
+          ],
+          "return_type": "void",
+          "logic": "Creates a merge snapshot for a given block."
+        },
+        {
+          "name": "CreateMergeSnapshot",
+          "parameters": [
+            "base::Vector<const Snapshot> predecessors",
+            "base::Vector<const bool> reachable"
+          ],
+          "return_type": "bool",
+          "logic": "Creates a merge snapshot given predecessors and reachability information."
+        },
+        {
+          "name": "RefineTypeKnowledge",
+          "parameters": [
+            "OpIndex object",
+            "wasm::ValueType new_type",
+            "const Operation& op"
+          ],
+          "return_type": "wasm::ValueType",
+          "logic": "Updates the type knowledge in the side table and returns the previous type."
+        },
+        {
+          "name": "RefineTypeKnowledgeNotNull",
+          "parameters": [
+            "OpIndex object",
+            "const Operation& op"
+          ],
+          "return_type": "wasm::ValueType",
+          "logic": "Updates the type knowledge to be non-nullable and returns the previous type."
+        },
+        {
+          "name": "ResolveAliases",
+          "parameters": [
+            "OpIndex object"
+          ],
+          "return_type": "OpIndex",
+          "logic": "Resolves aliases for a given OpIndex."
+        },
+        {
+          "name": "GetResolvedType",
+          "parameters": [
+            "OpIndex object"
+          ],
+          "return_type": "wasm::ValueType",
+          "logic": "Gets the resolved type for a given OpIndex."
+        },
+        {
+          "name": "IsReachable",
+          "parameters": [
+            "const Block& block"
+          ],
+          "return_type": "bool",
+          "logic": "Returns the reachability status of a block."
+        }
+      ]
+    },
+    {
+      "name": "WasmGCTypedOptimizationReducer",
+      "properties": [
+        "graph_",
+        "module_",
+        "analyzer_"
+      ],
+      "methods": [
+        {
+          "name": "Analyze",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Runs the type analyzer and then calls the base class's analyze function."
+        },
+        {
+          "name": "REDUCE_INPUT_GRAPH(WasmTypeCast)",
+          "parameters": [
+            "V<Object> op_idx",
+            "const WasmTypeCastOp& cast_op"
+          ],
+          "return_type": "V<Object>",
+          "logic": "Reduces a WasmTypeCast operation based on inferred type information, potentially removing it, replacing it with a null check, or refining the source type."
+        },
+        {
+          "name": "REDUCE_INPUT_GRAPH(WasmTypeCheck)",
+          "parameters": [
+            "V<Word32> op_idx",
+            "const WasmTypeCheckOp& type_check"
+          ],
+          "return_type": "V<Word32>",
+          "logic": "Reduces a WasmTypeCheck operation based on inferred type information, potentially replacing it with a constant, refining the source type or removing it."
+        },
+        {
+          "name": "REDUCE_INPUT_GRAPH(AssertNotNull)",
+          "parameters": [
+            "V<Object> op_idx",
+            "const AssertNotNullOp& assert_not_null"
+          ],
+          "return_type": "V<Object>",
+          "logic": "Reduces an AssertNotNull operation based on inferred type information, potentially removing it if the type is known to be non-nullable."
+        },
+        {
+          "name": "REDUCE_INPUT_GRAPH(IsNull)",
+          "parameters": [
+            "V<Word32> op_idx",
+            "const IsNullOp& is_null"
+          ],
+          "return_type": "V<Word32>",
+          "logic": "Reduces an IsNull operation based on inferred type information, potentially replacing it with a constant if the type is known to be always null or always non-null."
+        },
+        {
+          "name": "REDUCE_INPUT_GRAPH(WasmTypeAnnotation)",
+          "parameters": [
+            "V<Object> op_idx",
+            "const WasmTypeAnnotationOp& type_annotation"
+          ],
+          "return_type": "V<Object>",
+          "logic": "Removes WasmTypeAnnotation operations."
+        },
+        {
+          "name": "REDUCE_INPUT_GRAPH(StructGet)",
+          "parameters": [
+            "V<Any> op_idx",
+            "const StructGetOp& struct_get"
+          ],
+          "return_type": "V<Any>",
+          "logic": "Reduces a StructGet operation based on inferred type information, removing the null check if the type is known to be non-nullable."
+        },
+        {
+          "name": "REDUCE_INPUT_GRAPH(StructSet)",
+          "parameters": [
+            "V<None> op_idx",
+            "const StructSetOp& struct_set"
+          ],
+          "return_type": "V<None>",
+          "logic": "Reduces a StructSet operation based on inferred type information, removing the null check if the type is known to be non-nullable."
+        },
+        {
+          "name": "REDUCE_INPUT_GRAPH(ArrayLength)",
+          "parameters": [
+            "V<Word32> op_idx",
+            "const ArrayLengthOp& array_length"
+          ],
+          "return_type": "V<Word32>",
+          "logic": "Reduces an ArrayLength operation based on inferred type information, removing the null check if the type is known to be non-nullable."
+        },
+        {
+          "name": "REDUCE(AnyConvertExtern)",
+          "parameters": [
+            "V<Object> object"
+          ],
+          "return_type": "V<Object>",
+          "logic": "Reduces an AnyConvertExtern operation if it's followed by an ExternConvertAny operation to the original object, essentially removing both."
+        }
+      ]
+    }
+  ],
+  "functions": []
+}

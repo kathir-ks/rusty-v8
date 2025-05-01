@@ -1,0 +1,242 @@
+{
+  "file_path": "/home/kathirks_gc/v8_go/codebase/src/compiler/scheduler.h",
+  "imports": [
+    "<optional>",
+    "src/base/flags.h",
+    "src/compiler/node.h",
+    "src/compiler/schedule.h",
+    "src/zone/zone-containers.h"
+  ],
+  "classes": [
+    {
+      "name": "Scheduler",
+      "properties": [
+        "zone_",
+        "graph_",
+        "schedule_",
+        "flags_",
+        "scheduled_nodes_",
+        "schedule_root_nodes_",
+        "schedule_queue_",
+        "node_data_",
+        "control_flow_builder_",
+        "special_rpo_",
+        "equivalence_",
+        "tick_counter_",
+        "profile_data_",
+        "common_dominator_cache_"
+      ],
+      "methods": [
+        {
+          "name": "ComputeSchedule",
+          "parameters": [
+            "Zone* temp_zone",
+            "TFGraph* graph",
+            "Flags flags",
+            "TickCounter* tick_counter",
+            "const ProfileDataFromFile* profile_data"
+          ],
+          "return_type": "Schedule*",
+          "logic": "The complete scheduling algorithm. Creates a new schedule and places all nodes from the graph into it."
+        },
+        {
+          "name": "ComputeSpecialRPO",
+          "parameters": [
+            "Zone* zone",
+            "Schedule* schedule"
+          ],
+          "return_type": "BasicBlockVector*",
+          "logic": "Compute the RPO of blocks in an existing schedule."
+        },
+        {
+          "name": "GenerateDominatorTree",
+          "parameters": [
+            "Schedule* schedule"
+          ],
+          "return_type": "void",
+          "logic": "Computes the dominator tree on an existing schedule that has RPO computed."
+        },
+        {
+          "name": "profile_data",
+          "parameters": [],
+          "return_type": "const ProfileDataFromFile*",
+          "logic": "Returns the profile data."
+        },
+        {
+          "name": "Scheduler",
+          "parameters": [
+            "Zone* zone",
+            "TFGraph* graph",
+            "Schedule* schedule",
+            "Flags flags",
+            "size_t node_count_hint_",
+            "TickCounter* tick_counter",
+            "const ProfileDataFromFile* profile_data"
+          ],
+          "return_type": "void",
+          "logic": "Constructor for the Scheduler class."
+        },
+        {
+          "name": "DefaultSchedulerData",
+          "parameters": [],
+          "return_type": "SchedulerData",
+          "logic": "Returns the default scheduler data."
+        },
+        {
+          "name": "GetData",
+          "parameters": [
+            "Node* node"
+          ],
+          "return_type": "SchedulerData*",
+          "logic": "Returns the scheduler data for a given node."
+        },
+        {
+          "name": "GetPlacement",
+          "parameters": [
+            "Node* node"
+          ],
+          "return_type": "Placement",
+          "logic": "Gets the placement of a given node."
+        },
+        {
+          "name": "InitializePlacement",
+          "parameters": [
+            "Node* node"
+          ],
+          "return_type": "Placement",
+          "logic": "Initializes the placement of a given node."
+        },
+        {
+          "name": "UpdatePlacement",
+          "parameters": [
+            "Node* node",
+            "Placement placement"
+          ],
+          "return_type": "void",
+          "logic": "Updates the placement of a given node."
+        },
+        {
+          "name": "IsLive",
+          "parameters": [
+            "Node* node"
+          ],
+          "return_type": "bool",
+          "logic": "Checks if a given node is live."
+        },
+        {
+          "name": "GetCoupledControlEdge",
+          "parameters": [
+            "Node* node"
+          ],
+          "return_type": "std::optional<int>",
+          "logic": "If the node is coupled, returns the coupled control edge index."
+        },
+        {
+          "name": "IncrementUnscheduledUseCount",
+          "parameters": [
+            "Node* node",
+            "Node* from"
+          ],
+          "return_type": "void",
+          "logic": "Increments the unscheduled use count of a given node."
+        },
+        {
+          "name": "DecrementUnscheduledUseCount",
+          "parameters": [
+            "Node* node",
+            "Node* from"
+          ],
+          "return_type": "void",
+          "logic": "Decrements the unscheduled use count of a given node."
+        },
+        {
+          "name": "PropagateImmediateDominators",
+          "parameters": [
+            "BasicBlock* block"
+          ],
+          "return_type": "void",
+          "logic": "Propagates immediate dominators in a given block."
+        },
+        {
+          "name": "GetCommonDominator",
+          "parameters": [
+            "BasicBlock* b1",
+            "BasicBlock* b2"
+          ],
+          "return_type": "BasicBlock*",
+          "logic": "Uses {common_dominator_cache_} to speed up repeated calls to find the common dominator of two blocks."
+        },
+        {
+          "name": "GetCommonDominatorIfCached",
+          "parameters": [
+            "BasicBlock* b1",
+            "BasicBlock* b2"
+          ],
+          "return_type": "BasicBlock*",
+          "logic": "Returns the common dominator of {b1} and {b2} if it can be found in {common_dominator_cache_}, or nullptr otherwise. Not meant to be called directly, only from {GetCommonDominator}."
+        },
+        {
+          "name": "BuildCFG",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Builds control-flow graph (Phase 1)."
+        },
+        {
+          "name": "ComputeSpecialRPONumbering",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Computes special RPO numbering (Phase 2)."
+        },
+        {
+          "name": "GenerateDominatorTree",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Generates the dominator tree (Phase 2)."
+        },
+        {
+          "name": "PrepareUses",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Prepares use counts for nodes (Phase 3)."
+        },
+        {
+          "name": "ScheduleEarly",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Schedules nodes early (Phase 4)."
+        },
+        {
+          "name": "ScheduleLate",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Schedules nodes late (Phase 5)."
+        },
+        {
+          "name": "SealFinalSchedule",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Seals the final schedule (Phase 6)."
+        },
+        {
+          "name": "FuseFloatingControl",
+          "parameters": [
+            "BasicBlock* block",
+            "Node* node"
+          ],
+          "return_type": "void",
+          "logic": "Fuses floating control in a given block."
+        },
+        {
+          "name": "MovePlannedNodes",
+          "parameters": [
+            "BasicBlock* from",
+            "BasicBlock* to"
+          ],
+          "return_type": "void",
+          "logic": "Moves planned nodes from one block to another."
+        }
+      ]
+    }
+  ],
+  "functions": []
+}

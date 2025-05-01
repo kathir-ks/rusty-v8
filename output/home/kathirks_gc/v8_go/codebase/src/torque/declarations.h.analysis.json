@@ -1,0 +1,379 @@
+{
+  "file_path": "/home/kathirks_gc/v8_go/codebase/src/torque/declarations.h",
+  "imports": [
+    "<memory>",
+    "<optional>",
+    "<string>",
+    "src/torque/declarable.h",
+    "src/torque/utils.h"
+  ],
+  "classes": [
+    {
+      "name": "Declarations",
+      "properties": [],
+      "methods": [
+        {
+          "name": "TryLookup",
+          "parameters": [
+            "const QualifiedName& name"
+          ],
+          "return_type": "std::vector<Declarable*>",
+          "logic": "Looks up a name in the current scope and returns a vector of Declarable pointers. Delegates to CurrentScope::Get()->Lookup(name)."
+        },
+        {
+          "name": "TryLookupShallow",
+          "parameters": [
+            "const QualifiedName& name"
+          ],
+          "return_type": "std::vector<Declarable*>",
+          "logic": "Looks up a name in the current scope, but only in the current scope without traversing up the scope chain, and returns a vector of Declarable pointers. Delegates to CurrentScope::Get()->LookupShallow(name)."
+        },
+        {
+          "name": "TryLookup",
+          "parameters": [
+            "const QualifiedName& name"
+          ],
+          "return_type": "std::vector<T*>",
+          "logic": "Looks up a name in the current scope and filters the results to return a vector of pointers of type T, where T is a template parameter."
+        },
+        {
+          "name": "Lookup",
+          "parameters": [
+            "const QualifiedName& name"
+          ],
+          "return_type": "std::vector<Declarable*>",
+          "logic": "Looks up a name in the current scope and returns a vector of Declarable pointers. If the name is not found, it reports an error using ReportError."
+        },
+        {
+          "name": "LookupGlobalScope",
+          "parameters": [
+            "const QualifiedName& name"
+          ],
+          "return_type": "std::vector<Declarable*>",
+          "logic": "Looks up a name in the global scope and returns a vector of Declarable pointers."
+        },
+        {
+          "name": "LookupTypeAlias",
+          "parameters": [
+            "const QualifiedName& name"
+          ],
+          "return_type": "const TypeAlias*",
+          "logic": "Looks up a type alias by name and returns a pointer to the TypeAlias object."
+        },
+        {
+          "name": "LookupType",
+          "parameters": [
+            "const QualifiedName& name"
+          ],
+          "return_type": "const Type*",
+          "logic": "Looks up a type by name and returns a pointer to the Type object."
+        },
+        {
+          "name": "LookupType",
+          "parameters": [
+            "const Identifier* identifier"
+          ],
+          "return_type": "const Type*",
+          "logic": "Looks up a type by identifier and returns a pointer to the Type object."
+        },
+        {
+          "name": "TryLookupType",
+          "parameters": [
+            "const QualifiedName& name"
+          ],
+          "return_type": "std::optional<const Type*>",
+          "logic": "Tries to look up a type by name and returns an optional pointer to the Type object. Returns std::nullopt if the type is not found."
+        },
+        {
+          "name": "LookupGlobalType",
+          "parameters": [
+            "const QualifiedName& name"
+          ],
+          "return_type": "const Type*",
+          "logic": "Looks up a type in the global scope and returns a pointer to the Type object."
+        },
+        {
+          "name": "FindSomeInternalBuiltinWithType",
+          "parameters": [
+            "const BuiltinPointerType* type"
+          ],
+          "return_type": "Builtin*",
+          "logic": "Finds an internal builtin function with the specified BuiltinPointerType."
+        },
+        {
+          "name": "LookupValue",
+          "parameters": [
+            "const QualifiedName& name"
+          ],
+          "return_type": "Value*",
+          "logic": "Looks up a value by name and returns a pointer to the Value object."
+        },
+        {
+          "name": "TryLookupMacro",
+          "parameters": [
+            "const std::string& name",
+            "const TypeVector& types"
+          ],
+          "return_type": "Macro*",
+          "logic": "Tries to look up a macro by name and types and returns a pointer to the Macro object. Returns nullptr if the macro is not found."
+        },
+        {
+          "name": "TryLookupBuiltin",
+          "parameters": [
+            "const QualifiedName& name"
+          ],
+          "return_type": "std::optional<Builtin*>",
+          "logic": "Tries to look up a builtin by name and returns an optional pointer to the Builtin object. Returns std::nullopt if the builtin is not found."
+        },
+        {
+          "name": "LookupGeneric",
+          "parameters": [
+            "const std::string& name"
+          ],
+          "return_type": "std::vector<GenericCallable*>",
+          "logic": "Looks up all generic callables with the given name."
+        },
+        {
+          "name": "LookupUniqueGeneric",
+          "parameters": [
+            "const QualifiedName& name"
+          ],
+          "return_type": "GenericCallable*",
+          "logic": "Looks up a unique generic callable with the given name."
+        },
+        {
+          "name": "LookupUniqueGenericType",
+          "parameters": [
+            "const QualifiedName& name"
+          ],
+          "return_type": "GenericType*",
+          "logic": "Looks up a unique generic type with the given name."
+        },
+        {
+          "name": "LookupGlobalUniqueGenericType",
+          "parameters": [
+            "const std::string& name"
+          ],
+          "return_type": "GenericType*",
+          "logic": "Looks up a unique generic type in the global scope with the given name."
+        },
+        {
+          "name": "TryLookupGenericType",
+          "parameters": [
+            "const QualifiedName& name"
+          ],
+          "return_type": "std::optional<GenericType*>",
+          "logic": "Tries to look up a generic type with the given name and return its pointer if found.  Otherwise returns an empty optional."
+        },
+        {
+          "name": "DeclareNamespace",
+          "parameters": [
+            "const std::string& name"
+          ],
+          "return_type": "Namespace*",
+          "logic": "Declares a new namespace with the given name."
+        },
+        {
+          "name": "DeclareType",
+          "parameters": [
+            "const Identifier* name",
+            "const Type* type"
+          ],
+          "return_type": "TypeAlias*",
+          "logic": "Declares a new type alias with the given name and type."
+        },
+        {
+          "name": "PredeclareTypeAlias",
+          "parameters": [
+            "const Identifier* name",
+            "TypeDeclaration* type",
+            "bool redeclaration"
+          ],
+          "return_type": "TypeAlias*",
+          "logic": "Pre-declares a type alias."
+        },
+        {
+          "name": "CreateTorqueMacro",
+          "parameters": [
+            "std::string external_name",
+            "std::string readable_name",
+            "bool exported_to_csa",
+            "Signature signature",
+            "std::optional<Statement*> body",
+            "bool is_user_defined"
+          ],
+          "return_type": "TorqueMacro*",
+          "logic": "Creates a new Torque macro."
+        },
+        {
+          "name": "CreateExternMacro",
+          "parameters": [
+            "std::string name",
+            "std::string external_assembler_name",
+            "Signature signature"
+          ],
+          "return_type": "ExternMacro*",
+          "logic": "Creates a new external macro."
+        },
+        {
+          "name": "DeclareMacro",
+          "parameters": [
+            "const std::string& name",
+            "bool accessible_from_csa",
+            "std::optional<std::string> external_assembler_name",
+            "const Signature& signature",
+            "std::optional<Statement*> body",
+            "std::optional<std::string> op",
+            "bool is_user_defined"
+          ],
+          "return_type": "Macro*",
+          "logic": "Declares a new macro."
+        },
+        {
+          "name": "CreateMethod",
+          "parameters": [
+            "AggregateType* class_type",
+            "const std::string& name",
+            "Signature signature",
+            "Statement* body"
+          ],
+          "return_type": "Method*",
+          "logic": "Creates a new method."
+        },
+        {
+          "name": "CreateIntrinsic",
+          "parameters": [
+            "const std::string& name",
+            "const Signature& signature"
+          ],
+          "return_type": "Intrinsic*",
+          "logic": "Creates a new intrinsic."
+        },
+        {
+          "name": "DeclareIntrinsic",
+          "parameters": [
+            "const std::string& name",
+            "const Signature& signature"
+          ],
+          "return_type": "Intrinsic*",
+          "logic": "Declares a new intrinsic."
+        },
+        {
+          "name": "CreateBuiltin",
+          "parameters": [
+            "std::string external_name",
+            "std::string readable_name",
+            "Builtin::Kind kind",
+            "Builtin::Flags flags",
+            "Signature signature",
+            "std::optional<std::string> use_counter_name",
+            "std::optional<Statement*> body"
+          ],
+          "return_type": "Builtin*",
+          "logic": "Creates a new builtin function."
+        },
+        {
+          "name": "DeclareRuntimeFunction",
+          "parameters": [
+            "const std::string& name",
+            "const Signature& signature"
+          ],
+          "return_type": "RuntimeFunction*",
+          "logic": "Declares a new runtime function."
+        },
+        {
+          "name": "DeclareExternConstant",
+          "parameters": [
+            "Identifier* name",
+            "const Type* type",
+            "std::string value"
+          ],
+          "return_type": "ExternConstant*",
+          "logic": "Declares a new external constant."
+        },
+        {
+          "name": "DeclareNamespaceConstant",
+          "parameters": [
+            "Identifier* name",
+            "const Type* type",
+            "Expression* body"
+          ],
+          "return_type": "NamespaceConstant*",
+          "logic": "Declares a new namespace constant."
+        },
+        {
+          "name": "DeclareGenericCallable",
+          "parameters": [
+            "const std::string& name",
+            "GenericCallableDeclaration* ast_node"
+          ],
+          "return_type": "GenericCallable*",
+          "logic": "Declares a new generic callable."
+        },
+        {
+          "name": "DeclareGenericType",
+          "parameters": [
+            "const std::string& name",
+            "GenericTypeDeclaration* ast_node"
+          ],
+          "return_type": "GenericType*",
+          "logic": "Declares a new generic type."
+        },
+        {
+          "name": "Declare",
+          "parameters": [
+            "const std::string& name",
+            "T* d"
+          ],
+          "return_type": "T*",
+          "logic": "Adds a declarable to the current scope."
+        },
+        {
+          "name": "Declare",
+          "parameters": [
+            "const std::string& name",
+            "std::unique_ptr<T> d"
+          ],
+          "return_type": "T*",
+          "logic": "Adds a declarable (unique_ptr) to the current scope and returns the raw pointer."
+        },
+        {
+          "name": "DeclareOperator",
+          "parameters": [
+            "const std::string& name",
+            "Macro* m"
+          ],
+          "return_type": "Macro*",
+          "logic": "Declares a new operator macro."
+        },
+        {
+          "name": "GetGeneratedCallableName",
+          "parameters": [
+            "const std::string& name",
+            "const TypeVector& specialized_types"
+          ],
+          "return_type": "std::string",
+          "logic": "Generates a callable name based on the name and specialized types."
+        }
+      ]
+    }
+  ],
+  "functions": [
+    {
+      "name": "FilterDeclarables",
+      "parameters": [
+        "const std::vector<Declarable*> list"
+      ],
+      "return_type": "std::vector<T*>",
+      "logic": "Filters a list of Declarable pointers, returning a vector of pointers to objects of type T."
+    },
+    {
+      "name": "UnwrapTNodeTypeName",
+      "parameters": [
+        "const std::string& generates"
+      ],
+      "return_type": "std::string",
+      "logic": "Unwraps the type name from a TNode<...> string, removing the TNode< and > delimiters.  Reports an error if the input string is not in the correct format."
+    }
+  ]
+}

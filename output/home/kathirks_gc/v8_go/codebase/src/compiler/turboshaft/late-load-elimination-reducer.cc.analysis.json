@@ -1,0 +1,201 @@
+{
+  "file_path": "/home/kathirks_gc/v8_go/codebase/src/compiler/turboshaft/late-load-elimination-reducer.cc",
+  "imports": [
+    "src/compiler/turboshaft/late-load-elimination-reducer.h",
+    "src/compiler/backend/instruction.h",
+    "src/compiler/js-heap-broker.h",
+    "src/compiler/turboshaft/operation-matcher.h",
+    "src/compiler/turboshaft/operations.h",
+    "src/compiler/turboshaft/opmasks.h",
+    "src/compiler/turboshaft/phase.h",
+    "src/compiler/turboshaft/representations.h",
+    "src/objects/code-inl.h"
+  ],
+  "classes": [
+    {
+      "name": "LateLoadEliminationAnalyzer",
+      "properties": [
+        "replacements_",
+        "int32_truncated_loads_",
+        "non_aliasing_objects_",
+        "object_maps_",
+        "memory_",
+        "graph_",
+        "broker_",
+        "phase_zone_",
+        "raw_base_assumption_",
+        "block_to_snapshot_mapping_",
+        "predecessor_alias_snapshots_",
+        "predecessor_maps_snapshots_",
+        "predecessor_memory_snapshots_"
+      ],
+      "methods": [
+        {
+          "name": "Run",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "The main entry point for the late load elimination analysis. It iterates through blocks in the graph, processes each block, and incorporates load elimination decisions into int32-truncation data."
+        },
+        {
+          "name": "ProcessBlock",
+          "parameters": [
+            "const Block& block",
+            "bool compute_start_snapshot"
+          ],
+          "return_type": "void",
+          "logic": "Processes a given block by iterating through its operations. It handles different operation types, such as loads, stores, allocates, and calls, to either eliminate loads or update the state of the analysis. It also invalidates aliases when necessary."
+        },
+        {
+          "name": "ProcessLoad",
+          "parameters": [
+            "OpIndex op_idx",
+            "const LoadOp& load"
+          ],
+          "return_type": "void",
+          "logic": "Processes a load operation to determine if it can be eliminated based on previously stored values. It also handles atomic loads and external constants."
+        },
+        {
+          "name": "ProcessStore",
+          "parameters": [
+            "OpIndex op_idx",
+            "const StoreOp& store"
+          ],
+          "return_type": "void",
+          "logic": "Processes a store operation to update the known stored values and invalidate aliases if necessary. It also handles the case when a map is stored."
+        },
+        {
+          "name": "ProcessCall",
+          "parameters": [
+            "OpIndex op_idx",
+            "const CallOp& op"
+          ],
+          "return_type": "void",
+          "logic": "Processes a call operation to invalidate the state of the analysis, as calls can modify arbitrary memory. It also handles specific builtins that do not create aliases or invalidate existing memory."
+        },
+        {
+          "name": "DcheckWordBinop",
+          "parameters": [
+            "OpIndex op_idx",
+            "const WordBinopOp& binop"
+          ],
+          "return_type": "void",
+          "logic": "Performs a debug check for WordBinop operations to ensure that they are only used for Smi checks when dealing with non-aliasing objects."
+        },
+        {
+          "name": "InvalidateAllNonAliasingInputs",
+          "parameters": [
+            "const Operation& op"
+          ],
+          "return_type": "void",
+          "logic": "Invalidates all non-aliasing inputs of a given operation."
+        },
+        {
+          "name": "InvalidateIfAlias",
+          "parameters": [
+            "OpIndex op_idx"
+          ],
+          "return_type": "void",
+          "logic": "Invalidates the alias of a given operation index if it is a known non-aliasing object. It also recursively invalidates aliases for FrameState inputs."
+        },
+        {
+          "name": "ProcessAllocate",
+          "parameters": [
+            "OpIndex op_idx",
+            "const AllocateOp&"
+          ],
+          "return_type": "void",
+          "logic": "Processes an allocate operation to mark the allocated object as a fresh non-aliasing object."
+        },
+        {
+          "name": "ProcessAssumeMap",
+          "parameters": [
+            "OpIndex op_idx",
+            "const AssumeMapOp& assume_map"
+          ],
+          "return_type": "void",
+          "logic": "Processes an assume map operation to update the known maps for a given object."
+        },
+        {
+          "name": "ProcessChange",
+          "parameters": [
+            "OpIndex op_idx",
+            "const ChangeOp& change"
+          ],
+          "return_type": "void",
+          "logic": "Processes a change operation to check for specific patterns, such as the int32-truncated load pattern, and potentially replace loads with int32 versions."
+        },
+        {
+          "name": "FinishBlock",
+          "parameters": [
+            "const Block* block"
+          ],
+          "return_type": "void",
+          "logic": "Seals the current snapshots of non-aliasing objects, object maps, and memory for a given block."
+        },
+        {
+          "name": "SealAndDiscard",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Seals and discards the current snapshots of non-aliasing objects, object maps and memory"
+        },
+        {
+          "name": "StoreLoopSnapshotInForwardPredecessor",
+          "parameters": [
+            "const Block& loop_header"
+          ],
+          "return_type": "void",
+          "logic": "Stores the current snapshots of non-aliasing objects, object maps, and memory to the forward predecessor of a loop header block."
+        },
+        {
+          "name": "BackedgeHasSnapshot",
+          "parameters": [
+            "const Block& loop_header"
+          ],
+          "return_type": "bool",
+          "logic": "Checks if the backedge of a loop header block has a snapshot."
+        },
+        {
+          "name": "BeginBlock",
+          "parameters": [
+            "const Block* block"
+          ],
+          "return_type": "bool",
+          "logic": "Starts a new snapshot for a given block by merging information from its predecessors. It also checks if a loop needs to be revisited based on the snapshots of its predecessors."
+        }
+      ]
+    }
+  ],
+  "functions": [
+    {
+      "name": "operator<<",
+      "parameters": [
+        "std::ostream& os",
+        "const MemoryAddress& mem"
+      ],
+      "return_type": "std::ostream&",
+      "logic": "Overloads the << operator for the MemoryAddress struct to provide a human-readable representation of the memory address."
+    },
+    {
+      "name": "RepIsCompatible",
+      "parameters": [
+        "RegisterRepresentation actual",
+        "RegisterRepresentation expected_reg_repr",
+        "MemoryRepresentation expected_loaded_repr"
+      ],
+      "return_type": "bool",
+      "logic": "Determines if replacing a Load with a RegisterRepresentation and MemoryRepresentation with an operation with a different RegisterRepresentation is valid."
+    },
+    {
+      "name": "IsInt32TruncatedLoadPattern",
+      "parameters": [
+        "const Graph& graph",
+        "OpIndex change_idx",
+        "const ChangeOp& change",
+        "OpIndex* bitcast_idx",
+        "OpIndex* load_idx"
+      ],
+      "return_type": "bool",
+      "logic": "Checks if a given ChangeOp represents an int32-truncated load pattern and returns the bitcast and load operation indices."
+    }
+  ]
+}

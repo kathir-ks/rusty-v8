@@ -1,0 +1,633 @@
+{
+  "file_path": "/home/kathirks_gc/v8_go/codebase/src/regexp/arm/regexp-macro-assembler-arm.h",
+  "imports": [
+    "src/codegen/macro-assembler.h",
+    "src/regexp/regexp-macro-assembler.h"
+  ],
+  "classes": [
+    {
+      "name": "RegExpMacroAssemblerARM",
+      "properties": [
+        "masm_",
+        "no_root_array_scope_",
+        "mode_",
+        "num_registers_",
+        "num_saved_registers_",
+        "entry_label_",
+        "start_label_",
+        "success_label_",
+        "backtrack_label_",
+        "exit_label_",
+        "check_preempt_label_",
+        "stack_overflow_label_",
+        "fallback_label_"
+      ],
+      "methods": [
+        {
+          "name": "RegExpMacroAssemblerARM",
+          "parameters": [
+            "Isolate* isolate",
+            "Zone* zone",
+            "Mode mode",
+            "int registers_to_save"
+          ],
+          "return_type": "void",
+          "logic": "Constructor for the RegExpMacroAssemblerARM class. Initializes the assembler with the provided isolate, zone, mode, and number of registers to save."
+        },
+        {
+          "name": "~RegExpMacroAssemblerARM",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Destructor for the RegExpMacroAssemblerARM class."
+        },
+        {
+          "name": "AbortedCodeGeneration",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Handles the situation where code generation has been aborted."
+        },
+        {
+          "name": "stack_limit_slack_slot_count",
+          "parameters": [],
+          "return_type": "int",
+          "logic": "Returns the number of stack slots that can be used as slack before hitting the stack limit."
+        },
+        {
+          "name": "AdvanceCurrentPosition",
+          "parameters": [
+            "int by"
+          ],
+          "return_type": "void",
+          "logic": "Advances the current position in the input string by a specified amount."
+        },
+        {
+          "name": "AdvanceRegister",
+          "parameters": [
+            "int reg",
+            "int by"
+          ],
+          "return_type": "void",
+          "logic": "Advances the value of a specified register by a specified amount."
+        },
+        {
+          "name": "Backtrack",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Handles backtracking in the regular expression matching process."
+        },
+        {
+          "name": "Bind",
+          "parameters": [
+            "Label* label"
+          ],
+          "return_type": "void",
+          "logic": "Binds a label to the current position in the generated code."
+        },
+        {
+          "name": "CheckAtStart",
+          "parameters": [
+            "int cp_offset",
+            "Label* on_at_start"
+          ],
+          "return_type": "void",
+          "logic": "Checks if the current position (with an offset) is at the start of the input string. Jumps to on_at_start if it is."
+        },
+        {
+          "name": "CheckCharacter",
+          "parameters": [
+            "unsigned c",
+            "Label* on_equal"
+          ],
+          "return_type": "void",
+          "logic": "Checks if the current character is equal to a given character. Jumps to on_equal if it is."
+        },
+        {
+          "name": "CheckCharacterAfterAnd",
+          "parameters": [
+            "unsigned c",
+            "unsigned mask",
+            "Label* on_equal"
+          ],
+          "return_type": "void",
+          "logic": "Checks if the current character, after applying a bitwise AND with a mask, is equal to a given character. Jumps to on_equal if it is."
+        },
+        {
+          "name": "CheckCharacterGT",
+          "parameters": [
+            "base::uc16 limit",
+            "Label* on_greater"
+          ],
+          "return_type": "void",
+          "logic": "Checks if the current character is greater than a given limit. Jumps to on_greater if it is."
+        },
+        {
+          "name": "CheckCharacterLT",
+          "parameters": [
+            "base::uc16 limit",
+            "Label* on_less"
+          ],
+          "return_type": "void",
+          "logic": "Checks if the current character is less than a given limit. Jumps to on_less if it is."
+        },
+        {
+          "name": "CheckGreedyLoop",
+          "parameters": [
+            "Label* on_tos_equals_current_position"
+          ],
+          "return_type": "void",
+          "logic": "Checks if the top-of-stack equals the current position and jumps to the label if it does (for greedy loops)."
+        },
+        {
+          "name": "CheckNotAtStart",
+          "parameters": [
+            "int cp_offset",
+            "Label* on_not_at_start"
+          ],
+          "return_type": "void",
+          "logic": "Checks if the current position (with an offset) is not at the start of the input string. Jumps to on_not_at_start if it is not."
+        },
+        {
+          "name": "CheckNotBackReference",
+          "parameters": [
+            "int start_reg",
+            "bool read_backward",
+            "Label* on_no_match"
+          ],
+          "return_type": "void",
+          "logic": "Checks if the current match does not match a previous backreference. Jumps to on_no_match if there is no match."
+        },
+        {
+          "name": "CheckNotBackReferenceIgnoreCase",
+          "parameters": [
+            "int start_reg",
+            "bool read_backward",
+            "bool unicode",
+            "Label* on_no_match"
+          ],
+          "return_type": "void",
+          "logic": "Checks if the current match does not match a previous backreference, ignoring case. Jumps to on_no_match if there is no match."
+        },
+        {
+          "name": "CheckNotCharacter",
+          "parameters": [
+            "unsigned c",
+            "Label* on_not_equal"
+          ],
+          "return_type": "void",
+          "logic": "Checks if the current character is not equal to a given character. Jumps to on_not_equal if it is not."
+        },
+        {
+          "name": "CheckNotCharacterAfterAnd",
+          "parameters": [
+            "unsigned c",
+            "unsigned mask",
+            "Label* on_not_equal"
+          ],
+          "return_type": "void",
+          "logic": "Checks if the current character, after applying a bitwise AND with a mask, is not equal to a given character. Jumps to on_not_equal if it is not."
+        },
+        {
+          "name": "CheckNotCharacterAfterMinusAnd",
+          "parameters": [
+            "base::uc16 c",
+            "base::uc16 minus",
+            "base::uc16 mask",
+            "Label* on_not_equal"
+          ],
+          "return_type": "void",
+          "logic": "Checks if the current character, after applying a subtraction and a bitwise AND with a mask, is not equal to a given character. Jumps to on_not_equal if it is not."
+        },
+        {
+          "name": "CheckCharacterInRange",
+          "parameters": [
+            "base::uc16 from",
+            "base::uc16 to",
+            "Label* on_in_range"
+          ],
+          "return_type": "void",
+          "logic": "Checks if the current character is within a specified range. Jumps to on_in_range if it is."
+        },
+        {
+          "name": "CheckCharacterNotInRange",
+          "parameters": [
+            "base::uc16 from",
+            "base::uc16 to",
+            "Label* on_not_in_range"
+          ],
+          "return_type": "void",
+          "logic": "Checks if the current character is not within a specified range. Jumps to on_not_in_range if it is not."
+        },
+        {
+          "name": "CheckCharacterInRangeArray",
+          "parameters": [
+            "const ZoneList<CharacterRange>* ranges",
+            "Label* on_in_range"
+          ],
+          "return_type": "bool",
+          "logic": "Checks if the current character is within any of the character ranges in an array. Jumps to on_in_range if it is. Returns true if the check could be done, false otherwise."
+        },
+        {
+          "name": "CheckCharacterNotInRangeArray",
+          "parameters": [
+            "const ZoneList<CharacterRange>* ranges",
+            "Label* on_not_in_range"
+          ],
+          "return_type": "bool",
+          "logic": "Checks if the current character is not within any of the character ranges in an array. Jumps to on_not_in_range if it is. Returns true if the check could be done, false otherwise."
+        },
+        {
+          "name": "CheckBitInTable",
+          "parameters": [
+            "Handle<ByteArray> table",
+            "Label* on_bit_set"
+          ],
+          "return_type": "void",
+          "logic": "Checks if a bit is set in a given table for the current character. Jumps to on_bit_set if it is."
+        },
+        {
+          "name": "SkipUntilBitInTable",
+          "parameters": [
+            "int cp_offset",
+            "Handle<ByteArray> table",
+            "Handle<ByteArray> nibble_table",
+            "int advance_by"
+          ],
+          "return_type": "void",
+          "logic": "Skips characters until a bit is set in a table, advancing by a specified amount."
+        },
+        {
+          "name": "CheckPosition",
+          "parameters": [
+            "int cp_offset",
+            "Label* on_outside_input"
+          ],
+          "return_type": "void",
+          "logic": "Checks if a given offset from the current position is within the bounds of the input string. Jumps to on_outside_input if it is outside."
+        },
+        {
+          "name": "CheckSpecialClassRanges",
+          "parameters": [
+            "StandardCharacterSet type",
+            "Label* on_no_match"
+          ],
+          "return_type": "bool",
+          "logic": "Checks if the current character belongs to a specified standard character set. Jumps to on_no_match if there is no match. Returns true if the check could be done, false otherwise."
+        },
+        {
+          "name": "Fail",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Handles the failure case during regular expression matching."
+        },
+        {
+          "name": "GetCode",
+          "parameters": [
+            "DirectHandle<String> source",
+            "RegExpFlags flags"
+          ],
+          "return_type": "DirectHandle<HeapObject>",
+          "logic": "Generates and returns the compiled code for the regular expression."
+        },
+        {
+          "name": "GoTo",
+          "parameters": [
+            "Label* label"
+          ],
+          "return_type": "void",
+          "logic": "Unconditionally jumps to a specified label."
+        },
+        {
+          "name": "IfRegisterGE",
+          "parameters": [
+            "int reg",
+            "int comparand",
+            "Label* if_ge"
+          ],
+          "return_type": "void",
+          "logic": "Checks if the value in a register is greater than or equal to a comparand. Jumps to if_ge if it is."
+        },
+        {
+          "name": "IfRegisterLT",
+          "parameters": [
+            "int reg",
+            "int comparand",
+            "Label* if_lt"
+          ],
+          "return_type": "void",
+          "logic": "Checks if the value in a register is less than a comparand. Jumps to if_lt if it is."
+        },
+        {
+          "name": "IfRegisterEqPos",
+          "parameters": [
+            "int reg",
+            "Label* if_eq"
+          ],
+          "return_type": "void",
+          "logic": "Checks if the value in a register is equal to the current position. Jumps to if_eq if it is."
+        },
+        {
+          "name": "Implementation",
+          "parameters": [],
+          "return_type": "IrregexpImplementation",
+          "logic": "Returns the implementation type of the regular expression engine."
+        },
+        {
+          "name": "LoadCurrentCharacterUnchecked",
+          "parameters": [
+            "int cp_offset",
+            "int character_count"
+          ],
+          "return_type": "void",
+          "logic": "Loads the current character (without bounds checking) from the input string with a given offset and character count."
+        },
+        {
+          "name": "PopCurrentPosition",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Pops the current position from the stack."
+        },
+        {
+          "name": "PopRegister",
+          "parameters": [
+            "int register_index"
+          ],
+          "return_type": "void",
+          "logic": "Pops a value from the stack and stores it into a register."
+        },
+        {
+          "name": "PushBacktrack",
+          "parameters": [
+            "Label* label"
+          ],
+          "return_type": "void",
+          "logic": "Pushes a backtrack label onto the stack."
+        },
+        {
+          "name": "PushCurrentPosition",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Pushes the current position onto the stack."
+        },
+        {
+          "name": "PushRegister",
+          "parameters": [
+            "int register_index",
+            "StackCheckFlag check_stack_limit"
+          ],
+          "return_type": "void",
+          "logic": "Pushes the value of a register onto the stack, optionally checking the stack limit."
+        },
+        {
+          "name": "ReadCurrentPositionFromRegister",
+          "parameters": [
+            "int reg"
+          ],
+          "return_type": "void",
+          "logic": "Reads the current position from a register."
+        },
+        {
+          "name": "ReadStackPointerFromRegister",
+          "parameters": [
+            "int reg"
+          ],
+          "return_type": "void",
+          "logic": "Reads the stack pointer from a register."
+        },
+        {
+          "name": "SetCurrentPositionFromEnd",
+          "parameters": [
+            "int by"
+          ],
+          "return_type": "void",
+          "logic": "Sets the current position to a given offset from the end of the input string."
+        },
+        {
+          "name": "SetRegister",
+          "parameters": [
+            "int register_index",
+            "int to"
+          ],
+          "return_type": "void",
+          "logic": "Sets the value of a register to a specified value."
+        },
+        {
+          "name": "Succeed",
+          "parameters": [],
+          "return_type": "bool",
+          "logic": "Handles the success case during regular expression matching."
+        },
+        {
+          "name": "WriteCurrentPositionToRegister",
+          "parameters": [
+            "int reg",
+            "int cp_offset"
+          ],
+          "return_type": "void",
+          "logic": "Writes the current position (with a given offset) to a register."
+        },
+        {
+          "name": "ClearRegisters",
+          "parameters": [
+            "int reg_from",
+            "int reg_to"
+          ],
+          "return_type": "void",
+          "logic": "Clears a range of registers."
+        },
+        {
+          "name": "WriteStackPointerToRegister",
+          "parameters": [
+            "int reg"
+          ],
+          "return_type": "void",
+          "logic": "Writes the stack pointer to a register."
+        },
+        {
+          "name": "CheckStackGuardState",
+          "parameters": [
+            "Address* return_address",
+            "Address raw_code",
+            "Address re_frame",
+            "uintptr_t extra_space"
+          ],
+          "return_type": "int",
+          "logic": "Checks the stack guard state and fixes the return address if necessary. This is a static function."
+        },
+        {
+          "name": "CallCFunctionFromIrregexpCode",
+          "parameters": [
+            "ExternalReference function",
+            "int num_arguments"
+          ],
+          "return_type": "void",
+          "logic": "Calls a C function from the generated Irregexp code."
+        },
+        {
+          "name": "CheckPreemption",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Checks if preemption has been requested."
+        },
+        {
+          "name": "CheckStackLimit",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Checks if the backtrack stack has exceeded the stack limit."
+        },
+        {
+          "name": "AssertAboveStackLimitMinusSlack",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Asserts that the stack is above the stack limit minus slack."
+        },
+        {
+          "name": "CallCheckStackGuardState",
+          "parameters": [
+            "Operand extra_space_for_variables"
+          ],
+          "return_type": "void",
+          "logic": "Calls the CheckStackGuardState function."
+        },
+        {
+          "name": "CallIsCharacterInRangeArray",
+          "parameters": [
+            "const ZoneList<CharacterRange>* ranges"
+          ],
+          "return_type": "void",
+          "logic": "Calls the function to check if a character is within a range array."
+        },
+        {
+          "name": "register_location",
+          "parameters": [
+            "int register_index"
+          ],
+          "return_type": "MemOperand",
+          "logic": "Returns the memory operand for a regexp register."
+        },
+        {
+          "name": "char_size",
+          "parameters": [],
+          "return_type": "int",
+          "logic": "Returns the character size based on the mode (Latin1 or UC16)."
+        },
+        {
+          "name": "BranchOrBacktrack",
+          "parameters": [
+            "Condition condition",
+            "Label* to"
+          ],
+          "return_type": "void",
+          "logic": "Branches to a label based on a condition or backtracks if the label is null."
+        },
+        {
+          "name": "SafeCall",
+          "parameters": [
+            "Label* to",
+            "Condition cond"
+          ],
+          "return_type": "void",
+          "logic": "Calls a label in a GC-safe manner."
+        },
+        {
+          "name": "SafeReturn",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Returns from a function in a GC-safe manner."
+        },
+        {
+          "name": "SafeCallTarget",
+          "parameters": [
+            "Label* name"
+          ],
+          "return_type": "void",
+          "logic": "Marks a label as a safe call target for GC."
+        },
+        {
+          "name": "Push",
+          "parameters": [
+            "Register source"
+          ],
+          "return_type": "void",
+          "logic": "Pushes the value of a register onto the backtrack stack."
+        },
+        {
+          "name": "Pop",
+          "parameters": [
+            "Register target"
+          ],
+          "return_type": "void",
+          "logic": "Pops a value from the backtrack stack into a register."
+        },
+        {
+          "name": "LoadRegExpStackPointerFromMemory",
+          "parameters": [
+            "Register dst"
+          ],
+          "return_type": "void",
+          "logic": "Loads the regexp stack pointer from memory into a register."
+        },
+        {
+          "name": "StoreRegExpStackPointerToMemory",
+          "parameters": [
+            "Register src",
+            "Register scratch"
+          ],
+          "return_type": "void",
+          "logic": "Stores the regexp stack pointer from a register into memory."
+        },
+        {
+          "name": "PushRegExpBasePointer",
+          "parameters": [
+            "Register stack_pointer",
+            "Register scratch"
+          ],
+          "return_type": "void",
+          "logic": "Pushes the regexp base pointer onto the stack."
+        },
+        {
+          "name": "PopRegExpBasePointer",
+          "parameters": [
+            "Register stack_pointer_out",
+            "Register scratch"
+          ],
+          "return_type": "void",
+          "logic": "Pops the regexp base pointer from the stack."
+        },
+        {
+          "name": "isolate",
+          "parameters": [],
+          "return_type": "Isolate*",
+          "logic": "Returns the isolate associated with the macro assembler."
+        }
+      ]
+    }
+  ],
+  "functions": [],
+  "constants": [
+    "kFramePointerOffset",
+    "kStoredRegistersOffset",
+    "kReturnAddressOffset",
+    "kRegisterOutputOffset",
+    "kNumOutputRegistersOffset",
+    "kDirectCallOffset",
+    "kIsolateOffset",
+    "kFrameTypeOffset",
+    "kInputEndOffset",
+    "kInputStartOffset",
+    "kStartIndexOffset",
+    "kInputStringOffset",
+    "kSuccessfulCapturesOffset",
+    "kStringStartMinusOneOffset",
+    "kBacktrackCountOffset",
+    "kRegExpStackBasePointerOffset",
+    "kRegisterZeroOffset",
+    "kRegExpCodeSize",
+    "kBacktrackConstantPoolSize",
+    "current_input_offset",
+    "current_character",
+    "end_of_input_address",
+    "frame_pointer",
+    "backtrack_stackpointer",
+    "code_pointer"
+  ]
+}

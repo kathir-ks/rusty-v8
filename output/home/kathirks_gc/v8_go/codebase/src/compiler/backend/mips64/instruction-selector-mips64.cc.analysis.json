@@ -1,0 +1,442 @@
+{
+  "file_path": "/home/kathirks_gc/v8_go/codebase/src/compiler/backend/mips64/instruction-selector-mips64.cc",
+  "imports": [
+    "src/base/bits.h",
+    "src/base/logging.h",
+    "src/codegen/machine-type.h",
+    "src/compiler/backend/instruction-selector-impl.h",
+    "src/compiler/turboshaft/operations.h",
+    "src/compiler/turboshaft/opmasks.h",
+    "<optional>"
+  ],
+  "classes": [
+    {
+      "name": "Mips64OperandGeneratorT",
+      "properties": [],
+      "methods": [
+        {
+          "name": "Mips64OperandGeneratorT",
+          "parameters": [
+            "InstructionSelectorT* selector"
+          ],
+          "return_type": "explicit",
+          "logic": "Constructor for the Mips64OperandGeneratorT class. Initializes the base class."
+        },
+        {
+          "name": "UseOperand",
+          "parameters": [
+            "OpIndex node",
+            "InstructionCode opcode"
+          ],
+          "return_type": "InstructionOperand",
+          "logic": "Selects whether to use an immediate or register operand based on whether the node can be represented as an immediate value for the given opcode."
+        },
+        {
+          "name": "UseRegisterOrImmediateZero",
+          "parameters": [
+            "OpIndex node"
+          ],
+          "return_type": "InstructionOperand",
+          "logic": "Uses the zero register if the node has the immediate value zero, otherwise assign a register."
+        },
+        {
+          "name": "IsIntegerConstant",
+          "parameters": [
+            "OpIndex node"
+          ],
+          "return_type": "bool",
+          "logic": "Checks if a node is an integer constant."
+        },
+        {
+          "name": "GetOptionalIntegerConstant",
+          "parameters": [
+            "OpIndex operation"
+          ],
+          "return_type": "std::optional<int64_t>",
+          "logic": "Returns an optional containing the integer constant value of the operation, if it is an integer constant, otherwise returns std::nullopt."
+        },
+        {
+          "name": "CanBeImmediate",
+          "parameters": [
+            "OpIndex node",
+            "InstructionCode mode"
+          ],
+          "return_type": "bool",
+          "logic": "Checks if a node can be represented as an immediate value for the given instruction code."
+        },
+        {
+          "name": "CanBeImmediate",
+          "parameters": [
+            "int64_t value",
+            "InstructionCode opcode"
+          ],
+          "return_type": "bool",
+          "logic": "Checks if an integer value can be represented as an immediate value for the given instruction code, based on the instruction's opcode and allowed immediate range."
+        },
+        {
+          "name": "ImmediateFitsAddrMode1Instruction",
+          "parameters": [
+            "int32_t imm"
+          ],
+          "return_type": "bool",
+          "logic": "Placeholder function that always returns false. Indicates if an immediate fits the addressing mode 1 instruction (UNIMPLEMENTED)."
+        }
+      ]
+    },
+    {
+      "name": "ExtendingLoadMatcher",
+      "properties": [],
+      "methods": [
+        {
+          "name": "ExtendingLoadMatcher",
+          "parameters": [
+            "OpIndex node",
+            "InstructionSelectorT* selector"
+          ],
+          "return_type": "explicit",
+          "logic": "Constructor for the ExtendingLoadMatcher class, initializing the matching process."
+        },
+        {
+          "name": "Matches",
+          "parameters": [],
+          "return_type": "bool",
+          "logic": "Returns whether the load matches the extending load pattern."
+        },
+        {
+          "name": "base",
+          "parameters": [],
+          "return_type": "OpIndex",
+          "logic": "Returns the base OpIndex of the load instruction."
+        },
+        {
+          "name": "immediate",
+          "parameters": [],
+          "return_type": "int64_t",
+          "logic": "Returns the immediate offset of the load instruction."
+        },
+        {
+          "name": "opcode",
+          "parameters": [],
+          "return_type": "ArchOpcode",
+          "logic": "Returns the opcode of the load instruction."
+        },
+        {
+          "name": "Initialize",
+          "parameters": [
+            "turboshaft::OpIndex node"
+          ],
+          "return_type": "void",
+          "logic": "Initializes the matching process, detecting if a shift right arithmetic operation can be combined with a loading and sign-extending.  Detects shifting 64-bit value by 32 after loading and transforms it into loading word and extending."
+        }
+      ]
+    }
+  ],
+  "functions": [
+    {
+      "name": "VisitRR",
+      "parameters": [
+        "InstructionSelectorT* selector",
+        "ArchOpcode opcode",
+        "OpIndex node"
+      ],
+      "return_type": "void",
+      "logic": "Emits an instruction with two register operands."
+    },
+    {
+      "name": "VisitRRI",
+      "parameters": [
+        "InstructionSelectorT* selector",
+        "ArchOpcode opcode",
+        "OpIndex node"
+      ],
+      "return_type": "void",
+      "logic": "Emits an instruction with a register, register, and immediate operand (UNIMPLEMENTED)."
+    },
+    {
+      "name": "VisitSimdShift",
+      "parameters": [
+        "InstructionSelectorT* selector",
+        "ArchOpcode opcode",
+        "OpIndex node"
+      ],
+      "return_type": "void",
+      "logic": "Handles SIMD shift operations (UNIMPLEMENTED)."
+    },
+    {
+      "name": "VisitRRIR",
+      "parameters": [
+        "InstructionSelectorT* selector",
+        "ArchOpcode opcode",
+        "OpIndex node"
+      ],
+      "return_type": "void",
+      "logic": "Emits an instruction with register, register, immediate and register operands (UNIMPLEMENTED)."
+    },
+    {
+      "name": "VisitRRR",
+      "parameters": [
+        "InstructionSelectorT* selector",
+        "ArchOpcode opcode",
+        "OpIndex node"
+      ],
+      "return_type": "void",
+      "logic": "Emits an instruction with three register operands."
+    },
+    {
+      "name": "VisitUniqueRRR",
+      "parameters": [
+        "InstructionSelectorT* selector",
+        "ArchOpcode opcode",
+        "OpIndex node"
+      ],
+      "return_type": "void",
+      "logic": "Emits instruction with 3 unique registers(UNIMPLEMENTED)."
+    },
+    {
+      "name": "VisitRRRR",
+      "parameters": [
+        "InstructionSelectorT* selector",
+        "ArchOpcode opcode",
+        "OpIndex node"
+      ],
+      "return_type": "void",
+      "logic": "Emits an instruction with four register operands (UNIMPLEMENTED)."
+    },
+    {
+      "name": "VisitRRO",
+      "parameters": [
+        "InstructionSelectorT* selector",
+        "ArchOpcode opcode",
+        "OpIndex node"
+      ],
+      "return_type": "void",
+      "logic": "Emits an instruction with two register operands and one operand which can be a register or an immediate."
+    },
+    {
+      "name": "TryEmitExtendingLoad",
+      "parameters": [
+        "InstructionSelectorT* selector",
+        "OpIndex node",
+        "OpIndex output_node"
+      ],
+      "return_type": "bool",
+      "logic": "Tries to emit an extending load instruction if the given node matches the extending load pattern."
+    },
+    {
+      "name": "TryMatchImmediate",
+      "parameters": [
+        "InstructionSelectorT* selector",
+        "InstructionCode* opcode_return",
+        "OpIndex node",
+        "size_t* input_count_return",
+        "InstructionOperand* inputs"
+      ],
+      "return_type": "bool",
+      "logic": "Tries to match the given node as an immediate operand.  If successful, modifies opcode_return and populates input arguments"
+    },
+    {
+      "name": "VisitBinop",
+      "parameters": [
+        "InstructionSelectorT* selector",
+        "OpIndex node",
+        "InstructionCode opcode",
+        "bool has_reverse_opcode",
+        "InstructionCode reverse_opcode",
+        "FlagsContinuationT* cont"
+      ],
+      "return_type": "static void",
+      "logic": "Emits a binary operation instruction, potentially matching immediates on either side and using a reverse opcode if applicable. Takes flag continuations as input."
+    },
+    {
+      "name": "VisitBinop",
+      "parameters": [
+        "InstructionSelectorT* selector",
+        "OpIndex node",
+        "InstructionCode opcode",
+        "bool has_reverse_opcode",
+        "InstructionCode reverse_opcode"
+      ],
+      "return_type": "static void",
+      "logic": "Emits a binary operation instruction, potentially matching immediates on either side and using a reverse opcode if applicable."
+    },
+    {
+      "name": "VisitBinop",
+      "parameters": [
+        "InstructionSelectorT* selector",
+        "OpIndex node",
+        "InstructionCode opcode",
+        "FlagsContinuationT* cont"
+      ],
+      "return_type": "static void",
+      "logic": "Emits a binary operation instruction with a specified opcode, taking a flag continuation as input."
+    },
+    {
+      "name": "VisitBinop",
+      "parameters": [
+        "InstructionSelectorT* selector",
+        "OpIndex node",
+        "InstructionCode opcode"
+      ],
+      "return_type": "static void",
+      "logic": "Emits a binary operation instruction with a specified opcode."
+    },
+    {
+      "name": "EmitLoad",
+      "parameters": [
+        "InstructionSelectorT* selector",
+        "OpIndex node",
+        "InstructionCode opcode",
+        "OpIndex output"
+      ],
+      "return_type": "void",
+      "logic": "Emits a load instruction with the given opcode and addressing mode."
+    },
+    {
+      "name": "VisitCompare",
+      "parameters": [
+        "InstructionSelectorT* selector",
+        "InstructionCode opcode",
+        "InstructionOperand left",
+        "InstructionOperand right",
+        "FlagsContinuationT* cont"
+      ],
+      "return_type": "static Instruction*",
+      "logic": "Shared routine for multiple compare operations. Emits a comparison instruction with the given operands and continuation"
+    },
+    {
+      "name": "VisitFloat32Compare",
+      "parameters": [
+        "InstructionSelectorT* selector",
+        "OpIndex node",
+        "FlagsContinuationT* cont"
+      ],
+      "return_type": "void",
+      "logic": "Shared routine for multiple float32 compare operations. Emits a float32 comparison instruction."
+    },
+    {
+      "name": "VisitFloat64Compare",
+      "parameters": [
+        "InstructionSelectorT* selector",
+        "OpIndex node",
+        "FlagsContinuationT* cont"
+      ],
+      "return_type": "void",
+      "logic": "Shared routine for multiple float64 compare operations. Emits a float64 comparison instruction."
+    },
+    {
+      "name": "VisitWordCompare",
+      "parameters": [
+        "InstructionSelectorT* selector",
+        "OpIndex node",
+        "InstructionCode opcode",
+        "FlagsContinuationT* cont",
+        "bool commutative"
+      ],
+      "return_type": "Instruction*",
+      "logic": "Shared routine for multiple word compare operations. Emits a word comparison instruction."
+    },
+    {
+      "name": "VisitFullWord32Compare",
+      "parameters": [
+        "InstructionSelectorT* selector",
+        "OpIndex node",
+        "InstructionCode opcode",
+        "FlagsContinuationT* cont"
+      ],
+      "return_type": "void",
+      "logic": "Shared routine for multiple word compare operations. Emits a shifted word comparison instruction."
+    },
+    {
+      "name": "VisitWord32Compare",
+      "parameters": [
+        "InstructionSelectorT* selector",
+        "OpIndex node",
+        "FlagsContinuationT* cont"
+      ],
+      "return_type": "void",
+      "logic": "Shared routine for multiple word compare operations. Emits a shifted word comparison instruction."
+    },
+    {
+      "name": "VisitWord64Compare",
+      "parameters": [
+        "InstructionSelectorT* selector",
+        "OpIndex node",
+        "FlagsContinuationT* cont"
+      ],
+      "return_type": "void",
+      "logic": "Shared routine for multiple word compare operations. Emits a word comparison instruction."
+    },
+    {
+      "name": "EmitWordCompareZero",
+      "parameters": [
+        "InstructionSelectorT* selector",
+        "OpIndex value",
+        "FlagsContinuationT* cont"
+      ],
+      "return_type": "void",
+      "logic": "Emits a word comparison against zero instruction."
+    },
+    {
+      "name": "VisitAtomicLoad",
+      "parameters": [
+        "InstructionSelectorT* selector",
+        "OpIndex node",
+        "AtomicWidth width"
+      ],
+      "return_type": "void",
+      "logic": "Emits an atomic load instruction with the given width."
+    },
+    {
+      "name": "AtomicStoreParametersOf",
+      "parameters": [
+        "InstructionSelectorT* selector",
+        "OpIndex node"
+      ],
+      "return_type": "AtomicStoreParameters",
+      "logic": "Extracts parameters needed to generate atomic store opcodes."
+    },
+    {
+      "name": "VisitAtomicStore",
+      "parameters": [
+        "InstructionSelectorT* selector",
+        "OpIndex node",
+        "AtomicWidth width"
+      ],
+      "return_type": "void",
+      "logic": "Emits an atomic store instruction with the given width."
+    },
+    {
+      "name": "VisitAtomicExchange",
+      "parameters": [
+        "InstructionSelectorT* selector",
+        "OpIndex node",
+        "ArchOpcode opcode",
+        "AtomicWidth width"
+      ],
+      "return_type": "void",
+      "logic": "Emits an atomic exchange instruction with the given opcode and width."
+    },
+    {
+      "name": "VisitAtomicCompareExchange",
+      "parameters": [
+        "InstructionSelectorT* selector",
+        "OpIndex node",
+        "ArchOpcode opcode",
+        "AtomicWidth width"
+      ],
+      "return_type": "void",
+      "logic": "Emits an atomic compare and exchange instruction with the given opcode and width."
+    },
+    {
+      "name": "VisitAtomicBinop",
+      "parameters": [
+        "InstructionSelectorT* selector",
+        "OpIndex node",
+        "ArchOpcode opcode",
+        "AtomicWidth width"
+      ],
+      "return_type": "void",
+      "logic": "Emits an atomic binary operation instruction with the given opcode and width."
+    }
+  ]
+}

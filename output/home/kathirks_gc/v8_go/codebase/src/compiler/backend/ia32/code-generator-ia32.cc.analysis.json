@@ -1,0 +1,354 @@
+{
+  "file_path": "/home/kathirks_gc/v8_go/codebase/src/compiler/backend/ia32/code-generator-ia32.cc",
+  "imports": [
+    "src/base/overflowing-math.h",
+    "src/codegen/assembler-inl.h",
+    "src/codegen/callable.h",
+    "src/codegen/cpu-features.h",
+    "src/codegen/ia32/assembler-ia32.h",
+    "src/codegen/ia32/register-ia32.h",
+    "src/codegen/interface-descriptors-inl.h",
+    "src/codegen/macro-assembler.h",
+    "src/codegen/optimized-compilation-info.h",
+    "src/compiler/backend/code-generator-impl.h",
+    "src/compiler/backend/code-generator.h",
+    "src/compiler/backend/gap-resolver.h",
+    "src/compiler/node-matchers.h",
+    "src/compiler/osr.h",
+    "src/execution/frame-constants.h",
+    "src/execution/frames.h",
+    "src/heap/mutable-page-metadata.h",
+    "src/objects/smi.h",
+    "src/wasm/wasm-linkage.h",
+    "src/wasm/wasm-objects.h"
+  ],
+  "classes": [
+    {
+      "name": "IA32OperandConverter",
+      "properties": [],
+      "methods": [
+        {
+          "name": "IA32OperandConverter",
+          "parameters": [
+            "CodeGenerator* gen",
+            "Instruction* instr"
+          ],
+          "return_type": "void",
+          "logic": "Constructor for the IA32OperandConverter class. Initializes the base class."
+        },
+        {
+          "name": "InputOperand",
+          "parameters": [
+            "size_t index",
+            "int extra = 0"
+          ],
+          "return_type": "Operand",
+          "logic": "Converts an input instruction operand at the given index to an IA-32 Operand."
+        },
+        {
+          "name": "InputImmediate",
+          "parameters": [
+            "size_t index"
+          ],
+          "return_type": "Immediate",
+          "logic": "Converts an input instruction operand at the given index to an IA-32 Immediate."
+        },
+        {
+          "name": "OutputOperand",
+          "parameters": [],
+          "return_type": "Operand",
+          "logic": "Converts the output instruction operand to an IA-32 Operand."
+        },
+        {
+          "name": "ToOperand",
+          "parameters": [
+            "InstructionOperand* op",
+            "int extra = 0"
+          ],
+          "return_type": "Operand",
+          "logic": "Converts a generic instruction operand to an IA-32 Operand. Handles registers and stack slots."
+        },
+        {
+          "name": "SlotToOperand",
+          "parameters": [
+            "int slot",
+            "int extra = 0"
+          ],
+          "return_type": "Operand",
+          "logic": "Converts a stack slot index to an IA-32 Operand, using frame access state."
+        },
+        {
+          "name": "ToImmediate",
+          "parameters": [
+            "InstructionOperand* operand"
+          ],
+          "return_type": "Immediate",
+          "logic": "Converts a generic instruction operand to an IA-32 Immediate, handling different constant types."
+        },
+        {
+          "name": "NextOffset",
+          "parameters": [
+            "size_t* offset"
+          ],
+          "return_type": "size_t",
+          "logic": "Increments the offset pointer and returns the previous value."
+        },
+        {
+          "name": "ScaleFor",
+          "parameters": [
+            "AddressingMode one",
+            "AddressingMode mode"
+          ],
+          "return_type": "ScaleFactor",
+          "logic": "Calculates the scaling factor for an addressing mode."
+        },
+        {
+          "name": "MemoryOperand",
+          "parameters": [
+            "size_t* offset"
+          ],
+          "return_type": "Operand",
+          "logic": "Constructs a memory operand based on the instruction's addressing mode. Takes in an offset and advances as memory addressing components are decoded from the instruction"
+        },
+        {
+          "name": "MemoryOperand",
+          "parameters": [
+            "size_t first_input = 0"
+          ],
+          "return_type": "Operand",
+          "logic": "Constructs a memory operand based on the instruction's addressing mode starting at a particular input index."
+        },
+        {
+          "name": "NextMemoryOperand",
+          "parameters": [
+            "size_t offset = 0"
+          ],
+          "return_type": "Operand",
+          "logic": "Builds a memory operand for accessing consecutive memory locations, incrementing the offset."
+        },
+        {
+          "name": "MoveInstructionOperandToRegister",
+          "parameters": [
+            "Register destination",
+            "InstructionOperand* op"
+          ],
+          "return_type": "void",
+          "logic": "Moves an instruction operand (immediate, register, or memory) to a specified register."
+        }
+      ]
+    },
+    {
+      "name": "OutOfLineLoadFloat32NaN",
+      "properties": [
+        "XMMRegister const result_"
+      ],
+      "methods": [
+        {
+          "name": "OutOfLineLoadFloat32NaN",
+          "parameters": [
+            "CodeGenerator* gen",
+            "XMMRegister result"
+          ],
+          "return_type": "void",
+          "logic": "Constructor for the OutOfLineLoadFloat32NaN class. Initializes the result register."
+        },
+        {
+          "name": "Generate",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Generates code to load a Float32 NaN value into the result register."
+        }
+      ]
+    },
+    {
+      "name": "OutOfLineLoadFloat64NaN",
+      "properties": [
+        "XMMRegister const result_"
+      ],
+      "methods": [
+        {
+          "name": "OutOfLineLoadFloat64NaN",
+          "parameters": [
+            "CodeGenerator* gen",
+            "XMMRegister result"
+          ],
+          "return_type": "void",
+          "logic": "Constructor for the OutOfLineLoadFloat64NaN class. Initializes the result register."
+        },
+        {
+          "name": "Generate",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Generates code to load a Float64 NaN value into the result register."
+        }
+      ]
+    },
+    {
+      "name": "OutOfLineTruncateDoubleToI",
+      "properties": [
+        "Register const result_",
+        "XMMRegister const input_",
+        "Isolate* isolate_",
+        "Zone* zone_"
+      ],
+      "methods": [
+        {
+          "name": "OutOfLineTruncateDoubleToI",
+          "parameters": [
+            "CodeGenerator* gen",
+            "Register result",
+            "XMMRegister input",
+            "StubCallMode stub_mode"
+          ],
+          "return_type": "void",
+          "logic": "Constructor for the OutOfLineTruncateDoubleToI class. Initializes the result register, input register, stub mode, isolate, and zone."
+        },
+        {
+          "name": "Generate",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Generates code to truncate a double to an integer using a builtin call, handling overflow cases."
+        }
+      ]
+    },
+    {
+      "name": "OutOfLineRecordWrite",
+      "properties": [
+        "Register const object_",
+        "Operand const operand_",
+        "Register const value_",
+        "Register const scratch0_",
+        "Register const scratch1_",
+        "RecordWriteMode const mode_",
+        "Zone* zone_"
+      ],
+      "methods": [
+        {
+          "name": "OutOfLineRecordWrite",
+          "parameters": [
+            "CodeGenerator* gen",
+            "Register object",
+            "Operand operand",
+            "Register value",
+            "Register scratch0",
+            "Register scratch1",
+            "RecordWriteMode mode",
+            "StubCallMode stub_mode"
+          ],
+          "return_type": "void",
+          "logic": "Constructor for the OutOfLineRecordWrite class. Initializes the object register, operand, value register, scratch registers, mode, stub mode, and zone."
+        },
+        {
+          "name": "Generate",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Generates code for a record write barrier, calling the appropriate stub based on the mode."
+        }
+      ]
+    }
+  ],
+  "functions": [
+    {
+      "name": "HasAddressingMode",
+      "parameters": [
+        "Instruction* instr"
+      ],
+      "return_type": "bool",
+      "logic": "Checks if an instruction has an addressing mode other than kMode_None."
+    },
+    {
+      "name": "HasImmediateInput",
+      "parameters": [
+        "Instruction* instr",
+        "size_t index"
+      ],
+      "return_type": "bool",
+      "logic": "Checks if an instruction has an immediate input at a given index."
+    },
+    {
+      "name": "HasRegisterInput",
+      "parameters": [
+        "Instruction* instr",
+        "size_t index"
+      ],
+      "return_type": "bool",
+      "logic": "Checks if an instruction has a register input at a given index."
+    },
+    {
+      "name": "AdjustStackPointerForTailCall",
+      "parameters": [
+        "MacroAssembler* masm",
+        "FrameAccessState* state",
+        "int new_slot_above_sp",
+        "bool allow_shrinkage = true"
+      ],
+      "return_type": "void",
+      "logic": "Adjusts the stack pointer for a tail call, allocating or deallocating stack space."
+    },
+    {
+      "name": "VerifyOutputOfAtomicPairInstr",
+      "parameters": [
+        "IA32OperandConverter* converter",
+        "const Instruction* instr"
+      ],
+      "return_type": "bool",
+      "logic": "Verifies that the output registers for an atomic pair instruction are correct (eax and edx)."
+    },
+    {
+      "name": "CodeGenerator::AssembleDeconstructFrame",
+      "parameters": [],
+      "return_type": "void",
+      "logic": "Assembles code to deconstruct a stack frame (mov esp, ebp; pop ebp)."
+    },
+    {
+      "name": "CodeGenerator::AssemblePrepareTailCall",
+      "parameters": [],
+      "return_type": "void",
+      "logic": "Assembles code to prepare for a tail call, restoring the frame pointer."
+    },
+    {
+      "name": "CodeGenerator::AssembleTailCallBeforeGap",
+      "parameters": [
+        "Instruction* instr",
+        "int first_unused_slot_offset"
+      ],
+      "return_type": "void",
+      "logic": "Assembles code for a tail call before a gap in the stack frame, pushing arguments onto the stack."
+    },
+    {
+      "name": "CodeGenerator::AssembleTailCallAfterGap",
+      "parameters": [
+        "Instruction* instr",
+        "int first_unused_slot_offset"
+      ],
+      "return_type": "void",
+      "logic": "Assembles code for a tail call after a gap in the stack frame, adjusting the stack pointer."
+    },
+    {
+      "name": "CodeGenerator::AssembleCodeStartRegisterCheck",
+      "parameters": [],
+      "return_type": "void",
+      "logic": "Assembles code to check that the kJavaScriptCallCodeStartRegister contains the correct code start address."
+    },
+    {
+      "name": "CodeGenerator::AssembleDispatchHandleRegisterCheck",
+      "parameters": [],
+      "return_type": "void",
+      "logic": "Currently does nothing, as V8_JS_LINKAGE_INCLUDES_DISPATCH_HANDLE_BOOL is not defined."
+    },
+    {
+      "name": "CodeGenerator::BailoutIfDeoptimized",
+      "parameters": [],
+      "return_type": "void",
+      "logic": "Assembles code to check if the code object is marked for deoptimization and jumps to the CompileLazyDeoptimizedCode builtin if it is."
+    },
+    {
+      "name": "CodeGenerator::AssembleArchInstruction",
+      "parameters": [
+        "Instruction* instr"
+      ],
+      "return_type": "CodeGenerator::CodeGenResult",
+      "logic": "Assembles a single architecture-specific instruction based on the opcode and operands in the Instruction object."
+    }
+  ]
+}

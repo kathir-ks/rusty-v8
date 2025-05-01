@@ -1,0 +1,99 @@
+{
+  "file_path": "/home/kathirks_gc/v8_go/codebase/src/ast/ast-function-literal-id-reindexer.cc",
+  "imports": [
+    "src/ast/ast-function-literal-id-reindexer.h",
+    "src/ast/ast.h"
+  ],
+  "classes": [
+    {
+      "name": "AstFunctionLiteralIdReindexer",
+      "properties": [
+        "delta_",
+        "visited_"
+      ],
+      "methods": [
+        {
+          "name": "AstFunctionLiteralIdReindexer",
+          "parameters": [
+            "size_t stack_limit",
+            "int delta"
+          ],
+          "return_type": "void",
+          "logic": "Constructor. Initializes the AstFunctionLiteralIdReindexer with a stack limit and a delta value used for reindexing."
+        },
+        {
+          "name": "~AstFunctionLiteralIdReindexer",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Destructor. Default implementation."
+        },
+        {
+          "name": "Reindex",
+          "parameters": [
+            "Expression* pattern"
+          ],
+          "return_type": "void",
+          "logic": "Starts the reindexing process by visiting the given expression pattern. Clears the visited set in debug mode and checks if all visited function literals are marked as visited."
+        },
+        {
+          "name": "VisitFunctionLiteral",
+          "parameters": [
+            "FunctionLiteral* lit"
+          ],
+          "return_type": "void",
+          "logic": "Visits a function literal and updates its function literal ID by adding the delta value.  Also makes sure the function literal wasn't visited previously."
+        },
+        {
+          "name": "VisitCall",
+          "parameters": [
+            "Call* expr"
+          ],
+          "return_type": "void",
+          "logic": "Visits a call expression. If the call is possibly eval, adjusts the eval scope info index by the delta value."
+        },
+        {
+          "name": "VisitClassLiteral",
+          "parameters": [
+            "ClassLiteral* expr"
+          ],
+          "return_type": "void",
+          "logic": "Visits a class literal and its constituent parts (extends, constructor, static initializer, instance members initializer, private and public members) to ensure that any function literals within are visited and their IDs are reindexed. Manually performs the traversal instead of using the base class version. This is for correctly handling private/public fields."
+        },
+        {
+          "name": "CheckVisited",
+          "parameters": [
+            "Expression* expr"
+          ],
+          "return_type": "void",
+          "logic": "Debug-only method to check that all FunctionLiterals reachable from the given expression have been visited during reindexing."
+        }
+      ]
+    },
+    {
+      "name": "AstFunctionLiteralIdReindexChecker",
+      "properties": [
+        "visited_"
+      ],
+      "methods": [
+        {
+          "name": "AstFunctionLiteralIdReindexChecker",
+          "parameters": [
+            "size_t stack_limit",
+            "const std::set<FunctionLiteral*>* visited"
+          ],
+          "return_type": "void",
+          "logic": "Constructor. Initializes the checker with a stack limit and the set of visited function literals."
+        },
+        {
+          "name": "VisitFunctionLiteral",
+          "parameters": [
+            "FunctionLiteral* lit"
+          ],
+          "return_type": "void",
+          "logic": "Checks if a function literal has been visited by comparing it against the set of visited function literals."
+        }
+      ]
+    }
+  ],
+  "functions": []
+}

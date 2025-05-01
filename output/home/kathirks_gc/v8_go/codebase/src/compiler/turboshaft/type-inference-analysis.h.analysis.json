@@ -1,0 +1,225 @@
+{
+  "file_path": "/home/kathirks_gc/v8_go/codebase/src/compiler/turboshaft/type-inference-analysis.h",
+  "imports": [
+    "<limits>",
+    "<optional>",
+    "src/base/logging.h",
+    "src/base/vector.h",
+    "src/compiler/common-operator.h",
+    "src/compiler/turboshaft/assembler.h",
+    "src/compiler/turboshaft/operations.h",
+    "src/compiler/turboshaft/representations.h",
+    "src/compiler/turboshaft/sidetable.h",
+    "src/compiler/turboshaft/snapshot-table.h",
+    "src/compiler/turboshaft/typer.h",
+    "src/compiler/turboshaft/types.h"
+  ],
+  "classes": [
+    {
+      "name": "TypeInferenceAnalysis",
+      "properties": [
+        "graph_",
+        "types_",
+        "table_",
+        "current_block_",
+        "op_to_key_mapping_",
+        "block_to_snapshot_mapping_",
+        "predecessors_",
+        "graph_zone_",
+        "block_refinements_"
+      ],
+      "methods": [
+        {
+          "name": "TypeInferenceAnalysis",
+          "parameters": [
+            "const Graph& graph",
+            "Zone* phase_zone"
+          ],
+          "return_type": "void",
+          "logic": "Constructor for the TypeInferenceAnalysis class. Initializes member variables including the graph, type storage, snapshot table, mappings and the graph zone."
+        },
+        {
+          "name": "Run",
+          "parameters": [
+            "GrowingBlockSidetable<std::vector<std::pair<OpIndex, Type>>>* block_refinements"
+          ],
+          "return_type": "GrowingOpIndexSidetable<Type>",
+          "logic": "Runs the type inference analysis on the graph. Iterates through blocks, processing each one, and returns the inferred types for all operations."
+        },
+        {
+          "name": "ProcessBlock",
+          "parameters": [
+            "const Block& block",
+            "uint32_t* unprocessed_index"
+          ],
+          "return_type": "void",
+          "logic": "Processes a single block in the graph. It seals the previous block's snapshot, merges predecessor snapshots, refines types after branches, and processes each operation within the block.  Handles loop revisiting logic if necessary."
+        },
+        {
+          "name": "ProcessCheckTurboshaftTypeOf",
+          "parameters": [
+            "OpIndex index",
+            "const CheckTurboshaftTypeOfOp& check"
+          ],
+          "return_type": "void",
+          "logic": "Processes a CheckTurboshaftTypeOf operation. Verifies the input type against the expected type and performs tracing actions for success or failure."
+        },
+        {
+          "name": "ProcessComparison",
+          "parameters": [
+            "OpIndex index",
+            "const ComparisonOp& comparison"
+          ],
+          "return_type": "void",
+          "logic": "Processes a Comparison operation. Determines the result type based on the input types and comparison kind."
+        },
+        {
+          "name": "ProcessConstant",
+          "parameters": [
+            "OpIndex index",
+            "const ConstantOp& constant"
+          ],
+          "return_type": "void",
+          "logic": "Processes a Constant operation. Determines the type of the constant value and sets it for the operation."
+        },
+        {
+          "name": "ProcessFloatBinop",
+          "parameters": [
+            "OpIndex index",
+            "const FloatBinopOp& binop"
+          ],
+          "return_type": "void",
+          "logic": "Processes a FloatBinop operation. Determines the result type based on the input types and the binary operation kind."
+        },
+        {
+          "name": "ProcessLoopPhi",
+          "parameters": [
+            "OpIndex index",
+            "const PhiOp& phi"
+          ],
+          "return_type": "bool",
+          "logic": "Processes a Phi operation within a loop.  Computes the type for the Phi, and either narrows the type or widens the type and returns whether the loop needs to be revisited."
+        },
+        {
+          "name": "ProcessOverflowCheckedBinop",
+          "parameters": [
+            "OpIndex index",
+            "const OverflowCheckedBinopOp& binop"
+          ],
+          "return_type": "void",
+          "logic": "Processes an OverflowCheckedBinop operation. Determines the result type based on the input types and the binary operation kind."
+        },
+        {
+          "name": "ProcessPhi",
+          "parameters": [
+            "OpIndex index",
+            "const PhiOp& phi"
+          ],
+          "return_type": "void",
+          "logic": "Processes a Phi operation. Computes the type for the Phi based on its inputs."
+        },
+        {
+          "name": "ProcessProjection",
+          "parameters": [
+            "OpIndex index",
+            "const ProjectionOp& projection"
+          ],
+          "return_type": "void",
+          "logic": "Processes a Projection operation. Determines the result type based on the input tuple type and the projection index."
+        },
+        {
+          "name": "ProcessWordBinop",
+          "parameters": [
+            "V<Word> index",
+            "const WordBinopOp& binop"
+          ],
+          "return_type": "void",
+          "logic": "Processes a WordBinop operation. Determines the result type based on the input types and the binary operation kind."
+        },
+        {
+          "name": "ComputeTypeForPhi",
+          "parameters": [
+            "const PhiOp& phi"
+          ],
+          "return_type": "Type",
+          "logic": "Computes the type for a Phi operation based on its inputs. It considers Word64 to Word32 truncation implicitly."
+        },
+        {
+          "name": "RefineTypesAfterBranch",
+          "parameters": [
+            "const BranchOp* branch",
+            "const Block* new_block",
+            "bool then_branch"
+          ],
+          "return_type": "void",
+          "logic": "Refines types after a branch operation based on the branch condition and which branch is taken."
+        },
+        {
+          "name": "RefineOperationType",
+          "parameters": [
+            "const Block* new_block",
+            "OpIndex op",
+            "const Type& type",
+            "char case_for_tracing"
+          ],
+          "return_type": "void",
+          "logic": "Sets the refined type for a specific operation in a block."
+        },
+        {
+          "name": "SetType",
+          "parameters": [
+            "OpIndex index",
+            "Type result_type",
+            "bool allow_narrowing",
+            "bool is_fallback_for_unsupported_operation"
+          ],
+          "return_type": "void",
+          "logic": "Sets the type for an operation. It also handles tracing and fallback mechanisms for unsupported operations."
+        },
+        {
+          "name": "GetTypeOrInvalid",
+          "parameters": [
+            "const OpIndex index"
+          ],
+          "return_type": "Type",
+          "logic": "Gets the type for an operation, or returns Type::Invalid() if the type is not available."
+        },
+        {
+          "name": "GetTypeOrDefault",
+          "parameters": [
+            "OpIndex index",
+            "const Type& default_type"
+          ],
+          "return_type": "Type",
+          "logic": "Gets the type for an operation, or returns a default type if the type is not available."
+        },
+        {
+          "name": "GetType",
+          "parameters": [
+            "OpIndex index"
+          ],
+          "return_type": "Type",
+          "logic": "Gets the type for an operation. If the type is not available, it falls back to using representation based type."
+        },
+        {
+          "name": "GetTypeAtDefinition",
+          "parameters": [
+            "OpIndex index"
+          ],
+          "return_type": "Type",
+          "logic": "Returns the type of an OpIndex as it was defined originally."
+        },
+        {
+          "name": "Widen",
+          "parameters": [
+            "const Type& old_type",
+            "const Type& new_type"
+          ],
+          "return_type": "Type",
+          "logic": "Widens the old type to a more general type, based on the new type. Used during loop fixpoint iteration."
+        }
+      ]
+    }
+  ],
+  "functions": []
+}

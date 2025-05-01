@@ -1,0 +1,275 @@
+{
+  "file_path": "/home/kathirks_gc/v8_go/codebase/src/wasm/wasm-value.h",
+  "imports": [
+    "src/base/memory.h",
+    "src/common/simd128.h",
+    "src/handles/handles.h",
+    "src/utils/boxed-float.h",
+    "src/wasm/value-type.h",
+    "third_party/fp16/src/include/fp16.h"
+  ],
+  "classes": [
+    {
+      "name": "WasmValue",
+      "properties": [
+        "type_",
+        "bit_pattern_",
+        "module_"
+      ],
+      "methods": [
+        {
+          "name": "WasmValue",
+          "parameters": [],
+          "return_type": "WasmValue",
+          "logic": "Default constructor, initializes type to kWasmVoid and bit_pattern to zero."
+        },
+        {
+          "name": "WasmValue",
+          "parameters": [
+            "ctype v"
+          ],
+          "return_type": "WasmValue",
+          "logic": "Constructor for primitive types, initializes the WasmValue with a given ctype value and its corresponding wasm type.  Uses WriteUnalignedValue to write the given value to the bit_pattern_."
+        },
+        {
+          "name": "to_i8",
+          "parameters": [],
+          "return_type": "int8_t",
+          "logic": "Returns the value stored in bit_pattern_ as int8_t. Checks if the type is kWasmI8."
+        },
+        {
+          "name": "to_i8_unchecked",
+          "parameters": [],
+          "return_type": "int8_t",
+          "logic": "Returns the value stored in bit_pattern_ as int8_t without type checking.  Uses ReadUnalignedValue to read the int8_t from the bit_pattern_."
+        },
+        {
+          "name": "to_i16",
+          "parameters": [],
+          "return_type": "int16_t",
+          "logic": "Returns the value stored in bit_pattern_ as int16_t. Checks if the type is kWasmI16."
+        },
+        {
+          "name": "to_i16_unchecked",
+          "parameters": [],
+          "return_type": "int16_t",
+          "logic": "Returns the value stored in bit_pattern_ as int16_t without type checking."
+        },
+        {
+          "name": "to_i32",
+          "parameters": [],
+          "return_type": "int32_t",
+          "logic": "Returns the value stored in bit_pattern_ as int32_t. Checks if the type is kWasmI32."
+        },
+        {
+          "name": "to_i32_unchecked",
+          "parameters": [],
+          "return_type": "int32_t",
+          "logic": "Returns the value stored in bit_pattern_ as int32_t without type checking."
+        },
+        {
+          "name": "to_u32",
+          "parameters": [],
+          "return_type": "uint32_t",
+          "logic": "Returns the value stored in bit_pattern_ as uint32_t. Checks if the type is kWasmI32."
+        },
+        {
+          "name": "to_u32_unchecked",
+          "parameters": [],
+          "return_type": "uint32_t",
+          "logic": "Returns the value stored in bit_pattern_ as uint32_t without type checking."
+        },
+        {
+          "name": "to_i64",
+          "parameters": [],
+          "return_type": "int64_t",
+          "logic": "Returns the value stored in bit_pattern_ as int64_t. Checks if the type is kWasmI64."
+        },
+        {
+          "name": "to_i64_unchecked",
+          "parameters": [],
+          "return_type": "int64_t",
+          "logic": "Returns the value stored in bit_pattern_ as int64_t without type checking."
+        },
+        {
+          "name": "to_u64",
+          "parameters": [],
+          "return_type": "uint64_t",
+          "logic": "Returns the value stored in bit_pattern_ as uint64_t. Checks if the type is kWasmI64."
+        },
+        {
+          "name": "to_u64_unchecked",
+          "parameters": [],
+          "return_type": "uint64_t",
+          "logic": "Returns the value stored in bit_pattern_ as uint64_t without type checking."
+        },
+        {
+          "name": "to_f16",
+          "parameters": [],
+          "return_type": "uint16_t",
+          "logic": "Returns the value stored in bit_pattern_ as uint16_t. Checks if the type is kWasmF16."
+        },
+        {
+          "name": "to_f16_unchecked",
+          "parameters": [],
+          "return_type": "uint16_t",
+          "logic": "Returns the value stored in bit_pattern_ as uint16_t without type checking."
+        },
+        {
+          "name": "to_f32",
+          "parameters": [],
+          "return_type": "float",
+          "logic": "Returns the value stored in bit_pattern_ as float. Checks if the type is kWasmF32."
+        },
+        {
+          "name": "to_f32_unchecked",
+          "parameters": [],
+          "return_type": "float",
+          "logic": "Returns the value stored in bit_pattern_ as float without type checking."
+        },
+        {
+          "name": "to_f32_boxed",
+          "parameters": [],
+          "return_type": "Float32",
+          "logic": "Returns the value stored in bit_pattern_ as Float32. Checks if the type is kWasmF32."
+        },
+        {
+          "name": "to_f32_boxed_unchecked",
+          "parameters": [],
+          "return_type": "Float32",
+          "logic": "Returns the value stored in bit_pattern_ as Float32 without type checking."
+        },
+        {
+          "name": "to_f64",
+          "parameters": [],
+          "return_type": "double",
+          "logic": "Returns the value stored in bit_pattern_ as double. Checks if the type is kWasmF64."
+        },
+        {
+          "name": "to_f64_unchecked",
+          "parameters": [],
+          "return_type": "double",
+          "logic": "Returns the value stored in bit_pattern_ as double without type checking."
+        },
+        {
+          "name": "to_f64_boxed",
+          "parameters": [],
+          "return_type": "Float64",
+          "logic": "Returns the value stored in bit_pattern_ as Float64. Checks if the type is kWasmF64."
+        },
+        {
+          "name": "to_f64_boxed_unchecked",
+          "parameters": [],
+          "return_type": "Float64",
+          "logic": "Returns the value stored in bit_pattern_ as Float64 without type checking."
+        },
+        {
+          "name": "to_s128",
+          "parameters": [],
+          "return_type": "Simd128",
+          "logic": "Returns the value stored in bit_pattern_ as Simd128. Checks if the type is kWasmS128."
+        },
+        {
+          "name": "to_s128_unchecked",
+          "parameters": [],
+          "return_type": "Simd128",
+          "logic": "Returns the value stored in bit_pattern_ as Simd128 without type checking."
+        },
+        {
+          "name": "WasmValue",
+          "parameters": [
+            "const uint8_t* raw_bytes",
+            "CanonicalValueType type"
+          ],
+          "return_type": "WasmValue",
+          "logic": "Constructor for raw byte array with given CanonicalValueType, initializes bit_pattern_ by copying raw_bytes."
+        },
+        {
+          "name": "WasmValue",
+          "parameters": [
+            "DirectHandle<Object> ref",
+            "CanonicalValueType type"
+          ],
+          "return_type": "WasmValue",
+          "logic": "Constructor for Handle, stores the given handle in bit_pattern_."
+        },
+        {
+          "name": "to_ref",
+          "parameters": [],
+          "return_type": "DirectHandle<Object>",
+          "logic": "Returns the value stored in bit_pattern_ as Handle<Object>. Checks if the type is a reference type."
+        },
+        {
+          "name": "type",
+          "parameters": [],
+          "return_type": "CanonicalValueType",
+          "logic": "Returns the type of the WasmValue."
+        },
+        {
+          "name": "module",
+          "parameters": [],
+          "return_type": "const WasmModule*",
+          "logic": "Returns the associated WasmModule pointer."
+        },
+        {
+          "name": "operator==",
+          "parameters": [
+            "const WasmValue& other"
+          ],
+          "return_type": "bool",
+          "logic": "Checks if two WasmValue objects are equal by comparing their type and bit pattern."
+        },
+        {
+          "name": "CopyTo",
+          "parameters": [
+            "uint8_t* to"
+          ],
+          "return_type": "void",
+          "logic": "Copies the value's bit pattern to the provided memory location."
+        },
+        {
+          "name": "Packed",
+          "parameters": [
+            "ValueType packed_type"
+          ],
+          "return_type": "WasmValue",
+          "logic": "Packs the i32 value into either i8 or i16 when possible."
+        },
+        {
+          "name": "to",
+          "parameters": [],
+          "return_type": "T",
+          "logic": "Template method to cast to specific type T. Calls the type-specific to_<name>() method (e.g., to_i32())."
+        },
+        {
+          "name": "to_unchecked",
+          "parameters": [],
+          "return_type": "T",
+          "logic": "Template method to cast to specific type T without type checking.  Calls the type-specific to_<name>_unchecked() method."
+        },
+        {
+          "name": "ForUintPtr",
+          "parameters": [
+            "uintptr_t value"
+          ],
+          "return_type": "WasmValue",
+          "logic": "Creates a WasmValue for a uintptr_t, using either uint64_t or uint32_t depending on the system's pointer size."
+        },
+        {
+          "name": "to_string",
+          "parameters": [],
+          "return_type": "std::string",
+          "logic": "Converts the WasmValue to a string representation based on its type."
+        },
+        {
+          "name": "zero_byte_representation",
+          "parameters": [],
+          "return_type": "bool",
+          "logic": "Checks if the value has a zero byte representation (all bytes in bit_pattern_ are zero)."
+        }
+      ]
+    }
+  ],
+  "functions": [],
+  "notes": "The type-specific to_<name>() and to_<name>_unchecked() methods, as well as the template specializations for to() and to_unchecked(), are generated using the FOREACH_PRIMITIVE_WASMVAL_TYPE macro.  These aren't directly defined as separate functions but as methods inside the WasmValue class."
+}

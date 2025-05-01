@@ -1,0 +1,942 @@
+{
+  "file_path": "/home/kathirks_gc/v8_go/codebase/src/compiler/machine-operator-reducer.cc",
+  "imports": [
+    "src/compiler/machine-operator-reducer.h",
+    "cmath",
+    "cstdint",
+    "limits",
+    "optional",
+    "src/base/bits.h",
+    "src/base/division-by-constant.h",
+    "src/base/ieee754.h",
+    "src/base/logging.h",
+    "src/base/overflowing-math.h",
+    "src/builtins/builtins.h",
+    "src/compiler/diamond.h",
+    "src/compiler/js-operator.h",
+    "src/compiler/machine-graph.h",
+    "src/compiler/node-matchers.h",
+    "src/compiler/node-properties.h",
+    "src/compiler/opcodes.h",
+    "src/compiler/turbofan-graph.h",
+    "src/numbers/conversions-inl.h",
+    "src/numbers/ieee754.h"
+  ],
+  "classes": [
+    {
+      "name": "Word32Adapter",
+      "properties": [
+        "MachineOperatorReducer* r_"
+      ],
+      "methods": [
+        {
+          "name": "Word32Adapter",
+          "parameters": [
+            "MachineOperatorReducer* reducer"
+          ],
+          "return_type": "void",
+          "logic": "Constructor that initializes the internal MachineOperatorReducer pointer."
+        },
+        {
+          "name": "IsWordNAnd",
+          "parameters": [
+            "const T& x"
+          ],
+          "return_type": "bool",
+          "logic": "Checks if the given operator is a Word32And."
+        },
+        {
+          "name": "IsWordNShl",
+          "parameters": [
+            "const T& x"
+          ],
+          "return_type": "bool",
+          "logic": "Checks if the given operator is a Word32Shl."
+        },
+        {
+          "name": "IsWordNShr",
+          "parameters": [
+            "const T& x"
+          ],
+          "return_type": "bool",
+          "logic": "Checks if the given operator is a Word32Shr."
+        },
+        {
+          "name": "IsWordNSar",
+          "parameters": [
+            "const T& x"
+          ],
+          "return_type": "bool",
+          "logic": "Checks if the given operator is a Word32Sar."
+        },
+        {
+          "name": "IsWordNSarShiftOutZeros",
+          "parameters": [
+            "const Operator* op"
+          ],
+          "return_type": "bool",
+          "logic": "Checks if the given operator is a Word32Sar with ShiftOutZeros kind."
+        },
+        {
+          "name": "IsWordNXor",
+          "parameters": [
+            "const T& x"
+          ],
+          "return_type": "bool",
+          "logic": "Checks if the given operator is a Word32Xor."
+        },
+        {
+          "name": "IsIntNAdd",
+          "parameters": [
+            "const T& x"
+          ],
+          "return_type": "bool",
+          "logic": "Checks if the given operator is an Int32Add."
+        },
+        {
+          "name": "IsIntNMul",
+          "parameters": [
+            "const T& x"
+          ],
+          "return_type": "bool",
+          "logic": "Checks if the given operator is an Int32Mul."
+        },
+        {
+          "name": "IntNAdd",
+          "parameters": [
+            "MachineOperatorBuilder* machine"
+          ],
+          "return_type": "const Operator*",
+          "logic": "Returns the Int32Add operator."
+        },
+        {
+          "name": "WordNEqual",
+          "parameters": [
+            "MachineOperatorBuilder* machine"
+          ],
+          "return_type": "const Operator*",
+          "logic": "Returns the Word32Equal operator."
+        },
+        {
+          "name": "ReplaceIntN",
+          "parameters": [
+            "int32_t value"
+          ],
+          "return_type": "Reduction",
+          "logic": "Replaces the node with an Int32 constant."
+        },
+        {
+          "name": "ReduceWordNAnd",
+          "parameters": [
+            "Node* node"
+          ],
+          "return_type": "Reduction",
+          "logic": "Reduces a Word32And node."
+        },
+        {
+          "name": "ReduceIntNAdd",
+          "parameters": [
+            "Node* node"
+          ],
+          "return_type": "Reduction",
+          "logic": "Reduces an Int32Add node."
+        },
+        {
+          "name": "TryMatchWordNRor",
+          "parameters": [
+            "Node* node"
+          ],
+          "return_type": "Reduction",
+          "logic": "Tries to match a Word32Ror pattern."
+        },
+        {
+          "name": "IntNConstant",
+          "parameters": [
+            "int32_t value"
+          ],
+          "return_type": "Node*",
+          "logic": "Creates an Int32 constant node."
+        },
+        {
+          "name": "UintNConstant",
+          "parameters": [
+            "uint32_t value"
+          ],
+          "return_type": "Node*",
+          "logic": "Creates a Uint32 constant node."
+        },
+        {
+          "name": "WordNAnd",
+          "parameters": [
+            "Node* lhs",
+            "Node* rhs"
+          ],
+          "return_type": "Node*",
+          "logic": "Creates a Word32And node."
+        },
+        {
+          "name": "ReduceWordNComparisons",
+          "parameters": [
+            "Node* node"
+          ],
+          "return_type": "Reduction",
+          "logic": "Reduces Word32 comparisons."
+        }
+      ]
+    },
+    {
+      "name": "Word64Adapter",
+      "properties": [
+        "MachineOperatorReducer* r_"
+      ],
+      "methods": [
+        {
+          "name": "Word64Adapter",
+          "parameters": [
+            "MachineOperatorReducer* reducer"
+          ],
+          "return_type": "void",
+          "logic": "Constructor that initializes the internal MachineOperatorReducer pointer."
+        },
+        {
+          "name": "IsWordNAnd",
+          "parameters": [
+            "const T& x"
+          ],
+          "return_type": "bool",
+          "logic": "Checks if the given operator is a Word64And."
+        },
+        {
+          "name": "IsWordNShl",
+          "parameters": [
+            "const T& x"
+          ],
+          "return_type": "bool",
+          "logic": "Checks if the given operator is a Word64Shl."
+        },
+        {
+          "name": "IsWordNShr",
+          "parameters": [
+            "const T& x"
+          ],
+          "return_type": "bool",
+          "logic": "Checks if the given operator is a Word64Shr."
+        },
+        {
+          "name": "IsWordNSar",
+          "parameters": [
+            "const T& x"
+          ],
+          "return_type": "bool",
+          "logic": "Checks if the given operator is a Word64Sar."
+        },
+        {
+          "name": "IsWordNSarShiftOutZeros",
+          "parameters": [
+            "const Operator* op"
+          ],
+          "return_type": "bool",
+          "logic": "Checks if the given operator is a Word64Sar with ShiftOutZeros kind."
+        },
+        {
+          "name": "IsWordNXor",
+          "parameters": [
+            "const T& x"
+          ],
+          "return_type": "bool",
+          "logic": "Checks if the given operator is a Word64Xor."
+        },
+        {
+          "name": "IsIntNAdd",
+          "parameters": [
+            "const T& x"
+          ],
+          "return_type": "bool",
+          "logic": "Checks if the given operator is an Int64Add."
+        },
+        {
+          "name": "IsIntNMul",
+          "parameters": [
+            "const T& x"
+          ],
+          "return_type": "bool",
+          "logic": "Checks if the given operator is an Int64Mul."
+        },
+        {
+          "name": "IntNAdd",
+          "parameters": [
+            "MachineOperatorBuilder* machine"
+          ],
+          "return_type": "const Operator*",
+          "logic": "Returns the Int64Add operator."
+        },
+        {
+          "name": "WordNEqual",
+          "parameters": [
+            "MachineOperatorBuilder* machine"
+          ],
+          "return_type": "const Operator*",
+          "logic": "Returns the Word64Equal operator."
+        },
+        {
+          "name": "ReplaceIntN",
+          "parameters": [
+            "int64_t value"
+          ],
+          "return_type": "Reduction",
+          "logic": "Replaces the node with an Int64 constant."
+        },
+        {
+          "name": "ReduceWordNAnd",
+          "parameters": [
+            "Node* node"
+          ],
+          "return_type": "Reduction",
+          "logic": "Reduces a Word64And node."
+        },
+        {
+          "name": "ReduceIntNAdd",
+          "parameters": [
+            "Node* node"
+          ],
+          "return_type": "Reduction",
+          "logic": "Reduces an Int64Add node."
+        },
+        {
+          "name": "TryMatchWordNRor",
+          "parameters": [
+            "Node* node"
+          ],
+          "return_type": "Reduction",
+          "logic": "Placeholder for a TryMatchWord64Ror, which is not implemented."
+        },
+        {
+          "name": "IntNConstant",
+          "parameters": [
+            "int64_t value"
+          ],
+          "return_type": "Node*",
+          "logic": "Creates an Int64 constant node."
+        },
+        {
+          "name": "UintNConstant",
+          "parameters": [
+            "uint64_t value"
+          ],
+          "return_type": "Node*",
+          "logic": "Creates a Uint64 constant node."
+        },
+        {
+          "name": "WordNAnd",
+          "parameters": [
+            "Node* lhs",
+            "Node* rhs"
+          ],
+          "return_type": "Node*",
+          "logic": "Creates a Word64And node."
+        },
+        {
+          "name": "ReduceWordNComparisons",
+          "parameters": [
+            "Node* node"
+          ],
+          "return_type": "Reduction",
+          "logic": "Reduces Word64 comparisons."
+        }
+      ]
+    },
+    {
+      "name": "MachineOperatorReducer",
+      "properties": [
+        "MachineGraph* mcgraph_",
+        "SignallingNanPropagation signalling_nan_propagation_"
+      ],
+      "methods": [
+        {
+          "name": "MachineOperatorReducer",
+          "parameters": [
+            "Editor* editor",
+            "MachineGraph* mcgraph",
+            "SignallingNanPropagation signalling_nan_propagation"
+          ],
+          "return_type": "void",
+          "logic": "Constructor for the MachineOperatorReducer class, initializing its members."
+        },
+        {
+          "name": "~MachineOperatorReducer",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Destructor."
+        },
+        {
+          "name": "Float32Constant",
+          "parameters": [
+            "float value"
+          ],
+          "return_type": "Node*",
+          "logic": "Creates a Float32 constant node."
+        },
+        {
+          "name": "Float64Constant",
+          "parameters": [
+            "double value"
+          ],
+          "return_type": "Node*",
+          "logic": "Creates a Float64 constant node."
+        },
+        {
+          "name": "Int32Constant",
+          "parameters": [
+            "int32_t value"
+          ],
+          "return_type": "Node*",
+          "logic": "Creates an Int32 constant node."
+        },
+        {
+          "name": "Int64Constant",
+          "parameters": [
+            "int64_t value"
+          ],
+          "return_type": "Node*",
+          "logic": "Creates an Int64 constant node."
+        },
+        {
+          "name": "Float64Mul",
+          "parameters": [
+            "Node* lhs",
+            "Node* rhs"
+          ],
+          "return_type": "Node*",
+          "logic": "Creates a Float64Mul node."
+        },
+        {
+          "name": "Float64PowHalf",
+          "parameters": [
+            "Node* value"
+          ],
+          "return_type": "Node*",
+          "logic": "Optimizes Float64 power of a half. Rewrites x ** 0.5 to a more optimal form."
+        },
+        {
+          "name": "Word32And",
+          "parameters": [
+            "Node* lhs",
+            "Node* rhs"
+          ],
+          "return_type": "Node*",
+          "logic": "Creates a Word32And node and attempts to reduce it."
+        },
+        {
+          "name": "Word32Sar",
+          "parameters": [
+            "Node* lhs",
+            "uint32_t rhs"
+          ],
+          "return_type": "Node*",
+          "logic": "Creates a Word32Sar node."
+        },
+        {
+          "name": "Word64Sar",
+          "parameters": [
+            "Node* lhs",
+            "uint32_t rhs"
+          ],
+          "return_type": "Node*",
+          "logic": "Creates a Word64Sar node."
+        },
+        {
+          "name": "Word32Shr",
+          "parameters": [
+            "Node* lhs",
+            "uint32_t rhs"
+          ],
+          "return_type": "Node*",
+          "logic": "Creates a Word32Shr node."
+        },
+        {
+          "name": "Word64Shr",
+          "parameters": [
+            "Node* lhs",
+            "uint32_t rhs"
+          ],
+          "return_type": "Node*",
+          "logic": "Creates a Word64Shr node."
+        },
+        {
+          "name": "Word32Equal",
+          "parameters": [
+            "Node* lhs",
+            "Node* rhs"
+          ],
+          "return_type": "Node*",
+          "logic": "Creates a Word32Equal node."
+        },
+        {
+          "name": "Word64Equal",
+          "parameters": [
+            "Node* lhs",
+            "Node* rhs"
+          ],
+          "return_type": "Node*",
+          "logic": "Creates a Word64Equal node."
+        },
+        {
+          "name": "Word64And",
+          "parameters": [
+            "Node* lhs",
+            "Node* rhs"
+          ],
+          "return_type": "Node*",
+          "logic": "Creates a Word64And node and attempts to reduce it."
+        },
+        {
+          "name": "Int32Add",
+          "parameters": [
+            "Node* lhs",
+            "Node* rhs"
+          ],
+          "return_type": "Node*",
+          "logic": "Creates an Int32Add node and attempts to reduce it."
+        },
+        {
+          "name": "Int64Add",
+          "parameters": [
+            "Node* lhs",
+            "Node* rhs"
+          ],
+          "return_type": "Node*",
+          "logic": "Creates an Int64Add node and attempts to reduce it."
+        },
+        {
+          "name": "Int32Sub",
+          "parameters": [
+            "Node* lhs",
+            "Node* rhs"
+          ],
+          "return_type": "Node*",
+          "logic": "Creates an Int32Sub node and attempts to reduce it."
+        },
+        {
+          "name": "Int64Sub",
+          "parameters": [
+            "Node* lhs",
+            "Node* rhs"
+          ],
+          "return_type": "Node*",
+          "logic": "Creates an Int64Sub node and attempts to reduce it."
+        },
+        {
+          "name": "Int32Mul",
+          "parameters": [
+            "Node* lhs",
+            "Node* rhs"
+          ],
+          "return_type": "Node*",
+          "logic": "Creates an Int32Mul node."
+        },
+        {
+          "name": "Int64Mul",
+          "parameters": [
+            "Node* lhs",
+            "Node* rhs"
+          ],
+          "return_type": "Node*",
+          "logic": "Creates an Int64Mul node."
+        },
+        {
+          "name": "Int32Div",
+          "parameters": [
+            "Node* dividend",
+            "int32_t divisor"
+          ],
+          "return_type": "Node*",
+          "logic": "Creates a Node performing an integer division using magic numbers."
+        },
+        {
+          "name": "Int64Div",
+          "parameters": [
+            "Node* dividend",
+            "int64_t divisor"
+          ],
+          "return_type": "Node*",
+          "logic": "Creates a Node performing an integer division using magic numbers."
+        },
+        {
+          "name": "Uint32Div",
+          "parameters": [
+            "Node* dividend",
+            "uint32_t divisor"
+          ],
+          "return_type": "Node*",
+          "logic": "Creates a Node performing an unsigned integer division using magic numbers."
+        },
+        {
+          "name": "Uint64Div",
+          "parameters": [
+            "Node* dividend",
+            "uint64_t divisor"
+          ],
+          "return_type": "Node*",
+          "logic": "Creates a Node performing an unsigned integer division using magic numbers."
+        },
+        {
+          "name": "TruncateInt64ToInt32",
+          "parameters": [
+            "Node* value"
+          ],
+          "return_type": "Node*",
+          "logic": "Creates a TruncateInt64ToInt32 node and attempts to reduce it."
+        },
+        {
+          "name": "ChangeInt32ToInt64",
+          "parameters": [
+            "Node* value"
+          ],
+          "return_type": "Node*",
+          "logic": "Creates a ChangeInt32ToInt64 node."
+        },
+        {
+          "name": "Reduce",
+          "parameters": [
+            "Node* node"
+          ],
+          "return_type": "Reduction",
+          "logic": "Main reduction function that performs constant folding and strength reduction on machine operators."
+        },
+        {
+          "name": "ReduceTruncateInt64ToInt32",
+          "parameters": [
+            "Node* node"
+          ],
+          "return_type": "Reduction",
+          "logic": "Reduces a TruncateInt64ToInt32 node by constant folding and pattern matching."
+        },
+        {
+          "name": "ReduceInt32Add",
+          "parameters": [
+            "Node* node"
+          ],
+          "return_type": "Reduction",
+          "logic": "Reduces an Int32Add node by constant folding and pattern matching."
+        },
+        {
+          "name": "ReduceInt64Add",
+          "parameters": [
+            "Node* node"
+          ],
+          "return_type": "Reduction",
+          "logic": "Reduces an Int64Add node by constant folding and pattern matching."
+        },
+        {
+          "name": "ReduceInt32Sub",
+          "parameters": [
+            "Node* node"
+          ],
+          "return_type": "Reduction",
+          "logic": "Reduces an Int32Sub node by constant folding and pattern matching."
+        },
+        {
+          "name": "ReduceInt64Sub",
+          "parameters": [
+            "Node* node"
+          ],
+          "return_type": "Reduction",
+          "logic": "Reduces an Int64Sub node by constant folding and pattern matching."
+        },
+        {
+          "name": "ReduceInt64Mul",
+          "parameters": [
+            "Node* node"
+          ],
+          "return_type": "Reduction",
+          "logic": "Reduces an Int64Mul node by constant folding and pattern matching."
+        },
+        {
+          "name": "ReduceInt32Div",
+          "parameters": [
+            "Node* node"
+          ],
+          "return_type": "Reduction",
+          "logic": "Reduces an Int32Div node by constant folding and strength reduction."
+        },
+        {
+          "name": "ReduceInt64Div",
+          "parameters": [
+            "Node* node"
+          ],
+          "return_type": "Reduction",
+          "logic": "Reduces an Int64Div node by constant folding and strength reduction."
+        },
+        {
+          "name": "ReduceUint32Div",
+          "parameters": [
+            "Node* node"
+          ],
+          "return_type": "Reduction",
+          "logic": "Reduces a Uint32Div node by constant folding and strength reduction."
+        },
+        {
+          "name": "ReduceUint64Div",
+          "parameters": [
+            "Node* node"
+          ],
+          "return_type": "Reduction",
+          "logic": "Reduces a Uint64Div node by constant folding and strength reduction."
+        },
+        {
+          "name": "ReduceInt32Mod",
+          "parameters": [
+            "Node* node"
+          ],
+          "return_type": "Reduction",
+          "logic": "Reduces Int32Mod operation."
+        },
+        {
+          "name": "ReduceInt64Mod",
+          "parameters": [
+            "Node* node"
+          ],
+          "return_type": "Reduction",
+          "logic": "Reduces Int64Mod operation."
+        },
+        {
+          "name": "ReduceUint32Mod",
+          "parameters": [
+            "Node* node"
+          ],
+          "return_type": "Reduction",
+          "logic": "Reduces Uint32Mod operation."
+        },
+        {
+          "name": "ReduceUint64Mod",
+          "parameters": [
+            "Node* node"
+          ],
+          "return_type": "Reduction",
+          "logic": "Reduces Uint64Mod operation."
+        },
+        {
+          "name": "ReduceWord32Comparisons",
+          "parameters": [
+            "Node* node"
+          ],
+          "return_type": "Reduction",
+          "logic": "Reduces 32-bit integer comparison operations."
+        },
+        {
+          "name": "Map64To32Comparison",
+          "parameters": [
+            "const Operator* op",
+            "bool sign_extended"
+          ],
+          "return_type": "const Operator*",
+          "logic": "Maps 64-bit comparisons to equivalent 32-bit comparisons."
+        },
+        {
+          "name": "ReduceWord64Comparisons",
+          "parameters": [
+            "Node* node"
+          ],
+          "return_type": "Reduction",
+          "logic": "Reduces 64-bit integer comparison operations."
+        },
+        {
+          "name": "ReduceWord32Shifts",
+          "parameters": [
+            "Node* node"
+          ],
+          "return_type": "Reduction",
+          "logic": "Reduces 32-bit shift operations."
+        },
+        {
+          "name": "ReduceWord32Shl",
+          "parameters": [
+            "Node* node"
+          ],
+          "return_type": "Reduction",
+          "logic": "Reduces 32-bit left shift operations."
+        },
+        {
+          "name": "ReduceWord64Shl",
+          "parameters": [
+            "Node* node"
+          ],
+          "return_type": "Reduction",
+          "logic": "Reduces 64-bit left shift operations."
+        },
+        {
+          "name": "ReduceWord32Shr",
+          "parameters": [
+            "Node* node"
+          ],
+          "return_type": "Reduction",
+          "logic": "Reduces 32-bit logical right shift operations."
+        },
+        {
+          "name": "ReduceWord64Shr",
+          "parameters": [
+            "Node* node"
+          ],
+          "return_type": "Reduction",
+          "logic": "Reduces 64-bit logical right shift operations."
+        },
+        {
+          "name": "ReduceWord32Sar",
+          "parameters": [
+            "Node* node"
+          ],
+          "return_type": "Reduction",
+          "logic": "Reduces 32-bit arithmetic right shift operations."
+        },
+        {
+          "name": "ReduceWord64Sar",
+          "parameters": [
+            "Node* node"
+          ],
+          "return_type": "Reduction",
+          "logic": "Reduces 64-bit arithmetic right shift operations."
+        },
+        {
+          "name": "ReduceWord32And",
+          "parameters": [
+            "Node* node"
+          ],
+          "return_type": "Reduction",
+          "logic": "Reduces 32-bit bitwise AND operations."
+        },
+        {
+          "name": "ReduceWord64And",
+          "parameters": [
+            "Node* node"
+          ],
+          "return_type": "Reduction",
+          "logic": "Reduces 64-bit bitwise AND operations."
+        },
+        {
+          "name": "TryMatchWord32Ror",
+          "parameters": [
+            "Node* node"
+          ],
+          "return_type": "Reduction",
+          "logic": "Attempts to match and transform shift-or patterns into rotate right operations."
+        },
+        {
+          "name": "ReduceWord32Or",
+          "parameters": [
+            "Node* node"
+          ],
+          "return_type": "Reduction",
+          "logic": "Reduces 32-bit bitwise OR operations."
+        },
+        {
+          "name": "ReduceWord64Or",
+          "parameters": [
+            "Node* node"
+          ],
+          "return_type": "Reduction",
+          "logic": "Reduces 64-bit bitwise OR operations."
+        },
+        {
+          "name": "ReduceWord32Xor",
+          "parameters": [
+            "Node* node"
+          ],
+          "return_type": "Reduction",
+          "logic": "Reduces 32-bit bitwise XOR operations."
+        },
+        {
+          "name": "ReduceWord64Xor",
+          "parameters": [
+            "Node* node"
+          ],
+          "return_type": "Reduction",
+          "logic": "Reduces 64-bit bitwise XOR operations."
+        },
+        {
+          "name": "ReduceStore",
+          "parameters": [
+            "Node* node"
+          ],
+          "return_type": "Reduction",
+          "logic": "Reduces store operations."
+        },
+        {
+          "name": "ReduceProjection",
+          "parameters": [
+            "size_t index",
+            "Node* node"
+          ],
+          "return_type": "Reduction",
+          "logic": "Reduces projection nodes, especially those arising from operations with overflow."
+        },
+        {
+          "name": "ReduceFloat64RoundDown",
+          "parameters": [
+            "Node* node"
+          ],
+          "return_type": "Reduction",
+          "logic": "Reduces Float64RoundDown nodes."
+        },
+        {
+          "name": "ReduceConditional",
+          "parameters": [
+            "Node* node"
+          ],
+          "return_type": "Reduction",
+          "logic": "Reduces branch, deoptimize, and trap conditional nodes."
+        },
+        {
+          "name": "ReduceFloat64Compare",
+          "parameters": [
+            "Node* node"
+          ],
+          "return_type": "Reduction",
+          "logic": "Reduces float64 comparison nodes."
+        },
+        {
+          "name": "ReduceFloat64InsertLowWord32",
+          "parameters": [
+            "Node* node"
+          ],
+          "return_type": "Reduction",
+          "logic": "Reduces Float64InsertLowWord32 nodes."
+        },
+        {
+          "name": "ReduceFloat64InsertHighWord32",
+          "parameters": [
+            "Node* node"
+          ],
+          "return_type": "Reduction",
+          "logic": "Reduces Float64InsertHighWord32 nodes."
+        }
+      ]
+    }
+  ],
+  "functions": [
+    {
+      "name": "SilenceNaN",
+      "parameters": [
+        "T x"
+      ],
+      "return_type": "T",
+      "logic": "Converts a signalling NaN to a quiet NaN."
+    },
+    {
+      "name": "CanRevertLeftShiftWithRightShift",
+      "parameters": [
+        "T value",
+        "T shift"
+      ],
+      "return_type": "bool",
+      "logic": "Checks if left shifting and then right shifting a value is equivalent to the original value."
+    },
+    {
+      "name": "CanTruncate",
+      "parameters": [
+        "int64_t value"
+      ],
+      "return_type": "bool",
+      "logic": "Checks if an int64_t value can be truncated to int32_t without losing information."
+    }
+  ]
+}

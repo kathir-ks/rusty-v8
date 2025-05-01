@@ -1,0 +1,413 @@
+{
+  "file_path": "/home/kathirks_gc/v8_go/codebase/src/compiler/js-native-context-specialization.cc",
+  "imports": [
+    "src/compiler/js-native-context-specialization.h",
+    "optional",
+    "src/base/logging.h",
+    "src/builtins/accessors.h",
+    "src/codegen/code-factory.h",
+    "src/common/globals.h",
+    "src/compiler/access-builder.h",
+    "src/compiler/access-info.h",
+    "src/compiler/allocation-builder-inl.h",
+    "src/compiler/allocation-builder.h",
+    "src/compiler/common-operator.h",
+    "src/compiler/compilation-dependencies.h",
+    "src/compiler/fast-api-calls.h",
+    "src/compiler/frame-states.h",
+    "src/compiler/graph-assembler.h",
+    "src/compiler/js-graph.h",
+    "src/compiler/js-heap-broker.h",
+    "src/compiler/js-operator.h",
+    "src/compiler/linkage.h",
+    "src/compiler/map-inference.h",
+    "src/compiler/node-matchers.h",
+    "src/compiler/node-properties.h",
+    "src/compiler/property-access-builder.h",
+    "src/compiler/simplified-operator.h",
+    "src/compiler/type-cache.h",
+    "src/flags/flags.h",
+    "src/handles/handles.h",
+    "src/heap/factory.h",
+    "src/heap/heap-layout-inl.h",
+    "src/heap/heap-write-barrier-inl.h",
+    "src/objects/elements-kind.h",
+    "src/objects/feedback-vector.h",
+    "src/objects/heap-number.h",
+    "src/objects/string.h"
+  ],
+  "classes": [
+    {
+      "name": "JSNativeContextSpecialization",
+      "properties": [
+        "jsgraph_",
+        "broker_",
+        "flags_",
+        "global_object_",
+        "global_proxy_",
+        "zone_",
+        "shared_zone_",
+        "type_cache_",
+        "created_strings_"
+      ],
+      "methods": [
+        {
+          "name": "JSNativeContextSpecialization",
+          "parameters": [
+            "Editor* editor",
+            "JSGraph* jsgraph",
+            "JSHeapBroker* broker",
+            "Flags flags",
+            "Zone* zone",
+            "Zone* shared_zone"
+          ],
+          "return_type": "void",
+          "logic": "Constructor for the JSNativeContextSpecialization class. Initializes the member variables with provided values."
+        },
+        {
+          "name": "Reduce",
+          "parameters": [
+            "Node* node"
+          ],
+          "return_type": "Reduction",
+          "logic": "The main entry point of the reducer. It inspects the opcode of the input node and dispatches to a specific reducer function based on the opcode."
+        },
+        {
+          "name": "GetMaxStringLength",
+          "parameters": [
+            "JSHeapBroker* broker",
+            "Node* node"
+          ],
+          "return_type": "std::optional<size_t>",
+          "logic": "Calculates the maximum possible length of a string resulting from converting the given node to a string. Returns the string length if it's a constant string, or the max length if it is a number. Returns nullopt otherwise."
+        },
+        {
+          "name": "ReduceJSToString",
+          "parameters": [
+            "Node* node"
+          ],
+          "return_type": "Reduction",
+          "logic": "Reduces a JSToString node. If the input is already a string, it replaces the node with the input string. If the input is a number, it replaces the node with the string representation of the number."
+        },
+        {
+          "name": "CreateStringConstant",
+          "parameters": [
+            "Node* node"
+          ],
+          "return_type": "Handle<String>",
+          "logic": "Creates a String handle from a constant node. If the node is a number, it converts the number to a string. If the node is a string, it returns the string handle."
+        },
+        {
+          "name": "ReduceJSAsyncFunctionEnter",
+          "parameters": [
+            "Node* node"
+          ],
+          "return_type": "Reduction",
+          "logic": "Reduces a JSAsyncFunctionEnter node, creating promise and JSAsyncFunctionObject."
+        },
+        {
+          "name": "ReduceJSAsyncFunctionReject",
+          "parameters": [
+            "Node* node"
+          ],
+          "return_type": "Reduction",
+          "logic": "Reduces a JSAsyncFunctionReject node, handling rejection of async functions."
+        },
+        {
+          "name": "ReduceJSAsyncFunctionResolve",
+          "parameters": [
+            "Node* node"
+          ],
+          "return_type": "Reduction",
+          "logic": "Reduces a JSAsyncFunctionResolve node, handling the resolving of async functions."
+        },
+        {
+          "name": "Concatenate",
+          "parameters": [
+            "Handle<String> left",
+            "Handle<String> right"
+          ],
+          "return_type": "Handle<String>",
+          "logic": "Concatenates two string handles.  Creates a ConsString or SeqString depending on the length and type."
+        },
+        {
+          "name": "StringCanSafelyBeRead",
+          "parameters": [
+            "Node* const node",
+            "Handle<String> str"
+          ],
+          "return_type": "bool",
+          "logic": "Determines if a string can be safely read in the background, by checking if it is already in the created_strings_ set or if it is a number."
+        },
+        {
+          "name": "ReduceJSAdd",
+          "parameters": [
+            "Node* node"
+          ],
+          "return_type": "Reduction",
+          "logic": "Reduces a JSAdd node, specifically for string concatenation. It attempts to fold the addition if one of the operands is a string constant and the result length is within the maximum allowed string length."
+        },
+        {
+          "name": "ReduceJSGetSuperConstructor",
+          "parameters": [
+            "Node* node"
+          ],
+          "return_type": "Reduction",
+          "logic": "Reduces a JSGetSuperConstructor node. If the input is a known JSFunction and its map is stable, it replaces the node with the super constructor."
+        },
+        {
+          "name": "ReduceJSFindNonDefaultConstructorOrConstruct",
+          "parameters": [
+            "Node* node"
+          ],
+          "return_type": "Reduction",
+          "logic": "Reduces a JSFindNonDefaultConstructorOrConstruct node by walking up the class inheritance tree to find a constructor that isn't the default derived constructor."
+        },
+        {
+          "name": "ReduceJSInstanceOf",
+          "parameters": [
+            "Node* node"
+          ],
+          "return_type": "Reduction",
+          "logic": "Reduces a JSInstanceOf node, attempting to specialize the instanceof operation based on feedback and map information."
+        },
+        {
+          "name": "InferHasInPrototypeChain",
+          "parameters": [
+            "Node* receiver",
+            "Effect effect",
+            "HeapObjectRef prototype"
+          ],
+          "return_type": "JSNativeContextSpecialization::InferHasInPrototypeChainResult",
+          "logic": "Infers whether a receiver is in the prototype chain of a given prototype."
+        },
+        {
+          "name": "ReduceJSHasInPrototypeChain",
+          "parameters": [
+            "Node* node"
+          ],
+          "return_type": "Reduction",
+          "logic": "Reduces a JSHasInPrototypeChain node, attempting to constant-fold the prototype chain walk based on map information."
+        },
+        {
+          "name": "ReduceJSOrdinaryHasInstance",
+          "parameters": [
+            "Node* node"
+          ],
+          "return_type": "Reduction",
+          "logic": "Reduces a JSOrdinaryHasInstance node, specializing the OrdinaryHasInstance operation based on constructor type."
+        },
+        {
+          "name": "ReduceJSPromiseResolve",
+          "parameters": [
+            "Node* node"
+          ],
+          "return_type": "Reduction",
+          "logic": "Reduces a JSPromiseResolve node.  If the constructor is %Promise% and the value cannot be a JSPromise, creates a %Promise% instance and resolves it with the value."
+        },
+        {
+          "name": "ReduceJSResolvePromise",
+          "parameters": [
+            "Node* node"
+          ],
+          "return_type": "Reduction",
+          "logic": "Reduces a JSResolvePromise node, fulfilling the promise if the resolution definitely doesn't have a then property."
+        },
+        {
+          "name": "ReduceGlobalAccess",
+          "parameters": [
+            "Node* node",
+            "Node* lookup_start_object",
+            "Node* receiver",
+            "Node* value",
+            "NameRef name",
+            "AccessMode access_mode",
+            "Node* key",
+            "PropertyCellRef property_cell",
+            "Node* effect"
+          ],
+          "return_type": "Reduction",
+          "logic": "Reduces a global access (load/store/has) operation, specializing based on the property cell and details."
+        },
+        {
+          "name": "ReduceJSLoadGlobal",
+          "parameters": [
+            "Node* node"
+          ],
+          "return_type": "Reduction",
+          "logic": "Reduces a JSLoadGlobal node, specializing based on feedback whether its script context slot or property cell."
+        },
+        {
+          "name": "ReduceJSStoreGlobal",
+          "parameters": [
+            "Node* node"
+          ],
+          "return_type": "Reduction",
+          "logic": "Reduces a JSStoreGlobal node, specializing based on feedback whether its script context slot or property cell."
+        },
+        {
+          "name": "ReduceMegaDOMPropertyAccess",
+          "parameters": [
+            "Node* node",
+            "Node* value",
+            "MegaDOMPropertyAccessFeedback const& feedback",
+            "FeedbackSource const& source"
+          ],
+          "return_type": "Reduction",
+          "logic": "Reduces a MegaDOM property access. Specializes the access based on FunctionTemplateInfo and instance type range."
+        },
+        {
+          "name": "ReduceNamedAccess",
+          "parameters": [
+            "Node* node",
+            "Node* value",
+            "NamedAccessFeedback const& feedback",
+            "AccessMode access_mode",
+            "Node* key"
+          ],
+          "return_type": "Reduction",
+          "logic": "Reduces a named access (load/store/has) operation, specializing based on the feedback and map information."
+        },
+        {
+          "name": "ReduceJSLoadNamed",
+          "parameters": [
+            "Node* node"
+          ],
+          "return_type": "Reduction",
+          "logic": "Reduces a JSLoadNamed node, specializing the property access. Handles the \"prototype\" property of functions and \"length\" property of strings."
+        },
+        {
+          "name": "ReduceJSLoadNamedFromSuper",
+          "parameters": [
+            "Node* node"
+          ],
+          "return_type": "Reduction",
+          "logic": "Reduces a JSLoadNamedFromSuper node."
+        },
+        {
+          "name": "ReduceJSGetIterator",
+          "parameters": [
+            "Node* node"
+          ],
+          "return_type": "Reduction",
+          "logic": "Reduces JSGetIterator node by inlining load named, call and checking for JSReceiver result."
+        },
+        {
+          "name": "ReduceJSSetNamedProperty",
+          "parameters": [
+            "Node* node"
+          ],
+          "return_type": "Reduction",
+          "logic": "Reduces a JSSetNamedProperty node, specializing the property access."
+        },
+        {
+          "name": "ReduceJSDefineNamedOwnProperty",
+          "parameters": [
+            "Node* node"
+          ],
+          "return_type": "Reduction",
+          "logic": "Reduces a JSDefineNamedOwnProperty node, specializing the property definition access."
+        },
+        {
+          "name": "ReduceElementAccessOnString",
+          "parameters": [
+            "Node* node",
+            "Node* index",
+            "Node* value",
+            "KeyedAccessMode const& keyed_mode"
+          ],
+          "return_type": "Reduction",
+          "logic": "Reduces an element access on a string, loading the character at a given index if in bounds."
+        },
+        {
+          "name": "RemoveImpossibleMaps",
+          "parameters": [
+            "Node* object",
+            "ZoneVector<MapRef>* maps"
+          ],
+          "return_type": "void",
+          "logic": "Removes maps from the list of maps that are impossible given the root map from graph inference."
+        },
+        {
+          "name": "TryRefineElementAccessFeedback",
+          "parameters": [
+            "ElementAccessFeedback const& feedback",
+            "Node* receiver",
+            "Effect effect"
+          ],
+          "return_type": "ElementAccessFeedback const&",
+          "logic": "Possibly refine the feedback using inferred map information from the graph."
+        },
+        {
+          "name": "ReduceElementAccess",
+          "parameters": [
+            "Node* node",
+            "Node* index",
+            "Node* value",
+            "ElementAccessFeedback const& feedback"
+          ],
+          "return_type": "Reduction",
+          "logic": "Reduces element access operation (load/store/has) specializing for JSTypedArrays and Strings, based on feedback and map information."
+        }
+      ]
+    }
+  ],
+  "functions": [
+    {
+      "name": "HasNumberMaps",
+      "parameters": [
+        "JSHeapBroker* broker",
+        "ZoneVector<MapRef> const& maps"
+      ],
+      "return_type": "bool",
+      "logic": "Checks if any of the given maps are HeapNumber maps."
+    },
+    {
+      "name": "HasOnlyJSArrayMaps",
+      "parameters": [
+        "JSHeapBroker* broker",
+        "ZoneVector<MapRef> const& maps"
+      ],
+      "return_type": "bool",
+      "logic": "Checks if all of the given maps are JSArray maps."
+    },
+    {
+      "name": "ForPropertyCellValue",
+      "parameters": [
+        "MachineRepresentation representation",
+        "Type type",
+        "OptionalMapRef map",
+        "NameRef name"
+      ],
+      "return_type": "FieldAccess",
+      "logic": "Creates a FieldAccess descriptor for accessing the value of a PropertyCell."
+    },
+    {
+      "name": "IsStringConstant",
+      "parameters": [
+        "JSHeapBroker* broker",
+        "Node* node"
+      ],
+      "return_type": "bool",
+      "logic": "Checks if the node is a string constant."
+    },
+    {
+      "name": "IsStringWithNonAccessibleContent",
+      "parameters": [
+        "JSHeapBroker* broker",
+        "Node* node"
+      ],
+      "return_type": "bool",
+      "logic": "Checks if the node is a string with inaccessible content."
+    },
+    {
+      "name": "GetTypedArrayConstant",
+      "parameters": [
+        "JSHeapBroker* broker",
+        "Node* receiver"
+      ],
+      "return_type": "OptionalJSTypedArrayRef",
+      "logic": "Gets a JSTypedArrayRef, if the receiver is a constant JSTypedArray that is off-heap."
+    }
+  ]
+}

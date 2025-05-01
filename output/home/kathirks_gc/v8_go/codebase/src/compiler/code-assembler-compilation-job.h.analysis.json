@@ -1,0 +1,124 @@
+{
+  "file_path": "/home/kathirks_gc/v8_go/codebase/src/compiler/code-assembler-compilation-job.h",
+  "imports": [
+    "src/codegen/assembler.h",
+    "src/codegen/compiler.h",
+    "src/codegen/optimized-compilation-info.h",
+    "src/compiler/code-assembler.h",
+    "src/compiler/node-origin-table.h",
+    "src/compiler/pipeline-statistics.h",
+    "src/compiler/zone-stats.h"
+  ],
+  "classes": [
+    {
+      "name": "CodeAssemblerCompilationJob",
+      "properties": [
+        "generator_",
+        "installer_",
+        "profile_data_",
+        "initial_graph_hash_",
+        "zone_",
+        "zone_stats_",
+        "code_assembler_state_",
+        "assembler_options_",
+        "compilation_info_",
+        "node_origins_",
+        "jump_opt_",
+        "pipeline_statistics_",
+        "finalize_order_"
+      ],
+      "methods": [
+        {
+          "name": "CodeAssemblerCompilationJob",
+          "parameters": [
+            "Isolate* isolate",
+            "Builtin builtin",
+            "CodeAssemblerGenerator generator",
+            "CodeAssemblerInstaller installer",
+            "const AssemblerOptions& assembler_options",
+            "std::function<compiler::CallDescriptor*(Zone*)> get_call_descriptor",
+            "CodeKind code_kind",
+            "const char* name",
+            "const ProfileDataFromFile* profile_data",
+            "int finalize_order"
+          ],
+          "return_type": "void",
+          "logic": "Constructor for the CodeAssemblerCompilationJob class, initializes the job with necessary parameters for code generation and compilation."
+        },
+        {
+          "name": "FinalizeOrder",
+          "parameters": [],
+          "return_type": "int",
+          "logic": "Returns the finalization order of the compilation job.  Ensures that the finalization order is not the default 'no finalization' value before returning it."
+        },
+        {
+          "name": "NewJobForTesting",
+          "parameters": [
+            "Isolate* isolate",
+            "Builtin builtin",
+            "CodeAssemblerGenerator generator",
+            "CodeAssemblerInstaller installer",
+            "std::function<compiler::CallDescriptor*(Zone*)> get_call_descriptor",
+            "CodeKind code_kind",
+            "const char* name"
+          ],
+          "return_type": "std::unique_ptr<CodeAssemblerCompilationJob>",
+          "logic": "Creates a new CodeAssemblerCompilationJob instance specifically for testing purposes.  It provides a simplified interface for job creation in testing scenarios."
+        },
+        {
+          "name": "ShouldOptimizeJumps",
+          "parameters": [
+            "Isolate* isolate"
+          ],
+          "return_type": "bool",
+          "logic": "Determines whether jump optimization should be performed during compilation based on the Isolate's settings. Used to enable or disable jump optimization based on certain conditions."
+        },
+        {
+          "name": "raw_assembler",
+          "parameters": [],
+          "return_type": "RawMachineAssembler*",
+          "logic": "Returns a pointer to the RawMachineAssembler instance managed by the CodeAssemblerState. Provides access to the low-level assembler interface."
+        },
+        {
+          "name": "jsgraph",
+          "parameters": [],
+          "return_type": "JSGraph*",
+          "logic": "Returns a pointer to the JSGraph instance managed by the CodeAssemblerState. Provides access to the JavaScript graph representation."
+        },
+        {
+          "name": "PrepareJobImpl",
+          "parameters": [
+            "Isolate* isolate"
+          ],
+          "return_type": "Status",
+          "logic": "Prepares the compilation job for execution. This involves setting up the necessary data structures and configurations required for compilation."
+        },
+        {
+          "name": "FinalizeJobImpl",
+          "parameters": [
+            "Isolate* isolate"
+          ],
+          "return_type": "Status",
+          "logic": "Finalizes the compilation job after execution. This involves cleaning up resources and performing any necessary post-compilation steps."
+        },
+        {
+          "name": "EmplacePipeline",
+          "parameters": [
+            "Isolate* isolate"
+          ],
+          "return_type": "PipelineImpl*",
+          "logic": "Abstract method to create and place the pipeline.  Implemented in subclasses to handle differences between Turbofan and Turboshaft pipelines."
+        },
+        {
+          "name": "FinalizeCode",
+          "parameters": [
+            "Isolate* isolate"
+          ],
+          "return_type": "Handle<Code>",
+          "logic": "Abstract method to finalize the generated code.  Implemented in subclasses."
+        }
+      ]
+    }
+  ],
+  "functions": []
+}

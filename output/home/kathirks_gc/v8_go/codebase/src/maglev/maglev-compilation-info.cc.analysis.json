@@ -1,0 +1,182 @@
+{
+  "file_path": "/home/kathirks_gc/v8_go/codebase/src/maglev/maglev-compilation-info.cc",
+  "imports": [
+    "src/maglev/maglev-compilation-info.h",
+    "<optional>",
+    "src/codegen/compiler.h",
+    "src/compiler/compilation-dependencies.h",
+    "src/compiler/js-heap-broker.h",
+    "src/execution/isolate.h",
+    "src/flags/flags.h",
+    "src/handles/persistent-handles.h",
+    "src/maglev/maglev-code-generator.h",
+    "src/maglev/maglev-concurrent-dispatcher.h",
+    "src/maglev/maglev-compilation-unit.h",
+    "src/maglev/maglev-graph-labeller.h",
+    "src/objects/js-function-inl.h",
+    "src/utils/identity-map.h"
+  ],
+  "classes": [
+    {
+      "name": "MaglevCompilationHandleScope",
+      "properties": [
+        "info_",
+        "persistent_",
+        "exported_info_"
+      ],
+      "methods": [
+        {
+          "name": "MaglevCompilationHandleScope",
+          "parameters": [
+            "Isolate* isolate",
+            "maglev::MaglevCompilationInfo* info"
+          ],
+          "return_type": "void",
+          "logic": "Constructor.  Reopens and canonicalizes handles in a new scope using `ReopenAndCanonicalizeHandlesInNewScope`.  Initializes the PersistentHandlesScope."
+        },
+        {
+          "name": "~MaglevCompilationHandleScope",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Destructor. Detaches the PersistentHandles from the scope, making them available for later use."
+        }
+      ]
+    },
+    {
+      "name": "MaglevCompilationInfo",
+      "properties": [
+        "zone_",
+        "broker_",
+        "toplevel_function_",
+        "osr_offset_",
+        "owns_broker_",
+        "is_turbolev_",
+        "specialize_to_function_context_",
+        "graph_labeller_",
+        "code_generator_",
+        "canonical_handles_",
+        "ph_",
+        "collect_source_positions_",
+        "maglev_optimistic_types_",
+        "maglev_backwards_edge_split_always_",
+        "maglev_disable_concurrent_compilation_",
+        "maglev_disable_flush_ic_",
+        "maglev_enable_checks_in_optimized_code_",
+        "maglev_force_high_reg_count_",
+        "maglev_inline_constants_",
+        "maglev_inlining_",
+        "maglev_inlining_inside_try_",
+        "maglev_inlining_only_small_functions_",
+        "maglev_inlining_through_shared_closure_",
+        "maglev_number_untagging_",
+        "maglev_optimize_for_size_",
+        "maglev_osr_",
+        "maglev_store_elimination_",
+        "maglev_trace_bailout_",
+        "maglev_trace_environment_"
+      ],
+      "methods": [
+        {
+          "name": "MaglevCompilationInfo",
+          "parameters": [
+            "Isolate* isolate",
+            "IndirectHandle<JSFunction> function",
+            "BytecodeOffset osr_offset",
+            "std::optional<compiler::JSHeapBroker*> js_broker",
+            "std::optional<bool> specialize_to_function_context",
+            "bool for_turboshaft_frontend"
+          ],
+          "return_type": "void",
+          "logic": "Constructor. Initializes the compilation info, including the zone, heap broker, toplevel function, OSR offset, etc.  It also determines whether to specialize to a function context. It also creates the top-level compilation unit. If the compilation info owns the JSHeapBroker, then canonical handles are initialized, compilation dependencies are tracked, and the broker is initialized."
+        },
+        {
+          "name": "~MaglevCompilationInfo",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Destructor. Deletes the heap broker if this object owns it."
+        },
+        {
+          "name": "set_graph_labeller",
+          "parameters": [
+            "MaglevGraphLabeller* graph_labeller"
+          ],
+          "return_type": "void",
+          "logic": "Sets the graph labeller."
+        },
+        {
+          "name": "set_code_generator",
+          "parameters": [
+            "std::unique_ptr<MaglevCodeGenerator> code_generator"
+          ],
+          "return_type": "void",
+          "logic": "Sets the code generator."
+        },
+        {
+          "name": "ReopenAndCanonicalizeHandlesInNewScope",
+          "parameters": [
+            "Isolate* isolate"
+          ],
+          "return_type": "void",
+          "logic": "Reopens handles in a new scope and canonicalizes the top-level function handle."
+        },
+        {
+          "name": "set_persistent_handles",
+          "parameters": [
+            "std::unique_ptr<PersistentHandles>&& persistent_handles"
+          ],
+          "return_type": "void",
+          "logic": "Sets the persistent handles."
+        },
+        {
+          "name": "DetachPersistentHandles",
+          "parameters": [],
+          "return_type": "std::unique_ptr<PersistentHandles>",
+          "logic": "Detaches and returns the persistent handles."
+        },
+        {
+          "name": "set_canonical_handles",
+          "parameters": [
+            "std::unique_ptr<CanonicalHandlesMap>&& canonical_handles"
+          ],
+          "return_type": "void",
+          "logic": "Sets the canonical handles map."
+        },
+        {
+          "name": "is_detached",
+          "parameters": [],
+          "return_type": "bool",
+          "logic": "Checks if the toplevel function's context is detached."
+        },
+        {
+          "name": "DetachCanonicalHandles",
+          "parameters": [],
+          "return_type": "std::unique_ptr<CanonicalHandlesMap>",
+          "logic": "Detaches and returns the canonical handles map."
+        }
+      ]
+    }
+  ],
+  "functions": [
+    {
+      "name": "SpecializeToFunctionContext",
+      "parameters": [
+        "Isolate* isolate",
+        "BytecodeOffset osr_offset",
+        "DirectHandle<JSFunction> function",
+        "std::optional<bool> specialize_to_function_context_override"
+      ],
+      "return_type": "bool",
+      "logic": "Determines whether to specialize the compilation to the function context based on OSR offset, flags, and function properties. If the specialize_to_function_context_override is specified then it uses this value."
+    },
+    {
+      "name": "CanonicalHandle",
+      "parameters": [
+        "CanonicalHandlesMap* canonical_handles",
+        "Tagged<T> object",
+        "Isolate* isolate"
+      ],
+      "return_type": "IndirectHandle<T>",
+      "logic": "Canonicalizes the given object by either returning an existing indirect handle from the map or creating a new one and storing it in the map. Ensures handles are persistent across compilation stages."
+    }
+  ]
+}

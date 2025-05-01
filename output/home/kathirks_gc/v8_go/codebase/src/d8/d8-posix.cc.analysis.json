@@ -1,0 +1,302 @@
+{
+  "file_path": "/home/kathirks_gc/v8_go/codebase/src/d8/d8-posix.cc",
+  "imports": [
+    "<errno.h>",
+    "<fcntl.h>",
+    "src/d8/d8.h",
+    "<netinet/ip.h>",
+    "<signal.h>",
+    "<stdlib.h>",
+    "<string.h>",
+    "<sys/select.h>",
+    "<sys/socket.h>",
+    "<sys/stat.h>",
+    "<sys/time.h>",
+    "<sys/types.h>",
+    "<sys/wait.h>",
+    "<unistd.h>",
+    "include/v8-container.h",
+    "include/v8-template.h"
+  ],
+  "classes": [
+    {
+      "name": "ZombieProtector",
+      "properties": [
+        "pid_"
+      ],
+      "methods": [
+        {
+          "name": "ZombieProtector",
+          "parameters": [
+            "int pid"
+          ],
+          "return_type": "ZombieProtector",
+          "logic": "Constructor. Initializes pid_ with the given pid."
+        },
+        {
+          "name": "~ZombieProtector",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Destructor. Calls waitpid on the pid_ to prevent zombie processes if ChildIsDeadNow() was not called. Cleans up the process."
+        },
+        {
+          "name": "ChildIsDeadNow",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Sets pid_ to 0 to indicate that waitpid has already been called, preventing it being called in the destructor."
+        }
+      ]
+    },
+    {
+      "name": "OpenFDCloser",
+      "properties": [
+        "fd_"
+      ],
+      "methods": [
+        {
+          "name": "OpenFDCloser",
+          "parameters": [
+            "int fd"
+          ],
+          "return_type": "OpenFDCloser",
+          "logic": "Constructor. Initializes fd_ with the given file descriptor."
+        },
+        {
+          "name": "~OpenFDCloser",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Destructor. Closes the file descriptor fd_."
+        }
+      ]
+    },
+    {
+      "name": "ExecArgs",
+      "properties": [
+        "exec_args_"
+      ],
+      "methods": [
+        {
+          "name": "ExecArgs",
+          "parameters": [],
+          "return_type": "ExecArgs",
+          "logic": "Constructor. Initializes the exec_args_ array with null pointers."
+        },
+        {
+          "name": "Init",
+          "parameters": [
+            "Isolate* isolate",
+            "Local<Value> arg0",
+            "Local<Array> command_args"
+          ],
+          "return_type": "bool",
+          "logic": "Initializes the exec_args_ array with C-style strings created from the V8 string arguments.  Takes program name and arguments, converts to char arrays, and stores them in the exec_args_ array for use by execvp."
+        },
+        {
+          "name": "~ExecArgs",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Destructor. Deallocates the C-style strings in the exec_args_ array."
+        },
+        {
+          "name": "arg_array",
+          "parameters": [],
+          "return_type": "const char* const*",
+          "logic": "Returns the exec_args_ array."
+        },
+        {
+          "name": "arg0",
+          "parameters": [],
+          "return_type": "const char*",
+          "logic": "Returns the first argument (program name)."
+        }
+      ]
+    }
+  ],
+  "functions": [
+    {
+      "name": "LengthWithoutIncompleteUtf8",
+      "parameters": [
+        "char* buffer",
+        "int len"
+      ],
+      "return_type": "int",
+      "logic": "Calculates the length of a UTF-8 string, stopping before any incomplete UTF-8 sequences at the end of the buffer. If complete, returns full length."
+    },
+    {
+      "name": "WaitOnFD",
+      "parameters": [
+        "int fd",
+        "int read_timeout",
+        "int total_timeout",
+        "const struct timeval& start_time"
+      ],
+      "return_type": "bool",
+      "logic": "Suspends the thread until data is available on the given file descriptor. Returns true if data is ready, false if the timeout expires."
+    },
+    {
+      "name": "TimeIsOut",
+      "parameters": [
+        "const struct timeval& start_time",
+        "const int& total_time"
+      ],
+      "return_type": "bool",
+      "logic": "Checks if the time elapsed since start_time exceeds the total_time. Returns true if the time is out, false otherwise."
+    },
+    {
+      "name": "GetTimeouts",
+      "parameters": [
+        "const v8::FunctionCallbackInfo<v8::Value>& info",
+        "int* read_timeout",
+        "int* total_timeout"
+      ],
+      "return_type": "bool",
+      "logic": "Retrieves the read and total timeout values from the FunctionCallbackInfo object. Throws errors if arguments are not numbers. Returns true on success, false on failure."
+    },
+    {
+      "name": "v8_strerror",
+      "parameters": [
+        "v8::Isolate* isolate",
+        "int err"
+      ],
+      "return_type": "v8::Local<v8::String>",
+      "logic": "Converts an error code (errno) to a V8 string representation of the corresponding error message using strerror()."
+    },
+    {
+      "name": "ExecSubprocess",
+      "parameters": [
+        "int* exec_error_fds",
+        "int* stdout_fds",
+        "const ExecArgs& exec_args"
+      ],
+      "return_type": "void",
+      "logic": "Runs in the child process. Closes unused file descriptors, redirects stdout to a pipe, and executes the subprocess using execvp. If execvp fails, writes the errno to a pipe to notify the parent process."
+    },
+    {
+      "name": "ChildLaunchedOK",
+      "parameters": [
+        "Isolate* isolate",
+        "int* exec_error_fds"
+      ],
+      "return_type": "bool",
+      "logic": "Runs in the parent process. Reads from the error pipe to check if the child process successfully executed. If an error occurred during execution, throws a V8 error and returns false; otherwise, returns true."
+    },
+    {
+      "name": "GetStdout",
+      "parameters": [
+        "Isolate* isolate",
+        "int child_fd",
+        "const struct timeval& start_time",
+        "int read_timeout",
+        "int total_timeout"
+      ],
+      "return_type": "Local<Value>",
+      "logic": "Reads the stdout from the child process through a pipe and accumulates the output into a V8 string. Uses non-blocking I/O and WaitOnFD to handle timeouts."
+    },
+    {
+      "name": "WaitForChild",
+      "parameters": [
+        "Isolate* isolate",
+        "int pid",
+        "ZombieProtector& child_waiter",
+        "const struct timeval& start_time",
+        "int read_timeout",
+        "int total_timeout"
+      ],
+      "return_type": "bool",
+      "logic": "Waits for the child process to exit. Uses waitid (if available) to allow for timeouts without losing exit status information. Throws errors if the child is killed by a signal or exits with a non-zero status. Returns true on success, false if there was a problem or timeout."
+    },
+    {
+      "name": "Shell::System",
+      "parameters": [
+        "const v8::FunctionCallbackInfo<v8::Value>& info"
+      ],
+      "return_type": "void",
+      "logic": "Implementation of the os.system() function. Parses arguments, sets up pipes, forks a child process, executes the command in the child, reads stdout from the child, waits for the child to exit, and returns the output to the V8 environment."
+    },
+    {
+      "name": "Shell::ChangeDirectory",
+      "parameters": [
+        "const v8::FunctionCallbackInfo<v8::Value>& info"
+      ],
+      "return_type": "void",
+      "logic": "Implementation of the os.chdir() function. Changes the current working directory."
+    },
+    {
+      "name": "Shell::SetUMask",
+      "parameters": [
+        "const v8::FunctionCallbackInfo<v8::Value>& info"
+      ],
+      "return_type": "void",
+      "logic": "Implementation of the os.umask() function. Sets the file mode creation mask."
+    },
+    {
+      "name": "CheckItsADirectory",
+      "parameters": [
+        "Isolate* isolate",
+        "char* directory"
+      ],
+      "return_type": "bool",
+      "logic": "Checks if the given path exists and is a directory. Throws errors and returns false if it doesn't exist or isn't a directory, else return true."
+    },
+    {
+      "name": "mkdirp",
+      "parameters": [
+        "Isolate* isolate",
+        "char* directory",
+        "mode_t mask"
+      ],
+      "return_type": "bool",
+      "logic": "Recursively creates directories, creating parent directories as needed. It is equivalent to `mkdir -p`. It returns true on success and false on failure, potentially throwing an error via isolate. If the target exists it will check it is a directory."
+    },
+    {
+      "name": "Shell::MakeDirectory",
+      "parameters": [
+        "const v8::FunctionCallbackInfo<v8::Value>& info"
+      ],
+      "return_type": "void",
+      "logic": "Implementation of the os.mkdirp() function. Creates a directory, creating intermediate directories if necessary."
+    },
+    {
+      "name": "Shell::RemoveDirectory",
+      "parameters": [
+        "const v8::FunctionCallbackInfo<v8::Value>& info"
+      ],
+      "return_type": "void",
+      "logic": "Implementation of the os.rmdir() function. Removes a directory."
+    },
+    {
+      "name": "Shell::SetEnvironment",
+      "parameters": [
+        "const v8::FunctionCallbackInfo<v8::Value>& info"
+      ],
+      "return_type": "void",
+      "logic": "Implementation of the os.setenv() function. Sets an environment variable."
+    },
+    {
+      "name": "Shell::UnsetEnvironment",
+      "parameters": [
+        "const v8::FunctionCallbackInfo<v8::Value>& info"
+      ],
+      "return_type": "void",
+      "logic": "Implementation of the os.unsetenv() function. Unsets an environment variable."
+    },
+    {
+      "name": "Shell::ReadCharsFromTcpPort",
+      "parameters": [
+        "const char* name",
+        "int* size_out"
+      ],
+      "return_type": "char*",
+      "logic": "Reads characters from a TCP port (specified by shell option --read-from-tcp-port). It requests a file from the remote server by filename and returns the data."
+    },
+    {
+      "name": "Shell::AddOSMethods",
+      "parameters": [
+        "Isolate* isolate",
+        "Local<ObjectTemplate> os_templ"
+      ],
+      "return_type": "void",
+      "logic": "Adds the operating system methods (system, chdir, setenv, unsetenv, umask, mkdirp, rmdir) to the given object template, making them available in the V8 environment."
+    }
+  ]
+}

@@ -1,0 +1,96 @@
+{
+  "file_path": "/home/kathirks_gc/v8_go/codebase/src/wasm/value-type.cc",
+  "imports": [
+    "src/wasm/value-type.h",
+    "src/codegen/signature.h",
+    "src/utils/utils.h",
+    "src/wasm/canonical-types.h",
+    "src/wasm/signature-hashing.h"
+  ],
+  "classes": [
+    {
+      "name": "CanonicalSig::Builder",
+      "properties": [],
+      "methods": [
+        {
+          "name": "Get",
+          "parameters": [],
+          "return_type": "CanonicalSig*",
+          "logic": "Builds a CanonicalSig object, calculates its signature hash using SignatureHasher::Hash, and returns the built object."
+        }
+      ]
+    }
+  ],
+  "functions": [
+    {
+      "name": "ValueTypeBase::value_type_code_numeric",
+      "parameters": [],
+      "return_type": "ValueTypeCode",
+      "logic": "Returns the ValueTypeCode corresponding to the numeric kind of the ValueTypeBase object.  Uses a switch statement to map NumericKind to ValueTypeCode."
+    },
+    {
+      "name": "ValueTypeBase::value_type_code_generic",
+      "parameters": [],
+      "return_type": "ValueTypeCode",
+      "logic": "Returns the ValueTypeCode corresponding to the generic kind of the ValueTypeBase object.  Uses a switch statement to map GenericKind to ValueTypeCode. Handles special cases for internal types like 'void'."
+    },
+    {
+      "name": "ValueTypeBase::generic_heaptype_name",
+      "parameters": [],
+      "return_type": "std::string",
+      "logic": "Returns the name of the generic heaptype as a string.  Handles the 'shared' prefix if the type is shared. Uses a switch statement to map GenericKind to the heaptype name."
+    },
+    {
+      "name": "ValueTypeBase::name",
+      "parameters": [],
+      "return_type": "std::string",
+      "logic": "Returns the name of the ValueTypeBase object as a string. Handles numeric types, ref types (including nullable refs) and constructs strings like '(ref null i31)' or 'funcref'. Includes special handling for 'nullref', 'nullexnref','nullexternref', 'nullfuncref' and 'nullcontref'."
+    },
+    {
+      "name": "WasmReturnTypeFromSignature",
+      "parameters": [
+        "const CanonicalSig* wasm_signature"
+      ],
+      "return_type": "std::optional<wasm::ValueKind>",
+      "logic": "Extracts the return ValueKind from a CanonicalSig. Returns an empty optional if the signature has no returns, otherwise extracts and returns the ValueKind of the single return value."
+    },
+    {
+      "name": "EquivalentNumericSig",
+      "parameters": [
+        "const CanonicalSig* a",
+        "const FunctionSig* b"
+      ],
+      "return_type": "bool",
+      "logic": "Checks if two signatures (CanonicalSig and FunctionSig) are equivalent, specifically focusing on the case where all types are numeric. Compares parameter and return counts and the ValueKinds of all parameters and return values."
+    },
+    {
+      "name": "PrintFunctionSig",
+      "parameters": [
+        "const wasm::FunctionSig* sig"
+      ],
+      "return_type": "void",
+      "logic": "Prints the contents of a FunctionSig to the standard output. This function is only available in DEBUG mode."
+    },
+    {
+      "name": "ReplaceTypeInSig",
+      "parameters": [
+        "Zone* zone",
+        "const wasm::FunctionSig* sig",
+        "wasm::ValueType from",
+        "wasm::ValueType to",
+        "size_t num_replacements"
+      ],
+      "return_type": "const wasm::FunctionSig*",
+      "logic": "Replaces all occurrences of `from` ValueType with `to` ValueType in the given FunctionSig.  Creates a new FunctionSig on the given Zone if replacements are needed; otherwise, returns the original signature."
+    },
+    {
+      "name": "GetI32Sig",
+      "parameters": [
+        "Zone* zone",
+        "const wasm::FunctionSig* sig"
+      ],
+      "return_type": "const wasm::FunctionSig*",
+      "logic": "Replaces all occurrences of the `wasm::kWasmI64` ValueType with `wasm::kWasmI32` ValueType in the given FunctionSig. It uses `ReplaceTypeInSig` with `num_replacements=2`. This is done in the codebase probably because i64 is represented in JS as two i32 values"
+    }
+  ]
+}

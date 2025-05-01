@@ -1,0 +1,297 @@
+{
+  "file_path": "/home/kathirks_gc/v8_go/codebase/src/wasm/wasm-subtyping.cc",
+  "imports": [
+    "src/wasm/wasm-subtyping.h",
+    "src/wasm/canonical-types.h",
+    "src/wasm/wasm-module.h"
+  ],
+  "classes": [],
+  "functions": [
+    {
+      "name": "EquivalentIndices",
+      "parameters": [
+        "ModuleTypeIndex index1",
+        "ModuleTypeIndex index2",
+        "const WasmModule* module1",
+        "const WasmModule* module2"
+      ],
+      "return_type": "bool",
+      "logic": "Checks if two module type indices are equivalent by comparing their canonical type IDs within their respective modules. Asserts that either the indices or the modules are different."
+    },
+    {
+      "name": "ValidStructSubtypeDefinition",
+      "parameters": [
+        "ModuleTypeIndex subtype_index",
+        "ModuleTypeIndex supertype_index",
+        "const WasmModule* sub_module",
+        "const WasmModule* super_module"
+      ],
+      "return_type": "bool",
+      "logic": "Determines if a struct type is a valid subtype of another struct type. Checks that the subtype has at least as many fields as the supertype and that the mutability and types of the fields are compatible (either equivalent if mutable, or subtype if immutable)."
+    },
+    {
+      "name": "ValidArraySubtypeDefinition",
+      "parameters": [
+        "ModuleTypeIndex subtype_index",
+        "ModuleTypeIndex supertype_index",
+        "const WasmModule* sub_module",
+        "const WasmModule* super_module"
+      ],
+      "return_type": "bool",
+      "logic": "Determines if an array type is a valid subtype of another array type. Checks that the mutability flags are equal. If mutable, element types must be equivalent. If immutable, subtype relationship must hold."
+    },
+    {
+      "name": "ValidFunctionSubtypeDefinition",
+      "parameters": [
+        "ModuleTypeIndex subtype_index",
+        "ModuleTypeIndex supertype_index",
+        "const WasmModule* sub_module",
+        "const WasmModule* super_module"
+      ],
+      "return_type": "bool",
+      "logic": "Determines if a function type is a valid subtype of another function type. Checks for contravariance of parameters (supertype parameter is a subtype of subtype parameter) and covariance of return types (subtype return is subtype of supertype return), counts must match."
+    },
+    {
+      "name": "ValidContinuationSubtypeDefinition",
+      "parameters": [
+        "ModuleTypeIndex subtype_index",
+        "ModuleTypeIndex supertype_index",
+        "const WasmModule* sub_module",
+        "const WasmModule* super_module"
+      ],
+      "return_type": "bool",
+      "logic": "Determines if a continuation type is a valid subtype of another continuation type.  Checks that the contfun_typeindex is a heap subtype."
+    },
+    {
+      "name": "UpcastToStandardType",
+      "parameters": [
+        "ValueTypeBase type"
+      ],
+      "return_type": "StandardType",
+      "logic": "Converts a ValueTypeBase to a StandardType for custom structs/arrays/functions/continuations. If the input is an indexed type, returns the corresponding StandardType (kStruct, kArray, kFunc, kCont). Otherwise, returns the input type's standard type."
+    },
+    {
+      "name": "ToGenericKind",
+      "parameters": [
+        "StandardType type"
+      ],
+      "return_type": "GenericKind",
+      "logic": "Maps a StandardType to its corresponding GenericKind. Used for creating generic heap types."
+    },
+    {
+      "name": "ComputeCondensedIndex",
+      "parameters": [
+        "StandardType type"
+      ],
+      "return_type": "uint8_t",
+      "logic": "Computes a condensed index for a StandardType.  This condensed index maps the small subset of StandardTypes for which non-trivial subtyping relations exist into a small, dense number space.  Returns kNotRelatedSentinel if the type is not part of the non-trivial hierarchy."
+    },
+    {
+      "name": "ComputeStandardType",
+      "parameters": [
+        "uint8_t condensed_index"
+      ],
+      "return_type": "StandardType",
+      "logic": "Computes a StandardType based on a condensed index. This is the reverse of ComputeCondensedIndex."
+    },
+    {
+      "name": "CondensedIndex",
+      "parameters": [
+        "StandardType type"
+      ],
+      "return_type": "uint8_t",
+      "logic": "Looks up the condensed index for a given StandardType using the kCondensedIndexLookupMap."
+    },
+    {
+      "name": "CondensedToStandard",
+      "parameters": [
+        "uint8_t condensed"
+      ],
+      "return_type": "StandardType",
+      "logic": "Looks up the StandardType for a given condensed index using the kCondensedToStandardMap."
+    },
+    {
+      "name": "ComputeIsSubtype",
+      "parameters": [
+        "size_t sub",
+        "size_t super"
+      ],
+      "return_type": "bool",
+      "logic": "Recursively computes whether a subtype relationship exists between two types represented by their condensed indices, based on the FOREACH_SUBTYPING macro.  This uses the static declarations to build a transitive closure of the basic subtype relations."
+    },
+    {
+      "name": "SubtypeLookup",
+      "parameters": [
+        "StandardType sub",
+        "StandardType super"
+      ],
+      "return_type": "bool",
+      "logic": "Looks up the subtype relationship between two StandardTypes using the statically computed kSubtypeLookupMap2. Includes special cases for bottom and top types."
+    },
+    {
+      "name": "ComputeCommonAncestor",
+      "parameters": [
+        "size_t t1",
+        "size_t t2"
+      ],
+      "return_type": "StandardType",
+      "logic": "Recursively computes the lowest common ancestor of two types (represented by their condensed indices) in the subtype hierarchy. Uses the kSubtypeLookupMap2 and FOREACH_SUBTYPING macro to determine the ancestor. Returns kTop if no ancestor is found."
+    },
+    {
+      "name": "CommonAncestorLookup",
+      "parameters": [
+        "StandardType t1",
+        "StandardType t2"
+      ],
+      "return_type": "StandardType",
+      "logic": "Looks up the lowest common ancestor of two StandardTypes using the statically computed kCommonAncestorLookupMap. Includes special cases for bottom and top types."
+    },
+    {
+      "name": "NullSentinelImpl",
+      "parameters": [
+        "HeapType type"
+      ],
+      "return_type": "HeapType",
+      "logic": "Determines and returns the HeapType representing the null sentinel for a given HeapType. Iterates through candidate null types (None, NoFunc, etc.) and selects the most specific one that is a subtype of the given type."
+    },
+    {
+      "name": "IsNullSentinel",
+      "parameters": [
+        "HeapType type"
+      ],
+      "return_type": "bool",
+      "logic": "Checks if a given HeapType represents a null sentinel type."
+    },
+    {
+      "name": "IsGenericSubtypeOfIndexedTypes",
+      "parameters": [
+        "ValueTypeBase type"
+      ],
+      "return_type": "bool",
+      "logic": "Checks if a generic ValueTypeBase is a subtype of all indexed types. It must be a null-kind or bottom to satisfy this condition."
+    },
+    {
+      "name": "ValidSubtypeDefinition",
+      "parameters": [
+        "ModuleTypeIndex subtype_index",
+        "ModuleTypeIndex supertype_index",
+        "const WasmModule* sub_module",
+        "const WasmModule* super_module"
+      ],
+      "return_type": "bool",
+      "logic": "Determines if a type is a valid subtype of another type. Checks that the kinds, sharedness, and finality flags match, and then calls the appropriate subtype definition function based on the type kind (Function, Struct, Array, or Continuation)."
+    },
+    {
+      "name": "IsSubtypeOf_Abstract",
+      "parameters": [
+        "ValueTypeBase subtype",
+        "ValueTypeBase supertype"
+      ],
+      "return_type": "std::optional<bool>",
+      "logic": "Abstract implementation for checking if one ValueTypeBase is a subtype of another.  Handles sharedness and generic types. Returns {} if specialized implementations for heap types must be used."
+    },
+    {
+      "name": "IsSubtypeOfImpl",
+      "parameters": [
+        "HeapType subtype",
+        "HeapType supertype",
+        "const WasmModule* sub_module",
+        "const WasmModule* super_module"
+      ],
+      "return_type": "bool",
+      "logic": "Implementation for checking if one HeapType is a subtype of another HeapType in different modules. It performs a depth-first search through the supertype hierarchy, comparing canonical type indices until the supertype is found. Handles generic cases with IsSubtypeOf_Abstract."
+    },
+    {
+      "name": "IsSubtypeOfImpl",
+      "parameters": [
+        "ValueType subtype",
+        "ValueType supertype",
+        "const WasmModule* sub_module",
+        "const WasmModule* super_module"
+      ],
+      "return_type": "bool",
+      "logic": "Implementation for checking if one ValueType is a subtype of another ValueType. Handles top, numeric types, nullability, and then calls the HeapType version of IsSubtypeOfImpl."
+    },
+    {
+      "name": "IsSubtypeOfImpl",
+      "parameters": [
+        "CanonicalValueType subtype",
+        "CanonicalValueType supertype"
+      ],
+      "return_type": "bool",
+      "logic": "Implementation for checking if one CanonicalValueType is a subtype of another. Handles top, numeric types, nullability, then checks heap subtyping through GetTypeCanonicalizer()->IsHeapSubtype."
+    },
+    {
+      "name": "EquivalentTypes",
+      "parameters": [
+        "ValueType type1",
+        "ValueType type2",
+        "const WasmModule* module1",
+        "const WasmModule* module2"
+      ],
+      "return_type": "bool",
+      "logic": "Checks if two ValueTypes are equivalent. Handles non-indexed types, nullability, and then uses EquivalentIndices for indexed types."
+    },
+    {
+      "name": "CommonAncestor",
+      "parameters": [
+        "HeapType type1",
+        "HeapType type2",
+        "const WasmModule* module1",
+        "const WasmModule* module2"
+      ],
+      "return_type": "HeapType",
+      "logic": "Computes the least common ancestor of two HeapTypes in different modules. Climbs up the supertype hierarchies of both types until a common ancestor is found (using EquivalentIndices or same module). Handles cases where types are at different depths. Returns kWasmTop if no common ancestor is an indexed type."
+    },
+    {
+      "name": "CommonAncestorWithAbstract",
+      "parameters": [
+        "HeapType heap1",
+        "HeapType heap2",
+        "const WasmModule* module2"
+      ],
+      "return_type": "HeapType",
+      "logic": "Computes the least common ancestor of a abstract HeapType and another HeapType. First tests if the abstract type is a subtype, then handles it like a generic type."
+    },
+    {
+      "name": "Union",
+      "parameters": [
+        "ValueType type1",
+        "ValueType type2",
+        "const WasmModule* module1",
+        "const WasmModule* module2"
+      ],
+      "return_type": "TypeInModule",
+      "logic": "Computes the union (least upper bound) of two ValueTypes. Handles top, bottom, numeric types, and then uses CommonAncestor for HeapTypes to find the union of the underlying heap types."
+    },
+    {
+      "name": "Intersection",
+      "parameters": [
+        "ValueType type1",
+        "ValueType type2",
+        "const WasmModule* module1",
+        "const WasmModule* module2"
+      ],
+      "return_type": "TypeInModule",
+      "logic": "Computes the intersection (greatest lower bound) of two ValueTypes. Returns the appropriate subtype of the two types. Handles top, non-ref types, checks for common null sentinel."
+    },
+    {
+      "name": "ToNullSentinel",
+      "parameters": [
+        "TypeInModule type"
+      ],
+      "return_type": "ValueType",
+      "logic": "Converts a TypeInModule to its null sentinel representation."
+    },
+    {
+      "name": "IsSameTypeHierarchy",
+      "parameters": [
+        "HeapType type1",
+        "HeapType type2",
+        "const WasmModule* module"
+      ],
+      "return_type": "bool",
+      "logic": "Checks if two HeapTypes belong to the same type hierarchy by comparing their null sentinels."
+    }
+  ]
+}

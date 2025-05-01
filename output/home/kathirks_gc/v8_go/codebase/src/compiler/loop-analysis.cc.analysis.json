@@ -1,0 +1,361 @@
+{
+  "file_path": "/home/kathirks_gc/v8_go/codebase/src/compiler/loop-analysis.cc",
+  "imports": [
+    "src/compiler/loop-analysis.h",
+    "src/codegen/tick-counter.h",
+    "src/compiler/all-nodes.h",
+    "src/compiler/common-operator.h",
+    "src/compiler/node-marker.h",
+    "src/compiler/node-properties.h",
+    "src/compiler/node.h",
+    "src/compiler/turbofan-graph.h",
+    "src/zone/zone.h"
+  ],
+  "classes": [
+    {
+      "name": "NodeInfo",
+      "properties": [
+        "node",
+        "next",
+        "backwards_visited"
+      ],
+      "methods": []
+    },
+    {
+      "name": "TempLoopInfo",
+      "properties": [
+        "header",
+        "header_list",
+        "exit_list",
+        "body_list",
+        "loop"
+      ],
+      "methods": []
+    },
+    {
+      "name": "LoopFinderImpl",
+      "properties": [
+        "zone_",
+        "end_",
+        "queue_",
+        "queued_",
+        "info_",
+        "loops_",
+        "loop_num_",
+        "loop_tree_",
+        "loops_found_",
+        "width_",
+        "backward_",
+        "forward_",
+        "tick_counter_"
+      ],
+      "methods": [
+        {
+          "name": "LoopFinderImpl",
+          "parameters": [
+            "TFGraph* graph",
+            "LoopTree* loop_tree",
+            "TickCounter* tick_counter",
+            "Zone* zone"
+          ],
+          "return_type": "void",
+          "logic": "Constructor for the LoopFinderImpl class, initializes member variables."
+        },
+        {
+          "name": "Run",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Performs the loop finding algorithm by propagating marks backward and forward."
+        },
+        {
+          "name": "Print",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Prints out the results of the loop finding algorithm for debugging purposes."
+        },
+        {
+          "name": "num_nodes",
+          "parameters": [],
+          "return_type": "int",
+          "logic": "Returns the number of nodes in the graph."
+        },
+        {
+          "name": "PropagateBackwardMarks",
+          "parameters": [
+            "Node* from",
+            "Node* to",
+            "int loop_filter"
+          ],
+          "return_type": "bool",
+          "logic": "Propagates backward marks from one node to another, filtering marks based on loop."
+        },
+        {
+          "name": "SetBackwardMark",
+          "parameters": [
+            "Node* to",
+            "int loop_num"
+          ],
+          "return_type": "bool",
+          "logic": "Sets a backward mark for a node, indicating it is reachable from a loop backedge."
+        },
+        {
+          "name": "SetForwardMark",
+          "parameters": [
+            "Node* to",
+            "int loop_num"
+          ],
+          "return_type": "bool",
+          "logic": "Sets a forward mark for a node, indicating it is reachable from a loop header."
+        },
+        {
+          "name": "PropagateForwardMarks",
+          "parameters": [
+            "Node* from",
+            "Node* to"
+          ],
+          "return_type": "bool",
+          "logic": "Propagates forward marks from one node to another, taking into account backward marks."
+        },
+        {
+          "name": "IsInLoop",
+          "parameters": [
+            "Node* node",
+            "int loop_num"
+          ],
+          "return_type": "bool",
+          "logic": "Checks if a node is part of a specific loop, based on forward and backward marks."
+        },
+        {
+          "name": "PropagateBackward",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Propagates marks backward from the graph end and loop headers to find backedges and loop members."
+        },
+        {
+          "name": "CreateLoopInfo",
+          "parameters": [
+            "Node* node"
+          ],
+          "return_type": "int",
+          "logic": "Creates new loop information for the given loop node, and returns the loop number."
+        },
+        {
+          "name": "SetLoopMark",
+          "parameters": [
+            "Node* node",
+            "int loop_num"
+          ],
+          "return_type": "void",
+          "logic": "Sets the loop mark for a given node and updates the loop tree node mappings."
+        },
+        {
+          "name": "SetLoopMarkForLoopHeader",
+          "parameters": [
+            "Node* node",
+            "int loop_num"
+          ],
+          "return_type": "void",
+          "logic": "Sets the loop mark for a loop header and its associated phi nodes and loop exit nodes."
+        },
+        {
+          "name": "ResizeBackwardMarks",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Resizes the backward marks array to accommodate more loops."
+        },
+        {
+          "name": "ResizeForwardMarks",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Resizes the forward marks array to accommodate more loops."
+        },
+        {
+          "name": "PropagateForward",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Propagates marks forward from loop headers to identify loop members."
+        },
+        {
+          "name": "IsLoopHeaderNode",
+          "parameters": [
+            "Node* node"
+          ],
+          "return_type": "bool",
+          "logic": "Checks if a node is a loop header node (either a Loop node or a Phi node)."
+        },
+        {
+          "name": "IsLoopExitNode",
+          "parameters": [
+            "Node* node"
+          ],
+          "return_type": "bool",
+          "logic": "Checks if a node is a loop exit node."
+        },
+        {
+          "name": "IsBackedge",
+          "parameters": [
+            "Node* use",
+            "int index"
+          ],
+          "return_type": "bool",
+          "logic": "Checks if an edge is a backedge of a loop."
+        },
+        {
+          "name": "LoopNum",
+          "parameters": [
+            "Node* node"
+          ],
+          "return_type": "int",
+          "logic": "Returns the loop number associated with a node."
+        },
+        {
+          "name": "info",
+          "parameters": [
+            "Node* node"
+          ],
+          "return_type": "NodeInfo&",
+          "logic": "Returns the NodeInfo structure associated with a node, creating it if it doesn't exist."
+        },
+        {
+          "name": "Queue",
+          "parameters": [
+            "Node* node"
+          ],
+          "return_type": "void",
+          "logic": "Adds a node to the queue for processing, if it's not already in the queue."
+        },
+        {
+          "name": "AddNodeToLoop",
+          "parameters": [
+            "NodeInfo* node_info",
+            "TempLoopInfo* loop",
+            "int loop_num"
+          ],
+          "return_type": "void",
+          "logic": "Adds a node to the appropriate list (header, body, or exit) within a loop's information."
+        },
+        {
+          "name": "FinishLoopTree",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Connects loops into a tree structure, determines the innermost loop for each node, and serializes the loop tree."
+        },
+        {
+          "name": "FinishSingleLoop",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Handles the special case of a single loop in the graph."
+        },
+        {
+          "name": "SerializeLoop",
+          "parameters": [
+            "LoopTree::Loop* loop"
+          ],
+          "return_type": "void",
+          "logic": "Recursively serializes the header, body, and exit nodes of a loop into the loop tree."
+        },
+        {
+          "name": "ConnectLoopTree",
+          "parameters": [
+            "int loop_num"
+          ],
+          "return_type": "LoopTree::Loop*",
+          "logic": "Recursively connects the loop tree by finding the parent loop for a given loop number."
+        },
+        {
+          "name": "PrintLoop",
+          "parameters": [
+            "LoopTree::Loop* loop"
+          ],
+          "return_type": "void",
+          "logic": "Prints the loop structure, including its header, body, exits, and children."
+        }
+      ]
+    },
+    {
+      "name": "LoopFinder",
+      "properties": [],
+      "methods": [
+        {
+          "name": "BuildLoopTree",
+          "parameters": [
+            "TFGraph* graph",
+            "TickCounter* tick_counter",
+            "Zone* zone"
+          ],
+          "return_type": "LoopTree*",
+          "logic": "Builds a loop tree for the given graph using the LoopFinderImpl class."
+        },
+        {
+          "name": "FindSmallInnermostLoopFromHeader",
+          "parameters": [
+            "Node* loop_header",
+            "AllNodes& all_nodes",
+            "Zone* zone",
+            "size_t max_size",
+            "Purpose purpose"
+          ],
+          "return_type": "ZoneUnorderedSet<Node*>*",
+          "logic": "Finds a small innermost loop starting from a given loop header. Used for WebAssembly."
+        },
+        {
+          "name": "HasMarkedExits",
+          "parameters": [
+            "LoopTree* loop_tree",
+            "const LoopTree::Loop* loop"
+          ],
+          "return_type": "bool",
+          "logic": "Checks if a loop has marked exits, meaning loop exits are handled consistently. Necessary for loop peeling."
+        }
+      ]
+    },
+    {
+      "name": "LoopTree",
+      "properties": [],
+      "methods": [
+        {
+          "name": "HeaderNode",
+          "parameters": [
+            "const Loop* loop"
+          ],
+          "return_type": "Node*",
+          "logic": "Returns the header node of a loop."
+        }
+      ]
+    },
+    {
+      "name": "NodeCopier",
+      "properties": [],
+      "methods": [
+        {
+          "name": "map",
+          "parameters": [
+            "Node* node",
+            "uint32_t copy_index"
+          ],
+          "return_type": "Node*",
+          "logic": "Maps the original node to a copy based on copy index."
+        },
+        {
+          "name": "Insert",
+          "parameters": [
+            "Node* original",
+            "const NodeVector& new_copies"
+          ],
+          "return_type": "void",
+          "logic": "Inserts the original node and a vector of new copies in the node map."
+        },
+        {
+          "name": "Insert",
+          "parameters": [
+            "Node* original",
+            "Node* copy"
+          ],
+          "return_type": "void",
+          "logic": "Inserts the original node and a single copy in the node map."
+        }
+      ]
+    }
+  ],
+  "functions": []
+}

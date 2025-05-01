@@ -1,0 +1,87 @@
+{
+  "file_path": "/home/kathirks_gc/v8_go/codebase/src/snapshot/context-deserializer.cc",
+  "imports": [
+    "src/snapshot/context-deserializer.h",
+    "src/api/api-inl.h",
+    "src/base/logging.h",
+    "src/common/assert-scope.h",
+    "src/logging/counters-scopes.h",
+    "src/snapshot/serializer-deserializer.h"
+  ],
+  "classes": [
+    {
+      "name": "ContextDeserializer",
+      "properties": [],
+      "methods": [
+        {
+          "name": "DeserializeContext",
+          "parameters": [
+            "Isolate* isolate",
+            "const SnapshotData* data",
+            "size_t context_index",
+            "bool can_rehash",
+            "DirectHandle<JSGlobalProxy> global_proxy",
+            "DeserializeEmbedderFieldsCallback embedder_fields_deserializer"
+          ],
+          "return_type": "MaybeDirectHandle<Context>",
+          "logic": "Deserializes a context from a snapshot data. It measures the time taken for deserialization, handles profiling, and returns the deserialized context."
+        },
+        {
+          "name": "Deserialize",
+          "parameters": [
+            "Isolate* isolate",
+            "DirectHandle<JSGlobalProxy> global_proxy",
+            "DeserializeEmbedderFieldsCallback embedder_fields_deserializer"
+          ],
+          "return_type": "MaybeDirectHandle<Object>",
+          "logic": "Replaces serialized references to the global proxy and its map, reads the object, deserializes deferred objects, embedder fields, and API wrapper fields. Finally, it rehashes if needed and returns the result."
+        },
+        {
+          "name": "DeserializeEmbedderFields",
+          "parameters": [
+            "DirectHandle<NativeContext> context",
+            "DeserializeEmbedderFieldsCallback embedder_fields_deserializer"
+          ],
+          "return_type": "void",
+          "logic": "Deserializes embedder-specific data associated with the context or JS objects. It reads the data from the snapshot and calls the provided callback function to handle deserialization in the embedder."
+        },
+        {
+          "name": "DeserializeApiWrapperFields",
+          "parameters": [
+            "const v8::DeserializeAPIWrapperCallback& api_wrapper_callback"
+          ],
+          "return_type": "void",
+          "logic": "Deserializes API wrapper fields from snapshot data, using a callback to finalize the deserialization of API wrapper objects."
+        }
+      ]
+    },
+    {
+      "name": "PlainBuffer",
+      "properties": [
+        "data_",
+        "capacity_"
+      ],
+      "methods": [
+        {
+          "name": "data",
+          "parameters": [],
+          "return_type": "T*",
+          "logic": "Returns a pointer to the underlying data buffer."
+        },
+        {
+          "name": "EnsureCapacity",
+          "parameters": [
+            "size_t new_capacity"
+          ],
+          "return_type": "void",
+          "logic": "Ensures that the buffer has at least the given capacity, allocating a new buffer if necessary."
+        }
+      ]
+    }
+  ],
+  "functions": [],
+  "nested_namespaces": [
+    "v8::internal",
+    "v8"
+  ]
+}

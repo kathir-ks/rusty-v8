@@ -1,0 +1,666 @@
+{
+  "file_path": "/home/kathirks_gc/v8_go/codebase/src/ic/ic.cc",
+  "imports": [
+    "src/ic/ic.h",
+    "<optional>",
+    "<tuple>",
+    "src/api/api-arguments-inl.h",
+    "src/ast/ast.h",
+    "src/base/logging.h",
+    "src/builtins/accessors.h",
+    "src/common/assert-scope.h",
+    "src/common/globals.h",
+    "src/execution/arguments-inl.h",
+    "src/execution/execution.h",
+    "src/execution/frames-inl.h",
+    "src/execution/isolate-inl.h",
+    "src/execution/isolate.h",
+    "src/execution/protectors-inl.h",
+    "src/execution/tiering-manager.h",
+    "src/handles/handles-inl.h",
+    "src/handles/maybe-handles.h",
+    "src/heap/heap-layout-inl.h",
+    "src/ic/call-optimization.h",
+    "src/ic/handler-configuration-inl.h",
+    "src/ic/handler-configuration.h",
+    "src/ic/ic-inl.h",
+    "src/ic/ic-stats.h",
+    "src/ic/stub-cache.h",
+    "src/numbers/conversions.h",
+    "src/objects/api-callbacks.h",
+    "src/objects/field-type.h",
+    "src/objects/instance-type.h",
+    "src/objects/js-array-buffer-inl.h",
+    "src/objects/js-array-inl.h",
+    "src/objects/megadom-handler.h",
+    "src/objects/property-descriptor.h",
+    "src/objects/prototype.h",
+    "src/runtime/runtime.h",
+    "src/tracing/trace-event.h",
+    "src/tracing/tracing-category-observer.h",
+    "src/utils/ostreams.h",
+    "src/wasm/struct-types.h"
+  ],
+  "classes": [
+    {
+      "name": "IC",
+      "properties": [
+        "isolate_",
+        "vector_set_",
+        "kind_",
+        "target_maps_",
+        "target_maps_set_",
+        "slow_stub_reason_",
+        "nexus_",
+        "state_",
+        "old_state_",
+        "accessor_"
+      ],
+      "methods": [
+        {
+          "name": "TransitionMarkFromState",
+          "parameters": [
+            "state"
+          ],
+          "return_type": "char",
+          "logic": "Returns a character representing the IC state for tracing purposes."
+        },
+        {
+          "name": "TraceIC",
+          "parameters": [
+            "type",
+            "name"
+          ],
+          "return_type": "void",
+          "logic": "Traces IC events for statistical analysis, logging state transitions."
+        },
+        {
+          "name": "TraceIC",
+          "parameters": [
+            "type",
+            "name",
+            "old_state",
+            "new_state"
+          ],
+          "return_type": "void",
+          "logic": "Traces IC events for statistical analysis, logging state transitions with old and new states."
+        },
+        {
+          "name": "IC",
+          "parameters": [
+            "isolate",
+            "vector",
+            "slot",
+            "kind"
+          ],
+          "return_type": "void",
+          "logic": "Constructor for the IC class, initializing its state and associated data."
+        },
+        {
+          "name": "ShouldRecomputeHandler",
+          "parameters": [
+            "name"
+          ],
+          "return_type": "bool",
+          "logic": "Determines whether the IC handler should be recomputed based on changes in the prototype chain."
+        },
+        {
+          "name": "RecomputeHandlerForName",
+          "parameters": [
+            "name"
+          ],
+          "return_type": "bool",
+          "logic": "Checks if the handler should be recomputed because of a name failure in keyed accesses."
+        },
+        {
+          "name": "UpdateState",
+          "parameters": [
+            "lookup_start_object",
+            "name"
+          ],
+          "return_type": "void",
+          "logic": "Updates the internal state of the IC based on the lookup start object and name, potentially marking the handler for recomputation."
+        },
+        {
+          "name": "TypeError",
+          "parameters": [
+            "index",
+            "object",
+            "key"
+          ],
+          "return_type": "MaybeDirectHandle<Object>",
+          "logic": "Throws a TypeError exception with the given message template, object, and key."
+        },
+        {
+          "name": "ReferenceError",
+          "parameters": [
+            "name"
+          ],
+          "return_type": "MaybeDirectHandle<Object>",
+          "logic": "Throws a ReferenceError exception with the given name."
+        },
+        {
+          "name": "OnFeedbackChanged",
+          "parameters": [
+            "reason"
+          ],
+          "return_type": "void",
+          "logic": "Handles feedback changes by tracing updates and notifying the tiering manager."
+        },
+        {
+          "name": "OnFeedbackChanged",
+          "parameters": [
+            "isolate",
+            "vector",
+            "slot",
+            "reason"
+          ],
+          "return_type": "void",
+          "logic": "Static method that handles feedback changes."
+        },
+        {
+          "name": "ConfigureVectorState",
+          "parameters": [
+            "new_state",
+            "key"
+          ],
+          "return_type": "bool",
+          "logic": "Configures the feedback vector to megamorphic state."
+        },
+        {
+          "name": "ConfigureVectorState",
+          "parameters": [
+            "name",
+            "map",
+            "handler"
+          ],
+          "return_type": "void",
+          "logic": "Configures feedback vector state for a monomorphic IC."
+        },
+        {
+          "name": "ConfigureVectorState",
+          "parameters": [
+            "name",
+            "map",
+            "handler"
+          ],
+          "return_type": "void",
+          "logic": "Configures the feedback vector state for a monomorphic IC using MaybeObjectDirectHandle."
+        },
+        {
+          "name": "ConfigureVectorState",
+          "parameters": [
+            "name",
+            "maps",
+            "handlers"
+          ],
+          "return_type": "void",
+          "logic": "Configures feedback vector state for polymorphic ICs."
+        },
+        {
+          "name": "ConfigureVectorState",
+          "parameters": [
+            "name",
+            "maps_and_handlers"
+          ],
+          "return_type": "void",
+          "logic": "Configures feedback vector state for polymorphic ICs."
+        },
+        {
+          "name": "UpdateMegaDOMIC",
+          "parameters": [
+            "handler",
+            "name"
+          ],
+          "return_type": "bool",
+          "logic": "Updates the IC to use a MegaDOM handler if applicable"
+        },
+        {
+          "name": "UpdatePolymorphicIC",
+          "parameters": [
+            "name",
+            "handler"
+          ],
+          "return_type": "bool",
+          "logic": "Updates the IC to a polymorphic state, adding the handler to the existing list."
+        },
+        {
+          "name": "UpdateMonomorphicIC",
+          "parameters": [
+            "handler",
+            "name"
+          ],
+          "return_type": "void",
+          "logic": "Updates the IC to a monomorphic state, setting the handler."
+        },
+        {
+          "name": "CopyICToMegamorphicCache",
+          "parameters": [
+            "name"
+          ],
+          "return_type": "void",
+          "logic": "Copies all maps and handlers from IC to megamorphic cache"
+        },
+        {
+          "name": "IsTransitionOfMonomorphicTarget",
+          "parameters": [
+            "source_map",
+            "target_map"
+          ],
+          "return_type": "bool",
+          "logic": "Determines whether the transition from the source to the target map is a valid monomorphic target transition (e.g., elements kind transition)."
+        },
+        {
+          "name": "SetCache",
+          "parameters": [
+            "name",
+            "handler"
+          ],
+          "return_type": "void",
+          "logic": "Sets handler in the cache."
+        },
+        {
+          "name": "SetCache",
+          "parameters": [
+            "name",
+            "handler"
+          ],
+          "return_type": "void",
+          "logic": "Sets handler in the cache using MaybeObjectHandle."
+        },
+        {
+          "name": "stub_cache",
+          "parameters": [],
+          "return_type": "StubCache*",
+          "logic": "Returns the stub cache associated with the IC."
+        },
+        {
+          "name": "UpdateMegamorphicCache",
+          "parameters": [
+            "map",
+            "name",
+            "handler"
+          ],
+          "return_type": "void",
+          "logic": "Updates the megamorphic cache with the given map, name, and handler."
+        }
+      ]
+    },
+    {
+      "name": "LoadIC",
+      "properties": [],
+      "methods": [
+        {
+          "name": "Load",
+          "parameters": [
+            "object",
+            "name",
+            "update_feedback",
+            "receiver"
+          ],
+          "return_type": "MaybeDirectHandle<Object>",
+          "logic": "Loads a property from an object, handling null/undefined checks, and updating the inline cache."
+        },
+        {
+          "name": "UpdateCaches",
+          "parameters": [
+            "lookup"
+          ],
+          "return_type": "void",
+          "logic": "Updates the inline cache and stub cache with the result of the property lookup."
+        },
+        {
+          "name": "ComputeHandler",
+          "parameters": [
+            "lookup"
+          ],
+          "return_type": "MaybeObjectHandle",
+          "logic": "Computes a handler for the property lookup based on the lookup iterator state."
+        }
+      ]
+    },
+    {
+      "name": "LoadGlobalIC",
+      "properties": [],
+      "methods": [
+        {
+          "name": "Load",
+          "parameters": [
+            "name",
+            "update_feedback"
+          ],
+          "return_type": "MaybeDirectHandle<Object>",
+          "logic": "Loads a global variable, handling script context lookups and updating the inline cache."
+        }
+      ]
+    },
+    {
+      "name": "KeyedLoadIC",
+      "properties": [],
+      "methods": [
+        {
+          "name": "GetKeyedAccessLoadModeFor",
+          "parameters": [
+            "receiver_map"
+          ],
+          "return_type": "KeyedAccessLoadMode",
+          "logic": "Returns the KeyedAccessLoadMode associated with a map."
+        },
+        {
+          "name": "UpdateLoadElement",
+          "parameters": [
+            "receiver",
+            "new_load_mode"
+          ],
+          "return_type": "void",
+          "logic": "Updates element loads based on current feedback."
+        },
+        {
+          "name": "LoadElementHandler",
+          "parameters": [
+            "receiver_map",
+            "new_load_mode"
+          ],
+          "return_type": "Handle<Object>",
+          "logic": "Returns a handler for loading an element from the given map."
+        },
+        {
+          "name": "LoadElementPolymorphicHandlers",
+          "parameters": [
+            "receiver_maps",
+            "handlers",
+            "new_load_mode"
+          ],
+          "return_type": "void",
+          "logic": "Creates handlers for polymorphic element load accesses."
+        },
+        {
+          "name": "RuntimeLoad",
+          "parameters": [
+            "object",
+            "key",
+            "is_found"
+          ],
+          "return_type": "MaybeDirectHandle<Object>",
+          "logic": "Fallback runtime load in case fast load fails."
+        },
+        {
+          "name": "LoadName",
+          "parameters": [
+            "object",
+            "key",
+            "name"
+          ],
+          "return_type": "MaybeDirectHandle<Object>",
+          "logic": "Handles loading name properties"
+        },
+        {
+          "name": "Load",
+          "parameters": [
+            "object",
+            "key"
+          ],
+          "return_type": "MaybeDirectHandle<Object>",
+          "logic": "Loads a keyed property from an object, handling different key types (integer, string)."
+        }
+      ]
+    },
+    {
+      "name": "StoreIC",
+      "properties": [],
+      "methods": [
+        {
+          "name": "LookupForWrite",
+          "parameters": [
+            "it",
+            "value",
+            "store_origin"
+          ],
+          "return_type": "bool",
+          "logic": "Performs a lookup to determine the write location, handling proxies, interceptors, and access checks."
+        },
+        {
+          "name": "Store",
+          "parameters": [
+            "object",
+            "name",
+            "value",
+            "store_origin"
+          ],
+          "return_type": "MaybeDirectHandle<Object>",
+          "logic": "Stores a property on an object, handling null/undefined checks, and updating the inline cache."
+        },
+        {
+          "name": "UpdateCaches",
+          "parameters": [
+            "lookup",
+            "value",
+            "store_origin"
+          ],
+          "return_type": "void",
+          "logic": "Updates the inline cache and stub cache with the result of the property store."
+        },
+        {
+          "name": "ComputeHandler",
+          "parameters": [
+            "lookup"
+          ],
+          "return_type": "MaybeObjectHandle",
+          "logic": "Computes a handler for the property store based on the lookup iterator state."
+        }
+      ]
+    },
+    {
+      "name": "StoreGlobalIC",
+      "properties": [],
+      "methods": [
+        {
+          "name": "Store",
+          "parameters": [
+            "name",
+            "value"
+          ],
+          "return_type": "MaybeDirectHandle<Object>",
+          "logic": "Stores a global variable, handling script context lookups and updating the inline cache."
+        }
+      ]
+    },
+    {
+      "name": "KeyedStoreIC",
+      "properties": [],
+      "methods": [
+        {
+          "name": "UpdateStoreElement",
+          "parameters": [
+            "receiver_map",
+            "store_mode",
+            "new_receiver_map"
+          ],
+          "return_type": "void",
+          "logic": "Updates the store to element handler, handling various arrays"
+        },
+        {
+          "name": "StoreElementHandler",
+          "parameters": [
+            "receiver_map",
+            "store_mode",
+            "prev_validity_cell"
+          ],
+          "return_type": "Handle<Object>",
+          "logic": "Returns a handler for storing an element in the given map."
+        },
+        {
+          "name": "StoreElementPolymorphicHandlers",
+          "parameters": [
+            "receiver_maps_and_handlers",
+            "store_mode"
+          ],
+          "return_type": "void",
+          "logic": "Creates handlers for polymorphic element load accesses."
+        }
+      ]
+    }
+  ],
+  "functions": [
+    {
+      "name": "GetModifier",
+      "parameters": [
+        "mode"
+      ],
+      "return_type": "const char*",
+      "logic": "Returns a string representation of the KeyedAccessLoadMode."
+    },
+    {
+      "name": "GetModifier",
+      "parameters": [
+        "mode"
+      ],
+      "return_type": "const char*",
+      "logic": "Returns a string representation of the KeyedAccessStoreMode."
+    },
+    {
+      "name": "LookupForRead",
+      "parameters": [
+        "it",
+        "is_has_property"
+      ],
+      "return_type": "void",
+      "logic": "Iterates through the prototype chain, performing the necessary access checks and handling interceptors for read operations."
+    },
+    {
+      "name": "MigrateDeprecated",
+      "parameters": [
+        "isolate",
+        "object"
+      ],
+      "return_type": "bool",
+      "logic": "Migrates deprecated objects, used for updating the map and handling type stability."
+    },
+    {
+      "name": "AddOneReceiverMapIfMissing",
+      "parameters": [
+        "receiver_maps",
+        "new_receiver_map"
+      ],
+      "return_type": "bool",
+      "logic": "Adds a new receiver map to a list of maps, if it isn't already present."
+    },
+    {
+      "name": "AddOneReceiverMapIfMissing",
+      "parameters": [
+        "receiver_maps_and_handlers",
+        "new_receiver_map"
+      ],
+      "return_type": "bool",
+      "logic": "Adds a new receiver map to a list of maps (with handlers), if it isn't already present.  Does not add deprecated maps."
+    },
+    {
+      "name": "GetAccessorContext",
+      "parameters": [
+        "call_optimization",
+        "holder_map",
+        "isolate"
+      ],
+      "return_type": "DirectHandle<NativeContext>",
+      "logic": "Gets the NativeContext associated with an accessor, considering call optimizations."
+    },
+    {
+      "name": "AllowedHandlerChange",
+      "parameters": [
+        "old_mode",
+        "new_mode"
+      ],
+      "return_type": "bool",
+      "logic": "Returns whether the load mode transition is allowed."
+    },
+    {
+      "name": "AllowConvertHoleElementToUndefined",
+      "parameters": [
+        "isolate",
+        "receiver_map"
+      ],
+      "return_type": "bool",
+      "logic": "Determines if the conversion of holes to undefined is permitted."
+    },
+    {
+      "name": "IsOutOfBoundsAccess",
+      "parameters": [
+        "receiver",
+        "index"
+      ],
+      "return_type": "bool",
+      "logic": "Check for out of bounds access"
+    },
+    {
+      "name": "AllowReadingHoleElement",
+      "parameters": [
+        "elements_kind"
+      ],
+      "return_type": "bool",
+      "logic": "Check if hole elements can be read"
+    },
+    {
+      "name": "GetNewKeyedLoadMode",
+      "parameters": [
+        "isolate",
+        "receiver",
+        "index",
+        "is_found"
+      ],
+      "return_type": "KeyedAccessLoadMode",
+      "logic": "Computes KeyedAccessLoadMode"
+    },
+    {
+      "name": "GetUpdatedLoadModeForMap",
+      "parameters": [
+        "isolate",
+        "map",
+        "load_mode"
+      ],
+      "return_type": "KeyedAccessLoadMode",
+      "logic": "Returns updated Keyed Access Load Mode for Map"
+    },
+    {
+      "name": "TryConvertKey",
+      "parameters": [
+        "key",
+        "isolate",
+        "index_out",
+        "name_out"
+      ],
+      "return_type": "KeyType",
+      "logic": "Tries converting a key into an integer or name"
+    },
+    {
+      "name": "IntPtrKeyToSize",
+      "parameters": [
+        "index",
+        "receiver",
+        "out"
+      ],
+      "return_type": "bool",
+      "logic": "Convert key from intptr_t index to a valid size_t"
+    },
+    {
+      "name": "CanCache",
+      "parameters": [
+        "receiver",
+        "state"
+      ],
+      "return_type": "bool",
+      "logic": "Determines whether an object is cachable (JSReceiver and String only)"
+    },
+    {
+      "name": "DefineOwnDataProperty",
+      "parameters": [
+        "it",
+        "original_state",
+        "value",
+        "should_throw",
+        "store_origin"
+      ],
+      "return_type": "Maybe<bool>",
+      "logic": "Helper function for defining data property."
+    }
+  ]
+}

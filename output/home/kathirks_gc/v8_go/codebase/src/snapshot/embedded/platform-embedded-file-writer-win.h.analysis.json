@@ -1,0 +1,223 @@
+{
+  "file_path": "/home/kathirks_gc/v8_go/codebase/src/snapshot/embedded/platform-embedded-file-writer-win.h",
+  "imports": [
+    "src/base/macros.h",
+    "src/snapshot/embedded/platform-embedded-file-writer-base.h"
+  ],
+  "classes": [
+    {
+      "name": "PlatformEmbeddedFileWriterWin",
+      "properties": [
+        "target_arch_",
+        "target_os_"
+      ],
+      "methods": [
+        {
+          "name": "PlatformEmbeddedFileWriterWin",
+          "parameters": [
+            "EmbeddedTargetArch target_arch",
+            "EmbeddedTargetOs target_os"
+          ],
+          "return_type": "void",
+          "logic": "Constructor. Initializes target architecture and operating system. Asserts that the target OS is Windows."
+        },
+        {
+          "name": "SectionText",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Declares the beginning of the text section (code)."
+        },
+        {
+          "name": "SectionRoData",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Declares the beginning of the read-only data section."
+        },
+        {
+          "name": "AlignToCodeAlignment",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Aligns the current output to the required code alignment."
+        },
+        {
+          "name": "AlignToDataAlignment",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Aligns the current output to the required data alignment."
+        },
+        {
+          "name": "DeclareUint32",
+          "parameters": [
+            "const char* name",
+            "uint32_t value"
+          ],
+          "return_type": "void",
+          "logic": "Declares a 32-bit unsigned integer with the given name and value."
+        },
+        {
+          "name": "DeclareSymbolGlobal",
+          "parameters": [
+            "const char* name"
+          ],
+          "return_type": "void",
+          "logic": "Declares a global symbol with the given name."
+        },
+        {
+          "name": "DeclareLabel",
+          "parameters": [
+            "const char* name"
+          ],
+          "return_type": "void",
+          "logic": "Declares a label with the given name."
+        },
+        {
+          "name": "SourceInfo",
+          "parameters": [
+            "int fileid",
+            "const char* filename",
+            "int line"
+          ],
+          "return_type": "void",
+          "logic": "Records source code location information (file ID, filename, line number)."
+        },
+        {
+          "name": "DeclareFunctionBegin",
+          "parameters": [
+            "const char* name",
+            "uint32_t size"
+          ],
+          "return_type": "void",
+          "logic": "Declares the beginning of a function with the given name and size."
+        },
+        {
+          "name": "DeclareFunctionEnd",
+          "parameters": [
+            "const char* name"
+          ],
+          "return_type": "void",
+          "logic": "Declares the end of a function with the given name."
+        },
+        {
+          "name": "HexLiteral",
+          "parameters": [
+            "uint64_t value"
+          ],
+          "return_type": "int",
+          "logic": "Emits a hexadecimal literal representing the given 64-bit value. Returns number of bytes written."
+        },
+        {
+          "name": "Comment",
+          "parameters": [
+            "const char* string"
+          ],
+          "return_type": "void",
+          "logic": "Emits a comment string."
+        },
+        {
+          "name": "FilePrologue",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Emits the file prologue (initial code)."
+        },
+        {
+          "name": "DeclareExternalFilename",
+          "parameters": [
+            "int fileid",
+            "const char* filename"
+          ],
+          "return_type": "void",
+          "logic": "Declares an external filename with the given file ID and filename."
+        },
+        {
+          "name": "FileEpilogue",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Emits the file epilogue (final code)."
+        },
+        {
+          "name": "IndentedDataDirective",
+          "parameters": [
+            "DataDirective directive"
+          ],
+          "return_type": "int",
+          "logic": "Emits an indented data directive. Returns number of bytes written."
+        },
+        {
+          "name": "ByteChunkDataDirective",
+          "parameters": [],
+          "return_type": "DataDirective",
+          "logic": "Returns the data directive to use for byte chunks."
+        },
+        {
+          "name": "WriteByteChunk",
+          "parameters": [
+            "const uint8_t* data"
+          ],
+          "return_type": "int",
+          "logic": "Writes a chunk of byte data. Returns number of bytes written."
+        },
+        {
+          "name": "StartPdataSection",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Starts the procedure data (pdata) section. Used for exception handling on Windows."
+        },
+        {
+          "name": "EndPdataSection",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Ends the procedure data (pdata) section."
+        },
+        {
+          "name": "StartXdataSection",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Starts the exception data (xdata) section. Used for exception handling on Windows."
+        },
+        {
+          "name": "EndXdataSection",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Ends the exception data (xdata) section."
+        },
+        {
+          "name": "DeclareExternalFunction",
+          "parameters": [
+            "const char* name"
+          ],
+          "return_type": "void",
+          "logic": "Declares an external function."
+        },
+        {
+          "name": "DeclareRvaToSymbol",
+          "parameters": [
+            "const char* name",
+            "uint64_t offset"
+          ],
+          "return_type": "void",
+          "logic": "Emits an RVA (relative virtual address) to the symbol specified, with optional offset."
+        },
+        {
+          "name": "MaybeEmitUnwindData",
+          "parameters": [
+            "const char* unwind_info_symbol",
+            "const char* embedded_blob_data_symbol",
+            "const EmbeddedData* blob",
+            "const void* unwind_infos"
+          ],
+          "return_type": "void",
+          "logic": "Possibly emits unwind data associated with a blob, used for exception handling on Windows."
+        },
+        {
+          "name": "DirectiveAsString",
+          "parameters": [
+            "DataDirective directive"
+          ],
+          "return_type": "const char*",
+          "logic": "Converts a DataDirective enum value to a string representation (private helper method)."
+        }
+      ]
+    }
+  ],
+  "functions": []
+}

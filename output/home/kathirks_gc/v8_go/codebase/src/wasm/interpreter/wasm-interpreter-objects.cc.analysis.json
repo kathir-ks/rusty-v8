@@ -1,0 +1,72 @@
+{
+  "file_path": "/home/kathirks_gc/v8_go/codebase/src/wasm/interpreter/wasm-interpreter-objects.cc",
+  "imports": [
+    "src/wasm/interpreter/wasm-interpreter-objects.h",
+    "src/objects/heap-object-inl.h",
+    "src/objects/objects-inl.h",
+    "src/wasm/interpreter/wasm-interpreter-objects-inl.h",
+    "src/wasm/interpreter/wasm-interpreter-runtime.h",
+    "src/wasm/wasm-objects-inl.h"
+  ],
+  "classes": [
+    {
+      "name": "WasmInterpreterObject",
+      "properties": [],
+      "methods": [
+        {
+          "name": "New",
+          "parameters": [
+            "DirectHandle<WasmInstanceObject> instance"
+          ],
+          "return_type": "DirectHandle<Tuple2>",
+          "logic": "Creates a new Tuple2 object to represent the interpreter object for a given WasmInstanceObject. It also associates this object with the WasmTrustedInstanceData of the instance."
+        },
+        {
+          "name": "RunInterpreter",
+          "parameters": [
+            "Isolate* isolate",
+            "Address frame_pointer",
+            "DirectHandle<WasmInstanceObject> instance",
+            "int func_index",
+            "const std::vector<wasm::WasmValue>& argument_values",
+            "std::vector<wasm::WasmValue>& return_values"
+          ],
+          "return_type": "bool",
+          "logic": "Runs the interpreter for a specific function index within a WasmInstanceObject. It retrieves or creates an InterpreterHandle, and then calls the Execute method with given arguments."
+        },
+        {
+          "name": "RunInterpreter",
+          "parameters": [
+            "Isolate* isolate",
+            "Address frame_pointer",
+            "DirectHandle<WasmInstanceObject> instance",
+            "int func_index",
+            "uint8_t* interpreter_sp"
+          ],
+          "return_type": "bool",
+          "logic": "Runs the interpreter for a specific function index within a WasmInstanceObject, using a given interpreter stack pointer. It retrieves an InterpreterHandle and calls the Execute method."
+        },
+        {
+          "name": "GetInterpretedStack",
+          "parameters": [
+            "Tagged<Tuple2> interpreter_object",
+            "Address frame_pointer"
+          ],
+          "return_type": "std::vector<WasmInterpreterStackEntry>",
+          "logic": "Retrieves the interpreted stack from the InterpreterHandle associated with the given interpreter object and frame pointer. Returns a vector of stack entries."
+        },
+        {
+          "name": "GetFunctionIndex",
+          "parameters": [
+            "Tagged<Tuple2> interpreter_object",
+            "Address frame_pointer",
+            "int index"
+          ],
+          "return_type": "int",
+          "logic": "Retrieves the function index from the InterpreterHandle associated with the given interpreter object, frame pointer, and index.  The exact purpose of the index isn't immediately obvious from the code, but it's likely related to call stack depth or something similar."
+        }
+      ]
+    }
+  ],
+  "functions": []
+}

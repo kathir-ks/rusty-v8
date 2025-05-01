@@ -1,0 +1,257 @@
+{
+  "file_path": "/home/kathirks_gc/v8_go/codebase/src/execution/v8threads.cc",
+  "imports": [
+    "src/execution/v8threads.h",
+    "include/v8-locker.h",
+    "src/api/api.h",
+    "src/debug/debug.h",
+    "src/execution/execution.h",
+    "src/execution/isolate-inl.h",
+    "src/execution/stack-guard.h",
+    "src/init/bootstrapper.h",
+    "src/objects/visitors.h",
+    "src/regexp/regexp-stack.h"
+  ],
+  "classes": [
+    {
+      "name": "v8::Locker",
+      "properties": [
+        "has_lock_",
+        "top_level_",
+        "isolate_"
+      ],
+      "methods": [
+        {
+          "name": "Initialize",
+          "parameters": [
+            "v8::Isolate* isolate"
+          ],
+          "return_type": "void",
+          "logic": "Initializes the Locker, acquires the lock for the isolate if necessary, and restores the thread state if it's a nested Locker."
+        },
+        {
+          "name": "IsLocked",
+          "parameters": [
+            "v8::Isolate* isolate"
+          ],
+          "return_type": "bool",
+          "logic": "Checks if the current thread holds the lock for the given isolate."
+        },
+        {
+          "name": "~Locker",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Releases the lock held by the Locker, frees thread resources if it's a top-level Locker, or archives the thread state if it's a nested Locker."
+        }
+      ]
+    },
+    {
+      "name": "v8::Unlocker",
+      "properties": [
+        "isolate_"
+      ],
+      "methods": [
+        {
+          "name": "Initialize",
+          "parameters": [
+            "v8::Isolate* isolate"
+          ],
+          "return_type": "void",
+          "logic": "Initializes the Unlocker, archives the thread state, and releases the lock."
+        },
+        {
+          "name": "~Unlocker",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Reacquires the lock and restores the thread state when the Unlocker is destroyed."
+        }
+      ]
+    },
+    {
+      "name": "v8::internal::ThreadManager",
+      "properties": [
+        "mutex_",
+        "mutex_owner_",
+        "lazily_archived_thread_",
+        "lazily_archived_thread_state_",
+        "free_anchor_",
+        "in_use_anchor_",
+        "isolate_"
+      ],
+      "methods": [
+        {
+          "name": "InitThread",
+          "parameters": [
+            "const ExecutionAccess& lock"
+          ],
+          "return_type": "void",
+          "logic": "Initializes thread-local data for the Isolate, StackGuard, and Debugger."
+        },
+        {
+          "name": "RestoreThread",
+          "parameters": [],
+          "return_type": "bool",
+          "logic": "Restores the thread state from the archive, re-initializing the Isolate and related components. Returns true if thread was previously archived, false otherwise."
+        },
+        {
+          "name": "Lock",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Acquires the mutex, setting the mutex owner to the current thread."
+        },
+        {
+          "name": "Unlock",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Releases the mutex, resetting the mutex owner."
+        },
+        {
+          "name": "GetFreeThreadState",
+          "parameters": [],
+          "return_type": "ThreadState*",
+          "logic": "Gets a free ThreadState object. If the free list is empty, a new ThreadState is allocated."
+        },
+        {
+          "name": "FirstThreadStateInUse",
+          "parameters": [],
+          "return_type": "ThreadState*",
+          "logic": "Gets the first thread state object in the in-use list."
+        },
+        {
+          "name": "ThreadManager",
+          "parameters": [
+            "Isolate* isolate"
+          ],
+          "return_type": "N/A (Constructor)",
+          "logic": "Initializes the ThreadManager, creating the free and in-use thread state anchors."
+        },
+        {
+          "name": "~ThreadManager",
+          "parameters": [],
+          "return_type": "N/A (Destructor)",
+          "logic": "Destroys the ThreadManager, deleting the free and in-use thread state lists."
+        },
+        {
+          "name": "ArchiveThread",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Archives the current thread's state by storing the thread-local data into a ThreadState object. It uses lazy archiving for efficiency."
+        },
+        {
+          "name": "EagerlyArchiveThread",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Actually archives the thread data if it was previously lazily archived."
+        },
+        {
+          "name": "FreeThreadResources",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Frees thread-specific resources associated with an isolate."
+        },
+        {
+          "name": "IsArchived",
+          "parameters": [],
+          "return_type": "bool",
+          "logic": "Checks if the current thread's state has been archived."
+        },
+        {
+          "name": "Iterate",
+          "parameters": [
+            "RootVisitor* v"
+          ],
+          "return_type": "void",
+          "logic": "Iterates through the archived thread states, visiting the GC roots within them."
+        },
+        {
+          "name": "IterateArchivedThreads",
+          "parameters": [
+            "ThreadVisitor* v"
+          ],
+          "return_type": "void",
+          "logic": "Iterates through archived thread states for thread visiting purposes."
+        },
+        {
+          "name": "CurrentId",
+          "parameters": [],
+          "return_type": "ThreadId",
+          "logic": "Returns the ThreadId of the current thread."
+        },
+        {
+          "name": "DeleteThreadStateList",
+          "parameters": [
+            "ThreadState* anchor"
+          ],
+          "return_type": "void",
+          "logic": "Deletes all ThreadState objects from a ThreadState list, starting from anchor->next_ until the anchor is reached again."
+        }
+      ]
+    },
+    {
+      "name": "v8::internal::ThreadState",
+      "properties": [
+        "id_",
+        "data_",
+        "next_",
+        "previous_",
+        "thread_manager_"
+      ],
+      "methods": [
+        {
+          "name": "ThreadState",
+          "parameters": [
+            "ThreadManager* thread_manager"
+          ],
+          "return_type": "N/A (Constructor)",
+          "logic": "Initializes a ThreadState object."
+        },
+        {
+          "name": "~ThreadState",
+          "parameters": [],
+          "return_type": "N/A (Destructor)",
+          "logic": "Deallocates the memory used by the ThreadState object."
+        },
+        {
+          "name": "AllocateSpace",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Allocates space for storing the thread state."
+        },
+        {
+          "name": "Unlink",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Unlinks the ThreadState object from the linked list."
+        },
+        {
+          "name": "LinkInto",
+          "parameters": [
+            "List list"
+          ],
+          "return_type": "void",
+          "logic": "Links the ThreadState object into either the free or in-use list."
+        },
+        {
+          "name": "Next",
+          "parameters": [],
+          "return_type": "ThreadState*",
+          "logic": "Returns the next ThreadState object in the in-use list, or nullptr if at the end."
+        }
+      ]
+    }
+  ],
+  "functions": [
+    {
+      "name": "(anonymous namespace)::ArchiveSpacePerThread",
+      "parameters": [],
+      "return_type": "int",
+      "logic": "Calculates the amount of memory needed to archive a thread's state by summing the space required by various components."
+    },
+    {
+      "name": "(anonymous namespace)::g_locker_was_ever_used_",
+      "parameters": [],
+      "return_type": "base::AtomicWord",
+      "logic": "A global atomic variable to keep track of if lockers are used for an isolate."
+    }
+  ]
+}

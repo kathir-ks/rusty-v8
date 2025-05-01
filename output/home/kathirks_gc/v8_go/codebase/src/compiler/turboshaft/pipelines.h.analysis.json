@@ -1,0 +1,263 @@
+{
+  "file_path": "/home/kathirks_gc/v8_go/codebase/src/compiler/turboshaft/pipelines.h",
+  "imports": [
+    "<optional>",
+    "src/codegen/optimized-compilation-info.h",
+    "src/compiler/backend/register-allocator-verifier.h",
+    "src/compiler/basic-block-instrumentor.h",
+    "src/compiler/pipeline-statistics.h",
+    "src/compiler/turbofan-graph-visualizer.h",
+    "src/compiler/turboshaft/block-instrumentation-phase.h",
+    "src/compiler/turboshaft/build-graph-phase.h",
+    "src/compiler/turboshaft/code-elimination-and-simplification-phase.h",
+    "src/compiler/turboshaft/debug-feature-lowering-phase.h",
+    "src/compiler/turboshaft/decompression-optimization-phase.h",
+    "src/compiler/turboshaft/instruction-selection-phase.h",
+    "src/compiler/turboshaft/loop-peeling-phase.h",
+    "src/compiler/turboshaft/loop-unrolling-phase.h",
+    "src/compiler/turboshaft/machine-lowering-phase.h",
+    "src/compiler/turboshaft/maglev-graph-building-phase.h",
+    "src/compiler/turboshaft/optimize-phase.h",
+    "src/compiler/turboshaft/phase.h",
+    "src/compiler/turboshaft/register-allocation-phase.h",
+    "src/compiler/turboshaft/sidetable.h",
+    "src/compiler/turboshaft/store-store-elimination-phase.h",
+    "src/compiler/turboshaft/tracing.h",
+    "src/compiler/turboshaft/type-assertions-phase.h",
+    "src/compiler/turboshaft/typed-optimizations-phase.h",
+    "src/compiler/turboshaft/wasm-in-js-inlining-phase.h"
+  ],
+  "classes": [
+    {
+      "name": "SimplificationAndNormalizationPhase",
+      "properties": [],
+      "methods": [
+        {
+          "name": "Run",
+          "parameters": [
+            "PipelineData* data",
+            "Zone* temp_zone"
+          ],
+          "return_type": "void",
+          "logic": "Executes the simplification and normalization phase of the Turboshaft pipeline."
+        }
+      ]
+    },
+    {
+      "name": "Pipeline",
+      "properties": [
+        "PipelineData* data_"
+      ],
+      "methods": [
+        {
+          "name": "Pipeline",
+          "parameters": [
+            "PipelineData* data"
+          ],
+          "return_type": null,
+          "logic": "Constructor for the Pipeline class, initializes the data_ member."
+        },
+        {
+          "name": "data",
+          "parameters": [],
+          "return_type": "PipelineData*",
+          "logic": "Returns the PipelineData associated with this pipeline."
+        },
+        {
+          "name": "BeginPhaseKind",
+          "parameters": [
+            "const char* phase_kind_name"
+          ],
+          "return_type": "void",
+          "logic": "Starts a new phase kind for pipeline statistics tracking."
+        },
+        {
+          "name": "EndPhaseKind",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Ends the current phase kind for pipeline statistics tracking."
+        },
+        {
+          "name": "Run",
+          "parameters": [
+            "Args&&... args"
+          ],
+          "return_type": "auto",
+          "logic": "Runs a given Turboshaft phase, handling setup, temporary zones, origin tracking, runtime call statistics, and graph printing. Returns the phase's result if it has one."
+        },
+        {
+          "name": "PrintGraph",
+          "parameters": [
+            "Zone* zone",
+            "const char* phase_name"
+          ],
+          "return_type": "void",
+          "logic": "Prints the Turboshaft graph to a code tracer, if tracing is enabled."
+        },
+        {
+          "name": "TraceSequence",
+          "parameters": [
+            "const char* phase_name"
+          ],
+          "return_type": "void",
+          "logic": "Traces the instruction sequence to a JSON file and code tracer, if tracing is enabled."
+        },
+        {
+          "name": "CreateGraphWithMaglev",
+          "parameters": [
+            "Linkage* linkage"
+          ],
+          "return_type": "bool",
+          "logic": "Creates the Turboshaft graph using the Maglev graph building phase. Returns false on bailout, true otherwise."
+        },
+        {
+          "name": "CreateGraphFromTurbofan",
+          "parameters": [
+            "compiler::TFPipelineData* turbofan_data",
+            "Linkage* linkage"
+          ],
+          "return_type": "bool",
+          "logic": "Creates the Turboshaft graph from a Turbofan graph. Returns false on bailout, true otherwise."
+        },
+        {
+          "name": "OptimizeTurboshaftGraph",
+          "parameters": [
+            "Linkage* linkage"
+          ],
+          "return_type": "bool",
+          "logic": "Runs a series of Turboshaft optimization phases. Returns true on success."
+        },
+        {
+          "name": "RunSimplificationAndNormalizationPhase",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Runs the simplification and normalization phase."
+        },
+        {
+          "name": "PrepareForInstructionSelection",
+          "parameters": [
+            "const ProfileDataFromFile* profile"
+          ],
+          "return_type": "void",
+          "logic": "Prepares the graph for instruction selection by applying profiling data and running the decompression optimization phase."
+        },
+        {
+          "name": "SelectInstructions",
+          "parameters": [
+            "Linkage* linkage"
+          ],
+          "return_type": "bool",
+          "logic": "Selects and schedules instructions for the scheduled graph. Returns false on bailout, true otherwise."
+        },
+        {
+          "name": "AllocateRegisters",
+          "parameters": [
+            "CallDescriptor* call_descriptor"
+          ],
+          "return_type": "bool",
+          "logic": "Allocates registers for the instruction sequence. Returns true on success."
+        },
+        {
+          "name": "MayHaveUnverifiableGraph",
+          "parameters": [],
+          "return_type": "bool",
+          "logic": "Indicates whether the graph may not be verifiable. Currently always returns true."
+        },
+        {
+          "name": "VerifyGeneratedCodeIsIdempotent",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Verifies that the generated code is idempotent, checking for changes between invocations."
+        },
+        {
+          "name": "AllocateRegisters",
+          "parameters": [
+            "const RegisterConfiguration* config",
+            "CallDescriptor* call_descriptor",
+            "bool run_verifier"
+          ],
+          "return_type": "void",
+          "logic": "Performs register allocation using the provided configuration and call descriptor."
+        },
+        {
+          "name": "AssembleCode",
+          "parameters": [
+            "Linkage* linkage"
+          ],
+          "return_type": "void",
+          "logic": "Assembles the code from the instruction sequence."
+        },
+        {
+          "name": "GenerateCode",
+          "parameters": [
+            "CallDescriptor* call_descriptor"
+          ],
+          "return_type": "MaybeHandle<Code>",
+          "logic": "Generates code by performing instruction selection, register allocation, and code assembly."
+        },
+        {
+          "name": "GenerateCode",
+          "parameters": [
+            "Linkage* linkage",
+            "std::shared_ptr<OsrHelper> osr_helper",
+            "JumpOptimizationInfo* jump_optimization_info",
+            "const ProfileDataFromFile* profile",
+            "int initial_graph_hash"
+          ],
+          "return_type": "[[nodiscard]] bool",
+          "logic": "Generates the code using the provided linkage and other optional parameters."
+        },
+        {
+          "name": "info",
+          "parameters": [],
+          "return_type": "OptimizedCompilationInfo*",
+          "logic": "Returns the OptimizedCompilationInfo associated with this pipeline."
+        },
+        {
+          "name": "FinalizeCode",
+          "parameters": [
+            "bool retire_broker"
+          ],
+          "return_type": "MaybeIndirectHandle<Code>",
+          "logic": "Finalizes the generated code, setting it in the OptimizedCompilationInfo."
+        },
+        {
+          "name": "CommitDependencies",
+          "parameters": [
+            "Handle<Code> code"
+          ],
+          "return_type": "bool",
+          "logic": "Commits the dependencies to the code object."
+        }
+      ]
+    },
+    {
+      "name": "BuiltinPipeline",
+      "properties": [],
+      "methods": [
+        {
+          "name": "BuiltinPipeline",
+          "parameters": [
+            "PipelineData* data"
+          ],
+          "return_type": null,
+          "logic": "Constructor for the BuiltinPipeline class."
+        },
+        {
+          "name": "OptimizeBuiltin",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Optimizes the builtin function."
+        },
+        {
+          "name": "IsBuiltinPipeline",
+          "parameters": [],
+          "return_type": "bool",
+          "logic": "Override for debug purposes, to indicate it's a builtin pipeline."
+        }
+      ]
+    }
+  ],
+  "functions": [],
+  "enums": []
+}

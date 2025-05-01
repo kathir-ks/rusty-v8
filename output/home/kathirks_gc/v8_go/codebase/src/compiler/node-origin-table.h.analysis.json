@@ -1,0 +1,285 @@
+{
+  "file_path": "/home/kathirks_gc/v8_go/codebase/src/compiler/node-origin-table.h",
+  "imports": [
+    "<limits>",
+    "src/base/compiler-specific.h",
+    "src/compiler/node-aux-data.h"
+  ],
+  "classes": [
+    {
+      "name": "NodeOrigin",
+      "properties": [
+        "phase_name_",
+        "reducer_name_",
+        "origin_kind_",
+        "created_from_"
+      ],
+      "methods": [
+        {
+          "name": "NodeOrigin",
+          "parameters": [
+            "const char* phase_name",
+            "const char* reducer_name",
+            "NodeId created_from"
+          ],
+          "return_type": "void",
+          "logic": "Constructor for NodeOrigin, initializes phase_name_, reducer_name_, origin_kind_ to kGraphNode and created_from_ with the given parameters."
+        },
+        {
+          "name": "NodeOrigin",
+          "parameters": [
+            "const char* phase_name",
+            "const char* reducer_name",
+            "OriginKind origin_kind",
+            "uint64_t created_from"
+          ],
+          "return_type": "void",
+          "logic": "Constructor for NodeOrigin, initializes phase_name_, reducer_name_, origin_kind_ and created_from_ with the given parameters."
+        },
+        {
+          "name": "NodeOrigin",
+          "parameters": [
+            "const NodeOrigin& other"
+          ],
+          "return_type": "NodeOrigin&",
+          "logic": "Copy constructor for NodeOrigin."
+        },
+        {
+          "name": "operator=",
+          "parameters": [
+            "const NodeOrigin& other"
+          ],
+          "return_type": "NodeOrigin&",
+          "logic": "Copy assignment operator for NodeOrigin."
+        },
+        {
+          "name": "Unknown",
+          "parameters": [],
+          "return_type": "NodeOrigin",
+          "logic": "Returns an unknown NodeOrigin, by calling the default constructor."
+        },
+        {
+          "name": "IsKnown",
+          "parameters": [],
+          "return_type": "bool",
+          "logic": "Checks if the NodeOrigin is known by checking if created_from_ is >= 0."
+        },
+        {
+          "name": "created_from",
+          "parameters": [],
+          "return_type": "int64_t",
+          "logic": "Returns the created_from_ value."
+        },
+        {
+          "name": "reducer_name",
+          "parameters": [],
+          "return_type": "const char*",
+          "logic": "Returns the reducer_name_."
+        },
+        {
+          "name": "phase_name",
+          "parameters": [],
+          "return_type": "const char*",
+          "logic": "Returns the phase_name_."
+        },
+        {
+          "name": "origin_kind",
+          "parameters": [],
+          "return_type": "OriginKind",
+          "logic": "Returns the origin_kind_."
+        },
+        {
+          "name": "operator==",
+          "parameters": [
+            "const NodeOrigin& o"
+          ],
+          "return_type": "bool",
+          "logic": "Compares two NodeOrigin objects for equality, based on reducer_name_ and created_from_."
+        },
+        {
+          "name": "PrintJson",
+          "parameters": [
+            "std::ostream& out"
+          ],
+          "return_type": "void",
+          "logic": "Prints the NodeOrigin data as a JSON object to the given output stream."
+        }
+      ]
+    },
+    {
+      "name": "NodeOriginTable",
+      "properties": [
+        "graph_",
+        "decorator_",
+        "current_origin_",
+        "current_bytecode_position_",
+        "current_phase_name_",
+        "table_"
+      ],
+      "methods": [
+        {
+          "name": "NodeOriginTable",
+          "parameters": [
+            "TFGraph* graph"
+          ],
+          "return_type": "void",
+          "logic": "Constructor for NodeOriginTable, initializes the graph_ and other member variables."
+        },
+        {
+          "name": "NodeOriginTable",
+          "parameters": [
+            "Zone* zone"
+          ],
+          "return_type": "void",
+          "logic": "Constructor for NodeOriginTable, initializes the Zone and other member variables."
+        },
+        {
+          "name": "AddDecorator",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Adds a decorator to the graph.  The decorator stores additional info on nodes."
+        },
+        {
+          "name": "RemoveDecorator",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Removes the decorator."
+        },
+        {
+          "name": "GetNodeOrigin",
+          "parameters": [
+            "Node* node"
+          ],
+          "return_type": "NodeOrigin",
+          "logic": "Retrieves the NodeOrigin for a given Node."
+        },
+        {
+          "name": "GetNodeOrigin",
+          "parameters": [
+            "NodeId id"
+          ],
+          "return_type": "NodeOrigin",
+          "logic": "Retrieves the NodeOrigin for a given NodeId."
+        },
+        {
+          "name": "SetNodeOrigin",
+          "parameters": [
+            "Node* node",
+            "const NodeOrigin& no"
+          ],
+          "return_type": "void",
+          "logic": "Sets the NodeOrigin for a given Node."
+        },
+        {
+          "name": "SetNodeOrigin",
+          "parameters": [
+            "NodeId id",
+            "NodeId origin"
+          ],
+          "return_type": "void",
+          "logic": "Sets the NodeOrigin's `created_from` for a given NodeId."
+        },
+        {
+          "name": "SetNodeOrigin",
+          "parameters": [
+            "NodeId id",
+            "NodeOrigin::OriginKind kind",
+            "NodeId origin"
+          ],
+          "return_type": "void",
+          "logic": "Sets the NodeOrigin's `origin_kind` and `created_from` for a given NodeId."
+        },
+        {
+          "name": "SetCurrentPosition",
+          "parameters": [
+            "const NodeOrigin& no"
+          ],
+          "return_type": "void",
+          "logic": "Sets the current_origin_."
+        },
+        {
+          "name": "SetCurrentBytecodePosition",
+          "parameters": [
+            "int offset"
+          ],
+          "return_type": "void",
+          "logic": "Sets the current bytecode position for tracking bytecode origins."
+        },
+        {
+          "name": "GetCurrentBytecodePosition",
+          "parameters": [],
+          "return_type": "int",
+          "logic": "Returns the current bytecode position."
+        },
+        {
+          "name": "PrintJson",
+          "parameters": [
+            "std::ostream& os"
+          ],
+          "return_type": "void",
+          "logic": "Prints the NodeOriginTable data as a JSON object to the given output stream."
+        }
+      ]
+    },
+    {
+      "name": "NodeOriginTable::Scope",
+      "properties": [
+        "origins_",
+        "prev_origin_"
+      ],
+      "methods": [
+        {
+          "name": "Scope",
+          "parameters": [
+            "NodeOriginTable* origins",
+            "const char* reducer_name",
+            "Node* node"
+          ],
+          "return_type": "void",
+          "logic": "Constructor for Scope, saves current origin and sets the origin for the given reducer and node."
+        },
+        {
+          "name": "~Scope",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Destructor for Scope, restores the previous origin."
+        }
+      ]
+    },
+    {
+      "name": "NodeOriginTable::PhaseScope",
+      "properties": [
+        "origins_",
+        "prev_phase_name_"
+      ],
+      "methods": [
+        {
+          "name": "PhaseScope",
+          "parameters": [
+            "NodeOriginTable* origins",
+            "const char* phase_name"
+          ],
+          "return_type": "void",
+          "logic": "Constructor for PhaseScope, saves current phase and sets the phase name."
+        },
+        {
+          "name": "~PhaseScope",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Destructor for PhaseScope, restores the previous phase name."
+        }
+      ]
+    }
+  ],
+  "functions": [
+    {
+      "name": "operator!=",
+      "parameters": [
+        "const NodeOrigin& lhs",
+        "const NodeOrigin& rhs"
+      ],
+      "return_type": "bool",
+      "logic": "Overloads the != operator for NodeOrigin objects."
+    }
+  ]
+}

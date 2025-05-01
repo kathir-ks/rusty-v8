@@ -1,0 +1,165 @@
+{
+  "file_path": "/home/kathirks_gc/v8_go/codebase/src/ic/stub-cache.h",
+  "imports": [
+    "include/v8-callbacks.h",
+    "src/objects/name.h",
+    "src/objects/tagged-value.h"
+  ],
+  "classes": [
+    {
+      "name": "SCTableReference",
+      "properties": [
+        "Address address_"
+      ],
+      "methods": [
+        {
+          "name": "address",
+          "parameters": [],
+          "return_type": "Address",
+          "logic": "Returns the address stored in the SCTableReference object."
+        },
+        {
+          "name": "SCTableReference",
+          "parameters": [
+            "Address address"
+          ],
+          "return_type": null,
+          "logic": "Private constructor to create an SCTableReference object. Only the StubCache class can create instances of this class."
+        }
+      ]
+    },
+    {
+      "name": "StubCache",
+      "properties": [
+        "Entry primary_[kPrimaryTableSize]",
+        "Entry secondary_[kSecondaryTableSize]",
+        "Isolate* isolate_"
+      ],
+      "methods": [
+        {
+          "name": "Initialize",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Initializes the StubCache (presumably allocating and initializing the primary and secondary tables)."
+        },
+        {
+          "name": "Set",
+          "parameters": [
+            "Tagged<Name> name",
+            "Tagged<Map> map",
+            "Tagged<MaybeObject> handler"
+          ],
+          "return_type": "void",
+          "logic": "Sets the handler in the cache for a given name and map."
+        },
+        {
+          "name": "Get",
+          "parameters": [
+            "Tagged<Name> name",
+            "Tagged<Map> map"
+          ],
+          "return_type": "Tagged<MaybeObject>",
+          "logic": "Retrieves the handler from the cache for a given name and map."
+        },
+        {
+          "name": "Clear",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Clears the lookup table (presumably resetting all entries)."
+        },
+        {
+          "name": "key_reference",
+          "parameters": [
+            "StubCache::Table table"
+          ],
+          "return_type": "SCTableReference",
+          "logic": "Returns a SCTableReference to the key field of the first entry in the specified table."
+        },
+        {
+          "name": "map_reference",
+          "parameters": [
+            "StubCache::Table table"
+          ],
+          "return_type": "SCTableReference",
+          "logic": "Returns a SCTableReference to the map field of the first entry in the specified table."
+        },
+        {
+          "name": "value_reference",
+          "parameters": [
+            "StubCache::Table table"
+          ],
+          "return_type": "SCTableReference",
+          "logic": "Returns a SCTableReference to the value field of the first entry in the specified table."
+        },
+        {
+          "name": "first_entry",
+          "parameters": [
+            "StubCache::Table table"
+          ],
+          "return_type": "StubCache::Entry*",
+          "logic": "Returns a pointer to the first entry of the specified table (primary or secondary)."
+        },
+        {
+          "name": "isolate",
+          "parameters": [],
+          "return_type": "Isolate*",
+          "logic": "Returns a pointer to the isolate associated with this StubCache."
+        },
+        {
+          "name": "PrimaryOffsetForTesting",
+          "parameters": [
+            "Tagged<Name> name",
+            "Tagged<Map> map"
+          ],
+          "return_type": "int",
+          "logic": "Calculates the primary offset for testing purposes."
+        },
+        {
+          "name": "SecondaryOffsetForTesting",
+          "parameters": [
+            "Tagged<Name> name",
+            "Tagged<Map> map"
+          ],
+          "return_type": "int",
+          "logic": "Calculates the secondary offset for testing purposes."
+        },
+        {
+          "name": "StubCache",
+          "parameters": [
+            "Isolate* isolate"
+          ],
+          "return_type": null,
+          "logic": "Constructor for the StubCache class, taking an Isolate pointer as an argument."
+        },
+        {
+          "name": "PrimaryOffset",
+          "parameters": [
+            "Tagged<Name> name",
+            "Tagged<Map> map"
+          ],
+          "return_type": "int",
+          "logic": "Calculates the primary offset for a given name and map."
+        },
+        {
+          "name": "SecondaryOffset",
+          "parameters": [
+            "Tagged<Name> name",
+            "Tagged<Map> map"
+          ],
+          "return_type": "int",
+          "logic": "Calculates the secondary offset for a given name and map."
+        },
+        {
+          "name": "entry",
+          "parameters": [
+            "Entry* table",
+            "int offset"
+          ],
+          "return_type": "Entry*",
+          "logic": "Calculates the address of an Entry within the specified table at the given offset."
+        }
+      ]
+    }
+  ],
+  "functions": []
+}

@@ -1,0 +1,96 @@
+{
+  "file_path": "/home/kathirks_gc/v8_go/codebase/src/ic/call-optimization.cc",
+  "imports": [
+    "src/ic/call-optimization.h",
+    "<optional>",
+    "src/objects/objects-inl.h"
+  ],
+  "classes": [
+    {
+      "name": "CallOptimization",
+      "properties": [
+        "constant_function_",
+        "api_call_info_",
+        "expected_receiver_type_",
+        "is_simple_api_call_",
+        "accept_any_receiver_"
+      ],
+      "methods": [
+        {
+          "name": "CallOptimization",
+          "parameters": [
+            "IsolateT* isolate",
+            "Handle<Object> function"
+          ],
+          "return_type": "void",
+          "logic": "Constructor. Initializes the CallOptimization object based on whether the provided object is a JSFunction or a FunctionTemplateInfo."
+        },
+        {
+          "name": "GetAccessorContext",
+          "parameters": [
+            "Tagged<Map> holder_map"
+          ],
+          "return_type": "std::optional<Tagged<NativeContext>>",
+          "logic": "Returns the NativeContext associated with the given holder map. If the call is a constant call, it returns the native context of the constant function. If the holder is a remote object, it returns an empty optional. Otherwise, it returns the native context from the holder map."
+        },
+        {
+          "name": "IsCrossContextLazyAccessorPair",
+          "parameters": [
+            "Tagged<NativeContext> native_context",
+            "Tagged<Map> holder_map"
+          ],
+          "return_type": "bool",
+          "logic": "Determines if a lazy accessor pair is cross-context, meaning the native context of the accessor is different from the context of the holder."
+        },
+        {
+          "name": "LookupHolderOfExpectedType",
+          "parameters": [
+            "IsolateT* isolate",
+            "DirectHandle<Map> object_map",
+            "HolderLookup* holder_lookup"
+          ],
+          "return_type": "Handle<JSObject>",
+          "logic": "Looks up the holder of the expected type for API calls. It traverses the prototype chain to find a holder whose map is a template for the expected receiver type. Returns null if not found and sets holder_lookup accordingly."
+        },
+        {
+          "name": "IsCompatibleReceiverMap",
+          "parameters": [
+            "DirectHandle<JSObject> api_holder",
+            "Handle<JSObject> holder",
+            "HolderLookup holder_lookup"
+          ],
+          "return_type": "bool",
+          "logic": "Checks if the receiver map of the api_holder is compatible with the expected receiver based on the holder_lookup result. It verifies if the provided holder is the expected receiver, is in the prototype chain of the API holder."
+        },
+        {
+          "name": "Initialize",
+          "parameters": [
+            "IsolateT* isolate",
+            "Handle<FunctionTemplateInfo> function_template_info"
+          ],
+          "return_type": "void",
+          "logic": "Initializes the CallOptimization object based on a FunctionTemplateInfo. It extracts API call information, expected receiver type and flags related to API function calls."
+        },
+        {
+          "name": "Initialize",
+          "parameters": [
+            "IsolateT* isolate",
+            "Handle<JSFunction> function"
+          ],
+          "return_type": "void",
+          "logic": "Initializes the CallOptimization object based on a JSFunction. It checks if the function is compiled and analyzes it for possible API function optimizations."
+        },
+        {
+          "name": "AnalyzePossibleApiFunction",
+          "parameters": [
+            "IsolateT* isolate",
+            "DirectHandle<JSFunction> function"
+          ],
+          "return_type": "void",
+          "logic": "Analyzes a JSFunction to determine if it's an API function and, if so, initializes the CallOptimization object based on the associated FunctionTemplateInfo."
+        }
+      ]
+    }
+  ],
+  "functions": []
+}

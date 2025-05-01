@@ -1,0 +1,431 @@
+{
+  "file_path": "/home/kathirks_gc/v8_go/codebase/src/asmjs/asm-types.h",
+  "imports": [
+    "<string>",
+    "src/base/compiler-specific.h",
+    "src/base/macros.h",
+    "src/zone/zone-containers.h",
+    "src/zone/zone.h"
+  ],
+  "classes": [
+    {
+      "name": "AsmValueType",
+      "properties": [
+        "bitset_t",
+        "kAsmUnknown",
+        "kAsmValueTypeTag"
+      ],
+      "methods": [
+        {
+          "name": "AsValueType",
+          "parameters": [
+            "AsmType* type"
+          ],
+          "return_type": "AsmValueType*",
+          "logic": "Attempts to cast an AsmType to an AsmValueType. Returns nullptr if the cast fails. Uses bit manipulation to check the type tag."
+        },
+        {
+          "name": "Bitset",
+          "parameters": [],
+          "return_type": "bitset_t",
+          "logic": "Extracts the bitset representation of the AsmValueType."
+        },
+        {
+          "name": "New",
+          "parameters": [
+            "bitset_t bits"
+          ],
+          "return_type": "AsmType*",
+          "logic": "Creates a new AsmType from a bitset representing the type."
+        }
+      ]
+    },
+    {
+      "name": "AsmCallableType",
+      "properties": [],
+      "methods": [
+        {
+          "name": "Name",
+          "parameters": [],
+          "return_type": "std::string",
+          "logic": "Abstract method to return the name of the callable type."
+        },
+        {
+          "name": "CanBeInvokedWith",
+          "parameters": [
+            "AsmType* return_type",
+            "const ZoneVector<AsmType*>& args"
+          ],
+          "return_type": "bool",
+          "logic": "Abstract method to check if the callable type can be invoked with the given return type and arguments."
+        },
+        {
+          "name": "AsFunctionType",
+          "parameters": [],
+          "return_type": "AsmFunctionType*",
+          "logic": "Returns nullptr. Used for downcasting."
+        },
+        {
+          "name": "AsOverloadedFunctionType",
+          "parameters": [],
+          "return_type": "AsmOverloadedFunctionType*",
+          "logic": "Returns nullptr. Used for downcasting."
+        },
+        {
+          "name": "IsA",
+          "parameters": [
+            "AsmType* other"
+          ],
+          "return_type": "bool",
+          "logic": "Virtual method to check if this AsmType is a type of another AsmType."
+        }
+      ]
+    },
+    {
+      "name": "AsmFunctionType",
+      "properties": [
+        "return_type_",
+        "args_"
+      ],
+      "methods": [
+        {
+          "name": "AsFunctionType",
+          "parameters": [],
+          "return_type": "AsmFunctionType*",
+          "logic": "Returns `this`. Used for downcasting."
+        },
+        {
+          "name": "AddArgument",
+          "parameters": [
+            "AsmType* type"
+          ],
+          "return_type": "void",
+          "logic": "Adds an argument type to the function type's argument list."
+        },
+        {
+          "name": "Arguments",
+          "parameters": [],
+          "return_type": "const ZoneVector<AsmType*>&",
+          "logic": "Returns the list of argument types for the function type."
+        },
+        {
+          "name": "ReturnType",
+          "parameters": [],
+          "return_type": "AsmType*",
+          "logic": "Returns the return type of the function type."
+        },
+        {
+          "name": "CanBeInvokedWith",
+          "parameters": [
+            "AsmType* return_type",
+            "const ZoneVector<AsmType*>& args"
+          ],
+          "return_type": "bool",
+          "logic": "Checks if the function type can be invoked with the given return type and arguments."
+        },
+        {
+          "name": "Name",
+          "parameters": [],
+          "return_type": "std::string",
+          "logic": "Returns the name of the function type. This is overridden from AsmCallableType."
+        },
+        {
+          "name": "IsA",
+          "parameters": [
+            "AsmType* other"
+          ],
+          "return_type": "bool",
+          "logic": "Checks if the AsmType is an AsmFunctionType"
+        }
+      ]
+    },
+    {
+      "name": "AsmOverloadedFunctionType",
+      "properties": [
+        "overloads_"
+      ],
+      "methods": [
+        {
+          "name": "AsOverloadedFunctionType",
+          "parameters": [],
+          "return_type": "AsmOverloadedFunctionType*",
+          "logic": "Returns `this`. Used for downcasting."
+        },
+        {
+          "name": "AddOverload",
+          "parameters": [
+            "AsmType* overload"
+          ],
+          "return_type": "void",
+          "logic": "Adds an overload to the list of overloads for the overloaded function type."
+        },
+        {
+          "name": "Name",
+          "parameters": [],
+          "return_type": "std::string",
+          "logic": "Returns the name of the overloaded function type. This is overridden from AsmCallableType."
+        },
+        {
+          "name": "CanBeInvokedWith",
+          "parameters": [
+            "AsmType* return_type",
+            "const ZoneVector<AsmType*>& args"
+          ],
+          "return_type": "bool",
+          "logic": "Checks if the overloaded function type can be invoked with the given return type and arguments. This is overridden from AsmCallableType."
+        }
+      ]
+    },
+    {
+      "name": "AsmType",
+      "properties": [],
+      "methods": [
+        {
+          "name": "Heap",
+          "parameters": [],
+          "return_type": "AsmType*",
+          "logic": "Returns the AsmType representing Heap."
+        },
+        {
+          "name": "FloatishDoubleQ",
+          "parameters": [],
+          "return_type": "AsmType*",
+          "logic": "Returns the AsmType representing FloatishDoubleQ."
+        },
+        {
+          "name": "FloatQDoubleQ",
+          "parameters": [],
+          "return_type": "AsmType*",
+          "logic": "Returns the AsmType representing FloatQDoubleQ."
+        },
+        {
+          "name": "Void",
+          "parameters": [],
+          "return_type": "AsmType*",
+          "logic": "Returns the AsmType representing Void."
+        },
+        {
+          "name": "Extern",
+          "parameters": [],
+          "return_type": "AsmType*",
+          "logic": "Returns the AsmType representing Extern."
+        },
+        {
+          "name": "DoubleQ",
+          "parameters": [],
+          "return_type": "AsmType*",
+          "logic": "Returns the AsmType representing DoubleQ."
+        },
+        {
+          "name": "Double",
+          "parameters": [],
+          "return_type": "AsmType*",
+          "logic": "Returns the AsmType representing Double."
+        },
+        {
+          "name": "Intish",
+          "parameters": [],
+          "return_type": "AsmType*",
+          "logic": "Returns the AsmType representing Intish."
+        },
+        {
+          "name": "Int",
+          "parameters": [],
+          "return_type": "AsmType*",
+          "logic": "Returns the AsmType representing Int."
+        },
+        {
+          "name": "Signed",
+          "parameters": [],
+          "return_type": "AsmType*",
+          "logic": "Returns the AsmType representing Signed."
+        },
+        {
+          "name": "Unsigned",
+          "parameters": [],
+          "return_type": "AsmType*",
+          "logic": "Returns the AsmType representing Unsigned."
+        },
+        {
+          "name": "FixNum",
+          "parameters": [],
+          "return_type": "AsmType*",
+          "logic": "Returns the AsmType representing FixNum."
+        },
+        {
+          "name": "Floatish",
+          "parameters": [],
+          "return_type": "AsmType*",
+          "logic": "Returns the AsmType representing Floatish."
+        },
+        {
+          "name": "FloatQ",
+          "parameters": [],
+          "return_type": "AsmType*",
+          "logic": "Returns the AsmType representing FloatQ."
+        },
+        {
+          "name": "Float",
+          "parameters": [],
+          "return_type": "AsmType*",
+          "logic": "Returns the AsmType representing Float."
+        },
+        {
+          "name": "Uint8Array",
+          "parameters": [],
+          "return_type": "AsmType*",
+          "logic": "Returns the AsmType representing Uint8Array."
+        },
+        {
+          "name": "Int8Array",
+          "parameters": [],
+          "return_type": "AsmType*",
+          "logic": "Returns the AsmType representing Int8Array."
+        },
+        {
+          "name": "Uint16Array",
+          "parameters": [],
+          "return_type": "AsmType*",
+          "logic": "Returns the AsmType representing Uint16Array."
+        },
+        {
+          "name": "Int16Array",
+          "parameters": [],
+          "return_type": "AsmType*",
+          "logic": "Returns the AsmType representing Int16Array."
+        },
+        {
+          "name": "Uint32Array",
+          "parameters": [],
+          "return_type": "AsmType*",
+          "logic": "Returns the AsmType representing Uint32Array."
+        },
+        {
+          "name": "Int32Array",
+          "parameters": [],
+          "return_type": "AsmType*",
+          "logic": "Returns the AsmType representing Int32Array."
+        },
+        {
+          "name": "Float32Array",
+          "parameters": [],
+          "return_type": "AsmType*",
+          "logic": "Returns the AsmType representing Float32Array."
+        },
+        {
+          "name": "Float64Array",
+          "parameters": [],
+          "return_type": "AsmType*",
+          "logic": "Returns the AsmType representing Float64Array."
+        },
+        {
+          "name": "None",
+          "parameters": [],
+          "return_type": "AsmType*",
+          "logic": "Returns the AsmType representing None."
+        },
+        {
+          "name": "AsFunctionType",
+          "parameters": [],
+          "return_type": "AsmFunctionType*",
+          "logic": "Attempts to cast this AsmType to an AsmFunctionType."
+        },
+        {
+          "name": "AsOverloadedFunctionType",
+          "parameters": [],
+          "return_type": "AsmOverloadedFunctionType*",
+          "logic": "Attempts to cast this AsmType to an AsmOverloadedFunctionType."
+        },
+        {
+          "name": "AsValueType",
+          "parameters": [],
+          "return_type": "AsmValueType*",
+          "logic": "Attempts to cast this AsmType to an AsmValueType."
+        },
+        {
+          "name": "AsCallableType",
+          "parameters": [],
+          "return_type": "AsmCallableType*",
+          "logic": "Attempts to cast this AsmType to an AsmCallableType."
+        },
+        {
+          "name": "Function",
+          "parameters": [
+            "Zone* zone",
+            "AsmType* ret"
+          ],
+          "return_type": "AsmType*",
+          "logic": "Creates a new AsmType representing a function with the given return type."
+        },
+        {
+          "name": "OverloadedFunction",
+          "parameters": [
+            "Zone* zone"
+          ],
+          "return_type": "AsmType*",
+          "logic": "Creates a new AsmType representing an overloaded function."
+        },
+        {
+          "name": "FroundType",
+          "parameters": [
+            "Zone* zone"
+          ],
+          "return_type": "AsmType*",
+          "logic": "Returns the AsmType representing fround(src)."
+        },
+        {
+          "name": "MinMaxType",
+          "parameters": [
+            "Zone* zone",
+            "AsmType* dest",
+            "AsmType* src"
+          ],
+          "return_type": "AsmType*",
+          "logic": "Returns the AsmType representing min and max."
+        },
+        {
+          "name": "Name",
+          "parameters": [],
+          "return_type": "std::string",
+          "logic": "Returns the name of the AsmType."
+        },
+        {
+          "name": "IsExactly",
+          "parameters": [
+            "AsmType* x",
+            "AsmType* y"
+          ],
+          "return_type": "bool",
+          "logic": "Checks if two AsmTypes are exactly the same type."
+        },
+        {
+          "name": "IsA",
+          "parameters": [
+            "AsmType* that"
+          ],
+          "return_type": "bool",
+          "logic": "Checks if this AsmType is a type of another AsmType."
+        },
+        {
+          "name": "ElementSizeInBytes",
+          "parameters": [],
+          "return_type": "int32_t",
+          "logic": "Returns the element size in bytes if this is a heap type. Otherwise returns kNotHeapType."
+        },
+        {
+          "name": "LoadType",
+          "parameters": [],
+          "return_type": "AsmType*",
+          "logic": "Returns the load type if this is a heap type. AsmType::None is returned if this is not a heap type."
+        },
+        {
+          "name": "StoreType",
+          "parameters": [],
+          "return_type": "AsmType*",
+          "logic": "Returns the store type if this is a heap type. AsmType::None is returned if this is not a heap type."
+        }
+      ]
+    }
+  ],
+  "functions": []
+}

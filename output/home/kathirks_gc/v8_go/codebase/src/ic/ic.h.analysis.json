@@ -1,0 +1,854 @@
+{
+  "file_path": "/home/kathirks_gc/v8_go/codebase/src/ic/ic.h",
+  "imports": [
+    "<vector>",
+    "src/common/message-template.h",
+    "src/execution/isolate.h",
+    "src/heap/factory.h",
+    "src/ic/stub-cache.h",
+    "src/objects/feedback-vector.h",
+    "src/objects/map.h",
+    "src/objects/maybe-object.h",
+    "src/objects/smi.h"
+  ],
+  "classes": [
+    {
+      "name": "IC",
+      "properties": [
+        "isolate_",
+        "vector_set_",
+        "old_state_",
+        "state_",
+        "kind_",
+        "lookup_start_object_map_",
+        "accessor_",
+        "target_maps_",
+        "target_maps_set_",
+        "slow_stub_reason_",
+        "nexus_"
+      ],
+      "methods": [
+        {
+          "name": "IC",
+          "parameters": [
+            "Isolate* isolate",
+            "Handle<FeedbackVector> vector",
+            "FeedbackSlot slot",
+            "FeedbackSlotKind kind"
+          ],
+          "return_type": "void",
+          "logic": "Constructor for the IC class. Initializes the IC structure with given parameters."
+        },
+        {
+          "name": "~IC",
+          "parameters": [],
+          "return_type": "virtual",
+          "logic": "Virtual destructor for the IC class."
+        },
+        {
+          "name": "state",
+          "parameters": [],
+          "return_type": "State",
+          "logic": "Returns the current IC state."
+        },
+        {
+          "name": "UpdateState",
+          "parameters": [
+            "DirectHandle<Object> lookup_start_object",
+            "DirectHandle<Object> name"
+          ],
+          "return_type": "void",
+          "logic": "Computes the current IC state based on the target stub, lookup_start_object and name."
+        },
+        {
+          "name": "RecomputeHandlerForName",
+          "parameters": [
+            "DirectHandle<Object> name"
+          ],
+          "return_type": "bool",
+          "logic": "Determines whether handler recomputation is required for the given name."
+        },
+        {
+          "name": "MarkRecomputeHandler",
+          "parameters": [
+            "DirectHandle<Object> name"
+          ],
+          "return_type": "void",
+          "logic": "Marks IC to recompute handler for the given name."
+        },
+        {
+          "name": "IsAnyHas",
+          "parameters": [],
+          "return_type": "bool",
+          "logic": "Checks if the IC is a keyed has IC."
+        },
+        {
+          "name": "IsAnyLoad",
+          "parameters": [],
+          "return_type": "bool",
+          "logic": "Checks if the IC is a load IC (named, global, or keyed)."
+        },
+        {
+          "name": "IsAnyStore",
+          "parameters": [],
+          "return_type": "bool",
+          "logic": "Checks if the IC is a store IC (named, global, keyed, array literal)."
+        },
+        {
+          "name": "IsAnyDefineOwn",
+          "parameters": [],
+          "return_type": "bool",
+          "logic": "Checks if the IC is define own property ic"
+        },
+        {
+          "name": "IsHandler",
+          "parameters": [
+            "Tagged<MaybeObject> object"
+          ],
+          "return_type": "static inline bool",
+          "logic": "Checks if the given object is a handler."
+        },
+        {
+          "name": "OnFeedbackChanged",
+          "parameters": [
+            "Isolate* isolate",
+            "Tagged<FeedbackVector> vector",
+            "FeedbackSlot slot",
+            "const char* reason"
+          ],
+          "return_type": "static void",
+          "logic": "Notifies the IC system that feedback has changed (static method)."
+        },
+        {
+          "name": "OnFeedbackChanged",
+          "parameters": [
+            "const char* reason"
+          ],
+          "return_type": "void",
+          "logic": "Notifies the IC system that feedback has changed."
+        },
+        {
+          "name": "set_slow_stub_reason",
+          "parameters": [
+            "const char* reason"
+          ],
+          "return_type": "void",
+          "logic": "Sets the reason for using a slow stub."
+        },
+        {
+          "name": "set_accessor",
+          "parameters": [
+            "Handle<Object> accessor"
+          ],
+          "return_type": "void",
+          "logic": "Sets the accessor object."
+        },
+        {
+          "name": "accessor",
+          "parameters": [],
+          "return_type": "MaybeHandle<Object>",
+          "logic": "Returns the accessor object."
+        },
+        {
+          "name": "isolate",
+          "parameters": [],
+          "return_type": "Isolate*",
+          "logic": "Returns the isolate."
+        },
+        {
+          "name": "is_vector_set",
+          "parameters": [],
+          "return_type": "bool",
+          "logic": "Returns whether the feedback vector is set."
+        },
+        {
+          "name": "vector_needs_update",
+          "parameters": [],
+          "return_type": "inline bool",
+          "logic": "Check if the feedback vector needs update"
+        },
+        {
+          "name": "ConfigureVectorState",
+          "parameters": [
+            "IC::State new_state",
+            "DirectHandle<Object> key"
+          ],
+          "return_type": "bool",
+          "logic": "Configures the feedback vector for most states."
+        },
+        {
+          "name": "ConfigureVectorState",
+          "parameters": [
+            "DirectHandle<Name> name",
+            "DirectHandle<Map> map",
+            "DirectHandle<Object> handler"
+          ],
+          "return_type": "void",
+          "logic": "Configures the feedback vector for MONOMORPHIC state."
+        },
+        {
+          "name": "ConfigureVectorState",
+          "parameters": [
+            "DirectHandle<Name> name",
+            "DirectHandle<Map> map",
+            "const MaybeObjectDirectHandle& handler"
+          ],
+          "return_type": "void",
+          "logic": "Configures the feedback vector for MONOMORPHIC state with MaybeObjectDirectHandle."
+        },
+        {
+          "name": "ConfigureVectorState",
+          "parameters": [
+            "DirectHandle<Name> name",
+            "MapHandlesSpan maps",
+            "MaybeObjectHandles* handlers"
+          ],
+          "return_type": "void",
+          "logic": "Configures the feedback vector for POLYMORPHIC state."
+        },
+        {
+          "name": "ConfigureVectorState",
+          "parameters": [
+            "DirectHandle<Name> name",
+            "MapsAndHandlers const& maps_and_handlers"
+          ],
+          "return_type": "void",
+          "logic": "Configures the feedback vector for POLYMORPHIC state with MapsAndHandlers struct."
+        },
+        {
+          "name": "TransitionMarkFromState",
+          "parameters": [
+            "IC::State state"
+          ],
+          "return_type": "char",
+          "logic": "Returns transition mark from the state."
+        },
+        {
+          "name": "TraceIC",
+          "parameters": [
+            "const char* type",
+            "DirectHandle<Object> name"
+          ],
+          "return_type": "void",
+          "logic": "Traces the IC operation."
+        },
+        {
+          "name": "TraceIC",
+          "parameters": [
+            "const char* type",
+            "DirectHandle<Object> name",
+            "State old_state",
+            "State new_state"
+          ],
+          "return_type": "void",
+          "logic": "Traces the IC operation with old and new state."
+        },
+        {
+          "name": "TypeError",
+          "parameters": [
+            "MessageTemplate",
+            "Handle<Object> object",
+            "Handle<Object> key"
+          ],
+          "return_type": "MaybeDirectHandle<Object>",
+          "logic": "Creates a TypeError."
+        },
+        {
+          "name": "ReferenceError",
+          "parameters": [
+            "Handle<Name> name"
+          ],
+          "return_type": "MaybeDirectHandle<Object>",
+          "logic": "Creates a ReferenceError."
+        },
+        {
+          "name": "UpdateMonomorphicIC",
+          "parameters": [
+            "const MaybeObjectDirectHandle& handler",
+            "DirectHandle<Name> name"
+          ],
+          "return_type": "void",
+          "logic": "Updates the IC to the monomorphic state."
+        },
+        {
+          "name": "UpdateMegaDOMIC",
+          "parameters": [
+            "const MaybeObjectDirectHandle& handler",
+            "DirectHandle<Name> name"
+          ],
+          "return_type": "bool",
+          "logic": "Updates the IC to the mega DOM state."
+        },
+        {
+          "name": "UpdatePolymorphicIC",
+          "parameters": [
+            "DirectHandle<Name> name",
+            "const MaybeObjectDirectHandle& handler"
+          ],
+          "return_type": "bool",
+          "logic": "Updates the IC to the polymorphic state."
+        },
+        {
+          "name": "UpdateMegamorphicCache",
+          "parameters": [
+            "DirectHandle<Map> map",
+            "DirectHandle<Name> name",
+            "const MaybeObjectDirectHandle& handler"
+          ],
+          "return_type": "void",
+          "logic": "Updates the megamorphic cache."
+        },
+        {
+          "name": "stub_cache",
+          "parameters": [],
+          "return_type": "StubCache*",
+          "logic": "Returns the stub cache."
+        },
+        {
+          "name": "CopyICToMegamorphicCache",
+          "parameters": [
+            "DirectHandle<Name> name"
+          ],
+          "return_type": "void",
+          "logic": "Copies the current IC to the megamorphic cache."
+        },
+        {
+          "name": "IsTransitionOfMonomorphicTarget",
+          "parameters": [
+            "Tagged<Map> source_map",
+            "Tagged<Map> target_map"
+          ],
+          "return_type": "bool",
+          "logic": "Check if transition is a monomorphic target"
+        },
+        {
+          "name": "SetCache",
+          "parameters": [
+            "DirectHandle<Name> name",
+            "Handle<Object> handler"
+          ],
+          "return_type": "void",
+          "logic": "Sets the handler in the cache."
+        },
+        {
+          "name": "SetCache",
+          "parameters": [
+            "DirectHandle<Name> name",
+            "const MaybeObjectHandle& handler"
+          ],
+          "return_type": "void",
+          "logic": "Sets the MaybeObject handler in the cache."
+        },
+        {
+          "name": "kind",
+          "parameters": [],
+          "return_type": "FeedbackSlotKind",
+          "logic": "Returns the feedback slot kind."
+        },
+        {
+          "name": "IsGlobalIC",
+          "parameters": [],
+          "return_type": "bool",
+          "logic": "Checks if the IC is a global IC (load or store)."
+        },
+        {
+          "name": "IsLoadIC",
+          "parameters": [],
+          "return_type": "bool",
+          "logic": "Checks if the IC is a load IC."
+        },
+        {
+          "name": "IsLoadGlobalIC",
+          "parameters": [],
+          "return_type": "bool",
+          "logic": "Checks if the IC is a load global IC."
+        },
+        {
+          "name": "IsKeyedLoadIC",
+          "parameters": [],
+          "return_type": "bool",
+          "logic": "Checks if the IC is a keyed load IC."
+        },
+        {
+          "name": "IsStoreGlobalIC",
+          "parameters": [],
+          "return_type": "bool",
+          "logic": "Checks if the IC is a store global IC."
+        },
+        {
+          "name": "IsSetNamedIC",
+          "parameters": [],
+          "return_type": "bool",
+          "logic": "Checks if the IC is a set named IC."
+        },
+        {
+          "name": "IsDefineNamedOwnIC",
+          "parameters": [],
+          "return_type": "bool",
+          "logic": "Checks if the IC is a define named own IC."
+        },
+        {
+          "name": "IsStoreInArrayLiteralIC",
+          "parameters": [],
+          "return_type": "bool",
+          "logic": "Checks if the IC is a store in array literal IC."
+        },
+        {
+          "name": "IsKeyedStoreIC",
+          "parameters": [],
+          "return_type": "bool",
+          "logic": "Checks if the IC is a keyed store IC."
+        },
+        {
+          "name": "IsKeyedHasIC",
+          "parameters": [],
+          "return_type": "bool",
+          "logic": "Checks if the IC is a keyed has IC."
+        },
+        {
+          "name": "IsDefineKeyedOwnIC",
+          "parameters": [],
+          "return_type": "bool",
+          "logic": "Checks if the IC is a define keyed own IC."
+        },
+        {
+          "name": "is_keyed",
+          "parameters": [],
+          "return_type": "bool",
+          "logic": "Checks if the IC is a keyed operation (load or store)."
+        },
+        {
+          "name": "ShouldRecomputeHandler",
+          "parameters": [
+            "DirectHandle<String> name"
+          ],
+          "return_type": "bool",
+          "logic": "Check if the IC needs recompute handler"
+        },
+        {
+          "name": "lookup_start_object_map",
+          "parameters": [],
+          "return_type": "Handle<Map>",
+          "logic": "Returns the map of the lookup start object."
+        },
+        {
+          "name": "update_lookup_start_object_map",
+          "parameters": [
+            "DirectHandle<Object> object"
+          ],
+          "return_type": "inline void",
+          "logic": "Update map of lookup start object"
+        },
+        {
+          "name": "TargetMaps",
+          "parameters": [
+            "MapHandles* list"
+          ],
+          "return_type": "void",
+          "logic": "Adds the target maps to a provided list."
+        },
+        {
+          "name": "FirstTargetMap",
+          "parameters": [],
+          "return_type": "Tagged<Map>",
+          "logic": "Returns the first target map."
+        },
+        {
+          "name": "nexus",
+          "parameters": [],
+          "return_type": "const FeedbackNexus*",
+          "logic": "Returns const pointer to the FeedbackNexus"
+        },
+        {
+          "name": "nexus",
+          "parameters": [],
+          "return_type": "FeedbackNexus*",
+          "logic": "Returns pointer to the FeedbackNexus"
+        },
+        {
+          "name": "FindTargetMaps",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Finds and sets the target maps for the IC."
+        }
+      ]
+    },
+    {
+      "name": "LoadIC",
+      "properties": [],
+      "methods": [
+        {
+          "name": "LoadIC",
+          "parameters": [
+            "Isolate* isolate",
+            "Handle<FeedbackVector> vector",
+            "FeedbackSlot slot",
+            "FeedbackSlotKind kind"
+          ],
+          "return_type": "void",
+          "logic": "Constructor for the LoadIC class."
+        },
+        {
+          "name": "ShouldThrowReferenceError",
+          "parameters": [
+            "FeedbackSlotKind kind"
+          ],
+          "return_type": "static bool",
+          "logic": "Determines if a ReferenceError should be thrown based on the feedback slot kind."
+        },
+        {
+          "name": "ShouldThrowReferenceError",
+          "parameters": [],
+          "return_type": "bool",
+          "logic": "Determines if a ReferenceError should be thrown based on the kind."
+        },
+        {
+          "name": "Load",
+          "parameters": [
+            "Handle<JSAny> object",
+            "Handle<Name> name",
+            "bool update_feedback = true",
+            "DirectHandle<JSAny> receiver = DirectHandle<JSAny>()"
+          ],
+          "return_type": "MaybeDirectHandle<Object>",
+          "logic": "Performs a load operation, potentially updating feedback. Uses receiver if not empty, else object"
+        },
+        {
+          "name": "UpdateCaches",
+          "parameters": [
+            "LookupIterator* lookup"
+          ],
+          "return_type": "void",
+          "logic": "Updates the inline cache and the global stub cache based on the lookup result."
+        },
+        {
+          "name": "ComputeHandler",
+          "parameters": [
+            "LookupIterator* lookup"
+          ],
+          "return_type": "MaybeObjectHandle",
+          "logic": "Computes the appropriate handler for the load operation based on the lookup result."
+        }
+      ]
+    },
+    {
+      "name": "LoadGlobalIC",
+      "properties": [],
+      "methods": [
+        {
+          "name": "LoadGlobalIC",
+          "parameters": [
+            "Isolate* isolate",
+            "Handle<FeedbackVector> vector",
+            "FeedbackSlot slot",
+            "FeedbackSlotKind kind"
+          ],
+          "return_type": "void",
+          "logic": "Constructor for the LoadGlobalIC class."
+        },
+        {
+          "name": "Load",
+          "parameters": [
+            "Handle<Name> name",
+            "bool update_feedback = true"
+          ],
+          "return_type": "MaybeDirectHandle<Object>",
+          "logic": "Performs a load global operation, potentially updating feedback."
+        }
+      ]
+    },
+    {
+      "name": "KeyedLoadIC",
+      "properties": [],
+      "methods": [
+        {
+          "name": "KeyedLoadIC",
+          "parameters": [
+            "Isolate* isolate",
+            "Handle<FeedbackVector> vector",
+            "FeedbackSlot slot",
+            "FeedbackSlotKind kind"
+          ],
+          "return_type": "void",
+          "logic": "Constructor for the KeyedLoadIC class."
+        },
+        {
+          "name": "Load",
+          "parameters": [
+            "Handle<JSAny> object",
+            "Handle<Object> key"
+          ],
+          "return_type": "MaybeDirectHandle<Object>",
+          "logic": "Performs a keyed load operation."
+        },
+        {
+          "name": "RuntimeLoad",
+          "parameters": [
+            "DirectHandle<JSAny> object",
+            "DirectHandle<Object> key",
+            "bool* is_found = nullptr"
+          ],
+          "return_type": "MaybeDirectHandle<Object>",
+          "logic": "Performs runtime load"
+        },
+        {
+          "name": "LoadName",
+          "parameters": [
+            "Handle<JSAny> object",
+            "DirectHandle<Object> key",
+            "Handle<Name> name"
+          ],
+          "return_type": "MaybeDirectHandle<Object>",
+          "logic": "Performs a load operation using a Name."
+        },
+        {
+          "name": "UpdateLoadElement",
+          "parameters": [
+            "DirectHandle<HeapObject> receiver",
+            "KeyedAccessLoadMode new_load_mode"
+          ],
+          "return_type": "void",
+          "logic": "Updates the load element access and feedback."
+        },
+        {
+          "name": "LoadElementHandler",
+          "parameters": [
+            "DirectHandle<Map> receiver_map",
+            "KeyedAccessLoadMode new_load_mode"
+          ],
+          "return_type": "Handle<Object>",
+          "logic": "Computes appropriate handler for element load"
+        },
+        {
+          "name": "LoadElementPolymorphicHandlers",
+          "parameters": [
+            "MapHandles* receiver_maps",
+            "MaybeObjectHandles* handlers",
+            "KeyedAccessLoadMode new_load_mode"
+          ],
+          "return_type": "void",
+          "logic": "Configures polymorphic handlers for element load"
+        },
+        {
+          "name": "GetKeyedAccessLoadModeFor",
+          "parameters": [
+            "DirectHandle<Map> receiver_map"
+          ],
+          "return_type": "KeyedAccessLoadMode",
+          "logic": "Determines appropriate access load mode from map"
+        }
+      ]
+    },
+    {
+      "name": "StoreIC",
+      "properties": [],
+      "methods": [
+        {
+          "name": "StoreIC",
+          "parameters": [
+            "Isolate* isolate",
+            "Handle<FeedbackVector> vector",
+            "FeedbackSlot slot",
+            "FeedbackSlotKind kind"
+          ],
+          "return_type": "void",
+          "logic": "Constructor for the StoreIC class."
+        },
+        {
+          "name": "Store",
+          "parameters": [
+            "Handle<JSAny> object",
+            "Handle<Name> name",
+            "DirectHandle<Object> value",
+            "StoreOrigin store_origin = StoreOrigin::kNamed"
+          ],
+          "return_type": "MaybeDirectHandle<Object>",
+          "logic": "Performs a store operation."
+        },
+        {
+          "name": "LookupForWrite",
+          "parameters": [
+            "LookupIterator* it",
+            "DirectHandle<Object> value",
+            "StoreOrigin store_origin"
+          ],
+          "return_type": "bool",
+          "logic": "Looks up the property to write to."
+        },
+        {
+          "name": "UpdateCaches",
+          "parameters": [
+            "LookupIterator* lookup",
+            "DirectHandle<Object> value",
+            "StoreOrigin store_origin"
+          ],
+          "return_type": "void",
+          "logic": "Updates the inline cache and the global stub cache based on the lookup result."
+        },
+        {
+          "name": "ComputeHandler",
+          "parameters": [
+            "LookupIterator* lookup"
+          ],
+          "return_type": "MaybeObjectHandle",
+          "logic": "Computes the appropriate handler for the store operation based on the lookup result."
+        }
+      ]
+    },
+    {
+      "name": "StoreGlobalIC",
+      "properties": [],
+      "methods": [
+        {
+          "name": "StoreGlobalIC",
+          "parameters": [
+            "Isolate* isolate",
+            "Handle<FeedbackVector> vector",
+            "FeedbackSlot slot",
+            "FeedbackSlotKind kind"
+          ],
+          "return_type": "void",
+          "logic": "Constructor for the StoreGlobalIC class."
+        },
+        {
+          "name": "Store",
+          "parameters": [
+            "Handle<Name> name",
+            "DirectHandle<Object> value"
+          ],
+          "return_type": "MaybeDirectHandle<Object>",
+          "logic": "Performs a store global operation."
+        }
+      ]
+    },
+    {
+      "name": "KeyedStoreIC",
+      "properties": [],
+      "methods": [
+        {
+          "name": "GetKeyedAccessStoreMode",
+          "parameters": [],
+          "return_type": "KeyedAccessStoreMode",
+          "logic": "Returns the current KeyedAccessStoreMode."
+        },
+        {
+          "name": "KeyedStoreIC",
+          "parameters": [
+            "Isolate* isolate",
+            "Handle<FeedbackVector> vector",
+            "FeedbackSlot slot",
+            "FeedbackSlotKind kind"
+          ],
+          "return_type": "void",
+          "logic": "Constructor for the KeyedStoreIC class."
+        },
+        {
+          "name": "Store",
+          "parameters": [
+            "Handle<JSAny> object",
+            "Handle<Object> name",
+            "DirectHandle<Object> value"
+          ],
+          "return_type": "MaybeDirectHandle<Object>",
+          "logic": "Performs a keyed store operation."
+        },
+        {
+          "name": "UpdateStoreElement",
+          "parameters": [
+            "Handle<Map> receiver_map",
+            "KeyedAccessStoreMode store_mode",
+            "Handle<Map> new_receiver_map"
+          ],
+          "return_type": "void",
+          "logic": "Updates the element store access feedback."
+        },
+        {
+          "name": "ComputeTransitionedMap",
+          "parameters": [
+            "Handle<Map> map",
+            "TransitionMode transition_mode"
+          ],
+          "return_type": "DirectHandle<Map>",
+          "logic": "Computes the map after the array transition."
+        },
+        {
+          "name": "StoreElementHandler",
+          "parameters": [
+            "DirectHandle<Map> receiver_map",
+            "KeyedAccessStoreMode store_mode",
+            "MaybeDirectHandle<UnionOf<Smi, Cell>> prev_validity_cell = kNullMaybeHandle"
+          ],
+          "return_type": "Handle<Object>",
+          "logic": "Retrieves the appropriate handler for element store"
+        },
+        {
+          "name": "StoreElementPolymorphicHandlers",
+          "parameters": [
+            "MapsAndHandlers* receiver_maps_and_handlers",
+            "KeyedAccessStoreMode store_mode"
+          ],
+          "return_type": "void",
+          "logic": "Configures polymorphic handlers for element store"
+        }
+      ]
+    },
+    {
+      "name": "StoreInArrayLiteralIC",
+      "properties": [],
+      "methods": [
+        {
+          "name": "StoreInArrayLiteralIC",
+          "parameters": [
+            "Isolate* isolate",
+            "Handle<FeedbackVector> vector",
+            "FeedbackSlot slot"
+          ],
+          "return_type": "void",
+          "logic": "Constructor for the StoreInArrayLiteralIC class."
+        },
+        {
+          "name": "Store",
+          "parameters": [
+            "DirectHandle<JSArray> array",
+            "Handle<Object> index",
+            "DirectHandle<Object> value"
+          ],
+          "return_type": "MaybeDirectHandle<Object>",
+          "logic": "Performs a store in array literal operation."
+        }
+      ]
+    }
+  ],
+  "functions": [],
+  "enums": [
+    {
+      "name": "NamedPropertyType",
+      "values": [
+        "kNotOwn",
+        "kOwn"
+      ]
+    },
+    {
+      "name": "KeyedStoreCheckMap",
+      "values": [
+        "kDontCheckMap",
+        "kCheckMap"
+      ]
+    },
+    {
+      "name": "KeyedStoreIncrementLength",
+      "values": [
+        "kDontIncrementLength",
+        "kIncrementLength"
+      ]
+    },
+    {
+      "name": "TransitionMode",
+      "values": [
+        "kNoTransition",
+        "kTransitionToDouble",
+        "kTransitionToObject"
+      ]
+    }
+  ]
+}

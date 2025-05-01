@@ -1,0 +1,161 @@
+{
+  "file_path": "/home/kathirks_gc/v8_go/codebase/src/logging/metrics.h",
+  "imports": [
+    "<memory>",
+    "<queue>",
+    "include/v8-metrics.h",
+    "src/base/platform/mutex.h",
+    "src/base/platform/time.h",
+    "src/init/v8.h"
+  ],
+  "classes": [
+    {
+      "name": "Recorder",
+      "properties": [
+        "lock_",
+        "foreground_task_runner_",
+        "embedder_recorder_",
+        "delayed_events_"
+      ],
+      "methods": [
+        {
+          "name": "SetEmbedderRecorder",
+          "parameters": [
+            "Isolate* isolate",
+            "const std::shared_ptr<v8::metrics::Recorder>& embedder_recorder"
+          ],
+          "return_type": "void",
+          "logic": "Sets the embedder recorder for the isolate. This allows the V8 engine to send metrics to the embedder application."
+        },
+        {
+          "name": "HasEmbedderRecorder",
+          "parameters": [],
+          "return_type": "bool",
+          "logic": "Checks if an embedder recorder has been set."
+        },
+        {
+          "name": "NotifyIsolateDisposal",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Notifies the embedder recorder that the isolate is being disposed of."
+        },
+        {
+          "name": "AddMainThreadEvent",
+          "parameters": [
+            "const T& event",
+            "v8::metrics::Recorder::ContextId id"
+          ],
+          "return_type": "void",
+          "logic": "Adds an event that should be processed on the main thread using the embedder's recorder, if available. This is a template function."
+        },
+        {
+          "name": "DelayMainThreadEvent",
+          "parameters": [
+            "const T& event",
+            "v8::metrics::Recorder::ContextId id"
+          ],
+          "return_type": "void",
+          "logic": "Delays the processing of an event on the main thread by queuing it up and running it when possible. This is a template function."
+        },
+        {
+          "name": "AddThreadSafeEvent",
+          "parameters": [
+            "const T& event"
+          ],
+          "return_type": "void",
+          "logic": "Adds an event that can be processed safely from any thread, using the embedder's recorder if available. This is a template function."
+        },
+        {
+          "name": "Delay",
+          "parameters": [
+            "std::unique_ptr<Recorder::DelayedEventBase>&& event"
+          ],
+          "return_type": "void",
+          "logic": "Delays an event by adding it to a queue. The events in the queue are meant to be executed on the main thread."
+        }
+      ]
+    },
+    {
+      "name": "DelayedEventBase",
+      "properties": [],
+      "methods": [
+        {
+          "name": "~DelayedEventBase",
+          "parameters": [],
+          "return_type": "virtual",
+          "logic": "Virtual destructor for the base class."
+        },
+        {
+          "name": "Run",
+          "parameters": [
+            "const std::shared_ptr<Recorder>& recorder"
+          ],
+          "return_type": "void",
+          "logic": "Abstract method that executes the delayed event. Must be implemented by derived classes."
+        }
+      ]
+    },
+    {
+      "name": "DelayedEvent",
+      "properties": [
+        "event_",
+        "id_"
+      ],
+      "methods": [
+        {
+          "name": "DelayedEvent",
+          "parameters": [
+            "const T& event",
+            "v8::metrics::Recorder::ContextId id"
+          ],
+          "return_type": "N/A (Constructor)",
+          "logic": "Constructor to create a DelayedEvent with a specific event and context ID."
+        },
+        {
+          "name": "Run",
+          "parameters": [
+            "const std::shared_ptr<Recorder>& recorder"
+          ],
+          "return_type": "void",
+          "logic": "Executes the delayed event by calling AddMainThreadEvent on the recorder."
+        }
+      ]
+    },
+    {
+      "name": "TimedScope",
+      "properties": [
+        "event_",
+        "start_time_"
+      ],
+      "methods": [
+        {
+          "name": "TimedScope",
+          "parameters": [
+            "T* event"
+          ],
+          "return_type": "N/A (Constructor)",
+          "logic": "Constructor that starts the timer when the object is created."
+        },
+        {
+          "name": "~TimedScope",
+          "parameters": [],
+          "return_type": "N/A (Destructor)",
+          "logic": "Destructor that stops the timer when the object is destroyed."
+        },
+        {
+          "name": "Start",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Starts the timer by setting the start_time_ to the current time."
+        },
+        {
+          "name": "Stop",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Stops the timer and calculates the duration between start_time_ and the current time, then saves it to the event's wall_clock_duration_in_us.  Also resets start_time_ to min value to avoid multiple stops."
+        }
+      ]
+    }
+  ],
+  "functions": []
+}

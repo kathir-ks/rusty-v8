@@ -1,0 +1,670 @@
+{
+  "file_path": "/home/kathirks_gc/v8_go/codebase/src/compiler/load-elimination.h",
+  "imports": [
+    "src/base/compiler-specific.h",
+    "src/codegen/machine-type.h",
+    "src/common/globals.h",
+    "src/compiler/graph-reducer.h",
+    "src/compiler/simplified-operator.h",
+    "src/handles/maybe-handles.h"
+  ],
+  "classes": [
+    {
+      "name": "LoadElimination",
+      "properties": [
+        "broker_",
+        "node_states_",
+        "jsgraph_"
+      ],
+      "methods": [
+        {
+          "name": "LoadElimination",
+          "parameters": [
+            "Editor* editor",
+            "JSHeapBroker* broker",
+            "JSGraph* jsgraph",
+            "Zone* zone"
+          ],
+          "return_type": "void",
+          "logic": "Constructor for the LoadElimination class. Initializes the AdvancedReducer and other member variables."
+        },
+        {
+          "name": "~LoadElimination",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Destructor for the LoadElimination class."
+        },
+        {
+          "name": "operator=",
+          "parameters": [
+            "const LoadElimination&"
+          ],
+          "return_type": "LoadElimination&",
+          "logic": "Deleted assignment operator to prevent copying."
+        },
+        {
+          "name": "LoadElimination",
+          "parameters": [
+            "const LoadElimination&"
+          ],
+          "return_type": "void",
+          "logic": "Deleted copy constructor to prevent copying."
+        },
+        {
+          "name": "reducer_name",
+          "parameters": [],
+          "return_type": "const char*",
+          "logic": "Returns the name of the reducer: \"LoadElimination\"."
+        },
+        {
+          "name": "Reduce",
+          "parameters": [
+            "Node* node"
+          ],
+          "return_type": "Reduction",
+          "logic": "The main method of the reducer. Attempts to eliminate redundant loads from the given node."
+        },
+        {
+          "name": "common",
+          "parameters": [],
+          "return_type": "CommonOperatorBuilder*",
+          "logic": "Returns the CommonOperatorBuilder."
+        },
+        {
+          "name": "isolate",
+          "parameters": [],
+          "return_type": "Isolate*",
+          "logic": "Returns the Isolate."
+        },
+        {
+          "name": "factory",
+          "parameters": [],
+          "return_type": "Factory*",
+          "logic": "Returns the Factory."
+        },
+        {
+          "name": "graph",
+          "parameters": [],
+          "return_type": "TFGraph*",
+          "logic": "Returns the TFGraph."
+        },
+        {
+          "name": "jsgraph",
+          "parameters": [],
+          "return_type": "JSGraph*",
+          "logic": "Returns the JSGraph."
+        },
+        {
+          "name": "broker",
+          "parameters": [],
+          "return_type": "JSHeapBroker*",
+          "logic": "Returns the JSHeapBroker."
+        },
+        {
+          "name": "zone",
+          "parameters": [],
+          "return_type": "Zone*",
+          "logic": "Returns the Zone."
+        }
+      ]
+    },
+    {
+      "name": "AbstractElements",
+      "properties": [
+        "elements_",
+        "next_index_"
+      ],
+      "methods": [
+        {
+          "name": "AbstractElements",
+          "parameters": [
+            "Zone* zone"
+          ],
+          "return_type": "void",
+          "logic": "Constructor initializing elements with default Element instances."
+        },
+        {
+          "name": "AbstractElements",
+          "parameters": [
+            "Node* object",
+            "Node* index",
+            "Node* value",
+            "MachineRepresentation representation",
+            "Zone* zone"
+          ],
+          "return_type": "void",
+          "logic": "Constructor initializing elements with a new element."
+        },
+        {
+          "name": "Extend",
+          "parameters": [
+            "Node* object",
+            "Node* index",
+            "Node* value",
+            "MachineRepresentation representation",
+            "Zone* zone"
+          ],
+          "return_type": "AbstractElements const*",
+          "logic": "Creates a new AbstractElements instance extending the current one with a new element."
+        },
+        {
+          "name": "Lookup",
+          "parameters": [
+            "Node* object",
+            "Node* index",
+            "MachineRepresentation representation"
+          ],
+          "return_type": "Node*",
+          "logic": "Looks up an element in the AbstractElements state."
+        },
+        {
+          "name": "Kill",
+          "parameters": [
+            "Node* object",
+            "Node* index",
+            "Zone* zone"
+          ],
+          "return_type": "AbstractElements const*",
+          "logic": "Removes an element from the AbstractElements state."
+        },
+        {
+          "name": "Equals",
+          "parameters": [
+            "AbstractElements const* that"
+          ],
+          "return_type": "bool",
+          "logic": "Checks if two AbstractElements states are equal."
+        },
+        {
+          "name": "Merge",
+          "parameters": [
+            "AbstractElements const* that",
+            "Zone* zone"
+          ],
+          "return_type": "AbstractElements const*",
+          "logic": "Merges two AbstractElements states."
+        },
+        {
+          "name": "Print",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Prints the AbstractElements state for debugging purposes."
+        }
+      ]
+    },
+    {
+      "name": "AliasStateInfo",
+      "properties": [],
+      "methods": []
+    },
+    {
+      "name": "AbstractField",
+      "properties": [
+        "info_for_node_"
+      ],
+      "methods": [
+        {
+          "name": "AbstractField",
+          "parameters": [
+            "Zone* zone"
+          ],
+          "return_type": "void",
+          "logic": "Constructor for AbstractField."
+        },
+        {
+          "name": "AbstractField",
+          "parameters": [
+            "Node* object",
+            "FieldInfo info",
+            "Zone* zone"
+          ],
+          "return_type": "void",
+          "logic": "Constructor for AbstractField initializing info for a given object."
+        },
+        {
+          "name": "Extend",
+          "parameters": [
+            "Node* object",
+            "FieldInfo info",
+            "Zone* zone",
+            "int current_field_count"
+          ],
+          "return_type": "AbstractField const*",
+          "logic": "Extends the AbstractField state with new information for a given object."
+        },
+        {
+          "name": "Lookup",
+          "parameters": [
+            "Node* object"
+          ],
+          "return_type": "FieldInfo const*",
+          "logic": "Looks up the FieldInfo for a given object."
+        },
+        {
+          "name": "KillConst",
+          "parameters": [
+            "Node* object",
+            "Zone* zone"
+          ],
+          "return_type": "AbstractField const*",
+          "logic": "Kills (removes) the const FieldInfo for a given object."
+        },
+        {
+          "name": "Kill",
+          "parameters": [
+            "const AliasStateInfo& alias_info",
+            "MaybeHandle<Name> name",
+            "Zone* zone"
+          ],
+          "return_type": "AbstractField const*",
+          "logic": "Kills (removes) FieldInfo based on aliasing and name."
+        },
+        {
+          "name": "Equals",
+          "parameters": [
+            "AbstractField const* that"
+          ],
+          "return_type": "bool",
+          "logic": "Checks if two AbstractField states are equal."
+        },
+        {
+          "name": "Merge",
+          "parameters": [
+            "AbstractField const* that",
+            "Zone* zone",
+            "int* count"
+          ],
+          "return_type": "AbstractField const*",
+          "logic": "Merges two AbstractField states, counting the number of merged fields."
+        },
+        {
+          "name": "Print",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Prints the AbstractField state for debugging purposes."
+        },
+        {
+          "name": "count",
+          "parameters": [],
+          "return_type": "int",
+          "logic": "Returns the number of tracked fields."
+        }
+      ]
+    },
+    {
+      "name": "AbstractMaps",
+      "properties": [
+        "info_for_node_"
+      ],
+      "methods": [
+        {
+          "name": "AbstractMaps",
+          "parameters": [
+            "Zone* zone"
+          ],
+          "return_type": "void",
+          "logic": "Constructor for the AbstractMaps class."
+        },
+        {
+          "name": "AbstractMaps",
+          "parameters": [
+            "Node* object",
+            "ZoneRefSet<Map> maps",
+            "Zone* zone"
+          ],
+          "return_type": "void",
+          "logic": "Constructor for the AbstractMaps class that initializes the map for a specific object."
+        },
+        {
+          "name": "Extend",
+          "parameters": [
+            "Node* object",
+            "ZoneRefSet<Map> maps",
+            "Zone* zone"
+          ],
+          "return_type": "AbstractMaps const*",
+          "logic": "Extends the abstract map state with the given map for the given object."
+        },
+        {
+          "name": "Lookup",
+          "parameters": [
+            "Node* object",
+            "ZoneRefSet<Map>* object_maps"
+          ],
+          "return_type": "bool",
+          "logic": "Looks up the abstract map for the given object."
+        },
+        {
+          "name": "Kill",
+          "parameters": [
+            "const AliasStateInfo& alias_info",
+            "Zone* zone"
+          ],
+          "return_type": "AbstractMaps const*",
+          "logic": "Kills (removes) map information based on aliasing."
+        },
+        {
+          "name": "Equals",
+          "parameters": [
+            "AbstractMaps const* that"
+          ],
+          "return_type": "bool",
+          "logic": "Checks for equality with another AbstractMaps."
+        },
+        {
+          "name": "Merge",
+          "parameters": [
+            "AbstractMaps const* that",
+            "Zone* zone"
+          ],
+          "return_type": "AbstractMaps const*",
+          "logic": "Merges with another AbstractMaps."
+        },
+        {
+          "name": "Print",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Prints the AbstractMaps state for debugging."
+        }
+      ]
+    },
+    {
+      "name": "IndexRange",
+      "properties": [
+        "begin_",
+        "end_"
+      ],
+      "methods": [
+        {
+          "name": "IndexRange",
+          "parameters": [
+            "int begin",
+            "int size"
+          ],
+          "return_type": "void",
+          "logic": "Constructor for a valid IndexRange"
+        },
+        {
+          "name": "Invalid",
+          "parameters": [],
+          "return_type": "IndexRange",
+          "logic": "Returns a invalid IndexRange"
+        },
+        {
+          "name": "operator==",
+          "parameters": [
+            "const IndexRange& other"
+          ],
+          "return_type": "bool",
+          "logic": "Compare index ranges"
+        },
+        {
+          "name": "operator!=",
+          "parameters": [
+            "const IndexRange& other"
+          ],
+          "return_type": "bool",
+          "logic": "Compare index ranges for inequality"
+        },
+        {
+          "name": "begin",
+          "parameters": [],
+          "return_type": "Iterator",
+          "logic": "Iterator begin"
+        },
+        {
+          "name": "end",
+          "parameters": [],
+          "return_type": "Iterator",
+          "logic": "Iterator end"
+        }
+      ]
+    },
+    {
+      "name": "AbstractState",
+      "properties": [
+        "elements_",
+        "fields_",
+        "const_fields_",
+        "maps_",
+        "const_fields_count_",
+        "fields_count_"
+      ],
+      "methods": [
+        {
+          "name": "Equals",
+          "parameters": [
+            "AbstractState const* that"
+          ],
+          "return_type": "bool",
+          "logic": "Checks if two AbstractState objects are equal."
+        },
+        {
+          "name": "Merge",
+          "parameters": [
+            "AbstractState const* that",
+            "Zone* zone"
+          ],
+          "return_type": "void",
+          "logic": "Merges two AbstractState objects."
+        },
+        {
+          "name": "SetMaps",
+          "parameters": [
+            "Node* object",
+            "ZoneRefSet<Map> maps",
+            "Zone* zone"
+          ],
+          "return_type": "AbstractState const*",
+          "logic": "Sets the abstract map for the given object."
+        },
+        {
+          "name": "KillMaps",
+          "parameters": [
+            "Node* object",
+            "Zone* zone"
+          ],
+          "return_type": "AbstractState const*",
+          "logic": "Kills the map information for the given object."
+        },
+        {
+          "name": "KillMaps",
+          "parameters": [
+            "const AliasStateInfo& alias_info",
+            "Zone* zone"
+          ],
+          "return_type": "AbstractState const*",
+          "logic": "Kills the map information based on alias analysis."
+        },
+        {
+          "name": "LookupMaps",
+          "parameters": [
+            "Node* object",
+            "ZoneRefSet<Map>* object_maps"
+          ],
+          "return_type": "bool",
+          "logic": "Looks up the abstract map for the given object."
+        },
+        {
+          "name": "AddField",
+          "parameters": [
+            "Node* object",
+            "IndexRange index",
+            "FieldInfo info",
+            "Zone* zone"
+          ],
+          "return_type": "AbstractState const*",
+          "logic": "Adds field information to the abstract state for the given object."
+        },
+        {
+          "name": "KillConstField",
+          "parameters": [
+            "Node* object",
+            "IndexRange index_range",
+            "Zone* zone"
+          ],
+          "return_type": "AbstractState const*",
+          "logic": "Removes const field information from the abstract state for the given object and index range."
+        },
+        {
+          "name": "KillField",
+          "parameters": [
+            "const AliasStateInfo& alias_info",
+            "IndexRange index",
+            "MaybeHandle<Name> name",
+            "Zone* zone"
+          ],
+          "return_type": "AbstractState const*",
+          "logic": "Removes field information from the abstract state based on alias analysis, index, and name."
+        },
+        {
+          "name": "KillField",
+          "parameters": [
+            "Node* object",
+            "IndexRange index",
+            "MaybeHandle<Name> name",
+            "Zone* zone"
+          ],
+          "return_type": "AbstractState const*",
+          "logic": "Removes field information from the abstract state for the given object, index and name."
+        },
+        {
+          "name": "KillFields",
+          "parameters": [
+            "Node* object",
+            "MaybeHandle<Name> name",
+            "Zone* zone"
+          ],
+          "return_type": "AbstractState const*",
+          "logic": "Removes field information from the abstract state for the given object and name."
+        },
+        {
+          "name": "KillAll",
+          "parameters": [
+            "Zone* zone"
+          ],
+          "return_type": "AbstractState const*",
+          "logic": "Kills all field, element and map information."
+        },
+        {
+          "name": "LookupField",
+          "parameters": [
+            "Node* object",
+            "IndexRange index",
+            "ConstFieldInfo const_field_info"
+          ],
+          "return_type": "FieldInfo const*",
+          "logic": "Looks up the field information for the given object, index and const field information."
+        },
+        {
+          "name": "AddElement",
+          "parameters": [
+            "Node* object",
+            "Node* index",
+            "Node* value",
+            "MachineRepresentation representation",
+            "Zone* zone"
+          ],
+          "return_type": "AbstractState const*",
+          "logic": "Adds element information to the abstract state for the given object, index, value, and representation."
+        },
+        {
+          "name": "KillElement",
+          "parameters": [
+            "Node* object",
+            "Node* index",
+            "Zone* zone"
+          ],
+          "return_type": "AbstractState const*",
+          "logic": "Kills element information from the abstract state for the given object and index."
+        },
+        {
+          "name": "LookupElement",
+          "parameters": [
+            "Node* object",
+            "Node* index",
+            "MachineRepresentation representation"
+          ],
+          "return_type": "Node*",
+          "logic": "Looks up the element information for the given object, index and representation."
+        },
+        {
+          "name": "Print",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Prints the abstract state for debugging purposes."
+        },
+        {
+          "name": "empty_state",
+          "parameters": [],
+          "return_type": "AbstractState const*",
+          "logic": "Returns a static empty abstract state."
+        }
+      ]
+    },
+    {
+      "name": "AbstractStateForEffectNodes",
+      "properties": [
+        "info_for_node_"
+      ],
+      "methods": [
+        {
+          "name": "AbstractStateForEffectNodes",
+          "parameters": [
+            "Zone* zone"
+          ],
+          "return_type": "void",
+          "logic": "Constructor for AbstractStateForEffectNodes."
+        },
+        {
+          "name": "Get",
+          "parameters": [
+            "Node* node"
+          ],
+          "return_type": "AbstractState const*",
+          "logic": "Gets the abstract state for a given node."
+        },
+        {
+          "name": "Set",
+          "parameters": [
+            "Node* node",
+            "AbstractState const* state"
+          ],
+          "return_type": "void",
+          "logic": "Sets the abstract state for a given node."
+        },
+        {
+          "name": "zone",
+          "parameters": [],
+          "return_type": "Zone*",
+          "logic": "Returns the zone."
+        }
+      ]
+    }
+  ],
+  "functions": [
+    {
+      "name": "FieldIndexOf",
+      "parameters": [
+        "int offset",
+        "int representation_size"
+      ],
+      "return_type": "IndexRange",
+      "logic": "Calculates an IndexRange from offset and representation size."
+    },
+    {
+      "name": "FieldIndexOf",
+      "parameters": [
+        "FieldAccess const& access"
+      ],
+      "return_type": "IndexRange",
+      "logic": "Calculates an IndexRange from FieldAccess."
+    },
+    {
+      "name": "empty_state",
+      "parameters": [],
+      "return_type": "AbstractState const*",
+      "logic": "Returns the empty abstract state."
+    }
+  ]
+}

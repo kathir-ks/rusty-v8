@@ -1,0 +1,202 @@
+{
+  "file_path": "/home/kathirks_gc/v8_go/codebase/src/torque/declarable.cc",
+  "imports": [
+    "src/torque/declarable.h",
+    "fstream",
+    "iostream",
+    "optional",
+    "src/torque/ast.h",
+    "src/torque/global-context.h",
+    "src/torque/type-inference.h",
+    "src/torque/type-visitor.h"
+  ],
+  "classes": [
+    {
+      "name": "QualifiedName",
+      "properties": [
+        "namespace_qualification",
+        "name"
+      ],
+      "methods": [
+        {
+          "name": "Parse",
+          "parameters": [
+            "qualified_name"
+          ],
+          "return_type": "QualifiedName",
+          "logic": "Parses a qualified name string into a QualifiedName object. It splits the string by '::' to extract namespace qualifications and the final name."
+        }
+      ]
+    },
+    {
+      "name": "SpecializationRequester",
+      "properties": [
+        "position",
+        "name",
+        "scope"
+      ],
+      "methods": [
+        {
+          "name": "SpecializationRequester",
+          "parameters": [
+            "position",
+            "s",
+            "name"
+          ],
+          "return_type": "void",
+          "logic": "Constructor for the SpecializationRequester class. It initializes the position, name, and scope, skipping scopes unrelated to template specializations to avoid dangling pointers."
+        }
+      ]
+    },
+    {
+      "name": "Scope",
+      "properties": [],
+      "methods": [
+        {
+          "name": "Lookup",
+          "parameters": [
+            "name"
+          ],
+          "return_type": "std::vector<Declarable*>",
+          "logic": "Looks up a declarable by its qualified name within the scope. It searches the parent scopes recursively and then the current scope."
+        }
+      ]
+    },
+    {
+      "name": "TypeConstraint",
+      "properties": [
+        "upper_bound"
+      ],
+      "methods": [
+        {
+          "name": "IsViolated",
+          "parameters": [
+            "type"
+          ],
+          "return_type": "std::optional<std::string>",
+          "logic": "Checks if a given type violates the constraint. It determines if the type is a subtype of the upper bound, returning an error message if not."
+        }
+      ]
+    },
+    {
+      "name": "GenericCallable",
+      "properties": [],
+      "methods": [
+        {
+          "name": "InferSpecializationTypes",
+          "parameters": [
+            "explicit_specialization_types",
+            "arguments"
+          ],
+          "return_type": "TypeArgumentInference",
+          "logic": "Infers the types for a generic callable's specialization based on explicit specialization types and argument types. It also checks if the inferred types violate any constraints."
+        },
+        {
+          "name": "CallableBody",
+          "parameters": [],
+          "return_type": "std::optional<Statement*>",
+          "logic": "Retrieves the body of the callable, which can be a macro or a builtin. It returns the body statement if found, or nullopt otherwise."
+        }
+      ]
+    },
+    {
+      "name": "Namespace",
+      "properties": [],
+      "methods": [
+        {
+          "name": "IsDefaultNamespace",
+          "parameters": [],
+          "return_type": "bool",
+          "logic": "Checks if the namespace is the default namespace (GlobalContext::GetDefaultNamespace())."
+        },
+        {
+          "name": "IsTestNamespace",
+          "parameters": [],
+          "return_type": "bool",
+          "logic": "Checks if the namespace is the test namespace (name() == kTestNamespaceName)."
+        }
+      ]
+    },
+    {
+      "name": "TypeAlias",
+      "properties": [
+        "type_",
+        "delayed_",
+        "being_resolved_"
+      ],
+      "methods": [
+        {
+          "name": "Resolve",
+          "parameters": [],
+          "return_type": "const Type*",
+          "logic": "Resolves the type alias by computing the actual type from the delayed type declaration. It detects and reports circular dependencies."
+        }
+      ]
+    }
+  ],
+  "functions": [
+    {
+      "name": "operator<<",
+      "parameters": [
+        "os",
+        "name"
+      ],
+      "return_type": "std::ostream&",
+      "logic": "Overloads the output stream operator to print a QualifiedName object. It prints the namespace qualifications followed by the name."
+    },
+    {
+      "name": "operator<<",
+      "parameters": [
+        "os",
+        "m"
+      ],
+      "return_type": "std::ostream&",
+      "logic": "Overloads the output stream operator to print a Callable object, including its name, parameters, and return type."
+    },
+    {
+      "name": "operator<<",
+      "parameters": [
+        "os",
+        "b"
+      ],
+      "return_type": "std::ostream&",
+      "logic": "Overloads the output stream operator to print a Builtin object, including its return type, name, and parameters."
+    },
+    {
+      "name": "operator<<",
+      "parameters": [
+        "os",
+        "b"
+      ],
+      "return_type": "std::ostream&",
+      "logic": "Overloads the output stream operator to print a RuntimeFunction object, including its return type, name, and parameters."
+    },
+    {
+      "name": "operator<<",
+      "parameters": [
+        "os",
+        "g"
+      ],
+      "return_type": "std::ostream&",
+      "logic": "Overloads the output stream operator to print a GenericCallable object, including its name and generic parameters."
+    },
+    {
+      "name": "FindConstraintViolation",
+      "parameters": [
+        "types",
+        "constraints"
+      ],
+      "return_type": "std::optional<std::string>",
+      "logic": "Finds constraint violations. It iterates through types and their respective constraints. If a violation is found, a message indicating the problem is returned. If no violations, std::nullopt is returned."
+    },
+    {
+      "name": "ComputeConstraints",
+      "parameters": [
+        "scope",
+        "parameters"
+      ],
+      "return_type": "std::vector<TypeConstraint>",
+      "logic": "Computes the type constraints for a set of generic parameters within a given scope. It creates a SubtypeConstraint if a parameter has a specified constraint, and an Unconstrained otherwise."
+    }
+  ]
+}

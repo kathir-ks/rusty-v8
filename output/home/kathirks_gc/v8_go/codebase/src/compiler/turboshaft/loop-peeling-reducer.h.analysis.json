@@ -1,0 +1,107 @@
+{
+  "file_path": "/home/kathirks_gc/v8_go/codebase/src/compiler/turboshaft/loop-peeling-reducer.h",
+  "imports": [
+    "src/base/logging.h",
+    "src/compiler/turboshaft/assembler.h",
+    "src/compiler/turboshaft/copying-phase.h",
+    "src/compiler/turboshaft/index.h",
+    "src/compiler/turboshaft/loop-finder.h",
+    "src/compiler/turboshaft/machine-optimization-reducer.h",
+    "src/compiler/turboshaft/operations.h",
+    "src/compiler/turboshaft/phase.h"
+  ],
+  "classes": [
+    {
+      "name": "LoopPeelingReducer",
+      "properties": [
+        "kMaxSizeForPeeling",
+        "peeling_",
+        "current_loop_header_",
+        "loop_finder_",
+        "broker_"
+      ],
+      "methods": [
+        {
+          "name": "REDUCE_INPUT_GRAPH(Goto)",
+          "parameters": [
+            "V<None> ig_idx",
+            "const GotoOp& gto"
+          ],
+          "return_type": "V<None>",
+          "logic": "Reduces a Goto operation in the input graph.  If the Goto targets a loop header and the loop can be peeled, it peels the first iteration. Skips the backedge when emitting the peeled iteration."
+        },
+        {
+          "name": "REDUCE_INPUT_GRAPH(Call)",
+          "parameters": [
+            "V<AnyOrNone> ig_idx",
+            "const CallOp& call"
+          ],
+          "return_type": "V<AnyOrNone>",
+          "logic": "Reduces a Call operation in the input graph. Removes StackCheck operations from the peeled iteration."
+        },
+        {
+          "name": "REDUCE_INPUT_GRAPH(JSStackCheck)",
+          "parameters": [
+            "V<None> ig_idx",
+            "const JSStackCheckOp& stack_check"
+          ],
+          "return_type": "V<None>",
+          "logic": "Reduces a JSStackCheck operation in the input graph. Removes the stack check operation from the peeled iteration."
+        },
+        {
+          "name": "REDUCE_INPUT_GRAPH(WasmStackCheck)",
+          "parameters": [
+            "V<None> ig_idx",
+            "const WasmStackCheckOp& stack_check"
+          ],
+          "return_type": "V<None>",
+          "logic": "Reduces a WasmStackCheck operation in the input graph. Removes the stack check operation from the peeled iteration."
+        },
+        {
+          "name": "REDUCE_INPUT_GRAPH(Phi)",
+          "parameters": [
+            "OpIndex ig_idx",
+            "const PhiOp& phi"
+          ],
+          "return_type": "OpIndex",
+          "logic": "Reduces a Phi operation in the input graph for the unpeeled loop. Adjusts phi input to point to the backedge of the peeled iteration."
+        },
+        {
+          "name": "PeelFirstIteration",
+          "parameters": [
+            "const Block* header"
+          ],
+          "return_type": "void",
+          "logic": "Peels the first iteration of the loop. Emits the peeled iteration by cloning the loop body.  Then, emits the regular unpeeled loop by cloning the loop body again."
+        },
+        {
+          "name": "CanPeelLoop",
+          "parameters": [
+            "const Block* header"
+          ],
+          "return_type": "bool",
+          "logic": "Checks if the loop can be peeled. Checks if the loop is already being peeled, if it has inner loops, and if the loop is too large."
+        },
+        {
+          "name": "IsPeeling",
+          "parameters": [],
+          "return_type": "bool",
+          "logic": "Checks if the reducer is currently peeling a loop (either emitting the peeled iteration or the unpeeled body)."
+        },
+        {
+          "name": "IsEmittingPeeledIteration",
+          "parameters": [],
+          "return_type": "bool",
+          "logic": "Checks if the reducer is currently emitting the peeled iteration."
+        },
+        {
+          "name": "IsEmittingUnpeeledBody",
+          "parameters": [],
+          "return_type": "bool",
+          "logic": "Checks if the reducer is currently emitting the unpeeled body of the loop."
+        }
+      ]
+    }
+  ],
+  "functions": []
+}

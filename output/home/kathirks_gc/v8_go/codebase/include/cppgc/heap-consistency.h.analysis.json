@@ -1,0 +1,195 @@
+{
+  "file_path": "/home/kathirks_gc/v8_go/codebase/include/cppgc/heap-consistency.h",
+  "imports": [
+    "<cstddef>",
+    "cppgc/internal/write-barrier.h",
+    "cppgc/macros.h",
+    "cppgc/member.h",
+    "cppgc/trace-trait.h",
+    "v8config.h"
+  ],
+  "classes": [
+    {
+      "name": "HeapConsistency",
+      "properties": [],
+      "methods": [
+        {
+          "name": "GetWriteBarrierType",
+          "parameters": [
+            "const void* slot",
+            "const void* value",
+            "WriteBarrierParams& params"
+          ],
+          "return_type": "WriteBarrierType",
+          "logic": "Determines the appropriate write barrier type based on the slot and value.  Invokes the internal WriteBarrier::GetWriteBarrierType."
+        },
+        {
+          "name": "GetWriteBarrierType",
+          "parameters": [
+            "const internal::BasicMember<T, WeaknessTag, WriteBarrierPolicy, CheckingPolicy, StorageType>& value",
+            "WriteBarrierParams& params"
+          ],
+          "return_type": "WriteBarrierType",
+          "logic": "Determines the write barrier type for BasicMember writes. Invokes the internal WriteBarrier::GetWriteBarrierType, passing the raw slot and raw storage from the BasicMember."
+        },
+        {
+          "name": "GetWriteBarrierType",
+          "parameters": [
+            "const void* slot",
+            "WriteBarrierParams& params",
+            "HeapHandleCallback callback"
+          ],
+          "return_type": "WriteBarrierType",
+          "logic": "Determines write barrier type using a callback to obtain the HeapHandle if needed. Delegates to internal WriteBarrier."
+        },
+        {
+          "name": "GetWriteBarrierType",
+          "parameters": [
+            "const void* value",
+            "WriteBarrierParams& params"
+          ],
+          "return_type": "WriteBarrierType",
+          "logic": "Determines write barrier type based only on the value, used with marking write barriers. Delegates to internal WriteBarrier."
+        },
+        {
+          "name": "DijkstraWriteBarrier",
+          "parameters": [
+            "const WriteBarrierParams& params",
+            "const void* object"
+          ],
+          "return_type": "void",
+          "logic": "Applies a conservative Dijkstra-style write barrier to mark the object if it hasn't been processed. Calls internal WriteBarrier::DijkstraMarkingBarrier."
+        },
+        {
+          "name": "DijkstraWriteBarrierRange",
+          "parameters": [
+            "const WriteBarrierParams& params",
+            "const void* first_element",
+            "size_t element_size",
+            "size_t number_of_elements",
+            "TraceCallback trace_callback"
+          ],
+          "return_type": "void",
+          "logic": "Applies a Dijkstra-style write barrier to a range of elements. Calls internal WriteBarrier::DijkstraMarkingBarrierRange."
+        },
+        {
+          "name": "SteeleWriteBarrier",
+          "parameters": [
+            "const WriteBarrierParams& params",
+            "const void* object"
+          ],
+          "return_type": "void",
+          "logic": "Applies a Steele-style write barrier to re-process the object if it has already been processed. Calls internal WriteBarrier::SteeleMarkingBarrier."
+        },
+        {
+          "name": "GenerationalBarrier",
+          "parameters": [
+            "const WriteBarrierParams& params",
+            "const void* slot"
+          ],
+          "return_type": "void",
+          "logic": "Applies a generational write barrier for precise slot tracking. Delegates to internal WriteBarrier::GenerationalBarrier."
+        },
+        {
+          "name": "GenerationalBarrierForUncompressedSlot",
+          "parameters": [
+            "const WriteBarrierParams& params",
+            "const void* uncompressed_slot"
+          ],
+          "return_type": "void",
+          "logic": "Applies a generational write barrier for uncompressed slots. Delegates to internal WriteBarrier::GenerationalBarrier."
+        },
+        {
+          "name": "GenerationalBarrierForSourceObject",
+          "parameters": [
+            "const WriteBarrierParams& params",
+            "const void* inner_pointer"
+          ],
+          "return_type": "void",
+          "logic": "Applies a generational write barrier for source objects potentially pointing to the young generation. Delegates to internal WriteBarrier::GenerationalBarrier."
+        }
+      ]
+    },
+    {
+      "name": "DisallowGarbageCollectionScope",
+      "properties": [],
+      "methods": [
+        {
+          "name": "IsGarbageCollectionAllowed",
+          "parameters": [
+            "HeapHandle& heap_handle"
+          ],
+          "return_type": "bool",
+          "logic": "Checks if garbage collections are currently allowed for a given heap."
+        },
+        {
+          "name": "Enter",
+          "parameters": [
+            "HeapHandle& heap_handle"
+          ],
+          "return_type": "void",
+          "logic": "Enters a scope where garbage collections are disallowed for the given heap."
+        },
+        {
+          "name": "Leave",
+          "parameters": [
+            "HeapHandle& heap_handle"
+          ],
+          "return_type": "void",
+          "logic": "Leaves a scope where garbage collections are disallowed for the given heap."
+        },
+        {
+          "name": "DisallowGarbageCollectionScope",
+          "parameters": [
+            "HeapHandle& heap_handle"
+          ],
+          "return_type": null,
+          "logic": "Constructor for the DisallowGarbageCollectionScope, calls Enter to disallow GC."
+        },
+        {
+          "name": "~DisallowGarbageCollectionScope",
+          "parameters": [],
+          "return_type": null,
+          "logic": "Destructor for the DisallowGarbageCollectionScope, calls Leave to re-enable GC."
+        }
+      ]
+    },
+    {
+      "name": "NoGarbageCollectionScope",
+      "properties": [],
+      "methods": [
+        {
+          "name": "Enter",
+          "parameters": [
+            "HeapHandle& heap_handle"
+          ],
+          "return_type": "void",
+          "logic": "Enters a scope where garbage collections are avoided (but already running phases continue) for the given heap."
+        },
+        {
+          "name": "Leave",
+          "parameters": [
+            "HeapHandle& heap_handle"
+          ],
+          "return_type": "void",
+          "logic": "Leaves a scope where garbage collections are avoided for the given heap."
+        },
+        {
+          "name": "NoGarbageCollectionScope",
+          "parameters": [
+            "HeapHandle& heap_handle"
+          ],
+          "return_type": null,
+          "logic": "Constructor for the NoGarbageCollectionScope, calls Enter to avoid GC."
+        },
+        {
+          "name": "~NoGarbageCollectionScope",
+          "parameters": [],
+          "return_type": null,
+          "logic": "Destructor for the NoGarbageCollectionScope, calls Leave to potentially re-enable GC."
+        }
+      ]
+    }
+  ],
+  "functions": []
+}

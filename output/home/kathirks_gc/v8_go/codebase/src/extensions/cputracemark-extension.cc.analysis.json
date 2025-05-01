@@ -1,0 +1,37 @@
+{
+  "file_path": "/home/kathirks_gc/v8_go/codebase/src/extensions/cputracemark-extension.cc",
+  "imports": [
+    "src/extensions/cputracemark-extension.h",
+    "include/v8-isolate.h",
+    "include/v8-template.h",
+    "src/api/api.h"
+  ],
+  "classes": [
+    {
+      "name": "CpuTraceMarkExtension",
+      "properties": [],
+      "methods": [
+        {
+          "name": "GetNativeFunctionTemplate",
+          "parameters": [
+            "v8::Isolate* isolate",
+            "v8::Local<v8::String> str"
+          ],
+          "return_type": "v8::Local<v8::FunctionTemplate>",
+          "logic": "Creates and returns a FunctionTemplate for the 'Mark' function, which can be used to expose the cputracemark functionality to JavaScript."
+        },
+        {
+          "name": "Mark",
+          "parameters": [
+            "const v8::FunctionCallbackInfo<v8::Value>& info"
+          ],
+          "return_type": "void",
+          "logic": "This function is called when the 'cputracemark' function is invoked from JavaScript. It validates the input parameter (an unsigned int32) and then executes architecture-specific assembly code (cpuid instruction) to insert a trace marker.  Currently, only supports IA32 and X64 architectures with clang compiler.  The assembly code inserts a cpuid instruction with a specific value based on the provided parameter. The 'cpuid' instruction is a marker that can be identified by tracing tools."
+        }
+      ]
+    }
+  ],
+  "functions": [],
+  "enums": [],
+  "structs": []
+}

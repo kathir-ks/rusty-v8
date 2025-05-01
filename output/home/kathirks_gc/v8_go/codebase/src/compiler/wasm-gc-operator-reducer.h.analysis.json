@@ -1,0 +1,258 @@
+{
+  "file_path": "/home/kathirks_gc/v8_go/codebase/src/compiler/wasm-gc-operator-reducer.h",
+  "imports": [
+    "src/compiler/control-path-state.h",
+    "src/compiler/graph-reducer.h",
+    "src/compiler/wasm-graph-assembler.h",
+    "src/wasm/wasm-subtyping.h"
+  ],
+  "classes": [
+    {
+      "name": "NodeWithType",
+      "properties": [
+        "node",
+        "type"
+      ],
+      "methods": [
+        {
+          "name": "NodeWithType",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Default constructor, initializes node to nullptr and type to wasm::kWasmVoid."
+        },
+        {
+          "name": "NodeWithType",
+          "parameters": [
+            "Node* node",
+            "wasm::TypeInModule type"
+          ],
+          "return_type": "void",
+          "logic": "Constructor that initializes node and type with the given parameters."
+        },
+        {
+          "name": "operator==",
+          "parameters": [
+            "const NodeWithType& other"
+          ],
+          "return_type": "bool",
+          "logic": "Compares two NodeWithType objects for equality, checking if both node pointers and types are equal."
+        },
+        {
+          "name": "operator!=",
+          "parameters": [
+            "const NodeWithType& other"
+          ],
+          "return_type": "bool",
+          "logic": "Compares two NodeWithType objects for inequality, returning the opposite of the equality operator."
+        },
+        {
+          "name": "IsSet",
+          "parameters": [],
+          "return_type": "bool",
+          "logic": "Checks if the node pointer is not null, indicating that the NodeWithType object has been initialized with a valid node."
+        }
+      ]
+    },
+    {
+      "name": "WasmGCOperatorReducer",
+      "properties": [
+        "mcgraph_",
+        "gasm_",
+        "module_",
+        "source_position_table_"
+      ],
+      "methods": [
+        {
+          "name": "WasmGCOperatorReducer",
+          "parameters": [
+            "Editor* editor",
+            "Zone* temp_zone_",
+            "MachineGraph* mcgraph",
+            "const wasm::WasmModule* module",
+            "SourcePositionTable* source_position_table"
+          ],
+          "return_type": "void",
+          "logic": "Constructor for the WasmGCOperatorReducer class, initializing its members with the provided parameters."
+        },
+        {
+          "name": "reducer_name",
+          "parameters": [],
+          "return_type": "const char*",
+          "logic": "Returns the name of the reducer, used for debugging and logging purposes."
+        },
+        {
+          "name": "Reduce",
+          "parameters": [
+            "Node* node"
+          ],
+          "return_type": "Reduction",
+          "logic": "The main reduction function, which is responsible for dispatching to the appropriate handler based on the node's operator."
+        },
+        {
+          "name": "ReduceWasmStructOperation",
+          "parameters": [
+            "Node* node"
+          ],
+          "return_type": "Reduction",
+          "logic": "Reduces Wasm struct operation nodes, optimizing them based on type information."
+        },
+        {
+          "name": "ReduceWasmArrayLength",
+          "parameters": [
+            "Node* node"
+          ],
+          "return_type": "Reduction",
+          "logic": "Reduces Wasm array length nodes."
+        },
+        {
+          "name": "ReduceAssertNotNull",
+          "parameters": [
+            "Node* node"
+          ],
+          "return_type": "Reduction",
+          "logic": "Reduces AssertNotNull nodes related to Wasm GC, possibly eliminating them based on type information."
+        },
+        {
+          "name": "ReduceCheckNull",
+          "parameters": [
+            "Node* node"
+          ],
+          "return_type": "Reduction",
+          "logic": "Reduces CheckNull nodes, optimizing them based on type information."
+        },
+        {
+          "name": "ReduceWasmTypeCheck",
+          "parameters": [
+            "Node* node"
+          ],
+          "return_type": "Reduction",
+          "logic": "Reduces Wasm type check nodes, potentially eliminating them if the type check is redundant based on the node's known type."
+        },
+        {
+          "name": "ReduceWasmTypeCheckAbstract",
+          "parameters": [
+            "Node* node"
+          ],
+          "return_type": "Reduction",
+          "logic": "Reduces Wasm type check abstract nodes."
+        },
+        {
+          "name": "ReduceWasmTypeCast",
+          "parameters": [
+            "Node* node"
+          ],
+          "return_type": "Reduction",
+          "logic": "Reduces Wasm type cast nodes, potentially simplifying or eliminating them based on type information."
+        },
+        {
+          "name": "ReduceWasmTypeCastAbstract",
+          "parameters": [
+            "Node* node"
+          ],
+          "return_type": "Reduction",
+          "logic": "Reduces Wasm type cast abstract nodes."
+        },
+        {
+          "name": "ReduceTypeGuard",
+          "parameters": [
+            "Node* node"
+          ],
+          "return_type": "Reduction",
+          "logic": "Reduces TypeGuard nodes."
+        },
+        {
+          "name": "ReduceWasmAnyConvertExtern",
+          "parameters": [
+            "Node* node"
+          ],
+          "return_type": "Reduction",
+          "logic": "Reduces Wasm any convert extern nodes."
+        },
+        {
+          "name": "ReduceMerge",
+          "parameters": [
+            "Node* node"
+          ],
+          "return_type": "Reduction",
+          "logic": "Reduces Merge nodes, updating the type information at the merge point based on the incoming control paths."
+        },
+        {
+          "name": "ReduceIf",
+          "parameters": [
+            "Node* node",
+            "bool condition"
+          ],
+          "return_type": "Reduction",
+          "logic": "Reduces If nodes, inferring type information based on the branch condition and updating the control path state accordingly."
+        },
+        {
+          "name": "ReduceStart",
+          "parameters": [
+            "Node* node"
+          ],
+          "return_type": "Reduction",
+          "logic": "Reduces Start nodes, initializing the control path state at the beginning of the graph."
+        },
+        {
+          "name": "SetType",
+          "parameters": [
+            "Node* node",
+            "wasm::ValueType type"
+          ],
+          "return_type": "Node*",
+          "logic": "Sets the type of a node in the graph."
+        },
+        {
+          "name": "UpdateSourcePosition",
+          "parameters": [
+            "Node* new_node",
+            "Node* old_node"
+          ],
+          "return_type": "void",
+          "logic": "Copies the source position information from an old node to a new node."
+        },
+        {
+          "name": "ObjectTypeFromContext",
+          "parameters": [
+            "Node* object",
+            "Node* control",
+            "bool allow_non_wasm"
+          ],
+          "return_type": "wasm::TypeInModule",
+          "logic": "Returns the intersection of the type marked on {object} and the type information about object tracked on {control}'s control path."
+        },
+        {
+          "name": "UpdateNodeAndAliasesTypes",
+          "parameters": [
+            "Node* state_owner",
+            "ControlPathTypes parent_state",
+            "Node* node",
+            "wasm::TypeInModule type",
+            "bool in_new_block"
+          ],
+          "return_type": "Reduction",
+          "logic": "Updates types of a node and aliases"
+        },
+        {
+          "name": "graph",
+          "parameters": [],
+          "return_type": "TFGraph*",
+          "logic": "Returns a pointer to the underlying TFGraph."
+        },
+        {
+          "name": "common",
+          "parameters": [],
+          "return_type": "CommonOperatorBuilder*",
+          "logic": "Returns a pointer to the CommonOperatorBuilder."
+        },
+        {
+          "name": "simplified",
+          "parameters": [],
+          "return_type": "SimplifiedOperatorBuilder*",
+          "logic": "Returns a pointer to the SimplifiedOperatorBuilder from the WasmGraphAssembler."
+        }
+      ]
+    }
+  ],
+  "functions": []
+}

@@ -1,0 +1,211 @@
+{
+  "file_path": "/home/kathirks_gc/v8_go/codebase/src/compiler/backend/move-optimizer.cc",
+  "imports": [
+    "src/compiler/backend/move-optimizer.h",
+    "src/codegen/register-configuration.h"
+  ],
+  "classes": [
+    {
+      "name": "MoveKey",
+      "properties": [
+        "source",
+        "destination"
+      ],
+      "methods": [
+        {
+          "name": "operator<",
+          "parameters": [
+            "const MoveKey& other"
+          ],
+          "return_type": "bool",
+          "logic": "Compares two MoveKey objects based on their source and destination operands, providing an ordering for sorting."
+        },
+        {
+          "name": "operator==",
+          "parameters": [
+            "const MoveKey& other"
+          ],
+          "return_type": "bool",
+          "logic": "Compares two MoveKey objects for equality based on their source and destination operands."
+        }
+      ]
+    },
+    {
+      "name": "OperandSet",
+      "properties": [
+        "set_",
+        "fp_reps_"
+      ],
+      "methods": [
+        {
+          "name": "OperandSet",
+          "parameters": [
+            "ZoneVector<InstructionOperand>* buffer"
+          ],
+          "return_type": "explicit OperandSet",
+          "logic": "Constructor for the OperandSet class. Initializes the set_ with a provided buffer and clears it, and initializes fp_reps_ to 0."
+        },
+        {
+          "name": "InsertOp",
+          "parameters": [
+            "const InstructionOperand& op"
+          ],
+          "return_type": "void",
+          "logic": "Inserts an InstructionOperand into the set_. Handles FP register aliasing if enabled by updating fp_reps_."
+        },
+        {
+          "name": "Contains",
+          "parameters": [
+            "const InstructionOperand& op"
+          ],
+          "return_type": "bool",
+          "logic": "Checks if the set contains an InstructionOperand by comparing against canonicalized operands."
+        },
+        {
+          "name": "ContainsOpOrAlias",
+          "parameters": [
+            "const InstructionOperand& op"
+          ],
+          "return_type": "bool",
+          "logic": "Checks if the set contains the InstructionOperand or any of its aliases (for FP registers). Handles complex FP register aliasing if enabled."
+        },
+        {
+          "name": "HasMixedFPReps",
+          "parameters": [
+            "int reps"
+          ],
+          "return_type": "static bool",
+          "logic": "Determines if the provided `reps` bitmask indicates mixed floating-point representation."
+        }
+      ]
+    },
+    {
+      "name": "MoveOptimizer",
+      "properties": [
+        "local_zone_",
+        "code_",
+        "local_vector_",
+        "operand_buffer1",
+        "operand_buffer2"
+      ],
+      "methods": [
+        {
+          "name": "MoveOptimizer",
+          "parameters": [
+            "Zone* local_zone",
+            "InstructionSequence* code"
+          ],
+          "return_type": "MoveOptimizer",
+          "logic": "Constructor for the MoveOptimizer class. Initializes the member variables with the provided zone and code."
+        },
+        {
+          "name": "Run",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Executes the move optimization process by compressing gaps, blocks, merging moves, and finalizing moves."
+        },
+        {
+          "name": "RemoveClobberedDestinations",
+          "parameters": [
+            "Instruction* instruction"
+          ],
+          "return_type": "void",
+          "logic": "Removes moves from the gap that are made redundant by the instruction's outputs or temps, preventing assignments to destinations that will be clobbered."
+        },
+        {
+          "name": "MigrateMoves",
+          "parameters": [
+            "Instruction* to",
+            "Instruction* from"
+          ],
+          "return_type": "void",
+          "logic": "Migrates eligible moves from one instruction's gap to another. Determines which moves are safe to move without affecting instruction behavior."
+        },
+        {
+          "name": "CompressMoves",
+          "parameters": [
+            "ParallelMove* left",
+            "MoveOpVector* right"
+          ],
+          "return_type": "void",
+          "logic": "Compresses moves by merging two parallel moves into one, eliminating redundant moves and combining assignments."
+        },
+        {
+          "name": "CompressGaps",
+          "parameters": [
+            "Instruction* instruction"
+          ],
+          "return_type": "void",
+          "logic": "Compresses the gap moves within an instruction by swapping or merging them."
+        },
+        {
+          "name": "CompressBlock",
+          "parameters": [
+            "InstructionBlock* block"
+          ],
+          "return_type": "void",
+          "logic": "Compresses moves within an instruction block by migrating and removing redundant move assignments based on instruction outputs."
+        },
+        {
+          "name": "LastInstruction",
+          "parameters": [
+            "const InstructionBlock* block"
+          ],
+          "return_type": "const Instruction*",
+          "logic": "Returns the last instruction of a given instruction block."
+        },
+        {
+          "name": "OptimizeMerge",
+          "parameters": [
+            "InstructionBlock* block"
+          ],
+          "return_type": "void",
+          "logic": "Optimizes move merging by pushing common moves from predecessors into the gap of a merge block. The checks are performed to ensure that this pushdown is valid. Only valid moves are moved to the merge block."
+        },
+        {
+          "name": "FinalizeMoves",
+          "parameters": [
+            "Instruction* instr"
+          ],
+          "return_type": "void",
+          "logic": "Finalizes moves by splitting multiple loads of the same constant or stack slot into the second slot, improving code locality and performance."
+        }
+      ]
+    }
+  ],
+  "functions": [
+    {
+      "name": "FindFirstNonEmptySlot",
+      "parameters": [
+        "const Instruction* instr"
+      ],
+      "return_type": "int",
+      "logic": "Finds the first non-empty gap position in an instruction's parallel moves, eliminating redundant moves and clearing empty moves."
+    },
+    {
+      "name": "IsSlot",
+      "parameters": [
+        "const InstructionOperand& op"
+      ],
+      "return_type": "bool",
+      "logic": "Checks if the instruction operand is a stack slot or a floating-point stack slot."
+    },
+    {
+      "name": "Is64BitsWide",
+      "parameters": [
+        "const InstructionOperand& op"
+      ],
+      "return_type": "bool",
+      "logic": "Checks if the instruction operand is a 64-bit wide value based on its machine representation."
+    },
+    {
+      "name": "LoadCompare",
+      "parameters": [
+        "const MoveOperands* a",
+        "const MoveOperands* b"
+      ],
+      "return_type": "bool",
+      "logic": "Compares two MoveOperands for sorting purposes. Prioritizes wider operands, those to stack slots, and those with smaller (canonicalized) sources."
+    }
+  ]
+}

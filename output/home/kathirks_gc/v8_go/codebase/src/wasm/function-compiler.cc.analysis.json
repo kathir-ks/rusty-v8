@@ -1,0 +1,107 @@
+{
+  "file_path": "/home/kathirks_gc/v8_go/codebase/src/wasm/function-compiler.cc",
+  "imports": [
+    "src/wasm/function-compiler.h",
+    "optional",
+    "src/base/fpu.h",
+    "src/codegen/compiler.h",
+    "src/codegen/optimized-compilation-info.h",
+    "src/compiler/turboshaft/wasm-turboshaft-compiler.h",
+    "src/compiler/wasm-compiler.h",
+    "src/handles/handles-inl.h",
+    "src/logging/counters-scopes.h",
+    "src/logging/log.h",
+    "src/objects/code-inl.h",
+    "src/wasm/baseline/liftoff-compiler.h",
+    "src/wasm/compilation-environment-inl.h",
+    "src/wasm/turboshaft-graph-interface.h",
+    "src/wasm/wasm-code-manager.h",
+    "src/wasm/wasm-debug.h",
+    "src/wasm/wasm-engine.h"
+  ],
+  "classes": [
+    {
+      "name": "WasmCompilationUnit",
+      "properties": [
+        "func_index_",
+        "tier_",
+        "for_debugging_"
+      ],
+      "methods": [
+        {
+          "name": "ExecuteCompilation",
+          "parameters": [
+            "CompilationEnv* env",
+            "const WireBytesStorage* wire_bytes_storage",
+            "Counters* counters",
+            "WasmDetectedFeatures* detected"
+          ],
+          "return_type": "WasmCompilationResult",
+          "logic": "Compiles a single WASM function based on the compilation tier and returns the compilation result. Handles validation, profiling, Liftoff and Turbofan compilation paths."
+        },
+        {
+          "name": "CompileWasmFunction",
+          "parameters": [
+            "Counters* counters",
+            "NativeModule* native_module",
+            "WasmDetectedFeatures* detected",
+            "const WasmFunction* function",
+            "ExecutionTier tier"
+          ],
+          "return_type": "void",
+          "logic": "Static method to compile a WASM function within a NativeModule. Sets up the compilation environment, executes the compilation unit, and publishes the resulting code."
+        }
+      ]
+    },
+    {
+      "name": "JSToWasmWrapperCompilationUnit",
+      "properties": [
+        "isolate_",
+        "sig_",
+        "sig_index_",
+        "job_"
+      ],
+      "methods": [
+        {
+          "name": "JSToWasmWrapperCompilationUnit",
+          "parameters": [
+            "Isolate* isolate",
+            "const CanonicalSig* sig",
+            "CanonicalTypeIndex sig_index"
+          ],
+          "return_type": "JSToWasmWrapperCompilationUnit",
+          "logic": "Constructor for JSToWasmWrapperCompilationUnit. Initializes the isolate, signature, signature index, and compilation job."
+        },
+        {
+          "name": "~JSToWasmWrapperCompilationUnit",
+          "parameters": [],
+          "return_type": "JSToWasmWrapperCompilationUnit",
+          "logic": "Destructor for JSToWasmWrapperCompilationUnit."
+        },
+        {
+          "name": "Execute",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Executes the compilation job to create the JSToWasm wrapper."
+        },
+        {
+          "name": "Finalize",
+          "parameters": [],
+          "return_type": "DirectHandle<Code>",
+          "logic": "Finalizes the compilation job, retrieves the compiled code, installs it in the cache, and returns the code handle."
+        },
+        {
+          "name": "CompileJSToWasmWrapper",
+          "parameters": [
+            "Isolate* isolate",
+            "const CanonicalSig* sig",
+            "CanonicalTypeIndex sig_index"
+          ],
+          "return_type": "DirectHandle<Code>",
+          "logic": "Static method to compile a JSToWasm wrapper synchronously. Creates a compilation unit, executes it, and finalizes the result."
+        }
+      ]
+    }
+  ],
+  "functions": []
+}

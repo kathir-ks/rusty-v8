@@ -1,0 +1,381 @@
+{
+  "file_path": "/home/kathirks_gc/v8_go/codebase/src/execution/local-isolate.h",
+  "imports": [
+    "<optional>",
+    "src/base/macros.h",
+    "src/execution/mutex-guard-if-off-thread.h",
+    "src/execution/thread-id.h",
+    "src/handles/handles.h",
+    "src/handles/local-handles.h",
+    "src/handles/maybe-handles.h",
+    "src/heap/local-factory.h",
+    "src/heap/local-heap.h",
+    "src/logging/runtime-call-stats.h"
+  ],
+  "classes": [
+    {
+      "name": "HiddenLocalFactory",
+      "properties": [],
+      "methods": []
+    },
+    {
+      "name": "LocalIsolate",
+      "properties": [
+        "heap_",
+        "isolate_",
+        "logger_",
+        "thread_id_",
+        "stack_limit_",
+        "bigint_processor_",
+        "rcs_scope_",
+        "runtime_call_stats_",
+        "default_locale_"
+      ],
+      "methods": [
+        {
+          "name": "LocalIsolate",
+          "parameters": [
+            "Isolate* isolate",
+            "ThreadKind kind"
+          ],
+          "return_type": "void",
+          "logic": "Constructor for LocalIsolate, taking a pointer to an Isolate and a ThreadKind."
+        },
+        {
+          "name": "~LocalIsolate",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Destructor for LocalIsolate."
+        },
+        {
+          "name": "FromHeap",
+          "parameters": [
+            "LocalHeap* heap"
+          ],
+          "return_type": "LocalIsolate*",
+          "logic": "Static method to obtain a LocalIsolate* from a LocalHeap* using pointer arithmetic. Potentially sketchy."
+        },
+        {
+          "name": "is_main_thread",
+          "parameters": [],
+          "return_type": "bool",
+          "logic": "Returns whether this LocalIsolate is associated with the main thread."
+        },
+        {
+          "name": "heap",
+          "parameters": [],
+          "return_type": "LocalHeap*",
+          "logic": "Returns a pointer to the LocalHeap owned by this LocalIsolate."
+        },
+        {
+          "name": "heap",
+          "parameters": [],
+          "return_type": "const LocalHeap*",
+          "logic": "Returns a const pointer to the LocalHeap owned by this LocalIsolate."
+        },
+        {
+          "name": "cage_base",
+          "parameters": [],
+          "return_type": "Address",
+          "logic": "Returns the cage base address. (inline)"
+        },
+        {
+          "name": "code_cage_base",
+          "parameters": [],
+          "return_type": "Address",
+          "logic": "Returns the code cage base address. (inline)"
+        },
+        {
+          "name": "read_only_heap",
+          "parameters": [],
+          "return_type": "ReadOnlyHeap*",
+          "logic": "Returns a pointer to the ReadOnlyHeap associated with the isolate. (inline)"
+        },
+        {
+          "name": "roots_table",
+          "parameters": [],
+          "return_type": "RootsTable&",
+          "logic": "Returns a reference to the RootsTable."
+        },
+        {
+          "name": "roots_table",
+          "parameters": [],
+          "return_type": "const RootsTable&",
+          "logic": "Returns a const reference to the RootsTable."
+        },
+        {
+          "name": "root",
+          "parameters": [
+            "RootIndex index"
+          ],
+          "return_type": "Tagged<Object>",
+          "logic": "Returns a root object given an index from the RootsTable. (inline)"
+        },
+        {
+          "name": "root_handle",
+          "parameters": [
+            "RootIndex index"
+          ],
+          "return_type": "Handle<Object>",
+          "logic": "Returns a handle to a root object given an index from the RootsTable. (inline)"
+        },
+        {
+          "name": "fuzzer_rng",
+          "parameters": [],
+          "return_type": "base::RandomNumberGenerator*",
+          "logic": "Returns the fuzzer random number generator from the Isolate."
+        },
+        {
+          "name": "string_table",
+          "parameters": [],
+          "return_type": "StringTable*",
+          "logic": "Returns the StringTable from the Isolate."
+        },
+        {
+          "name": "internalized_string_access",
+          "parameters": [],
+          "return_type": "base::Mutex*",
+          "logic": "Returns a mutex for accessing internalized strings from the Isolate."
+        },
+        {
+          "name": "shared_function_info_access",
+          "parameters": [],
+          "return_type": "base::Mutex*",
+          "logic": "Returns a mutex for accessing shared function info from the Isolate."
+        },
+        {
+          "name": "ast_string_constants",
+          "parameters": [],
+          "return_type": "const AstStringConstants*",
+          "logic": "Returns the AST string constants from the Isolate."
+        },
+        {
+          "name": "lazy_compile_dispatcher",
+          "parameters": [],
+          "return_type": "LazyCompileDispatcher*",
+          "logic": "Returns the lazy compile dispatcher from the Isolate."
+        },
+        {
+          "name": "main_thread_logger",
+          "parameters": [],
+          "return_type": "V8FileLogger*",
+          "logic": "Returns the main thread logger from the Isolate. Needs refactoring to use LocalLogger."
+        },
+        {
+          "name": "is_precise_binary_code_coverage",
+          "parameters": [],
+          "return_type": "bool",
+          "logic": "Returns whether precise binary code coverage is enabled in the Isolate."
+        },
+        {
+          "name": "factory",
+          "parameters": [],
+          "return_type": "v8::internal::LocalFactory*",
+          "logic": "Returns the LocalFactory for this LocalIsolate. Performs a c-style cast to access the private base class."
+        },
+        {
+          "name": "isolate_group",
+          "parameters": [],
+          "return_type": "IsolateGroup*",
+          "logic": "Returns the IsolateGroup from the Isolate."
+        },
+        {
+          "name": "allocator",
+          "parameters": [],
+          "return_type": "AccountingAllocator*",
+          "logic": "Returns the AccountingAllocator from the Isolate."
+        },
+        {
+          "name": "has_exception",
+          "parameters": [],
+          "return_type": "bool",
+          "logic": "Always returns false as LocalIsolate doesn't support exceptions."
+        },
+        {
+          "name": "serializer_enabled",
+          "parameters": [],
+          "return_type": "bool",
+          "logic": "Returns whether the serializer is enabled in the Isolate."
+        },
+        {
+          "name": "RegisterDeserializerStarted",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Registers that a deserializer has started."
+        },
+        {
+          "name": "RegisterDeserializerFinished",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Registers that a deserializer has finished."
+        },
+        {
+          "name": "has_active_deserializer",
+          "parameters": [],
+          "return_type": "bool",
+          "logic": "Checks whether there is an active deserializer."
+        },
+        {
+          "name": "Throw",
+          "parameters": [
+            "Tagged<Object> exception"
+          ],
+          "return_type": "void",
+          "logic": "Always crashes with UNREACHABLE(), as LocalIsolate doesn't support exceptions."
+        },
+        {
+          "name": "FatalProcessOutOfHeapMemory",
+          "parameters": [
+            "const char* location"
+          ],
+          "return_type": "void",
+          "logic": "Always crashes with UNREACHABLE(), as LocalIsolate doesn't support exceptions."
+        },
+        {
+          "name": "GetNextScriptId",
+          "parameters": [],
+          "return_type": "int",
+          "logic": "Gets the next script ID from the Isolate."
+        },
+        {
+          "name": "GetAndIncNextUniqueSfiId",
+          "parameters": [],
+          "return_type": "uint32_t",
+          "logic": "Gets and increments the next unique SharedFunctionInfo ID from the Isolate."
+        },
+        {
+          "name": "v8_file_logger",
+          "parameters": [],
+          "return_type": "LocalLogger*",
+          "logic": "Returns the LocalLogger."
+        },
+        {
+          "name": "thread_id",
+          "parameters": [],
+          "return_type": "ThreadId",
+          "logic": "Returns the ThreadId of this LocalIsolate."
+        },
+        {
+          "name": "stack_limit",
+          "parameters": [],
+          "return_type": "Address",
+          "logic": "Returns the stack limit of this LocalIsolate."
+        },
+        {
+          "name": "runtime_call_stats",
+          "parameters": [],
+          "return_type": "RuntimeCallStats*",
+          "logic": "Returns the RuntimeCallStats object, or nullptr if V8_RUNTIME_CALL_STATS is not defined."
+        },
+        {
+          "name": "bigint_processor",
+          "parameters": [],
+          "return_type": "bigint::Processor*",
+          "logic": "Returns the bigint processor, initializing it if necessary."
+        },
+        {
+          "name": "GetJSDispatchTableSpaceFor",
+          "parameters": [
+            "Address owning_slot"
+          ],
+          "return_type": "JSDispatchTable::Space*",
+          "logic": "Returns the JSDispatchTable space for a given owning slot from the Isolate if V8_ENABLE_LEAPTIERING is defined."
+        },
+        {
+          "name": "AsIsolate",
+          "parameters": [],
+          "return_type": "Isolate*",
+          "logic": "Returns the underlying Isolate pointer. Only allowed on the main thread."
+        },
+        {
+          "name": "AsLocalIsolate",
+          "parameters": [],
+          "return_type": "LocalIsolate*",
+          "logic": "Returns a pointer to this LocalIsolate."
+        },
+        {
+          "name": "shared_space_isolate",
+          "parameters": [],
+          "return_type": "LocalIsolate*",
+          "logic": "Returns the shared space isolate's main thread local isolate from the Isolate."
+        },
+        {
+          "name": "GetMainThreadIsolateUnsafe",
+          "parameters": [],
+          "return_type": "Isolate*",
+          "logic": "Returns the underlying Isolate.  Unsafe to use in many contexts."
+        },
+        {
+          "name": "snapshot_blob",
+          "parameters": [],
+          "return_type": "const v8::StartupData*",
+          "logic": "Returns the snapshot blob from the Isolate."
+        },
+        {
+          "name": "pending_message_address",
+          "parameters": [],
+          "return_type": "Tagged<Object>*",
+          "logic": "Returns the address of the pending message in the Isolate."
+        },
+        {
+          "name": "NextOptimizationId",
+          "parameters": [],
+          "return_type": "int",
+          "logic": "Gets the next optimization ID from the Isolate."
+        },
+        {
+          "name": "ExecuteMainThreadWhileParked",
+          "parameters": [
+            "Callback callback"
+          ],
+          "return_type": "void",
+          "logic": "Executes a callback on the main thread while the current thread is parked. (template)"
+        },
+        {
+          "name": "ParkIfOnBackgroundAndExecute",
+          "parameters": [
+            "Callback callback"
+          ],
+          "return_type": "void",
+          "logic": "Parks the current thread if it's a background thread and then executes the callback. (template)"
+        },
+        {
+          "name": "DefaultLocale",
+          "parameters": [],
+          "return_type": "const std::string&",
+          "logic": "Returns the default locale. WARNING: This might be out-of-sync with the main-thread. (ifdef V8_INTL_SUPPORT)"
+        },
+        {
+          "name": "ForSandbox",
+          "parameters": [],
+          "return_type": "Isolate*",
+          "logic": "Returns the underlying Isolate.  Used by IsolateForSandbox."
+        },
+        {
+          "name": "InitializeBigIntProcessor",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Initializes the bigint processor if it hasn't been initialized already."
+        }
+      ]
+    },
+    {
+      "name": "MutexGuardIfOffThread<LocalIsolate>",
+      "properties": [
+        "mutex_guard_"
+      ],
+      "methods": [
+        {
+          "name": "MutexGuardIfOffThread",
+          "parameters": [
+            "base::Mutex* mutex",
+            "LocalIsolate* isolate"
+          ],
+          "return_type": "void",
+          "logic": "Constructor that takes a mutex and a LocalIsolate. Only constructs a MutexGuard if the isolate is not on the main thread."
+        }
+      ]
+    }
+  ],
+  "functions": []
+}

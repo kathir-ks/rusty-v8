@@ -1,0 +1,79 @@
+{
+  "file_path": "/home/kathirks_gc/v8_go/codebase/src/compiler/turboshaft/use-map.h",
+  "imports": [
+    "src/compiler/turboshaft/sidetable.h"
+  ],
+  "classes": [
+    {
+      "name": "UseMap",
+      "properties": [
+        "table_",
+        "uses_",
+        "saturated_uses_"
+      ],
+      "methods": [
+        {
+          "name": "UseMap",
+          "parameters": [
+            "const Graph& graph",
+            "Zone* zone",
+            "FunctionType filter"
+          ],
+          "return_type": "void",
+          "logic": "Constructor for the UseMap class. Takes a graph, a zone, and a filter function as input. Initializes the internal data structures used to track uses of operations in the graph. The filter function determines if certain operations are skipped during use map construction."
+        },
+        {
+          "name": "UseMap",
+          "parameters": [
+            "const Graph& graph",
+            "Zone* zone"
+          ],
+          "return_type": "void",
+          "logic": "Overloaded constructor for the UseMap class. Takes a graph and a zone as input. Initializes the internal data structures and uses a default filter function that always returns false (i.e., no operations are skipped)."
+        },
+        {
+          "name": "uses",
+          "parameters": [
+            "OpIndex index"
+          ],
+          "return_type": "base::Vector<const OpIndex>",
+          "logic": "Returns a vector of OpIndex representing the uses of the operation at the given index."
+        },
+        {
+          "name": "AddUse",
+          "parameters": [
+            "const Graph* graph",
+            "OpIndex node",
+            "OpIndex use"
+          ],
+          "return_type": "void",
+          "logic": "Adds a use to the internal data structures, associating the `use` operation with the `node` operation. This is a private helper function."
+        }
+      ]
+    },
+    {
+      "name": "SimdUseMap",
+      "properties": [],
+      "methods": [
+        {
+          "name": "SimdUseMap",
+          "parameters": [
+            "const Graph& graph",
+            "Zone* zone"
+          ],
+          "return_type": "void",
+          "logic": "Constructor for the SimdUseMap class. It inherits from UseMap and filters out non-SIMD operations during construction. Specifically, it includes operations only if all of their inputs or their outputs are of Simd128 type."
+        }
+      ]
+    }
+  ],
+  "functions": [],
+  "enums": [],
+  "typedefs": [
+    {
+      "name": "FunctionType",
+      "type": "bool (*)(const Operation& op, Zone* zone)",
+      "logic": "Defines a function pointer type `FunctionType` which points to a function that takes a `const Operation&` and a `Zone*` as parameters and returns a boolean value.  This function is used as a filter in `UseMap` constructors."
+    }
+  ]
+}

@@ -1,0 +1,210 @@
+{
+  "file_path": "/home/kathirks_gc/v8_go/codebase/src/debug/wasm/gdb-server/wasm-module-debug.cc",
+  "imports": [
+    "src/debug/wasm/gdb-server/wasm-module-debug.h",
+    "src/api/api-inl.h",
+    "src/api/api.h",
+    "src/execution/frames-inl.h",
+    "src/execution/frames.h",
+    "src/objects/script.h",
+    "src/wasm/module-instantiate.h",
+    "src/wasm/wasm-debug.h",
+    "src/wasm/wasm-value.h"
+  ],
+  "classes": [
+    {
+      "name": "WasmModuleDebug",
+      "properties": [
+        "isolate_",
+        "wasm_script_"
+      ],
+      "methods": [
+        {
+          "name": "WasmModuleDebug",
+          "parameters": [
+            "v8::Isolate* isolate",
+            "Local<debug::WasmScript> wasm_script"
+          ],
+          "return_type": "void",
+          "logic": "Constructor. Initializes the isolate and the wasm script."
+        },
+        {
+          "name": "GetModuleName",
+          "parameters": [],
+          "return_type": "std::string",
+          "logic": "Retrieves the module name from the WasmScript object."
+        },
+        {
+          "name": "GetFirstWasmInstance",
+          "parameters": [],
+          "return_type": "Handle<WasmInstanceObject>",
+          "logic": "Gets the first WasmInstanceObject associated with the WasmScript."
+        },
+        {
+          "name": "GetCallStack",
+          "parameters": [
+            "uint32_t debug_context_id",
+            "Isolate* isolate"
+          ],
+          "return_type": "std::vector<wasm_addr_t>",
+          "logic": "Walks the stack and retrieves the call stack for a given debug context.  Translates stack frame information into script ID and offset pairs representing WASM functions within the call stack."
+        },
+        {
+          "name": "FindWasmFrame",
+          "parameters": [
+            "DebuggableStackFrameIterator* frame_it",
+            "uint32_t* frame_index"
+          ],
+          "return_type": "std::vector<FrameSummary>",
+          "logic": "Finds a specific WASM frame within the stack based on the provided iterator and frame index. Used to locate the frame summaries."
+        },
+        {
+          "name": "GetWasmInstance",
+          "parameters": [
+            "Isolate* isolate",
+            "uint32_t frame_index"
+          ],
+          "return_type": "Handle<WasmInstanceObject>",
+          "logic": "Retrieves the WasmInstanceObject associated with a specific stack frame by traversing the stack frame summaries."
+        },
+        {
+          "name": "GetWasmGlobal",
+          "parameters": [
+            "Isolate* isolate",
+            "uint32_t frame_index",
+            "uint32_t index",
+            "uint8_t* buffer",
+            "uint32_t buffer_size",
+            "uint32_t* size"
+          ],
+          "return_type": "bool",
+          "logic": "Retrieves the value of a specific Wasm global variable for a given frame index, and stores it in a provided buffer."
+        },
+        {
+          "name": "GetWasmLocal",
+          "parameters": [
+            "Isolate* isolate",
+            "uint32_t frame_index",
+            "uint32_t index",
+            "uint8_t* buffer",
+            "uint32_t buffer_size",
+            "uint32_t* size"
+          ],
+          "return_type": "bool",
+          "logic": "Retrieves the value of a specific Wasm local variable for a given frame index, and stores it in a provided buffer."
+        },
+        {
+          "name": "GetWasmStackValue",
+          "parameters": [
+            "Isolate* isolate",
+            "uint32_t frame_index",
+            "uint32_t index",
+            "uint8_t* buffer",
+            "uint32_t buffer_size",
+            "uint32_t* size"
+          ],
+          "return_type": "bool",
+          "logic": "Retrieves the value of a specific Wasm stack value for a given frame index, and stores it in a provided buffer."
+        },
+        {
+          "name": "GetWasmMemory",
+          "parameters": [
+            "Isolate* isolate",
+            "uint32_t offset",
+            "uint8_t* buffer",
+            "uint32_t size"
+          ],
+          "return_type": "uint32_t",
+          "logic": "Reads data from the Wasm memory for the first instance and writes it into a buffer."
+        },
+        {
+          "name": "GetWasmData",
+          "parameters": [
+            "Isolate* isolate",
+            "uint32_t offset",
+            "uint8_t* buffer",
+            "uint32_t size"
+          ],
+          "return_type": "uint32_t",
+          "logic": "Reads data from a Wasm data segment for the first instance and writes it into a buffer."
+        },
+        {
+          "name": "GetWasmModuleBytes",
+          "parameters": [
+            "wasm_addr_t wasm_addr",
+            "uint8_t* buffer",
+            "uint32_t size"
+          ],
+          "return_type": "uint32_t",
+          "logic": "Reads bytes from the Wasm module and writes them to the buffer, based on the given address."
+        },
+        {
+          "name": "AddBreakpoint",
+          "parameters": [
+            "uint32_t offset",
+            "int* breakpoint_id"
+          ],
+          "return_type": "bool",
+          "logic": "Adds a breakpoint to the Wasm script at a given offset."
+        },
+        {
+          "name": "RemoveBreakpoint",
+          "parameters": [
+            "uint32_t offset",
+            "int breakpoint_id"
+          ],
+          "return_type": "void",
+          "logic": "Removes a breakpoint from the Wasm script."
+        },
+        {
+          "name": "PrepareStep",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Prepares the debugger for stepping into the next instruction."
+        },
+        {
+          "name": "GetWasmValue",
+          "parameters": [
+            "const wasm::WasmValue& wasm_value",
+            "uint8_t* buffer",
+            "uint32_t buffer_size",
+            "uint32_t* size"
+          ],
+          "return_type": "bool",
+          "logic": "Static method to store a WasmValue into a provided buffer, updating the size written. Handles different WASM value types."
+        }
+      ]
+    }
+  ],
+  "functions": [
+    {
+      "name": "GetLEB128Size",
+      "parameters": [
+        "base::Vector<const uint8_t> module_bytes",
+        "int offset"
+      ],
+      "return_type": "int",
+      "logic": "Calculates the size of a LEB128 encoded integer starting at a given offset in the module bytes."
+    },
+    {
+      "name": "ReturnPc",
+      "parameters": [
+        "const NativeModule* native_module",
+        "int pc"
+      ],
+      "return_type": "int",
+      "logic": "Calculates the return program counter based on the opcode found at a given program counter (pc) value."
+    },
+    {
+      "name": "StoreValue",
+      "parameters": [
+        "const T& value",
+        "uint8_t* buffer",
+        "uint32_t buffer_size",
+        "uint32_t* size"
+      ],
+      "return_type": "bool",
+      "logic": "Stores a given value into a buffer and sets the size. Template to handle different types."
+    }
+  ]
+}

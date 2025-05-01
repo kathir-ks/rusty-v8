@@ -1,0 +1,31 @@
+{
+  "file_path": "/home/kathirks_gc/v8_go/codebase/src/compiler/turboshaft/explicit-truncation-reducer.h",
+  "imports": [
+    "src/compiler/turboshaft/assembler.h",
+    "src/compiler/turboshaft/operations.h",
+    "src/compiler/turboshaft/uniform-reducer-adapter.h"
+  ],
+  "classes": [
+    {
+      "name": "ExplicitTruncationReducer",
+      "properties": [
+        "inputs_rep_storage_",
+        "storage_"
+      ],
+      "methods": [
+        {
+          "name": "ReduceOperation",
+          "parameters": [
+            "opcode opcode",
+            "typename Continuation",
+            "typename... Ts args"
+          ],
+          "return_type": "OpIndex",
+          "logic": "This method attempts to insert explicit int64 to int32 truncation operations before uses of int64 values where an int32 value is expected.  It iterates through the inputs of an operation, checks if an input's expected representation is Word32 but the actual representation is Word64. If so, it inserts a ChangeOp::Kind::kTruncate operation to perform the explicit conversion. It uses the `UniformReducerAdapter` base class and its `Reduce` method for the continuation."
+        }
+      ]
+    }
+  ],
+  "functions": [],
+  "explanation": "This file defines the ExplicitTruncationReducer class, which is a Turboshaft reducer responsible for adding explicit int64 to int32 truncation operations to the Turboshaft graph. This reducer is a workaround for Turbofan's lack of an explicit truncation operation during the transition to Turboshaft. Once the Turboshaft graph is created independently from Turbofan, this reducer should become unnecessary."
+}

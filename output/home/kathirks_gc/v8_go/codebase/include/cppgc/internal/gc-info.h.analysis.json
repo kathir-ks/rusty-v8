@@ -1,0 +1,100 @@
+{
+  "file_path": "/home/kathirks_gc/v8_go/codebase/include/cppgc/internal/gc-info.h",
+  "imports": [
+    "<atomic>",
+    "<cstdint>",
+    "<type_traits>",
+    "cppgc/internal/finalizer-trait.h",
+    "cppgc/internal/logging.h",
+    "cppgc/internal/name-trait.h",
+    "cppgc/trace-trait.h",
+    "v8config.h"
+  ],
+  "classes": [
+    {
+      "name": "EnsureGCInfoIndexTrait",
+      "properties": [],
+      "methods": [
+        {
+          "name": "EnsureIndex",
+          "parameters": [
+            "std::atomic<GCInfoIndex>& registered_index"
+          ],
+          "return_type": "GCInfoIndex",
+          "logic": "Acquires a new GC info object and updates `registered_index` with the index that identifies that new info accordingly. Dispatches to EnsureGCInfoIndexTraitDispatch based on template argument T."
+        },
+        {
+          "name": "EnsureGCInfoIndex",
+          "parameters": [
+            "std::atomic<GCInfoIndex>&",
+            "TraceCallback",
+            "FinalizationCallback",
+            "NameCallback"
+          ],
+          "return_type": "GCInfoIndex",
+          "logic": "Registers a new GCInfo entry with trace, finalization and name callbacks."
+        },
+        {
+          "name": "EnsureGCInfoIndex",
+          "parameters": [
+            "std::atomic<GCInfoIndex>&",
+            "TraceCallback",
+            "FinalizationCallback"
+          ],
+          "return_type": "GCInfoIndex",
+          "logic": "Registers a new GCInfo entry with trace and finalization callbacks."
+        },
+        {
+          "name": "EnsureGCInfoIndex",
+          "parameters": [
+            "std::atomic<GCInfoIndex>&",
+            "TraceCallback",
+            "NameCallback"
+          ],
+          "return_type": "GCInfoIndex",
+          "logic": "Registers a new GCInfo entry with trace and name callbacks."
+        },
+        {
+          "name": "EnsureGCInfoIndex",
+          "parameters": [
+            "std::atomic<GCInfoIndex>&",
+            "TraceCallback"
+          ],
+          "return_type": "GCInfoIndex",
+          "logic": "Registers a new GCInfo entry with just a trace callback."
+        }
+      ]
+    },
+    {
+      "name": "GCInfoTrait",
+      "properties": [],
+      "methods": [
+        {
+          "name": "Index",
+          "parameters": [],
+          "return_type": "GCInfoIndex",
+          "logic": "Returns the GCInfoIndex for type T.  If no index has been registered, it acquires a new one via EnsureGCInfoIndexTrait::EnsureIndex. Uses a static atomic variable for thread-safe initialization."
+        },
+        {
+          "name": "CheckCallbacksAreDefined",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Ensures that the callbacks (Trace, Finalization, Name) are defined for the type T by attempting to cast the static members of TraceTrait, FinalizerTrait and NameTrait to their respective callback types."
+        }
+      ]
+    },
+    {
+      "name": "GCInfoFolding",
+      "properties": [],
+      "methods": [
+        {
+          "name": "WantToFold",
+          "parameters": [],
+          "return_type": "bool",
+          "logic": "Determines whether GCInfoTrait::Index should be folded based on finalizer behavior and object naming support. Checks virtual destructor at base, whether both types are trivially destructible, custom finalizer dispatch at base, and if detailed object names are wanted. Calls CheckCallbacksAreDefined to ensure that all callbacks are well defined regardless if folding occurs."
+        }
+      ]
+    }
+  ],
+  "functions": []
+}

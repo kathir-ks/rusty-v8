@@ -1,0 +1,266 @@
+{
+  "file_path": "/home/kathirks_gc/v8_go/codebase/src/regexp/experimental/experimental-bytecode.h",
+  "imports": [
+    "src/base/bit-field.h",
+    "src/base/strings.h",
+    "src/base/vector.h",
+    "src/regexp/regexp-ast.h"
+  ],
+  "classes": [
+    {
+      "name": "RegExpInstruction",
+      "properties": [
+        "opcode",
+        "payload"
+      ],
+      "methods": [
+        {
+          "name": "ConsumeRange",
+          "parameters": [
+            "base::uc16 min",
+            "base::uc16 max"
+          ],
+          "return_type": "RegExpInstruction",
+          "logic": "Creates a RegExpInstruction with opcode CONSUME_RANGE and payload containing the given min and max unicode characters for the range."
+        },
+        {
+          "name": "ConsumeAnyChar",
+          "parameters": [],
+          "return_type": "RegExpInstruction",
+          "logic": "Creates a RegExpInstruction that matches any character (range from 0x0000 to 0xFFFF)."
+        },
+        {
+          "name": "Fail",
+          "parameters": [],
+          "return_type": "RegExpInstruction",
+          "logic": "Creates a RegExpInstruction that always fails by using an invalid range (0xFFFF to 0x0000)."
+        },
+        {
+          "name": "RangeCount",
+          "parameters": [
+            "int32_t num_ranges"
+          ],
+          "return_type": "RegExpInstruction",
+          "logic": "Creates a RegExpInstruction with opcode RANGE_COUNT and payload containing the number of ranges."
+        },
+        {
+          "name": "Fork",
+          "parameters": [
+            "int32_t alt_index"
+          ],
+          "return_type": "RegExpInstruction",
+          "logic": "Creates a RegExpInstruction with opcode FORK and payload containing the alternative index (PC) for the forked thread."
+        },
+        {
+          "name": "Jmp",
+          "parameters": [
+            "int32_t alt_index"
+          ],
+          "return_type": "RegExpInstruction",
+          "logic": "Creates a RegExpInstruction with opcode JMP and payload containing the alternative index (PC) to jump to."
+        },
+        {
+          "name": "Accept",
+          "parameters": [],
+          "return_type": "RegExpInstruction",
+          "logic": "Creates a RegExpInstruction with opcode ACCEPT, indicating a successful match."
+        },
+        {
+          "name": "SetRegisterToCp",
+          "parameters": [
+            "int32_t register_index"
+          ],
+          "return_type": "RegExpInstruction",
+          "logic": "Creates a RegExpInstruction with opcode SET_REGISTER_TO_CP and payload containing the index of the register to set to the current input position."
+        },
+        {
+          "name": "Assertion",
+          "parameters": [
+            "RegExpAssertion::Type t"
+          ],
+          "return_type": "RegExpInstruction",
+          "logic": "Creates a RegExpInstruction with opcode ASSERTION and payload containing the type of assertion."
+        },
+        {
+          "name": "ClearRegister",
+          "parameters": [
+            "int32_t register_index"
+          ],
+          "return_type": "RegExpInstruction",
+          "logic": "Creates a RegExpInstruction with opcode CLEAR_REGISTER and payload containing the index of the register to clear."
+        },
+        {
+          "name": "SetQuantifierToClock",
+          "parameters": [
+            "int32_t quantifier_id"
+          ],
+          "return_type": "RegExpInstruction",
+          "logic": "Creates a RegExpInstruction with opcode SET_QUANTIFIER_TO_CLOCK and payload containing the quantifier id."
+        },
+        {
+          "name": "FilterQuantifier",
+          "parameters": [
+            "int32_t quantifier_id"
+          ],
+          "return_type": "RegExpInstruction",
+          "logic": "Creates a RegExpInstruction with opcode FILTER_QUANTIFIER and payload containing the quantifier id."
+        },
+        {
+          "name": "FilterGroup",
+          "parameters": [
+            "int32_t group_id"
+          ],
+          "return_type": "RegExpInstruction",
+          "logic": "Creates a RegExpInstruction with opcode FILTER_GROUP and payload containing the group id."
+        },
+        {
+          "name": "FilterLookaround",
+          "parameters": [
+            "int32_t lookaround_id"
+          ],
+          "return_type": "RegExpInstruction",
+          "logic": "Creates a RegExpInstruction with opcode FILTER_LOOKAROUND and payload containing the lookaround id."
+        },
+        {
+          "name": "FilterChild",
+          "parameters": [
+            "int32_t pc"
+          ],
+          "return_type": "RegExpInstruction",
+          "logic": "Creates a RegExpInstruction with opcode FILTER_CHILD and payload containing the program counter."
+        },
+        {
+          "name": "BeginLoop",
+          "parameters": [],
+          "return_type": "RegExpInstruction",
+          "logic": "Creates a RegExpInstruction with opcode BEGIN_LOOP."
+        },
+        {
+          "name": "EndLoop",
+          "parameters": [],
+          "return_type": "RegExpInstruction",
+          "logic": "Creates a RegExpInstruction with opcode END_LOOP."
+        },
+        {
+          "name": "StartLookaround",
+          "parameters": [
+            "int lookaround_index",
+            "bool is_positive",
+            "RegExpLookaround::Type type"
+          ],
+          "return_type": "RegExpInstruction",
+          "logic": "Creates a RegExpInstruction with opcode START_LOOKAROUND and a LookaroundPayload."
+        },
+        {
+          "name": "EndLookaround",
+          "parameters": [],
+          "return_type": "RegExpInstruction",
+          "logic": "Creates a RegExpInstruction with opcode END_LOOKAROUND."
+        },
+        {
+          "name": "WriteLookTable",
+          "parameters": [
+            "int32_t index"
+          ],
+          "return_type": "RegExpInstruction",
+          "logic": "Creates a RegExpInstruction with opcode WRITE_LOOKAROUND_TABLE and payload containing the index."
+        },
+        {
+          "name": "ReadLookTable",
+          "parameters": [
+            "int32_t index",
+            "bool is_positive",
+            "RegExpLookaround::Type type"
+          ],
+          "return_type": "RegExpInstruction",
+          "logic": "Creates a RegExpInstruction with opcode READ_LOOKAROUND_TABLE and payload containing a LookaroundPayload."
+        },
+        {
+          "name": "IsFilter",
+          "parameters": [
+            "const RegExpInstruction& instruction"
+          ],
+          "return_type": "bool",
+          "logic": "Returns true if the instruction is a FILTER_GROUP, FILTER_QUANTIFIER, or FILTER_CHILD."
+        }
+      ]
+    },
+    {
+      "name": "RegExpInstruction::Uc16Range",
+      "properties": [
+        "min",
+        "max"
+      ],
+      "methods": []
+    },
+    {
+      "name": "RegExpInstruction::LookaroundPayload",
+      "properties": [],
+      "methods": [
+        {
+          "name": "LookaroundPayload",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Default constructor for LookaroundPayload."
+        },
+        {
+          "name": "LookaroundPayload",
+          "parameters": [
+            "uint32_t lookaround_index",
+            "bool is_positive",
+            "RegExpLookaround::Type type"
+          ],
+          "return_type": "void",
+          "logic": "Constructor for LookaroundPayload that initializes the payload_ field using bitfields."
+        },
+        {
+          "name": "index",
+          "parameters": [],
+          "return_type": "uint32_t",
+          "logic": "Returns the lookaround index from the payload."
+        },
+        {
+          "name": "is_positive",
+          "parameters": [],
+          "return_type": "bool",
+          "logic": "Returns the positivity flag from the payload."
+        },
+        {
+          "name": "type",
+          "parameters": [],
+          "return_type": "RegExpLookaround::Type",
+          "logic": "Returns the lookaround type from the payload."
+        }
+      ]
+    }
+  ],
+  "functions": [
+    {
+      "name": "operator<<",
+      "parameters": [
+        "std::ostream& os",
+        "const RegExpInstruction& inst"
+      ],
+      "return_type": "std::ostream&",
+      "logic": "Overloads the << operator for RegExpInstruction to allow printing to an ostream."
+    },
+    {
+      "name": "operator<<",
+      "parameters": [
+        "std::ostream& os",
+        "base::Vector<const RegExpInstruction> insts"
+      ],
+      "return_type": "std::ostream&",
+      "logic": "Overloads the << operator for a vector of RegExpInstructions to allow printing to an ostream."
+    },
+    {
+      "name": "operator<<",
+      "parameters": [
+        "std::ostream& os",
+        "const RegExpInstruction::LookaroundPayload& inst"
+      ],
+      "return_type": "std::ostream&",
+      "logic": "Overloads the << operator for RegExpInstruction::LookaroundPayload to allow printing to an ostream."
+    }
+  ]
+}

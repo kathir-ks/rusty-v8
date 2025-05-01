@@ -1,0 +1,255 @@
+{
+  "file_path": "/home/kathirks_gc/v8_go/codebase/src/libsampler/sampler.cc",
+  "imports": [
+    "src/libsampler/sampler.h",
+    "include/v8-isolate.h",
+    "include/v8-platform.h",
+    "include/v8-unwinder.h",
+    "<errno.h>",
+    "<pthread.h>",
+    "<signal.h>",
+    "<sys/time.h>",
+    "<atomic>",
+    "<sys/syscall.h>",
+    "src/base/platform/time.h",
+    "<mach/mach.h>",
+    "<ucontext.h>",
+    "<unistd.h>",
+    "<windows.h>",
+    "<zircon/process.h>",
+    "<zircon/syscalls.h>",
+    "<zircon/syscalls/debug.h>",
+    "<zircon/types.h>",
+    "<algorithm>",
+    "<vector>",
+    "src/base/atomic-utils.h",
+    "src/base/platform/mutex.h",
+    "src/base/platform/platform.h",
+    "edcwccwi.h"
+  ],
+  "classes": [
+    {
+      "name": "AtomicGuard",
+      "properties": [
+        "atomic_",
+        "is_success_"
+      ],
+      "methods": [
+        {
+          "name": "AtomicGuard",
+          "parameters": [
+            "AtomicMutex* atomic",
+            "bool is_blocking"
+          ],
+          "return_type": "AtomicGuard",
+          "logic": "Constructor. Attempts to acquire the atomic mutex. If blocking is enabled, it spins until acquired. Sets is_success_ to indicate if the mutex was acquired."
+        },
+        {
+          "name": "~AtomicGuard",
+          "parameters": [],
+          "return_type": "AtomicGuard",
+          "logic": "Destructor. Releases the atomic mutex if it was acquired."
+        },
+        {
+          "name": "is_success",
+          "parameters": [],
+          "return_type": "bool",
+          "logic": "Returns whether the AtomicGuard successfully acquired the lock."
+        }
+      ]
+    },
+    {
+      "name": "Sampler::PlatformData",
+      "properties": [
+        "vm_tid_",
+        "vm_tself_",
+        "profiled_thread_"
+      ],
+      "methods": [
+        {
+          "name": "PlatformData",
+          "parameters": [],
+          "return_type": "PlatformData",
+          "logic": "Constructor. Gets the current thread ID and pthread_t. On Windows duplicates thread handle, on Fuchsia duplicates thread handle."
+        },
+        {
+          "name": "~PlatformData",
+          "parameters": [],
+          "return_type": "PlatformData",
+          "logic": "Destructor. Closes the duplicated thread handle on Windows and Fuchsia."
+        },
+        {
+          "name": "vm_tid",
+          "parameters": [],
+          "return_type": "int",
+          "logic": "Returns the virtual machine thread ID."
+        },
+        {
+          "name": "vm_tself",
+          "parameters": [],
+          "return_type": "pthread_t",
+          "logic": "Returns the pthread ID."
+        },
+        {
+          "name": "profiled_thread",
+          "parameters": [],
+          "return_type": "HANDLE",
+          "logic": "Returns the duplicated handle of the profiled thread (Windows)."
+        },
+        {
+          "name": "profiled_thread",
+          "parameters": [],
+          "return_type": "zx_handle_t",
+          "logic": "Returns the duplicated handle of the profiled thread (Fuchsia)."
+        }
+      ]
+    },
+    {
+      "name": "SamplerManager",
+      "properties": [
+        "sampler_map_",
+        "samplers_access_counter_"
+      ],
+      "methods": [
+        {
+          "name": "AddSampler",
+          "parameters": [
+            "Sampler* sampler"
+          ],
+          "return_type": "void",
+          "logic": "Adds a sampler to the sampler_map_, indexed by thread ID. Protects access with an AtomicGuard."
+        },
+        {
+          "name": "RemoveSampler",
+          "parameters": [
+            "Sampler* sampler"
+          ],
+          "return_type": "void",
+          "logic": "Removes a sampler from the sampler_map_. Protects access with an AtomicGuard."
+        },
+        {
+          "name": "DoSample",
+          "parameters": [
+            "const v8::RegisterState& state"
+          ],
+          "return_type": "void",
+          "logic": "Iterates through the samplers for the current thread and calls SampleStack on each active sampler. Protects access with an AtomicGuard."
+        },
+        {
+          "name": "instance",
+          "parameters": [],
+          "return_type": "SamplerManager*",
+          "logic": "Returns the singleton instance of SamplerManager."
+        }
+      ]
+    },
+    {
+      "name": "SignalHandler",
+      "properties": [
+        "mutex_",
+        "client_count_",
+        "signal_handler_installed_",
+        "old_signal_handler_"
+      ],
+      "methods": [
+        {
+          "name": "IncreaseSamplerCount",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Increases a counter of active samplers. Installs the signal handler when the counter transitions from 0 to 1."
+        },
+        {
+          "name": "DecreaseSamplerCount",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Decreases the counter of active samplers. Restores the old signal handler when the counter transitions from 1 to 0."
+        },
+        {
+          "name": "Installed",
+          "parameters": [],
+          "return_type": "bool",
+          "logic": "Returns whether the signal handler is installed."
+        },
+        {
+          "name": "mutex",
+          "parameters": [],
+          "return_type": "v8::base::RecursiveMutex*",
+          "logic": "Returns a pointer to the mutex protecting access to signal handler data."
+        },
+        {
+          "name": "Install",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Installs the signal handler for SIGPROF."
+        },
+        {
+          "name": "Restore",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Restores the old signal handler for SIGPROF."
+        },
+        {
+          "name": "FillRegisterState",
+          "parameters": [
+            "void* context",
+            "RegisterState* regs"
+          ],
+          "return_type": "void",
+          "logic": "Fills the RegisterState struct with register values extracted from the signal context. This is platform-dependent."
+        },
+        {
+          "name": "HandleProfilerSignal",
+          "parameters": [
+            "int signal",
+            "siginfo_t* info",
+            "void* context"
+          ],
+          "return_type": "void",
+          "logic": "Signal handler for SIGPROF. Extracts register state from the context, sets default permissions and calls SamplerManager::DoSample."
+        }
+      ]
+    },
+    {
+      "name": "Sampler",
+      "properties": [
+        "isolate_",
+        "data_"
+      ],
+      "methods": [
+        {
+          "name": "Sampler",
+          "parameters": [
+            "Isolate* isolate"
+          ],
+          "return_type": "Sampler",
+          "logic": "Constructor. Initializes the sampler with an isolate and allocates PlatformData."
+        },
+        {
+          "name": "~Sampler",
+          "parameters": [],
+          "return_type": "Sampler",
+          "logic": "Destructor. Ensures the sampler is not active."
+        },
+        {
+          "name": "Start",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Starts the sampler. Adds itself to the SamplerManager, installs the signal handler (if using signals), and sets the active flag."
+        },
+        {
+          "name": "Stop",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Stops the sampler. Removes itself from the SamplerManager, disables the signal handler (if using signals), and resets the active flag."
+        },
+        {
+          "name": "DoSample",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Triggers a sample. On platforms using signals, it raises SIGPROF. On Windows, it suspends the thread, gets the context, and resumes the thread.  On Fuchsia it suspends the thread with a suspend token, gets the context, and resumes the thread.  Then SampleStack is called."
+        }
+      ]
+    }
+  ],
+  "functions": []
+}

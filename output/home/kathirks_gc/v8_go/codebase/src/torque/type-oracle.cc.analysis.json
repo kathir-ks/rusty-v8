@@ -1,0 +1,60 @@
+{
+  "file_path": "/home/kathirks_gc/v8_go/codebase/src/torque/type-oracle.cc",
+  "imports": [
+    "src/torque/type-oracle.h",
+    "<optional>",
+    "src/torque/type-visitor.h",
+    "src/torque/types.h"
+  ],
+  "classes": [],
+  "functions": [
+    {
+      "name": "GetAggregateTypes",
+      "parameters": [],
+      "return_type": "const std::vector<std::unique_ptr<AggregateType>>&",
+      "logic": "Returns a reference to the vector of aggregate types stored in the TypeOracle singleton. This allows access to all defined aggregate types (structs, classes, etc.)."
+    },
+    {
+      "name": "GetBitFieldStructTypes",
+      "parameters": [],
+      "return_type": "const std::vector<std::unique_ptr<BitFieldStructType>>&",
+      "logic": "Returns a reference to the vector of bit field struct types stored in the TypeOracle singleton."
+    },
+    {
+      "name": "FinalizeAggregateTypes",
+      "parameters": [],
+      "return_type": "void",
+      "logic": "Iterates through all aggregate types and calls their `Finalize()` method.  This is likely a post-processing step to resolve dependencies and perform other setup tasks after all types have been declared."
+    },
+    {
+      "name": "GetGenericTypeInstance",
+      "parameters": [
+        "GenericType* generic_type",
+        "TypeVector arg_types"
+      ],
+      "return_type": "const Type*",
+      "logic": "Retrieves an instance of a generic type, potentially specializing it with the provided argument types.  If a specialization already exists, it returns that. Otherwise, it computes the type using `TypeVisitor::ComputeType`, adds the new specialization to the generic type, and returns it. This ensures that only one instance of a given specialization exists."
+    },
+    {
+      "name": "CreateGenericTypeInstantiationNamespace",
+      "parameters": [],
+      "return_type": "Namespace*",
+      "logic": "Creates a new namespace for generic type instantiations and stores it.  Returns a pointer to the newly created namespace. This namespace is used to group symbols created during generic type specialization."
+    },
+    {
+      "name": "GetClasses",
+      "parameters": [],
+      "return_type": "std::vector<const ClassType*>",
+      "logic": "Retrieves all ClassType instances from the registered aggregate types. It iterates through the aggregate types and adds those that are classes to the returned vector."
+    },
+    {
+      "name": "MatchReferenceGeneric",
+      "parameters": [
+        "const Type* reference_type",
+        "bool* is_const"
+      ],
+      "return_type": "std::optional<const Type*>",
+      "logic": "Attempts to match a given `reference_type` against either the mutable or const reference generic types. If it matches, returns the underlying type of the reference and sets `is_const` accordingly. If no match is found, returns std::nullopt."
+    }
+  ]
+}

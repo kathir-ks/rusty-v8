@@ -1,0 +1,158 @@
+{
+  "file_path": "/home/kathirks_gc/v8_go/codebase/src/compiler/pipeline-statistics.cc",
+  "imports": [
+    "src/compiler/pipeline-statistics.h",
+    "memory",
+    "src/codegen/optimized-compilation-info.h",
+    "src/compiler/turboshaft/phase.h",
+    "src/compiler/zone-stats.h",
+    "src/objects/shared-function-info.h"
+  ],
+  "classes": [
+    {
+      "name": "PipelineStatisticsBase::CommonStats",
+      "properties": [
+        "scope_",
+        "outer_zone_initial_size_",
+        "allocated_bytes_at_start_",
+        "graph_size_at_start_",
+        "timer_"
+      ],
+      "methods": [
+        {
+          "name": "Begin",
+          "parameters": [
+            "PipelineStatisticsBase* pipeline_stats"
+          ],
+          "return_type": "void",
+          "logic": "Starts the statistics collection for a specific phase.  It initializes the timer, records the current allocated bytes, outer zone size, and possibly graph size for Turboshaft (commented out)."
+        },
+        {
+          "name": "End",
+          "parameters": [
+            "PipelineStatisticsBase* pipeline_stats",
+            "CompilationStatistics::BasicStats* diff"
+          ],
+          "return_type": "void",
+          "logic": "Ends the statistics collection for a specific phase.  It calculates the elapsed time, the maximum allocated bytes, and the total allocated bytes. Fills the `diff` parameter with calculated statistics. Also, it used to record graph size if turboshaft scope exists (commented out)."
+        }
+      ]
+    },
+    {
+      "name": "PipelineStatisticsBase",
+      "properties": [
+        "outer_zone_",
+        "zone_stats_",
+        "compilation_stats_",
+        "code_kind_",
+        "total_stats_",
+        "phase_kind_name_",
+        "phase_kind_stats_",
+        "phase_name_",
+        "phase_stats_"
+      ],
+      "methods": [
+        {
+          "name": "PipelineStatisticsBase",
+          "parameters": [
+            "Zone* outer_zone",
+            "ZoneStats* zone_stats",
+            "std::shared_ptr<CompilationStatistics> compilation_stats",
+            "CodeKind code_kind"
+          ],
+          "return_type": "void",
+          "logic": "Constructor for PipelineStatisticsBase. Initializes the members with given values and begins the total stats collection."
+        },
+        {
+          "name": "~PipelineStatisticsBase",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Destructor for PipelineStatisticsBase. Ends the total stats collection and records the results to compilation_stats_."
+        },
+        {
+          "name": "BeginPhaseKind",
+          "parameters": [
+            "const char* phase_kind_name"
+          ],
+          "return_type": "void",
+          "logic": "Starts the statistics collection for a phase kind. It saves the phase kind name and begin collecting stats."
+        },
+        {
+          "name": "EndPhaseKind",
+          "parameters": [
+            "CompilationStatistics::BasicStats* diff"
+          ],
+          "return_type": "void",
+          "logic": "Ends the statistics collection for a phase kind. Fills the diff parameter with the results and records the results to compilation_stats_."
+        },
+        {
+          "name": "BeginPhase",
+          "parameters": [
+            "const char* phase_name"
+          ],
+          "return_type": "void",
+          "logic": "Starts the statistics collection for a phase. It saves the phase name and begins collecting stats."
+        },
+        {
+          "name": "EndPhase",
+          "parameters": [
+            "CompilationStatistics::BasicStats* diff"
+          ],
+          "return_type": "void",
+          "logic": "Ends the statistics collection for a phase. Fills the diff parameter with the results and records the results to compilation_stats_."
+        }
+      ]
+    },
+    {
+      "name": "TurbofanPipelineStatistics",
+      "properties": [],
+      "methods": [
+        {
+          "name": "TurbofanPipelineStatistics",
+          "parameters": [
+            "OptimizedCompilationInfo* info",
+            "std::shared_ptr<CompilationStatistics> compilation_stats",
+            "ZoneStats* zone_stats"
+          ],
+          "return_type": "void",
+          "logic": "Constructor for TurbofanPipelineStatistics. Initializes the base class and sets the function name if available."
+        },
+        {
+          "name": "~TurbofanPipelineStatistics",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Destructor for TurbofanPipelineStatistics. Ends the current phase kind if a phase kind is in progress."
+        },
+        {
+          "name": "BeginPhaseKind",
+          "parameters": [
+            "const char* name"
+          ],
+          "return_type": "void",
+          "logic": "Starts statistics collection for a phase kind, ending the previous one, beginning a new stats recording using the base class. Also, it emits a trace event to the TRACE_EVENT system with phase information."
+        },
+        {
+          "name": "EndPhaseKind",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Ends the statistics collection for a phase kind using the base class. Also, it emits a trace event to the TRACE_EVENT system with phase information and stats."
+        },
+        {
+          "name": "BeginPhase",
+          "parameters": [
+            "const char* name"
+          ],
+          "return_type": "void",
+          "logic": "Starts statistics collection for a phase using base class, emitting a trace event to the TRACE_EVENT system with phase information."
+        },
+        {
+          "name": "EndPhase",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Ends statistics collection for a phase using base class, emitting a trace event to the TRACE_EVENT system with phase information and stats."
+        }
+      ]
+    }
+  ],
+  "functions": []
+}

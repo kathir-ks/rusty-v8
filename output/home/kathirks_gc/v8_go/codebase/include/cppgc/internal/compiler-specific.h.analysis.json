@@ -1,0 +1,40 @@
+{
+  "file_path": "/home/kathirks_gc/v8_go/codebase/include/cppgc/internal/compiler-specific.h",
+  "imports": [
+    "v8config.h"
+  ],
+  "classes": [],
+  "functions": [],
+  "macros": [
+    {
+      "name": "CPPGC_HAS_ATTRIBUTE",
+      "definition": "__has_attribute(FEATURE)",
+      "condition": "defined(__has_attribute)",
+      "else_definition": "0",
+      "logic": "Checks if the compiler supports a given attribute using the __has_attribute preprocessor feature.  Defines the macro to 1 if supported, 0 otherwise."
+    },
+    {
+      "name": "CPPGC_HAS_CPP_ATTRIBUTE",
+      "definition": "__has_cpp_attribute(FEATURE)",
+      "condition": "defined(__has_cpp_attribute)",
+      "else_definition": "0",
+      "logic": "Checks if the compiler supports a given C++ attribute using the __has_cpp_attribute preprocessor feature. Defines the macro to 1 if supported, 0 otherwise."
+    },
+    {
+      "name": "CPPGC_NO_UNIQUE_ADDRESS",
+      "definition": "[[msvc::no_unique_address]]",
+      "condition": "defined(V8_CC_MSVC) && CPPGC_HAS_CPP_ATTRIBUTE(msvc::no_unique_address)",
+      "logic": "Defines the `CPPGC_NO_UNIQUE_ADDRESS` attribute for marking class members that can share the same address (empty base optimization). Uses `[[msvc::no_unique_address]]` on MSVC if available, otherwise falls back to the standard C++20 `[[no_unique_address]]`.  If neither are supported, it's defined as empty.",
+      "else_if_condition": "CPPGC_HAS_CPP_ATTRIBUTE(no_unique_address)",
+      "else_if_definition": "[[no_unique_address]]",
+      "else_definition": ""
+    },
+    {
+      "name": "CPPGC_UNUSED",
+      "definition": "__attribute__((unused))",
+      "condition": "CPPGC_HAS_ATTRIBUTE(unused)",
+      "else_definition": "",
+      "logic": "Defines the `CPPGC_UNUSED` macro using the `__attribute__((unused))` compiler extension, if the compiler supports the 'unused' attribute. This is used to suppress compiler warnings about unused variables or parameters."
+    }
+  ]
+}

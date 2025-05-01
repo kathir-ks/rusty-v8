@@ -1,0 +1,161 @@
+{
+  "file_path": "/home/kathirks_gc/v8_go/codebase/src/snapshot/read-only-serializer-deserializer.h",
+  "imports": [
+    "src/common/globals.h"
+  ],
+  "classes": [
+    {
+      "name": "BitSet",
+      "properties": [
+        "size_in_bits_",
+        "data_",
+        "owns_data_"
+      ],
+      "methods": [
+        {
+          "name": "BitSet",
+          "parameters": [
+            "size_in_bits"
+          ],
+          "return_type": "explicit BitSet",
+          "logic": "Constructor. Allocates memory for the bitset and initializes all bits to 0."
+        },
+        {
+          "name": "BitSet",
+          "parameters": [
+            "data",
+            "size_in_bits"
+          ],
+          "return_type": "explicit BitSet",
+          "logic": "Constructor. Takes a pre-allocated data buffer and initializes the bitset."
+        },
+        {
+          "name": "~BitSet",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Destructor. Deallocates the memory if the BitSet owns the data."
+        },
+        {
+          "name": "contains",
+          "parameters": [
+            "i"
+          ],
+          "return_type": "bool",
+          "logic": "Checks if the bit at index i is set."
+        },
+        {
+          "name": "set",
+          "parameters": [
+            "i"
+          ],
+          "return_type": "void",
+          "logic": "Sets the bit at index i."
+        },
+        {
+          "name": "size_in_bits",
+          "parameters": [],
+          "return_type": "size_t",
+          "logic": "Returns the size of the bitset in bits."
+        },
+        {
+          "name": "size_in_bytes",
+          "parameters": [],
+          "return_type": "size_t",
+          "logic": "Returns the size of the bitset in bytes, rounded up to the nearest byte."
+        },
+        {
+          "name": "data",
+          "parameters": [],
+          "return_type": "const uint8_t*",
+          "logic": "Returns a pointer to the underlying data buffer."
+        }
+      ]
+    },
+    {
+      "name": "EncodedTagged",
+      "properties": [
+        "page_index",
+        "offset"
+      ],
+      "methods": [
+        {
+          "name": "EncodedTagged",
+          "parameters": [
+            "page_index",
+            "offset"
+          ],
+          "return_type": "explicit EncodedTagged",
+          "logic": "Constructor. Encodes the page index and offset into a single integer value."
+        },
+        {
+          "name": "ToUint32",
+          "parameters": [],
+          "return_type": "uint32_t",
+          "logic": "Converts the EncodedTagged structure to a uint32_t value."
+        },
+        {
+          "name": "FromUint32",
+          "parameters": [
+            "v"
+          ],
+          "return_type": "static EncodedTagged",
+          "logic": "Creates an EncodedTagged structure from a uint32_t value."
+        },
+        {
+          "name": "FromAddress",
+          "parameters": [
+            "address"
+          ],
+          "return_type": "static EncodedTagged",
+          "logic": "Creates an EncodedTagged structure from an Address."
+        }
+      ]
+    },
+    {
+      "name": "EncodedExternalReference",
+      "properties": [
+        "is_api_reference",
+        "index"
+      ],
+      "methods": [
+        {
+          "name": "ToUint32",
+          "parameters": [],
+          "return_type": "uint32_t",
+          "logic": "Converts the EncodedExternalReference structure to a uint32_t value."
+        },
+        {
+          "name": "FromUint32",
+          "parameters": [
+            "v"
+          ],
+          "return_type": "static EncodedExternalReference",
+          "logic": "Creates an EncodedExternalReference structure from a uint32_t value."
+        },
+        {
+          "name": "EncodedExternalReference",
+          "parameters": [
+            "is_api_reference",
+            "index"
+          ],
+          "return_type": "EncodedExternalReference",
+          "logic": "Constructor. Initializes the is_api_reference flag and the index."
+        }
+      ]
+    }
+  ],
+  "functions": [],
+  "enums": [
+    {
+      "name": "Bytecode",
+      "values": [
+        "kAllocatePage",
+        "kAllocatePageAt",
+        "kSegment",
+        "kRelocateSegment",
+        "kReadOnlyRootsTable",
+        "kFinalizeReadOnlySpace"
+      ]
+    }
+  ]
+}

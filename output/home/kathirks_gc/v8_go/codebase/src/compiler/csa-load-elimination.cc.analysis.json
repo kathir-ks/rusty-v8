@@ -1,0 +1,304 @@
+{
+  "file_path": "/home/kathirks_gc/v8_go/codebase/src/compiler/csa-load-elimination.cc",
+  "imports": [
+    "src/compiler/csa-load-elimination.h",
+    "src/compiler/common-operator.h",
+    "src/compiler/node-matchers.h",
+    "src/compiler/node-properties.h",
+    "src/compiler/simplified-operator.h"
+  ],
+  "classes": [
+    {
+      "name": "CsaLoadElimination",
+      "properties": [
+        "node_states_",
+        "zone_",
+        "jsgraph_"
+      ],
+      "methods": [
+        {
+          "name": "Reduce",
+          "parameters": [
+            "Node* node"
+          ],
+          "return_type": "Reduction",
+          "logic": "Main reduction function that dispatches to specific handlers based on the node's opcode. Handles LoadFromObject, StoreToObject, EffectPhi, etc.  It performs load elimination and state updates."
+        },
+        {
+          "name": "AssertUnreachable",
+          "parameters": [
+            "Node* node"
+          ],
+          "return_type": "Reduction",
+          "logic": "Replaces the given node with an Unreachable node, used when encountering mutable/immutable inconsistencies, indicating unreachable code."
+        },
+        {
+          "name": "ReduceLoadFromObject",
+          "parameters": [
+            "Node* node",
+            "ObjectAccess const& access"
+          ],
+          "return_type": "Reduction",
+          "logic": "Handles LoadFromObject and LoadImmutableFromObject nodes.  Attempts to eliminate loads by reusing previously loaded or stored values. Maintains mutable and immutable state separately."
+        },
+        {
+          "name": "ReduceStoreToObject",
+          "parameters": [
+            "Node* node",
+            "ObjectAccess const& access"
+          ],
+          "return_type": "Reduction",
+          "logic": "Handles StoreToObject and InitializeImmutableInObject nodes.  Updates the abstract state with the stored value and kills overlapping fields. Maintains mutable and immutable state separately."
+        },
+        {
+          "name": "ReduceEffectPhi",
+          "parameters": [
+            "Node* node"
+          ],
+          "return_type": "Reduction",
+          "logic": "Handles EffectPhi nodes, merging the abstract states from multiple incoming control flow paths. Uses intersection to combine states conservatively."
+        },
+        {
+          "name": "ReduceStart",
+          "parameters": [
+            "Node* node"
+          ],
+          "return_type": "Reduction",
+          "logic": "Handles Start node, initializing the abstract state to an empty state."
+        },
+        {
+          "name": "ReduceCall",
+          "parameters": [
+            "Node* node"
+          ],
+          "return_type": "Reduction",
+          "logic": "Handles Call nodes. Propagates the input state when it can be determined that the call does not have side effects that would impact load elimination."
+        },
+        {
+          "name": "ReduceOtherNode",
+          "parameters": [
+            "Node* node"
+          ],
+          "return_type": "Reduction",
+          "logic": "Handles other nodes by propagating or resetting the effect state based on whether it has the kNoWrite property."
+        },
+        {
+          "name": "UpdateState",
+          "parameters": [
+            "Node* node",
+            "AbstractState const* state"
+          ],
+          "return_type": "Reduction",
+          "logic": "Updates the node's abstract state and returns Changed if the state has changed."
+        },
+        {
+          "name": "PropagateInputState",
+          "parameters": [
+            "Node* node"
+          ],
+          "return_type": "Reduction",
+          "logic": "Propagates the input effect's state to the node."
+        },
+        {
+          "name": "ComputeLoopState",
+          "parameters": [
+            "Node* node",
+            "AbstractState const* state"
+          ],
+          "return_type": "CsaLoadElimination::AbstractState const*",
+          "logic": "Computes the abstract state at the loop header by iterating through effect inputs in the loop, killing fields corresponding to stores and initializing immutables to prevent duplicate initializations"
+        },
+        {
+          "name": "TruncateAndExtend",
+          "parameters": [
+            "Node* node",
+            "MachineRepresentation from",
+            "MachineType to"
+          ],
+          "return_type": "Node*",
+          "logic": "Truncates and extends a node's value based on the 'from' and 'to' machine types. It adds intermediate nodes for the truncation or extension as needed to ensure correctness."
+        },
+        {
+          "name": "common",
+          "parameters": [],
+          "return_type": "CommonOperatorBuilder*",
+          "logic": "Returns the common operator builder."
+        },
+        {
+          "name": "machine",
+          "parameters": [],
+          "return_type": "MachineOperatorBuilder*",
+          "logic": "Returns the machine operator builder."
+        },
+        {
+          "name": "graph",
+          "parameters": [],
+          "return_type": "TFGraph*",
+          "logic": "Returns the TurboFan graph."
+        },
+        {
+          "name": "isolate",
+          "parameters": [],
+          "return_type": "Isolate*",
+          "logic": "Returns the Isolate."
+        }
+      ]
+    },
+    {
+      "name": "CsaLoadElimination::HalfState",
+      "properties": [
+        "fresh_entries_",
+        "constant_entries_",
+        "arbitrary_entries_",
+        "fresh_unknown_entries_",
+        "constant_unknown_entries_",
+        "arbitrary_unknown_entries_",
+        "zone_"
+      ],
+      "methods": [
+        {
+          "name": "IntersectWith",
+          "parameters": [
+            "OuterMap<OuterKey>& to",
+            "const OuterMap<OuterKey>& from"
+          ],
+          "return_type": "void",
+          "logic": "Intersects the information in {to} with the information from {from}. Sets field information to empty_info if the field info in {from} does not match with the info in {to}."
+        },
+        {
+          "name": "IntersectWith",
+          "parameters": [
+            "HalfState const* that"
+          ],
+          "return_type": "void",
+          "logic": "Intersects each field of this HalfState with the fields of the 'that' HalfState."
+        },
+        {
+          "name": "KillField",
+          "parameters": [
+            "Node* object",
+            "Node* offset",
+            "MachineRepresentation repr"
+          ],
+          "return_type": "CsaLoadElimination::HalfState const*",
+          "logic": "Creates a new HalfState that kills the specified field (object, offset, repr). It accounts for possible aliasing and clears relevant entries."
+        },
+        {
+          "name": "AddField",
+          "parameters": [
+            "Node* object",
+            "Node* offset",
+            "Node* value",
+            "MachineRepresentation repr"
+          ],
+          "return_type": "CsaLoadElimination::HalfState const*",
+          "logic": "Creates a new HalfState and adds the specified field (object, offset, value, repr) to the appropriate map (fresh, constant, arbitrary)."
+        },
+        {
+          "name": "Lookup",
+          "parameters": [
+            "Node* object",
+            "Node* offset"
+          ],
+          "return_type": "CsaLoadElimination::FieldInfo",
+          "logic": "Looks up the FieldInfo for the specified object and offset in the state."
+        },
+        {
+          "name": "KillOffset",
+          "parameters": [
+            "ConstantOffsetInfos& infos",
+            "uint32_t offset",
+            "MachineRepresentation repr",
+            "Zone* zone"
+          ],
+          "return_type": "void",
+          "logic": "Kills all elements in {infos} that overlap with an element with {offset} and size {ElementSizeInBytes(repr)}."
+        },
+        {
+          "name": "KillOffsetInFresh",
+          "parameters": [
+            "Node* const object",
+            "uint32_t offset",
+            "MachineRepresentation repr"
+          ],
+          "return_type": "void",
+          "logic": "Kills a given offset in the fresh entry of the HalfState. It prevents re-using data from memory locations in fresh objects that have been overwritten."
+        },
+        {
+          "name": "Print",
+          "parameters": [
+            "const CsaLoadElimination::HalfState::ConstantOffsetInfos& infos"
+          ],
+          "return_type": "void",
+          "logic": "Prints the contents of ConstantOffsetInfos for debugging."
+        },
+        {
+          "name": "Print",
+          "parameters": [
+            "const CsaLoadElimination::HalfState::UnknownOffsetInfos& infos"
+          ],
+          "return_type": "void",
+          "logic": "Prints the contents of UnknownOffsetInfos for debugging."
+        },
+        {
+          "name": "Print",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Prints the contents of the HalfState for debugging."
+        }
+      ]
+    },
+    {
+      "name": "CsaLoadElimination::AbstractState",
+      "properties": [
+        "mutable_state",
+        "immutable_state"
+      ],
+      "methods": [
+        {
+          "name": "IntersectWith",
+          "parameters": [
+            "AbstractState const* that"
+          ],
+          "return_type": "void",
+          "logic": "Intersects the mutable and immutable states of this object with the mutable and immutable states of 'that'."
+        },
+        {
+          "name": "Equals",
+          "parameters": [
+            "AbstractState const* that"
+          ],
+          "return_type": "bool",
+          "logic": "Compares the equality of the mutable and immutable states of this object to those of 'that'."
+        }
+      ]
+    }
+  ],
+  "functions": [
+    {
+      "name": "Subsumes",
+      "parameters": [
+        "MachineRepresentation from",
+        "MachineRepresentation to"
+      ],
+      "return_type": "bool",
+      "logic": "Determines if one MachineRepresentation subsumes another. Used for type-based load elimination."
+    },
+    {
+      "name": "IsConstantObject",
+      "parameters": [
+        "Node* object"
+      ],
+      "return_type": "bool",
+      "logic": "Checks if a node represents a constant object (Parameter, LoadImmutable, or Constant)."
+    },
+    {
+      "name": "IsFreshObject",
+      "parameters": [
+        "Node* object"
+      ],
+      "return_type": "bool",
+      "logic": "Checks if a node represents a newly allocated object (Allocate or AllocateRaw)."
+    }
+  ]
+}

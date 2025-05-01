@@ -1,0 +1,212 @@
+{
+  "file_path": "/home/kathirks_gc/v8_go/codebase/src/compiler/js-inlining-heuristic.cc",
+  "imports": [
+    "src/compiler/js-inlining-heuristic.h",
+    "src/compiler/common-operator.h",
+    "src/compiler/compiler-source-position-table.h",
+    "src/compiler/js-heap-broker.h",
+    "src/compiler/node-matchers.h",
+    "src/compiler/simplified-operator.h",
+    "src/numbers/conversions.h"
+  ],
+  "classes": [
+    {
+      "name": "JSInliningHeuristic",
+      "properties": [
+        "total_inlined_bytecode_size_",
+        "max_inlined_bytecode_size_absolute_",
+        "max_inlined_bytecode_size_cumulative_",
+        "seen_",
+        "candidates_",
+        "inliner_",
+        "jsgraph()",
+        "broker()",
+        "info()",
+        "source_positions_",
+        "mode()"
+      ],
+      "methods": [
+        {
+          "name": "CollectFunctions",
+          "parameters": [
+            "Node* node",
+            "int functions_size"
+          ],
+          "return_type": "Candidate",
+          "logic": "Collects information about functions that are potential candidates for inlining at a given call site (Node).  It identifies the callee and checks if it's a JSFunction or a Phi node (representing polymorphic calls) or a closure. Determines if the functions meet the criteria for inlining based on feedback and inlineability."
+        },
+        {
+          "name": "Reduce",
+          "parameters": [
+            "Node* node"
+          ],
+          "return_type": "Reduction",
+          "logic": "The main entry point for the inlining heuristic. It checks if a node is an inlineable opcode, if the inlining budget is exceeded, and if the node has been seen before. If all checks pass, it collects candidate functions and either inlines small functions immediately or adds them to a set of candidates for later inlining."
+        },
+        {
+          "name": "Finalize",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Performs the actual inlining of the collected candidates after the main reduction phase. It iterates through the candidates, checks if they are still valid, and inlines them if the inlining budget allows. The inlining decision is made based on candidate size and call frequency."
+        },
+        {
+          "name": "DuplicateStateValuesAndRename",
+          "parameters": [
+            "Node* state_values",
+            "Node* from",
+            "Node* to",
+            "StateCloneMode mode"
+          ],
+          "return_type": "Node*",
+          "logic": "Duplicates a StateValues node and renames a specific node ('from') to another node ('to') within the duplicated StateValues. It avoids renaming shared states."
+        },
+        {
+          "name": "DuplicateFrameStateAndRename",
+          "parameters": [
+            "FrameState frame_state",
+            "Node* from",
+            "Node* to",
+            "StateCloneMode mode"
+          ],
+          "return_type": "FrameState",
+          "logic": "Duplicates a FrameState node and renames a specific node ('from') to another node ('to') within the duplicated FrameState. This function handles renaming within the stack and locals of the FrameState and avoids renaming shared states."
+        },
+        {
+          "name": "TryReuseDispatch",
+          "parameters": [
+            "Node* node",
+            "Node* callee",
+            "Node** if_successes",
+            "Node** calls",
+            "Node** inputs",
+            "int input_count",
+            "int* num_calls"
+          ],
+          "return_type": "bool",
+          "logic": "Attempts to reuse the control flow branch created for computing the callee target of the call for polymorphic inlining.  This optimization avoids duplicating control flow logic under certain circumstances."
+        },
+        {
+          "name": "CreateOrReuseDispatch",
+          "parameters": [
+            "Node* node",
+            "Node* callee",
+            "Candidate const& candidate",
+            "Node** if_successes",
+            "Node** calls",
+            "Node** inputs",
+            "int input_count",
+            "int* num_calls"
+          ],
+          "return_type": "void",
+          "logic": "Creates or reuses control flow for polymorphic inlining, dispatching to different function call targets based on runtime type information. It handles creating the branch structure and cloning the call nodes."
+        },
+        {
+          "name": "InlineCandidate",
+          "parameters": [
+            "Candidate const& candidate",
+            "bool small_function"
+          ],
+          "return_type": "Reduction",
+          "logic": "Inlines a candidate function. If there's only one candidate, it directly inlines the function. If there are multiple candidates (polymorphic call), it creates a dispatch structure (if not reusing one) and inlines each of the potential functions."
+        },
+        {
+          "name": "PrintCandidates",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Prints information about the inlining candidates to the standard output for debugging purposes."
+        },
+        {
+          "name": "graph",
+          "parameters": [],
+          "return_type": "TFGraph*",
+          "logic": "Returns the Turbofan graph."
+        },
+        {
+          "name": "dependencies",
+          "parameters": [],
+          "return_type": "CompilationDependencies*",
+          "logic": "Returns the compilation dependencies."
+        },
+        {
+          "name": "common",
+          "parameters": [],
+          "return_type": "CommonOperatorBuilder*",
+          "logic": "Returns the common operator builder."
+        },
+        {
+          "name": "simplified",
+          "parameters": [],
+          "return_type": "SimplifiedOperatorBuilder*",
+          "logic": "Returns the simplified operator builder."
+        }
+      ]
+    },
+    {
+      "name": "CandidateCompare",
+      "properties": [],
+      "methods": [
+        {
+          "name": "operator()",
+          "parameters": [
+            "const Candidate& left",
+            "const Candidate& right"
+          ],
+          "return_type": "bool",
+          "logic": "Comparator used to prioritize inlining candidates. Ranks based on frequency and bytecode size."
+        }
+      ]
+    }
+  ],
+  "functions": [
+    {
+      "name": "IsSmall",
+      "parameters": [
+        "int const size"
+      ],
+      "return_type": "bool",
+      "logic": "Checks if a given size is considered 'small' based on a flag."
+    },
+    {
+      "name": "CanConsiderForInlining",
+      "parameters": [
+        "JSHeapBroker* broker",
+        "FeedbackCellRef feedback_cell"
+      ],
+      "return_type": "bool",
+      "logic": "Determines whether a function, indicated by its feedback cell, is eligible for inlining. It checks for the existence of a feedback vector, bytecode, inlineability status, and changes in the feedback vector."
+    },
+    {
+      "name": "CanConsiderForInlining",
+      "parameters": [
+        "JSHeapBroker* broker",
+        "JSFunctionRef function"
+      ],
+      "return_type": "bool",
+      "logic": "Determines whether a JSFunction is eligible for inlining using its FeedbackCell."
+    },
+    {
+      "name": "CollectStateValuesOwnedUses",
+      "parameters": [
+        "Node* node",
+        "Node* state_values",
+        "NodeAndIndex* uses_buffer",
+        "size_t* use_count",
+        "size_t max_uses"
+      ],
+      "return_type": "bool",
+      "logic": "Collects the uses of state values related to a given node, where the state values are not shared with other users. Used in frame state manipulation. Returns false if max_uses is exceeded, true otherwise."
+    },
+    {
+      "name": "CollectFrameStateUniqueUses",
+      "parameters": [
+        "Node* node",
+        "FrameState frame_state",
+        "NodeAndIndex* uses_buffer",
+        "size_t* use_count",
+        "size_t max_uses"
+      ],
+      "return_type": "bool",
+      "logic": "Collects unique uses (not shared with other users) of a given node within a frame state. Returns false if max_uses is exceeded, true otherwise."
+    }
+  ]
+}

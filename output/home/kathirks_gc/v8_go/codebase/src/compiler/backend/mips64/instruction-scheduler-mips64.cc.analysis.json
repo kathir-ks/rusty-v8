@@ -1,0 +1,720 @@
+{
+  "file_path": "/home/kathirks_gc/v8_go/codebase/src/compiler/backend/mips64/instruction-scheduler-mips64.cc",
+  "imports": [
+    "src/codegen/macro-assembler.h",
+    "src/compiler/backend/instruction-scheduler.h"
+  ],
+  "classes": [
+    {
+      "name": "InstructionScheduler",
+      "properties": [],
+      "methods": [
+        {
+          "name": "SchedulerSupported",
+          "parameters": [],
+          "return_type": "bool",
+          "logic": "Returns true, indicating that instruction scheduling is supported for MIPS64 architecture."
+        },
+        {
+          "name": "GetTargetInstructionFlags",
+          "parameters": [
+            "const Instruction* instr"
+          ],
+          "return_type": "int",
+          "logic": "Determines and returns instruction flags based on the instruction's opcode.  It checks the architecture-specific opcode (arch_opcode()) of the instruction and returns appropriate flags. Returns kIsLoadOperation if the instruction is a load operation, kHasSideEffect if the instruction has side effects (e.g., stores), and kNoOpcodeFlags for other instructions.  If the instruction is already covered in an architecture independent code, it should not reach the UNREACHABLE macro. Many opcodes are handled, especially vector operations, and atomic memory operations."
+        },
+        {
+          "name": "GetInstructionLatency",
+          "parameters": [
+            "const Instruction* instr"
+          ],
+          "return_type": "int",
+          "logic": "Returns the estimated latency of a given instruction. It uses a switch statement based on the instruction's arch_opcode() to determine the latency. It models latencies for various MIPS64 instructions like arithmetic operations, memory access, function calls, and floating-point operations. Many opcodes' latencies depend on the `kArchVariant` for MIPS64 to represent the instruction set version."
+        }
+      ]
+    }
+  ],
+  "functions": [
+    {
+      "name": "DadduLatency",
+      "parameters": [
+        "bool is_operand_register = true"
+      ],
+      "return_type": "int",
+      "logic": "Returns the latency of a Daddu instruction, which may be different if the operand is a register or not."
+    },
+    {
+      "name": "DsubuLatency",
+      "parameters": [
+        "bool is_operand_register = true"
+      ],
+      "return_type": "int",
+      "logic": "Returns the latency of a Dsubu instruction, delegates to DadduLatency."
+    },
+    {
+      "name": "AndLatency",
+      "parameters": [
+        "bool is_operand_register = true"
+      ],
+      "return_type": "int",
+      "logic": "Returns the latency of an And instruction, delegates to DadduLatency."
+    },
+    {
+      "name": "OrLatency",
+      "parameters": [
+        "bool is_operand_register = true"
+      ],
+      "return_type": "int",
+      "logic": "Returns the latency of an Or instruction, delegates to DadduLatency."
+    },
+    {
+      "name": "NorLatency",
+      "parameters": [
+        "bool is_operand_register = true"
+      ],
+      "return_type": "int",
+      "logic": "Returns the latency of a Nor instruction, which may be different if the operand is a register or not."
+    },
+    {
+      "name": "XorLatency",
+      "parameters": [
+        "bool is_operand_register = true"
+      ],
+      "return_type": "int",
+      "logic": "Returns the latency of an Xor instruction, delegates to DadduLatency."
+    },
+    {
+      "name": "MulLatency",
+      "parameters": [
+        "bool is_operand_register = true"
+      ],
+      "return_type": "int",
+      "logic": "Returns the latency of a Mul instruction, which may be different if the operand is a register or not."
+    },
+    {
+      "name": "DmulLatency",
+      "parameters": [
+        "bool is_operand_register = true"
+      ],
+      "return_type": "int",
+      "logic": "Returns the latency of a Dmul instruction, which may be different depending on the architecture variant (kArchVariant) and if the operand is a register or not."
+    },
+    {
+      "name": "MulhLatency",
+      "parameters": [
+        "bool is_operand_register = true"
+      ],
+      "return_type": "int",
+      "logic": "Returns the latency of a Mulh instruction, which may be different depending on the architecture variant (kArchVariant) and if the operand is a register or not."
+    },
+    {
+      "name": "MulhuLatency",
+      "parameters": [
+        "bool is_operand_register = true"
+      ],
+      "return_type": "int",
+      "logic": "Returns the latency of a Mulhu instruction, which may be different depending on the architecture variant (kArchVariant) and if the operand is a register or not."
+    },
+    {
+      "name": "DMulhLatency",
+      "parameters": [
+        "bool is_operand_register = true"
+      ],
+      "return_type": "int",
+      "logic": "Returns the latency of a DMulh instruction, which may be different depending on the architecture variant (kArchVariant) and if the operand is a register or not."
+    },
+    {
+      "name": "DivLatency",
+      "parameters": [
+        "bool is_operand_register = true"
+      ],
+      "return_type": "int",
+      "logic": "Returns the latency of a Div instruction, which may be different if the operand is a register or not."
+    },
+    {
+      "name": "DivuLatency",
+      "parameters": [
+        "bool is_operand_register = true"
+      ],
+      "return_type": "int",
+      "logic": "Returns the latency of a Divu instruction, which may be different if the operand is a register or not."
+    },
+    {
+      "name": "DdivLatency",
+      "parameters": [
+        "bool is_operand_register = true"
+      ],
+      "return_type": "int",
+      "logic": "Returns the latency of a Ddiv instruction, which may be different depending on the architecture variant (kArchVariant) and if the operand is a register or not."
+    },
+    {
+      "name": "DdivuLatency",
+      "parameters": [
+        "bool is_operand_register = true"
+      ],
+      "return_type": "int",
+      "logic": "Returns the latency of a Ddivu instruction, which may be different depending on the architecture variant (kArchVariant) and if the operand is a register or not."
+    },
+    {
+      "name": "ModLatency",
+      "parameters": [
+        "bool is_operand_register = true"
+      ],
+      "return_type": "int",
+      "logic": "Returns the latency of a Mod instruction, which may be different depending on the architecture variant (kArchVariant) and if the operand is a register or not."
+    },
+    {
+      "name": "ModuLatency",
+      "parameters": [
+        "bool is_operand_register = true"
+      ],
+      "return_type": "int",
+      "logic": "Returns the latency of a Modu instruction, which may be different depending on the architecture variant (kArchVariant) and if the operand is a register or not."
+    },
+    {
+      "name": "DmodLatency",
+      "parameters": [
+        "bool is_operand_register = true"
+      ],
+      "return_type": "int",
+      "logic": "Returns the latency of a Dmod instruction, which may be different depending on the architecture variant (kArchVariant) and if the operand is a register or not."
+    },
+    {
+      "name": "DmoduLatency",
+      "parameters": [
+        "bool is_operand_register = true"
+      ],
+      "return_type": "int",
+      "logic": "Returns the latency of a Dmodu instruction, which may be different depending on the architecture variant (kArchVariant) and if the operand is a register or not."
+    },
+    {
+      "name": "MovzLatency",
+      "parameters": [],
+      "return_type": "int",
+      "logic": "Returns the latency of a Movz instruction, which depends on the architecture variant (kArchVariant)."
+    },
+    {
+      "name": "MovnLatency",
+      "parameters": [],
+      "return_type": "int",
+      "logic": "Returns the latency of a Movn instruction, which depends on the architecture variant (kArchVariant)."
+    },
+    {
+      "name": "DlsaLatency",
+      "parameters": [],
+      "return_type": "int",
+      "logic": "Returns the latency of a Dlsa instruction."
+    },
+    {
+      "name": "CallLatency",
+      "parameters": [],
+      "return_type": "int",
+      "logic": "Returns the latency of a Call instruction."
+    },
+    {
+      "name": "JumpLatency",
+      "parameters": [],
+      "return_type": "int",
+      "logic": "Returns the latency of a Jump instruction."
+    },
+    {
+      "name": "SmiUntagLatency",
+      "parameters": [],
+      "return_type": "int",
+      "logic": "Returns the latency of a SmiUntag operation."
+    },
+    {
+      "name": "PrepareForTailCallLatency",
+      "parameters": [],
+      "return_type": "int",
+      "logic": "Returns the latency for preparing for a tail call."
+    },
+    {
+      "name": "AssertLatency",
+      "parameters": [],
+      "return_type": "int",
+      "logic": "Returns the latency of an Assert instruction."
+    },
+    {
+      "name": "PrepareCallCFunctionLatency",
+      "parameters": [],
+      "return_type": "int",
+      "logic": "Returns the latency for preparing a call to a C function."
+    },
+    {
+      "name": "AdjustBaseAndOffsetLatency",
+      "parameters": [],
+      "return_type": "int",
+      "logic": "Returns the latency for adjusting base and offset for memory access."
+    },
+    {
+      "name": "AlignedMemoryLatency",
+      "parameters": [],
+      "return_type": "int",
+      "logic": "Returns the latency of accessing aligned memory."
+    },
+    {
+      "name": "UlhuLatency",
+      "parameters": [],
+      "return_type": "int",
+      "logic": "Returns the latency of an Ulhu instruction, depending on the architecture variant."
+    },
+    {
+      "name": "UlwLatency",
+      "parameters": [],
+      "return_type": "int",
+      "logic": "Returns the latency of an Ulw instruction, depending on the architecture variant."
+    },
+    {
+      "name": "UlwuLatency",
+      "parameters": [],
+      "return_type": "int",
+      "logic": "Returns the latency of an Ulwu instruction, depending on the architecture variant."
+    },
+    {
+      "name": "UldLatency",
+      "parameters": [],
+      "return_type": "int",
+      "logic": "Returns the latency of an Uld instruction, depending on the architecture variant."
+    },
+    {
+      "name": "Ulwc1Latency",
+      "parameters": [],
+      "return_type": "int",
+      "logic": "Returns the latency of an Ulwc1 instruction, depending on the architecture variant."
+    },
+    {
+      "name": "Uldc1Latency",
+      "parameters": [],
+      "return_type": "int",
+      "logic": "Returns the latency of an Uldc1 instruction, depending on the architecture variant."
+    },
+    {
+      "name": "UshLatency",
+      "parameters": [],
+      "return_type": "int",
+      "logic": "Returns the latency of an Ush instruction, depending on the architecture variant."
+    },
+    {
+      "name": "UswLatency",
+      "parameters": [],
+      "return_type": "int",
+      "logic": "Returns the latency of an Usw instruction, depending on the architecture variant."
+    },
+    {
+      "name": "UsdLatency",
+      "parameters": [],
+      "return_type": "int",
+      "logic": "Returns the latency of an Usd instruction, depending on the architecture variant."
+    },
+    {
+      "name": "Uswc1Latency",
+      "parameters": [],
+      "return_type": "int",
+      "logic": "Returns the latency of an Uswc1 instruction, depending on the architecture variant."
+    },
+    {
+      "name": "Usdc1Latency",
+      "parameters": [],
+      "return_type": "int",
+      "logic": "Returns the latency of an Usdc1 instruction, depending on the architecture variant."
+    },
+    {
+      "name": "Lwc1Latency",
+      "parameters": [],
+      "return_type": "int",
+      "logic": "Returns the latency of an Lwc1 instruction."
+    },
+    {
+      "name": "Swc1Latency",
+      "parameters": [],
+      "return_type": "int",
+      "logic": "Returns the latency of an Swc1 instruction."
+    },
+    {
+      "name": "Sdc1Latency",
+      "parameters": [],
+      "return_type": "int",
+      "logic": "Returns the latency of an Sdc1 instruction."
+    },
+    {
+      "name": "Ldc1Latency",
+      "parameters": [],
+      "return_type": "int",
+      "logic": "Returns the latency of an Ldc1 instruction."
+    },
+    {
+      "name": "MultiPushLatency",
+      "parameters": [],
+      "return_type": "int",
+      "logic": "Returns the latency of pushing multiple registers onto the stack."
+    },
+    {
+      "name": "MultiPushFPULatency",
+      "parameters": [],
+      "return_type": "int",
+      "logic": "Returns the latency of pushing multiple FPU registers onto the stack."
+    },
+    {
+      "name": "PushCallerSavedLatency",
+      "parameters": [
+        "SaveFPRegsMode fp_mode"
+      ],
+      "return_type": "int",
+      "logic": "Returns the latency of saving caller-saved registers, including FPU registers depending on the mode."
+    },
+    {
+      "name": "MultiPopLatency",
+      "parameters": [],
+      "return_type": "int",
+      "logic": "Returns the latency of popping multiple registers from the stack."
+    },
+    {
+      "name": "MultiPopFPULatency",
+      "parameters": [],
+      "return_type": "int",
+      "logic": "Returns the latency of popping multiple FPU registers from the stack."
+    },
+    {
+      "name": "PopCallerSavedLatency",
+      "parameters": [
+        "SaveFPRegsMode fp_mode"
+      ],
+      "return_type": "int",
+      "logic": "Returns the latency of restoring caller-saved registers, including FPU registers depending on the mode."
+    },
+    {
+      "name": "CallCFunctionHelperLatency",
+      "parameters": [],
+      "return_type": "int",
+      "logic": "Returns the latency for the helper function used for calling C functions."
+    },
+    {
+      "name": "CallCFunctionLatency",
+      "parameters": [],
+      "return_type": "int",
+      "logic": "Returns the latency for calling a C function."
+    },
+    {
+      "name": "AssembleArchJumpLatency",
+      "parameters": [],
+      "return_type": "int",
+      "logic": "Returns the latency for assembling an architecture-specific jump."
+    },
+    {
+      "name": "GenerateSwitchTableLatency",
+      "parameters": [],
+      "return_type": "int",
+      "logic": "Returns the latency for generating a switch table."
+    },
+    {
+      "name": "AssembleArchTableSwitchLatency",
+      "parameters": [],
+      "return_type": "int",
+      "logic": "Returns the latency for assembling an architecture-specific table switch."
+    },
+    {
+      "name": "DropAndRetLatency",
+      "parameters": [],
+      "return_type": "int",
+      "logic": "Returns the latency for dropping arguments and returning."
+    },
+    {
+      "name": "AssemblerReturnLatency",
+      "parameters": [],
+      "return_type": "int",
+      "logic": "Returns the latency for the assembler return sequence."
+    },
+    {
+      "name": "TryInlineTruncateDoubleToILatency",
+      "parameters": [],
+      "return_type": "int",
+      "logic": "Returns the latency for trying to inline truncate double to integer operation."
+    },
+    {
+      "name": "CallStubDelayedLatency",
+      "parameters": [],
+      "return_type": "int",
+      "logic": "Returns the latency for a delayed call to a stub."
+    },
+    {
+      "name": "TruncateDoubleToIDelayedLatency",
+      "parameters": [],
+      "return_type": "int",
+      "logic": "Returns the latency for a delayed truncate double to integer operation."
+    },
+    {
+      "name": "CheckPageFlagLatency",
+      "parameters": [],
+      "return_type": "int",
+      "logic": "Returns the latency for checking a page flag."
+    },
+    {
+      "name": "SltuLatency",
+      "parameters": [
+        "bool is_operand_register = true"
+      ],
+      "return_type": "int",
+      "logic": "Returns the latency of an Sltu instruction."
+    },
+    {
+      "name": "BranchShortHelperR6Latency",
+      "parameters": [],
+      "return_type": "int",
+      "logic": "Returns the latency of Branch Short R6 helper."
+    },
+    {
+      "name": "BranchShortHelperLatency",
+      "parameters": [],
+      "return_type": "int",
+      "logic": "Returns the latency of a Branch Short Helper."
+    },
+    {
+      "name": "BranchShortLatency",
+      "parameters": [
+        "BranchDelaySlot bdslot = PROTECT"
+      ],
+      "return_type": "int",
+      "logic": "Returns the latency of a Branch Short depending on the architecture and branch delay slot type."
+    },
+    {
+      "name": "MoveLatency",
+      "parameters": [],
+      "return_type": "int",
+      "logic": "Returns the latency of a Move operation."
+    },
+    {
+      "name": "MovToFloatParametersLatency",
+      "parameters": [],
+      "return_type": "int",
+      "logic": "Returns the latency for moving parameters to float registers."
+    },
+    {
+      "name": "MovFromFloatResultLatency",
+      "parameters": [],
+      "return_type": "int",
+      "logic": "Returns the latency for moving result from a float register."
+    },
+    {
+      "name": "DaddOverflowLatency",
+      "parameters": [],
+      "return_type": "int",
+      "logic": "Returns the latency of Dadd Overflow."
+    },
+    {
+      "name": "DsubOverflowLatency",
+      "parameters": [],
+      "return_type": "int",
+      "logic": "Returns the latency of Dsub Overflow."
+    },
+    {
+      "name": "MulOverflowLatency",
+      "parameters": [],
+      "return_type": "int",
+      "logic": "Returns the latency of Mul Overflow."
+    },
+    {
+      "name": "DclzLatency",
+      "parameters": [],
+      "return_type": "int",
+      "logic": "Returns the latency of Dclz."
+    },
+    {
+      "name": "CtzLatency",
+      "parameters": [],
+      "return_type": "int",
+      "logic": "Returns the latency of Ctz (count trailing zeros)."
+    },
+    {
+      "name": "DctzLatency",
+      "parameters": [],
+      "return_type": "int",
+      "logic": "Returns the latency of Dctz (count trailing zeros)."
+    },
+    {
+      "name": "PopcntLatency",
+      "parameters": [],
+      "return_type": "int",
+      "logic": "Returns the latency of Popcnt (population count)."
+    },
+    {
+      "name": "DpopcntLatency",
+      "parameters": [],
+      "return_type": "int",
+      "logic": "Returns the latency of Dpopcnt (population count)."
+    },
+    {
+      "name": "CompareFLatency",
+      "parameters": [],
+      "return_type": "int",
+      "logic": "Returns the latency of compare float operation."
+    },
+    {
+      "name": "CompareF32Latency",
+      "parameters": [],
+      "return_type": "int",
+      "logic": "Returns the latency of compare float 32 operation."
+    },
+    {
+      "name": "CompareF64Latency",
+      "parameters": [],
+      "return_type": "int",
+      "logic": "Returns the latency of compare float 64 operation."
+    },
+    {
+      "name": "CompareIsNanFLatency",
+      "parameters": [],
+      "return_type": "int",
+      "logic": "Returns the latency of comparing for NaN for float."
+    },
+    {
+      "name": "CompareIsNanF32Latency",
+      "parameters": [],
+      "return_type": "int",
+      "logic": "Returns the latency of comparing for NaN float32."
+    },
+    {
+      "name": "CompareIsNanF64Latency",
+      "parameters": [],
+      "return_type": "int",
+      "logic": "Returns the latency of comparing for NaN float64."
+    },
+    {
+      "name": "NegsLatency",
+      "parameters": [],
+      "return_type": "int",
+      "logic": "Returns the latency of Negs operation (negation)."
+    },
+    {
+      "name": "NegdLatency",
+      "parameters": [],
+      "return_type": "int",
+      "logic": "Returns the latency of Negd operation (negation)."
+    },
+    {
+      "name": "Float64RoundLatency",
+      "parameters": [],
+      "return_type": "int",
+      "logic": "Returns the latency of Float64 Round."
+    },
+    {
+      "name": "Float32RoundLatency",
+      "parameters": [],
+      "return_type": "int",
+      "logic": "Returns the latency of Float32 Round."
+    },
+    {
+      "name": "Float32MaxLatency",
+      "parameters": [],
+      "return_type": "int",
+      "logic": "Returns the latency of Float32 max function."
+    },
+    {
+      "name": "Float64MaxLatency",
+      "parameters": [],
+      "return_type": "int",
+      "logic": "Returns the latency of Float64 max function."
+    },
+    {
+      "name": "Float32MinLatency",
+      "parameters": [],
+      "return_type": "int",
+      "logic": "Returns the latency of Float32 min function."
+    },
+    {
+      "name": "Float64MinLatency",
+      "parameters": [],
+      "return_type": "int",
+      "logic": "Returns the latency of Float64 min function."
+    },
+    {
+      "name": "TruncLSLatency",
+      "parameters": [
+        "bool load_status"
+      ],
+      "return_type": "int",
+      "logic": "Returns the latency of truncating long to single-precision floating-point."
+    },
+    {
+      "name": "TruncLDLatency",
+      "parameters": [
+        "bool load_status"
+      ],
+      "return_type": "int",
+      "logic": "Returns the latency of truncating long to double-precision floating-point."
+    },
+    {
+      "name": "TruncUlSLatency",
+      "parameters": [],
+      "return_type": "int",
+      "logic": "Returns the latency of truncate unsigned long to single-precision float."
+    },
+    {
+      "name": "TruncUlDLatency",
+      "parameters": [],
+      "return_type": "int",
+      "logic": "Returns the latency of truncate unsigned long to double-precision float."
+    },
+    {
+      "name": "PushLatency",
+      "parameters": [],
+      "return_type": "int",
+      "logic": "Returns the latency of pushing a register on stack"
+    },
+    {
+      "name": "ByteSwapSignedLatency",
+      "parameters": [],
+      "return_type": "int",
+      "logic": "Returns the latency of a byte swap operation."
+    },
+    {
+      "name": "LlLatency",
+      "parameters": [
+        "int offset"
+      ],
+      "return_type": "int",
+      "logic": "Returns latency of load-linked instruction"
+    },
+    {
+      "name": "ExtractBitsLatency",
+      "parameters": [
+        "bool sign_extend",
+        "int size"
+      ],
+      "return_type": "int",
+      "logic": "Returns latency to extract bits from a register"
+    },
+    {
+      "name": "InsertBitsLatency",
+      "parameters": [],
+      "return_type": "int",
+      "logic": "Returns latency of insert bits instruction"
+    },
+    {
+      "name": "ScLatency",
+      "parameters": [
+        "int offset"
+      ],
+      "return_type": "int",
+      "logic": "Returns latency of store conditional instruction"
+    },
+    {
+      "name": "Word32AtomicExchangeLatency",
+      "parameters": [
+        "bool sign_extend",
+        "int size"
+      ],
+      "return_type": "int",
+      "logic": "Returns latency of 32 bit word exchange atomic operation"
+    },
+    {
+      "name": "Word32AtomicCompareExchangeLatency",
+      "parameters": [
+        "bool sign_extend",
+        "int size"
+      ],
+      "return_type": "int",
+      "logic": "Returns latency of 32 bit word compare and exchange atomic operation"
+    }
+  ]
+}

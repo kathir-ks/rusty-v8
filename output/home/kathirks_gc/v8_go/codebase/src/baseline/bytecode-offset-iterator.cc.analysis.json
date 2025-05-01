@@ -1,0 +1,69 @@
+{
+  "file_path": "/home/kathirks_gc/v8_go/codebase/src/baseline/bytecode-offset-iterator.cc",
+  "imports": [
+    "src/baseline/bytecode-offset-iterator.h",
+    "src/execution/isolate.h",
+    "src/heap/local-heap.h",
+    "src/objects/bytecode-array-inl.h"
+  ],
+  "classes": [
+    {
+      "name": "BytecodeOffsetIterator",
+      "properties": [
+        "mapping_table_",
+        "data_start_address_",
+        "data_length_",
+        "current_index_",
+        "bytecode_iterator_",
+        "local_heap_",
+        "bytecode_handle_storage_",
+        "no_gc_",
+        "current_pc_start_offset_",
+        "current_pc_end_offset_",
+        "current_bytecode_offset_"
+      ],
+      "methods": [
+        {
+          "name": "BytecodeOffsetIterator",
+          "parameters": [
+            "Handle<TrustedByteArray> mapping_table",
+            "Handle<BytecodeArray> bytecodes"
+          ],
+          "return_type": "void",
+          "logic": "Constructor that initializes the iterator with handles to the mapping table and bytecode array.  Sets up the local heap and adds a GC epilogue callback."
+        },
+        {
+          "name": "BytecodeOffsetIterator",
+          "parameters": [
+            "Tagged<TrustedByteArray> mapping_table",
+            "Tagged<BytecodeArray> bytecodes"
+          ],
+          "return_type": "void",
+          "logic": "Constructor that initializes the iterator with tagged objects (raw pointers) to the mapping table and bytecode array.  Disallows garbage collection during the iterator's lifetime in this mode and avoids using the LocalHeap. Used when no garbage collection should occur during operation. "
+        },
+        {
+          "name": "~BytecodeOffsetIterator",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Destructor that removes the GC epilogue callback from the local heap if it was added."
+        },
+        {
+          "name": "Initialize",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Initializes the iterator state for the beginning of the bytecode array. Sets the initial pc offsets and bytecode offset for the function entry point."
+        },
+        {
+          "name": "UpdatePointers",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Updates the internal pointer to the mapping table after a garbage collection. This ensures that the iterator continues to point to valid memory after objects have been moved."
+        }
+      ]
+    }
+  ],
+  "functions": [],
+  "enums": [],
+  "typedefs": [],
+  "constants": []
+}

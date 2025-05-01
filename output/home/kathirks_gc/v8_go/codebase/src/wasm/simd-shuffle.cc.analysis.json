@@ -1,0 +1,313 @@
+{
+  "file_path": "/home/kathirks_gc/v8_go/codebase/src/wasm/simd-shuffle.cc",
+  "imports": [
+    "src/wasm/simd-shuffle.h",
+    "algorithm",
+    "src/common/globals.h"
+  ],
+  "classes": [
+    {
+      "name": "SimdShuffle",
+      "properties": [],
+      "methods": [
+        {
+          "name": "TryMatchCanonical",
+          "parameters": [
+            "const ShuffleArray& shuffle"
+          ],
+          "return_type": "CanonicalShuffle",
+          "logic": "Tries to match the given shuffle pattern against a list of known canonical shuffle patterns.  If a match is found, returns the corresponding CanonicalShuffle enum value. Otherwise, returns CanonicalShuffle::kUnknown."
+        },
+        {
+          "name": "TryMatchIdentity",
+          "parameters": [
+            "const uint8_t* shuffle"
+          ],
+          "return_type": "bool",
+          "logic": "Checks if the given shuffle is the identity shuffle (i.e., each byte maps to itself)."
+        },
+        {
+          "name": "TryMatch32x4Rotate",
+          "parameters": [
+            "const uint8_t* shuffle",
+            "uint8_t* shuffle32x4",
+            "bool is_swizzle"
+          ],
+          "return_type": "bool",
+          "logic": "Tries to match a 32x4 rotate shuffle pattern. If matched, it computes the rotation amount and stores it in `shuffle32x4`. Returns true if matched, false otherwise."
+        },
+        {
+          "name": "TryMatch32x4Reverse",
+          "parameters": [
+            "const uint8_t* shuffle32x4"
+          ],
+          "return_type": "bool",
+          "logic": "Checks if the given 32x4 shuffle represents a reverse operation."
+        },
+        {
+          "name": "TryMatch32x4OneLaneSwizzle",
+          "parameters": [
+            "const uint8_t* shuffle32x4",
+            "uint8_t* from_lane",
+            "uint8_t* to_lane"
+          ],
+          "return_type": "bool",
+          "logic": "Tries to match a 32x4 one-lane swizzle.  If matched, determines the source and destination lanes and stores them in `from_lane` and `to_lane`, respectively. Returns true if matched, false otherwise."
+        },
+        {
+          "name": "TryMatch64x2Shuffle",
+          "parameters": [
+            "const uint8_t* shuffle",
+            "uint8_t* shuffle64x2"
+          ],
+          "return_type": "bool",
+          "logic": "Tries to match a 64x2 shuffle pattern. If a match is found, it determines the lane indices and stores them in `shuffle64x2`. Returns true if matched, false otherwise."
+        },
+        {
+          "name": "TryMatch64x1Shuffle",
+          "parameters": [
+            "const uint8_t* shuffle",
+            "uint8_t* shuffle64x1"
+          ],
+          "return_type": "bool",
+          "logic": "Tries to match a 64x1 shuffle pattern.  If matched, it determines the lane index and stores it in `shuffle64x1`. Returns true if matched, false otherwise."
+        },
+        {
+          "name": "TryMatch32x1Shuffle",
+          "parameters": [
+            "const uint8_t* shuffle",
+            "uint8_t* shuffle32x1"
+          ],
+          "return_type": "bool",
+          "logic": "Tries to match a 32x1 shuffle pattern.  If matched, it determines the lane index and stores it in `shuffle32x1`. Returns true if matched, false otherwise."
+        },
+        {
+          "name": "TryMatch32x2Shuffle",
+          "parameters": [
+            "const uint8_t* shuffle",
+            "uint8_t* shuffle32x2"
+          ],
+          "return_type": "bool",
+          "logic": "Tries to match a 32x2 shuffle pattern.  If matched, it determines the lane indices and stores them in `shuffle32x2`. Returns true if matched, false otherwise."
+        },
+        {
+          "name": "TryMatch32x4Shuffle",
+          "parameters": [
+            "const uint8_t* shuffle",
+            "uint8_t* shuffle32x4"
+          ],
+          "return_type": "bool",
+          "logic": "Tries to match a 32x4 shuffle pattern.  If matched, it determines the lane indices and stores them in `shuffle32x4`. Returns true if matched, false otherwise."
+        },
+        {
+          "name": "TryMatch32x8Shuffle",
+          "parameters": [
+            "const uint8_t* shuffle",
+            "uint8_t* shuffle32x8"
+          ],
+          "return_type": "bool",
+          "logic": "Tries to match a 32x8 shuffle pattern.  If matched, it determines the lane indices and stores them in `shuffle32x8`. Returns true if matched, false otherwise."
+        },
+        {
+          "name": "TryMatch16x1Shuffle",
+          "parameters": [
+            "const uint8_t* shuffle",
+            "uint8_t* shuffle16x1"
+          ],
+          "return_type": "bool",
+          "logic": "Tries to match a 16x1 shuffle pattern.  If matched, it determines the lane index and stores it in `shuffle16x1`. Returns true if matched, false otherwise."
+        },
+        {
+          "name": "TryMatch16x2Shuffle",
+          "parameters": [
+            "const uint8_t* shuffle",
+            "uint8_t* shuffle16x2"
+          ],
+          "return_type": "bool",
+          "logic": "Tries to match a 16x2 shuffle pattern.  If matched, it determines the lane indices and stores them in `shuffle16x2`. Returns true if matched, false otherwise."
+        },
+        {
+          "name": "TryMatch16x4Shuffle",
+          "parameters": [
+            "const uint8_t* shuffle",
+            "uint8_t* shuffle16x4"
+          ],
+          "return_type": "bool",
+          "logic": "Tries to match a 16x4 shuffle pattern.  If matched, it determines the lane indices and stores them in `shuffle16x4`. Returns true if matched, false otherwise."
+        },
+        {
+          "name": "TryMatch16x8Shuffle",
+          "parameters": [
+            "const uint8_t* shuffle",
+            "uint8_t* shuffle16x8"
+          ],
+          "return_type": "bool",
+          "logic": "Tries to match a 16x8 shuffle pattern.  If matched, it determines the lane indices and stores them in `shuffle16x8`. Returns true if matched, false otherwise."
+        },
+        {
+          "name": "TryMatchConcat",
+          "parameters": [
+            "const uint8_t* shuffle",
+            "uint8_t* offset"
+          ],
+          "return_type": "bool",
+          "logic": "Tries to match a concatenation shuffle pattern.  If matched, it determines the offset and stores it in `offset`. Returns true if matched, false otherwise."
+        },
+        {
+          "name": "TryMatchBlend",
+          "parameters": [
+            "const uint8_t* shuffle"
+          ],
+          "return_type": "bool",
+          "logic": "Tries to match a blend shuffle pattern. Returns true if matched, false otherwise."
+        },
+        {
+          "name": "TryMatchByteToDwordZeroExtend",
+          "parameters": [
+            "const uint8_t* shuffle"
+          ],
+          "return_type": "bool",
+          "logic": "Tries to match a byte-to-dword zero-extend shuffle pattern. Returns true if matched, false otherwise."
+        },
+        {
+          "name": "TryMatch8x16UpperToLowerReduce",
+          "parameters": [
+            "const uint8_t* shuffle1",
+            "const uint8_t* shuffle2",
+            "const uint8_t* shuffle3",
+            "const uint8_t* shuffle4"
+          ],
+          "return_type": "bool",
+          "logic": "Tries to match a multi-step 8x16 upper-to-lower half reduction sequence."
+        },
+        {
+          "name": "TryMatch16x8UpperToLowerReduce",
+          "parameters": [
+            "const uint8_t* shuffle1",
+            "const uint8_t* shuffle2",
+            "const uint8_t* shuffle3"
+          ],
+          "return_type": "bool",
+          "logic": "Tries to match a multi-step 16x8 upper-to-lower half reduction sequence."
+        },
+        {
+          "name": "TryMatch32x4UpperToLowerReduce",
+          "parameters": [
+            "const uint8_t* shuffle1",
+            "const uint8_t* shuffle2"
+          ],
+          "return_type": "bool",
+          "logic": "Tries to match a multi-step 32x4 upper-to-lower half reduction sequence."
+        },
+        {
+          "name": "TryMatch32x4PairwiseReduce",
+          "parameters": [
+            "const uint8_t* shuffle1",
+            "const uint8_t* shuffle2"
+          ],
+          "return_type": "bool",
+          "logic": "Tries to match a two-step 32x4 pairwise reduction."
+        },
+        {
+          "name": "TryMatch64x2Reduce",
+          "parameters": [
+            "const uint8_t* shuffle64x2"
+          ],
+          "return_type": "bool",
+          "logic": "Tries to match a 64x2 reduction pattern."
+        },
+        {
+          "name": "PackShuffle4",
+          "parameters": [
+            "uint8_t* shuffle"
+          ],
+          "return_type": "uint8_t",
+          "logic": "Packs a 4-byte shuffle pattern into a single byte."
+        },
+        {
+          "name": "PackBlend8",
+          "parameters": [
+            "const uint8_t* shuffle16x8"
+          ],
+          "return_type": "uint8_t",
+          "logic": "Packs a 16x8 blend pattern into a single byte."
+        },
+        {
+          "name": "PackBlend4",
+          "parameters": [
+            "const uint8_t* shuffle32x4"
+          ],
+          "return_type": "uint8_t",
+          "logic": "Packs a 32x4 blend pattern into a single byte."
+        },
+        {
+          "name": "Pack2Lanes",
+          "parameters": [
+            "const std::array<uint8_t, 2>& shuffle"
+          ],
+          "return_type": "int32_t",
+          "logic": "Packs a 2-lane shuffle into an int32_t."
+        },
+        {
+          "name": "Pack4Lanes",
+          "parameters": [
+            "const uint8_t* shuffle"
+          ],
+          "return_type": "int32_t",
+          "logic": "Packs a 4-lane shuffle into an int32_t."
+        },
+        {
+          "name": "Pack16Lanes",
+          "parameters": [
+            "uint32_t* dst",
+            "const uint8_t* shuffle"
+          ],
+          "return_type": "void",
+          "logic": "Packs a 16-lane shuffle into an array of four uint32_t."
+        },
+        {
+          "name": "TryMatchVpshufd",
+          "parameters": [
+            "const uint8_t* shuffle32x8",
+            "uint8_t* control"
+          ],
+          "return_type": "bool",
+          "logic": "Attempts to match the shuffle with the x64 instruction vpshufd, which shuffles doublewords within a 128-bit lane."
+        },
+        {
+          "name": "TryMatchShufps256",
+          "parameters": [
+            "const uint8_t* shuffle32x8",
+            "uint8_t* control"
+          ],
+          "return_type": "bool",
+          "logic": "Attempts to match the shuffle with the x64 instruction shufps256, which shuffles floats within two 128 bit lanes."
+        }
+      ]
+    },
+    {
+      "name": "SimdSwizzle",
+      "properties": [],
+      "methods": [
+        {
+          "name": "AllInRangeOrTopBitSet",
+          "parameters": [
+            "std::array<uint8_t, kSimd128Size> shuffle"
+          ],
+          "return_type": "bool",
+          "logic": "Checks if all elements in the shuffle array are either within the valid range (less than kSimd128Size) or have the top bit set (0x80), which can indicate a special flag or mask."
+        }
+      ]
+    }
+  ],
+  "functions": [
+    {
+      "name": "expand",
+      "parameters": [
+        "const std::array<uint8_t, N> in"
+      ],
+      "return_type": "SimdShuffle::ShuffleArray",
+      "logic": "Takes a lane-wise shuffle pattern as input and expands it to a byte-wise shuffle pattern, adjusting indices to account for lane size."
+    }
+  ]
+}

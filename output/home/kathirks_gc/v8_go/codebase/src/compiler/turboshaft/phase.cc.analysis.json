@@ -1,0 +1,69 @@
+{
+  "file_path": "/home/kathirks_gc/v8_go/codebase/src/compiler/turboshaft/phase.cc",
+  "imports": [
+    "src/compiler/turboshaft/phase.h",
+    "src/compiler/backend/register-allocator.h",
+    "src/compiler/js-heap-broker.h",
+    "src/compiler/turbofan-graph-visualizer.h",
+    "src/compiler/turboshaft/graph-visualizer.h",
+    "src/diagnostics/code-tracer.h",
+    "src/utils/ostreams.h",
+    "src/wasm/wasm-engine.h"
+  ],
+  "classes": [
+    {
+      "name": "PipelineData",
+      "properties": [
+        "register_component_"
+      ],
+      "methods": [
+        {
+          "name": "InitializeRegisterComponent",
+          "parameters": [
+            "const RegisterConfiguration* config",
+            "CallDescriptor* call_descriptor"
+          ],
+          "return_type": "void",
+          "logic": "Initializes the register component of the pipeline data. It allocates and initializes `RegisterAllocationData` which is used during register allocation."
+        },
+        {
+          "name": "allocator",
+          "parameters": [],
+          "return_type": "AccountingAllocator*",
+          "logic": "Returns the accounting allocator used by the pipeline.  This tries to get it from the isolate, or the wasm engine, or returns null if neither is available."
+        },
+        {
+          "name": "GetCodeTracer",
+          "parameters": [],
+          "return_type": "CodeTracer*",
+          "logic": "Returns the code tracer, using either the Isolate's or WasmEngine's code tracer depending on the compilation type. This facilitates tracing compilation activity."
+        }
+      ]
+    }
+  ],
+  "functions": [
+    {
+      "name": "PrintTurboshaftGraph",
+      "parameters": [
+        "PipelineData* data",
+        "Zone* temp_zone",
+        "CodeTracer* code_tracer",
+        "const char* phase_name"
+      ],
+      "return_type": "void",
+      "logic": "Prints the Turboshaft graph to different outputs based on flags. It prints a JSON representation for Turbolizer and a text representation for the code tracer, allowing visualization and debugging of the graph."
+    },
+    {
+      "name": "PrintTurboshaftGraphForTurbolizer",
+      "parameters": [
+        "std::ofstream& stream",
+        "const Graph& graph",
+        "const char* phase_name",
+        "NodeOriginTable* node_origins",
+        "Zone* temp_zone"
+      ],
+      "return_type": "void",
+      "logic": "Prints the Turboshaft graph in JSON format for Turbolizer, including custom data per operation (Properties, Types, Representations, Use Count) and per block (Type Refinements), which are defined by lambda functions."
+    }
+  ]
+}

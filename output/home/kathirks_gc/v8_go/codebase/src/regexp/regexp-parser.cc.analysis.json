@@ -1,0 +1,962 @@
+{
+  "file_path": "/home/kathirks_gc/v8_go/codebase/src/regexp/regexp-parser.cc",
+  "imports": [
+    "src/regexp/regexp-parser.h",
+    "src/execution/isolate.h",
+    "src/objects/string-inl.h",
+    "src/regexp/regexp-ast.h",
+    "src/regexp/regexp-macro-assembler.h",
+    "src/regexp/regexp.h",
+    "src/strings/char-predicates-inl.h",
+    "src/utils/ostreams.h",
+    "src/utils/utils.h",
+    "src/zone/zone-allocator.h",
+    "src/zone/zone-list-inl.h",
+    "unicode/uniset.h",
+    "unicode/unistr.h",
+    "unicode/usetiter.h",
+    "unicode/utf16.h"
+  ],
+  "classes": [
+    {
+      "name": "RegExpTextBuilder",
+      "properties": [
+        "zone_",
+        "flags_",
+        "characters_",
+        "pending_surrogate_",
+        "terms_",
+        "text_"
+      ],
+      "methods": [
+        {
+          "name": "RegExpTextBuilder",
+          "parameters": [
+            "Zone* zone",
+            "SmallRegExpTreeVector* terms_storage",
+            "RegExpFlags flags"
+          ],
+          "return_type": "void",
+          "logic": "Constructor for RegExpTextBuilder, initializes members."
+        },
+        {
+          "name": "AddCharacter",
+          "parameters": [
+            "base::uc16 character"
+          ],
+          "return_type": "void",
+          "logic": "Adds a character to the current text being built."
+        },
+        {
+          "name": "AddUnicodeCharacter",
+          "parameters": [
+            "base::uc32 character"
+          ],
+          "return_type": "void",
+          "logic": "Adds a Unicode character to the current text, handling surrogate pairs if necessary."
+        },
+        {
+          "name": "AddEscapedUnicodeCharacter",
+          "parameters": [
+            "base::uc32 character"
+          ],
+          "return_type": "void",
+          "logic": "Adds a unicode character from an escape sequence.  Prevents surrogate pairs from being combined."
+        },
+        {
+          "name": "AddAtom",
+          "parameters": [
+            "RegExpTree* atom"
+          ],
+          "return_type": "void",
+          "logic": "Adds an atom (RegExpTree) to the current text being built."
+        },
+        {
+          "name": "AddTerm",
+          "parameters": [
+            "RegExpTree* term"
+          ],
+          "return_type": "void",
+          "logic": "Adds a term (RegExpTree) to the list of terms, flushing any pending text."
+        },
+        {
+          "name": "AddClassRanges",
+          "parameters": [
+            "RegExpClassRanges* cc"
+          ],
+          "return_type": "void",
+          "logic": "Adds a class ranges element, flushing and adding as a term if desugaring is needed."
+        },
+        {
+          "name": "FlushPendingSurrogate",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Flushes any pending surrogate pair to the text, possibly desugaring based on case-insensitivity."
+        },
+        {
+          "name": "FlushText",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Flushes the pending text and adds it as a term, combining consecutive text elements."
+        },
+        {
+          "name": "PopLastAtom",
+          "parameters": [],
+          "return_type": "RegExpTree*",
+          "logic": "Removes and returns the last atom added to the text. Useful for quantifier handling."
+        },
+        {
+          "name": "ToRegExp",
+          "parameters": [],
+          "return_type": "RegExpTree*",
+          "logic": "Converts the builder's contents into a RegExpTree, handling empty, single-term, and multi-term cases."
+        },
+        {
+          "name": "AddLeadSurrogate",
+          "parameters": [
+            "base::uc16 lead_surrogate"
+          ],
+          "return_type": "void",
+          "logic": "Adds the lead surrogate of a surrogate pair, flushes the pending surrogate."
+        },
+        {
+          "name": "AddTrailSurrogate",
+          "parameters": [
+            "base::uc16 trail_surrogate"
+          ],
+          "return_type": "void",
+          "logic": "Adds the trail surrogate to create a surrogate pair."
+        },
+        {
+          "name": "FlushCharacters",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Flushes character buffer into RegExpAtom."
+        },
+        {
+          "name": "NeedsDesugaringForUnicode",
+          "parameters": [
+            "RegExpClassRanges* cc"
+          ],
+          "return_type": "bool",
+          "logic": "Checks if a character class requires desugaring for unicode support and case insensitive matching."
+        },
+        {
+          "name": "NeedsDesugaringForIgnoreCase",
+          "parameters": [
+            "base::uc32 c"
+          ],
+          "return_type": "bool",
+          "logic": "Checks if a character needs desugaring for case-insensitive matching in unicode mode."
+        },
+        {
+          "name": "AddClassRangesForDesugaring",
+          "parameters": [
+            "base::uc32 c"
+          ],
+          "return_type": "void",
+          "logic": "Adds class ranges for desugaring a character."
+        },
+        {
+          "name": "ignore_case",
+          "parameters": [],
+          "return_type": "bool",
+          "logic": "Returns if ignore_case is set."
+        },
+        {
+          "name": "IsUnicodeMode",
+          "parameters": [],
+          "return_type": "bool",
+          "logic": "Returns if unicode mode is active."
+        },
+        {
+          "name": "zone",
+          "parameters": [],
+          "return_type": "Zone*",
+          "logic": "Returns the zone pointer."
+        }
+      ]
+    },
+    {
+      "name": "RegExpBuilder",
+      "properties": [
+        "zone_",
+        "flags_",
+        "terms_",
+        "alternatives_",
+        "text_builder_"
+      ],
+      "methods": [
+        {
+          "name": "RegExpBuilder",
+          "parameters": [
+            "Zone* zone",
+            "RegExpFlags flags"
+          ],
+          "return_type": "RegExpBuilder",
+          "logic": "Constructor for RegExpBuilder, initializes internal data."
+        },
+        {
+          "name": "AddCharacter",
+          "parameters": [
+            "base::uc16 character"
+          ],
+          "return_type": "void",
+          "logic": "Adds a character to the current atom being built."
+        },
+        {
+          "name": "AddUnicodeCharacter",
+          "parameters": [
+            "base::uc32 character"
+          ],
+          "return_type": "void",
+          "logic": "Adds a Unicode character to the current atom, handling surrogate pairs."
+        },
+        {
+          "name": "AddEscapedUnicodeCharacter",
+          "parameters": [
+            "base::uc32 character"
+          ],
+          "return_type": "void",
+          "logic": "Adds a escaped Unicode character to the current atom, handling surrogate pairs."
+        },
+        {
+          "name": "AddEmpty",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Adds an empty expression, used for capturing quantifiers."
+        },
+        {
+          "name": "AddClassRanges",
+          "parameters": [
+            "RegExpClassRanges* cc"
+          ],
+          "return_type": "void",
+          "logic": "Adds a class ranges element."
+        },
+        {
+          "name": "AddAtom",
+          "parameters": [
+            "RegExpTree* tree"
+          ],
+          "return_type": "void",
+          "logic": "Adds an atom (RegExpTree) to the current term being built."
+        },
+        {
+          "name": "AddTerm",
+          "parameters": [
+            "RegExpTree* tree"
+          ],
+          "return_type": "void",
+          "logic": "Adds a term (RegExpTree) to the list of alternatives."
+        },
+        {
+          "name": "AddAssertion",
+          "parameters": [
+            "RegExpTree* tree"
+          ],
+          "return_type": "void",
+          "logic": "Adds an assertion (RegExpTree) to the current term."
+        },
+        {
+          "name": "NewAlternative",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Starts a new alternative (disjunction)."
+        },
+        {
+          "name": "AddQuantifierToAtom",
+          "parameters": [
+            "int min",
+            "int max",
+            "int index",
+            "RegExpQuantifier::QuantifierType type"
+          ],
+          "return_type": "bool",
+          "logic": "Adds a quantifier to the last atom added."
+        },
+        {
+          "name": "FlushText",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Flushes all pending text into a new term, making space to add operators etc."
+        },
+        {
+          "name": "ToRegExp",
+          "parameters": [],
+          "return_type": "RegExpTree*",
+          "logic": "Converts the builder's contents into a RegExpTree."
+        },
+        {
+          "name": "flags",
+          "parameters": [],
+          "return_type": "RegExpFlags",
+          "logic": "Returns the regexp flags."
+        },
+        {
+          "name": "ignore_case",
+          "parameters": [],
+          "return_type": "bool",
+          "logic": "Returns if the ignore case flag is set."
+        },
+        {
+          "name": "multiline",
+          "parameters": [],
+          "return_type": "bool",
+          "logic": "Returns if the multiline flag is set."
+        },
+        {
+          "name": "dotall",
+          "parameters": [],
+          "return_type": "bool",
+          "logic": "Returns if the dotall flag is set."
+        },
+        {
+          "name": "FlushTerms",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Flushes the pending terms."
+        },
+        {
+          "name": "IsUnicodeMode",
+          "parameters": [],
+          "return_type": "bool",
+          "logic": "Returns if the unicode flag is set."
+        },
+        {
+          "name": "zone",
+          "parameters": [],
+          "return_type": "Zone*",
+          "logic": "Returns a pointer to the Zone."
+        },
+        {
+          "name": "text_builder",
+          "parameters": [],
+          "return_type": "RegExpTextBuilder&",
+          "logic": "Returns a reference to the text builder."
+        }
+      ]
+    },
+    {
+      "name": "RegExpParserState",
+      "properties": [
+        "previous_state_",
+        "builder_",
+        "group_type_",
+        "lookaround_type_",
+        "disjunction_capture_index_",
+        "capture_name_",
+        "non_participating_capture_group_interval_"
+      ],
+      "methods": [
+        {
+          "name": "RegExpParserState",
+          "parameters": [
+            "RegExpParserState* previous_state",
+            "SubexpressionType group_type",
+            "RegExpLookaround::Type lookaround_type",
+            "int disjunction_capture_index",
+            "const ZoneVector<base::uc16>* capture_name",
+            "RegExpFlags flags",
+            "Zone* zone"
+          ],
+          "return_type": "RegExpParserState",
+          "logic": "Constructor for RegExpParserState, initializes internal data, sets flag for non-participating captures"
+        },
+        {
+          "name": "previous_state",
+          "parameters": [],
+          "return_type": "RegExpParserState*",
+          "logic": "Returns the previous parser state."
+        },
+        {
+          "name": "IsSubexpression",
+          "parameters": [],
+          "return_type": "bool",
+          "logic": "Returns true if the current state is a subexpression."
+        },
+        {
+          "name": "builder",
+          "parameters": [],
+          "return_type": "RegExpBuilder*",
+          "logic": "Returns a pointer to the RegExpBuilder for this state."
+        },
+        {
+          "name": "group_type",
+          "parameters": [],
+          "return_type": "SubexpressionType",
+          "logic": "Returns the subexpression type."
+        },
+        {
+          "name": "lookaround_type",
+          "parameters": [],
+          "return_type": "RegExpLookaround::Type",
+          "logic": "Returns the lookaround type"
+        },
+        {
+          "name": "capture_index",
+          "parameters": [],
+          "return_type": "int",
+          "logic": "Returns the capture index."
+        },
+        {
+          "name": "capture_name",
+          "parameters": [],
+          "return_type": "const ZoneVector<base::uc16>*",
+          "logic": "Returns the name of the capture"
+        },
+        {
+          "name": "non_participating_capture_group_interval",
+          "parameters": [],
+          "return_type": "std::pair<int, int>",
+          "logic": "Returns a pair of integers, representing the interval of non-participating groups"
+        },
+        {
+          "name": "IsNamedCapture",
+          "parameters": [],
+          "return_type": "bool",
+          "logic": "Returns if it is a named capture"
+        },
+        {
+          "name": "IsInsideCaptureGroup",
+          "parameters": [
+            "int index"
+          ],
+          "return_type": "bool",
+          "logic": "Checks whether the parser is inside a capture group with the given index."
+        },
+        {
+          "name": "IsInsideCaptureGroup",
+          "parameters": [
+            "const ZoneVector<base::uc16>* name"
+          ],
+          "return_type": "bool",
+          "logic": "Checks whether the parser is inside a capture group with the given name."
+        },
+        {
+          "name": "NewAlternative",
+          "parameters": [
+            "int captures_started"
+          ],
+          "return_type": "void",
+          "logic": "Handles the alternation inside captures, and updates the interval of non participating capture groups."
+        }
+      ]
+    },
+    {
+      "name": "RegExpParserImpl",
+      "properties": [
+        "no_gc_",
+        "zone_",
+        "error_",
+        "error_pos_",
+        "captures_",
+        "named_captures_",
+        "named_back_references_",
+        "input_",
+        "input_length_",
+        "current_",
+        "flags_",
+        "force_unicode_",
+        "next_pos_",
+        "captures_started_",
+        "capture_count_",
+        "quantifier_count_",
+        "lookaround_count_",
+        "has_more_",
+        "simple_",
+        "contains_anchor_",
+        "is_scanned_for_captures_",
+        "has_named_captures_",
+        "failed_",
+        "stack_limit_"
+      ],
+      "methods": [
+        {
+          "name": "RegExpParserImpl",
+          "parameters": [
+            "const CharT* input",
+            "int input_length",
+            "RegExpFlags flags",
+            "uintptr_t stack_limit",
+            "Zone* zone",
+            "const DisallowGarbageCollection& no_gc"
+          ],
+          "return_type": "RegExpParserImpl",
+          "logic": "Constructor for RegExpParserImpl, initializes the state of the parser."
+        },
+        {
+          "name": "Parse",
+          "parameters": [
+            "RegExpCompileData* result"
+          ],
+          "return_type": "bool",
+          "logic": "Main parsing method, kicks off the parsing process."
+        },
+        {
+          "name": "ParsePattern",
+          "parameters": [],
+          "return_type": "RegExpTree*",
+          "logic": "Parses the entire regular expression pattern."
+        },
+        {
+          "name": "ParseDisjunction",
+          "parameters": [],
+          "return_type": "RegExpTree*",
+          "logic": "Parses a disjunction (sequence of alternatives separated by '|')."
+        },
+        {
+          "name": "ParseGroup",
+          "parameters": [],
+          "return_type": "RegExpTree*",
+          "logic": "Parses a group within parentheses."
+        },
+        {
+          "name": "ParseIntervalQuantifier",
+          "parameters": [
+            "int* min_out",
+            "int* max_out"
+          ],
+          "return_type": "bool",
+          "logic": "Parses an interval quantifier ({min,max})."
+        },
+        {
+          "name": "ParseHexEscape",
+          "parameters": [
+            "int length",
+            "base::uc32* value"
+          ],
+          "return_type": "bool",
+          "logic": "Parses a hexadecimal escape sequence of a given length."
+        },
+        {
+          "name": "ParseUnicodeEscape",
+          "parameters": [
+            "base::uc32* value"
+          ],
+          "return_type": "bool",
+          "logic": "Parses a Unicode escape sequence (\\uXXXX or \\u{XXXX})."
+        },
+        {
+          "name": "ParseUnlimitedLengthHexNumber",
+          "parameters": [
+            "int max_value",
+            "base::uc32* value"
+          ],
+          "return_type": "bool",
+          "logic": "Parses an unlimited length hex number until max value."
+        },
+        {
+          "name": "ParsePropertyClassName",
+          "parameters": [
+            "ZoneVector<char>* name_1",
+            "ZoneVector<char>* name_2"
+          ],
+          "return_type": "bool",
+          "logic": "Parses the name of a unicode property class."
+        },
+        {
+          "name": "AddPropertyClassRange",
+          "parameters": [
+            "ZoneList<CharacterRange>* add_to_range",
+            "CharacterClassStrings* add_to_strings",
+            "bool negate",
+            "const ZoneVector<char>& name_1",
+            "const ZoneVector<char>& name_2"
+          ],
+          "return_type": "bool",
+          "logic": "Adds a range based on property name (if supported by ICU)."
+        },
+        {
+          "name": "ParseClassRanges",
+          "parameters": [
+            "ZoneList<CharacterRange>* ranges",
+            "bool add_unicode_case_equivalents"
+          ],
+          "return_type": "RegExpTree*",
+          "logic": "Parses the character ranges within a character class ([...])."
+        },
+        {
+          "name": "ParseClassEscape",
+          "parameters": [
+            "ZoneList<CharacterRange>* ranges",
+            "Zone* zone",
+            "bool add_unicode_case_equivalents",
+            "base::uc32* char_out",
+            "bool* is_class_escape"
+          ],
+          "return_type": "void",
+          "logic": "Parses a class escape (\\b, \\d, etc.) within a character class."
+        },
+        {
+          "name": "TryParseCharacterClassEscape",
+          "parameters": [
+            "base::uc32 next",
+            "InClassEscapeState in_class_escape_state",
+            "ZoneList<CharacterRange>* ranges",
+            "CharacterClassStrings* strings",
+            "Zone* zone",
+            "bool add_unicode_case_equivalents"
+          ],
+          "return_type": "bool",
+          "logic": "Tries to parse a standard character class escape (\\d, \\s, \\w)."
+        },
+        {
+          "name": "ParseClassStringDisjunction",
+          "parameters": [
+            "ZoneList<CharacterRange>* ranges",
+            "CharacterClassStrings* strings"
+          ],
+          "return_type": "RegExpTree*",
+          "logic": "Parses ClassStringDisjunction inside character sets."
+        },
+        {
+          "name": "ParseClassSetOperand",
+          "parameters": [
+            "const RegExpBuilder* builder",
+            "ClassSetOperandType* type_out"
+          ],
+          "return_type": "RegExpTree*",
+          "logic": "Parse ClassSetOperand."
+        },
+        {
+          "name": "ParseClassSetOperand",
+          "parameters": [
+            "const RegExpBuilder* builder",
+            "ClassSetOperandType* type_out",
+            "ZoneList<CharacterRange>* ranges",
+            "CharacterClassStrings* strings",
+            "base::uc32* character"
+          ],
+          "return_type": "RegExpTree*",
+          "logic": "Parse ClassSetOperand with range/string values."
+        },
+        {
+          "name": "ParseClassSetCharacter",
+          "parameters": [],
+          "return_type": "base::uc32",
+          "logic": "Parses a ClassSetCharacter."
+        },
+        {
+          "name": "ParseCharacterEscape",
+          "parameters": [
+            "InClassEscapeState in_class_escape_state",
+            "bool* is_escaped_unicode_character"
+          ],
+          "return_type": "base::uc32",
+          "logic": "Parses an escaped character (\\n, \\t, \\uXXXX)."
+        },
+        {
+          "name": "AddMaybeSimpleCaseFoldedRange",
+          "parameters": [
+            "ZoneList<CharacterRange>* ranges",
+            "CharacterRange new_range"
+          ],
+          "return_type": "void",
+          "logic": "Case folds ranges."
+        },
+        {
+          "name": "ParseClassUnion",
+          "parameters": [
+            "const RegExpBuilder* builder",
+            "bool is_negated",
+            "RegExpTree* first_operand",
+            "ClassSetOperandType first_operand_type",
+            "ZoneList<CharacterRange>* ranges",
+            "CharacterClassStrings* strings",
+            "base::uc32 first_character"
+          ],
+          "return_type": "RegExpTree*",
+          "logic": "Parses a ClassUnion."
+        },
+        {
+          "name": "ParseClassIntersection",
+          "parameters": [
+            "const RegExpBuilder* builder",
+            "bool is_negated",
+            "RegExpTree* first_operand",
+            "ClassSetOperandType first_operand_type"
+          ],
+          "return_type": "RegExpTree*",
+          "logic": "Parses a ClassIntersection."
+        },
+        {
+          "name": "ParseClassSubtraction",
+          "parameters": [
+            "const RegExpBuilder* builder",
+            "bool is_negated",
+            "RegExpTree* first_operand",
+            "ClassSetOperandType first_operand_type"
+          ],
+          "return_type": "RegExpTree*",
+          "logic": "Parses a ClassSubtraction."
+        },
+        {
+          "name": "ParseCharacterClass",
+          "parameters": [
+            "const RegExpBuilder* state"
+          ],
+          "return_type": "RegExpTree*",
+          "logic": "Parses a character class ([...])."
+        },
+        {
+          "name": "ParseOctalLiteral",
+          "parameters": [],
+          "return_type": "base::uc32",
+          "logic": "Parses an octal literal."
+        },
+        {
+          "name": "ParseBackReferenceIndex",
+          "parameters": [
+            "int* index_out"
+          ],
+          "return_type": "bool",
+          "logic": "Tries to parse the input as a back reference."
+        },
+        {
+          "name": "ReportError",
+          "parameters": [
+            "RegExpError error"
+          ],
+          "return_type": "RegExpTree*",
+          "logic": "Reports an error during parsing."
+        },
+        {
+          "name": "Advance",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Advances to the next character in the input."
+        },
+        {
+          "name": "Advance",
+          "parameters": [
+            "int dist"
+          ],
+          "return_type": "void",
+          "logic": "Advances by the provided number of characters."
+        },
+        {
+          "name": "RewindByOneCodepoint",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Rewinds to before the previous Advance()."
+        },
+        {
+          "name": "Reset",
+          "parameters": [
+            "int pos"
+          ],
+          "return_type": "void",
+          "logic": "Reset current position to the specified one."
+        },
+        {
+          "name": "simple",
+          "parameters": [],
+          "return_type": "bool",
+          "logic": "Reports whether the pattern might be used as a literal search string."
+        },
+        {
+          "name": "contains_anchor",
+          "parameters": [],
+          "return_type": "bool",
+          "logic": "Reports whether the pattern contains anchor."
+        },
+        {
+          "name": "set_contains_anchor",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Set 'contains_anchor' variable."
+        },
+        {
+          "name": "captures_started",
+          "parameters": [],
+          "return_type": "int",
+          "logic": "Returns the number of captures started."
+        },
+        {
+          "name": "position",
+          "parameters": [],
+          "return_type": "int",
+          "logic": "Returns the current position in the input string."
+        },
+        {
+          "name": "failed",
+          "parameters": [],
+          "return_type": "bool",
+          "logic": "Returns a flag if the process failed."
+        },
+        {
+          "name": "flags",
+          "parameters": [],
+          "return_type": "RegExpFlags",
+          "logic": "Returns the regular expression flags."
+        },
+        {
+          "name": "IsUnicodeMode",
+          "parameters": [],
+          "return_type": "bool",
+          "logic": "Returns if the Unicode flag is enabled."
+        },
+        {
+          "name": "unicode_sets",
+          "parameters": [],
+          "return_type": "bool",
+          "logic": "Returns if the unicode set flag is enabled."
+        },
+        {
+          "name": "ignore_case",
+          "parameters": [],
+          "return_type": "bool",
+          "logic": "Returns if the ignore case flag is enabled."
+        },
+        {
+          "name": "IsSyntaxCharacterOrSlash",
+          "parameters": [
+            "base::uc32 c"
+          ],
+          "return_type": "bool",
+          "logic": "Checks if the character is a syntax character or slash."
+        },
+        {
+          "name": "IsClassSetSyntaxCharacter",
+          "parameters": [
+            "base::uc32 c"
+          ],
+          "return_type": "bool",
+          "logic": "Returns true if the character is class set syntax character."
+        },
+        {
+          "name": "IsClassSetReservedPunctuator",
+          "parameters": [
+            "base::uc32 c"
+          ],
+          "return_type": "bool",
+          "logic": "Returns true if the character is class set reserved punctuator."
+        },
+        {
+          "name": "IsClassSetReservedDoublePunctuator",
+          "parameters": [
+            "base::uc32 c"
+          ],
+          "return_type": "bool",
+          "logic": "Returns true if the character is class set reserved double punctuator."
+        },
+        {
+          "name": "GetCapture",
+          "parameters": [
+            "int index"
+          ],
+          "return_type": "RegExpCapture*",
+          "logic": "Return the RegExpCapture object."
+        },
+        {
+          "name": "CreateNamedCaptureAtIndex",
+          "parameters": [
+            "const RegExpParserState* state",
+            "int index"
+          ],
+          "return_type": "bool",
+          "logic": "Creates a named capture at the specified index."
+        },
+        {
+          "name": "ParseCaptureGroupName",
+          "parameters": [],
+          "return_type": "const ZoneVector<base::uc16>*",
+          "logic": "Parses the name of a capture group."
+        },
+        {
+          "name": "ParseNamedBackReference",
+          "parameters": [
+            "RegExpBuilder* builder",
+            "RegExpParserState* state"
+          ],
+          "return_type": "bool",
+          "logic": "Parse a name of back reference."
+        },
+        {
+          "name": "ParseOpenParenthesis",
+          "parameters": [
+            "RegExpParserState* state"
+          ],
+          "return_type": "RegExpParserState*",
+          "logic": "Parse an open parenthesis."
+        },
+        {
+          "name": "PatchNamedBackReferences",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "After the initial parsing pass, patch corresponding RegExpCapture objects into all RegExpBackReferences."
+        },
+        {
+          "name": "GetNamedCaptures",
+          "parameters": [],
+          "return_type": "ZoneVector<RegExpCapture*>*",
+          "logic": "Returns named captures."
+        },
+        {
+          "name": "HasNamedCaptures",
+          "parameters": [
+            "InClassEscapeState in_class_escape_state"
+          ],
+          "return_type": "bool",
+          "logic": "Returns true iff the pattern contains named captures. May call ScanForCaptures to look ahead at the remaining pattern."
+        },
+        {
+          "name": "current",
+          "parameters": [],
+          "return_type": "base::uc32",
+          "logic": "Get current character code"
+        },
+        {
+          "name": "has_more",
+          "parameters": [],
+          "return_type": "bool",
+          "logic": "Check if there's remaining characters to process"
+        },
+        {
+          "name": "has_next",
+          "parameters": [],
+          "return_type": "bool",
+          "logic": "Check if there's a next position to process"
+        },
+        {
+          "name": "Next",
+          "parameters": [],
+          "return_type": "base::uc32",
+          "logic": "Read next character."
+        },
+        {
+          "name": "ReadNext",
+          "parameters": [],
+          "return_type": "base::uc32",
+          "logic": "Read next char."
+        },
+        {
+          "name": "InputAt",
+          "parameters": [],
+          "return_type": "CharT",
+          "logic": "Get CharT at specified index."
+        },
+        {
+          "name": "input_length",
+          "parameters": [],
+          "return_type": "int",
+          "logic": "Length of the input."
+        },
+        {
+          "name": "ScanForCaptures",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Scan for capture groups."
+        },
+        {
+          "name": "zone",
+          "parameters": [],
+          "return_type": "Zone*",
+          "logic": "Returns Zone."
+        }
+      ]
+    }
+  ],
+  "functions": []
+}

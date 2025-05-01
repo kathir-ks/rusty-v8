@@ -1,0 +1,40 @@
+{
+  "file_path": "/home/kathirks_gc/v8_go/codebase/include/v8-unwinder-state.h",
+  "imports": [],
+  "classes": [
+    {
+      "name": "CalleeSavedRegisters",
+      "properties": [
+        "arm_r4",
+        "arm_r5",
+        "arm_r6",
+        "arm_r7",
+        "arm_r8",
+        "arm_r9",
+        "arm_r10"
+      ],
+      "methods": []
+    }
+  ],
+  "functions": [],
+  "conditional_compilation": {
+    "V8_TARGET_ARCH_ARM": {
+      "CalleeSavedRegisters": {
+        "definition": "struct CalleeSavedRegisters { void* arm_r4; void* arm_r5; void* arm_r6; void* arm_r7; void* arm_r8; void* arm_r9; void* arm_r10; };",
+        "logic": "Defines a struct that holds the callee-saved registers for the ARM architecture.  This is important for stack unwinding and debugging."
+      }
+    },
+    "V8_TARGET_ARCH_X64 || V8_TARGET_ARCH_IA32 || V8_TARGET_ARCH_ARM64 || V8_TARGET_ARCH_MIPS64 || V8_TARGET_ARCH_PPC64 || V8_TARGET_ARCH_RISCV64 || V8_TARGET_ARCH_S390X || V8_TARGET_ARCH_LOONG64 || V8_TARGET_ARCH_RISCV32": {
+      "CalleeSavedRegisters": {
+        "definition": "struct CalleeSavedRegisters {};",
+        "logic": "Defines an empty struct for other architectures. This suggests that callee-saved registers are handled differently or not needed for unwinding on these architectures."
+      }
+    },
+    "ELSE": {
+      "error": {
+        "message": "#error Target architecture was not detected as supported by v8",
+        "logic": "Triggers a compile-time error if the target architecture is not supported. This ensures that the code is only compiled for known and supported architectures."
+      }
+    }
+  }
+}

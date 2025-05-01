@@ -1,0 +1,299 @@
+{
+  "file_path": "/home/kathirks_gc/v8_go/codebase/src/baseline/baseline-assembler-inl.h",
+  "imports": [
+    "src/baseline/baseline-assembler.h",
+    "<type_traits>",
+    "<unordered_map>",
+    "src/codegen/interface-descriptors-inl.h",
+    "src/interpreter/bytecode-register.h",
+    "src/objects/feedback-cell.h",
+    "src/objects/js-function.h",
+    "src/objects/map.h",
+    "src/baseline/x64/baseline-assembler-x64-inl.h",
+    "src/baseline/arm64/baseline-assembler-arm64-inl.h",
+    "src/baseline/ia32/baseline-assembler-ia32-inl.h",
+    "src/baseline/arm/baseline-assembler-arm-inl.h",
+    "src/baseline/ppc/baseline-assembler-ppc-inl.h",
+    "src/baseline/s390/baseline-assembler-s390-inl.h",
+    "src/baseline/riscv/baseline-assembler-riscv-inl.h",
+    "src/baseline/mips64/baseline-assembler-mips64-inl.h",
+    "src/baseline/loong64/baseline-assembler-loong64-inl.h"
+  ],
+  "classes": [
+    {
+      "name": "EnsureAccumulatorPreservedScope",
+      "properties": [
+        "assembler_",
+        "comment_"
+      ],
+      "methods": [
+        {
+          "name": "EnsureAccumulatorPreservedScope",
+          "parameters": [
+            "BaselineAssembler* assembler"
+          ],
+          "return_type": "void",
+          "logic": "Constructor: Pushes the interpreter accumulator register onto the stack to preserve it."
+        },
+        {
+          "name": "~EnsureAccumulatorPreservedScope",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Destructor: Pops the value from the stack and asserts that it is equal to the current accumulator. Restores the accumulator from the stack."
+        }
+      ]
+    }
+  ],
+  "functions": [
+    {
+      "name": "GetCode",
+      "parameters": [
+        "LocalIsolate* isolate",
+        "CodeDesc* desc"
+      ],
+      "return_type": "void",
+      "logic": "Delegates the call to the underlying assembler's GetCode method to retrieve the generated code."
+    },
+    {
+      "name": "pc_offset",
+      "parameters": [],
+      "return_type": "int",
+      "logic": "Delegates to the underlying assembler's pc_offset method, returning the current program counter offset."
+    },
+    {
+      "name": "CodeEntry",
+      "parameters": [],
+      "return_type": "void",
+      "logic": "Delegates to the underlying assembler's CodeEntry method, marking the code entry point."
+    },
+    {
+      "name": "ExceptionHandler",
+      "parameters": [],
+      "return_type": "void",
+      "logic": "Delegates to the underlying assembler's ExceptionHandler method, marking the exception handler location."
+    },
+    {
+      "name": "RecordComment",
+      "parameters": [
+        "const char* string"
+      ],
+      "return_type": "void",
+      "logic": "Records a comment in the generated code if code comments are enabled."
+    },
+    {
+      "name": "Trap",
+      "parameters": [],
+      "return_type": "void",
+      "logic": "Inserts a trap instruction."
+    },
+    {
+      "name": "DebugBreak",
+      "parameters": [],
+      "return_type": "void",
+      "logic": "Inserts a debug break instruction."
+    },
+    {
+      "name": "CallRuntime",
+      "parameters": [
+        "Runtime::FunctionId function",
+        "int nargs"
+      ],
+      "return_type": "void",
+      "logic": "Calls a runtime function with the specified function ID and number of arguments."
+    },
+    {
+      "name": "CallBuiltin",
+      "parameters": [
+        "Builtin builtin"
+      ],
+      "return_type": "void",
+      "logic": "Calls a builtin function."
+    },
+    {
+      "name": "TailCallBuiltin",
+      "parameters": [
+        "Builtin builtin"
+      ],
+      "return_type": "void",
+      "logic": "Performs a tail call to a builtin function."
+    },
+    {
+      "name": "ContextOperand",
+      "parameters": [],
+      "return_type": "MemOperand",
+      "logic": "Returns a memory operand representing the current context."
+    },
+    {
+      "name": "FunctionOperand",
+      "parameters": [],
+      "return_type": "MemOperand",
+      "logic": "Returns a memory operand representing the function closure."
+    },
+    {
+      "name": "LoadMap",
+      "parameters": [
+        "Register output",
+        "Register value"
+      ],
+      "return_type": "void",
+      "logic": "Loads the map of an object into a register."
+    },
+    {
+      "name": "LoadRoot",
+      "parameters": [
+        "Register output",
+        "RootIndex index"
+      ],
+      "return_type": "void",
+      "logic": "Loads a root value into a register."
+    },
+    {
+      "name": "LoadNativeContextSlot",
+      "parameters": [
+        "Register output",
+        "uint32_t index"
+      ],
+      "return_type": "void",
+      "logic": "Loads a slot from the native context into a register."
+    },
+    {
+      "name": "Move",
+      "parameters": [
+        "Register output",
+        "interpreter::Register source"
+      ],
+      "return_type": "void",
+      "logic": "Moves the value from an interpreter register to a general-purpose register."
+    },
+    {
+      "name": "Move",
+      "parameters": [
+        "Register output",
+        "RootIndex source"
+      ],
+      "return_type": "void",
+      "logic": "Moves the value of a root into the specified register."
+    },
+    {
+      "name": "Move",
+      "parameters": [
+        "Register output",
+        "Register source"
+      ],
+      "return_type": "void",
+      "logic": "Moves the value from one register to another."
+    },
+    {
+      "name": "Move",
+      "parameters": [
+        "Register output",
+        "MemOperand operand"
+      ],
+      "return_type": "void",
+      "logic": "Moves the value from a memory operand to a register."
+    },
+    {
+      "name": "Move",
+      "parameters": [
+        "Register output",
+        "Tagged<Smi> value"
+      ],
+      "return_type": "void",
+      "logic": "Moves a Smi value into a register."
+    },
+    {
+      "name": "SmiUntag",
+      "parameters": [
+        "Register reg"
+      ],
+      "return_type": "void",
+      "logic": "Untags a Smi (Small Integer) by shifting it right by one bit."
+    },
+    {
+      "name": "SmiUntag",
+      "parameters": [
+        "Register output",
+        "Register value"
+      ],
+      "return_type": "void",
+      "logic": "Untags a Smi (Small Integer) by shifting it right by one bit and stores the result to output register."
+    },
+    {
+      "name": "LoadFixedArrayElement",
+      "parameters": [
+        "Register output",
+        "Register array",
+        "int32_t index"
+      ],
+      "return_type": "void",
+      "logic": "Loads an element from a FixedArray into a register."
+    },
+    {
+      "name": "LoadPrototype",
+      "parameters": [
+        "Register prototype",
+        "Register object"
+      ],
+      "return_type": "void",
+      "logic": "Loads the prototype of an object into a register."
+    },
+    {
+      "name": "LoadContext",
+      "parameters": [
+        "Register output"
+      ],
+      "return_type": "void",
+      "logic": "Loads the current context into the specified register."
+    },
+    {
+      "name": "LoadFunction",
+      "parameters": [
+        "Register output"
+      ],
+      "return_type": "void",
+      "logic": "Loads the function closure into the specified register."
+    },
+    {
+      "name": "StoreContext",
+      "parameters": [
+        "Register context"
+      ],
+      "return_type": "void",
+      "logic": "Stores the provided register into the current context register."
+    },
+    {
+      "name": "LoadRegister",
+      "parameters": [
+        "Register output",
+        "interpreter::Register source"
+      ],
+      "return_type": "void",
+      "logic": "Loads the value from the specified interpreter register into the given general-purpose register."
+    },
+    {
+      "name": "StoreRegister",
+      "parameters": [
+        "interpreter::Register output",
+        "Register value"
+      ],
+      "return_type": "void",
+      "logic": "Stores the value of the input register into the specified interpreter register."
+    },
+    {
+      "name": "LoadFeedbackCell",
+      "parameters": [
+        "Register output"
+      ],
+      "return_type": "void",
+      "logic": "Loads a feedback cell into a register."
+    },
+    {
+      "name": "DecodeField",
+      "parameters": [
+        "Register reg"
+      ],
+      "return_type": "void",
+      "logic": "Decodes a field in a register.  The actual implementation depends on the template parameter Field."
+    }
+  ]
+}

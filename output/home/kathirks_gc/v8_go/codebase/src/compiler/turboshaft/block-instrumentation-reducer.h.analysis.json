@@ -1,0 +1,117 @@
+{
+  "file_path": "/home/kathirks_gc/v8_go/codebase/src/compiler/turboshaft/block-instrumentation-reducer.h",
+  "imports": [
+    "src/compiler/turboshaft/assembler.h",
+    "src/compiler/turboshaft/index.h",
+    "src/compiler/turboshaft/operations.h",
+    "src/compiler/turboshaft/representations.h",
+    "src/compiler/turboshaft/uniform-reducer-adapter.h"
+  ],
+  "classes": [
+    {
+      "name": "BlockInstrumentationReducer",
+      "properties": [
+        "isolate_",
+        "data_",
+        "on_heap_counters_",
+        "operations_emitted_in_current_block_",
+        "counters_array_handle_"
+      ],
+      "methods": [
+        {
+          "name": "BlockInstrumentationReducer",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Constructor. Initializes the reducer and potentially creates a counters array handle if on-heap counters are enabled."
+        },
+        {
+          "name": "Bind",
+          "parameters": [
+            "Block* new_block"
+          ],
+          "return_type": "void",
+          "logic": "Binds the reducer to a new block, setting the block ID in the profiler data and resetting the counter for operations emitted in the current block."
+        },
+        {
+          "name": "ReduceOperation",
+          "parameters": [
+            "Args... args"
+          ],
+          "return_type": "OpIndex",
+          "logic": "Reduces an operation. If it's the first non-skipped operation in the block, emits block instrumentation. Skips certain opcodes like CatchBlockBegin, DidntThrow and Parameter."
+        },
+        {
+          "name": "REDUCE(Parameter)",
+          "parameters": [
+            "int32_t parameter_index",
+            "RegisterRepresentation rep",
+            "const char* debug_name"
+          ],
+          "return_type": "V<Object>",
+          "logic": "Reduces a Parameter operation. Skips generic callback to avoid emitting instrumentation before the operation."
+        },
+        {
+          "name": "REDUCE(CatchBlockBegin)",
+          "parameters": [],
+          "return_type": "V<Any>",
+          "logic": "Reduces a CatchBlockBegin operation. Skips generic callback to avoid emitting instrumentation before the operation."
+        },
+        {
+          "name": "REDUCE(DidntThrow)",
+          "parameters": [
+            "V<Any> throwing_operation",
+            "bool has_catch_block",
+            "const base::Vector<const RegisterRepresentation>* results_rep",
+            "OpEffects throwing_op_effects"
+          ],
+          "return_type": "V<Any>",
+          "logic": "Reduces a DidntThrow operation. Skips generic callback to avoid emitting instrumentation before the operation."
+        },
+        {
+          "name": "LoadCounterValue",
+          "parameters": [
+            "int block_number"
+          ],
+          "return_type": "V<Word32>",
+          "logic": "Loads the current counter value for a given block number.  Handles both on-heap and off-heap counters.  For on-heap counters it uses a heap constant that will be patched later."
+        },
+        {
+          "name": "StoreCounterValue",
+          "parameters": [
+            "int block_number",
+            "V<Word32> value"
+          ],
+          "return_type": "void",
+          "logic": "Stores a counter value for a given block number. Handles both on-heap and off-heap counters. For on-heap counters it uses a heap constant that will be patched later."
+        },
+        {
+          "name": "EmitBlockInstrumentation",
+          "parameters": [
+            "int block_number"
+          ],
+          "return_type": "void",
+          "logic": "Emits the block instrumentation code.  Loads the counter value, increments it (saturating to avoid overflow), and stores the new value."
+        },
+        {
+          "name": "REDUCE_INPUT_GRAPH(Branch)",
+          "parameters": [
+            "V<None> ig_index",
+            "const BranchOp& branch"
+          ],
+          "return_type": "V<None>",
+          "logic": "Reduces a branch operation in the input graph. Adds the true and false branch IDs to the profiler data."
+        }
+      ]
+    }
+  ],
+  "functions": [
+    {
+      "name": "CreateCountersArray",
+      "parameters": [
+        "Isolate* isolate"
+      ],
+      "return_type": "Handle<HeapObject>",
+      "logic": "Creates an array to store the counters. Located in the detail namespace."
+    }
+  ]
+}

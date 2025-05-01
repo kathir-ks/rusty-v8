@@ -1,0 +1,684 @@
+{
+  "file_path": "/home/kathirks_gc/v8_go/codebase/src/compiler/turbofan-graph-visualizer.cc",
+  "imports": [
+    "src/compiler/turbofan-graph-visualizer.h",
+    "memory",
+    "optional",
+    "regex",
+    "sstream",
+    "string",
+    "src/base/vector.h",
+    "src/codegen/optimized-compilation-info.h",
+    "src/codegen/source-position.h",
+    "src/compiler/all-nodes.h",
+    "src/compiler/backend/register-allocation.h",
+    "src/compiler/backend/register-allocator.h",
+    "src/compiler/compiler-source-position-table.h",
+    "src/compiler/node-origin-table.h",
+    "src/compiler/node-properties.h",
+    "src/compiler/node.h",
+    "src/compiler/opcodes.h",
+    "src/compiler/operator-properties.h",
+    "src/compiler/operator.h",
+    "src/compiler/schedule.h",
+    "src/compiler/turbofan-graph.h",
+    "src/objects/script-inl.h",
+    "src/objects/shared-function-info.h",
+    "src/utils/ostreams.h",
+    "src/wasm/wasm-disassembler.h"
+  ],
+  "classes": [
+    {
+      "name": "TurboJsonFile",
+      "properties": [],
+      "methods": [
+        {
+          "name": "TurboJsonFile",
+          "parameters": [
+            "OptimizedCompilationInfo* info",
+            "std::ios_base::openmode mode"
+          ],
+          "return_type": "constructor",
+          "logic": "Constructor for TurboJsonFile, opens a file for writing JSON output related to Turbofan compilation."
+        },
+        {
+          "name": "~TurboJsonFile",
+          "parameters": [],
+          "return_type": "destructor",
+          "logic": "Destructor for TurboJsonFile, flushes the output stream to disk."
+        }
+      ]
+    },
+    {
+      "name": "TurboCfgFile",
+      "properties": [],
+      "methods": [
+        {
+          "name": "TurboCfgFile",
+          "parameters": [
+            "Isolate* isolate"
+          ],
+          "return_type": "constructor",
+          "logic": "Constructor for TurboCfgFile, opens a file for appending control flow graph (CFG) information."
+        },
+        {
+          "name": "~TurboCfgFile",
+          "parameters": [],
+          "return_type": "destructor",
+          "logic": "Destructor for TurboCfgFile, flushes the output stream to disk."
+        }
+      ]
+    },
+    {
+      "name": "SourcePositionAsJSON",
+      "properties": [
+        "SourcePosition sp"
+      ],
+      "methods": []
+    },
+    {
+      "name": "NodeOriginAsJSON",
+      "properties": [
+        "NodeOrigin no"
+      ],
+      "methods": []
+    },
+    {
+      "name": "SourceIdAssigner",
+      "properties": [
+        "printed_",
+        "source_ids_"
+      ],
+      "methods": [
+        {
+          "name": "GetIdFor",
+          "parameters": [
+            "Handle<SharedFunctionInfo> shared"
+          ],
+          "return_type": "int",
+          "logic": "Assigns a unique ID to a SharedFunctionInfo. If the SharedFunctionInfo has been seen before, returns the existing ID. Otherwise, it assigns a new ID and stores the SharedFunctionInfo."
+        }
+      ]
+    },
+    {
+      "name": "JSONGraphWriter",
+      "properties": [
+        "os_",
+        "zone_",
+        "graph_",
+        "positions_",
+        "origins_",
+        "first_node_",
+        "first_edge_"
+      ],
+      "methods": [
+        {
+          "name": "JSONGraphWriter",
+          "parameters": [
+            "std::ostream& os",
+            "const TFGraph* graph",
+            "const SourcePositionTable* positions",
+            "const NodeOriginTable* origins"
+          ],
+          "return_type": "constructor",
+          "logic": "Initializes the JSONGraphWriter with the output stream, graph, source position table, and node origin table."
+        },
+        {
+          "name": "PrintPhase",
+          "parameters": [
+            "const char* phase_name"
+          ],
+          "return_type": "void",
+          "logic": "Prints a complete phase of the graph in JSON format including wrapping the whole graph in 'name' and 'type' fields."
+        },
+        {
+          "name": "Print",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Prints the graph in JSON format including all nodes and edges."
+        },
+        {
+          "name": "PrintNode",
+          "parameters": [
+            "Node* node",
+            "bool is_live"
+          ],
+          "return_type": "void",
+          "logic": "Prints a single node in JSON format, including its ID, label, title, live status, and properties."
+        },
+        {
+          "name": "PrintEdges",
+          "parameters": [
+            "Node* node"
+          ],
+          "return_type": "void",
+          "logic": "Prints the edges (inputs) of a node in JSON format."
+        },
+        {
+          "name": "PrintEdge",
+          "parameters": [
+            "Node* from",
+            "int index",
+            "Node* to"
+          ],
+          "return_type": "void",
+          "logic": "Prints a single edge in JSON format, including source, target, and type."
+        },
+        {
+          "name": "GetType",
+          "parameters": [
+            "Node* node"
+          ],
+          "return_type": "std::optional<Type>",
+          "logic": "Retrieves the type of a node, if it has one."
+        }
+      ]
+    },
+    {
+      "name": "GraphC1Visualizer",
+      "properties": [
+        "os_",
+        "indent_",
+        "zone_"
+      ],
+      "methods": [
+        {
+          "name": "GraphC1Visualizer",
+          "parameters": [
+            "std::ostream& os",
+            "Zone* zone"
+          ],
+          "return_type": "constructor",
+          "logic": "Initializes GraphC1Visualizer with an output stream and a zone."
+        },
+        {
+          "name": "PrintCompilation",
+          "parameters": [
+            "const OptimizedCompilationInfo* info"
+          ],
+          "return_type": "void",
+          "logic": "Prints compilation information in C1 visualizer format."
+        },
+        {
+          "name": "PrintSchedule",
+          "parameters": [
+            "const char* phase",
+            "const Schedule* schedule",
+            "const SourcePositionTable* positions",
+            "const InstructionSequence* instructions"
+          ],
+          "return_type": "void",
+          "logic": "Prints schedule information in C1 visualizer format."
+        },
+        {
+          "name": "PrintLiveRanges",
+          "parameters": [
+            "const char* phase",
+            "const RegisterAllocationData* data"
+          ],
+          "return_type": "void",
+          "logic": "Prints live range information in C1 visualizer format."
+        },
+        {
+          "name": "zone",
+          "parameters": [],
+          "return_type": "Zone*",
+          "logic": "Accessor for the zone"
+        },
+        {
+          "name": "PrintStringProperty",
+          "parameters": [
+            "const char* name",
+            "const char* value"
+          ],
+          "return_type": "void",
+          "logic": "Prints a string property in C1 visualizer format."
+        },
+        {
+          "name": "PrintLongProperty",
+          "parameters": [
+            "const char* name",
+            "int64_t value"
+          ],
+          "return_type": "void",
+          "logic": "Prints a long property in C1 visualizer format."
+        },
+        {
+          "name": "PrintIntProperty",
+          "parameters": [
+            "const char* name",
+            "int value"
+          ],
+          "return_type": "void",
+          "logic": "Prints an integer property in C1 visualizer format."
+        },
+        {
+          "name": "PrintBlockProperty",
+          "parameters": [
+            "const char* name",
+            "int rpo_number"
+          ],
+          "return_type": "void",
+          "logic": "Prints a block property in C1 visualizer format."
+        },
+        {
+          "name": "PrintNodeId",
+          "parameters": [
+            "Node* n"
+          ],
+          "return_type": "void",
+          "logic": "Prints the node id in C1 visualizer format."
+        },
+        {
+          "name": "PrintNode",
+          "parameters": [
+            "Node* n"
+          ],
+          "return_type": "void",
+          "logic": "Prints the node in C1 visualizer format."
+        },
+        {
+          "name": "PrintInputs",
+          "parameters": [
+            "Node* n"
+          ],
+          "return_type": "void",
+          "logic": "Prints node inputs in C1 visualizer format."
+        },
+        {
+          "name": "PrintType",
+          "parameters": [
+            "Node* node"
+          ],
+          "return_type": "void",
+          "logic": "Prints the node type in C1 visualizer format."
+        },
+        {
+          "name": "PrintLiveRange",
+          "parameters": [
+            "const LiveRange* range",
+            "const char* type",
+            "int vreg"
+          ],
+          "return_type": "void",
+          "logic": "Prints live range info"
+        },
+        {
+          "name": "PrintLiveRangeChain",
+          "parameters": [
+            "const TopLevelLiveRange* range",
+            "const char* type"
+          ],
+          "return_type": "void",
+          "logic": "Prints live range chain info"
+        }
+      ]
+    },
+    {
+      "name": "Tag",
+      "properties": [
+        "visualizer_",
+        "name_"
+      ],
+      "methods": [
+        {
+          "name": "Tag",
+          "parameters": [
+            "GraphC1Visualizer* visualizer",
+            "const char* name"
+          ],
+          "return_type": "constructor",
+          "logic": "Constructor for Tag, indents the output, prints 'begin_name', and increases the indent level. Used for structured output in C1 visualizer format."
+        },
+        {
+          "name": "~Tag",
+          "parameters": [],
+          "return_type": "destructor",
+          "logic": "Destructor for Tag, decreases the indent level and prints 'end_name'. Ensures proper nesting in C1 visualizer format."
+        }
+      ]
+    },
+    {
+      "name": "GraphAsJSON",
+      "properties": [
+        "graph",
+        "positions",
+        "origins"
+      ],
+      "methods": []
+    },
+    {
+      "name": "AsC1VCompilation",
+      "properties": [
+        "info_"
+      ],
+      "methods": []
+    },
+    {
+      "name": "AsC1V",
+      "properties": [
+        "phase_",
+        "schedule_",
+        "positions_",
+        "instructions_"
+      ],
+      "methods": []
+    },
+    {
+      "name": "AsC1VRegisterAllocationData",
+      "properties": [
+        "phase_",
+        "data_"
+      ],
+      "methods": []
+    },
+    {
+      "name": "AsRPO",
+      "properties": [
+        "graph"
+      ],
+      "methods": []
+    },
+    {
+      "name": "AsScheduledGraph",
+      "properties": [
+        "schedule"
+      ],
+      "methods": []
+    },
+    {
+      "name": "LiveRangeAsJSON",
+      "properties": [
+        "range_",
+        "code_"
+      ],
+      "methods": []
+    },
+    {
+      "name": "TopLevelLiveRangeAsJSON",
+      "properties": [
+        "range_",
+        "code_"
+      ],
+      "methods": []
+    },
+    {
+      "name": "RegisterAllocationDataAsJSON",
+      "properties": [
+        "data_",
+        "code_"
+      ],
+      "methods": []
+    },
+    {
+      "name": "InstructionOperandAsJSON",
+      "properties": [
+        "op_",
+        "code_"
+      ],
+      "methods": []
+    },
+    {
+      "name": "InstructionAsJSON",
+      "properties": [
+        "instr_",
+        "code_",
+        "index_"
+      ],
+      "methods": []
+    },
+    {
+      "name": "InstructionBlockAsJSON",
+      "properties": [
+        "block_",
+        "code_"
+      ],
+      "methods": []
+    },
+    {
+      "name": "InstructionSequenceAsJSON",
+      "properties": [
+        "sequence_"
+      ],
+      "methods": []
+    }
+  ],
+  "functions": [
+    {
+      "name": "get_cached_trace_turbo_filename",
+      "parameters": [
+        "OptimizedCompilationInfo* info"
+      ],
+      "return_type": "const char*",
+      "logic": "Retrieves or sets the cached filename for tracing Turbofan compilation. Generates a new filename if one doesn't exist."
+    },
+    {
+      "name": "operator<<",
+      "parameters": [
+        "std::ostream& out",
+        "const SourcePositionAsJSON& asJSON"
+      ],
+      "return_type": "std::ostream&",
+      "logic": "Overloads the << operator to print a SourcePosition in JSON format."
+    },
+    {
+      "name": "operator<<",
+      "parameters": [
+        "std::ostream& out",
+        "const NodeOriginAsJSON& asJSON"
+      ],
+      "return_type": "std::ostream&",
+      "logic": "Overloads the << operator to print a NodeOrigin in JSON format."
+    },
+    {
+      "name": "JsonPrintBytecodeSource",
+      "parameters": [
+        "std::ostream& os",
+        "int source_id",
+        "std::unique_ptr<char[]> function_name",
+        "DirectHandle<BytecodeArray> bytecode_array",
+        "Tagged<FeedbackVector> feedback_vector"
+      ],
+      "return_type": "void",
+      "logic": "Prints bytecode source information in JSON format."
+    },
+    {
+      "name": "JsonPrintFunctionSource",
+      "parameters": [
+        "std::ostream& os",
+        "int source_id",
+        "std::unique_ptr<char[]> function_name",
+        "DirectHandle<Script> script",
+        "Isolate* isolate",
+        "DirectHandle<SharedFunctionInfo> shared",
+        "bool with_key"
+      ],
+      "return_type": "void",
+      "logic": "Prints function source information in JSON format."
+    },
+    {
+      "name": "JsonPrintAllBytecodeSources",
+      "parameters": [
+        "std::ostream& os",
+        "OptimizedCompilationInfo* info"
+      ],
+      "return_type": "void",
+      "logic": "Prints all bytecode sources related to a compilation in JSON format."
+    },
+    {
+      "name": "JsonPrintAllSourceWithPositions",
+      "parameters": [
+        "std::ostream& os",
+        "OptimizedCompilationInfo* info",
+        "Isolate* isolate"
+      ],
+      "return_type": "void",
+      "logic": "Prints all source code with their positions related to a compilation in JSON format."
+    },
+    {
+      "name": "JsonPrintAllSourceWithPositionsWasm",
+      "parameters": [
+        "std::ostream& os",
+        "const wasm::WasmModule* module",
+        "const wasm::WireBytesStorage* wire_bytes",
+        "base::Vector<WasmInliningPosition> positions"
+      ],
+      "return_type": "void",
+      "logic": "Prints wasm source code with positions for inlined functions in JSON format"
+    },
+    {
+      "name": "GetVisualizerLogFileName",
+      "parameters": [
+        "OptimizedCompilationInfo* info",
+        "const char* optional_base_dir",
+        "const char* phase",
+        "const char* suffix"
+      ],
+      "return_type": "std::unique_ptr<char[]>",
+      "logic": "Generates a filename for the visualizer log, based on the compilation info, optional base directory, phase, and suffix."
+    },
+    {
+      "name": "SafeId",
+      "parameters": [
+        "Node* node"
+      ],
+      "return_type": "static int",
+      "logic": "Returns the id of a node, or -1 if the node is null. Used to avoid dereferencing null pointers."
+    },
+    {
+      "name": "SafeMnemonic",
+      "parameters": [
+        "Node* node"
+      ],
+      "return_type": "static const char*",
+      "logic": "Returns the mnemonic of a node's operator, or 'null' if the node is null. Used to avoid dereferencing null pointers."
+    },
+    {
+      "name": "operator<<",
+      "parameters": [
+        "std::ostream& os",
+        "const GraphAsJSON& ad"
+      ],
+      "return_type": "std::ostream&",
+      "logic": "Overloads the << operator to print a Graph in JSON format."
+    },
+    {
+      "name": "operator<<",
+      "parameters": [
+        "std::ostream& os",
+        "const AsC1VCompilation& ac"
+      ],
+      "return_type": "std::ostream&",
+      "logic": "Overloads the << operator to print an OptimizedCompilationInfo in C1 visualizer format."
+    },
+    {
+      "name": "operator<<",
+      "parameters": [
+        "std::ostream& os",
+        "const AsC1V& ac"
+      ],
+      "return_type": "std::ostream&",
+      "logic": "Overloads the << operator to print schedule information in C1 visualizer format."
+    },
+    {
+      "name": "operator<<",
+      "parameters": [
+        "std::ostream& os",
+        "const AsC1VRegisterAllocationData& ac"
+      ],
+      "return_type": "std::ostream&",
+      "logic": "Overloads the << operator to print RegisterAllocationData in C1 visualizer format."
+    },
+    {
+      "name": "operator<<",
+      "parameters": [
+        "std::ostream& os",
+        "const AsRPO& ar"
+      ],
+      "return_type": "std::ostream&",
+      "logic": "Overloads the << operator to print the reverse post-order graph representation"
+    },
+    {
+      "name": "operator<<",
+      "parameters": [
+        "std::ostream& os",
+        "const LiveRangeAsJSON& live_range_json"
+      ],
+      "return_type": "std::ostream&",
+      "logic": "Overloads the << operator to print a LiveRange as JSON"
+    },
+    {
+      "name": "operator<<",
+      "parameters": [
+        "std::ostream& os",
+        "const TopLevelLiveRangeAsJSON& top_level_live_range_json"
+      ],
+      "return_type": "std::ostream&",
+      "logic": "Overloads the << operator to print a TopLevelLiveRange as JSON"
+    },
+    {
+      "name": "PrintTopLevelLiveRanges",
+      "parameters": [
+        "std::ostream& os",
+        "const ZoneVector<TopLevelLiveRange*> ranges",
+        "const InstructionSequence& code"
+      ],
+      "return_type": "void",
+      "logic": "Helper function to print ZoneVector of TopLevelLiveRange as JSON"
+    },
+    {
+      "name": "operator<<",
+      "parameters": [
+        "std::ostream& os",
+        "const RegisterAllocationDataAsJSON& ac"
+      ],
+      "return_type": "std::ostream&",
+      "logic": "Overloads the << operator to print RegisterAllocationData as JSON"
+    },
+    {
+      "name": "operator<<",
+      "parameters": [
+        "std::ostream& os",
+        "const AsScheduledGraph& scheduled"
+      ],
+      "return_type": "std::ostream&",
+      "logic": "Overloads the << operator to print a ScheduledGraph"
+    },
+    {
+      "name": "operator<<",
+      "parameters": [
+        "std::ostream& os",
+        "const InstructionOperandAsJSON& o"
+      ],
+      "return_type": "std::ostream&",
+      "logic": "Overloads the << operator to print an InstructionOperand as JSON"
+    },
+    {
+      "name": "operator<<",
+      "parameters": [
+        "std::ostream& os",
+        "const InstructionAsJSON& i_json"
+      ],
+      "return_type": "std::ostream&",
+      "logic": "Overloads the << operator to print an Instruction as JSON"
+    },
+    {
+      "name": "operator<<",
+      "parameters": [
+        "std::ostream& os",
+        "const InstructionBlockAsJSON& b"
+      ],
+      "return_type": "std::ostream&",
+      "logic": "Overloads the << operator to print an InstructionBlock as JSON"
+    },
+    {
+      "name": "operator<<",
+      "parameters": [
+        "std::ostream& os",
+        "const InstructionSequenceAsJSON& s"
+      ],
+      "return_type": "std::ostream&",
+      "logic": "Overloads the << operator to print an InstructionSequence as JSON"
+    }
+  ]
+}

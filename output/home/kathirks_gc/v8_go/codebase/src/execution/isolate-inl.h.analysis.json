@@ -1,0 +1,246 @@
+{
+  "file_path": "/home/kathirks_gc/v8_go/codebase/src/execution/isolate-inl.h",
+  "imports": [
+    "src/execution/isolate.h",
+    "src/objects/contexts-inl.h",
+    "src/objects/js-function.h",
+    "src/objects/lookup-inl.h",
+    "src/objects/objects-inl.h",
+    "src/objects/oddball.h",
+    "src/objects/property-cell.h",
+    "src/objects/regexp-match-info.h",
+    "src/objects/shared-function-info.h",
+    "src/objects/source-text-module-inl.h",
+    "src/common/ptr-compr-inl.h",
+    "src/runtime/runtime-utils.h"
+  ],
+  "classes": [
+    {
+      "name": "Isolate",
+      "properties": [],
+      "methods": [
+        {
+          "name": "CurrentPerIsolateThreadData",
+          "parameters": [],
+          "return_type": "Isolate::PerIsolateThreadData*",
+          "logic": "Returns the current per-isolate thread data."
+        },
+        {
+          "name": "Current",
+          "parameters": [],
+          "return_type": "Isolate*",
+          "logic": "Returns the current isolate. Asserts that the isolate is not null."
+        },
+        {
+          "name": "IsCurrent",
+          "parameters": [],
+          "return_type": "bool",
+          "logic": "Checks if this isolate is the current isolate."
+        },
+        {
+          "name": "set_context",
+          "parameters": [
+            "Tagged<Context> context"
+          ],
+          "return_type": "void",
+          "logic": "Sets the current context for the isolate."
+        },
+        {
+          "name": "native_context",
+          "parameters": [],
+          "return_type": "Handle<NativeContext>",
+          "logic": "Returns a handle to the native context."
+        },
+        {
+          "name": "raw_native_context",
+          "parameters": [],
+          "return_type": "Tagged<NativeContext>",
+          "logic": "Returns the raw native context."
+        },
+        {
+          "name": "set_topmost_script_having_context",
+          "parameters": [
+            "Tagged<Context> context"
+          ],
+          "return_type": "void",
+          "logic": "Sets the topmost script having a context."
+        },
+        {
+          "name": "clear_topmost_script_having_context",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Clears the topmost script having a context, setting it to null."
+        },
+        {
+          "name": "GetIncumbentContext",
+          "parameters": [],
+          "return_type": "DirectHandle<NativeContext>",
+          "logic": "Returns the incumbent context, either the topmost script's context or the slow-path version."
+        },
+        {
+          "name": "set_pending_message",
+          "parameters": [
+            "Tagged<Object> message_obj"
+          ],
+          "return_type": "void",
+          "logic": "Sets the pending message object."
+        },
+        {
+          "name": "pending_message",
+          "parameters": [],
+          "return_type": "Tagged<Object>",
+          "logic": "Returns the pending message object."
+        },
+        {
+          "name": "clear_pending_message",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Clears the pending message object, setting it to the hole value."
+        },
+        {
+          "name": "has_pending_message",
+          "parameters": [],
+          "return_type": "bool",
+          "logic": "Checks if there is a pending message."
+        },
+        {
+          "name": "exception",
+          "parameters": [],
+          "return_type": "Tagged<Object>",
+          "logic": "Returns the current exception object."
+        },
+        {
+          "name": "set_exception",
+          "parameters": [
+            "Tagged<Object> exception_obj"
+          ],
+          "return_type": "void",
+          "logic": "Sets the current exception object."
+        },
+        {
+          "name": "clear_internal_exception",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Clears the internal exception object."
+        },
+        {
+          "name": "clear_exception",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Clears the exception, including resetting the try-catch handler if present."
+        },
+        {
+          "name": "has_exception",
+          "parameters": [],
+          "return_type": "bool",
+          "logic": "Checks if there is an exception set."
+        },
+        {
+          "name": "is_execution_terminating",
+          "parameters": [],
+          "return_type": "bool",
+          "logic": "Checks if the execution is terminating due to an exception."
+        },
+        {
+          "name": "VerifyBuiltinsResult",
+          "parameters": [
+            "Tagged<Object> result"
+          ],
+          "return_type": "Tagged<Object>",
+          "logic": "Verifies the result returned from builtins, especially during termination."
+        },
+        {
+          "name": "VerifyBuiltinsResult",
+          "parameters": [
+            "ObjectPair pair"
+          ],
+          "return_type": "ObjectPair",
+          "logic": "Verifies the ObjectPair result returned from builtins, especially during termination. This is for 64-bit architectures."
+        },
+        {
+          "name": "is_catchable_by_javascript",
+          "parameters": [
+            "Tagged<Object> exception"
+          ],
+          "return_type": "bool",
+          "logic": "Checks if the exception is catchable by JavaScript."
+        },
+        {
+          "name": "InFastCCall",
+          "parameters": [],
+          "return_type": "bool",
+          "logic": "Checks if the isolate is in a fast C call."
+        },
+        {
+          "name": "is_catchable_by_wasm",
+          "parameters": [
+            "Tagged<Object> exception"
+          ],
+          "return_type": "bool",
+          "logic": "Checks if the exception is catchable by WebAssembly."
+        },
+        {
+          "name": "FireBeforeCallEnteredCallback",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Fires the callbacks to be called before a function is entered."
+        },
+        {
+          "name": "global_object",
+          "parameters": [],
+          "return_type": "Handle<JSGlobalObject>",
+          "logic": "Returns a handle to the global object."
+        },
+        {
+          "name": "global_proxy",
+          "parameters": [],
+          "return_type": "Handle<JSGlobalProxy>",
+          "logic": "Returns a handle to the global proxy."
+        },
+        {
+          "name": "IsInitialArrayPrototype",
+          "parameters": [
+            "Tagged<JSArray> array"
+          ],
+          "return_type": "bool",
+          "logic": "Checks if the given array is the initial array prototype."
+        },
+        {
+          "name": "name",
+          "parameters": [],
+          "return_type": "Handle<UNPAREN(type)>",
+          "logic": "Accessor for native context field 'name'."
+        },
+        {
+          "name": "is_name",
+          "parameters": [
+            "Tagged<UNPAREN(type)> value"
+          ],
+          "return_type": "bool",
+          "logic": "Checks if value is the native context field 'name'."
+        }
+      ]
+    },
+    {
+      "name": "Isolate::ExceptionScope",
+      "properties": [],
+      "methods": [
+        {
+          "name": "ExceptionScope",
+          "parameters": [
+            "Isolate* isolate"
+          ],
+          "return_type": null,
+          "logic": "Constructor for ExceptionScope, clears the internal exception."
+        },
+        {
+          "name": "~ExceptionScope",
+          "parameters": [],
+          "return_type": null,
+          "logic": "Destructor for ExceptionScope, sets the exception."
+        }
+      ]
+    }
+  ],
+  "functions": []
+}

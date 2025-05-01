@@ -1,0 +1,255 @@
+{
+  "file_path": "/home/kathirks_gc/v8_go/codebase/src/compiler-dispatcher/lazy-compile-dispatcher.cc",
+  "imports": [
+    "src/compiler-dispatcher/lazy-compile-dispatcher.h",
+    "atomic",
+    "include/v8-platform.h",
+    "src/base/platform/mutex.h",
+    "src/base/platform/time.h",
+    "src/codegen/compiler.h",
+    "src/common/globals.h",
+    "src/execution/isolate.h",
+    "src/flags/flags.h",
+    "src/heap/parked-scope.h",
+    "src/logging/counters.h",
+    "src/logging/runtime-call-stats-scope.h",
+    "src/objects/instance-type.h",
+    "src/objects/objects-inl.h",
+    "src/parsing/parse-info.h",
+    "src/parsing/scanner.h",
+    "src/tasks/cancelable-task.h",
+    "src/tasks/task-utils.h",
+    "src/zone/zone-list-inl.h"
+  ],
+  "classes": [
+    {
+      "name": "LazyCompileDispatcher::JobTask",
+      "properties": [
+        "lazy_compile_dispatcher_"
+      ],
+      "methods": [
+        {
+          "name": "JobTask",
+          "parameters": [
+            "LazyCompileDispatcher* lazy_compile_dispatcher"
+          ],
+          "return_type": "void",
+          "logic": "Constructor that initializes the `lazy_compile_dispatcher_` member."
+        },
+        {
+          "name": "Run",
+          "parameters": [
+            "JobDelegate* delegate"
+          ],
+          "return_type": "void",
+          "logic": "Runs the background work by calling `DoBackgroundWork` on the associated `LazyCompileDispatcher`."
+        },
+        {
+          "name": "GetMaxConcurrency",
+          "parameters": [
+            "size_t worker_count"
+          ],
+          "return_type": "size_t",
+          "logic": "Calculates the maximum concurrency for the job, based on the number of jobs and the flag `lazy_compile_dispatcher_max_threads`."
+        }
+      ]
+    },
+    {
+      "name": "LazyCompileDispatcher::Job",
+      "properties": [
+        "task",
+        "state"
+      ],
+      "methods": [
+        {
+          "name": "Job",
+          "parameters": [
+            "std::unique_ptr<BackgroundCompileTask> task"
+          ],
+          "return_type": "void",
+          "logic": "Constructor that initializes the `task` and sets the initial state to `kPending`."
+        },
+        {
+          "name": "~Job",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Default destructor for the Job class."
+        }
+      ]
+    },
+    {
+      "name": "LazyCompileDispatcher",
+      "properties": [
+        "isolate_",
+        "worker_thread_runtime_call_stats_",
+        "background_compile_timer_",
+        "taskrunner_",
+        "platform_",
+        "max_stack_size_",
+        "trace_compiler_dispatcher_",
+        "idle_task_manager_",
+        "idle_task_scheduled_",
+        "num_jobs_for_background_",
+        "main_thread_blocking_on_job_",
+        "main_thread_blocking_signal_",
+        "job_handle_",
+        "mutex_",
+        "pending_background_jobs_",
+        "finalizable_jobs_",
+        "jobs_to_dispose_",
+        "all_jobs_",
+        "block_for_testing_",
+        "semaphore_for_testing_"
+      ],
+      "methods": [
+        {
+          "name": "LazyCompileDispatcher",
+          "parameters": [
+            "Isolate* isolate",
+            "Platform* platform",
+            "size_t max_stack_size"
+          ],
+          "return_type": "void",
+          "logic": "Constructor that initializes the dispatcher with the given isolate, platform, and maximum stack size. Sets up the background job system."
+        },
+        {
+          "name": "~LazyCompileDispatcher",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Destructor that asserts that AbortAll must be called before LazyCompileDispatcher is destroyed."
+        },
+        {
+          "name": "Enqueue",
+          "parameters": [
+            "LocalIsolate* isolate",
+            "Handle<SharedFunctionInfo> shared_info",
+            "std::unique_ptr<Utf16CharacterStream> character_stream"
+          ],
+          "return_type": "void",
+          "logic": "Enqueues a compilation job for the given shared function info, creating a new Job, associating it with the shared function info, and posting it to the background worker."
+        },
+        {
+          "name": "IsEnqueued",
+          "parameters": [
+            "DirectHandle<SharedFunctionInfo> shared"
+          ],
+          "return_type": "bool",
+          "logic": "Checks if a job is enqueued for a given shared function info by looking at the UncompiledData associated with it."
+        },
+        {
+          "name": "WaitForJobIfRunningOnBackground",
+          "parameters": [
+            "Job* job",
+            "const base::MutexGuard& lock"
+          ],
+          "return_type": "void",
+          "logic": "Waits for a job to finish if it's currently running on the background thread.  Handles different job states and removes from the pending or finalizable job lists if necessary."
+        },
+        {
+          "name": "FinishNow",
+          "parameters": [
+            "DirectHandle<SharedFunctionInfo> function"
+          ],
+          "return_type": "bool",
+          "logic": "Finishes a compilation job immediately. Waits for the background work, runs it on the main thread if necessary, finalizes the compilation, and deletes the job. Opportunistically finalizes other jobs."
+        },
+        {
+          "name": "AbortJob",
+          "parameters": [
+            "DirectHandle<SharedFunctionInfo> shared_info"
+          ],
+          "return_type": "void",
+          "logic": "Aborts a compilation job for the given shared function info, setting the state to aborted or waiting for background thread to finish, and finally deleting the job."
+        },
+        {
+          "name": "AbortAll",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Aborts all pending and finalizable compilation jobs and cleans up resources."
+        },
+        {
+          "name": "GetJobFor",
+          "parameters": [
+            "DirectHandle<SharedFunctionInfo> shared",
+            "const base::MutexGuard&"
+          ],
+          "return_type": "LazyCompileDispatcher::Job*",
+          "logic": "Retrieves the Job associated with a shared function info, if one exists."
+        },
+        {
+          "name": "ScheduleIdleTaskFromAnyThread",
+          "parameters": [
+            "const base::MutexGuard&"
+          ],
+          "return_type": "void",
+          "logic": "Schedules an idle task to finalize compilations on the main thread."
+        },
+        {
+          "name": "DoBackgroundWork",
+          "parameters": [
+            "JobDelegate* delegate"
+          ],
+          "return_type": "void",
+          "logic": "Performs background compilation work.  Runs pending jobs until a yield signal is received or all jobs are completed, finalizing/aborting jobs as needed."
+        },
+        {
+          "name": "PopSingleFinalizeJob",
+          "parameters": [],
+          "return_type": "LazyCompileDispatcher::Job*",
+          "logic": "Pops a single job from the list of finalizable jobs, setting its state to `kFinalizingNow` or `kAbortingNow`."
+        },
+        {
+          "name": "FinalizeSingleJob",
+          "parameters": [],
+          "return_type": "bool",
+          "logic": "Finalizes a single compilation job that is ready to be finalized, either by completing the compilation or aborting it."
+        },
+        {
+          "name": "DoIdleWork",
+          "parameters": [
+            "double deadline_in_seconds"
+          ],
+          "return_type": "void",
+          "logic": "Performs idle work by finalizing compilation jobs within a given deadline."
+        },
+        {
+          "name": "DeleteJob",
+          "parameters": [
+            "Job* job"
+          ],
+          "return_type": "void",
+          "logic": "Deletes a Job that has been finalized or aborted."
+        },
+        {
+          "name": "DeleteJob",
+          "parameters": [
+            "Job* job",
+            "const base::MutexGuard&"
+          ],
+          "return_type": "void",
+          "logic": "Deletes a Job that has been finalized or aborted. (Internal version for locking)"
+        },
+        {
+          "name": "VerifyBackgroundTaskCount",
+          "parameters": [
+            "const base::MutexGuard&"
+          ],
+          "return_type": "void",
+          "logic": "Verify internal job state in debug mode.  Checks that background job counts match sizes of pending, running and finalizable job lists."
+        }
+      ]
+    }
+  ],
+  "functions": [
+    {
+      "name": "SetUncompiledDataJobPointer",
+      "parameters": [
+        "LocalIsolate* isolate",
+        "DirectHandle<SharedFunctionInfo> shared_info",
+        "Address job_address"
+      ],
+      "return_type": "void",
+      "logic": "Sets the job pointer in the UncompiledData of a SharedFunctionInfo.  Handles different UncompiledData types and allocates a new one if necessary."
+    }
+  ]
+}

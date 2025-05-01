@@ -1,0 +1,496 @@
+{
+  "file_path": "/home/kathirks_gc/v8_go/codebase/src/wasm/baseline/liftoff-register.h",
+  "imports": [
+    "<iosfwd>",
+    "<memory>",
+    "src/base/bits.h",
+    "src/wasm/baseline/liftoff-assembler-defs.h",
+    "src/wasm/wasm-opcodes.h"
+  ],
+  "classes": [
+    {
+      "name": "LiftoffRegister",
+      "properties": [
+        "storage_t code_"
+      ],
+      "methods": [
+        {
+          "name": "LiftoffRegister",
+          "parameters": [
+            "Register reg"
+          ],
+          "return_type": "LiftoffRegister",
+          "logic": "Constructor for a general purpose register (gp) from its Register object, initializing the underlying code_."
+        },
+        {
+          "name": "LiftoffRegister",
+          "parameters": [
+            "DoubleRegister reg"
+          ],
+          "return_type": "LiftoffRegister",
+          "logic": "Constructor for a floating point register (fp) from its DoubleRegister object, initializing the underlying code_."
+        },
+        {
+          "name": "from_uncached",
+          "parameters": [
+            "DoubleRegister reg"
+          ],
+          "return_type": "LiftoffRegister",
+          "logic": "Special constructor for IA32 where certain registers are not cached but need LiftoffRegister representation"
+        },
+        {
+          "name": "from_liftoff_code",
+          "parameters": [
+            "int code"
+          ],
+          "return_type": "LiftoffRegister",
+          "logic": "Creates a LiftoffRegister from its encoded integer code. Performs a round-trip check."
+        },
+        {
+          "name": "from_code",
+          "parameters": [
+            "RegClass rc",
+            "int code"
+          ],
+          "return_type": "LiftoffRegister",
+          "logic": "Creates a LiftoffRegister from RegClass and its respective register code (gp or fp)"
+        },
+        {
+          "name": "from_external_code",
+          "parameters": [
+            "RegClass rc",
+            "ValueKind kind",
+            "int code"
+          ],
+          "return_type": "LiftoffRegister",
+          "logic": "Creates a LiftoffRegister from an external code. Handles special case when needing to convert f32 to f64 code and for S128 register doubling when using pair."
+        },
+        {
+          "name": "ForPair",
+          "parameters": [
+            "Register low",
+            "Register high"
+          ],
+          "return_type": "LiftoffRegister",
+          "logic": "Creates a LiftoffRegister representing a pair of general purpose registers (for i64 types)"
+        },
+        {
+          "name": "ForFpPair",
+          "parameters": [
+            "DoubleRegister low"
+          ],
+          "return_type": "LiftoffRegister",
+          "logic": "Creates a LiftoffRegister representing a pair of floating point registers (for s128 types)"
+        },
+        {
+          "name": "is_pair",
+          "parameters": [],
+          "return_type": "bool",
+          "logic": "Checks if the LiftoffRegister represents a register pair"
+        },
+        {
+          "name": "is_gp_pair",
+          "parameters": [],
+          "return_type": "bool",
+          "logic": "Checks if the LiftoffRegister represents a pair of general purpose registers"
+        },
+        {
+          "name": "is_fp_pair",
+          "parameters": [],
+          "return_type": "bool",
+          "logic": "Checks if the LiftoffRegister represents a pair of floating point registers"
+        },
+        {
+          "name": "is_gp",
+          "parameters": [],
+          "return_type": "bool",
+          "logic": "Checks if the LiftoffRegister represents a general purpose register"
+        },
+        {
+          "name": "is_fp",
+          "parameters": [],
+          "return_type": "bool",
+          "logic": "Checks if the LiftoffRegister represents a floating point register"
+        },
+        {
+          "name": "low",
+          "parameters": [],
+          "return_type": "LiftoffRegister",
+          "logic": "Returns the low register of the pair. If not a pair, returns itself or other register depending on the use case."
+        },
+        {
+          "name": "high",
+          "parameters": [],
+          "return_type": "LiftoffRegister",
+          "logic": "Returns the high register of the pair. If not a pair, returns itself or other register depending on the use case."
+        },
+        {
+          "name": "low_gp",
+          "parameters": [],
+          "return_type": "Register",
+          "logic": "Returns the low general purpose register of the pair"
+        },
+        {
+          "name": "high_gp",
+          "parameters": [],
+          "return_type": "Register",
+          "logic": "Returns the high general purpose register of the pair"
+        },
+        {
+          "name": "low_fp",
+          "parameters": [],
+          "return_type": "DoubleRegister",
+          "logic": "Returns the low floating point register of the pair"
+        },
+        {
+          "name": "high_fp",
+          "parameters": [],
+          "return_type": "DoubleRegister",
+          "logic": "Returns the high floating point register of the pair"
+        },
+        {
+          "name": "gp",
+          "parameters": [],
+          "return_type": "Register",
+          "logic": "Returns the underlying general purpose register"
+        },
+        {
+          "name": "fp",
+          "parameters": [],
+          "return_type": "DoubleRegister",
+          "logic": "Returns the underlying floating point register"
+        },
+        {
+          "name": "liftoff_code",
+          "parameters": [],
+          "return_type": "int",
+          "logic": "Returns the encoded integer code of the LiftoffRegister"
+        },
+        {
+          "name": "reg_class",
+          "parameters": [],
+          "return_type": "RegClass",
+          "logic": "Returns the RegClass of the LiftoffRegister"
+        },
+        {
+          "name": "operator==",
+          "parameters": [
+            "const LiftoffRegister other"
+          ],
+          "return_type": "bool",
+          "logic": "Checks if two LiftoffRegisters are equal"
+        },
+        {
+          "name": "overlaps",
+          "parameters": [
+            "const LiftoffRegister other"
+          ],
+          "return_type": "bool",
+          "logic": "Checks if two LiftoffRegisters are the same register or overlap (in the case of pairs)."
+        }
+      ]
+    },
+    {
+      "name": "LiftoffRegList",
+      "properties": [
+        "storage_t regs_"
+      ],
+      "methods": [
+        {
+          "name": "LiftoffRegList",
+          "parameters": [],
+          "return_type": "LiftoffRegList",
+          "logic": "Default constructor initializes the register list with no registers set."
+        },
+        {
+          "name": "LiftoffRegList",
+          "parameters": [
+            "Regs... regs"
+          ],
+          "return_type": "LiftoffRegList",
+          "logic": "Variadic constructor that accepts a sequence of Registers, DoubleRegisters or LiftoffRegisters to initialize the reglist by setting the corresponding bits"
+        },
+        {
+          "name": "set",
+          "parameters": [
+            "Register reg"
+          ],
+          "return_type": "Register",
+          "logic": "Sets a general purpose register in the list"
+        },
+        {
+          "name": "set",
+          "parameters": [
+            "DoubleRegister reg"
+          ],
+          "return_type": "DoubleRegister",
+          "logic": "Sets a floating-point register in the list"
+        },
+        {
+          "name": "set",
+          "parameters": [
+            "LiftoffRegister reg"
+          ],
+          "return_type": "LiftoffRegister",
+          "logic": "Sets a LiftoffRegister in the list (handles pairs)"
+        },
+        {
+          "name": "clear",
+          "parameters": [
+            "LiftoffRegister reg"
+          ],
+          "return_type": "LiftoffRegister",
+          "logic": "Clears a LiftoffRegister from the list (handles pairs)"
+        },
+        {
+          "name": "clear",
+          "parameters": [
+            "Register reg"
+          ],
+          "return_type": "Register",
+          "logic": "Clears a general purpose register from the list"
+        },
+        {
+          "name": "clear",
+          "parameters": [
+            "DoubleRegister reg"
+          ],
+          "return_type": "DoubleRegister",
+          "logic": "Clears a floating-point register from the list"
+        },
+        {
+          "name": "has",
+          "parameters": [
+            "LiftoffRegister reg"
+          ],
+          "return_type": "bool",
+          "logic": "Checks if a LiftoffRegister is in the list"
+        },
+        {
+          "name": "has",
+          "parameters": [
+            "Register reg"
+          ],
+          "return_type": "bool",
+          "logic": "Checks if a general purpose register is in the list"
+        },
+        {
+          "name": "has",
+          "parameters": [
+            "DoubleRegister reg"
+          ],
+          "return_type": "bool",
+          "logic": "Checks if a floating-point register is in the list"
+        },
+        {
+          "name": "is_empty",
+          "parameters": [],
+          "return_type": "bool",
+          "logic": "Checks if the list is empty"
+        },
+        {
+          "name": "GetNumRegsSet",
+          "parameters": [],
+          "return_type": "unsigned int",
+          "logic": "Returns the number of registers set in the list"
+        },
+        {
+          "name": "operator&",
+          "parameters": [
+            "const LiftoffRegList other"
+          ],
+          "return_type": "LiftoffRegList",
+          "logic": "Returns a new LiftoffRegList with the intersection of the two lists"
+        },
+        {
+          "name": "operator&=",
+          "parameters": [
+            "const LiftoffRegList other"
+          ],
+          "return_type": "LiftoffRegList&",
+          "logic": "Intersects the current LiftoffRegList with another list"
+        },
+        {
+          "name": "operator|",
+          "parameters": [
+            "const LiftoffRegList other"
+          ],
+          "return_type": "LiftoffRegList",
+          "logic": "Returns a new LiftoffRegList with the union of the two lists"
+        },
+        {
+          "name": "operator|=",
+          "parameters": [
+            "const LiftoffRegList other"
+          ],
+          "return_type": "LiftoffRegList&",
+          "logic": "Unions the current LiftoffRegList with another list"
+        },
+        {
+          "name": "GetAdjacentFpRegsSet",
+          "parameters": [],
+          "return_type": "LiftoffRegList",
+          "logic": "Returns a new LiftoffRegList containing all adjacent pairs of floating point registers that are set in the original list (even numbered registers only)"
+        },
+        {
+          "name": "HasAdjacentFpRegsSet",
+          "parameters": [],
+          "return_type": "bool",
+          "logic": "Checks if the list contains any adjacent pairs of floating point registers set (even numbered registers only)"
+        },
+        {
+          "name": "SpreadSetBitsToAdjacentFpRegs",
+          "parameters": [],
+          "return_type": "LiftoffRegList",
+          "logic": "Returns a new LiftoffRegList where any adjacent Fp registers that have at least one bit set, have both bits set"
+        },
+        {
+          "name": "operator==",
+          "parameters": [
+            "const LiftoffRegList&"
+          ],
+          "return_type": "bool",
+          "logic": "Default equals operator."
+        },
+        {
+          "name": "GetFirstRegSet",
+          "parameters": [],
+          "return_type": "LiftoffRegister",
+          "logic": "Returns the first register that is set in the list."
+        },
+        {
+          "name": "GetLastRegSet",
+          "parameters": [],
+          "return_type": "LiftoffRegister",
+          "logic": "Returns the last register that is set in the list."
+        },
+        {
+          "name": "MaskOut",
+          "parameters": [
+            "const LiftoffRegList mask"
+          ],
+          "return_type": "LiftoffRegList",
+          "logic": "Returns a new LiftoffRegList with all the registers from the `mask` cleared in current list."
+        },
+        {
+          "name": "GetGpList",
+          "parameters": [],
+          "return_type": "RegList",
+          "logic": "Extracts and returns a RegList representing the GP registers set"
+        },
+        {
+          "name": "GetFpList",
+          "parameters": [],
+          "return_type": "DoubleRegList",
+          "logic": "Extracts and returns a DoubleRegList representing the FP registers set"
+        },
+        {
+          "name": "begin",
+          "parameters": [],
+          "return_type": "Iterator",
+          "logic": "Returns an iterator pointing to the beginning of the list"
+        },
+        {
+          "name": "end",
+          "parameters": [],
+          "return_type": "Iterator",
+          "logic": "Returns an iterator pointing to the end of the list"
+        },
+        {
+          "name": "FromBits",
+          "parameters": [
+            "storage_t bits"
+          ],
+          "return_type": "LiftoffRegList",
+          "logic": "Creates a LiftoffRegList from bits, checking its correctness"
+        },
+        {
+          "name": "FromBits",
+          "parameters": [],
+          "return_type": "LiftoffRegList",
+          "logic": "Creates a LiftoffRegList from bits, using a template argument"
+        }
+      ]
+    },
+    {
+      "name": "LiftoffRegList::Iterator",
+      "properties": [
+        "LiftoffRegList remaining_"
+      ],
+      "methods": [
+        {
+          "name": "operator*",
+          "parameters": [],
+          "return_type": "LiftoffRegister",
+          "logic": "Dereference operator. Returns the next LiftoffRegister set in the list."
+        },
+        {
+          "name": "operator++",
+          "parameters": [],
+          "return_type": "Iterator&",
+          "logic": "Prefix increment operator. Moves to the next LiftoffRegister set in the list."
+        },
+        {
+          "name": "operator==",
+          "parameters": [
+            "const Iterator& other"
+          ],
+          "return_type": "bool",
+          "logic": "Default equals operator."
+        }
+      ]
+    }
+  ],
+  "functions": [
+    {
+      "name": "needs_gp_reg_pair",
+      "parameters": [
+        "ValueKind kind"
+      ],
+      "return_type": "bool",
+      "logic": "Determines whether a given ValueKind needs a general purpose register pair"
+    },
+    {
+      "name": "needs_fp_reg_pair",
+      "parameters": [
+        "ValueKind kind"
+      ],
+      "return_type": "bool",
+      "logic": "Determines whether a given ValueKind needs a floating point register pair"
+    },
+    {
+      "name": "reg_class_for",
+      "parameters": [
+        "ValueKind kind"
+      ],
+      "return_type": "RegClass",
+      "logic": "Returns the register class for a given ValueKind"
+    },
+    {
+      "name": "GetCacheRegList",
+      "parameters": [
+        "RegClass rc"
+      ],
+      "return_type": "LiftoffRegList",
+      "logic": "Returns the register list for the specific RegClass."
+    },
+    {
+      "name": "operator<<",
+      "parameters": [
+        "std::ostream& os",
+        "LiftoffRegister reg"
+      ],
+      "return_type": "std::ostream&",
+      "logic": "Overloads the << operator for LiftoffRegister for printing register name"
+    },
+    {
+      "name": "operator<<",
+      "parameters": [
+        "std::ostream& os",
+        "LiftoffRegList reglist"
+      ],
+      "return_type": "std::ostream&",
+      "logic": "Overloads the << operator for LiftoffRegList for printing the reg list"
+    }
+  ]
+}

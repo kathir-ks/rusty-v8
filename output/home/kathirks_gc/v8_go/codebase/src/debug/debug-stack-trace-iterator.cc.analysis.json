@@ -1,0 +1,159 @@
+{
+  "file_path": "/home/kathirks_gc/v8_go/codebase/src/debug/debug-stack-trace-iterator.cc",
+  "imports": [
+    "include/v8-function.h",
+    "src/api/api-inl.h",
+    "src/debug/debug-evaluate.h",
+    "src/debug/debug-scope-iterator.h",
+    "src/debug/debug.h",
+    "src/execution/frames-inl.h",
+    "src/execution/frames.h",
+    "src/execution/isolate.h",
+    "src/debug/debug-wasm-objects.h"
+  ],
+  "classes": [
+    {
+      "name": "v8::debug::StackTraceIterator",
+      "properties": [],
+      "methods": [
+        {
+          "name": "Create",
+          "parameters": [
+            "v8::Isolate* isolate",
+            "int index"
+          ],
+          "return_type": "std::unique_ptr<debug::StackTraceIterator>",
+          "logic": "Creates a new DebugStackTraceIterator object."
+        }
+      ]
+    },
+    {
+      "name": "internal::DebugStackTraceIterator",
+      "properties": [
+        "isolate_",
+        "iterator_",
+        "is_top_frame_",
+        "resumable_fn_on_stack_",
+        "inlined_frame_index_",
+        "frame_inspector_"
+      ],
+      "methods": [
+        {
+          "name": "DebugStackTraceIterator",
+          "parameters": [
+            "Isolate* isolate",
+            "int index"
+          ],
+          "return_type": "DebugStackTraceIterator",
+          "logic": "Constructor. Initializes the iterator, and advances to the specified index."
+        },
+        {
+          "name": "~DebugStackTraceIterator",
+          "parameters": [],
+          "return_type": "DebugStackTraceIterator",
+          "logic": "Destructor."
+        },
+        {
+          "name": "Done",
+          "parameters": [],
+          "return_type": "bool",
+          "logic": "Checks if the iterator is done (reached the end of the stack trace)."
+        },
+        {
+          "name": "Advance",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Advances the iterator to the next frame in the stack trace, handling inlined frames."
+        },
+        {
+          "name": "GetContextId",
+          "parameters": [],
+          "return_type": "int",
+          "logic": "Returns the context ID of the current frame."
+        },
+        {
+          "name": "GetReceiver",
+          "parameters": [],
+          "return_type": "v8::MaybeLocal<v8::Value>",
+          "logic": "Returns the receiver (this) of the current frame."
+        },
+        {
+          "name": "GetReturnValue",
+          "parameters": [],
+          "return_type": "v8::Local<v8::Value>",
+          "logic": "Returns the return value of the current frame if available."
+        },
+        {
+          "name": "GetFunctionDebugName",
+          "parameters": [],
+          "return_type": "v8::Local<v8::String>",
+          "logic": "Returns the debug name of the function in the current frame."
+        },
+        {
+          "name": "GetScript",
+          "parameters": [],
+          "return_type": "v8::Local<v8::debug::Script>",
+          "logic": "Returns the script object associated with the current frame."
+        },
+        {
+          "name": "GetSourceLocation",
+          "parameters": [],
+          "return_type": "debug::Location",
+          "logic": "Returns the source location (line and column) of the current frame."
+        },
+        {
+          "name": "GetFunctionLocation",
+          "parameters": [],
+          "return_type": "debug::Location",
+          "logic": "Returns the location of the function in the script."
+        },
+        {
+          "name": "GetFunction",
+          "parameters": [],
+          "return_type": "v8::Local<v8::Function>",
+          "logic": "Returns the function object associated with the current frame."
+        },
+        {
+          "name": "GetSharedFunctionInfo",
+          "parameters": [],
+          "return_type": "Handle<SharedFunctionInfo>",
+          "logic": "Returns the shared function info object of the function in the current frame."
+        },
+        {
+          "name": "GetScopeIterator",
+          "parameters": [],
+          "return_type": "std::unique_ptr<v8::debug::ScopeIterator>",
+          "logic": "Returns a ScopeIterator for iterating over the scopes of the current frame."
+        },
+        {
+          "name": "CanBeRestarted",
+          "parameters": [],
+          "return_type": "bool",
+          "logic": "Checks if the current frame can be restarted."
+        },
+        {
+          "name": "UpdateInlineFrameIndexAndResumableFnOnStack",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Updates the inlined frame index and checks for resumable functions on the stack."
+        },
+        {
+          "name": "Evaluate",
+          "parameters": [
+            "v8::Local<v8::String> source",
+            "bool throw_on_side_effect"
+          ],
+          "return_type": "v8::MaybeLocal<v8::Value>",
+          "logic": "Evaluates a string in the context of the current frame."
+        },
+        {
+          "name": "PrepareRestart",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Prepares the current frame for restart."
+        }
+      ]
+    }
+  ],
+  "functions": []
+}

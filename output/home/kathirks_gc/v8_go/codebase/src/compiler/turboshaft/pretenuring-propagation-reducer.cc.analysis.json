@@ -1,0 +1,88 @@
+{
+  "file_path": "/home/kathirks_gc/v8_go/codebase/src/compiler/turboshaft/pretenuring-propagation-reducer.cc",
+  "imports": [
+    "src/compiler/turboshaft/pretenuring-propagation-reducer.h"
+  ],
+  "classes": [
+    {
+      "name": "PretenuringPropagationAnalyzer",
+      "properties": [
+        "input_graph_",
+        "old_allocs_",
+        "old_phis_",
+        "store_graph_",
+        "queue_"
+      ],
+      "methods": [
+        {
+          "name": "ProcessStore",
+          "parameters": [
+            "const StoreOp& store"
+          ],
+          "return_type": "void",
+          "logic": "Analyzes a store operation to determine if the stored value should be considered for pretenuring. It checks if the base and value are potentially allocations, if the value is already old, or if the value is a Phi that is not worth recording. If eligible, it records the store operation."
+        },
+        {
+          "name": "ProcessPhi",
+          "parameters": [
+            "const PhiOp& phi"
+          ],
+          "return_type": "void",
+          "logic": "Analyzes a phi operation to record its inputs that could potentially be allocations, for pretenuring propagation.  It iterates through the inputs and records them only if they are AllocateOps or Phis that are already tracked by the analyzer."
+        },
+        {
+          "name": "ProcessAllocate",
+          "parameters": [
+            "const AllocateOp& allocate"
+          ],
+          "return_type": "void",
+          "logic": "Handles an allocation operation, adding it to the list of old allocations if it's an old allocation."
+        },
+        {
+          "name": "PushContainedValues",
+          "parameters": [
+            "OpIndex base"
+          ],
+          "return_type": "bool",
+          "logic": "Adds the values contained within the given base (either stored into it via stores, or as phi inputs) to the work queue for propagation. Returns true if values were added, false otherwise."
+        },
+        {
+          "name": "OldifySubgraph",
+          "parameters": [
+            "OpIndex old_alloc"
+          ],
+          "return_type": "void",
+          "logic": "Performs a depth-first search starting from an old allocation to mark all reachable allocations as old. It uses a queue to iterate through the graph and stops when it encounters already-old allocations or previously visited old Phis."
+        },
+        {
+          "name": "PropagateAllocationTypes",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Iterates through the list of old allocations and calls OldifySubgraph to propagate the old allocation type."
+        },
+        {
+          "name": "BuildStoreInputGraph",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Builds a graph of store operations to facilitate pretenuring propagation. It iterates through all operations in the input graph and processes store, allocate, and phi operations as relevant."
+        },
+        {
+          "name": "Run",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "The main entry point for the pretenuring propagation analysis. It calls BuildStoreInputGraph to build the store graph and then PropagateAllocationTypes to propagate allocation types."
+        }
+      ]
+    }
+  ],
+  "functions": [
+    {
+      "name": "CouldBeAllocate",
+      "parameters": [
+        "const Operation& base"
+      ],
+      "return_type": "bool",
+      "logic": "Checks if a given operation could be an allocation (either an AllocateOp or a PhiOp)."
+    }
+  ]
+}

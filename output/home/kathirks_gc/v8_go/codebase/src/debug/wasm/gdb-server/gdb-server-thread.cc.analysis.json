@@ -1,0 +1,56 @@
+{
+  "file_path": "/home/kathirks_gc/v8_go/codebase/src/debug/wasm/gdb-server/gdb-server-thread.cc",
+  "imports": [
+    "src/debug/wasm/gdb-server/gdb-server-thread.h",
+    "src/debug/wasm/gdb-server/gdb-server.h",
+    "src/debug/wasm/gdb-server/session.h",
+    "src/flags/flags.h"
+  ],
+  "classes": [
+    {
+      "name": "GdbServerThread",
+      "properties": [
+        "gdb_server_",
+        "start_semaphore_",
+        "mutex_",
+        "target_",
+        "transport_"
+      ],
+      "methods": [
+        {
+          "name": "GdbServerThread",
+          "parameters": [
+            "GdbServer* gdb_server"
+          ],
+          "return_type": "void",
+          "logic": "Constructor for the GdbServerThread. Initializes the thread with the given GdbServer, sets the thread name, and initializes the semaphore."
+        },
+        {
+          "name": "StartAndInitialize",
+          "parameters": [],
+          "return_type": "bool",
+          "logic": "Starts the GdbServerThread and waits for it to initialize its transport and target. This ensures that the thread is fully set up before allowing the main thread to continue. Returns true if the target_ is valid, false otherwise."
+        },
+        {
+          "name": "CleanupThread",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Cleans up resources used by the GdbServerThread, setting target_ and transport_ to null and cleaning up Winsock on Windows."
+        },
+        {
+          "name": "Run",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "The main loop of the GdbServerThread. Initializes Winsock on Windows, binds to a TCP port (either the configured port or any available port), creates the transport and target, signals the semaphore to allow the main thread to continue, and then enters a loop to accept incoming connections and run sessions. It continues until the target is terminated, then cleans up the thread."
+        },
+        {
+          "name": "Stop",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Stops the GdbServerThread. Terminates the target and closes the transport to unblock the server thread if it's waiting for a connection or packet."
+        }
+      ]
+    }
+  ],
+  "functions": []
+}

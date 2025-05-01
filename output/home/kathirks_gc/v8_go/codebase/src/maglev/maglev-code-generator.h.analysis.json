@@ -1,0 +1,154 @@
+{
+  "file_path": "/home/kathirks_gc/v8_go/codebase/src/maglev/maglev-code-generator.h",
+  "imports": [
+    "src/codegen/maglev-safepoint-table.h",
+    "src/common/globals.h",
+    "src/deoptimizer/frame-translation-builder.h",
+    "src/maglev/maglev-assembler.h",
+    "src/maglev/maglev-code-gen-state.h",
+    "src/utils/identity-map.h"
+  ],
+  "classes": [
+    {
+      "name": "MaglevCodeGenerator",
+      "properties": [
+        "local_isolate_",
+        "safepoint_table_builder_",
+        "frame_translation_builder_",
+        "code_gen_state_",
+        "masm_",
+        "graph_",
+        "protected_deopt_literals_",
+        "deopt_literals_",
+        "deopt_exit_start_offset_",
+        "handler_table_offset_",
+        "inlined_function_count_",
+        "code_gen_succeeded_",
+        "deopt_data_",
+        "code_",
+        "retained_maps_",
+        "is_context_specialized_",
+        "zone_"
+      ],
+      "methods": [
+        {
+          "name": "MaglevCodeGenerator",
+          "parameters": [
+            "LocalIsolate* isolate",
+            "MaglevCompilationInfo* compilation_info",
+            "Graph* graph"
+          ],
+          "return_type": "void",
+          "logic": "Constructor for the MaglevCodeGenerator, initializes the member variables with provided parameters."
+        },
+        {
+          "name": "Assemble",
+          "parameters": [],
+          "return_type": "bool",
+          "logic": "Top-level function for assembling the Maglev code, likely orchestrating the emission of code and metadata."
+        },
+        {
+          "name": "Generate",
+          "parameters": [
+            "Isolate* isolate"
+          ],
+          "return_type": "MaybeHandle<Code>",
+          "logic": "Generates the final Code object after assembly is complete."
+        },
+        {
+          "name": "RetainedMaps",
+          "parameters": [
+            "Isolate* isolate"
+          ],
+          "return_type": "GlobalHandleVector<Map>",
+          "logic": "Returns a vector of retained Map objects. Maps are V8 objects describing the layout of Javascript objects. Retained maps are needed for garbage collection purposes."
+        },
+        {
+          "name": "EmitCode",
+          "parameters": [],
+          "return_type": "bool",
+          "logic": "Emits the main body of the generated code."
+        },
+        {
+          "name": "EmitDeferredCode",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Emits code that's not performance-critical and can be deferred, such as infrequent branches."
+        },
+        {
+          "name": "EmitDeopts",
+          "parameters": [],
+          "return_type": "bool",
+          "logic": "Emits deoptimization code, which handles cases where the optimized code needs to revert to a less optimized version."
+        },
+        {
+          "name": "EmitExceptionHandlerTrampolines",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Emits trampolines for exception handling, redirecting control to the appropriate exception handlers."
+        },
+        {
+          "name": "EmitMetadata",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Emits metadata necessary for debugging, garbage collection, and other runtime services."
+        },
+        {
+          "name": "RecordInlinedFunctions",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Records information about inlined functions for debugging and other purposes."
+        },
+        {
+          "name": "CollectRetainedMaps",
+          "parameters": [
+            "DirectHandle<Code> code"
+          ],
+          "return_type": "GlobalHandleVector<Map>",
+          "logic": "Collects the maps that need to be retained for garbage collection, given a Code object. Maps are V8 objects that describe the structure of Javascript objects."
+        },
+        {
+          "name": "GenerateDeoptimizationData",
+          "parameters": [
+            "LocalIsolate* local_isolate"
+          ],
+          "return_type": "Handle<DeoptimizationData>",
+          "logic": "Generates the DeoptimizationData object, which contains information needed to deoptimize the code."
+        },
+        {
+          "name": "BuildCodeObject",
+          "parameters": [
+            "LocalIsolate* local_isolate"
+          ],
+          "return_type": "MaybeHandle<Code>",
+          "logic": "Builds the final Code object from the generated assembly and metadata."
+        },
+        {
+          "name": "stack_slot_count",
+          "parameters": [],
+          "return_type": "int",
+          "logic": "Returns the number of stack slots used by the generated code."
+        },
+        {
+          "name": "stack_slot_count_with_fixed_frame",
+          "parameters": [],
+          "return_type": "int",
+          "logic": "Returns the number of stack slots used, including the slots for the standard frame."
+        },
+        {
+          "name": "parameter_count",
+          "parameters": [],
+          "return_type": "uint16_t",
+          "logic": "Returns the number of parameters of the function being compiled."
+        },
+        {
+          "name": "masm",
+          "parameters": [],
+          "return_type": "MaglevAssembler*",
+          "logic": "Returns a pointer to the MaglevAssembler object."
+        }
+      ]
+    }
+  ],
+  "functions": []
+}

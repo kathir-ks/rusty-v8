@@ -1,0 +1,72 @@
+{
+  "file_path": "/home/kathirks_gc/v8_go/codebase/src/snapshot/snapshot-source-sink.cc",
+  "imports": [
+    "src/snapshot/snapshot-source-sink.h",
+    "<vector>",
+    "src/base/logging.h",
+    "src/handles/handles-inl.h",
+    "src/objects/objects-inl.h"
+  ],
+  "classes": [
+    {
+      "name": "SnapshotByteSink",
+      "properties": [
+        "data_"
+      ],
+      "methods": [
+        {
+          "name": "PutN",
+          "parameters": [
+            "int number_of_bytes",
+            "const uint8_t v",
+            "const char* description"
+          ],
+          "return_type": "void",
+          "logic": "Appends 'number_of_bytes' copies of the byte 'v' to the internal data buffer (data_)."
+        },
+        {
+          "name": "PutUint30",
+          "parameters": [
+            "uint32_t integer",
+            "const char* description"
+          ],
+          "return_type": "void",
+          "logic": "Encodes a 30-bit unsigned integer into a variable number of bytes (1-4). The number of bytes is stored in the lower 2 bits of the first byte. The integer itself is shifted left by 2 bits before encoding."
+        },
+        {
+          "name": "PutRaw",
+          "parameters": [
+            "const uint8_t* data",
+            "int number_of_bytes",
+            "const char* description"
+          ],
+          "return_type": "void",
+          "logic": "Appends 'number_of_bytes' from 'data' to the internal data buffer (data_). Includes a memory sanitizer check if MEMORY_SANITIZER is defined."
+        },
+        {
+          "name": "Append",
+          "parameters": [
+            "const SnapshotByteSink& other"
+          ],
+          "return_type": "void",
+          "logic": "Appends the contents of another SnapshotByteSink to the internal data buffer (data_)."
+        }
+      ]
+    },
+    {
+      "name": "SnapshotByteSource",
+      "properties": [],
+      "methods": [
+        {
+          "name": "GetBlob",
+          "parameters": [
+            "const uint8_t** data"
+          ],
+          "return_type": "int",
+          "logic": "Reads the next chunk of data (a 'blob') from the internal data buffer (data_). The size of the chunk is read as a Uint30 encoded integer.  Returns the size of the blob and sets the data pointer to the start of the blob. Advances the internal position accordingly."
+        }
+      ]
+    }
+  ],
+  "functions": []
+}

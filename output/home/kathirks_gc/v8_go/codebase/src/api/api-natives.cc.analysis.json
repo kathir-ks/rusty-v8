@@ -1,0 +1,311 @@
+{
+  "file_path": "/home/kathirks_gc/v8_go/codebase/src/api/api-natives.cc",
+  "imports": [
+    "src/api/api-natives.h",
+    "src/api/api-inl.h",
+    "src/common/globals.h",
+    "src/common/message-template.h",
+    "src/execution/isolate-inl.h",
+    "src/execution/protectors-inl.h",
+    "src/heap/heap-inl.h",
+    "src/logging/runtime-call-stats-scope.h",
+    "src/objects/api-callbacks.h",
+    "src/objects/lookup.h",
+    "src/objects/templates.h"
+  ],
+  "classes": [
+    {
+      "name": "InvokeScope",
+      "properties": [
+        "isolate_",
+        "save_context_"
+      ],
+      "methods": [
+        {
+          "name": "InvokeScope",
+          "parameters": [
+            "Isolate* isolate"
+          ],
+          "return_type": "void",
+          "logic": "Constructor. Initializes the isolate and saves the current context."
+        },
+        {
+          "name": "~InvokeScope",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Destructor. Reports pending messages if an exception occurred; otherwise, clears pending messages."
+        }
+      ]
+    },
+    {
+      "name": "AccessCheckDisableScope",
+      "properties": [
+        "isolate_",
+        "disabled_",
+        "obj_"
+      ],
+      "methods": [
+        {
+          "name": "AccessCheckDisableScope",
+          "parameters": [
+            "Isolate* isolate",
+            "DirectHandle<JSObject> obj"
+          ],
+          "return_type": "void",
+          "logic": "Constructor. Disables access checks for the given JSObject if they were previously enabled."
+        },
+        {
+          "name": "~AccessCheckDisableScope",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Destructor. Re-enables access checks for the given JSObject if they were disabled in the constructor."
+        }
+      ]
+    }
+  ],
+  "functions": [
+    {
+      "name": "InstantiateObject",
+      "parameters": [
+        "Isolate* isolate",
+        "DirectHandle<ObjectTemplateInfo> data",
+        "DirectHandle<JSReceiver> new_target",
+        "bool is_prototype"
+      ],
+      "return_type": "MaybeHandle<JSObject>",
+      "logic": "Instantiates a JSObject from an ObjectTemplateInfo, potentially using a provided constructor.  Handles caching and prototype setup.  It checks whether simple instantiation applies and uses a cached value or a fresh allocation. Disables access checks while constructing the object, configures its properties, sets up immutable prototypes, and migrates the new object to fast mode."
+    },
+    {
+      "name": "InstantiateFunction",
+      "parameters": [
+        "Isolate* isolate",
+        "DirectHandle<NativeContext> native_context",
+        "DirectHandle<FunctionTemplateInfo> data",
+        "MaybeDirectHandle<Name> maybe_name"
+      ],
+      "return_type": "MaybeHandle<JSFunction>",
+      "logic": "Instantiates a JSFunction from a FunctionTemplateInfo. Manages the prototype chain, caching, and object configuration."
+    },
+    {
+      "name": "InstantiateFunction",
+      "parameters": [
+        "Isolate* isolate",
+        "DirectHandle<FunctionTemplateInfo> data",
+        "MaybeDirectHandle<Name> maybe_name"
+      ],
+      "return_type": "MaybeHandle<JSFunction>",
+      "logic": "Overload of InstantiateFunction, uses the isolate's native context."
+    },
+    {
+      "name": "Instantiate",
+      "parameters": [
+        "Isolate* isolate",
+        "DirectHandle<Object> data",
+        "MaybeDirectHandle<Name> maybe_name"
+      ],
+      "return_type": "MaybeDirectHandle<Object>",
+      "logic": "Instantiates either a JSFunction or a JSObject based on the type of the given data (ObjectTemplateInfo or FunctionTemplateInfo)."
+    },
+    {
+      "name": "DefineAccessorProperty",
+      "parameters": [
+        "Isolate* isolate",
+        "DirectHandle<JSObject> object",
+        "DirectHandle<Name> name",
+        "DirectHandle<Object> getter",
+        "DirectHandle<Object> setter",
+        "PropertyAttributes attributes"
+      ],
+      "return_type": "MaybeDirectHandle<Object>",
+      "logic": "Defines an accessor property (getter/setter) on a JSObject. It first checks if the getter and setter functions are FunctionTemplateInfos and, if so, potentially instantiates them and inserts a debug break trampoline before defining the property."
+    },
+    {
+      "name": "DefineDataProperty",
+      "parameters": [
+        "Isolate* isolate",
+        "DirectHandle<JSObject> object",
+        "DirectHandle<Name> name",
+        "DirectHandle<Object> prop_data",
+        "PropertyAttributes attributes"
+      ],
+      "return_type": "MaybeDirectHandle<Object>",
+      "logic": "Defines a data property (value) on a JSObject. It instantiates the property value and then adds the data property to the JSObject."
+    },
+    {
+      "name": "DisableAccessChecks",
+      "parameters": [
+        "Isolate* isolate",
+        "DirectHandle<JSObject> object"
+      ],
+      "return_type": "void",
+      "logic": "Disables access checks for the given JSObject by copying the map and setting the access check flag."
+    },
+    {
+      "name": "EnableAccessChecks",
+      "parameters": [
+        "Isolate* isolate",
+        "DirectHandle<JSObject> object"
+      ],
+      "return_type": "void",
+      "logic": "Enables access checks for the given JSObject by copying the map and setting the access check flag. It also sets the may_have_interesting_properties bit."
+    },
+    {
+      "name": "GetIntrinsic",
+      "parameters": [
+        "Isolate* isolate",
+        "v8::Intrinsic intrinsic"
+      ],
+      "return_type": "Tagged<Object>",
+      "logic": "Retrieves an intrinsic value from the native context based on the given v8::Intrinsic enum value."
+    },
+    {
+      "name": "ConfigureInstance",
+      "parameters": [
+        "Isolate* isolate",
+        "Handle<JSObject> obj",
+        "DirectHandle<TemplateInfoT> data"
+      ],
+      "return_type": "MaybeHandle<JSObject>",
+      "logic": "Configures the instance (JSObject) by adding accessors and properties from the TemplateInfo chain."
+    },
+    {
+      "name": "IsSimpleInstantiation",
+      "parameters": [
+        "Isolate* isolate",
+        "Tagged<ObjectTemplateInfo> info",
+        "Tagged<JSReceiver> new_target"
+      ],
+      "return_type": "bool",
+      "logic": "Checks if an instantiation is simple (not a subclass, using the same native context, etc.), enabling caching."
+    },
+    {
+      "name": "GetInstancePrototype",
+      "parameters": [
+        "Isolate* isolate",
+        "DirectHandle<Object> function_template"
+      ],
+      "return_type": "MaybeDirectHandle<Object>",
+      "logic": "Instantiates a function from a function template and retrieves its prototype."
+    },
+    {
+      "name": "AddPropertyToPropertyList",
+      "parameters": [
+        "Isolate* isolate",
+        "DirectHandle<TemplateInfoWithProperties> info",
+        "base::Vector<DirectHandle<Object>> data"
+      ],
+      "return_type": "void",
+      "logic": "Adds a property to the property list of a TemplateInfo object."
+    },
+    {
+      "name": "CreateAccessorFunctionTemplateInfo",
+      "parameters": [
+        "Isolate* i_isolate",
+        "FunctionCallback callback",
+        "int length",
+        "SideEffectType side_effect_type"
+      ],
+      "return_type": "DirectHandle<FunctionTemplateInfo>",
+      "logic": "Creates an accessor FunctionTemplateInfo. Wraps the v8::FunctionTemplate::New function."
+    },
+    {
+      "name": "ApiNatives::InstantiateFunction",
+      "parameters": [
+        "Isolate* isolate",
+        "DirectHandle<NativeContext> native_context",
+        "DirectHandle<FunctionTemplateInfo> data",
+        "MaybeDirectHandle<Name> maybe_name"
+      ],
+      "return_type": "MaybeHandle<JSFunction>",
+      "logic": "Public API.  Instantiates a function template into a JavaScript function. Uses InvokeScope for exception handling."
+    },
+    {
+      "name": "ApiNatives::InstantiateFunction",
+      "parameters": [
+        "Isolate* isolate",
+        "DirectHandle<FunctionTemplateInfo> data",
+        "MaybeDirectHandle<Name> maybe_name"
+      ],
+      "return_type": "MaybeHandle<JSFunction>",
+      "logic": "Public API. Instantiates a function template using the isolate's native context. Uses InvokeScope."
+    },
+    {
+      "name": "ApiNatives::InstantiateObject",
+      "parameters": [
+        "Isolate* isolate",
+        "DirectHandle<ObjectTemplateInfo> data",
+        "DirectHandle<JSReceiver> new_target"
+      ],
+      "return_type": "MaybeHandle<JSObject>",
+      "logic": "Public API. Instantiates an object from a template. Uses InvokeScope."
+    },
+    {
+      "name": "ApiNatives::InstantiateRemoteObject",
+      "parameters": [
+        "DirectHandle<ObjectTemplateInfo> data"
+      ],
+      "return_type": "MaybeHandle<JSObject>",
+      "logic": "Creates a context-less JSObject (used for remote contexts) from an ObjectTemplateInfo."
+    },
+    {
+      "name": "ApiNatives::AddDataProperty",
+      "parameters": [
+        "Isolate* isolate",
+        "DirectHandle<TemplateInfoWithProperties> info",
+        "DirectHandle<Name> name",
+        "DirectHandle<Object> value",
+        "PropertyAttributes attributes"
+      ],
+      "return_type": "void",
+      "logic": "Adds a data property to a template info object."
+    },
+    {
+      "name": "ApiNatives::AddDataProperty",
+      "parameters": [
+        "Isolate* isolate",
+        "DirectHandle<TemplateInfoWithProperties> info",
+        "DirectHandle<Name> name",
+        "v8::Intrinsic intrinsic",
+        "PropertyAttributes attributes"
+      ],
+      "return_type": "void",
+      "logic": "Adds a data property, which uses an intrinsic as a value, to a template info object."
+    },
+    {
+      "name": "ApiNatives::AddAccessorProperty",
+      "parameters": [
+        "Isolate* isolate",
+        "DirectHandle<TemplateInfoWithProperties> info",
+        "DirectHandle<Name> name",
+        "DirectHandle<FunctionTemplateInfo> getter",
+        "DirectHandle<FunctionTemplateInfo> setter",
+        "PropertyAttributes attributes"
+      ],
+      "return_type": "void",
+      "logic": "Adds an accessor property to a template info object."
+    },
+    {
+      "name": "ApiNatives::AddNativeDataProperty",
+      "parameters": [
+        "Isolate* isolate",
+        "DirectHandle<TemplateInfoWithProperties> info",
+        "DirectHandle<AccessorInfo> property"
+      ],
+      "return_type": "void",
+      "logic": "Adds a native data property to a template info object."
+    },
+    {
+      "name": "ApiNatives::CreateApiFunction",
+      "parameters": [
+        "Isolate* isolate",
+        "DirectHandle<NativeContext> native_context",
+        "DirectHandle<FunctionTemplateInfo> obj",
+        "DirectHandle<Object> prototype",
+        "InstanceType type",
+        "MaybeDirectHandle<Name> maybe_name"
+      ],
+      "return_type": "Handle<JSFunction>",
+      "logic": "Creates a JSFunction for an API function, setting up its prototype, initial map, and properties. It builds a JSFunction using a Factory, sets the prototype, creates a map based on the InstanceType, sets interceptors, and marks the instance as callable if needed."
+    }
+  ]
+}

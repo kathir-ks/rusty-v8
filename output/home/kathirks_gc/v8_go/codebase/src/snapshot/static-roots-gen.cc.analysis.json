@@ -1,0 +1,65 @@
+{
+  "file_path": "/home/kathirks_gc/v8_go/codebase/src/snapshot/static-roots-gen.cc",
+  "imports": [
+    "src/snapshot/static-roots-gen.h",
+    "fstream",
+    "src/common/globals.h",
+    "src/common/ptr-compr-inl.h",
+    "src/execution/isolate.h",
+    "src/objects/instance-type-inl.h",
+    "src/objects/instance-type.h",
+    "src/objects/objects-definitions.h",
+    "src/objects/visitors.h",
+    "src/roots/roots-inl.h",
+    "src/roots/roots.h"
+  ],
+  "classes": [
+    {
+      "name": "StaticRootsTableGenImpl",
+      "properties": [
+        "sorted_roots_",
+        "camel_names_"
+      ],
+      "methods": [
+        {
+          "name": "StaticRootsTableGenImpl",
+          "parameters": [
+            "Isolate* isolate"
+          ],
+          "return_type": "void",
+          "logic": "Constructor. Collects all read-only roots from the isolate's ReadOnlyRoots, compresses their pointers using V8HeapCompressionScheme, stores them in a sorted map (`sorted_roots_`) keyed by the compressed pointer, and stores the CamelCase name of the root using `camel_names_`."
+        },
+        {
+          "name": "sorted_roots",
+          "parameters": [],
+          "return_type": "const std::map<Tagged_t, std::list<RootIndex>>&",
+          "logic": "Returns a const reference to the `sorted_roots_` map, which stores the compressed root pointers and their associated RootIndex values."
+        },
+        {
+          "name": "camel_name",
+          "parameters": [
+            "RootIndex idx"
+          ],
+          "return_type": "const std::string&",
+          "logic": "Returns the CamelCase name of the root corresponding to the given RootIndex from the `camel_names_` map."
+        }
+      ]
+    },
+    {
+      "name": "StaticRootsTableGen",
+      "properties": [],
+      "methods": [
+        {
+          "name": "write",
+          "parameters": [
+            "Isolate* isolate",
+            "const char* file"
+          ],
+          "return_type": "void",
+          "logic": "Writes a C++ header file containing static definitions for the read-only roots. The file will contain a struct `StaticReadOnlyRoot` with static constexpr Tagged_t members representing each root, and a static constexpr array `StaticReadOnlyRootsPointerTable` containing the addresses of the roots in their RootIndex order.  It performs several checks related to the build configuration (V8_STATIC_ROOTS_BOOL and V8_STATIC_ROOTS_GENERATION_BOOL) and writes the root information to the specified file, sorted by address to help with layout visualization."
+        }
+      ]
+    }
+  ],
+  "functions": []
+}

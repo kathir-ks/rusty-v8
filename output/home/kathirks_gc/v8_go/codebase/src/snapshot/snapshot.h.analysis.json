@@ -1,0 +1,308 @@
+{
+  "file_path": "/home/kathirks_gc/v8_go/codebase/src/snapshot/snapshot.h",
+  "imports": [
+    "<vector>",
+    "include/v8-array-buffer.h",
+    "include/v8-snapshot.h",
+    "src/common/assert-scope.h",
+    "src/common/globals.h",
+    "src/snapshot/serializer-deserializer.h"
+  ],
+  "classes": [
+    {
+      "name": "Snapshot",
+      "properties": [],
+      "methods": [
+        {
+          "name": "ClearReconstructableDataForSerialization",
+          "parameters": [
+            "Isolate* isolate",
+            "bool clear_recompilable_data"
+          ],
+          "return_type": "void",
+          "logic": "Clears data from the given isolate's heap that can be reconstructed and is not suitable for serialization.  The `clear_recompilable_data` flag controls whether compiled objects are cleared from shared function infos and regexp objects."
+        },
+        {
+          "name": "Create",
+          "parameters": [
+            "Isolate* isolate",
+            "std::vector<Tagged<Context>>* contexts",
+            "const std::vector<SerializeEmbedderFieldsCallback>& embedder_fields_serializers",
+            "const SafepointScope& safepoint_scope",
+            "const DisallowGarbageCollection& no_gc",
+            "SerializerFlags flags"
+          ],
+          "return_type": "v8::StartupData",
+          "logic": "Serializes the given isolate and contexts into a snapshot. Each context may have an associated callback to serialize internal fields. The default context must be passed at index 0."
+        },
+        {
+          "name": "Initialize",
+          "parameters": [
+            "Isolate* isolate"
+          ],
+          "return_type": "bool",
+          "logic": "Initializes the Isolate from the internal snapshot. Returns false if no snapshot could be found."
+        },
+        {
+          "name": "NewContextFromSnapshot",
+          "parameters": [
+            "Isolate* isolate",
+            "DirectHandle<JSGlobalProxy> global_proxy",
+            "size_t context_index",
+            "DeserializeEmbedderFieldsCallback embedder_fields_deserializer"
+          ],
+          "return_type": "MaybeDirectHandle<Context>",
+          "logic": "Creates a new context using the internal context snapshot."
+        },
+        {
+          "name": "SerializeDeserializeAndVerifyForTesting",
+          "parameters": [
+            "Isolate* isolate",
+            "DirectHandle<Context> default_context"
+          ],
+          "return_type": "void",
+          "logic": "Serializes the current isolate and context into a snapshot, deserializes the snapshot into a new isolate and context, and finally runs VerifyHeap on the fresh isolate. Used for testing."
+        },
+        {
+          "name": "HasContextSnapshot",
+          "parameters": [
+            "Isolate* isolate",
+            "size_t index"
+          ],
+          "return_type": "bool",
+          "logic": "Checks if a context snapshot exists for the given isolate at the specified index."
+        },
+        {
+          "name": "EmbedsScript",
+          "parameters": [
+            "Isolate* isolate"
+          ],
+          "return_type": "bool",
+          "logic": "Determines if the snapshot embeds a script."
+        },
+        {
+          "name": "GetExpectedChecksum",
+          "parameters": [
+            "const v8::StartupData* data"
+          ],
+          "return_type": "uint32_t",
+          "logic": "Gets the expected checksum of the snapshot data."
+        },
+        {
+          "name": "CalculateChecksum",
+          "parameters": [
+            "const v8::StartupData* data"
+          ],
+          "return_type": "uint32_t",
+          "logic": "Calculates the checksum of the snapshot data."
+        },
+        {
+          "name": "VerifyChecksum",
+          "parameters": [
+            "const v8::StartupData* data"
+          ],
+          "return_type": "bool",
+          "logic": "Verifies the checksum of the snapshot data."
+        },
+        {
+          "name": "ExtractRehashability",
+          "parameters": [
+            "const v8::StartupData* data"
+          ],
+          "return_type": "bool",
+          "logic": "Extracts rehashability information from the snapshot data."
+        },
+        {
+          "name": "ExtractReadOnlySnapshotChecksum",
+          "parameters": [
+            "const v8::StartupData* data"
+          ],
+          "return_type": "uint32_t",
+          "logic": "Extracts the read-only snapshot checksum from the snapshot data."
+        },
+        {
+          "name": "VersionIsValid",
+          "parameters": [
+            "const v8::StartupData* data"
+          ],
+          "return_type": "bool",
+          "logic": "Checks if the snapshot version is valid."
+        },
+        {
+          "name": "DefaultSnapshotBlob",
+          "parameters": [],
+          "return_type": "const v8::StartupData*",
+          "logic": "Returns the default snapshot blob."
+        },
+        {
+          "name": "ShouldVerifyChecksum",
+          "parameters": [
+            "const v8::StartupData* data"
+          ],
+          "return_type": "bool",
+          "logic": "Determines if the checksum should be verified for the snapshot data."
+        },
+        {
+          "name": "SnapshotIsValid",
+          "parameters": [
+            "const v8::StartupData* snapshot_blob"
+          ],
+          "return_type": "bool",
+          "logic": "Checks if the given snapshot blob is valid (only in DEBUG mode)."
+        }
+      ]
+    },
+    {
+      "name": "SnapshotCreatorImpl",
+      "properties": [
+        "const bool owns_isolate_",
+        "Isolate* const isolate_",
+        "std::unique_ptr<v8::ArrayBuffer::Allocator> array_buffer_allocator_",
+        "std::vector<SerializableContext> contexts_"
+      ],
+      "methods": [
+        {
+          "name": "SnapshotCreatorImpl",
+          "parameters": [
+            "Isolate* isolate",
+            "const intptr_t* api_external_references",
+            "const StartupData* existing_blob",
+            "bool owns_isolate"
+          ],
+          "return_type": "",
+          "logic": "Constructor for internal usages, to hook into an existing isolate."
+        },
+        {
+          "name": "SnapshotCreatorImpl",
+          "parameters": [
+            "const v8::Isolate::CreateParams& params"
+          ],
+          "return_type": "",
+          "logic": "Constructor, taking creation params."
+        },
+        {
+          "name": "SnapshotCreatorImpl",
+          "parameters": [
+            "Isolate* isolate",
+            "const v8::Isolate::CreateParams& params"
+          ],
+          "return_type": "",
+          "logic": "Constructor, taking isolate and creation params."
+        },
+        {
+          "name": "~SnapshotCreatorImpl",
+          "parameters": [],
+          "return_type": "",
+          "logic": "Destructor."
+        },
+        {
+          "name": "isolate",
+          "parameters": [],
+          "return_type": "Isolate*",
+          "logic": "Returns the isolate associated with the SnapshotCreator."
+        },
+        {
+          "name": "SetDefaultContext",
+          "parameters": [
+            "DirectHandle<NativeContext> context",
+            "SerializeEmbedderFieldsCallback callback"
+          ],
+          "return_type": "void",
+          "logic": "Sets the default context for the snapshot creator."
+        },
+        {
+          "name": "AddContext",
+          "parameters": [
+            "DirectHandle<NativeContext> context",
+            "SerializeEmbedderFieldsCallback callback"
+          ],
+          "return_type": "size_t",
+          "logic": "Adds a context to the snapshot creator."
+        },
+        {
+          "name": "AddData",
+          "parameters": [
+            "DirectHandle<NativeContext> context",
+            "Address object"
+          ],
+          "return_type": "size_t",
+          "logic": "Adds data associated with a given context."
+        },
+        {
+          "name": "AddData",
+          "parameters": [
+            "Address object"
+          ],
+          "return_type": "size_t",
+          "logic": "Adds data to the snapshot creator."
+        },
+        {
+          "name": "CreateBlob",
+          "parameters": [
+            "SnapshotCreator::FunctionCodeHandling function_code_handling",
+            "Snapshot::SerializerFlags serializer_flags"
+          ],
+          "return_type": "StartupData",
+          "logic": "Creates a snapshot data blob."
+        },
+        {
+          "name": "FromSnapshotCreator",
+          "parameters": [
+            "v8::SnapshotCreator* snapshot_creator"
+          ],
+          "return_type": "SnapshotCreatorImpl*",
+          "logic": "Gets the internal implementation from the public API class."
+        }
+      ]
+    }
+  ],
+  "functions": [
+    {
+      "name": "CreateSnapshotDataBlobInternal",
+      "parameters": [
+        "v8::SnapshotCreator::FunctionCodeHandling function_code_handling",
+        "const char* embedded_source",
+        "Snapshot::SerializerFlags serializer_flags"
+      ],
+      "return_type": "v8::StartupData",
+      "logic": "Convenience wrapper around snapshot data blob creation used e.g. by tests."
+    },
+    {
+      "name": "CreateSnapshotDataBlobInternal",
+      "parameters": [
+        "v8::SnapshotCreator::FunctionCodeHandling function_code_handling",
+        "const char* embedded_source",
+        "v8::SnapshotCreator& snapshot_creator",
+        "Snapshot::SerializerFlags serializer_flags"
+      ],
+      "return_type": "v8::StartupData",
+      "logic": "Convenience wrapper around snapshot data blob creation used e.g. by mksnapshot."
+    },
+    {
+      "name": "CreateSnapshotDataBlobInternalForInspectorTest",
+      "parameters": [
+        "v8::SnapshotCreator::FunctionCodeHandling function_code_handling",
+        "const char* embedded_source"
+      ],
+      "return_type": "v8::StartupData",
+      "logic": "Convenience wrapper for inspector-test.cc."
+    },
+    {
+      "name": "WarmUpSnapshotDataBlobInternal",
+      "parameters": [
+        "v8::StartupData cold_snapshot_blob",
+        "const char* warmup_source"
+      ],
+      "return_type": "v8::StartupData",
+      "logic": "Convenience wrapper around snapshot data blob warmup used e.g. by tests and mksnapshot."
+    },
+    {
+      "name": "SetSnapshotFromFile",
+      "parameters": [
+        "StartupData* snapshot_blob"
+      ],
+      "return_type": "void",
+      "logic": "Sets the snapshot data from a file (only when V8_USE_EXTERNAL_STARTUP_DATA is defined)."
+    }
+  ]
+}

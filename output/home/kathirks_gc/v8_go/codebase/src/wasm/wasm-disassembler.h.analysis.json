@@ -1,0 +1,68 @@
+{
+  "file_path": "/home/kathirks_gc/v8_go/codebase/src/wasm/wasm-disassembler.h",
+  "imports": [
+    "src/wasm/wasm-module.h"
+  ],
+  "classes": [
+    {
+      "name": "v8::debug::DisassemblyCollector",
+      "properties": [],
+      "methods": []
+    },
+    {
+      "name": "v8::internal::wasm::NamesProvider",
+      "properties": [],
+      "methods": []
+    }
+  ],
+  "functions": [
+    {
+      "name": "v8::internal::wasm::Disassemble",
+      "parameters": [
+        "const WasmModule* module",
+        "ModuleWireBytes wire_bytes",
+        "NamesProvider* names",
+        "v8::debug::DisassemblyCollector* collector",
+        "std::vector<int>* function_body_offsets"
+      ],
+      "return_type": "void",
+      "logic": "Disassembles the entire WebAssembly module, using the module object, the raw byte data, and a names provider to produce human-readable output. Stores the disassembled output in the DisassemblyCollector.  The function body offsets vector contains offsets into the `wire_bytes` for the start of each function body."
+    },
+    {
+      "name": "v8::internal::wasm::Disassemble",
+      "parameters": [
+        "base::Vector<const uint8_t> wire_bytes",
+        "v8::debug::DisassemblyCollector* collector",
+        "std::vector<int>* function_body_offsets"
+      ],
+      "return_type": "void",
+      "logic": "Disassembles WebAssembly code directly from byte data, likely without a pre-parsed module. Stores the disassembled output in the DisassemblyCollector. The function body offsets vector contains offsets into the `wire_bytes` for the start of each function body."
+    },
+    {
+      "name": "v8::internal::wasm::DisassembleFunction",
+      "parameters": [
+        "const WasmModule* module",
+        "int func_index",
+        "base::Vector<const uint8_t> wire_bytes",
+        "NamesProvider* names",
+        "std::ostream& os"
+      ],
+      "return_type": "void",
+      "logic": "Disassembles a specific function within a WebAssembly module, using the module object, function index, raw byte data, a names provider, and an output stream to produce human-readable output. Writes the disassembled output to the provided output stream."
+    },
+    {
+      "name": "v8::internal::wasm::DisassembleFunction",
+      "parameters": [
+        "const WasmModule* module",
+        "int func_index",
+        "base::Vector<const uint8_t> function_body",
+        "base::Vector<const uint8_t> maybe_wire_bytes",
+        "uint32_t function_body_offset",
+        "std::ostream& os",
+        "std::vector<uint32_t>* offsets"
+      ],
+      "return_type": "void",
+      "logic": "Disassembles a specific function, given the function body as a byte vector, the index, maybe the full wire bytes vector, and offset into the wire bytes vector. Writes the disassembled output to the provided output stream. Optionally receives a vector of offsets to be filled by the disassembler."
+    }
+  ]
+}

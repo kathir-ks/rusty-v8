@@ -1,0 +1,211 @@
+{
+  "file_path": "/home/kathirks_gc/v8_go/codebase/include/v8-cppgc.h",
+  "imports": [
+    "<cstdint>",
+    "<memory>",
+    "<vector>",
+    "cppgc/common.h",
+    "cppgc/custom-space.h",
+    "cppgc/heap-statistics.h",
+    "cppgc/visitor.h",
+    "v8-internal.h",
+    "v8-platform.h",
+    "v8-traced-handle.h"
+  ],
+  "classes": [
+    {
+      "name": "v8::CppHeapCreateParams",
+      "properties": [
+        "std::vector<std::unique_ptr<cppgc::CustomSpaceBase>> custom_spaces",
+        "cppgc::Heap::MarkingType marking_support",
+        "cppgc::Heap::SweepingType sweeping_support"
+      ],
+      "methods": [
+        {
+          "name": "CppHeapCreateParams",
+          "parameters": [
+            "std::vector<std::unique_ptr<cppgc::CustomSpaceBase>> custom_spaces"
+          ],
+          "return_type": "CppHeapCreateParams",
+          "logic": "Constructor that initializes the `custom_spaces` vector. Takes ownership of unique pointers in `custom_spaces`."
+        },
+        {
+          "name": "CppHeapCreateParams",
+          "parameters": [
+            "const CppHeapCreateParams&"
+          ],
+          "return_type": "CppHeapCreateParams",
+          "logic": "Deleted copy constructor."
+        },
+        {
+          "name": "operator=",
+          "parameters": [
+            "const CppHeapCreateParams&"
+          ],
+          "return_type": "CppHeapCreateParams&",
+          "logic": "Deleted copy assignment operator."
+        }
+      ]
+    },
+    {
+      "name": "v8::CppHeap",
+      "properties": [],
+      "methods": [
+        {
+          "name": "Create",
+          "parameters": [
+            "v8::Platform* platform",
+            "const CppHeapCreateParams& params"
+          ],
+          "return_type": "std::unique_ptr<CppHeap>",
+          "logic": "Creates a new `CppHeap` instance using the given platform and creation parameters."
+        },
+        {
+          "name": "~CppHeap",
+          "parameters": [],
+          "return_type": "virtual",
+          "logic": "Virtual destructor for the `CppHeap` class. Terminates the heap."
+        },
+        {
+          "name": "GetAllocationHandle",
+          "parameters": [],
+          "return_type": "cppgc::AllocationHandle&",
+          "logic": "Returns the allocation handle, used for allocating garbage-collected objects."
+        },
+        {
+          "name": "GetHeapHandle",
+          "parameters": [],
+          "return_type": "cppgc::HeapHandle&",
+          "logic": "Returns the heap handle which can be used to identify the heap."
+        },
+        {
+          "name": "Terminate",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Terminates the heap, clearing roots and running garbage collections. Marked as deprecated because it is called in the destructor now."
+        },
+        {
+          "name": "CollectStatistics",
+          "parameters": [
+            "cppgc::HeapStatistics::DetailLevel detail_level"
+          ],
+          "return_type": "cppgc::HeapStatistics",
+          "logic": "Collects heap statistics with a specified detail level."
+        },
+        {
+          "name": "CollectCustomSpaceStatisticsAtLastGC",
+          "parameters": [
+            "std::vector<cppgc::CustomSpaceIndex> custom_spaces",
+            "std::unique_ptr<CustomSpaceStatisticsReceiver> receiver"
+          ],
+          "return_type": "void",
+          "logic": "Collects statistics for specified custom spaces and reports them to the provided receiver. It operates on the statistics from the last garbage collection."
+        },
+        {
+          "name": "EnableDetachedGarbageCollectionsForTesting",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Enables detached mode, allowing testing of garbage collection independently. After this is used, the heap cannot be attached to an Isolate."
+        },
+        {
+          "name": "CollectGarbageForTesting",
+          "parameters": [
+            "cppgc::EmbedderStackState stack_state"
+          ],
+          "return_type": "void",
+          "logic": "Performs a full stop-the-world garbage collection for testing purposes."
+        },
+        {
+          "name": "CollectGarbageInYoungGenerationForTesting",
+          "parameters": [
+            "cppgc::EmbedderStackState stack_state"
+          ],
+          "return_type": "void",
+          "logic": "Performs a minor stop-the-world garbage collection for testing purposes."
+        }
+      ]
+    },
+    {
+      "name": "v8::JSVisitor",
+      "properties": [],
+      "methods": [
+        {
+          "name": "JSVisitor",
+          "parameters": [
+            "cppgc::Visitor::Key key"
+          ],
+          "return_type": "JSVisitor",
+          "logic": "Constructor for JSVisitor that passes the key to the base class (cppgc::Visitor)."
+        },
+        {
+          "name": "~JSVisitor",
+          "parameters": [],
+          "return_type": "virtual",
+          "logic": "Virtual Destructor for JSVisitor."
+        },
+        {
+          "name": "Trace",
+          "parameters": [
+            "const TracedReferenceBase& ref"
+          ],
+          "return_type": "void",
+          "logic": "Traces a TracedReferenceBase object. If it's not empty, it calls Visit to perform the actual tracing."
+        },
+        {
+          "name": "Visit",
+          "parameters": [
+            "const TracedReferenceBase& ref"
+          ],
+          "return_type": "virtual void",
+          "logic": "Virtual Visit function to be overridden by derived classes"
+        }
+      ]
+    },
+    {
+      "name": "v8::CustomSpaceStatisticsReceiver",
+      "properties": [],
+      "methods": [
+        {
+          "name": "~CustomSpaceStatisticsReceiver",
+          "parameters": [],
+          "return_type": "virtual",
+          "logic": "Virtual destructor for the `CustomSpaceStatisticsReceiver` class."
+        },
+        {
+          "name": "AllocatedBytes",
+          "parameters": [
+            "cppgc::CustomSpaceIndex space_index",
+            "size_t bytes"
+          ],
+          "return_type": "virtual void",
+          "logic": "Reports the size of a space at the last garbage collection."
+        }
+      ]
+    }
+  ],
+  "functions": [],
+  "template_specializations": [
+    {
+      "name": "cppgc::TraceTrait<v8::TracedReference<T>>",
+      "methods": [
+        {
+          "name": "GetTraceDescriptor",
+          "parameters": [
+            "const void* self"
+          ],
+          "return_type": "cppgc::TraceDescriptor",
+          "logic": "Returns a trace descriptor for the traced reference."
+        },
+        {
+          "name": "Trace",
+          "parameters": [
+            "Visitor* visitor",
+            "const void* self"
+          ],
+          "return_type": "void",
+          "logic": "Performs the actual tracing of the `TracedReference` object by calling the `Trace` method on the `JSVisitor`."
+        }
+      ]
+    }
+  ]
+}

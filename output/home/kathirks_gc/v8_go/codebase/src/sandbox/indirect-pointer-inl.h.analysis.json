@@ -1,0 +1,63 @@
+{
+  "file_path": "/home/kathirks_gc/v8_go/codebase/src/sandbox/indirect-pointer-inl.h",
+  "imports": [
+    "src/sandbox/indirect-pointer.h",
+    "include/v8-internal.h",
+    "src/base/atomic-utils.h",
+    "src/sandbox/code-pointer-table-inl.h",
+    "src/sandbox/isolate-inl.h",
+    "src/sandbox/trusted-pointer-table-inl.h"
+  ],
+  "classes": [],
+  "functions": [
+    {
+      "name": "InitSelfIndirectPointerField",
+      "parameters": [
+        "Address field_address",
+        "IsolateForSandbox isolate",
+        "Tagged<HeapObject> host",
+        "IndirectPointerTag tag",
+        "TrustedPointerPublishingScope* opt_publishing_scope"
+      ],
+      "return_type": "void",
+      "logic": "Initializes an indirect pointer field within a HeapObject. It allocates and initializes an entry in either the CodePointerTable or the TrustedPointerTable based on the provided tag.  It stores the handle to the allocated entry in the specified field_address using a Release_Store to ensure proper memory ordering in a multi-threaded environment. The function is only active when V8_ENABLE_SANDBOX is defined."
+    },
+    {
+      "name": "ResolveTrustedPointerHandle",
+      "parameters": [
+        "IndirectPointerHandle handle",
+        "IsolateForSandbox isolate"
+      ],
+      "return_type": "Tagged<Object>",
+      "logic": "Resolves a trusted pointer handle to a Tagged<Object> by retrieving the corresponding address from the TrustedPointerTable. This is a template function specialized for different IndirectPointerTags and only active when V8_ENABLE_SANDBOX is defined."
+    },
+    {
+      "name": "ResolveCodePointerHandle",
+      "parameters": [
+        "IndirectPointerHandle handle"
+      ],
+      "return_type": "Tagged<Object>",
+      "logic": "Resolves a code pointer handle to a Tagged<Object> by retrieving the corresponding code object from the CodePointerTable. It uses the IsolateGroup's CodePointerTable instance. This function is only active when V8_ENABLE_SANDBOX is defined."
+    },
+    {
+      "name": "ReadIndirectPointerField",
+      "parameters": [
+        "Address field_address",
+        "IsolateForSandbox isolate",
+        "AcquireLoadTag"
+      ],
+      "return_type": "Tagged<Object>",
+      "logic": "Reads an indirect pointer field from an object. It loads the IndirectPointerHandle from the specified memory location using an Acquire_Load, then resolves the handle using either the CodePointerTable or the TrustedPointerTable depending on the provided tag. The 'kUnknownIndirectPointerTag' path determines which table to use based on a marker in the handle itself. This function is templated for different IndirectPointerTags and is only active when V8_ENABLE_SANDBOX is defined."
+    },
+    {
+      "name": "WriteIndirectPointerField",
+      "parameters": [
+        "Address field_address",
+        "Tagged<ExposedTrustedObject> value",
+        "ReleaseStoreTag"
+      ],
+      "return_type": "void",
+      "logic": "Writes an indirect pointer field in an object. It retrieves the IndirectPointerHandle from the given Tagged<ExposedTrustedObject> and stores it in the specified memory location using a Release_Store. The static_assert ensures that the tag is not kIndirectPointerNullTag. This function is templated for different IndirectPointerTags and is only active when V8_ENABLE_SANDBOX is defined."
+    }
+  ]
+}

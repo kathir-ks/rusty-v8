@@ -1,0 +1,74 @@
+{
+  "file_path": "/home/kathirks_gc/v8_go/codebase/src/snapshot/serializer-deserializer.cc",
+  "imports": [
+    "src/snapshot/serializer-deserializer.h",
+    "src/objects/embedder-data-array-inl.h",
+    "src/objects/objects-inl.h"
+  ],
+  "classes": [
+    {
+      "name": "SerializerDeserializer",
+      "properties": [],
+      "methods": [
+        {
+          "name": "IterateStartupObjectCache",
+          "parameters": [
+            "Isolate* isolate",
+            "RootVisitor* visitor"
+          ],
+          "return_type": "void",
+          "logic": "Iterates the startup object cache using the provided visitor. This is used during deserialization and garbage collection."
+        },
+        {
+          "name": "IterateSharedHeapObjectCache",
+          "parameters": [
+            "Isolate* isolate",
+            "RootVisitor* visitor"
+          ],
+          "return_type": "void",
+          "logic": "Iterates the shared heap object cache using the provided visitor. This is used during deserialization and garbage collection."
+        },
+        {
+          "name": "CanBeDeferred",
+          "parameters": [
+            "Tagged<HeapObject> o",
+            "SlotType slot_type"
+          ],
+          "return_type": "bool",
+          "logic": "Determines whether the serialization of a given HeapObject can be deferred.  Certain objects like InternalizedStrings and objects with embedder fields cannot be deferred."
+        },
+        {
+          "name": "RestoreExternalReferenceRedirector",
+          "parameters": [
+            "Isolate* isolate",
+            "Tagged<AccessorInfo> accessor_info"
+          ],
+          "return_type": "void",
+          "logic": "Restores the external reference redirector for an AccessorInfo object. It initializes the getter redirection to the isolate's heap."
+        },
+        {
+          "name": "RestoreExternalReferenceRedirector",
+          "parameters": [
+            "Isolate* isolate",
+            "Tagged<FunctionTemplateInfo> function_template_info"
+          ],
+          "return_type": "void",
+          "logic": "Restores the external reference redirector for a FunctionTemplateInfo object.  It initializes the callback redirection."
+        }
+      ]
+    }
+  ],
+  "functions": [
+    {
+      "name": "IterateObjectCache",
+      "parameters": [
+        "Isolate* isolate",
+        "std::vector<Tagged<Object>>* cache",
+        "Root root_id",
+        "RootVisitor* visitor"
+      ],
+      "return_type": "void",
+      "logic": "Iterates through the object cache, populating it during deserialization using the provided RootVisitor.  It terminates the cache iteration when it encounters 'undefined'."
+    }
+  ]
+}

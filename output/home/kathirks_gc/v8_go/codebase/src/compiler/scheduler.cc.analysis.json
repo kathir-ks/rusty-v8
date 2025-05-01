@@ -1,0 +1,436 @@
+{
+  "file_path": "/home/kathirks_gc/v8_go/codebase/src/compiler/scheduler.cc",
+  "imports": [
+    "src/compiler/scheduler.h",
+    "iomanip",
+    "optional",
+    "src/base/iterator.h",
+    "src/builtins/profile-data-reader.h",
+    "src/codegen/tick-counter.h",
+    "src/compiler/common-operator.h",
+    "src/compiler/control-equivalence.h",
+    "src/compiler/node-marker.h",
+    "src/compiler/node-properties.h",
+    "src/compiler/node.h",
+    "src/compiler/turbofan-graph.h",
+    "src/utils/bit-vector.h",
+    "src/zone/zone-containers.h"
+  ],
+  "classes": [
+    {
+      "name": "Scheduler",
+      "properties": [
+        "zone_",
+        "graph_",
+        "schedule_",
+        "flags_",
+        "scheduled_nodes_",
+        "schedule_root_nodes_",
+        "schedule_queue_",
+        "node_data_",
+        "tick_counter_",
+        "profile_data_",
+        "common_dominator_cache_",
+        "equivalence_",
+        "control_flow_builder_",
+        "special_rpo_"
+      ],
+      "methods": [
+        {
+          "name": "Scheduler",
+          "parameters": [
+            "Zone* zone",
+            "TFGraph* graph",
+            "Schedule* schedule",
+            "Flags flags",
+            "size_t node_count_hint",
+            "TickCounter* tick_counter",
+            "const ProfileDataFromFile* profile_data"
+          ],
+          "return_type": "void",
+          "logic": "Constructor for the Scheduler class. Initializes the scheduler with necessary data structures and hints."
+        },
+        {
+          "name": "ComputeSchedule",
+          "parameters": [
+            "Zone* zone",
+            "TFGraph* graph",
+            "Flags flags",
+            "TickCounter* tick_counter",
+            "const ProfileDataFromFile* profile_data"
+          ],
+          "return_type": "Schedule*",
+          "logic": "Computes the scheduling order for the nodes in the graph. Creates a scheduler, builds the CFG, computes RPO numbering and dominator tree, prepares uses, schedules early and late, and seals the final schedule."
+        },
+        {
+          "name": "DefaultSchedulerData",
+          "parameters": [],
+          "return_type": "Scheduler::SchedulerData",
+          "logic": "Returns a default SchedulerData struct, initializing the minimum block to the start block and the unscheduled count to 0."
+        },
+        {
+          "name": "GetData",
+          "parameters": [
+            "Node* node"
+          ],
+          "return_type": "Scheduler::SchedulerData*",
+          "logic": "Returns a pointer to the SchedulerData for a given node."
+        },
+        {
+          "name": "InitializePlacement",
+          "parameters": [
+            "Node* node"
+          ],
+          "return_type": "Scheduler::Placement",
+          "logic": "Initializes the placement of a node based on its opcode. Sets the placement to fixed for parameters, OSR values, phi nodes with fixed control inputs, and to schedulable for other control nodes."
+        },
+        {
+          "name": "GetPlacement",
+          "parameters": [
+            "Node* node"
+          ],
+          "return_type": "Scheduler::Placement",
+          "logic": "Returns the placement of a given node."
+        },
+        {
+          "name": "IsLive",
+          "parameters": [
+            "Node* node"
+          ],
+          "return_type": "bool",
+          "logic": "Checks if a node is live (has a placement other than kUnknown)."
+        },
+        {
+          "name": "UpdatePlacement",
+          "parameters": [
+            "Node* node",
+            "Placement placement"
+          ],
+          "return_type": "void",
+          "logic": "Updates the placement of a node and performs actions based on the new placement. Decrements the unscheduled use count of the node's inputs to potentially make them schedulable."
+        },
+        {
+          "name": "GetCoupledControlEdge",
+          "parameters": [
+            "Node* node"
+          ],
+          "return_type": "std::optional<int>",
+          "logic": "Returns the control edge of a coupled node as an optional index. Returns nullopt otherwise."
+        },
+        {
+          "name": "IncrementUnscheduledUseCount",
+          "parameters": [
+            "Node* node",
+            "Node* from"
+          ],
+          "return_type": "void",
+          "logic": "Increments the unscheduled use count for a node, used to determine when a node can be scheduled."
+        },
+        {
+          "name": "DecrementUnscheduledUseCount",
+          "parameters": [
+            "Node* node",
+            "Node* from"
+          ],
+          "return_type": "void",
+          "logic": "Decrements the unscheduled use count for a node. If the count reaches 0, the node is added to the schedule queue."
+        },
+        {
+          "name": "BuildCFG",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Builds the control flow graph for the function, creating basic blocks and connecting them based on control flow edges."
+        },
+        {
+          "name": "ComputeSpecialRPONumbering",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Computes a special reverse-post-order numbering for basic blocks, ensuring loop bodies are contiguous."
+        },
+        {
+          "name": "GetCommonDominatorIfCached",
+          "parameters": [
+            "BasicBlock* b1",
+            "BasicBlock* b2"
+          ],
+          "return_type": "BasicBlock*",
+          "logic": "Retrieves the common dominator of two basic blocks from the cache, if available. Returns null if not cached."
+        },
+        {
+          "name": "GetCommonDominator",
+          "parameters": [
+            "BasicBlock* b1",
+            "BasicBlock* b2"
+          ],
+          "return_type": "BasicBlock*",
+          "logic": "Calculates the common dominator of two basic blocks, using a cache for performance. Populates the cache with new entries for future lookups."
+        },
+        {
+          "name": "PropagateImmediateDominators",
+          "parameters": [
+            "BasicBlock* block"
+          ],
+          "return_type": "void",
+          "logic": "Propagates immediate dominators through the control flow graph, setting the dominator, depth, and deferred status of each block."
+        },
+        {
+          "name": "GenerateDominatorTree",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Generates the dominator tree for the control flow graph."
+        },
+        {
+          "name": "PrepareUses",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Counts the uses of each node to ensure that all uses are scheduled before the node itself."
+        },
+        {
+          "name": "ScheduleEarly",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Computes the minimum block for each node, determining the earliest position it can be placed in the schedule."
+        },
+        {
+          "name": "ScheduleLate",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Schedules nodes in the latest possible block, hoisting them out of loops when possible."
+        },
+        {
+          "name": "SealFinalSchedule",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Serializes the assembly order and reverse-post-order numbering, and adds the collected nodes to their corresponding basic blocks in the correct order."
+        },
+        {
+          "name": "FuseFloatingControl",
+          "parameters": [
+            "BasicBlock* block",
+            "Node* node"
+          ],
+          "return_type": "void",
+          "logic": "Fuses a floating control structure (e.g., a loop) into the existing control flow graph."
+        },
+        {
+          "name": "MovePlannedNodes",
+          "parameters": [
+            "BasicBlock* from",
+            "BasicBlock* to"
+          ],
+          "return_type": "void",
+          "logic": "Moves planned nodes from one basic block to another."
+        }
+      ]
+    },
+    {
+      "name": "CFGBuilder",
+      "properties": [
+        "zone_",
+        "scheduler_",
+        "schedule_",
+        "queued_",
+        "queue_",
+        "control_",
+        "component_entry_",
+        "component_start_",
+        "component_end_"
+      ],
+      "methods": [
+        {
+          "name": "CFGBuilder",
+          "parameters": [
+            "Zone* zone",
+            "Scheduler* scheduler"
+          ],
+          "return_type": null,
+          "logic": "Constructor for CFGBuilder. Initializes member variables."
+        },
+        {
+          "name": "Run",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Builds the control flow graph by traversing the node graph backwards from the end node."
+        },
+        {
+          "name": "Run",
+          "parameters": [
+            "BasicBlock* block",
+            "Node* exit"
+          ],
+          "return_type": "void",
+          "logic": "Builds the control flow graph for a minimal control-connected component ending in exit and merges it into an existing control flow graph at the bottom of block."
+        }
+      ]
+    },
+    {
+      "name": "SpecialRPONumberer",
+      "properties": [
+        "zone_",
+        "schedule_",
+        "order_",
+        "beyond_end_",
+        "loops_",
+        "backedges_",
+        "stack_",
+        "previous_block_count_",
+        "empty_"
+      ],
+      "methods": [
+        {
+          "name": "SpecialRPONumberer",
+          "parameters": [
+            "Zone* zone",
+            "Schedule* schedule"
+          ],
+          "return_type": null,
+          "logic": "Constructor for SpecialRPONumberer. Initializes member variables."
+        },
+        {
+          "name": "ComputeSpecialRPO",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Computes the special reverse-post-order for the main control flow graph."
+        },
+        {
+          "name": "UpdateSpecialRPO",
+          "parameters": [
+            "BasicBlock* entry",
+            "BasicBlock* end"
+          ],
+          "return_type": "void",
+          "logic": "Computes the special reverse-post-order for a partial control flow graph and updates the existing ordering."
+        },
+        {
+          "name": "SerializeRPOIntoSchedule",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Serializes the previously computed order as a special reverse-post-order numbering for basic blocks into the final schedule."
+        },
+        {
+          "name": "PrintAndVerifySpecialRPO",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Prints and verifies the special reverse-post-order (debug build only)."
+        },
+        {
+          "name": "GetOutgoingBlocks",
+          "parameters": [
+            "BasicBlock* block"
+          ],
+          "return_type": "const ZoneVector<BasicBlock*>&",
+          "logic": "Returns the list of outgoing blocks for the block in question"
+        },
+        {
+          "name": "HasLoopBlocks",
+          "parameters": [],
+          "return_type": "bool",
+          "logic": "Returns whether the numberer has loop blocks"
+        }
+      ]
+    },
+    {
+      "name": "PrepareUsesVisitor",
+      "properties": [
+        "scheduler_",
+        "schedule_",
+        "graph_",
+        "visited_",
+        "stack_"
+      ],
+      "methods": [
+        {
+          "name": "PrepareUsesVisitor",
+          "parameters": [
+            "Scheduler* scheduler",
+            "TFGraph* graph",
+            "Zone* zone"
+          ],
+          "return_type": null,
+          "logic": "Constructor for PrepareUsesVisitor. Initializes member variables."
+        },
+        {
+          "name": "Run",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Runs the prepare uses algorithm to count the uses of each node."
+        }
+      ]
+    },
+    {
+      "name": "ScheduleEarlyNodeVisitor",
+      "properties": [
+        "scheduler_",
+        "schedule_",
+        "queue_"
+      ],
+      "methods": [
+        {
+          "name": "ScheduleEarlyNodeVisitor",
+          "parameters": [
+            "Zone* zone",
+            "Scheduler* scheduler"
+          ],
+          "return_type": null,
+          "logic": "Constructor for ScheduleEarlyNodeVisitor. Initializes member variables."
+        },
+        {
+          "name": "Run",
+          "parameters": [
+            "NodeVector* roots"
+          ],
+          "return_type": "void",
+          "logic": "Runs the schedule early algorithm on a set of fixed root nodes."
+        }
+      ]
+    },
+    {
+      "name": "ScheduleLateNodeVisitor",
+      "properties": [
+        "zone_",
+        "scheduler_",
+        "schedule_",
+        "marking_queue_",
+        "marked_"
+      ],
+      "methods": [
+        {
+          "name": "ScheduleLateNodeVisitor",
+          "parameters": [
+            "Zone* zone",
+            "Scheduler* scheduler"
+          ],
+          "return_type": null,
+          "logic": "Constructor for ScheduleLateNodeVisitor. Initializes member variables."
+        },
+        {
+          "name": "Run",
+          "parameters": [
+            "NodeVector* roots"
+          ],
+          "return_type": "void",
+          "logic": "Runs the schedule late algorithm on a set of fixed root nodes."
+        }
+      ]
+    }
+  ],
+  "functions": [
+    {
+      "name": "Scheduler::ComputeSpecialRPO",
+      "parameters": [
+        "Zone* zone",
+        "Schedule* schedule"
+      ],
+      "return_type": "BasicBlockVector*",
+      "logic": "Computes the special reverse-post-order for basic blocks."
+    },
+    {
+      "name": "Scheduler::GenerateDominatorTree",
+      "parameters": [
+        "Schedule* schedule"
+      ],
+      "return_type": "void",
+      "logic": "Generates the dominator tree for the control flow graph given a schedule."
+    }
+  ]
+}

@@ -1,0 +1,125 @@
+{
+  "file_path": "/home/kathirks_gc/v8_go/codebase/src/zone/zone.cc",
+  "imports": [
+    "src/zone/zone.h",
+    "<cstring>",
+    "<memory>",
+    "src/base/sanitizer/asan.h",
+    "src/init/v8.h",
+    "src/utils/utils.h",
+    "src/zone/type-stats.h"
+  ],
+  "classes": [
+    {
+      "name": "Zone",
+      "properties": [
+        "allocator_",
+        "name_",
+        "supports_compression_",
+        "segment_head_",
+        "position_",
+        "limit_",
+        "allocation_size_",
+        "segment_bytes_allocated_",
+        "sealed_"
+      ],
+      "methods": [
+        {
+          "name": "Zone",
+          "parameters": [
+            "AccountingAllocator* allocator",
+            "const char* name",
+            "bool support_compression"
+          ],
+          "return_type": "void",
+          "logic": "Constructor for the Zone class. Initializes the allocator, name, and compression support flag. Traces the creation of the zone using the allocator."
+        },
+        {
+          "name": "~Zone",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Destructor for the Zone class. Deletes all segments in the zone and asserts that no memory is allocated in it"
+        },
+        {
+          "name": "AsanNew",
+          "parameters": [
+            "size_t size"
+          ],
+          "return_type": "void*",
+          "logic": "Allocates a block of memory of the given size in the zone, adding ASan redzones.  Expands the zone if necessary. Returns a pointer to the allocated memory.  Uses Address Sanitizer (ASan) to detect memory errors."
+        },
+        {
+          "name": "Reset",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Resets the Zone, discarding all but the first segment.  Un-poisons and reuses the kept segment.  Reinitializes position and limit."
+        },
+        {
+          "name": "Contains",
+          "parameters": [
+            "const void* ptr"
+          ],
+          "return_type": "bool",
+          "logic": "Checks if the given pointer is within the bounds of any of the Zone's segments. Only available in debug builds."
+        },
+        {
+          "name": "Snapshot",
+          "parameters": [],
+          "return_type": "ZoneSnapshot",
+          "logic": "Creates a snapshot of the Zone's current state."
+        },
+        {
+          "name": "DeleteAll",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Deletes all segments in the zone, returning them to the allocator. Resets the zone's state."
+        },
+        {
+          "name": "ReleaseSegment",
+          "parameters": [
+            "Segment* segment"
+          ],
+          "return_type": "void",
+          "logic": "Releases a segment back to the allocator. Un-poisons memory before releasing."
+        },
+        {
+          "name": "Expand",
+          "parameters": [
+            "size_t size"
+          ],
+          "return_type": "void",
+          "logic": "Expands the zone by allocating a new segment. Increases segment size over time with a high water mark strategy. Uses a maximum segment size to limit VA pressure."
+        }
+      ]
+    },
+    {
+      "name": "ZoneSnapshot",
+      "properties": [
+        "allocation_size_",
+        "segment_bytes_allocated_",
+        "position_",
+        "limit_",
+        "segment_head_"
+      ],
+      "methods": [
+        {
+          "name": "ZoneSnapshot",
+          "parameters": [
+            "const Zone* zone"
+          ],
+          "return_type": "void",
+          "logic": "Constructor for the ZoneSnapshot class. Captures the current state of the Zone."
+        },
+        {
+          "name": "Restore",
+          "parameters": [
+            "Zone* zone"
+          ],
+          "return_type": "void",
+          "logic": "Restores a Zone to the state captured in the snapshot. Releases segments until segment_head_ is reached, and then updates the Zone's fields."
+        }
+      ]
+    }
+  ],
+  "functions": []
+}

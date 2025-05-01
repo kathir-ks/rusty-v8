@@ -1,0 +1,522 @@
+{
+  "file_path": "/home/kathirks_gc/v8_go/codebase/src/compiler/turboshaft/loop-unrolling-reducer.h",
+  "imports": [
+    "<optional>",
+    "src/base/logging.h",
+    "src/compiler/globals.h",
+    "src/compiler/turboshaft/assembler.h",
+    "src/compiler/turboshaft/copying-phase.h",
+    "src/compiler/turboshaft/index.h",
+    "src/compiler/turboshaft/loop-finder.h",
+    "src/compiler/turboshaft/machine-optimization-reducer.h",
+    "src/compiler/turboshaft/operations.h",
+    "src/compiler/turboshaft/phase.h",
+    "src/compiler/turboshaft/define-assembler-macros.inc",
+    "src/compiler/turboshaft/undef-assembler-macros.inc"
+  ],
+  "classes": [
+    {
+      "name": "IterationCount",
+      "properties": [
+        "Kind kind_",
+        "size_t count_"
+      ],
+      "methods": [
+        {
+          "name": "Exact",
+          "parameters": [
+            "size_t count"
+          ],
+          "return_type": "IterationCount",
+          "logic": "Creates an IterationCount object with a known exact count."
+        },
+        {
+          "name": "Approx",
+          "parameters": [
+            "size_t count"
+          ],
+          "return_type": "IterationCount",
+          "logic": "Creates an IterationCount object with an approximate count.  Used for removing stack checks in loops with a small number of iterations."
+        },
+        {
+          "name": "Unknown",
+          "parameters": [],
+          "return_type": "IterationCount",
+          "logic": "Creates an IterationCount object representing an unknown number of iterations."
+        },
+        {
+          "name": "IterationCount",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Default constructor, initializes to Unknown."
+        },
+        {
+          "name": "IterationCount",
+          "parameters": [
+            "Kind kind"
+          ],
+          "return_type": "void",
+          "logic": "Constructor for non-exact iteration counts"
+        },
+        {
+          "name": "IterationCount",
+          "parameters": [
+            "Kind kind",
+            "size_t count"
+          ],
+          "return_type": "void",
+          "logic": "Constructor for Exact/Approx iteration counts"
+        },
+        {
+          "name": "exact_count",
+          "parameters": [],
+          "return_type": "size_t",
+          "logic": "Returns the exact iteration count.  Asserts that the count is indeed exact."
+        },
+        {
+          "name": "approx_count",
+          "parameters": [],
+          "return_type": "size_t",
+          "logic": "Returns the approximate iteration count.  Asserts that the count is indeed approximate."
+        },
+        {
+          "name": "IsExact",
+          "parameters": [],
+          "return_type": "bool",
+          "logic": "Returns true if the iteration count is exact."
+        },
+        {
+          "name": "IsApprox",
+          "parameters": [],
+          "return_type": "bool",
+          "logic": "Returns true if the iteration count is approximate."
+        },
+        {
+          "name": "IsUnknown",
+          "parameters": [],
+          "return_type": "bool",
+          "logic": "Returns true if the iteration count is unknown."
+        },
+        {
+          "name": "IsSmallerThan",
+          "parameters": [
+            "size_t max"
+          ],
+          "return_type": "bool",
+          "logic": "Returns true if the iteration count is exact or approximate, and smaller than max."
+        }
+      ]
+    },
+    {
+      "name": "StaticCanonicalForLoopMatcher",
+      "properties": [
+        "const OperationMatcher& matcher_"
+      ],
+      "methods": [
+        {
+          "name": "StaticCanonicalForLoopMatcher",
+          "parameters": [
+            "const OperationMatcher& matcher"
+          ],
+          "return_type": "void",
+          "logic": "Constructor, takes an OperationMatcher."
+        },
+        {
+          "name": "GetIterCountIfStaticCanonicalForLoop",
+          "parameters": [
+            "const Block* header",
+            "OpIndex cond_idx",
+            "bool loop_if_cond_is"
+          ],
+          "return_type": "IterationCount",
+          "logic": "Attempts to match a static canonical for-loop pattern in the graph and returns the iteration count if successful, otherwise returns IterationCount::Unknown()."
+        },
+        {
+          "name": "ComparisonKindToCmpOp",
+          "parameters": [
+            "ComparisonOp::Kind kind"
+          ],
+          "return_type": "CmpOp",
+          "logic": "Static constexpr function to convert ComparisonOp::Kind to CmpOp."
+        },
+        {
+          "name": "InvertComparisonOp",
+          "parameters": [
+            "CmpOp op"
+          ],
+          "return_type": "CmpOp",
+          "logic": "Static constexpr function to invert a CmpOp."
+        },
+        {
+          "name": "BinopFromWordBinopKind",
+          "parameters": [
+            "WordBinopOp::Kind kind"
+          ],
+          "return_type": "BinOp",
+          "logic": "Static constexpr function to convert WordBinopOp::Kind to BinOp."
+        },
+        {
+          "name": "BinopFromOverflowCheckedBinopKind",
+          "parameters": [
+            "OverflowCheckedBinopOp::Kind kind"
+          ],
+          "return_type": "BinOp",
+          "logic": "Static constexpr function to convert OverflowCheckedBinopOp::Kind to BinOp."
+        },
+        {
+          "name": "BinopKindIsSupported",
+          "parameters": [
+            "WordBinopOp::Kind binop_kind"
+          ],
+          "return_type": "bool",
+          "logic": "Static constexpr function to check if a WordBinopOp::Kind is supported."
+        },
+        {
+          "name": "MatchPhiCompareCst",
+          "parameters": [
+            "OpIndex cond_idx",
+            "StaticCanonicalForLoopMatcher::CmpOp* cmp_op",
+            "OpIndex* phi",
+            "uint64_t* cst"
+          ],
+          "return_type": "bool",
+          "logic": "Matches the pattern `phi cmp cst`, returns true if matched."
+        },
+        {
+          "name": "MatchCheckedOverflowBinop",
+          "parameters": [
+            "OpIndex idx",
+            "V<Word>* left",
+            "V<Word>* right",
+            "BinOp* binop_op",
+            "WordRepresentation* binop_rep"
+          ],
+          "return_type": "bool",
+          "logic": "Matches a checked overflow binary operation. Returns true if matched and populates the output parameters."
+        },
+        {
+          "name": "MatchWordBinop",
+          "parameters": [
+            "OpIndex idx",
+            "V<Word>* left",
+            "V<Word>* right",
+            "BinOp* binop_op",
+            "WordRepresentation* binop_rep"
+          ],
+          "return_type": "bool",
+          "logic": "Matches a word binary operation. Returns true if matched and populates the output parameters."
+        },
+        {
+          "name": "CountIterations",
+          "parameters": [
+            "uint64_t equal_cst",
+            "CmpOp cmp_op",
+            "uint64_t initial_input",
+            "uint64_t binop_cst",
+            "BinOp binop_op",
+            "WordRepresentation binop_rep",
+            "bool loop_if_cond_is"
+          ],
+          "return_type": "IterationCount",
+          "logic": "Counts the number of iterations in the loop. Calls CountIterationsImpl with Int=uint64_t."
+        },
+        {
+          "name": "CountIterationsImpl",
+          "parameters": [
+            "Int init",
+            "Int max",
+            "CmpOp cmp_op",
+            "Int binop_cst",
+            "StaticCanonicalForLoopMatcher::BinOp binop_op",
+            "WordRepresentation binop_rep",
+            "bool loop_if_cond_is"
+          ],
+          "return_type": "IterationCount",
+          "logic": "Counts iterations by simulating the loop execution for a maximum of kMaxExactIter iterations to check for termination.  Handles various comparison and binary operation types."
+        }
+      ]
+    },
+    {
+      "name": "LoopUnrollingAnalyzer",
+      "properties": [
+        "Graph* input_graph_",
+        "OperationMatcher matcher_",
+        "LoopFinder loop_finder_",
+        "ZoneUnorderedMap<const Block*, IterationCount> loop_iteration_count_",
+        "const StaticCanonicalForLoopMatcher canonical_loop_matcher_",
+        "const bool is_wasm_",
+        "const size_t kMaxLoopSizeForPartialUnrolling",
+        "bool can_unroll_at_least_one_loop_",
+        "ZoneAbslFlatHashSet<uint32_t>& stack_checks_to_remove_"
+      ],
+      "methods": [
+        {
+          "name": "LoopUnrollingAnalyzer",
+          "parameters": [
+            "Zone* phase_zone",
+            "Graph* input_graph",
+            "bool is_wasm"
+          ],
+          "return_type": "void",
+          "logic": "Constructor for the class.  Initializes the LoopFinder, OperationMatcher, loop_iteration_count_, canonical_loop_matcher_, and other necessary data.  Calls DetectUnrollableLoops to populate loop information."
+        },
+        {
+          "name": "ShouldFullyUnrollLoop",
+          "parameters": [
+            "const Block* loop_header"
+          ],
+          "return_type": "bool",
+          "logic": "Determines whether a given loop should be fully unrolled based on loop size and number of iterations."
+        },
+        {
+          "name": "ShouldPartiallyUnrollLoop",
+          "parameters": [
+            "const Block* loop_header"
+          ],
+          "return_type": "bool",
+          "logic": "Determines whether a given loop should be partially unrolled based on loop size."
+        },
+        {
+          "name": "GetPartialUnrollCount",
+          "parameters": [
+            "const Block* loop_header"
+          ],
+          "return_type": "size_t",
+          "logic": "Determines the number of times a given loop should be partially unrolled."
+        },
+        {
+          "name": "ShouldRemoveLoop",
+          "parameters": [
+            "const Block* loop_header"
+          ],
+          "return_type": "bool",
+          "logic": "Determines whether a given loop should be removed."
+        },
+        {
+          "name": "GetIterationCount",
+          "parameters": [
+            "const Block* loop_header"
+          ],
+          "return_type": "IterationCount",
+          "logic": "Returns the iteration count of the loop."
+        },
+        {
+          "name": "GetLoopBody",
+          "parameters": [
+            "const Block* loop_header"
+          ],
+          "return_type": "ZoneSet<const Block*, LoopFinder::BlockCmp>",
+          "logic": "Returns the set of blocks constituting the loop body."
+        },
+        {
+          "name": "GetLoopHeader",
+          "parameters": [
+            "const Block* block"
+          ],
+          "return_type": "const Block*",
+          "logic": "Returns the header block of the loop containing a given block."
+        },
+        {
+          "name": "CanUnrollAtLeastOneLoop",
+          "parameters": [],
+          "return_type": "bool",
+          "logic": "Returns true if the analyzer detected at least one loop can be unrolled (fully or partially) or removed."
+        },
+        {
+          "name": "DetectUnrollableLoops",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Detects the unrollable loops in the graph and populates {loop_iteration_count_} and {can_unroll_at_least_one_loop_}."
+        },
+        {
+          "name": "GetLoopIterationCount",
+          "parameters": [
+            "const LoopFinder::LoopInfo& info"
+          ],
+          "return_type": "IterationCount",
+          "logic": "Attempts to determine the iteration count of a given loop based on its LoopInfo, using canonical_loop_matcher_."
+        }
+      ]
+    },
+    {
+      "name": "LoopStackCheckElisionReducer",
+      "properties": [
+        "bool skip_next_stack_check_",
+        "const ZoneAbslFlatHashSet<uint32_t>& stack_checks_to_remove_",
+        "bool remove_stack_checks_",
+        "JSHeapBroker* broker_"
+      ],
+      "methods": [
+        {
+          "name": "Bind",
+          "parameters": [
+            "Block* new_block"
+          ],
+          "return_type": "void",
+          "logic": "Called when a new block is created. Checks if stack checks should be skipped for this block if it's a loop."
+        },
+        {
+          "name": "REDUCE_INPUT_GRAPH(Call)",
+          "parameters": [
+            "V<AnyOrNone> ig_idx",
+            "const CallOp& call"
+          ],
+          "return_type": "V<AnyOrNone>",
+          "logic": "Reduces Call operations. Removes stack checks for loop iterations based on `skip_next_stack_check_` and the kind of stack check."
+        },
+        {
+          "name": "REDUCE_INPUT_GRAPH(JSStackCheck)",
+          "parameters": [
+            "V<None> ig_idx",
+            "const JSStackCheckOp& stack_check"
+          ],
+          "return_type": "V<None>",
+          "logic": "Reduces JSStackCheck operations. Skips stack checks for loops if `skip_next_stack_check_` is true."
+        },
+        {
+          "name": "REDUCE_INPUT_GRAPH(WasmStackCheck)",
+          "parameters": [
+            "V<None> ig_idx",
+            "const WasmStackCheckOp& stack_check"
+          ],
+          "return_type": "V<None>",
+          "logic": "Reduces WasmStackCheck operations. Skips stack checks for loops if `skip_next_stack_check_` is true."
+        }
+      ]
+    },
+    {
+      "name": "LoopUnrollingReducer",
+      "properties": [
+        "LoopUnrollingAnalyzer& analyzer_",
+        "UnrollingStatus unrolling_",
+        "bool skip_next_stack_check_",
+        "const Block* current_loop_header_",
+        "JSHeapBroker* broker_"
+      ],
+      "methods": [
+        {
+          "name": "REDUCE_INPUT_GRAPH(Goto)",
+          "parameters": [
+            "V<None> ig_idx",
+            "const GotoOp& gto"
+          ],
+          "return_type": "V<None>",
+          "logic": "Reduces Goto operations. Handles loop unrolling decisions based on the Goto's destination being a loop header."
+        },
+        {
+          "name": "REDUCE_INPUT_GRAPH(Branch)",
+          "parameters": [
+            "V<None> ig_idx",
+            "const BranchOp& branch"
+          ],
+          "return_type": "V<None>",
+          "logic": "Reduces Branch operations.  Modifies the final Branch of fully unrolled loops to a Goto to outside of the loop."
+        },
+        {
+          "name": "REDUCE_INPUT_GRAPH(Call)",
+          "parameters": [
+            "V<AnyOrNone> ig_idx",
+            "const CallOp& call"
+          ],
+          "return_type": "V<AnyOrNone>",
+          "logic": "Reduces Call operations. Skips stack checks when unrolling loops."
+        },
+        {
+          "name": "REDUCE_INPUT_GRAPH(JSStackCheck)",
+          "parameters": [
+            "V<None> ig_idx",
+            "const JSStackCheckOp& check"
+          ],
+          "return_type": "V<None>",
+          "logic": "Reduces JSStackCheck operations.  Skips stack checks during unrolling."
+        },
+        {
+          "name": "REDUCE_INPUT_GRAPH(WasmStackCheck)",
+          "parameters": [
+            "V<None> ig_idx",
+            "const WasmStackCheckOp& check"
+          ],
+          "return_type": "V<None>",
+          "logic": "Reduces WasmStackCheck operations. Skips stack checks during unrolling."
+        },
+        {
+          "name": "RemoveLoop",
+          "parameters": [
+            "const Block* header"
+          ],
+          "return_type": "void",
+          "logic": "Removes a loop by cloning and inlining the header, converting the loop's final Branch to a Goto."
+        },
+        {
+          "name": "FullyUnrollLoop",
+          "parameters": [
+            "const Block* header"
+          ],
+          "return_type": "void",
+          "logic": "Fully unrolls a loop by cloning the loop body for the exact number of iterations, and then emits the loop header."
+        },
+        {
+          "name": "PartiallyUnrollLoop",
+          "parameters": [
+            "const Block* header"
+          ],
+          "return_type": "void",
+          "logic": "Partially unrolls a loop by cloning the loop body multiple times, followed by the original loop."
+        },
+        {
+          "name": "FixLoopPhis",
+          "parameters": [
+            "const Block* input_graph_loop",
+            "Block* output_graph_loop",
+            "const Block* backedge_block"
+          ],
+          "return_type": "void",
+          "logic": "Fixes loop phis after partially unrolling a loop, which requires careful handling of variable snapshots for the header and backedge."
+        },
+        {
+          "name": "IsRunningBuiltinPipeline",
+          "parameters": [],
+          "return_type": "bool",
+          "logic": "Checks if the currently running pipeline is the Builtin (CSA) Pipeline"
+        },
+        {
+          "name": "StopUnrollingIfUnreachable",
+          "parameters": [
+            "std::optional<Block*> output_graph_header"
+          ],
+          "return_type": "bool",
+          "logic": "Stops the loop unrolling if operations are being generated for an unreachable block. This helps with early exits from loops."
+        }
+      ]
+    }
+  ],
+  "functions": [
+    {
+      "name": "operator<<",
+      "parameters": [
+        "std::ostream& os",
+        "const IterationCount& count"
+      ],
+      "return_type": "std::ostream&",
+      "logic": "Overloads the << operator for IterationCount to allow printing IterationCount objects to an output stream."
+    },
+    {
+      "name": "operator<<",
+      "parameters": [
+        "std::ostream& os",
+        "const StaticCanonicalForLoopMatcher::CmpOp& cmp"
+      ],
+      "return_type": "std::ostream&",
+      "logic": "Overloads the << operator for StaticCanonicalForLoopMatcher::CmpOp to allow printing enum values to an output stream."
+    },
+    {
+      "name": "operator<<",
+      "parameters": [
+        "std::ostream& os",
+        "const StaticCanonicalForLoopMatcher::BinOp& binop"
+      ],
+      "return_type": "std::ostream&",
+      "logic": "Overloads the << operator for StaticCanonicalForLoopMatcher::BinOp to allow printing enum values to an output stream."
+    }
+  ]
+}

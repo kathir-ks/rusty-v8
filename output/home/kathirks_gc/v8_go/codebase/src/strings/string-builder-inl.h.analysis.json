@@ -1,0 +1,140 @@
+{
+  "file_path": "/home/kathirks_gc/v8_go/codebase/src/strings/string-builder-inl.h",
+  "imports": [
+    "src/execution/isolate.h",
+    "src/handles/handles-inl.h",
+    "src/objects/string-inl.h",
+    "src/strings/string-builder.h"
+  ],
+  "classes": [
+    {
+      "name": "ReplacementStringBuilder",
+      "properties": [],
+      "methods": [
+        {
+          "name": "AddSubjectSlice",
+          "parameters": [
+            "FixedArrayBuilder* builder",
+            "int from",
+            "int to"
+          ],
+          "return_type": "void",
+          "logic": "Adds a slice of the subject string to the FixedArrayBuilder. Encodes the slice as one or two Smis depending on the slice length and position. Checks if the length and from position is valid using BitField::is_valid()."
+        },
+        {
+          "name": "AddSubjectSlice",
+          "parameters": [
+            "int from",
+            "int to"
+          ],
+          "return_type": "void",
+          "logic": "Adds a slice of the subject string to the array_builder_. Ensures enough capacity in the array before adding the slice, and increments the character count."
+        }
+      ]
+    },
+    {
+      "name": "IncrementalStringBuilder",
+      "properties": [],
+      "methods": [
+        {
+          "name": "Append",
+          "parameters": [
+            "SrcChar c"
+          ],
+          "return_type": "void",
+          "logic": "Appends a character to the current part of the string being built. Handles both one-byte and two-byte encodings, checks the current_index_ and extends current_part_ if needed."
+        },
+        {
+          "name": "AppendCharacter",
+          "parameters": [
+            "uint8_t c"
+          ],
+          "return_type": "void",
+          "logic": "Appends a character to the current part of the string being built using template Append."
+        },
+        {
+          "name": "AppendCStringLiteral",
+          "parameters": [
+            "const char (&literal)[N]"
+          ],
+          "return_type": "void",
+          "logic": "Appends a C-style string literal to the current string being built. Optimizes for the one-byte encoding case where the current part can fit the entire literal."
+        },
+        {
+          "name": "AppendCString",
+          "parameters": [
+            "const SrcChar* s"
+          ],
+          "return_type": "void",
+          "logic": "Appends a C-style string to the current string being built. Handles both one-byte and two-byte encodings."
+        },
+        {
+          "name": "AppendString",
+          "parameters": [
+            "std::string_view str"
+          ],
+          "return_type": "void",
+          "logic": "Appends a std::string_view to the current string being built.  Optimizes for the one-byte encoding case where the current part can fit the entire string."
+        },
+        {
+          "name": "AppendInt",
+          "parameters": [
+            "int i"
+          ],
+          "return_type": "void",
+          "logic": "Appends an integer to the current string being built by converting it to a string and appending that."
+        },
+        {
+          "name": "EscapedLengthIfCurrentPartFits",
+          "parameters": [
+            "int length"
+          ],
+          "return_type": "int",
+          "logic": "Calculates the worst-case escaped length of a string with the given length, and returns that length only if the current part of the string builder can fit it. If it doesn't fit or the length exceeds a threshold, returns 0."
+        },
+        {
+          "name": "ChangeEncoding",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Changes the encoding of the string builder from one-byte to two-byte. Shrinks the current part and then extends to create a new two-byte part."
+        },
+        {
+          "name": "factory",
+          "parameters": [],
+          "return_type": "Factory*",
+          "logic": "Returns a pointer to the isolate's factory."
+        },
+        {
+          "name": "ShrinkCurrentPart",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Shrinks the current part of the string builder to the current index, effectively truncating it."
+        }
+      ]
+    }
+  ],
+  "functions": [
+    {
+      "name": "StringBuilderConcatHelper",
+      "parameters": [
+        "Tagged<String> special",
+        "sinkchar* sink",
+        "Tagged<FixedArray> fixed_array",
+        "int array_length"
+      ],
+      "return_type": "void",
+      "logic": "Concatenates strings from a FixedArray into a sink buffer, potentially using a special string as well."
+    },
+    {
+      "name": "StringBuilderConcatLength",
+      "parameters": [
+        "int special_length",
+        "Tagged<FixedArray> fixed_array",
+        "int array_length",
+        "bool* one_byte"
+      ],
+      "return_type": "int",
+      "logic": "Calculates the total length of the concatenated string and determines if the result can be represented as a one-byte string. Returns -1 on illegal arguments."
+    }
+  ]
+}

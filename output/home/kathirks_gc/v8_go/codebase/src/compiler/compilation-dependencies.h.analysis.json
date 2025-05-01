@@ -1,0 +1,431 @@
+{
+  "file_path": "/home/kathirks_gc/v8_go/codebase/src/compiler/compilation-dependencies.h",
+  "imports": [
+    "src/compiler/js-heap-broker.h",
+    "src/objects/property-cell.h",
+    "src/zone/zone-containers.h"
+  ],
+  "classes": [
+    {
+      "name": "SlackTrackingPrediction",
+      "properties": [
+        "instance_size_",
+        "inobject_property_count_"
+      ],
+      "methods": [
+        {
+          "name": "SlackTrackingPrediction",
+          "parameters": [
+            "MapRef initial_map",
+            "int instance_size"
+          ],
+          "return_type": "void",
+          "logic": "Constructor. Initializes instance_size_ and inobject_property_count_."
+        },
+        {
+          "name": "inobject_property_count",
+          "parameters": [],
+          "return_type": "int",
+          "logic": "Returns the number of in-object properties."
+        },
+        {
+          "name": "instance_size",
+          "parameters": [],
+          "return_type": "int",
+          "logic": "Returns the instance size."
+        }
+      ]
+    },
+    {
+      "name": "CompilationDependencies",
+      "properties": [
+        "zone_",
+        "broker_",
+        "dependencies_"
+      ],
+      "methods": [
+        {
+          "name": "CompilationDependencies",
+          "parameters": [
+            "JSHeapBroker* broker",
+            "Zone* zone"
+          ],
+          "return_type": "void",
+          "logic": "Constructor. Initializes the zone_ and broker_ members."
+        },
+        {
+          "name": "Commit",
+          "parameters": [
+            "Handle<Code> code"
+          ],
+          "return_type": "bool",
+          "logic": "Commits the collected dependencies to the given code object."
+        },
+        {
+          "name": "DependOnInitialMap",
+          "parameters": [
+            "JSFunctionRef function"
+          ],
+          "return_type": "MapRef",
+          "logic": "Returns the initial map of the given function and records the assumption that it stays the initial map."
+        },
+        {
+          "name": "DependOnPrototypeProperty",
+          "parameters": [
+            "JSFunctionRef function"
+          ],
+          "return_type": "HeapObjectRef",
+          "logic": "Returns the prototype property of the given function and records the assumption that it doesn't change."
+        },
+        {
+          "name": "DependOnStableMap",
+          "parameters": [
+            "MapRef map"
+          ],
+          "return_type": "void",
+          "logic": "Records the assumption that the given map stays stable."
+        },
+        {
+          "name": "DependOnNoSlackTrackingChange",
+          "parameters": [
+            "MapRef map"
+          ],
+          "return_type": "void",
+          "logic": "Records the assumption that slack tracking for the given map doesn't change during compilation."
+        },
+        {
+          "name": "DependOnConstantInDictionaryPrototypeChain",
+          "parameters": [
+            "MapRef receiver_map",
+            "NameRef property_name",
+            "ObjectRef constant",
+            "PropertyKind kind"
+          ],
+          "return_type": "void",
+          "logic": "Records a dependency on a constant value in the dictionary prototype chain."
+        },
+        {
+          "name": "DependOnPretenureMode",
+          "parameters": [
+            "AllocationSiteRef site"
+          ],
+          "return_type": "AllocationType",
+          "logic": "Returns the pretenure mode of the given allocation site and records the assumption that it does not change."
+        },
+        {
+          "name": "DependOnFieldConstness",
+          "parameters": [
+            "MapRef map",
+            "MapRef owner",
+            "InternalIndex descriptor"
+          ],
+          "return_type": "PropertyConstness",
+          "logic": "Returns a field's constness and, if kConst, records the assumption that it remains kConst."
+        },
+        {
+          "name": "FieldConstnessDependencyOffTheRecord",
+          "parameters": [
+            "MapRef map",
+            "MapRef owner",
+            "InternalIndex descriptor"
+          ],
+          "return_type": "CompilationDependency const*",
+          "logic": "Gathers the assumption about a field constness, without actually registering it."
+        },
+        {
+          "name": "DependOnGlobalProperty",
+          "parameters": [
+            "PropertyCellRef cell"
+          ],
+          "return_type": "void",
+          "logic": "Records the assumption that neither the given cell's CellType changes, nor the IsReadOnly() flag of the cell's PropertyDetails."
+        },
+        {
+          "name": "DependOnScriptContextSlotProperty",
+          "parameters": [
+            "ContextRef script_context",
+            "size_t index",
+            "ContextSidePropertyCell::Property property",
+            "JSHeapBroker* broker"
+          ],
+          "return_type": "bool",
+          "logic": "Records a property assumption in the script context slot."
+        },
+        {
+          "name": "DependOnEmptyContextExtension",
+          "parameters": [
+            "ScopeInfoRef scope_info"
+          ],
+          "return_type": "bool",
+          "logic": "Records the assumption that respective contexts do not have context extension, if true."
+        },
+        {
+          "name": "DependOnProtector",
+          "parameters": [
+            "PropertyCellRef cell"
+          ],
+          "return_type": "bool",
+          "logic": "Returns the validity of the given protector and, if true, records the assumption that the protector remains valid."
+        },
+        {
+          "name": "DependOnArrayBufferDetachingProtector",
+          "parameters": [],
+          "return_type": "bool",
+          "logic": "Records the assumption about ArrayBuffer detaching protector validity."
+        },
+        {
+          "name": "DependOnArrayIteratorProtector",
+          "parameters": [],
+          "return_type": "bool",
+          "logic": "Records the assumption about ArrayIterator protector validity."
+        },
+        {
+          "name": "DependOnArraySpeciesProtector",
+          "parameters": [],
+          "return_type": "bool",
+          "logic": "Records the assumption about ArraySpecies protector validity."
+        },
+        {
+          "name": "DependOnNoElementsProtector",
+          "parameters": [],
+          "return_type": "bool",
+          "logic": "Records the assumption about NoElements protector validity."
+        },
+        {
+          "name": "DependOnPromiseHookProtector",
+          "parameters": [],
+          "return_type": "bool",
+          "logic": "Records the assumption about PromiseHook protector validity."
+        },
+        {
+          "name": "DependOnPromiseSpeciesProtector",
+          "parameters": [],
+          "return_type": "bool",
+          "logic": "Records the assumption about PromiseSpecies protector validity."
+        },
+        {
+          "name": "DependOnPromiseThenProtector",
+          "parameters": [],
+          "return_type": "bool",
+          "logic": "Records the assumption about PromiseThen protector validity."
+        },
+        {
+          "name": "DependOnMegaDOMProtector",
+          "parameters": [],
+          "return_type": "bool",
+          "logic": "Records the assumption about MegaDOM protector validity."
+        },
+        {
+          "name": "DependOnNoProfilingProtector",
+          "parameters": [],
+          "return_type": "bool",
+          "logic": "Records the assumption about NoProfiling protector validity."
+        },
+        {
+          "name": "DependOnNoUndetectableObjectsProtector",
+          "parameters": [],
+          "return_type": "bool",
+          "logic": "Records the assumption about NoUndetectableObjects protector validity."
+        },
+        {
+          "name": "DependOnStringWrapperToPrimitiveProtector",
+          "parameters": [],
+          "return_type": "bool",
+          "logic": "Records the assumption about StringWrapperToPrimitive protector validity."
+        },
+        {
+          "name": "DependOnTypedArrayLengthProtector",
+          "parameters": [],
+          "return_type": "bool",
+          "logic": "Records the assumption about TypedArrayLength protector validity."
+        },
+        {
+          "name": "DependOnElementsKind",
+          "parameters": [
+            "AllocationSiteRef site"
+          ],
+          "return_type": "void",
+          "logic": "Records the assumption that the given allocation site's ElementsKind doesn't change."
+        },
+        {
+          "name": "DependOnObjectSlotValue",
+          "parameters": [
+            "HeapObjectRef object",
+            "int offset",
+            "ObjectRef value"
+          ],
+          "return_type": "void",
+          "logic": "Records that an object slot will not change during compilation."
+        },
+        {
+          "name": "DependOnOwnConstantElement",
+          "parameters": [
+            "JSObjectRef holder",
+            "uint32_t index",
+            "ObjectRef element"
+          ],
+          "return_type": "void",
+          "logic": "Records the assumption that the given element is constant for the object."
+        },
+        {
+          "name": "DependOnOwnConstantDataProperty",
+          "parameters": [
+            "JSObjectRef holder",
+            "MapRef map",
+            "FieldIndex index",
+            "ObjectRef value"
+          ],
+          "return_type": "void",
+          "logic": "Records the assumption that a given data property is constant for the object."
+        },
+        {
+          "name": "DependOnOwnConstantDoubleProperty",
+          "parameters": [
+            "JSObjectRef holder",
+            "MapRef map",
+            "FieldIndex index",
+            "Float64 value"
+          ],
+          "return_type": "void",
+          "logic": "Records the assumption that a given double property is constant for the object."
+        },
+        {
+          "name": "DependOnOwnConstantDictionaryProperty",
+          "parameters": [
+            "JSObjectRef holder",
+            "InternalIndex index",
+            "ObjectRef value"
+          ],
+          "return_type": "void",
+          "logic": "Records the assumption that a given dictionary property is constant for the object."
+        },
+        {
+          "name": "DependOnStablePrototypeChains",
+          "parameters": [
+            "ZoneVector<MapRef> const& receiver_maps",
+            "WhereToStart start",
+            "OptionalJSObjectRef last_prototype"
+          ],
+          "return_type": "void",
+          "logic": "For each given map, depend on the stability of (the maps of) all prototypes up to (and including) the {last_prototype}."
+        },
+        {
+          "name": "DependOnStablePrototypeChain",
+          "parameters": [
+            "MapRef receiver_maps",
+            "WhereToStart start",
+            "OptionalJSObjectRef last_prototype"
+          ],
+          "return_type": "void",
+          "logic": "For the given map, depend on the stability of (the maps of) all prototypes up to (and including) the {last_prototype}."
+        },
+        {
+          "name": "DependOnElementsKinds",
+          "parameters": [
+            "AllocationSiteRef site"
+          ],
+          "return_type": "void",
+          "logic": "Like DependOnElementsKind but also applies to all nested allocation sites."
+        },
+        {
+          "name": "DependOnConsistentJSFunctionView",
+          "parameters": [
+            "JSFunctionRef function"
+          ],
+          "return_type": "void",
+          "logic": "Records dependency on the consistent view of JSFunction object."
+        },
+        {
+          "name": "DependOnInitialMapInstanceSizePrediction",
+          "parameters": [
+            "JSFunctionRef function"
+          ],
+          "return_type": "SlackTrackingPrediction",
+          "logic": "Predicts the final instance size for {function}'s initial map and record the assumption that this prediction is correct."
+        },
+        {
+          "name": "RecordDependency",
+          "parameters": [
+            "CompilationDependency const* dependency"
+          ],
+          "return_type": "void",
+          "logic": "Records dependency if not null."
+        },
+        {
+          "name": "TransitionDependencyOffTheRecord",
+          "parameters": [
+            "MapRef target_map"
+          ],
+          "return_type": "CompilationDependency const*",
+          "logic": "Gathers the assumption that {target_map} can be transitioned to, i.e., that it does not become deprecated."
+        },
+        {
+          "name": "FieldRepresentationDependencyOffTheRecord",
+          "parameters": [
+            "MapRef map",
+            "MapRef owner",
+            "InternalIndex descriptor",
+            "Representation representation"
+          ],
+          "return_type": "CompilationDependency const*",
+          "logic": "Gather the assumption that the field representation of a field does not change."
+        },
+        {
+          "name": "FieldTypeDependencyOffTheRecord",
+          "parameters": [
+            "MapRef map",
+            "MapRef owner",
+            "InternalIndex descriptor",
+            "ObjectRef type"
+          ],
+          "return_type": "CompilationDependency const*",
+          "logic": "Gather the assumption that the field type of a field does not change."
+        },
+        {
+          "name": "IsFieldRepresentationDependencyOnMap",
+          "parameters": [
+            "const CompilationDependency* dep",
+            "const Handle<Map>& receiver_map"
+          ],
+          "return_type": "static bool",
+          "logic": "Debug helper to verify if a CompilationDependency is a field representation dependency, for a given map."
+        },
+        {
+          "name": "PrepareInstall",
+          "parameters": [],
+          "return_type": "bool",
+          "logic": "Prepares the installation of the dependencies."
+        },
+        {
+          "name": "PrepareInstallPredictable",
+          "parameters": [],
+          "return_type": "bool",
+          "logic": "Prepares the installation of the predictable dependencies."
+        },
+        {
+          "name": "CompilationDependencyHash::operator()",
+          "parameters": [
+            "const CompilationDependency* dep"
+          ],
+          "return_type": "size_t",
+          "logic": "Hashes a CompilationDependency pointer."
+        },
+        {
+          "name": "CompilationDependencyEqual::operator()",
+          "parameters": [
+            "const CompilationDependency* lhs",
+            "const CompilationDependency* rhs"
+          ],
+          "return_type": "bool",
+          "logic": "Compares two CompilationDependency pointers for equality."
+        }
+      ]
+    },
+    {
+      "name": "CompilationDependency",
+      "properties": [],
+      "methods": []
+    }
+  ],
+  "functions": []
+}

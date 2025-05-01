@@ -1,0 +1,855 @@
+{
+  "file_path": "/home/kathirks_gc/v8_go/codebase/src/objects/js-date-time-format.cc",
+  "imports": [
+    "src/objects/js-date-time-format.h",
+    "algorithm",
+    "map",
+    "memory",
+    "optional",
+    "string",
+    "utility",
+    "vector",
+    "src/base/bit-field.h",
+    "src/date/date.h",
+    "src/execution/isolate.h",
+    "src/heap/factory.h",
+    "src/objects/intl-objects.h",
+    "src/objects/js-date-time-format-inl.h",
+    "src/objects/js-temporal-objects-inl.h",
+    "src/objects/managed-inl.h",
+    "src/objects/option-utils.h",
+    "unicode/calendar.h",
+    "unicode/dtitvfmt.h",
+    "unicode/dtptngen.h",
+    "unicode/fieldpos.h",
+    "unicode/gregocal.h",
+    "unicode/smpdtfmt.h",
+    "unicode/unistr.h"
+  ],
+  "classes": [
+    {
+      "name": "PatternMap",
+      "properties": [
+        "pattern",
+        "value"
+      ],
+      "methods": [
+        {
+          "name": "PatternMap",
+          "parameters": [
+            "pattern",
+            "value"
+          ],
+          "return_type": "N/A (Constructor)",
+          "logic": "Constructor that initializes the pattern and value members using std::move for efficiency."
+        },
+        {
+          "name": "~PatternMap",
+          "parameters": [],
+          "return_type": "N/A (Destructor)",
+          "logic": "Default destructor."
+        }
+      ]
+    },
+    {
+      "name": "PatternItem",
+      "properties": [
+        "bitShift",
+        "property",
+        "pairs",
+        "allowed_values"
+      ],
+      "methods": [
+        {
+          "name": "PatternItem",
+          "parameters": [
+            "shift",
+            "property",
+            "pairs",
+            "allowed_values"
+          ],
+          "return_type": "N/A (Constructor)",
+          "logic": "Constructor that initializes the member variables using std::move."
+        },
+        {
+          "name": "~PatternItem",
+          "parameters": [],
+          "return_type": "N/A (Destructor)",
+          "logic": "Default destructor."
+        }
+      ]
+    },
+    {
+      "name": "PatternItems",
+      "properties": [
+        "data"
+      ],
+      "methods": [
+        {
+          "name": "PatternItems",
+          "parameters": [],
+          "return_type": "N/A (Constructor)",
+          "logic": "Constructor. Initializes the `data` member by calling `BuildPatternItems`."
+        },
+        {
+          "name": "~PatternItems",
+          "parameters": [],
+          "return_type": "N/A (Destructor)",
+          "logic": "Default destructor."
+        },
+        {
+          "name": "Get",
+          "parameters": [],
+          "return_type": "const std::vector<PatternItem>&",
+          "logic": "Returns a const reference to the `data` member."
+        }
+      ]
+    },
+    {
+      "name": "PatternData",
+      "properties": [
+        "bitShift",
+        "property",
+        "map",
+        "allowed_values"
+      ],
+      "methods": [
+        {
+          "name": "PatternData",
+          "parameters": [
+            "shift",
+            "property",
+            "pairs",
+            "allowed_values"
+          ],
+          "return_type": "N/A (Constructor)",
+          "logic": "Constructor that initializes the bitShift, property, and allowed_values members. It also populates the map from the provided pairs."
+        },
+        {
+          "name": "~PatternData",
+          "parameters": [],
+          "return_type": "N/A (Destructor)",
+          "logic": "Default destructor."
+        }
+      ]
+    },
+    {
+      "name": "Pattern",
+      "properties": [
+        "data"
+      ],
+      "methods": [
+        {
+          "name": "Pattern",
+          "parameters": [
+            "d1",
+            "d2"
+          ],
+          "return_type": "N/A (Constructor)",
+          "logic": "Constructor that initializes the data member with the CreateData function."
+        },
+        {
+          "name": "~Pattern",
+          "parameters": [],
+          "return_type": "N/A (Destructor)",
+          "logic": "Default destructor."
+        },
+        {
+          "name": "Get",
+          "parameters": [],
+          "return_type": "const std::vector<PatternData>&",
+          "logic": "Returns a const reference to the data member."
+        }
+      ]
+    },
+    {
+      "name": "H11Trait",
+      "properties": [],
+      "methods": [
+        {
+          "name": "Construct",
+          "parameters": [
+            "allocated_ptr"
+          ],
+          "return_type": "void",
+          "logic": "Placement new to construct a Pattern object with d1 = 'KK' and d2 = 'K'."
+        }
+      ]
+    },
+    {
+      "name": "H12Trait",
+      "properties": [],
+      "methods": [
+        {
+          "name": "Construct",
+          "parameters": [
+            "allocated_ptr"
+          ],
+          "return_type": "void",
+          "logic": "Placement new to construct a Pattern object with d1 = 'hh' and d2 = 'h'."
+        }
+      ]
+    },
+    {
+      "name": "H23Trait",
+      "properties": [],
+      "methods": [
+        {
+          "name": "Construct",
+          "parameters": [
+            "allocated_ptr"
+          ],
+          "return_type": "void",
+          "logic": "Placement new to construct a Pattern object with d1 = 'HH' and d2 = 'H'."
+        }
+      ]
+    },
+    {
+      "name": "H24Trait",
+      "properties": [],
+      "methods": [
+        {
+          "name": "Construct",
+          "parameters": [
+            "allocated_ptr"
+          ],
+          "return_type": "void",
+          "logic": "Placement new to construct a Pattern object with d1 = 'kk' and d2 = 'k'."
+        }
+      ]
+    },
+    {
+      "name": "HDefaultTrait",
+      "properties": [],
+      "methods": [
+        {
+          "name": "Construct",
+          "parameters": [
+            "allocated_ptr"
+          ],
+          "return_type": "void",
+          "logic": "Placement new to construct a Pattern object with d1 = 'jj' and d2 = 'j'."
+        }
+      ]
+    },
+    {
+      "name": "SpecialTimeZoneMap",
+      "properties": [
+        "map_"
+      ],
+      "methods": [
+        {
+          "name": "SpecialTimeZoneMap",
+          "parameters": [],
+          "return_type": "N/A (Constructor)",
+          "logic": "Constructor that adds special timezone mappings (upper case id to title case id)."
+        },
+        {
+          "name": "Find",
+          "parameters": [
+            "id"
+          ],
+          "return_type": "std::string",
+          "logic": "Finds a special timezone mapping by id (case-insensitive)."
+        },
+        {
+          "name": "Add",
+          "parameters": [
+            "id"
+          ],
+          "return_type": "void",
+          "logic": "Adds a special timezone mapping from the upper case of the id to the original id."
+        }
+      ]
+    },
+    {
+      "name": "CalendarCache",
+      "properties": [
+        "map_",
+        "mutex_"
+      ],
+      "methods": [
+        {
+          "name": "CreateCalendar",
+          "parameters": [
+            "locale",
+            "tz"
+          ],
+          "return_type": "icu::Calendar*",
+          "logic": "Creates or retrieves a cached ICU Calendar instance for a given locale and timezone."
+        }
+      ]
+    },
+    {
+      "name": "DateFormatCache",
+      "properties": [
+        "map_",
+        "mutex_"
+      ],
+      "methods": [
+        {
+          "name": "Create",
+          "parameters": [
+            "icu_locale",
+            "skeleton",
+            "generator",
+            "hc"
+          ],
+          "return_type": "icu::SimpleDateFormat*",
+          "logic": "Creates or retrieves a cached ICU SimpleDateFormat instance for a given locale, skeleton, and hour cycle."
+        }
+      ]
+    },
+    {
+      "name": "DateTimePatternGeneratorCache",
+      "properties": [
+        "map_",
+        "mutex_"
+      ],
+      "methods": [
+        {
+          "name": "CreateGenerator",
+          "parameters": [
+            "isolate",
+            "locale"
+          ],
+          "return_type": "icu::DateTimePatternGenerator*",
+          "logic": "Creates or retrieves a cached ICU DateTimePatternGenerator instance for a given locale."
+        }
+      ]
+    }
+  ],
+  "functions": [
+    {
+      "name": "ToHourCycleString",
+      "parameters": [
+        "hc"
+      ],
+      "return_type": "std::string",
+      "logic": "Converts a JSDateTimeFormat::HourCycle enum value to its corresponding string representation."
+    },
+    {
+      "name": "ToHourCycle",
+      "parameters": [
+        "hc"
+      ],
+      "return_type": "JSDateTimeFormat::HourCycle",
+      "logic": "Converts a string representation of an hour cycle to its corresponding JSDateTimeFormat::HourCycle enum value."
+    },
+    {
+      "name": "ToHourCycle",
+      "parameters": [
+        "hc"
+      ],
+      "return_type": "JSDateTimeFormat::HourCycle",
+      "logic": "Converts a UDateFormatHourCycle enum value to its corresponding JSDateTimeFormat::HourCycle enum value."
+    },
+    {
+      "name": "DefaultHourCycle12",
+      "parameters": [
+        "locale",
+        "defaultHourCycle"
+      ],
+      "return_type": "JSDateTimeFormat::HourCycle",
+      "logic": "Determines the default hour cycle for a 12-hour system based on the locale and a default hour cycle preference."
+    },
+    {
+      "name": "DefaultHourCycle24",
+      "parameters": [
+        "locale",
+        "defaultHourCycle"
+      ],
+      "return_type": "JSDateTimeFormat::HourCycle",
+      "logic": "Determines the default hour cycle for a 24-hour system based on the locale and a default hour cycle preference."
+    },
+    {
+      "name": "GetHourCycle",
+      "parameters": [
+        "isolate",
+        "options",
+        "method_name"
+      ],
+      "return_type": "Maybe<JSDateTimeFormat::HourCycle>",
+      "logic": "Retrieves the hourCycle option from a JSReceiver, validating that the provided value is one of the allowed hour cycles."
+    },
+    {
+      "name": "BuildPatternItems",
+      "parameters": [],
+      "return_type": "std::vector<PatternItem>",
+      "logic": "Builds a vector of PatternItem objects, which define the mapping between ICU date/time patterns and ECMA-402 properties."
+    },
+    {
+      "name": "GetPatternItems",
+      "parameters": [],
+      "return_type": "const std::vector<PatternItem>&",
+      "logic": "Returns a const reference to a static vector of PatternItem objects."
+    },
+    {
+      "name": "CreateCommonData",
+      "parameters": [
+        "hour_data"
+      ],
+      "return_type": "const std::vector<PatternData>",
+      "logic": "Creates a vector of PatternData objects, substituting a specified hour pattern data object for the default hour pattern data."
+    },
+    {
+      "name": "CreateData",
+      "parameters": [
+        "digit2",
+        "numeric"
+      ],
+      "return_type": "const std::vector<PatternData>",
+      "logic": "Creates a vector of PatternData objects with the given parameters. It replaces hour fields with provided 2 digit and numeric representation"
+    },
+    {
+      "name": "GetPatternData",
+      "parameters": [
+        "hour_cycle"
+      ],
+      "return_type": "const std::vector<PatternData>&",
+      "logic": "Returns a const reference to a static vector of PatternData objects based on the specified hour cycle."
+    },
+    {
+      "name": "GetGMTTzID",
+      "parameters": [
+        "input"
+      ],
+      "return_type": "std::string",
+      "logic": "If the input is in the format of GMT[+-]hh or GMT[+-]hhmm, change it to Etc/GMT[+-]hh or Etc/GMT[+-]hhmm. Otherwise return empty string."
+    },
+    {
+      "name": "IsAsciiAlpha",
+      "parameters": [
+        "ch"
+      ],
+      "return_type": "bool",
+      "logic": "Checks if a character is an ASCII alphabetic character (A-Z or a-z)."
+    },
+    {
+      "name": "LocaleIndependentAsciiToUpper",
+      "parameters": [
+        "ch"
+      ],
+      "return_type": "char",
+      "logic": "Converts an ASCII character to its uppercase equivalent, independently of the current locale."
+    },
+    {
+      "name": "LocaleIndependentAsciiToLower",
+      "parameters": [
+        "ch"
+      ],
+      "return_type": "char",
+      "logic": "Converts an ASCII character to its lowercase equivalent, independently of the current locale."
+    },
+    {
+      "name": "ToTitleCaseTimezoneLocation",
+      "parameters": [
+        "input"
+      ],
+      "return_type": "std::string",
+      "logic": "Converts a timezone location string to title case (e.g., 'bueNos_airES' to 'Buenos_Aires')."
+    },
+    {
+      "name": "DateTimeStyleAsString",
+      "parameters": [
+        "isolate",
+        "style"
+      ],
+      "return_type": "DirectHandle<String>",
+      "logic": "Converts a DateTimeStyle enum value to its string representation (e.g., kFull to 'full')."
+    },
+    {
+      "name": "FractionalSecondDigitsFromPattern",
+      "parameters": [
+        "pattern"
+      ],
+      "return_type": "int",
+      "logic": "Parses the fractional seconds from a date pattern, up to a maximum of 3 digits."
+    },
+    {
+      "name": "GetCalendar",
+      "parameters": [
+        "isolate",
+        "simple_date_format"
+      ],
+      "return_type": "DirectHandle<String>",
+      "logic": "Extracts and transforms calendar from the given simple date format object."
+    },
+    {
+      "name": "GetTimeZone",
+      "parameters": [
+        "isolate",
+        "simple_date_format"
+      ],
+      "return_type": "DirectHandle<Object>",
+      "logic": "Gets the Timezone information for the isolate, from the passed in ICU simple date format object"
+    },
+    {
+      "name": "IsTemporalObject",
+      "parameters": [
+        "value"
+      ],
+      "return_type": "bool",
+      "logic": "Determines whether a JSObject is a Temporal object based on its internal slots."
+    },
+    {
+      "name": "SameTemporalType",
+      "parameters": [
+        "x",
+        "y"
+      ],
+      "return_type": "bool",
+      "logic": "Determines whether two objects are both Temporal objects and have the same temporal type."
+    },
+    {
+      "name": "TemporalInstantToRecord",
+      "parameters": [
+        "isolate",
+        "instant",
+        "kind"
+      ],
+      "return_type": "DateTimeValueRecord",
+      "logic": "Converts a Temporal Instant to a DateTimeValueRecord representing epoch milliseconds."
+    },
+    {
+      "name": "TemporalPlainDateTimeToRecord",
+      "parameters": [
+        "isolate",
+        "date_time_format",
+        "kind",
+        "plain_date_time",
+        "method_name"
+      ],
+      "return_type": "Maybe<DateTimeValueRecord>",
+      "logic": "Converts a Temporal PlainDateTime to a DateTimeValueRecord by converting it to an instant based on the timezone."
+    },
+    {
+      "name": "TemporalToRecord",
+      "parameters": [
+        "isolate",
+        "date_time_format",
+        "kind",
+        "temporal",
+        "calendar",
+        "method_name"
+      ],
+      "return_type": "Maybe<DateTimeValueRecord>",
+      "logic": "Converts a Temporal PlainDate, PlainTime, or PlainDateTime to a DateTimeValueRecord by converting it to a PlainDateTime with a fixed time of 12:00:00."
+    },
+    {
+      "name": "HandleDateTimeTemporalDate",
+      "parameters": [
+        "isolate",
+        "date_time_format",
+        "date_time_format_calendar",
+        "temporal_date",
+        "method_name"
+      ],
+      "return_type": "Maybe<DateTimeValueRecord>",
+      "logic": "Handles DateTime value if it is TemporalDate"
+    },
+    {
+      "name": "HandleDateTimeTemporalDateTime",
+      "parameters": [
+        "isolate",
+        "date_time_format",
+        "date_time_format_calendar",
+        "date_time",
+        "method_name"
+      ],
+      "return_type": "Maybe<DateTimeValueRecord>",
+      "logic": "Handles DateTime value if it is TemporalDateTime"
+    },
+    {
+      "name": "HandleDateTimeTemporalZonedDateTime",
+      "parameters": [
+        "isolate",
+        "date_time_format",
+        "date_time_format_calendar",
+        "zoned_date_time",
+        "method_name"
+      ],
+      "return_type": "Maybe<DateTimeValueRecord>",
+      "logic": "Handles DateTime value if it is TemporalZonedDateTime"
+    },
+    {
+      "name": "HandleDateTimeTemporalInstant",
+      "parameters": [
+        "isolate",
+        "date_time_format",
+        "instant",
+        "method_name"
+      ],
+      "return_type": "Maybe<DateTimeValueRecord>",
+      "logic": "Handles DateTime value if it is TemporalInstant"
+    },
+    {
+      "name": "HandleDateTimeTemporalTime",
+      "parameters": [
+        "isolate",
+        "date_time_format",
+        "temporal_time",
+        "method_name"
+      ],
+      "return_type": "Maybe<DateTimeValueRecord>",
+      "logic": "Handles DateTime value if it is TemporalTime"
+    },
+    {
+      "name": "HandleDateTimeTemporalYearMonthOrMonthDay",
+      "parameters": [
+        "isolate",
+        "date_time_format",
+        "date_time_format_calendar",
+        "kind",
+        "temporal",
+        "method_name"
+      ],
+      "return_type": "Maybe<DateTimeValueRecord>",
+      "logic": "Handles DateTime value if it is TemporalYearMonth or TemporalMonthDay."
+    },
+    {
+      "name": "HandleDateTimeTemporalYearMonth",
+      "parameters": [
+        "isolate",
+        "date_time_format",
+        "date_time_format_calendar",
+        "temporal_year_month",
+        "method_name"
+      ],
+      "return_type": "Maybe<DateTimeValueRecord>",
+      "logic": "Handles DateTime value if it is TemporalYearMonth"
+    },
+    {
+      "name": "HandleDateTimeTemporalMonthDay",
+      "parameters": [
+        "isolate",
+        "date_time_format",
+        "date_time_format_calendar",
+        "temporal_month_day",
+        "method_name"
+      ],
+      "return_type": "Maybe<DateTimeValueRecord>",
+      "logic": "Handles DateTime value if it is TemporalMonthDay"
+    },
+    {
+      "name": "HandleDateTimeOthers",
+      "parameters": [
+        "isolate",
+        "date_time_format",
+        "x_obj",
+        "method_name"
+      ],
+      "return_type": "Maybe<DateTimeValueRecord>",
+      "logic": "Handles DateTime value if it is not a temporal object"
+    },
+    {
+      "name": "HandleDateTimeValue",
+      "parameters": [
+        "isolate",
+        "date_time_format",
+        "date_time_format_calendar",
+        "x",
+        "method_name"
+      ],
+      "return_type": "Maybe<DateTimeValueRecord>",
+      "logic": "Handles a DateTime value, dispatching to the correct handler depending on whether it's a Temporal object or a primitive value."
+    },
+    {
+      "name": "KeepSupportedAddDefault",
+      "parameters": [
+        "input",
+        "keep",
+        "add_default"
+      ],
+      "return_type": "icu::UnicodeString",
+      "logic": "Filters and adds default skeleton fields based on supported fields."
+    },
+    {
+      "name": "GetSkeletonForPatternKind",
+      "parameters": [
+        "input",
+        "kind"
+      ],
+      "return_type": "icu::UnicodeString",
+      "logic": "Get skeleton based on specified pattern kind"
+    },
+    {
+      "name": "SkeletonFromDateFormat",
+      "parameters": [
+        "icu_date_format"
+      ],
+      "return_type": "icu::UnicodeString",
+      "logic": "Extracts the skeleton from date format."
+    },
+    {
+      "name": "GetSimpleDateTimeForTemporal",
+      "parameters": [
+        "date_format",
+        "kind"
+      ],
+      "return_type": "std::unique_ptr<icu::SimpleDateFormat>",
+      "logic": "Get simple date time for a temporal object."
+    },
+    {
+      "name": "CallICUFormat",
+      "parameters": [
+        "date_format",
+        "kind",
+        "time_in_milliseconds",
+        "fp_iter",
+        "status"
+      ],
+      "return_type": "icu::UnicodeString",
+      "logic": "Creates datetime string in ICU format with error handling."
+    },
+    {
+      "name": "FormatDateTime",
+      "parameters": [
+        "isolate",
+        "date_format",
+        "x"
+      ],
+      "return_type": "MaybeDirectHandle<String>",
+      "logic": "Formats a date/time value using the specified ICU date format."
+    },
+    {
+      "name": "FormatMillisecondsByKindToString",
+      "parameters": [
+        "isolate",
+        "date_format",
+        "kind",
+        "x"
+      ],
+      "return_type": "MaybeDirectHandle<String>",
+      "logic": "Formats milliseconds value depending on pattern kind."
+    },
+    {
+      "name": "FormatDateTimeWithTemporalSupport",
+      "parameters": [
+        "isolate",
+        "date_format",
+        "date_time_format_calendar",
+        "x",
+        "method_name"
+      ],
+      "return_type": "MaybeDirectHandle<String>",
+      "logic": "Format DateTime with temporal support"
+    },
+    {
+      "name": "FormatDateTimeWithTemporalSupport",
+      "parameters": [
+        "isolate",
+        "date_time_format",
+        "x",
+        "method_name"
+      ],
+      "return_type": "MaybeDirectHandle<String>",
+      "logic": "Wrapper to call the format method with the specified formatting"
+    },
+    {
+      "name": "ConvertToCacheType",
+      "parameters": [
+        "type"
+      ],
+      "return_type": "Isolate::ICUObjectCacheType",
+      "logic": "Convert JSDateTimeFormat::DefaultsOption to Isolate::ICUObjectCacheType."
+    },
+    {
+      "name": "GetOffsetTimeZone",
+      "parameters": [
+        "isolate",
+        "time_zone"
+      ],
+      "return_type": "std::optional<std::string>",
+      "logic": "Converts a timezone offset string (e.g., '+05:30') to the SimpleTimeZone ID (e.g., 'GMT+0530')."
+    },
+    {
+      "name": "CreateCalendar",
+      "parameters": [
+        "isolate",
+        "icu_locale",
+        "tz"
+      ],
+      "return_type": "icu::Calendar*",
+      "logic": "Wrapper function to create a new calendar using CalendarCache."
+    },
+    {
+      "name": "ReplaceHourCycleInPattern",
+      "parameters": [
+        "pattern",
+        "hc"
+      ],
+      "return_type": "icu::UnicodeString",
+      "logic": "Replaces the hour cycle in a date/time pattern with the specified hour cycle character."
+    },
+    {
+      "name": "CreateICUDateFormat",
+      "parameters": [
+        "icu_locale",
+        "skeleton",
+        "generator",
+        "hc"
+      ],
+      "return_type": "std::unique_ptr<icu::SimpleDateFormat>",
+      "logic": "Creates an ICU SimpleDateFormat object from a skeleton and hour cycle."
+    },
+    {
+      "name": "CreateICUDateFormatFromCache",
+      "parameters": [
+        "icu_locale",
+        "skeleton",
+        "generator",
+        "hc"
+      ],
+      "return_type": "std::unique_ptr<icu::SimpleDateFormat>",
+      "logic": "Create ICU Date Format From Cache."
+    },
+    {
+      "name": "LazyCreateDateIntervalFormat",
+      "parameters": [
+        "isolate",
+        "date_time_format",
+        "kind"
+      ],
+      "return_type": "std::unique_ptr<icu::DateIntervalFormat>",
+      "logic": "Creates a DateIntervalFormat lazily based on specified kind."
+    },
+    {
+      "name": "HourCycleFromPattern",
+      "parameters": [
+        "pattern"
+      ],
+      "return_type": "JSDateTimeFormat::HourCycle",
+      "logic": "Determines the hour cycle from an ICU date/time pattern by searching for specific hour format characters (K, h, H, k)."
+    },
+    {
+      "name": "DateTimeStyleToEStyle",
+      "parameters": [
+        "style"
+      ],
+      "return_type": "icu::DateFormat::EStyle",
+      "logic": "Convert DateTimeStyle To EStyle"
+    },
+    {
+      "name": "ReplaceSkeleton",
+      "parameters": [
+        "input",
+        "hc"
+      ],
+      "return_type": "icu::UnicodeString",
+      "logic": "Replaces the specified hour cycle in the Date time skeleton"
+    },
+    {
+      "name": "DateTimeStylePattern",
+      "parameters": [
+        "date_style",
+        "time_style",
+        "icu_locale",
+        "hc",
+        "generator"
+      ],
+      "return_type": "std::unique_ptr<icu::SimpleDateFormat>",
+      "logic": "Creates an ICU SimpleDateFormat object for the given date and time styles."
+    }
+  ]
+}

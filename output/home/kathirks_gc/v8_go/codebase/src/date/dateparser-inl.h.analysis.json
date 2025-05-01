@@ -1,0 +1,63 @@
+{
+  "file_path": "/home/kathirks_gc/v8_go/codebase/src/date/dateparser-inl.h",
+  "imports": [
+    "src/date/dateparser.h",
+    "src/execution/isolate.h",
+    "src/strings/char-predicates-inl.h"
+  ],
+  "classes": [
+    {
+      "name": "DateParser::DateStringTokenizer",
+      "properties": [],
+      "methods": [
+        {
+          "name": "Scan",
+          "parameters": [],
+          "return_type": "DateParser::DateToken",
+          "logic": "Scans the input stream and returns the next date token.  Identifies numbers, symbols (:, -, +, .), keywords, whitespace, and handles parentheses. Returns a DateToken representing the identified token type."
+        }
+      ]
+    },
+    {
+      "name": "DateParser::InputReader",
+      "properties": [],
+      "methods": [
+        {
+          "name": "SkipWhiteSpace",
+          "parameters": [],
+          "return_type": "bool",
+          "logic": "Skips over whitespace characters in the input stream. Returns true if whitespace was skipped, false otherwise."
+        },
+        {
+          "name": "SkipParentheses",
+          "parameters": [],
+          "return_type": "bool",
+          "logic": "Skips over parenthesized text in the input stream, handling nested parentheses. Returns true if parentheses were skipped, false otherwise."
+        }
+      ]
+    }
+  ],
+  "functions": [
+    {
+      "name": "DateParser::Parse",
+      "parameters": [
+        "Isolate* isolate",
+        "base::Vector<Char> str",
+        "double* out"
+      ],
+      "return_type": "bool",
+      "logic": "Parses a date string, attempting to parse it as an ES5 ISO 8601 date-time string first. If that fails, it tries to parse it as a legacy date. Returns true if parsing was successful, false otherwise. Writes the resulting time value to the provided 'out' pointer."
+    },
+    {
+      "name": "DateParser::ParseES5DateTime",
+      "parameters": [
+        "DateStringTokenizer<Char>* scanner",
+        "DayComposer* day",
+        "TimeComposer* time",
+        "TimeZoneComposer* tz"
+      ],
+      "return_type": "DateParser::DateToken",
+      "logic": "Parses an ES5 ISO 8601 date-time string from the input stream using the given tokenizer, day composer, time composer, and timezone composer. Returns the next unhandled token if parsing fails, or EndOfInput if successful."
+    }
+  ]
+}

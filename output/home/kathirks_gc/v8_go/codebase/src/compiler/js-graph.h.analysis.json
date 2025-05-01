@@ -1,0 +1,434 @@
+{
+  "file_path": "/home/kathirks_gc/v8_go/codebase/src/compiler/js-graph.h",
+  "imports": [
+    "src/common/globals.h",
+    "src/compiler/common-operator.h",
+    "src/compiler/js-heap-broker.h",
+    "src/compiler/js-operator.h",
+    "src/compiler/machine-graph.h",
+    "src/compiler/turbofan-graph.h",
+    "src/execution/isolate.h",
+    "src/objects/oddball.h"
+  ],
+  "classes": [
+    {
+      "name": "JSGraph",
+      "properties": [
+        "isolate_",
+        "javascript_",
+        "simplified_",
+        "AllocateInYoungGenerationStubConstant_",
+        "AllocateInOldGenerationStubConstant_",
+        "WasmAllocateInYoungGenerationStubConstant_",
+        "WasmAllocateInOldGenerationStubConstant_",
+        "ArrayConstructorStubConstant_",
+        "BigIntMapConstant_",
+        "BooleanMapConstant_",
+        "ToNumberBuiltinConstant_",
+        "PlainPrimitiveToNumberBuiltinConstant_",
+        "EmptyFixedArrayConstant_",
+        "EmptyStringConstant_",
+        "FixedArrayMapConstant_",
+        "PropertyArrayMapConstant_",
+        "FixedDoubleArrayMapConstant_",
+        "WeakFixedArrayMapConstant_",
+        "HeapNumberMapConstant_",
+        "UndefinedConstant_",
+        "TheHoleConstant_",
+        "PropertyCellHoleConstant_",
+        "HashTableHoleConstant_",
+        "PromiseHoleConstant_",
+        "UninitializedConstant_",
+        "OptimizedOutConstant_",
+        "StaleRegisterConstant_",
+        "TrueConstant_",
+        "FalseConstant_",
+        "NullConstant_",
+        "ZeroConstant_",
+        "MinusZeroConstant_",
+        "OneConstant_",
+        "MinusOneConstant_",
+        "NaNConstant_",
+        "EmptyStateValues_",
+        "SingleDeadTypedStateValues_",
+        "ExternalObjectMapConstant_",
+        "CEntryStub1Constant_",
+        "CEntryStub2Constant_",
+        "CEntryStub3Constant_",
+        "CEntryStub1WithBuiltinExitFrameConstant_"
+      ],
+      "methods": [
+        {
+          "name": "JSGraph",
+          "parameters": [
+            "Isolate* isolate",
+            "TFGraph* graph",
+            "CommonOperatorBuilder* common",
+            "JSOperatorBuilder* javascript",
+            "SimplifiedOperatorBuilder* simplified",
+            "MachineOperatorBuilder* machine"
+          ],
+          "return_type": "void",
+          "logic": "Constructor for the JSGraph class, initializing the base class MachineGraph and member variables."
+        },
+        {
+          "name": "CEntryStubConstant",
+          "parameters": [
+            "int result_size",
+            "ArgvMode argv_mode",
+            "bool builtin_exit_frame"
+          ],
+          "return_type": "Node*",
+          "logic": "Returns a cached CEntryStub node based on result size and other flags."
+        },
+        {
+          "name": "PaddingConstant",
+          "parameters": [],
+          "return_type": "TNode<Hole>",
+          "logic": "Returns a TNode representing the hole (padding constant)."
+        },
+        {
+          "name": "NoContextConstant",
+          "parameters": [],
+          "return_type": "TNode<Number>",
+          "logic": "Returns a TNode representing SMI zero, used for stubs and runtime functions without context."
+        },
+        {
+          "name": "HeapConstantNoHole",
+          "parameters": [
+            "Handle<HeapObject> value"
+          ],
+          "return_type": "Node*",
+          "logic": "Creates a HeapConstant node, possibly canonicalized.  Checks that it doesn't emit hole values. Use this if possible to emit JSReceiver heap constants."
+        },
+        {
+          "name": "HeapConstantMaybeHole",
+          "parameters": [
+            "Handle<HeapObject> value"
+          ],
+          "return_type": "Node*",
+          "logic": "Creates a HeapConstant node, possibly canonicalized.  This can be used whenever we might need to emit a hole value or a JSReceiver. Use this cautiously only if you really need it."
+        },
+        {
+          "name": "HeapConstantHole",
+          "parameters": [
+            "Handle<HeapObject> value"
+          ],
+          "return_type": "Node*",
+          "logic": "Creates a HeapConstant node, possibly canonicalized.  This is only used to emit hole values. Use this if you are sure that you only emit a Hole value."
+        },
+        {
+          "name": "TrustedHeapConstant",
+          "parameters": [
+            "Handle<HeapObject> value"
+          ],
+          "return_type": "Node*",
+          "logic": "Createas a TrustedHeapConstant node. This is similar to HeapConstant, but for constants that live in trusted space (having a different cage base) and therefore shouldn't be compressed."
+        },
+        {
+          "name": "ConstantNoHole",
+          "parameters": [
+            "ObjectRef ref",
+            "JSHeapBroker* broker"
+          ],
+          "return_type": "Node*",
+          "logic": "Creates a Constant node of the appropriate type for the given object.  Inspect the object and determine whether one of the canonicalized globals or a number constant should be returned. Checks that we do not emit a Hole value, use this whenever possible."
+        },
+        {
+          "name": "ConstantMaybeHole",
+          "parameters": [
+            "ObjectRef ref",
+            "JSHeapBroker* broker"
+          ],
+          "return_type": "Node*",
+          "logic": "Creates a Constant node of the appropriate type for the given object.  Inspect the object and determine whether one of the canonicalized globals or a number constant should be returned. Use this if you really need to emit Hole values."
+        },
+        {
+          "name": "ConstantMaybeHole",
+          "parameters": [
+            "double value"
+          ],
+          "return_type": "Node*",
+          "logic": "Creates a NumberConstant node, usually canonicalized."
+        },
+        {
+          "name": "ConstantNoHole",
+          "parameters": [
+            "double value"
+          ],
+          "return_type": "Node*",
+          "logic": "Creates a NumberConstant node, usually canonicalized, and checks that we are not emitting a kHoleNanInt64."
+        },
+        {
+          "name": "ConstantMutableHeapNumber",
+          "parameters": [
+            "HeapNumberRef ref",
+            "JSHeapBroker* broker"
+          ],
+          "return_type": "Node*",
+          "logic": "Creates a Constant node that holds a mutable Heap Number."
+        },
+        {
+          "name": "BooleanConstant",
+          "parameters": [
+            "bool is_true"
+          ],
+          "return_type": "TNode<Boolean>",
+          "logic": "Creates a HeapConstant node for either true or false."
+        },
+        {
+          "name": "SmiConstant",
+          "parameters": [
+            "int32_t immediate"
+          ],
+          "return_type": "Node*",
+          "logic": "Creates a Constant node for a Smi value."
+        },
+        {
+          "name": "javascript",
+          "parameters": [],
+          "return_type": "JSOperatorBuilder*",
+          "logic": "Returns the JSOperatorBuilder."
+        },
+        {
+          "name": "simplified",
+          "parameters": [],
+          "return_type": "SimplifiedOperatorBuilder*",
+          "logic": "Returns the SimplifiedOperatorBuilder."
+        },
+        {
+          "name": "isolate",
+          "parameters": [],
+          "return_type": "Isolate*",
+          "logic": "Returns the Isolate."
+        },
+        {
+          "name": "factory",
+          "parameters": [],
+          "return_type": "Factory*",
+          "logic": "Returns the Factory associated with the Isolate."
+        },
+        {
+          "name": "GetCachedNodes",
+          "parameters": [
+            "NodeVector* nodes"
+          ],
+          "return_type": "void",
+          "logic": "Adds all the cached nodes to the given list."
+        },
+        {
+          "name": "AllocateInYoungGenerationStubConstant",
+          "parameters": [],
+          "return_type": "TNode<Code>",
+          "logic": "Getter for AllocateInYoungGenerationStubConstant_"
+        },
+        {
+          "name": "AllocateInOldGenerationStubConstant",
+          "parameters": [],
+          "return_type": "TNode<Code>",
+          "logic": "Getter for AllocateInOldGenerationStubConstant_"
+        },
+        {
+          "name": "WasmAllocateInYoungGenerationStubConstant",
+          "parameters": [],
+          "return_type": "TNode<Code>",
+          "logic": "Getter for WasmAllocateInYoungGenerationStubConstant_"
+        },
+        {
+          "name": "WasmAllocateInOldGenerationStubConstant",
+          "parameters": [],
+          "return_type": "TNode<Code>",
+          "logic": "Getter for WasmAllocateInOldGenerationStubConstant_"
+        },
+        {
+          "name": "ArrayConstructorStubConstant",
+          "parameters": [],
+          "return_type": "TNode<Code>",
+          "logic": "Getter for ArrayConstructorStubConstant_"
+        },
+        {
+          "name": "BigIntMapConstant",
+          "parameters": [],
+          "return_type": "TNode<Map>",
+          "logic": "Getter for BigIntMapConstant_"
+        },
+        {
+          "name": "BooleanMapConstant",
+          "parameters": [],
+          "return_type": "TNode<Map>",
+          "logic": "Getter for BooleanMapConstant_"
+        },
+        {
+          "name": "ToNumberBuiltinConstant",
+          "parameters": [],
+          "return_type": "TNode<Code>",
+          "logic": "Getter for ToNumberBuiltinConstant_"
+        },
+        {
+          "name": "PlainPrimitiveToNumberBuiltinConstant",
+          "parameters": [],
+          "return_type": "TNode<Code>",
+          "logic": "Getter for PlainPrimitiveToNumberBuiltinConstant_"
+        },
+        {
+          "name": "EmptyFixedArrayConstant",
+          "parameters": [],
+          "return_type": "TNode<FixedArray>",
+          "logic": "Getter for EmptyFixedArrayConstant_"
+        },
+        {
+          "name": "EmptyStringConstant",
+          "parameters": [],
+          "return_type": "TNode<String>",
+          "logic": "Getter for EmptyStringConstant_"
+        },
+        {
+          "name": "FixedArrayMapConstant",
+          "parameters": [],
+          "return_type": "TNode<Map>",
+          "logic": "Getter for FixedArrayMapConstant_"
+        },
+        {
+          "name": "PropertyArrayMapConstant",
+          "parameters": [],
+          "return_type": "TNode<Map>",
+          "logic": "Getter for PropertyArrayMapConstant_"
+        },
+        {
+          "name": "FixedDoubleArrayMapConstant",
+          "parameters": [],
+          "return_type": "TNode<Map>",
+          "logic": "Getter for FixedDoubleArrayMapConstant_"
+        },
+        {
+          "name": "WeakFixedArrayMapConstant",
+          "parameters": [],
+          "return_type": "TNode<Map>",
+          "logic": "Getter for WeakFixedArrayMapConstant_"
+        },
+        {
+          "name": "HeapNumberMapConstant",
+          "parameters": [],
+          "return_type": "TNode<Map>",
+          "logic": "Getter for HeapNumberMapConstant_"
+        },
+        {
+          "name": "UndefinedConstant",
+          "parameters": [],
+          "return_type": "TNode<Undefined>",
+          "logic": "Getter for UndefinedConstant_"
+        },
+        {
+          "name": "TheHoleConstant",
+          "parameters": [],
+          "return_type": "TNode<Hole>",
+          "logic": "Getter for TheHoleConstant_"
+        },
+        {
+          "name": "PropertyCellHoleConstant",
+          "parameters": [],
+          "return_type": "TNode<Hole>",
+          "logic": "Getter for PropertyCellHoleConstant_"
+        },
+        {
+          "name": "HashTableHoleConstant",
+          "parameters": [],
+          "return_type": "TNode<Hole>",
+          "logic": "Getter for HashTableHoleConstant_"
+        },
+        {
+          "name": "PromiseHoleConstant",
+          "parameters": [],
+          "return_type": "TNode<Hole>",
+          "logic": "Getter for PromiseHoleConstant_"
+        },
+        {
+          "name": "UninitializedConstant",
+          "parameters": [],
+          "return_type": "TNode<Hole>",
+          "logic": "Getter for UninitializedConstant_"
+        },
+        {
+          "name": "OptimizedOutConstant",
+          "parameters": [],
+          "return_type": "TNode<Hole>",
+          "logic": "Getter for OptimizedOutConstant_"
+        },
+        {
+          "name": "StaleRegisterConstant",
+          "parameters": [],
+          "return_type": "TNode<Hole>",
+          "logic": "Getter for StaleRegisterConstant_"
+        },
+        {
+          "name": "TrueConstant",
+          "parameters": [],
+          "return_type": "TNode<True>",
+          "logic": "Getter for TrueConstant_"
+        },
+        {
+          "name": "FalseConstant",
+          "parameters": [],
+          "return_type": "TNode<False>",
+          "logic": "Getter for FalseConstant_"
+        },
+        {
+          "name": "NullConstant",
+          "parameters": [],
+          "return_type": "TNode<Null>",
+          "logic": "Getter for NullConstant_"
+        },
+        {
+          "name": "ZeroConstant",
+          "parameters": [],
+          "return_type": "TNode<Number>",
+          "logic": "Getter for ZeroConstant_"
+        },
+        {
+          "name": "MinusZeroConstant",
+          "parameters": [],
+          "return_type": "TNode<Number>",
+          "logic": "Getter for MinusZeroConstant_"
+        },
+        {
+          "name": "OneConstant",
+          "parameters": [],
+          "return_type": "TNode<Number>",
+          "logic": "Getter for OneConstant_"
+        },
+        {
+          "name": "MinusOneConstant",
+          "parameters": [],
+          "return_type": "TNode<Number>",
+          "logic": "Getter for MinusOneConstant_"
+        },
+        {
+          "name": "NaNConstant",
+          "parameters": [],
+          "return_type": "TNode<Number>",
+          "logic": "Getter for NaNConstant_"
+        },
+        {
+          "name": "EmptyStateValues",
+          "parameters": [],
+          "return_type": "TNode<UntaggedT>",
+          "logic": "Getter for EmptyStateValues_"
+        },
+        {
+          "name": "SingleDeadTypedStateValues",
+          "parameters": [],
+          "return_type": "TNode<UntaggedT>",
+          "logic": "Getter for SingleDeadTypedStateValues_"
+        },
+        {
+          "name": "ExternalObjectMapConstant",
+          "parameters": [],
+          "return_type": "TNode<Map>",
+          "logic": "Getter for ExternalObjectMapConstant_"
+        }
+      ]
+    }
+  ],
+  "functions": [],
+  "additional_notes": "The DECLARE_GETTER macros expand to functions, but they are so simple (just returning a member field) that I did not create a function entry for each."
+}

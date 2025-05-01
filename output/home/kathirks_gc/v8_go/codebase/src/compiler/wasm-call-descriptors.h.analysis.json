@@ -1,0 +1,47 @@
+{
+  "file_path": "/home/kathirks_gc/v8_go/codebase/src/compiler/wasm-call-descriptors.h",
+  "imports": [
+    "<memory>",
+    "src/common/globals.h"
+  ],
+  "classes": [
+    {
+      "name": "WasmCallDescriptors",
+      "properties": [
+        "zone_",
+        "bigint_to_i64_descriptor_",
+        "bigint_to_i64_descriptor_with_framestate_",
+        "bigint_to_i32pair_descriptor_",
+        "bigint_to_i32pair_descriptor_with_framestate_"
+      ],
+      "methods": [
+        {
+          "name": "WasmCallDescriptors",
+          "parameters": [
+            "AccountingAllocator* allocator"
+          ],
+          "return_type": "void",
+          "logic": "Constructor for the WasmCallDescriptors class.  Initializes internal data structures likely used to manage call descriptors."
+        },
+        {
+          "name": "GetBigIntToI64Descriptor",
+          "parameters": [
+            "bool needs_frame_state"
+          ],
+          "return_type": "compiler::CallDescriptor*",
+          "logic": "Returns the appropriate CallDescriptor for converting a BigInt to an I64, based on whether a frame state is needed.  This appears to manage two different call descriptors for the same operation to account for frame state."
+        },
+        {
+          "name": "GetLoweredCallDescriptor",
+          "parameters": [
+            "const compiler::CallDescriptor* original"
+          ],
+          "return_type": "compiler::CallDescriptor*",
+          "logic": "On 32-bit architectures, this function would return a 'lowered' call descriptor, potentially modifying the calling convention. On other architectures it is defined as UNREACHABLE."
+        }
+      ]
+    }
+  ],
+  "functions": [],
+  "notes": "The fields 'bigint_to_i32pair_descriptor_' and 'bigint_to_i32pair_descriptor_with_framestate_' are only present if `V8_TARGET_ARCH_32_BIT` is defined."
+}

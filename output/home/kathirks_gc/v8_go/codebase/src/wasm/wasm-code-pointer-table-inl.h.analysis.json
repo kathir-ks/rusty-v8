@@ -1,0 +1,174 @@
+{
+  "file_path": "/home/kathirks_gc/v8_go/codebase/src/wasm/wasm-code-pointer-table-inl.h",
+  "imports": [
+    "src/common/code-memory-access-inl.h",
+    "src/common/segmented-table-inl.h",
+    "src/wasm/wasm-code-pointer-table.h"
+  ],
+  "classes": [
+    {
+      "name": "WasmCodePointerTableEntry",
+      "properties": [
+        "entrypoint_",
+        "signature_hash_"
+      ],
+      "methods": [
+        {
+          "name": "MakeCodePointerEntry",
+          "parameters": [
+            "Address entrypoint",
+            "uint64_t signature_hash"
+          ],
+          "return_type": "void",
+          "logic": "Makes the entry a code pointer entry, storing the entrypoint and signature hash."
+        },
+        {
+          "name": "UpdateCodePointerEntry",
+          "parameters": [
+            "Address entrypoint",
+            "uint64_t signature_hash"
+          ],
+          "return_type": "void",
+          "logic": "Updates the code pointer entry with a new entrypoint, checking that the signature hash matches if sandbox is enabled."
+        },
+        {
+          "name": "GetEntrypoint",
+          "parameters": [
+            "uint64_t signature_hash"
+          ],
+          "return_type": "Address",
+          "logic": "Gets the entrypoint, checking that the signature hash matches if sandbox is enabled."
+        },
+        {
+          "name": "GetEntrypointWithoutSignatureCheck",
+          "parameters": [],
+          "return_type": "Address",
+          "logic": "Gets the entrypoint without checking the signature hash."
+        },
+        {
+          "name": "MakeFreelistEntry",
+          "parameters": [
+            "uint32_t next_entry_index"
+          ],
+          "return_type": "void",
+          "logic": "Makes the entry a freelist entry, storing the index of the next free entry."
+        },
+        {
+          "name": "GetNextFreelistEntryIndex",
+          "parameters": [],
+          "return_type": "uint32_t",
+          "logic": "Gets the index of the next free entry in the freelist."
+        }
+      ]
+    },
+    {
+      "name": "WasmCodePointerTable",
+      "properties": [],
+      "methods": [
+        {
+          "name": "GetEntrypoint",
+          "parameters": [
+            "WasmCodePointer index",
+            "uint64_t signature_hash"
+          ],
+          "return_type": "Address",
+          "logic": "Gets the entrypoint at the given index, checking that the signature hash matches."
+        },
+        {
+          "name": "GetEntrypointWithoutSignatureCheck",
+          "parameters": [
+            "WasmCodePointer index"
+          ],
+          "return_type": "Address",
+          "logic": "Gets the entrypoint at the given index without checking the signature hash."
+        },
+        {
+          "name": "UpdateEntrypoint",
+          "parameters": [
+            "WasmCodePointer index",
+            "Address value",
+            "uint64_t signature_hash"
+          ],
+          "return_type": "void",
+          "logic": "Updates the entrypoint at the given index with the given value and signature hash."
+        },
+        {
+          "name": "SetEntrypointAndSignature",
+          "parameters": [
+            "WasmCodePointer index",
+            "Address value",
+            "uint64_t signature_hash"
+          ],
+          "return_type": "void",
+          "logic": "Sets the entrypoint and signature hash at the given index."
+        },
+        {
+          "name": "SetEntrypointWithWriteScope",
+          "parameters": [
+            "WasmCodePointer index",
+            "Address value",
+            "uint64_t signature_hash",
+            "WriteScope& write_scope"
+          ],
+          "return_type": "void",
+          "logic": "Sets the entrypoint and signature hash at the given index within a given write scope."
+        },
+        {
+          "name": "AllocateAndInitializeEntry",
+          "parameters": [
+            "Address entrypoint",
+            "uint64_t signature_hash"
+          ],
+          "return_type": "WasmCodePointer",
+          "logic": "Allocates a new entry and initializes it with the given entrypoint and signature hash."
+        },
+        {
+          "name": "ReadFreelistHead",
+          "parameters": [],
+          "return_type": "WasmCodePointerTable::FreelistHead",
+          "logic": "Reads the freelist head from memory using an atomic operation with acquire memory ordering. Retries if a retry marker is present."
+        },
+        {
+          "name": "AllocateUninitializedEntry",
+          "parameters": [],
+          "return_type": "WasmCodePointer",
+          "logic": "Allocates an uninitialized entry from the freelist, extending the table if necessary. Uses atomic operations to manage the freelist."
+        },
+        {
+          "name": "TryAllocateFromFreelist",
+          "parameters": [
+            "uint32_t* index"
+          ],
+          "return_type": "bool",
+          "logic": "Tries to allocate an entry from the freelist using compare-and-exchange atomic operations. Returns true if successful, false otherwise."
+        },
+        {
+          "name": "AllocateEntryFromFreelistNonAtomic",
+          "parameters": [
+            "FreelistHead* freelist_head"
+          ],
+          "return_type": "uint32_t",
+          "logic": "Allocates an entry from the freelist without using atomic operations. Assumes that the freelist is already locked. Only used within allocateUninitializedEntry."
+        },
+        {
+          "name": "FreeEntry",
+          "parameters": [
+            "WasmCodePointer entry"
+          ],
+          "return_type": "void",
+          "logic": "Frees an entry by linking it to the freelist."
+        },
+        {
+          "name": "LinkFreelist",
+          "parameters": [
+            "FreelistHead freelist_to_link",
+            "uint32_t last_element"
+          ],
+          "return_type": "WasmCodePointerTable::FreelistHead",
+          "logic": "Links a freelist to the main freelist using compare-and-exchange atomic operations."
+        }
+      ]
+    }
+  ],
+  "functions": []
+}

@@ -1,0 +1,534 @@
+{
+  "file_path": "/home/kathirks_gc/v8_go/codebase/src/json/json-parser.h",
+  "imports": [
+    "<optional>",
+    "include/v8-callbacks.h",
+    "src/base/small-vector.h",
+    "src/base/strings.h",
+    "src/common/high-allocation-throughput-scope.h",
+    "src/execution/isolate.h",
+    "src/heap/factory.h",
+    "src/objects/objects.h",
+    "src/objects/string.h",
+    "src/roots/roots.h"
+  ],
+  "classes": [
+    {
+      "name": "JsonString",
+      "properties": [
+        "start_",
+        "index_",
+        "length_",
+        "needs_conversion_",
+        "internalize_",
+        "has_escape_",
+        "is_index_"
+      ],
+      "methods": [
+        {
+          "name": "JsonString",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Default constructor. Initializes a JsonString object, setting default values for start, length, needs_conversion, internalize, has_escape, and is_index."
+        },
+        {
+          "name": "JsonString",
+          "parameters": [
+            "uint32_t index"
+          ],
+          "return_type": "void",
+          "logic": "Constructor that creates a JsonString representing an index. It initializes a JsonString object setting the index_ and sets the is_index_ flag to true."
+        },
+        {
+          "name": "JsonString",
+          "parameters": [
+            "uint32_t start",
+            "uint32_t length",
+            "bool needs_conversion",
+            "bool internalize",
+            "bool has_escape"
+          ],
+          "return_type": "void",
+          "logic": "Constructor to create JsonString. Initializes a JsonString object with a start position, length, and boolean flags for conversion, internalization, and escape characters."
+        },
+        {
+          "name": "internalize",
+          "parameters": [],
+          "return_type": "bool",
+          "logic": "Returns the value of the internalize_ flag. Asserts that it is not an index."
+        },
+        {
+          "name": "needs_conversion",
+          "parameters": [],
+          "return_type": "bool",
+          "logic": "Returns the value of the needs_conversion_ flag. Asserts that it is not an index."
+        },
+        {
+          "name": "has_escape",
+          "parameters": [],
+          "return_type": "bool",
+          "logic": "Returns the value of the has_escape_ flag. Asserts that it is not an index."
+        },
+        {
+          "name": "start",
+          "parameters": [],
+          "return_type": "uint32_t",
+          "logic": "Returns the value of the start_ member. Asserts that it is not an index."
+        },
+        {
+          "name": "length",
+          "parameters": [],
+          "return_type": "uint32_t",
+          "logic": "Returns the value of the length_ member. Asserts that it is not an index."
+        },
+        {
+          "name": "index",
+          "parameters": [],
+          "return_type": "uint32_t",
+          "logic": "Returns the value of the index_ member. Asserts that it is an index."
+        },
+        {
+          "name": "is_index",
+          "parameters": [],
+          "return_type": "bool",
+          "logic": "Returns the value of the is_index_ member."
+        }
+      ]
+    },
+    {
+      "name": "JsonProperty",
+      "properties": [
+        "string",
+        "value"
+      ],
+      "methods": [
+        {
+          "name": "JsonProperty",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Default constructor that calls UNREACHABLE()."
+        },
+        {
+          "name": "JsonProperty",
+          "parameters": [
+            "const JsonString& string"
+          ],
+          "return_type": "void",
+          "logic": "Constructor that initializes a JsonProperty with a JsonString."
+        },
+        {
+          "name": "JsonProperty",
+          "parameters": [
+            "const JsonString& string",
+            "Handle<Object> value"
+          ],
+          "return_type": "void",
+          "logic": "Constructor that initializes a JsonProperty with a JsonString and a Handle to an Object (value)."
+        }
+      ]
+    },
+    {
+      "name": "JsonParseInternalizer",
+      "properties": [
+        "isolate_",
+        "reviver_",
+        "source_"
+      ],
+      "methods": [
+        {
+          "name": "Internalize",
+          "parameters": [
+            "Isolate* isolate",
+            "DirectHandle<Object> result",
+            "Handle<Object> reviver",
+            "Handle<String> source",
+            "MaybeHandle<Object> val_node"
+          ],
+          "return_type": "MaybeHandle<Object>",
+          "logic": "Static method that performs the internalization of the JSON parsing result, potentially using a reviver function."
+        },
+        {
+          "name": "InternalizeJsonProperty",
+          "parameters": [
+            "DirectHandle<JSReceiver> holder",
+            "DirectHandle<String> key",
+            "Handle<Object> val_node",
+            "DirectHandle<Object> snapshot"
+          ],
+          "return_type": "MaybeHandle<Object>",
+          "logic": "Template method for internalizing a JSON property, optionally including the source string in the reviver call."
+        },
+        {
+          "name": "RecurseAndApply",
+          "parameters": [
+            "Handle<JSReceiver> holder",
+            "Handle<String> name",
+            "Handle<Object> val_node",
+            "Handle<Object> snapshot"
+          ],
+          "return_type": "bool",
+          "logic": "Template method to recursively internalize nested JSON properties, applying the reviver function if necessary."
+        }
+      ]
+    },
+    {
+      "name": "JsonParser",
+      "properties": [
+        "isolate_",
+        "hash_seed_",
+        "next_",
+        "chars_may_relocate_",
+        "object_constructor_",
+        "original_source_",
+        "source_",
+        "parsed_val_node_",
+        "element_stack_",
+        "property_stack_",
+        "double_elements_",
+        "smi_elements_",
+        "cursor_",
+        "end_",
+        "chars_"
+      ],
+      "methods": [
+        {
+          "name": "CheckRawJson",
+          "parameters": [
+            "Isolate* isolate",
+            "Handle<String> source"
+          ],
+          "return_type": "bool",
+          "logic": "Static method that creates a JsonParser and calls ParseRawJson to validate if the source is valid json without reviver functionality"
+        },
+        {
+          "name": "Parse",
+          "parameters": [
+            "Isolate* isolate",
+            "Handle<String> source",
+            "Handle<Object> reviver"
+          ],
+          "return_type": "MaybeHandle<Object>",
+          "logic": "Static method that creates a JsonParser and calls ParseJson to parse the JSON source string. If a reviver function is provided, it calls JsonParseInternalizer::Internalize. It handles allocation throughput."
+        },
+        {
+          "name": "JsonParser",
+          "parameters": [
+            "Isolate* isolate",
+            "Handle<String> source"
+          ],
+          "return_type": "void",
+          "logic": "Constructor for the JsonParser class. Initializes the parser with the Isolate and the JSON source string."
+        },
+        {
+          "name": "~JsonParser",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Destructor for the JsonParser class."
+        },
+        {
+          "name": "ParseJson",
+          "parameters": [
+            "DirectHandle<Object> reviver"
+          ],
+          "return_type": "MaybeHandle<Object>",
+          "logic": "Parses a string containing a single JSON value."
+        },
+        {
+          "name": "ParseRawJson",
+          "parameters": [],
+          "return_type": "bool",
+          "logic": "Parses a string, checks if it is valid JSON, and returns a boolean indicating success."
+        },
+        {
+          "name": "advance",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Advances the cursor to the next character in the input string."
+        },
+        {
+          "name": "CurrentCharacter",
+          "parameters": [],
+          "return_type": "base::uc32",
+          "logic": "Returns the current character at the cursor position. Returns kEndOfString if at end of string."
+        },
+        {
+          "name": "NextCharacter",
+          "parameters": [],
+          "return_type": "base::uc32",
+          "logic": "Advances the cursor and returns the new current character."
+        },
+        {
+          "name": "AdvanceToNonDecimal",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Advances the cursor until a non-decimal character is reached."
+        },
+        {
+          "name": "peek",
+          "parameters": [],
+          "return_type": "JsonToken",
+          "logic": "Returns the next token without advancing the cursor."
+        },
+        {
+          "name": "Consume",
+          "parameters": [
+            "JsonToken token"
+          ],
+          "return_type": "void",
+          "logic": "Consumes the specified token if it matches the next token. Asserts that they are equal."
+        },
+        {
+          "name": "Expect",
+          "parameters": [
+            "JsonToken token",
+            "std::optional<MessageTemplate> errorMessage"
+          ],
+          "return_type": "void",
+          "logic": "Expects the next token to be the specified token. If not, reports an unexpected token with optional error message."
+        },
+        {
+          "name": "ExpectNext",
+          "parameters": [
+            "JsonToken token",
+            "std::optional<MessageTemplate> errorMessage"
+          ],
+          "return_type": "void",
+          "logic": "Skips whitespace, then expects the next token to be the specified token. If not, reports an unexpected token with optional error message."
+        },
+        {
+          "name": "Check",
+          "parameters": [
+            "JsonToken token"
+          ],
+          "return_type": "bool",
+          "logic": "Skips whitespace and checks if the next token is the specified token. If so, consumes it and returns true, otherwise returns false."
+        },
+        {
+          "name": "ScanLiteral",
+          "parameters": [
+            "const char (&s)[N]"
+          ],
+          "return_type": "void",
+          "logic": "Scans a literal string (e.g., 'true', 'false', 'null') and verifies if it matches the expected literal. Reports an unexpected character or EOS if there is a mismatch."
+        },
+        {
+          "name": "SkipWhitespace",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Skips whitespace characters (tab, carriage-return, newline, space) in the input string."
+        },
+        {
+          "name": "ScanJsonString",
+          "parameters": [
+            "bool needs_internalization"
+          ],
+          "return_type": "JsonString",
+          "logic": "Scans a JSON string literal (double-quoted) and returns a JsonString object representing it."
+        },
+        {
+          "name": "ScanJsonPropertyKey",
+          "parameters": [
+            "JsonContinuation* cont"
+          ],
+          "return_type": "JsonString",
+          "logic": "Scans a JSON property key (within an object) and returns a JsonString object."
+        },
+        {
+          "name": "ScanUnicodeCharacter",
+          "parameters": [],
+          "return_type": "base::uc32",
+          "logic": "Scans a Unicode character (e.g., from \\uXXXX escape sequence)."
+        },
+        {
+          "name": "GetKeyChars",
+          "parameters": [
+            "JsonString key"
+          ],
+          "return_type": "base::Vector<const Char>",
+          "logic": "Returns a Vector containing the characters of a JsonString key from source string."
+        },
+        {
+          "name": "MakeString",
+          "parameters": [
+            "const JsonString& string",
+            "Handle<String> hint"
+          ],
+          "return_type": "Handle<String>",
+          "logic": "Creates a String object from a JsonString."
+        },
+        {
+          "name": "DecodeString",
+          "parameters": [
+            "SinkChar* sink",
+            "uint32_t start",
+            "uint32_t length"
+          ],
+          "return_type": "void",
+          "logic": "Decodes a JSON string into a character sink."
+        },
+        {
+          "name": "DecodeString",
+          "parameters": [
+            "const JsonString& string",
+            "Handle<SinkSeqString> intermediate",
+            "Handle<String> hint"
+          ],
+          "return_type": "Handle<String>",
+          "logic": "Decodes a JSON string into a String object using an intermediate sequence string."
+        },
+        {
+          "name": "ParseJsonNumber",
+          "parameters": [],
+          "return_type": "Handle<Object>",
+          "logic": "Parses a JSON number literal and returns a Number object."
+        },
+        {
+          "name": "ParseJsonNumberAsDoubleOrSmi",
+          "parameters": [
+            "double* result_double",
+            "int* result_smi"
+          ],
+          "return_type": "bool",
+          "logic": "Parses a JSON number and returns either a double or a Smi. Returns true if parsed as a double, false if parsed as a Smi."
+        },
+        {
+          "name": "ParseJsonValue",
+          "parameters": [],
+          "return_type": "MaybeHandle<Object>",
+          "logic": "Parses a single JSON value (string, number, boolean, null, object, array). Parametrised with should_track_json_source."
+        },
+        {
+          "name": "ParseJsonValueRecursive",
+          "parameters": [
+            "Handle<Map> feedback"
+          ],
+          "return_type": "MaybeHandle<Object>",
+          "logic": "Parses a JSON value recursively. Used to parse the underlying JSON structure."
+        },
+        {
+          "name": "ParseJsonArray",
+          "parameters": [],
+          "return_type": "MaybeHandle<Object>",
+          "logic": "Parses a JSON array literal and returns a JSArray object."
+        },
+        {
+          "name": "ParseJsonObject",
+          "parameters": [
+            "Handle<Map> feedback"
+          ],
+          "return_type": "MaybeHandle<Object>",
+          "logic": "Parses a JSON object literal and returns a JSObject object."
+        },
+        {
+          "name": "BuildJsonObject",
+          "parameters": [
+            "const JsonContinuation& cont",
+            "DirectHandle<Map> feedback"
+          ],
+          "return_type": "Handle<JSObject>",
+          "logic": "Builds a JSObject based on the parsed JSON data, potentially tracking source information."
+        },
+        {
+          "name": "BuildJsonArray",
+          "parameters": [
+            "size_t start"
+          ],
+          "return_type": "Handle<Object>",
+          "logic": "Builds a JSArray based on the parsed JSON data."
+        },
+        {
+          "name": "ReportUnexpectedCharacter",
+          "parameters": [
+            "base::uc32 c"
+          ],
+          "return_type": "void",
+          "logic": "Reports an unexpected character during parsing and throws a SyntaxError."
+        },
+        {
+          "name": "IsSpecialString",
+          "parameters": [],
+          "return_type": "bool",
+          "logic": "Check if the current value starts with special characters (e.g. NaN, Infinity, -Infinity). Returns true if special otherwise false."
+        },
+        {
+          "name": "GetErrorMessageWithEllipses",
+          "parameters": [
+            "DirectHandle<Object>& arg",
+            "DirectHandle<Object>& arg2",
+            "int pos"
+          ],
+          "return_type": "MessageTemplate",
+          "logic": "Returns a suitable error message when the input string has ellipsis (...) when generating an error."
+        },
+        {
+          "name": "LookUpErrorMessageForJsonToken",
+          "parameters": [
+            "JsonToken token",
+            "DirectHandle<Object>& arg",
+            "DirectHandle<Object>& arg2",
+            "int pos"
+          ],
+          "return_type": "MessageTemplate",
+          "logic": "Looks up an appropriate error message template to use based on the unexpected JSON token that was found during parsing."
+        },
+        {
+          "name": "CalculateFileLocation",
+          "parameters": [
+            "DirectHandle<Object>& line",
+            "DirectHandle<Object>& column"
+          ],
+          "return_type": "void",
+          "logic": "Calculates the line and column number for the current cursor position and sets the passed arguments."
+        },
+        {
+          "name": "ReportUnexpectedToken",
+          "parameters": [
+            "JsonToken token",
+            "std::optional<MessageTemplate> errorMessage"
+          ],
+          "return_type": "void",
+          "logic": "Reports an unexpected token during parsing and throws a SyntaxError."
+        },
+        {
+          "name": "isolate",
+          "parameters": [],
+          "return_type": "Isolate*",
+          "logic": "Returns the isolate."
+        },
+        {
+          "name": "factory",
+          "parameters": [],
+          "return_type": "Factory*",
+          "logic": "Returns the factory associated with the isolate."
+        },
+        {
+          "name": "roots",
+          "parameters": [],
+          "return_type": "ReadOnlyRoots",
+          "logic": "Returns the ReadOnlyRoots associated with the isolate."
+        },
+        {
+          "name": "object_constructor",
+          "parameters": [],
+          "return_type": "DirectHandle<JSFunction>",
+          "logic": "Returns a direct handle to the object constructor."
+        },
+        {
+          "name": "UpdatePointersCallback",
+          "parameters": [
+            "void* parser"
+          ],
+          "return_type": "void",
+          "logic": "Static callback used to update internal pointers when the heap is compacted during garbage collection."
+        },
+        {
+          "name": "UpdatePointers",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Updates internal pointers (chars_, cursor_, end_) to reflect the current location of the source string in memory after a possible garbage collection."
+        }
+      ]
+    }
+  ],
+  "functions": []
+}

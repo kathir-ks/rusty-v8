@@ -1,0 +1,113 @@
+{
+  "file_path": "/home/kathirks_gc/v8_go/codebase/src/tasks/task-utils.cc",
+  "imports": [
+    "src/tasks/task-utils.h",
+    "src/tasks/cancelable-task.h"
+  ],
+  "classes": [
+    {
+      "name": "CancelableFuncTask",
+      "properties": [
+        "func_"
+      ],
+      "methods": [
+        {
+          "name": "CancelableFuncTask",
+          "parameters": [
+            "Isolate* isolate",
+            "std::function<void()> func"
+          ],
+          "return_type": null,
+          "logic": "Constructor that initializes the task with an isolate and a function to execute.  It calls the CancelableTask constructor with the isolate."
+        },
+        {
+          "name": "CancelableFuncTask",
+          "parameters": [
+            "CancelableTaskManager* manager",
+            "std::function<void()> func"
+          ],
+          "return_type": null,
+          "logic": "Constructor that initializes the task with a CancelableTaskManager and a function to execute. It calls the CancelableTask constructor with the manager."
+        },
+        {
+          "name": "RunInternal",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Executes the stored function 'func_'."
+        }
+      ]
+    },
+    {
+      "name": "CancelableIdleFuncTask",
+      "properties": [
+        "func_"
+      ],
+      "methods": [
+        {
+          "name": "CancelableIdleFuncTask",
+          "parameters": [
+            "Isolate* isolate",
+            "std::function<void(double)> func"
+          ],
+          "return_type": null,
+          "logic": "Constructor that initializes the idle task with an isolate and a function to execute. It calls the CancelableIdleTask constructor with the isolate."
+        },
+        {
+          "name": "CancelableIdleFuncTask",
+          "parameters": [
+            "CancelableTaskManager* manager",
+            "std::function<void(double)> func"
+          ],
+          "return_type": null,
+          "logic": "Constructor that initializes the idle task with a CancelableTaskManager and a function to execute. It calls the CancelableIdleTask constructor with the manager."
+        },
+        {
+          "name": "RunInternal",
+          "parameters": [
+            "double deadline_in_seconds"
+          ],
+          "return_type": "void",
+          "logic": "Executes the stored function 'func_' with the provided deadline."
+        }
+      ]
+    }
+  ],
+  "functions": [
+    {
+      "name": "MakeCancelableTask",
+      "parameters": [
+        "Isolate* isolate",
+        "std::function<void()> func"
+      ],
+      "return_type": "std::unique_ptr<CancelableTask>",
+      "logic": "Creates a unique pointer to a CancelableFuncTask, initialized with the provided isolate and function."
+    },
+    {
+      "name": "MakeCancelableTask",
+      "parameters": [
+        "CancelableTaskManager* manager",
+        "std::function<void()> func"
+      ],
+      "return_type": "std::unique_ptr<CancelableTask>",
+      "logic": "Creates a unique pointer to a CancelableFuncTask, initialized with the provided CancelableTaskManager and function."
+    },
+    {
+      "name": "MakeCancelableIdleTask",
+      "parameters": [
+        "Isolate* isolate",
+        "std::function<void(double)> func"
+      ],
+      "return_type": "std::unique_ptr<CancelableIdleTask>",
+      "logic": "Creates a unique pointer to a CancelableIdleFuncTask, initialized with the provided isolate and function."
+    },
+    {
+      "name": "MakeCancelableIdleTask",
+      "parameters": [
+        "CancelableTaskManager* manager",
+        "std::function<void(double)> func"
+      ],
+      "return_type": "std::unique_ptr<CancelableIdleTask>",
+      "logic": "Creates a unique pointer to a CancelableIdleFuncTask, initialized with the provided CancelableTaskManager and function."
+    }
+  ]
+}

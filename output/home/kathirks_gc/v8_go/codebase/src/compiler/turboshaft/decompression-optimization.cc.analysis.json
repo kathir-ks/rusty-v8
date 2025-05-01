@@ -1,0 +1,98 @@
+{
+  "file_path": "/home/kathirks_gc/v8_go/codebase/src/compiler/turboshaft/decompression-optimization.cc",
+  "imports": [
+    "src/compiler/turboshaft/decompression-optimization.h",
+    "src/codegen/machine-type.h",
+    "src/compiler/turboshaft/copying-phase.h",
+    "src/compiler/turboshaft/operations.h",
+    "src/compiler/turboshaft/representations.h"
+  ],
+  "classes": [
+    {
+      "name": "DecompressionAnalyzer",
+      "properties": [
+        "graph",
+        "phase_zone",
+        "needs_decompression",
+        "candidates"
+      ],
+      "methods": [
+        {
+          "name": "DecompressionAnalyzer",
+          "parameters": [
+            "const Graph& graph",
+            "Zone* phase_zone"
+          ],
+          "return_type": "void",
+          "logic": "Constructor for the DecompressionAnalyzer. Initializes the graph, phase_zone, needs_decompression table, and candidates vector."
+        },
+        {
+          "name": "Run",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Runs the decompression analysis. Iterates backwards through the blocks of the graph, processing each block and its operations to determine which values need decompression. Handles loops with a fixed-point iteration."
+        },
+        {
+          "name": "NeedsDecompression",
+          "parameters": [
+            "OpIndex op"
+          ],
+          "return_type": "bool",
+          "logic": "Returns true if the value at the given OpIndex needs decompression, false otherwise."
+        },
+        {
+          "name": "NeedsDecompression",
+          "parameters": [
+            "const Operation& op"
+          ],
+          "return_type": "bool",
+          "logic": "Returns true if the given operation's output needs decompression, false otherwise."
+        },
+        {
+          "name": "MarkAsNeedsDecompression",
+          "parameters": [
+            "OpIndex op"
+          ],
+          "return_type": "bool",
+          "logic": "Marks the value at the given OpIndex as needing decompression. Returns true if the state changed."
+        },
+        {
+          "name": "ProcessBlock",
+          "parameters": [
+            "const Block& block",
+            "int32_t* next_block_id"
+          ],
+          "return_type": "void",
+          "logic": "Processes a block, iterating backwards through its operations and calling ProcessOperation on each. Handles loop phis to ensure correct fixed-point iteration."
+        },
+        {
+          "name": "ProcessOperation",
+          "parameters": [
+            "const Operation& op"
+          ],
+          "return_type": "void",
+          "logic": "Processes a single operation, determining if its inputs need decompression based on the operation's type and uses. Updates the needs_decompression table and candidates vector accordingly."
+        },
+        {
+          "name": "MarkAddressingBase",
+          "parameters": [
+            "OpIndex base_idx"
+          ],
+          "return_type": "void",
+          "logic": "Checks if a base index of a LoadOp can be kept compressed and decompressed using complex addressing mode. If not, marks it as needing decompression."
+        }
+      ]
+    }
+  ],
+  "functions": [
+    {
+      "name": "RunDecompressionOptimization",
+      "parameters": [
+        "Graph& graph",
+        "Zone* phase_zone"
+      ],
+      "return_type": "void",
+      "logic": "Runs the decompression optimization on the given Turboshaft graph. Uses the DecompressionAnalyzer to determine which values need decompression and then modifies the graph in-place to reflect the optimized representation choices."
+    }
+  ]
+}

@@ -1,0 +1,768 @@
+{
+  "file_path": "/home/kathirks_gc/v8_go/codebase/include/v8-script.h",
+  "imports": [
+    "<stddef.h>",
+    "<stdint.h>",
+    "<memory>",
+    "<tuple>",
+    "<vector>",
+    "v8-callbacks.h",
+    "v8-data.h",
+    "v8-local-handle.h",
+    "v8-maybe.h",
+    "v8-memory-span.h",
+    "v8-message.h",
+    "v8config.h"
+  ],
+  "classes": [
+    {
+      "name": "ScriptOrModule",
+      "properties": [],
+      "methods": [
+        {
+          "name": "GetResourceName",
+          "parameters": [],
+          "return_type": "Local<Value>",
+          "logic": "Returns the resource name that was passed as ResourceName to the ScriptOrigin."
+        },
+        {
+          "name": "HostDefinedOptions",
+          "parameters": [],
+          "return_type": "Local<Data>",
+          "logic": "Returns the options that were passed as HostDefinedOptions to the ScriptOrigin."
+        }
+      ]
+    },
+    {
+      "name": "UnboundScript",
+      "properties": [
+        "static const int kNoScriptId"
+      ],
+      "methods": [
+        {
+          "name": "BindToCurrentContext",
+          "parameters": [],
+          "return_type": "Local<Script>",
+          "logic": "Binds the script to the currently entered context."
+        },
+        {
+          "name": "GetId",
+          "parameters": [],
+          "return_type": "int",
+          "logic": "Returns the ID of the script."
+        },
+        {
+          "name": "GetScriptName",
+          "parameters": [],
+          "return_type": "Local<Value>",
+          "logic": "Returns the name of the script."
+        },
+        {
+          "name": "GetSourceURL",
+          "parameters": [],
+          "return_type": "Local<Value>",
+          "logic": "Returns the source URL of the script, read from magic comments."
+        },
+        {
+          "name": "GetSourceMappingURL",
+          "parameters": [],
+          "return_type": "Local<Value>",
+          "logic": "Returns the source mapping URL of the script, read from magic comments."
+        },
+        {
+          "name": "GetLineNumber",
+          "parameters": [
+            "int code_pos = 0"
+          ],
+          "return_type": "int",
+          "logic": "Returns the line number of the code position in the script."
+        },
+        {
+          "name": "GetColumnNumber",
+          "parameters": [
+            "int code_pos = 0"
+          ],
+          "return_type": "int",
+          "logic": "Returns the column number of the code position in the script."
+        }
+      ]
+    },
+    {
+      "name": "UnboundModuleScript",
+      "properties": [],
+      "methods": [
+        {
+          "name": "GetSourceURL",
+          "parameters": [],
+          "return_type": "Local<Value>",
+          "logic": "Returns the source URL of the module script, read from magic comments."
+        },
+        {
+          "name": "GetSourceMappingURL",
+          "parameters": [],
+          "return_type": "Local<Value>",
+          "logic": "Returns the source mapping URL of the module script, read from magic comments."
+        }
+      ]
+    },
+    {
+      "name": "Location",
+      "properties": [
+        "int line_number_",
+        "int column_number_"
+      ],
+      "methods": [
+        {
+          "name": "GetLineNumber",
+          "parameters": [],
+          "return_type": "int",
+          "logic": "Returns the line number."
+        },
+        {
+          "name": "GetColumnNumber",
+          "parameters": [],
+          "return_type": "int",
+          "logic": "Returns the column number."
+        },
+        {
+          "name": "Location",
+          "parameters": [
+            "int line_number",
+            "int column_number"
+          ],
+          "return_type": "void",
+          "logic": "Constructor for the Location class."
+        }
+      ]
+    },
+    {
+      "name": "ModuleRequest",
+      "properties": [],
+      "methods": [
+        {
+          "name": "GetSpecifier",
+          "parameters": [],
+          "return_type": "Local<String>",
+          "logic": "Returns the module specifier."
+        },
+        {
+          "name": "GetPhase",
+          "parameters": [],
+          "return_type": "ModuleImportPhase",
+          "logic": "Returns the module import phase."
+        },
+        {
+          "name": "GetSourceOffset",
+          "parameters": [],
+          "return_type": "int",
+          "logic": "Returns the source code offset of the module request."
+        },
+        {
+          "name": "GetImportAttributes",
+          "parameters": [],
+          "return_type": "Local<FixedArray>",
+          "logic": "Returns the import attributes for this request."
+        },
+        {
+          "name": "GetImportAssertions",
+          "parameters": [],
+          "return_type": "Local<FixedArray>",
+          "logic": "Deprecated alias for GetImportAttributes"
+        },
+        {
+          "name": "Cast",
+          "parameters": [
+            "Data* data"
+          ],
+          "return_type": "ModuleRequest*",
+          "logic": "Casts a Data* to a ModuleRequest*."
+        }
+      ]
+    },
+    {
+      "name": "Module",
+      "properties": [],
+      "methods": [
+        {
+          "name": "GetStatus",
+          "parameters": [],
+          "return_type": "Status",
+          "logic": "Returns the module's current status."
+        },
+        {
+          "name": "GetException",
+          "parameters": [],
+          "return_type": "Local<Value>",
+          "logic": "For a module in kErrored status, this returns the corresponding exception."
+        },
+        {
+          "name": "GetModuleRequests",
+          "parameters": [],
+          "return_type": "Local<FixedArray>",
+          "logic": "Returns the ModuleRequests for this module."
+        },
+        {
+          "name": "SourceOffsetToLocation",
+          "parameters": [
+            "int offset"
+          ],
+          "return_type": "Location",
+          "logic": "For the given source text offset in this module, returns the corresponding Location with line and column numbers."
+        },
+        {
+          "name": "GetIdentityHash",
+          "parameters": [],
+          "return_type": "int",
+          "logic": "Returns the identity hash for this object."
+        },
+        {
+          "name": "InstantiateModule",
+          "parameters": [
+            "Local<Context> context",
+            "ResolveModuleCallback module_callback",
+            "ResolveSourceCallback source_callback = nullptr"
+          ],
+          "return_type": "Maybe<bool>",
+          "logic": "Instantiates the module and its dependencies."
+        },
+        {
+          "name": "Evaluate",
+          "parameters": [
+            "Local<Context> context"
+          ],
+          "return_type": "MaybeLocal<Value>",
+          "logic": "Evaluates the module and its dependencies."
+        },
+        {
+          "name": "GetModuleNamespace",
+          "parameters": [],
+          "return_type": "Local<Value>",
+          "logic": "Returns the namespace object of this module."
+        },
+        {
+          "name": "GetUnboundModuleScript",
+          "parameters": [],
+          "return_type": "Local<UnboundModuleScript>",
+          "logic": "Returns the corresponding context-unbound module script."
+        },
+        {
+          "name": "ScriptId",
+          "parameters": [],
+          "return_type": "int",
+          "logic": "Returns the underlying script's id."
+        },
+        {
+          "name": "IsGraphAsync",
+          "parameters": [],
+          "return_type": "bool",
+          "logic": "Returns whether this module or any of its requested modules is async, i.e. contains top-level await."
+        },
+        {
+          "name": "HasTopLevelAwait",
+          "parameters": [],
+          "return_type": "bool",
+          "logic": "Returns whether this module is individually asynchronous (for example, if it's a Source Text Module Record containing a top-level await)."
+        },
+        {
+          "name": "IsSourceTextModule",
+          "parameters": [],
+          "return_type": "bool",
+          "logic": "Returns whether the module is a SourceTextModule."
+        },
+        {
+          "name": "IsSyntheticModule",
+          "parameters": [],
+          "return_type": "bool",
+          "logic": "Returns whether the module is a SyntheticModule."
+        },
+        {
+          "name": "CreateSyntheticModule",
+          "parameters": [
+            "Isolate* isolate",
+            "Local<String> module_name",
+            "const MemorySpan<const Local<String>>& export_names",
+            "SyntheticModuleEvaluationSteps evaluation_steps"
+          ],
+          "return_type": "Local<Module>",
+          "logic": "Creates a new SyntheticModule with the specified export names, where evaluation_steps will be executed upon module evaluation."
+        },
+        {
+          "name": "SetSyntheticModuleExport",
+          "parameters": [
+            "Isolate* isolate",
+            "Local<String> export_name",
+            "Local<Value> export_value"
+          ],
+          "return_type": "Maybe<bool>",
+          "logic": "Set this module's exported value for the name export_name to the specified export_value. This method must be called only on Modules created via CreateSyntheticModule."
+        },
+        {
+          "name": "GetStalledTopLevelAwaitMessages",
+          "parameters": [
+            "Isolate* isolate"
+          ],
+          "return_type": "std::pair<LocalVector<Module>, LocalVector<Message>>",
+          "logic": "Search the modules requested directly or indirectly by the module for any top-level await that has not yet resolved."
+        },
+        {
+          "name": "Cast",
+          "parameters": [
+            "Data* data"
+          ],
+          "return_type": "Module*",
+          "logic": "Casts a Data* to a Module*."
+        }
+      ]
+    },
+    {
+      "name": "CompileHintsCollector",
+      "properties": [],
+      "methods": [
+        {
+          "name": "GetCompileHints",
+          "parameters": [
+            "Isolate* isolate"
+          ],
+          "return_type": "std::vector<int>",
+          "logic": "Returns the positions of lazy functions which were compiled and executed."
+        }
+      ]
+    },
+    {
+      "name": "Script",
+      "properties": [],
+      "methods": [
+        {
+          "name": "Compile",
+          "parameters": [
+            "Local<Context> context",
+            "Local<String> source",
+            "ScriptOrigin* origin = nullptr"
+          ],
+          "return_type": "MaybeLocal<Script>",
+          "logic": "A shorthand for ScriptCompiler::Compile()."
+        },
+        {
+          "name": "Run",
+          "parameters": [
+            "Local<Context> context"
+          ],
+          "return_type": "MaybeLocal<Value>",
+          "logic": "Runs the script returning the resulting value."
+        },
+        {
+          "name": "Run",
+          "parameters": [
+            "Local<Context> context",
+            "Local<Data> host_defined_options"
+          ],
+          "return_type": "MaybeLocal<Value>",
+          "logic": "Runs the script returning the resulting value."
+        },
+        {
+          "name": "GetUnboundScript",
+          "parameters": [],
+          "return_type": "Local<UnboundScript>",
+          "logic": "Returns the corresponding context-unbound script."
+        },
+        {
+          "name": "GetResourceName",
+          "parameters": [],
+          "return_type": "Local<Value>",
+          "logic": "The name that was passed by the embedder as ResourceName to the ScriptOrigin."
+        },
+        {
+          "name": "GetProducedCompileHints",
+          "parameters": [],
+          "return_type": "std::vector<int>",
+          "logic": "Deprecated: If the script was compiled, returns the positions of lazy functions which were eventually compiled and executed."
+        },
+        {
+          "name": "GetCompileHintsCollector",
+          "parameters": [],
+          "return_type": "Local<CompileHintsCollector>",
+          "logic": "Get a compile hints collector object which we can use later for retrieving compile hints."
+        }
+      ]
+    },
+    {
+      "name": "ScriptCompiler",
+      "properties": [],
+      "methods": [],
+      "inner_classes": [
+        {
+          "name": "CachedData",
+          "properties": [
+            "const uint8_t* data",
+            "int length",
+            "bool rejected",
+            "BufferPolicy buffer_policy"
+          ],
+          "methods": [
+            {
+              "name": "CachedData",
+              "parameters": [],
+              "return_type": "void",
+              "logic": "Default constructor"
+            },
+            {
+              "name": "CachedData",
+              "parameters": [
+                "const uint8_t* data",
+                "int length",
+                "BufferPolicy buffer_policy = BufferNotOwned"
+              ],
+              "return_type": "void",
+              "logic": "Constructor with data and length."
+            },
+            {
+              "name": "~CachedData",
+              "parameters": [],
+              "return_type": "void",
+              "logic": "Destructor."
+            },
+            {
+              "name": "CompatibilityCheck",
+              "parameters": [
+                "Isolate* isolate"
+              ],
+              "return_type": "CompatibilityCheckResult",
+              "logic": "Check if the CachedData can be loaded in the given isolate."
+            }
+          ]
+        },
+        {
+          "name": "CompilationDetails",
+          "properties": [
+            "InMemoryCacheResult in_memory_cache_result",
+            "static constexpr int64_t kTimeNotMeasured",
+            "int64_t foreground_time_in_microseconds",
+            "int64_t background_time_in_microseconds"
+          ],
+          "methods": []
+        },
+        {
+          "name": "Source",
+          "properties": [
+            "Local<String> source_string",
+            "Local<Value> resource_name",
+            "int resource_line_offset",
+            "int resource_column_offset",
+            "ScriptOriginOptions resource_options",
+            "Local<Value> source_map_url",
+            "Local<Data> host_defined_options",
+            "std::unique_ptr<CachedData> cached_data",
+            "std::unique_ptr<ConsumeCodeCacheTask> consume_cache_task",
+            "CompileHintCallback compile_hint_callback",
+            "void* compile_hint_callback_data",
+            "CompilationDetails compilation_details"
+          ],
+          "methods": [
+            {
+              "name": "Source",
+              "parameters": [
+                "Local<String> source_string",
+                "const ScriptOrigin& origin",
+                "CachedData* cached_data = nullptr",
+                "ConsumeCodeCacheTask* consume_cache_task = nullptr"
+              ],
+              "return_type": "void",
+              "logic": "Constructor taking source string, origin, cached data and consume cache task."
+            },
+            {
+              "name": "Source",
+              "parameters": [
+                "Local<String> source_string",
+                "CachedData* cached_data = nullptr",
+                "ConsumeCodeCacheTask* consume_cache_task = nullptr"
+              ],
+              "return_type": "void",
+              "logic": "Constructor taking source string, cached data and consume cache task."
+            },
+            {
+              "name": "Source",
+              "parameters": [
+                "Local<String> source_string",
+                "const ScriptOrigin& origin",
+                "CompileHintCallback callback",
+                "void* callback_data"
+              ],
+              "return_type": "void",
+              "logic": "Constructor taking source string, origin, compile hint callback and callback data."
+            },
+            {
+              "name": "~Source",
+              "parameters": [],
+              "return_type": "void",
+              "logic": "Destructor."
+            },
+            {
+              "name": "GetCachedData",
+              "parameters": [],
+              "return_type": "const CachedData*",
+              "logic": "Returns the cached data."
+            },
+            {
+              "name": "GetResourceOptions",
+              "parameters": [],
+              "return_type": "const ScriptOriginOptions&",
+              "logic": "Returns the resource options."
+            },
+            {
+              "name": "GetCompilationDetails",
+              "parameters": [],
+              "return_type": "const CompilationDetails&",
+              "logic": "Returns the CompilationDetails."
+            }
+          ]
+        },
+        {
+          "name": "ExternalSourceStream",
+          "properties": [],
+          "methods": [
+            {
+              "name": "~ExternalSourceStream",
+              "parameters": [],
+              "return_type": "virtual void",
+              "logic": "Virtual destructor."
+            },
+            {
+              "name": "GetMoreData",
+              "parameters": [
+                "const uint8_t** src"
+              ],
+              "return_type": "virtual size_t",
+              "logic": "Returns the next chunk of data from the embedder."
+            }
+          ]
+        },
+        {
+          "name": "StreamedSource",
+          "properties": [
+            "std::unique_ptr<internal::ScriptStreamingData> impl_",
+            "CompilationDetails compilation_details_"
+          ],
+          "methods": [
+            {
+              "name": "StreamedSource",
+              "parameters": [
+                "std::unique_ptr<ExternalSourceStream> source_stream",
+                "Encoding encoding"
+              ],
+              "return_type": "void",
+              "logic": "Constructor."
+            },
+            {
+              "name": "~StreamedSource",
+              "parameters": [],
+              "return_type": "void",
+              "logic": "Destructor."
+            },
+            {
+              "name": "impl",
+              "parameters": [],
+              "return_type": "internal::ScriptStreamingData*",
+              "logic": "Returns the internal ScriptStreamingData pointer."
+            },
+            {
+              "name": "compilation_details",
+              "parameters": [],
+              "return_type": "CompilationDetails&",
+              "logic": "Returns CompilationDetails object"
+            }
+          ]
+        },
+        {
+          "name": "ScriptStreamingTask",
+          "properties": [
+            "internal::ScriptStreamingData* data_"
+          ],
+          "methods": [
+            {
+              "name": "Run",
+              "parameters": [],
+              "return_type": "void",
+              "logic": "Runs the streaming task."
+            }
+          ]
+        },
+        {
+          "name": "ConsumeCodeCacheTask",
+          "properties": [
+            "std::unique_ptr<internal::BackgroundDeserializeTask> impl_"
+          ],
+          "methods": [
+            {
+              "name": "~ConsumeCodeCacheTask",
+              "parameters": [],
+              "return_type": "void",
+              "logic": "Destructor."
+            },
+            {
+              "name": "Run",
+              "parameters": [],
+              "return_type": "void",
+              "logic": "Runs the deserialization task."
+            },
+            {
+              "name": "SourceTextAvailable",
+              "parameters": [
+                "Isolate* isolate",
+                "Local<String> source_text",
+                "const ScriptOrigin& origin"
+              ],
+              "return_type": "void",
+              "logic": "Provides the source text string and origin information to the consumption task."
+            },
+            {
+              "name": "ShouldMergeWithExistingScript",
+              "parameters": [],
+              "return_type": "bool",
+              "logic": "Returns whether the embedder should call MergeWithExistingScript."
+            },
+            {
+              "name": "MergeWithExistingScript",
+              "parameters": [],
+              "return_type": "void",
+              "logic": "Merges newly deserialized data into an existing script which was found during SourceTextAvailable."
+            }
+          ]
+        }
+      ],
+      "static_methods": [
+        {
+          "name": "CompileUnboundScript",
+          "parameters": [
+            "Isolate* isolate",
+            "Source* source",
+            "CompileOptions options = kNoCompileOptions",
+            "NoCacheReason no_cache_reason = kNoCacheNoReason"
+          ],
+          "return_type": "MaybeLocal<UnboundScript>",
+          "logic": "Compiles the specified script (context-independent)."
+        },
+        {
+          "name": "Compile",
+          "parameters": [
+            "Local<Context> context",
+            "Source* source",
+            "CompileOptions options = kNoCompileOptions",
+            "NoCacheReason no_cache_reason = kNoCacheNoReason"
+          ],
+          "return_type": "MaybeLocal<Script>",
+          "logic": "Compiles the specified script (bound to current context)."
+        },
+        {
+          "name": "StartStreaming",
+          "parameters": [
+            "Isolate* isolate",
+            "StreamedSource* source",
+            "ScriptType type = ScriptType::kClassic",
+            "CompileOptions options = kNoCompileOptions",
+            "CompileHintCallback compile_hint_callback = nullptr",
+            "void* compile_hint_callback_data = nullptr"
+          ],
+          "return_type": "ScriptStreamingTask*",
+          "logic": "Returns a task which streams script data into V8."
+        },
+        {
+          "name": "StartConsumingCodeCache",
+          "parameters": [
+            "Isolate* isolate",
+            "std::unique_ptr<CachedData> source"
+          ],
+          "return_type": "ConsumeCodeCacheTask*",
+          "logic": "Starts consuming a V8 code cache."
+        },
+        {
+          "name": "StartConsumingCodeCacheOnBackground",
+          "parameters": [
+            "Isolate* isolate",
+            "std::unique_ptr<CachedData> source"
+          ],
+          "return_type": "ConsumeCodeCacheTask*",
+          "logic": "Starts consuming a V8 code cache on the background."
+        },
+        {
+          "name": "Compile",
+          "parameters": [
+            "Local<Context> context",
+            "StreamedSource* source",
+            "Local<String> full_source_string",
+            "const ScriptOrigin& origin"
+          ],
+          "return_type": "MaybeLocal<Script>",
+          "logic": "Compiles a streamed script (bound to current context)."
+        },
+        {
+          "name": "CachedDataVersionTag",
+          "parameters": [],
+          "return_type": "uint32_t",
+          "logic": "Return a version tag for CachedData for the current V8 version & flags."
+        },
+        {
+          "name": "CompileModule",
+          "parameters": [
+            "Isolate* isolate",
+            "Source* source",
+            "CompileOptions options = kNoCompileOptions",
+            "NoCacheReason no_cache_reason = kNoCacheNoReason"
+          ],
+          "return_type": "MaybeLocal<Module>",
+          "logic": "Compile an ES module."
+        },
+        {
+          "name": "CompileModule",
+          "parameters": [
+            "Local<Context> context",
+            "StreamedSource* v8_source",
+            "Local<String> full_source_string",
+            "const ScriptOrigin& origin"
+          ],
+          "return_type": "MaybeLocal<Module>",
+          "logic": "Compiles a streamed module script."
+        },
+        {
+          "name": "CompileFunction",
+          "parameters": [
+            "Local<Context> context",
+            "Source* source",
+            "size_t arguments_count = 0",
+            "Local<String> arguments[] = nullptr",
+            "size_t context_extension_count = 0",
+            "Local<Object> context_extensions[] = nullptr",
+            "CompileOptions options = kNoCompileOptions",
+            "NoCacheReason no_cache_reason = kNoCacheNoReason"
+          ],
+          "return_type": "MaybeLocal<Function>",
+          "logic": "Compile a function for a given context."
+        },
+        {
+          "name": "CreateCodeCache",
+          "parameters": [
+            "Local<UnboundScript> unbound_script"
+          ],
+          "return_type": "CachedData*",
+          "logic": "Creates and returns code cache for the specified unbound_script."
+        },
+        {
+          "name": "CreateCodeCache",
+          "parameters": [
+            "Local<UnboundModuleScript> unbound_module_script"
+          ],
+          "return_type": "CachedData*",
+          "logic": "Creates and returns code cache for the specified unbound_module_script."
+        },
+        {
+          "name": "CreateCodeCacheForFunction",
+          "parameters": [
+            "Local<Function> function"
+          ],
+          "return_type": "CachedData*",
+          "logic": "Creates and returns code cache for the specified function."
+        }
+      ]
+    }
+  ],
+  "functions": []
+}

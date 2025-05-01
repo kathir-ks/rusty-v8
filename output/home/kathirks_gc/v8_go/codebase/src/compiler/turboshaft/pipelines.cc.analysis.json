@@ -1,0 +1,70 @@
+{
+  "file_path": "/home/kathirks_gc/v8_go/codebase/src/compiler/turboshaft/pipelines.cc",
+  "imports": [
+    "src/compiler/turboshaft/pipelines.h",
+    "src/compiler/pipeline-data-inl.h",
+    "src/compiler/turboshaft/csa-optimize-phase.h",
+    "src/compiler/turboshaft/debug-feature-lowering-phase.h",
+    "src/compiler/turboshaft/instruction-selection-normalization-reducer.h",
+    "src/compiler/turboshaft/load-store-simplification-reducer.h",
+    "src/compiler/turboshaft/stack-check-lowering-reducer.h"
+  ],
+  "classes": [
+    {
+      "name": "SimplificationAndNormalizationPhase",
+      "properties": [],
+      "methods": [
+        {
+          "name": "Run",
+          "parameters": [
+            "PipelineData* data",
+            "Zone* temp_zone"
+          ],
+          "return_type": "void",
+          "logic": "Runs the copying phase with LoadStoreSimplificationReducer and InstructionSelectionNormalizationReducer. This likely performs simplification and normalization of the intermediate representation."
+        }
+      ]
+    },
+    {
+      "name": "Pipeline",
+      "properties": [],
+      "methods": [
+        {
+          "name": "AllocateRegisters",
+          "parameters": [
+            "const RegisterConfiguration* config",
+            "CallDescriptor* call_descriptor",
+            "bool run_verifier"
+          ],
+          "return_type": "void",
+          "logic": "Allocates registers for the compiled code.  It runs several phases related to register allocation, including constraint meeting, phi resolution, live range analysis, bundle building, register assignment (for general, FP, and SIMD registers), spilling, assignment committing, range connecting, control flow resolving, reference map populating, and move optimization. It also includes verification steps if `run_verifier` is true."
+        },
+        {
+          "name": "GenerateCode",
+          "parameters": [
+            "Linkage* linkage",
+            "std::shared_ptr<OsrHelper> osr_helper",
+            "JumpOptimizationInfo* jump_optimization_info",
+            "const ProfileDataFromFile* profile",
+            "int initial_graph_hash"
+          ],
+          "return_type": "bool",
+          "logic": "Generates machine code.  It initializes the codegen component, prepares for instruction selection, performs instruction selection, allocates registers, assembles the code, and handles jump optimization (potentially repeating instruction selection and register allocation).  Returns true on success, false otherwise."
+        }
+      ]
+    },
+    {
+      "name": "BuiltinPipeline",
+      "properties": [],
+      "methods": [
+        {
+          "name": "OptimizeBuiltin",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Optimizes built-in functions using a series of CSA (Common Subexpression Analysis) based phases, debug feature lowering and code elimination and simplification."
+        }
+      ]
+    }
+  ],
+  "functions": []
+}

@@ -1,0 +1,155 @@
+{
+  "file_path": "/home/kathirks_gc/v8_go/codebase/src/torque/cfg.cc",
+  "imports": [
+    "src/torque/cfg.h",
+    "<optional>",
+    "src/torque/type-oracle.h"
+  ],
+  "classes": [
+    {
+      "name": "Block",
+      "properties": [
+        "input_types_"
+      ],
+      "methods": [
+        {
+          "name": "SetInputTypes",
+          "parameters": [
+            "const Stack<const Type*>& input_types"
+          ],
+          "return_type": "void",
+          "logic": "Sets the input types for the block.  If input types are already set, it checks for compatibility and merges them if necessary, reporting an error if they are incompatible."
+        }
+      ]
+    },
+    {
+      "name": "CfgAssembler",
+      "properties": [
+        "current_block_",
+        "current_stack_",
+        "cfg_"
+      ],
+      "methods": [
+        {
+          "name": "Bind",
+          "parameters": [
+            "Block* block"
+          ],
+          "return_type": "void",
+          "logic": "Binds a block to the assembler, setting it as the current block and updating the current stack based on the block's input types."
+        },
+        {
+          "name": "Goto",
+          "parameters": [
+            "Block* block"
+          ],
+          "return_type": "void",
+          "logic": "Emits a Goto instruction to the given block. If the target block has input types, drops the current stack to match."
+        },
+        {
+          "name": "Goto",
+          "parameters": [
+            "Block* block",
+            "size_t preserved_slots"
+          ],
+          "return_type": "StackRange",
+          "logic": "Emits a Goto instruction to the given block, preserving a specified number of stack slots. It first deletes the unpreserved slots, then emits the Goto."
+        },
+        {
+          "name": "Branch",
+          "parameters": [
+            "Block* if_true",
+            "Block* if_false"
+          ],
+          "return_type": "void",
+          "logic": "Emits a Branch instruction to the specified 'if_true' and 'if_false' blocks."
+        },
+        {
+          "name": "DeleteRange",
+          "parameters": [
+            "StackRange range"
+          ],
+          "return_type": "void",
+          "logic": "Deletes a range of slots from the current stack, moving upper slots to fill the gap."
+        },
+        {
+          "name": "DropTo",
+          "parameters": [
+            "BottomOffset new_level"
+          ],
+          "return_type": "void",
+          "logic": "Deletes slots from the current stack down to the specified level."
+        },
+        {
+          "name": "Peek",
+          "parameters": [
+            "StackRange range",
+            "std::optional<const Type*> type"
+          ],
+          "return_type": "StackRange",
+          "logic": "Emits Peek instructions for the specified range of stack slots, optionally lowering the type if provided. Returns the range on top of the stack where peeks are stored."
+        },
+        {
+          "name": "Poke",
+          "parameters": [
+            "StackRange destination",
+            "StackRange origin",
+            "std::optional<const Type*> type"
+          ],
+          "return_type": "void",
+          "logic": "Emits Poke instructions to copy values from an origin range to a destination range on the stack, optionally lowering the type if provided."
+        },
+        {
+          "name": "Print",
+          "parameters": [
+            "std::string s"
+          ],
+          "return_type": "void",
+          "logic": "Emits a PrintErrorInstruction with the given string. This will print the string during execution."
+        },
+        {
+          "name": "AssertionFailure",
+          "parameters": [
+            "std::string message"
+          ],
+          "return_type": "void",
+          "logic": "Emits an AbortInstruction with the kind kAssertionFailure and the given message.  This will cause an assertion failure during execution."
+        },
+        {
+          "name": "Unreachable",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Emits an AbortInstruction with the kind kUnreachable.  This indicates that the code should never reach this point."
+        },
+        {
+          "name": "DebugBreak",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Emits an AbortInstruction with the kind kDebugBreak.  This will trigger a debug break during execution."
+        },
+        {
+          "name": "OptimizeCfg",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Optimizes the control flow graph by merging blocks that have only one predecessor and a single Goto instruction to another block."
+        },
+        {
+          "name": "ComputeInputDefinitions",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Computes the definition locations for input values of each block in the CFG using a worklist-based fixpoint algorithm."
+        }
+      ]
+    }
+  ],
+  "functions": [
+    {
+      "name": "CountBlockPredecessors",
+      "parameters": [
+        "const ControlFlowGraph& cfg"
+      ],
+      "return_type": "std::vector<std::size_t>",
+      "logic": "Counts the number of predecessor blocks for each block in the control flow graph."
+    }
+  ]
+}

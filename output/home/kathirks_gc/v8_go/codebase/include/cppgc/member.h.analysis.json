@@ -1,0 +1,574 @@
+{
+  "file_path": "/home/kathirks_gc/v8_go/codebase/include/cppgc/member.h",
+  "imports": [
+    "<atomic>",
+    "<cstddef>",
+    "<type_traits>",
+    "cppgc/internal/api-constants.h",
+    "cppgc/internal/member-storage.h",
+    "cppgc/internal/pointer-policies.h",
+    "cppgc/sentinel-pointer.h",
+    "cppgc/type-traits.h",
+    "v8config.h"
+  ],
+  "classes": [
+    {
+      "name": "MemberBase",
+      "properties": [
+        "raw_"
+      ],
+      "methods": [
+        {
+          "name": "MemberBase",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Default constructor."
+        },
+        {
+          "name": "MemberBase",
+          "parameters": [
+            "const void* value"
+          ],
+          "return_type": "void",
+          "logic": "Constructor that initializes with a raw pointer value."
+        },
+        {
+          "name": "MemberBase",
+          "parameters": [
+            "const void* value",
+            "AtomicInitializerTag"
+          ],
+          "return_type": "void",
+          "logic": "Constructor that initializes with a raw pointer value using atomic operations."
+        },
+        {
+          "name": "MemberBase",
+          "parameters": [
+            "RawStorage raw"
+          ],
+          "return_type": "void",
+          "logic": "Constructor that initializes with RawStorage value."
+        },
+        {
+          "name": "MemberBase",
+          "parameters": [
+            "std::nullptr_t"
+          ],
+          "return_type": "void",
+          "logic": "Constructor that initializes with nullptr."
+        },
+        {
+          "name": "MemberBase",
+          "parameters": [
+            "SentinelPointer s"
+          ],
+          "return_type": "void",
+          "logic": "Constructor that initializes with a sentinel pointer."
+        },
+        {
+          "name": "GetRawSlot",
+          "parameters": [],
+          "return_type": "const void**",
+          "logic": "Returns a pointer to the raw storage slot."
+        },
+        {
+          "name": "GetRaw",
+          "parameters": [],
+          "return_type": "const void*",
+          "logic": "Atomically loads and returns the raw pointer value."
+        },
+        {
+          "name": "SetRaw",
+          "parameters": [
+            "void* value"
+          ],
+          "return_type": "void",
+          "logic": "Atomically stores a new raw pointer value."
+        },
+        {
+          "name": "GetRawAtomic",
+          "parameters": [],
+          "return_type": "const void*",
+          "logic": "Atomically loads and returns the raw pointer value."
+        },
+        {
+          "name": "SetRawAtomic",
+          "parameters": [
+            "const void* value"
+          ],
+          "return_type": "void",
+          "logic": "Atomically stores a new raw pointer value."
+        },
+        {
+          "name": "GetRawStorage",
+          "parameters": [],
+          "return_type": "RawStorage",
+          "logic": "Returns the raw storage."
+        },
+        {
+          "name": "SetRawStorageAtomic",
+          "parameters": [
+            "RawStorage other"
+          ],
+          "return_type": "void",
+          "logic": "Atomically sets the raw storage."
+        },
+        {
+          "name": "IsCleared",
+          "parameters": [],
+          "return_type": "bool",
+          "logic": "Checks if the member has been cleared (is null)."
+        },
+        {
+          "name": "ClearFromGC",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Clears the member during garbage collection."
+        }
+      ]
+    },
+    {
+      "name": "BasicMember",
+      "properties": [],
+      "methods": [
+        {
+          "name": "BasicMember",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Default constructor."
+        },
+        {
+          "name": "BasicMember",
+          "parameters": [
+            "std::nullptr_t"
+          ],
+          "return_type": "void",
+          "logic": "Constructor taking a nullptr."
+        },
+        {
+          "name": "BasicMember",
+          "parameters": [
+            "SentinelPointer s"
+          ],
+          "return_type": "void",
+          "logic": "Constructor taking a SentinelPointer."
+        },
+        {
+          "name": "BasicMember",
+          "parameters": [
+            "T* raw"
+          ],
+          "return_type": "void",
+          "logic": "Constructor taking a raw pointer, performs write barrier and pointer checks."
+        },
+        {
+          "name": "BasicMember",
+          "parameters": [
+            "T& raw"
+          ],
+          "return_type": "void",
+          "logic": "Constructor taking a reference, performs write barrier and pointer checks."
+        },
+        {
+          "name": "BasicMember",
+          "parameters": [
+            "std::nullptr_t",
+            "AtomicInitializerTag atomic"
+          ],
+          "return_type": "void",
+          "logic": "Atomic constructor taking a nullptr."
+        },
+        {
+          "name": "BasicMember",
+          "parameters": [
+            "SentinelPointer s",
+            "AtomicInitializerTag atomic"
+          ],
+          "return_type": "void",
+          "logic": "Atomic constructor taking a SentinelPointer."
+        },
+        {
+          "name": "BasicMember",
+          "parameters": [
+            "T* raw",
+            "AtomicInitializerTag atomic"
+          ],
+          "return_type": "void",
+          "logic": "Atomic constructor taking a raw pointer, performs write barrier and pointer checks."
+        },
+        {
+          "name": "BasicMember",
+          "parameters": [
+            "T& raw",
+            "AtomicInitializerTag atomic"
+          ],
+          "return_type": "void",
+          "logic": "Atomic constructor taking a reference, performs write barrier and pointer checks."
+        },
+        {
+          "name": "BasicMember",
+          "parameters": [
+            "const BasicMember& other"
+          ],
+          "return_type": "void",
+          "logic": "Copy constructor."
+        },
+        {
+          "name": "BasicMember",
+          "parameters": [
+            "const BasicMember<U, OtherWeaknessTag, OtherBarrierPolicy, OtherCheckingPolicy, StorageType>& other"
+          ],
+          "return_type": "void",
+          "logic": "Heterogeneous copy constructor."
+        },
+        {
+          "name": "BasicMember",
+          "parameters": [
+            "const BasicMember<U, OtherWeaknessTag, OtherBarrierPolicy, OtherCheckingPolicy, StorageType>& other"
+          ],
+          "return_type": "void",
+          "logic": "Heterogeneous copy constructor from base class."
+        },
+        {
+          "name": "BasicMember",
+          "parameters": [
+            "BasicMember&& other"
+          ],
+          "return_type": "void",
+          "logic": "Move constructor."
+        },
+        {
+          "name": "BasicMember",
+          "parameters": [
+            "BasicMember<U, OtherWeaknessTag, OtherBarrierPolicy, OtherCheckingPolicy, StorageType>&& other"
+          ],
+          "return_type": "void",
+          "logic": "Heterogeneous move constructor."
+        },
+        {
+          "name": "BasicMember",
+          "parameters": [
+            "BasicMember<U, OtherWeaknessTag, OtherBarrierPolicy, OtherCheckingPolicy, StorageType>&& other"
+          ],
+          "return_type": "void",
+          "logic": "Heterogeneous move constructor from base class."
+        },
+        {
+          "name": "BasicMember",
+          "parameters": [
+            "const BasicPersistent<U, PersistentWeaknessPolicy, PersistentLocationPolicy, PersistentCheckingPolicy>& p"
+          ],
+          "return_type": "void",
+          "logic": "Construction from Persistent handle."
+        },
+        {
+          "name": "operator=",
+          "parameters": [
+            "const BasicMember& other"
+          ],
+          "return_type": "BasicMember&",
+          "logic": "Copy assignment operator."
+        },
+        {
+          "name": "operator=",
+          "parameters": [
+            "const BasicMember<U, OtherWeaknessTag, OtherBarrierPolicy, OtherCheckingPolicy, StorageType>& other"
+          ],
+          "return_type": "BasicMember&",
+          "logic": "Heterogeneous copy assignment operator."
+        },
+        {
+          "name": "operator=",
+          "parameters": [
+            "BasicMember&& other"
+          ],
+          "return_type": "BasicMember&",
+          "logic": "Move assignment operator."
+        },
+        {
+          "name": "operator=",
+          "parameters": [
+            "BasicMember<U, OtherWeaknessTag, OtherBarrierPolicy, OtherCheckingPolicy, StorageType>&& other"
+          ],
+          "return_type": "BasicMember&",
+          "logic": "Heterogeneous move assignment operator."
+        },
+        {
+          "name": "operator=",
+          "parameters": [
+            "const BasicPersistent<U, PersistentWeaknessPolicy, PersistentLocationPolicy, PersistentCheckingPolicy>& other"
+          ],
+          "return_type": "BasicMember&",
+          "logic": "Assignment from Persistent handle."
+        },
+        {
+          "name": "operator=",
+          "parameters": [
+            "T* other"
+          ],
+          "return_type": "BasicMember&",
+          "logic": "Assignment from raw pointer, performs write barrier and pointer checks."
+        },
+        {
+          "name": "operator=",
+          "parameters": [
+            "std::nullptr_t"
+          ],
+          "return_type": "BasicMember&",
+          "logic": "Assignment from nullptr."
+        },
+        {
+          "name": "operator=",
+          "parameters": [
+            "SentinelPointer s"
+          ],
+          "return_type": "BasicMember&",
+          "logic": "Assignment from SentinelPointer."
+        },
+        {
+          "name": "Swap",
+          "parameters": [
+            "BasicMember<T, OtherWeaknessTag, OtherBarrierPolicy, OtherCheckingPolicy, StorageType>& other"
+          ],
+          "return_type": "void",
+          "logic": "Swaps the contents with another BasicMember."
+        },
+        {
+          "name": "operator bool",
+          "parameters": [],
+          "return_type": "bool",
+          "logic": "Conversion to bool, checks if the member is not null."
+        },
+        {
+          "name": "operator T*",
+          "parameters": [],
+          "return_type": "T*",
+          "logic": "Conversion to raw pointer."
+        },
+        {
+          "name": "operator->",
+          "parameters": [],
+          "return_type": "T*",
+          "logic": "Dereference operator."
+        },
+        {
+          "name": "operator*",
+          "parameters": [],
+          "return_type": "T&",
+          "logic": "Dereference operator."
+        },
+        {
+          "name": "Get",
+          "parameters": [],
+          "return_type": "T*",
+          "logic": "Returns the raw pointer value (with CFI cast exemption)."
+        },
+        {
+          "name": "Clear",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Clears the member (sets to null)."
+        },
+        {
+          "name": "Release",
+          "parameters": [],
+          "return_type": "T*",
+          "logic": "Releases the pointer and clears the member."
+        },
+        {
+          "name": "GetSlotForTesting",
+          "parameters": [],
+          "return_type": "const T**",
+          "logic": "Returns a pointer to the underlying raw storage slot for testing."
+        },
+        {
+          "name": "GetRawStorage",
+          "parameters": [],
+          "return_type": "RawStorage",
+          "logic": "Returns the raw storage."
+        },
+        {
+          "name": "ClearFromGC",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Clears the member during garbage collection."
+        },
+        {
+          "name": "GetFromGC",
+          "parameters": [],
+          "return_type": "T*",
+          "logic": "Gets the pointer during garbage collection."
+        }
+      ]
+    },
+    {
+      "name": "IsWeak",
+      "properties": [],
+      "methods": []
+    }
+  ],
+  "functions": [
+    {
+      "name": "operator==",
+      "parameters": [
+        "const BasicMember<T1, WeaknessTag1, WriteBarrierPolicy1, CheckingPolicy1, StorageType>& member1",
+        "const BasicMember<T2, WeaknessTag2, WriteBarrierPolicy2, CheckingPolicy2, StorageType>& member2"
+      ],
+      "return_type": "bool",
+      "logic": "Compares two BasicMembers for equality."
+    },
+    {
+      "name": "operator!=",
+      "parameters": [
+        "const BasicMember<T1, WeaknessTag1, WriteBarrierPolicy1, CheckingPolicy1, StorageType>& member1",
+        "const BasicMember<T2, WeaknessTag2, WriteBarrierPolicy2, CheckingPolicy2, StorageType>& member2"
+      ],
+      "return_type": "bool",
+      "logic": "Compares two BasicMembers for inequality."
+    },
+    {
+      "name": "operator==",
+      "parameters": [
+        "const BasicMember<T, WeaknessTag, WriteBarrierPolicy, CheckingPolicy, StorageType>& member",
+        "U* raw"
+      ],
+      "return_type": "bool",
+      "logic": "Compares a BasicMember with a raw pointer for equality."
+    },
+    {
+      "name": "operator!=",
+      "parameters": [
+        "const BasicMember<T, WeaknessTag, WriteBarrierPolicy, CheckingPolicy, StorageType>& member",
+        "U* raw"
+      ],
+      "return_type": "bool",
+      "logic": "Compares a BasicMember with a raw pointer for inequality."
+    },
+    {
+      "name": "operator==",
+      "parameters": [
+        "T* raw",
+        "const BasicMember<U, WeaknessTag, WriteBarrierPolicy, CheckingPolicy, StorageType>& member"
+      ],
+      "return_type": "bool",
+      "logic": "Compares a raw pointer with a BasicMember for equality."
+    },
+    {
+      "name": "operator!=",
+      "parameters": [
+        "T* raw",
+        "const BasicMember<U, WeaknessTag, WriteBarrierPolicy, CheckingPolicy, StorageType>& member"
+      ],
+      "return_type": "bool",
+      "logic": "Compares a raw pointer with a BasicMember for inequality."
+    },
+    {
+      "name": "operator==",
+      "parameters": [
+        "const BasicMember<T, WeaknessTag, WriteBarrierPolicy, CheckingPolicy, StorageType>& member",
+        "SentinelPointer"
+      ],
+      "return_type": "bool",
+      "logic": "Compares a BasicMember with a SentinelPointer for equality."
+    },
+    {
+      "name": "operator!=",
+      "parameters": [
+        "const BasicMember<T, WeaknessTag, WriteBarrierPolicy, CheckingPolicy, StorageType>& member",
+        "SentinelPointer s"
+      ],
+      "return_type": "bool",
+      "logic": "Compares a BasicMember with a SentinelPointer for inequality."
+    },
+    {
+      "name": "operator==",
+      "parameters": [
+        "SentinelPointer s",
+        "const BasicMember<T, WeaknessTag, WriteBarrierPolicy, CheckingPolicy, StorageType>& member"
+      ],
+      "return_type": "bool",
+      "logic": "Compares a SentinelPointer with a BasicMember for equality."
+    },
+    {
+      "name": "operator!=",
+      "parameters": [
+        "SentinelPointer s",
+        "const BasicMember<T, WeaknessTag, WriteBarrierPolicy, CheckingPolicy, StorageType>& member"
+      ],
+      "return_type": "bool",
+      "logic": "Compares a SentinelPointer with a BasicMember for inequality."
+    },
+    {
+      "name": "operator==",
+      "parameters": [
+        "const BasicMember<T, WeaknessTag, WriteBarrierPolicy, CheckingPolicy, StorageType>& member",
+        "std::nullptr_t"
+      ],
+      "return_type": "bool",
+      "logic": "Compares a BasicMember with nullptr for equality."
+    },
+    {
+      "name": "operator!=",
+      "parameters": [
+        "const BasicMember<T, WeaknessTag, WriteBarrierPolicy, CheckingPolicy, StorageType>& member",
+        "std::nullptr_t n"
+      ],
+      "return_type": "bool",
+      "logic": "Compares a BasicMember with nullptr for inequality."
+    },
+    {
+      "name": "operator==",
+      "parameters": [
+        "std::nullptr_t n",
+        "const BasicMember<T, WeaknessTag, WriteBarrierPolicy, CheckingPolicy, StorageType>& member"
+      ],
+      "return_type": "bool",
+      "logic": "Compares nullptr with a BasicMember for equality."
+    },
+    {
+      "name": "operator!=",
+      "parameters": [
+        "std::nullptr_t n",
+        "const BasicMember<T, WeaknessTag, WriteBarrierPolicy, CheckingPolicy, StorageType>& member"
+      ],
+      "return_type": "bool",
+      "logic": "Compares nullptr with a BasicMember for inequality."
+    },
+    {
+      "name": "operator<",
+      "parameters": [
+        "const BasicMember<T1, WeaknessTag1, WriteBarrierPolicy1, CheckingPolicy1, StorageType>& member1",
+        "const BasicMember<T2, WeaknessTag2, WriteBarrierPolicy2, CheckingPolicy2, StorageType>& member2"
+      ],
+      "return_type": "bool",
+      "logic": "Less than operator for BasicMembers."
+    },
+    {
+      "name": "operator<=",
+      "parameters": [
+        "const BasicMember<T1, WeaknessTag1, WriteBarrierPolicy1, CheckingPolicy1, StorageType>& member1",
+        "const BasicMember<T2, WeaknessTag2, WriteBarrierPolicy2, CheckingPolicy2, StorageType>& member2"
+      ],
+      "return_type": "bool",
+      "logic": "Less than or equal operator for BasicMembers."
+    },
+    {
+      "name": "operator>",
+      "parameters": [
+        "const BasicMember<T1, WeaknessTag1, WriteBarrierPolicy1, CheckingPolicy1, StorageType>& member1",
+        "const BasicMember<T2, WeaknessTag2, WriteBarrierPolicy2, CheckingPolicy2, StorageType>& member2"
+      ],
+      "return_type": "bool",
+      "logic": "Greater than operator for BasicMembers."
+    },
+    {
+      "name": "operator>=",
+      "parameters": [
+        "const BasicMember<T1, WeaknessTag1, WriteBarrierPolicy1, CheckingPolicy1, StorageType>& member1",
+        "const BasicMember<T2, WeaknessTag2, WriteBarrierPolicy2, CheckingPolicy2, StorageType>& member2"
+      ],
+      "return_type": "bool",
+      "logic": "Greater than or equal operator for BasicMembers."
+    }
+  ]
+}

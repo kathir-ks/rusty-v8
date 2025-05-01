@@ -1,0 +1,316 @@
+{
+  "file_path": "/home/kathirks_gc/v8_go/codebase/src/torque/global-context.h",
+  "imports": [
+    "<map>",
+    "<memory>",
+    "src/base/contextual.h",
+    "src/common/globals.h",
+    "src/torque/ast.h",
+    "src/torque/cpp-builder.h",
+    "src/torque/declarable.h"
+  ],
+  "classes": [
+    {
+      "name": "GlobalContext",
+      "properties": [
+        "collect_language_server_data_",
+        "collect_kythe_data_",
+        "force_assert_statements_",
+        "annotate_ir_",
+        "default_namespace_",
+        "ast_",
+        "declarables_",
+        "cpp_includes_",
+        "generated_per_file_",
+        "fresh_ids_",
+        "macros_for_cc_output_",
+        "macros_for_cc_output_set_",
+        "macros_for_cc_debug_output_",
+        "macros_for_cc_debug_output_set_",
+        "instance_types_initialized_"
+      ],
+      "methods": [
+        {
+          "name": "GlobalContext",
+          "parameters": [
+            "GlobalContext&&"
+          ],
+          "return_type": "void",
+          "logic": "Move constructor, defaulted"
+        },
+        {
+          "name": "operator=",
+          "parameters": [
+            "GlobalContext&&"
+          ],
+          "return_type": "GlobalContext&",
+          "logic": "Move assignment operator, defaulted"
+        },
+        {
+          "name": "GlobalContext",
+          "parameters": [
+            "Ast ast"
+          ],
+          "return_type": "explicit",
+          "logic": "Constructor that takes an Ast object."
+        },
+        {
+          "name": "GetDefaultNamespace",
+          "parameters": [],
+          "return_type": "Namespace*",
+          "logic": "Returns the default namespace, accessed via the singleton instance."
+        },
+        {
+          "name": "RegisterDeclarable",
+          "parameters": [
+            "std::unique_ptr<T> d"
+          ],
+          "return_type": "T*",
+          "logic": "Registers a Declarable object. Takes ownership of the unique_ptr, stores it, and returns a raw pointer to the object."
+        },
+        {
+          "name": "AllDeclarables",
+          "parameters": [],
+          "return_type": "const std::vector<std::unique_ptr<Declarable>>&",
+          "logic": "Returns a const reference to the vector of all declarables."
+        },
+        {
+          "name": "AddCppInclude",
+          "parameters": [
+            "std::string include_path"
+          ],
+          "return_type": "void",
+          "logic": "Adds a C++ include path to the set of required includes."
+        },
+        {
+          "name": "CppIncludes",
+          "parameters": [],
+          "return_type": "const std::set<std::string>&",
+          "logic": "Returns the set of C++ include paths."
+        },
+        {
+          "name": "SetCollectLanguageServerData",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Sets the flag to collect data for the language server."
+        },
+        {
+          "name": "collect_language_server_data",
+          "parameters": [],
+          "return_type": "bool",
+          "logic": "Returns whether to collect data for the language server."
+        },
+        {
+          "name": "SetCollectKytheData",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Sets the flag to collect data for Kythe."
+        },
+        {
+          "name": "collect_kythe_data",
+          "parameters": [],
+          "return_type": "bool",
+          "logic": "Returns whether to collect data for Kythe."
+        },
+        {
+          "name": "SetForceAssertStatements",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Sets a flag to force assert statements to be generated."
+        },
+        {
+          "name": "force_assert_statements",
+          "parameters": [],
+          "return_type": "bool",
+          "logic": "Returns whether to force assert statements."
+        },
+        {
+          "name": "SetAnnotateIR",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Sets the flag to annotate the IR (Intermediate Representation)."
+        },
+        {
+          "name": "annotate_ir",
+          "parameters": [],
+          "return_type": "bool",
+          "logic": "Returns whether to annotate the IR."
+        },
+        {
+          "name": "ast",
+          "parameters": [],
+          "return_type": "Ast*",
+          "logic": "Returns a pointer to the Ast object."
+        },
+        {
+          "name": "MakeUniqueName",
+          "parameters": [
+            "const std::string& base"
+          ],
+          "return_type": "std::string",
+          "logic": "Generates a unique name based on the given base name by appending a counter. "
+        },
+        {
+          "name": "GeneratedPerFile",
+          "parameters": [
+            "SourceId file"
+          ],
+          "return_type": "PerFileStreams&",
+          "logic": "Returns the PerFileStreams object for the given SourceId, creating it if it doesn't exist."
+        },
+        {
+          "name": "SetInstanceTypesInitialized",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Sets the flag indicating that instance types are initialized."
+        },
+        {
+          "name": "IsInstanceTypesInitialized",
+          "parameters": [],
+          "return_type": "bool",
+          "logic": "Returns whether instance types are initialized."
+        },
+        {
+          "name": "EnsureInCCOutputList",
+          "parameters": [
+            "TorqueMacro* macro",
+            "SourceId source"
+          ],
+          "return_type": "void",
+          "logic": "Ensures a TorqueMacro/SourceId pair is in the list for generating C++ output."
+        },
+        {
+          "name": "AllMacrosForCCOutput",
+          "parameters": [],
+          "return_type": "const std::vector<std::pair<TorqueMacro*, SourceId>>&",
+          "logic": "Returns the list of TorqueMacro/SourceId pairs for generating C++ output."
+        },
+        {
+          "name": "EnsureInCCDebugOutputList",
+          "parameters": [
+            "TorqueMacro* macro",
+            "SourceId source"
+          ],
+          "return_type": "void",
+          "logic": "Ensures a TorqueMacro/SourceId pair is in the list for generating C++ debug output."
+        },
+        {
+          "name": "AllMacrosForCCDebugOutput",
+          "parameters": [],
+          "return_type": "const std::vector<std::pair<TorqueMacro*, SourceId>>&",
+          "logic": "Returns the list of TorqueMacro/SourceId pairs for generating C++ debug output."
+        }
+      ]
+    },
+    {
+      "name": "GlobalContext::PerFileStreams",
+      "properties": [
+        "file",
+        "csa_headerfile",
+        "csa_header",
+        "csa_ccfile",
+        "csa_cc",
+        "class_definition_headerfile",
+        "class_definition_inline_headerfile_macro_declarations",
+        "class_definition_inline_headerfile_macro_definitions",
+        "class_definition_inline_headerfile",
+        "class_definition_ccfile",
+        "class_definition_cc",
+        "required_builtin_includes"
+      ],
+      "methods": [
+        {
+          "name": "PerFileStreams",
+          "parameters": [],
+          "return_type": "",
+          "logic": "Constructor initializes various streams and sets the file SourceId to Invalid."
+        }
+      ]
+    },
+    {
+      "name": "TargetArchitecture",
+      "properties": [
+        "tagged_size_",
+        "raw_ptr_size_",
+        "smi_tag_and_shift_size_",
+        "external_ptr_size_",
+        "cppheap_ptr_size_",
+        "trusted_ptr_size_"
+      ],
+      "methods": [
+        {
+          "name": "TargetArchitecture",
+          "parameters": [
+            "bool force_32bit"
+          ],
+          "return_type": "explicit",
+          "logic": "Constructor that determines the architecture-specific sizes based on whether 32-bit is forced."
+        },
+        {
+          "name": "TaggedSize",
+          "parameters": [],
+          "return_type": "size_t",
+          "logic": "Returns the size of a tagged pointer."
+        },
+        {
+          "name": "RawPtrSize",
+          "parameters": [],
+          "return_type": "size_t",
+          "logic": "Returns the size of a raw pointer."
+        },
+        {
+          "name": "ExternalPointerSize",
+          "parameters": [],
+          "return_type": "size_t",
+          "logic": "Returns the size of an external pointer."
+        },
+        {
+          "name": "CppHeapPointerSize",
+          "parameters": [],
+          "return_type": "size_t",
+          "logic": "Returns the size of a C++ heap pointer."
+        },
+        {
+          "name": "TrustedPointerSize",
+          "parameters": [],
+          "return_type": "size_t",
+          "logic": "Returns the size of a trusted pointer."
+        },
+        {
+          "name": "ProtectedPointerSize",
+          "parameters": [],
+          "return_type": "size_t",
+          "logic": "Returns the size of a protected pointer (same as TaggedSize)."
+        },
+        {
+          "name": "MaxHeapAlignment",
+          "parameters": [],
+          "return_type": "size_t",
+          "logic": "Returns the maximum heap alignment (same as TaggedSize)."
+        },
+        {
+          "name": "ArePointersCompressed",
+          "parameters": [],
+          "return_type": "bool",
+          "logic": "Returns true if pointers are compressed (TaggedSize < RawPtrSize)."
+        },
+        {
+          "name": "SmiTagAndShiftSize",
+          "parameters": [],
+          "return_type": "int",
+          "logic": "Returns the size of the Smi tag and shift value."
+        }
+      ]
+    }
+  ],
+  "functions": [
+    {
+      "name": "RegisterDeclarable",
+      "parameters": [
+        "std::unique_ptr<T> d"
+      ],
+      "return_type": "T*",
+      "logic": "Registers a Declarable object using the GlobalContext singleton. Delegates the call to the GlobalContext method."
+    }
+  ]
+}

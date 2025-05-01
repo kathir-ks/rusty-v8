@@ -1,0 +1,136 @@
+{
+  "file_path": "/home/kathirks_gc/v8_go/codebase/src/sandbox/tagged-payload.h",
+  "imports": [
+    "src/common/globals.h",
+    "src/sandbox/indirect-pointer-tag.h"
+  ],
+  "classes": [
+    {
+      "name": "TaggedPayload",
+      "properties": [
+        "encoded_word_"
+      ],
+      "methods": [
+        {
+          "name": "TaggedPayload",
+          "parameters": [
+            "Address pointer",
+            "typename PayloadTaggingScheme::TagType tag"
+          ],
+          "return_type": "N/A (Constructor)",
+          "logic": "Constructor that initializes the encoded_word_ by tagging the given pointer with the given tag."
+        },
+        {
+          "name": "Untag",
+          "parameters": [
+            "typename PayloadTaggingScheme::TagType tag"
+          ],
+          "return_type": "Address",
+          "logic": "Removes the specified tag and the mark bit from the encoded_word_, returning the original address."
+        },
+        {
+          "name": "Tag",
+          "parameters": [
+            "Address pointer",
+            "typename PayloadTaggingScheme::TagType tag"
+          ],
+          "return_type": "Address",
+          "logic": "Tags the given pointer with the given tag by performing a bitwise OR operation."
+        },
+        {
+          "name": "IsTaggedWith",
+          "parameters": [
+            "typename PayloadTaggingScheme::TagType tag"
+          ],
+          "return_type": "bool",
+          "logic": "Checks if the encoded_word_ is tagged with the given tag by comparing the tag bits."
+        },
+        {
+          "name": "SetTag",
+          "parameters": [
+            "typename PayloadTaggingScheme::TagType new_tag"
+          ],
+          "return_type": "void",
+          "logic": "Sets the tag of the encoded_word_ to the given new_tag by clearing the existing tag bits and then ORing with the new tag."
+        },
+        {
+          "name": "SetMarkBit",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Sets the mark bit in the encoded_word_."
+        },
+        {
+          "name": "ClearMarkBit",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Clears the mark bit in the encoded_word_."
+        },
+        {
+          "name": "HasMarkBitSet",
+          "parameters": [],
+          "return_type": "bool",
+          "logic": "Checks if the mark bit is set in the encoded_word_."
+        },
+        {
+          "name": "ExtractFreelistLink",
+          "parameters": [],
+          "return_type": "uint32_t",
+          "logic": "Extracts the freelist link from the encoded_word_ by casting it to a uint32_t."
+        },
+        {
+          "name": "ExtractTag",
+          "parameters": [],
+          "return_type": "typename PayloadTaggingScheme::TagType",
+          "logic": "Extracts the tag from the encoded_word_ by masking with the tag mask and ORing the result with the mark bit."
+        },
+        {
+          "name": "ContainsFreelistLink",
+          "parameters": [],
+          "return_type": "bool",
+          "logic": "Checks if the tagged payload contains a freelist link by checking if it is tagged with the freelist entry tag."
+        },
+        {
+          "name": "ContainsEvacuationEntry",
+          "parameters": [],
+          "return_type": "bool",
+          "logic": "Checks if the tagged payload contains an evacuation entry by checking if it is tagged with the evacuation entry tag. Only active if evacuation support is enabled in the PayloadTaggingScheme"
+        },
+        {
+          "name": "IsZapped",
+          "parameters": [],
+          "return_type": "bool",
+          "logic": "Checks if the tagged payload is in zapped state by checking if it is tagged with the zapped entry tag. Only active if zapping support is enabled in the PayloadTaggingScheme."
+        },
+        {
+          "name": "ExtractEvacuationEntryHandleLocation",
+          "parameters": [],
+          "return_type": "Address",
+          "logic": "Untags the evacuation entry to extract the handle location, only usable if evacuation support is enabled."
+        },
+        {
+          "name": "ContainsPointer",
+          "parameters": [],
+          "return_type": "bool",
+          "logic": "Checks if the tagged payload contains a normal pointer. Returns true only if it's not a freelist link, evacuation entry, or zapped entry."
+        },
+        {
+          "name": "operator==",
+          "parameters": [
+            "TaggedPayload other"
+          ],
+          "return_type": "bool",
+          "logic": "Compares this TaggedPayload with another TaggedPayload for equality."
+        },
+        {
+          "name": "operator!=",
+          "parameters": [
+            "TaggedPayload other"
+          ],
+          "return_type": "bool",
+          "logic": "Compares this TaggedPayload with another TaggedPayload for inequality."
+        }
+      ]
+    }
+  ],
+  "functions": []
+}

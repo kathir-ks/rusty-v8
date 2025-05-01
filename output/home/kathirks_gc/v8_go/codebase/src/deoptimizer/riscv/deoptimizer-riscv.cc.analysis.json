@@ -1,0 +1,102 @@
+{
+  "file_path": "/home/kathirks_gc/v8_go/codebase/src/deoptimizer/riscv/deoptimizer-riscv.cc",
+  "imports": [
+    "src/deoptimizer/deoptimizer.h"
+  ],
+  "classes": [
+    {
+      "name": "Deoptimizer",
+      "properties": [
+        "kEagerDeoptExitSize",
+        "kLazyDeoptExitSize",
+        "kAdaptShadowStackOffsetToSubtract"
+      ],
+      "methods": [
+        {
+          "name": "PatchToJump",
+          "parameters": [
+            "Address pc",
+            "Address new_pc"
+          ],
+          "return_type": "void",
+          "logic": "Patches the code at address 'pc' to jump to address 'new_pc'.  Currently unimplemented, so it calls UNREACHABLE().  Likely intended to replace code with a jump to the deoptimization entry point."
+        }
+      ]
+    },
+    {
+      "name": "RegisterValues",
+      "properties": [],
+      "methods": [
+        {
+          "name": "GetFloatRegister",
+          "parameters": [
+            "unsigned n"
+          ],
+          "return_type": "Float32",
+          "logic": "Retrieves the value of the nth float register as a Float32. It reads the double register, gets the bits, and then casts it to uint32_t and creates the Float32."
+        },
+        {
+          "name": "GetDoubleRegister",
+          "parameters": [
+            "unsigned n"
+          ],
+          "return_type": "Float64",
+          "logic": "Retrieves the value of the nth double register as a Float64. It reads the double register, gets the bits, and then casts it to uint64_t and creates the Float64."
+        },
+        {
+          "name": "SetDoubleRegister",
+          "parameters": [
+            "unsigned n",
+            "Float64 value"
+          ],
+          "return_type": "void",
+          "logic": "Sets the value of the nth double register to the given Float64 'value'. Uses WriteUnalignedValue to handle potential alignment issues."
+        }
+      ]
+    },
+    {
+      "name": "FrameDescription",
+      "properties": [
+        "pc_"
+      ],
+      "methods": [
+        {
+          "name": "SetCallerPc",
+          "parameters": [
+            "unsigned offset",
+            "intptr_t value"
+          ],
+          "return_type": "void",
+          "logic": "Sets the caller's program counter at the given 'offset' in the frame to the specified 'value'. It calls SetFrameSlot to achieve this."
+        },
+        {
+          "name": "SetCallerFp",
+          "parameters": [
+            "unsigned offset",
+            "intptr_t value"
+          ],
+          "return_type": "void",
+          "logic": "Sets the caller's frame pointer at the given 'offset' in the frame to the specified 'value'. It calls SetFrameSlot to achieve this."
+        },
+        {
+          "name": "SetCallerConstantPool",
+          "parameters": [
+            "unsigned offset",
+            "intptr_t value"
+          ],
+          "return_type": "void",
+          "logic": "This function is not implemented because it indicates lack of embedded constant pool support. It calls UNREACHABLE()."
+        },
+        {
+          "name": "SetPc",
+          "parameters": [
+            "intptr_t pc"
+          ],
+          "return_type": "void",
+          "logic": "Sets the program counter (PC) of the frame to the given 'pc' value."
+        }
+      ]
+    }
+  ],
+  "functions": []
+}

@@ -1,0 +1,244 @@
+{
+  "file_path": "/home/kathirks_gc/v8_go/codebase/src/logging/log-file.h",
+  "imports": [
+    "<stdio.h>",
+    "<atomic>",
+    "<cstdarg>",
+    "<memory>",
+    "<optional>",
+    "src/base/compiler-specific.h",
+    "src/base/platform/mutex.h",
+    "src/common/assert-scope.h",
+    "src/flags/flags.h",
+    "src/utils/allocation.h",
+    "src/utils/ostreams.h"
+  ],
+  "classes": [
+    {
+      "name": "LogFile",
+      "properties": [
+        "logger_",
+        "file_name_",
+        "output_handle_",
+        "os_",
+        "mutex_",
+        "format_buffer_"
+      ],
+      "methods": [
+        {
+          "name": "LogFile",
+          "parameters": [
+            "V8FileLogger* logger",
+            "std::string log_file_name"
+          ],
+          "return_type": "explicit",
+          "logic": "Constructor for the LogFile class, initializes the logger, file name and other internal data structures."
+        },
+        {
+          "name": "IsLoggingToConsole",
+          "parameters": [
+            "std::string file_name"
+          ],
+          "return_type": "static bool",
+          "logic": "Checks if the given file name indicates logging to the console."
+        },
+        {
+          "name": "IsLoggingToTemporaryFile",
+          "parameters": [
+            "std::string file_name"
+          ],
+          "return_type": "static bool",
+          "logic": "Checks if the given file name indicates logging to a temporary file."
+        },
+        {
+          "name": "Close",
+          "parameters": [],
+          "return_type": "FILE*",
+          "logic": "Closes the log file and frees resources. Returns the stream descriptor if a temporary file was used."
+        },
+        {
+          "name": "file_name",
+          "parameters": [],
+          "return_type": "std::string",
+          "logic": "Returns the name of the log file."
+        },
+        {
+          "name": "NewMessageBuilder",
+          "parameters": [],
+          "return_type": "std::unique_ptr<LogFile::MessageBuilder>",
+          "logic": "Creates a new MessageBuilder instance for formatting and writing log messages.  Returns null if logging is disabled."
+        },
+        {
+          "name": "CreateOutputHandle",
+          "parameters": [
+            "std::string file_name"
+          ],
+          "return_type": "static FILE*",
+          "logic": "Creates a file handle for writing logs based on the file name. Handles both console and file outputs."
+        },
+        {
+          "name": "mutex",
+          "parameters": [],
+          "return_type": "base::Mutex*",
+          "logic": "Returns a pointer to the mutex used for synchronizing access to the log file."
+        },
+        {
+          "name": "WriteLogHeader",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Writes a log header to the log file."
+        }
+      ]
+    },
+    {
+      "name": "LogFile::MessageBuilder",
+      "properties": [
+        "log_",
+        "lock_guard_"
+      ],
+      "methods": [
+        {
+          "name": "~MessageBuilder",
+          "parameters": [],
+          "return_type": "default",
+          "logic": "Default destructor for MessageBuilder."
+        },
+        {
+          "name": "AppendString",
+          "parameters": [
+            "Tagged<String> str",
+            "std::optional<int> length_limit"
+          ],
+          "return_type": "void",
+          "logic": "Appends a tagged string to the message buffer, optionally with a length limit."
+        },
+        {
+          "name": "AppendString",
+          "parameters": [
+            "base::Vector<const char> str"
+          ],
+          "return_type": "void",
+          "logic": "Appends a character vector to the message buffer."
+        },
+        {
+          "name": "AppendString",
+          "parameters": [
+            "const char* str"
+          ],
+          "return_type": "void",
+          "logic": "Appends a C-style string to the message buffer."
+        },
+        {
+          "name": "AppendString",
+          "parameters": [
+            "const char* str",
+            "size_t length",
+            "bool is_one_byte"
+          ],
+          "return_type": "void",
+          "logic": "Appends a C-style string with a specified length to the message buffer. Indicates if the string is one-byte encoded."
+        },
+        {
+          "name": "AppendFormatString",
+          "parameters": [
+            "const char* format",
+            "..."
+          ],
+          "return_type": "void",
+          "logic": "Appends a formatted string to the message buffer using printf-style formatting."
+        },
+        {
+          "name": "AppendCharacter",
+          "parameters": [
+            "char c"
+          ],
+          "return_type": "void",
+          "logic": "Appends a character to the message buffer."
+        },
+        {
+          "name": "AppendTwoByteCharacter",
+          "parameters": [
+            "char c1",
+            "char c2"
+          ],
+          "return_type": "void",
+          "logic": "Appends a two-byte character (two chars) to the message buffer."
+        },
+        {
+          "name": "AppendSymbolName",
+          "parameters": [
+            "Tagged<Symbol> symbol"
+          ],
+          "return_type": "void",
+          "logic": "Appends the name of a symbol to the message buffer."
+        },
+        {
+          "name": "operator<<",
+          "parameters": [
+            "T value"
+          ],
+          "return_type": "MessageBuilder&",
+          "logic": "Overloads the << operator for appending values to the underlying ostream.  Escapes strings to maintain single-line log entries."
+        },
+        {
+          "name": "WriteToLogFile",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Finishes the current log line and flushes it to the log file."
+        },
+        {
+          "name": "MessageBuilder",
+          "parameters": [
+            "LogFile* log"
+          ],
+          "return_type": "explicit",
+          "logic": "Constructor for MessageBuilder. Acquires the mutex in the log."
+        },
+        {
+          "name": "FormatStringIntoBuffer",
+          "parameters": [
+            "const char* format",
+            "va_list args"
+          ],
+          "return_type": "int",
+          "logic": "Formats a string into the internal format buffer. Returns the length of the result."
+        },
+        {
+          "name": "AppendSymbolNameDetails",
+          "parameters": [
+            "Tagged<String> str",
+            "bool show_impl_info"
+          ],
+          "return_type": "void",
+          "logic": "Appends symbol name details to the message builder."
+        },
+        {
+          "name": "AppendRawFormatString",
+          "parameters": [
+            "const char* format",
+            "..."
+          ],
+          "return_type": "void",
+          "logic": "Appends a raw formatted string to the message buffer, without escaping."
+        },
+        {
+          "name": "AppendRawString",
+          "parameters": [
+            "const char* format"
+          ],
+          "return_type": "void",
+          "logic": "Appends a raw string to the message buffer, without escaping."
+        },
+        {
+          "name": "AppendRawCharacter",
+          "parameters": [
+            "const char character"
+          ],
+          "return_type": "void",
+          "logic": "Appends a raw character to the message buffer, without escaping."
+        }
+      ]
+    }
+  ],
+  "functions": []
+}

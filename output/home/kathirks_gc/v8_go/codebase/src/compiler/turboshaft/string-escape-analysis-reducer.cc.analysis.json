@@ -1,0 +1,78 @@
+{
+  "file_path": "/home/kathirks_gc/v8_go/codebase/src/compiler/turboshaft/string-escape-analysis-reducer.cc",
+  "imports": [
+    "src/compiler/turboshaft/string-escape-analysis-reducer.h",
+    "<utility>",
+    "src/compiler/turboshaft/graph.h",
+    "src/compiler/turboshaft/index.h",
+    "src/compiler/turboshaft/operations.h"
+  ],
+  "classes": [
+    {
+      "name": "StringEscapeAnalyzer",
+      "properties": [],
+      "methods": [
+        {
+          "name": "Run",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Performs the string escape analysis. Iterates through blocks, processes them, reprocesses string concats, and computes frame states to reconstruct."
+        },
+        {
+          "name": "MarkNextFrameStateInputAsEscaping",
+          "parameters": [
+            "FrameStateData::Iterator* it"
+          ],
+          "return_type": "void",
+          "logic": "Marks the next input in a FrameState's data iterator as escaping if it's an actual input (kInput instruction). Skips other FrameStateData::Instr values."
+        },
+        {
+          "name": "ProcessFrameState",
+          "parameters": [
+            "V<FrameState> index",
+            "const FrameStateOp& framestate"
+          ],
+          "return_type": "void",
+          "logic": "Processes a FrameState operation. Checks if it has StringConcat inputs and adds it to the list of frame states that might need to be reconstructed. Also, marks the Function and the Receiver of the frame state as escaping."
+        },
+        {
+          "name": "ProcessBlock",
+          "parameters": [
+            "const Block& block"
+          ],
+          "return_type": "void",
+          "logic": "Processes a block, iterating through its operations. Handles FrameState, StringConcat, and StringLength operations specially. By default, marks all inputs as escaping."
+        },
+        {
+          "name": "MarkAllInputsAsEscaping",
+          "parameters": [
+            "const Operation& op"
+          ],
+          "return_type": "void",
+          "logic": "Marks all inputs of an operation as escaping, except for FrameState inputs."
+        },
+        {
+          "name": "RecursivelyMarkAllStringConcatInputsAsEscaping",
+          "parameters": [
+            "const StringConcatOp* concat"
+          ],
+          "return_type": "void",
+          "logic": "Recursively marks all inputs of a StringConcat operation as escaping, and traverses StringConcat inputs to mark them as escaping too."
+        },
+        {
+          "name": "ReprocessStringConcats",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Reprocesses StringConcat operations. If the maximum input count for FrameStates might be exceeded during elision, all StringConcats are marked as escaping. Otherwise, it recursively marks the inputs of escaping StringConcats as escaping."
+        },
+        {
+          "name": "ComputeFrameStatesToReconstruct",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Determines which FrameStates need to be reconstructed during reduction. This is necessary when FrameStates have StringConcat inputs that are being elided."
+        }
+      ]
+    }
+  ],
+  "functions": []
+}

@@ -1,0 +1,712 @@
+{
+  "file_path": "/home/kathirks_gc/v8_go/codebase/src/compiler/js-typed-lowering.cc",
+  "imports": [
+    "src/compiler/js-typed-lowering.h",
+    "optional",
+    "src/ast/modules.h",
+    "src/builtins/builtins-inl.h",
+    "src/builtins/builtins-utils.h",
+    "src/codegen/code-factory.h",
+    "src/codegen/interface-descriptors-inl.h",
+    "src/common/globals.h",
+    "src/compiler/access-builder.h",
+    "src/compiler/allocation-builder-inl.h",
+    "src/compiler/allocation-builder.h",
+    "src/compiler/common-operator.h",
+    "src/compiler/compilation-dependencies.h",
+    "src/compiler/graph-assembler.h",
+    "src/compiler/js-graph.h",
+    "src/compiler/js-heap-broker.h",
+    "src/compiler/linkage.h",
+    "src/compiler/node-matchers.h",
+    "src/compiler/node-properties.h",
+    "src/compiler/node.h",
+    "src/compiler/opcodes.h",
+    "src/compiler/operator-properties.h",
+    "src/compiler/simplified-operator.h",
+    "src/compiler/turbofan-types.h",
+    "src/compiler/type-cache.h",
+    "src/deoptimizer/deoptimize-reason.h",
+    "src/execution/protectors.h",
+    "src/flags/flags.h",
+    "src/objects/casting.h",
+    "src/objects/heap-number.h",
+    "src/objects/js-generator.h",
+    "src/objects/module-inl.h",
+    "src/objects/objects-inl.h",
+    "src/objects/objects.h",
+    "src/objects/property-cell.h"
+  ],
+  "classes": [
+    {
+      "name": "JSBinopReduction",
+      "properties": [
+        "lowering_",
+        "node_"
+      ],
+      "methods": [
+        {
+          "name": "JSBinopReduction",
+          "parameters": [
+            "JSTypedLowering* lowering",
+            "Node* node"
+          ],
+          "return_type": "void",
+          "logic": "Constructor for the JSBinopReduction class, initializes lowering_ and node_."
+        },
+        {
+          "name": "GetCompareNumberOperationHint",
+          "parameters": [
+            "NumberOperationHint* hint"
+          ],
+          "return_type": "bool",
+          "logic": "Retrieves a NumberOperationHint based on the CompareOperationHint of the node. Returns true if a valid NumberOperationHint is found, false otherwise."
+        },
+        {
+          "name": "GetCompareBigIntOperationHint",
+          "parameters": [
+            "BigIntOperationHint* hint"
+          ],
+          "return_type": "bool",
+          "logic": "Retrieves a BigIntOperationHint based on the CompareOperationHint of the node. Returns true if a valid BigIntOperationHint is found, false otherwise."
+        },
+        {
+          "name": "IsInternalizedStringCompareOperation",
+          "parameters": [],
+          "return_type": "bool",
+          "logic": "Checks if the comparison operation is on internalized strings."
+        },
+        {
+          "name": "IsReceiverCompareOperation",
+          "parameters": [],
+          "return_type": "bool",
+          "logic": "Checks if the comparison operation is on receivers."
+        },
+        {
+          "name": "IsReceiverOrNullOrUndefinedCompareOperation",
+          "parameters": [],
+          "return_type": "bool",
+          "logic": "Checks if the comparison operation is on receiver, null or undefined."
+        },
+        {
+          "name": "IsStringCompareOperation",
+          "parameters": [],
+          "return_type": "bool",
+          "logic": "Checks if the comparison operation is on strings."
+        },
+        {
+          "name": "IsSymbolCompareOperation",
+          "parameters": [],
+          "return_type": "bool",
+          "logic": "Checks if the comparison operation is on symbols."
+        },
+        {
+          "name": "ShouldCreateConsString",
+          "parameters": [],
+          "return_type": "bool",
+          "logic": "Determines if a string addition will definitely result in a ConsString based on length considerations."
+        },
+        {
+          "name": "CheckLeftInputToReceiver",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Inserts a CheckReceiver node for the left input of the binop."
+        },
+        {
+          "name": "CheckLeftInputToReceiverOrNullOrUndefined",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Inserts a CheckReceiverOrNullOrUndefined node for the left input of the binop."
+        },
+        {
+          "name": "CheckInputsToReceiver",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Checks that both inputs are Receivers, inserting CheckReceiver nodes if necessary."
+        },
+        {
+          "name": "CheckInputsToReceiverOrNullOrUndefined",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Checks that both inputs are Receiver, Null or Undefined, inserting CheckReceiverOrNullOrUndefined nodes if necessary."
+        },
+        {
+          "name": "CheckLeftInputToSymbol",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Inserts a CheckSymbol node for the left input of the binop."
+        },
+        {
+          "name": "CheckInputsToSymbol",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Checks that both inputs are Symbol, inserting CheckSymbol nodes if necessary."
+        },
+        {
+          "name": "CheckInputsToString",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Checks that both inputs are String, inserting CheckString nodes if necessary."
+        },
+        {
+          "name": "CheckInputsToStringOrStringWrapper",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Checks that both inputs are String or StringWrapper, inserting CheckStringOrStringWrapper nodes if necessary."
+        },
+        {
+          "name": "CheckInputsToInternalizedString",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Checks that both inputs are InternalizedString, inserting CheckInternalizedString nodes if necessary."
+        },
+        {
+          "name": "ConvertInputsToNumber",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Converts both inputs to Number via ToNumber."
+        },
+        {
+          "name": "ConvertInputsToUI32",
+          "parameters": [
+            "Signedness left_signedness",
+            "Signedness right_signedness"
+          ],
+          "return_type": "void",
+          "logic": "Converts both inputs to UI32."
+        },
+        {
+          "name": "SwapInputs",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Swaps the left and right inputs of the binop node."
+        },
+        {
+          "name": "ChangeToPureOperator",
+          "parameters": [
+            "const Operator* op",
+            "Type type"
+          ],
+          "return_type": "Reduction",
+          "logic": "Changes the node to a pure operator, removing effect and control dependencies."
+        },
+        {
+          "name": "ChangeToSpeculativeOperator",
+          "parameters": [
+            "const Operator* op",
+            "Type upper_bound"
+          ],
+          "return_type": "Reduction",
+          "logic": "Changes the node to a speculative operator."
+        },
+        {
+          "name": "NumberOp",
+          "parameters": [],
+          "return_type": "const Operator*",
+          "logic": "Returns the corresponding Number operator for the current JS operator."
+        },
+        {
+          "name": "LeftInputIs",
+          "parameters": [
+            "Type t"
+          ],
+          "return_type": "bool",
+          "logic": "Checks if the left input has the given type."
+        },
+        {
+          "name": "RightInputIs",
+          "parameters": [
+            "Type t"
+          ],
+          "return_type": "bool",
+          "logic": "Checks if the right input has the given type."
+        },
+        {
+          "name": "OneInputIs",
+          "parameters": [
+            "Type t"
+          ],
+          "return_type": "bool",
+          "logic": "Checks if either input has the given type."
+        },
+        {
+          "name": "BothInputsAre",
+          "parameters": [
+            "Type t"
+          ],
+          "return_type": "bool",
+          "logic": "Checks if both inputs have the given type."
+        },
+        {
+          "name": "BothInputsMaybe",
+          "parameters": [
+            "Type t"
+          ],
+          "return_type": "bool",
+          "logic": "Checks if both inputs maybe have the given type."
+        },
+        {
+          "name": "OneInputCannotBe",
+          "parameters": [
+            "Type t"
+          ],
+          "return_type": "bool",
+          "logic": "Checks if one input cannot be of a specific type"
+        },
+        {
+          "name": "NeitherInputCanBe",
+          "parameters": [
+            "Type t"
+          ],
+          "return_type": "bool",
+          "logic": "Checks if neither input can be a particular type"
+        },
+        {
+          "name": "GetBinaryOperationHint",
+          "parameters": [
+            "Node* node"
+          ],
+          "return_type": "BinaryOperationHint",
+          "logic": "Returns the BinaryOperationHint from the node's feedback."
+        },
+        {
+          "name": "effect",
+          "parameters": [],
+          "return_type": "Node*",
+          "logic": "Returns the effect input node."
+        },
+        {
+          "name": "control",
+          "parameters": [],
+          "return_type": "Node*",
+          "logic": "Returns the control input node."
+        },
+        {
+          "name": "context",
+          "parameters": [],
+          "return_type": "Node*",
+          "logic": "Returns the context input node."
+        },
+        {
+          "name": "left",
+          "parameters": [],
+          "return_type": "Node*",
+          "logic": "Returns the left input node."
+        },
+        {
+          "name": "right",
+          "parameters": [],
+          "return_type": "Node*",
+          "logic": "Returns the right input node."
+        },
+        {
+          "name": "left_type",
+          "parameters": [],
+          "return_type": "Type",
+          "logic": "Returns the type of the left input."
+        },
+        {
+          "name": "right_type",
+          "parameters": [],
+          "return_type": "Type",
+          "logic": "Returns the type of the right input."
+        },
+        {
+          "name": "type",
+          "parameters": [],
+          "return_type": "Type",
+          "logic": "Returns the type of the current node."
+        },
+        {
+          "name": "simplified",
+          "parameters": [],
+          "return_type": "SimplifiedOperatorBuilder*",
+          "logic": "Returns the simplified operator builder."
+        },
+        {
+          "name": "graph",
+          "parameters": [],
+          "return_type": "TFGraph* const",
+          "logic": "Returns the graph."
+        },
+        {
+          "name": "jsgraph",
+          "parameters": [],
+          "return_type": "JSGraph*",
+          "logic": "Returns the JSGraph."
+        },
+        {
+          "name": "isolate",
+          "parameters": [],
+          "return_type": "Isolate*",
+          "logic": "Returns the isolate."
+        },
+        {
+          "name": "javascript",
+          "parameters": [],
+          "return_type": "JSOperatorBuilder*",
+          "logic": "Returns the javascript operator builder."
+        },
+        {
+          "name": "common",
+          "parameters": [],
+          "return_type": "CommonOperatorBuilder*",
+          "logic": "Returns the common operator builder."
+        },
+        {
+          "name": "zone",
+          "parameters": [],
+          "return_type": "Zone* const",
+          "logic": "Returns the zone."
+        }
+      ]
+    },
+    {
+      "name": "JSTypedLowering",
+      "properties": [
+        "jsgraph_",
+        "broker_",
+        "empty_string_type_",
+        "pointer_comparable_type_",
+        "type_cache_"
+      ],
+      "methods": [
+        {
+          "name": "JSTypedLowering",
+          "parameters": [
+            "Editor* editor",
+            "JSGraph* jsgraph",
+            "JSHeapBroker* broker",
+            "Zone* zone"
+          ],
+          "return_type": "void",
+          "logic": "Constructor for JSTypedLowering, initializes the fields."
+        },
+        {
+          "name": "ReduceJSBitwiseNot",
+          "parameters": [
+            "Node* node"
+          ],
+          "return_type": "Reduction",
+          "logic": "Reduces a JSBitwiseNot operation."
+        },
+        {
+          "name": "ReduceJSDecrement",
+          "parameters": [
+            "Node* node"
+          ],
+          "return_type": "Reduction",
+          "logic": "Reduces a JSDecrement operation."
+        },
+        {
+          "name": "ReduceJSIncrement",
+          "parameters": [
+            "Node* node"
+          ],
+          "return_type": "Reduction",
+          "logic": "Reduces a JSIncrement operation."
+        },
+        {
+          "name": "ReduceJSNegate",
+          "parameters": [
+            "Node* node"
+          ],
+          "return_type": "Reduction",
+          "logic": "Reduces a JSNegate operation."
+        },
+        {
+          "name": "GenerateStringAddition",
+          "parameters": [
+            "Node* node",
+            "Node* left",
+            "Node* right",
+            "Node* context",
+            "Node* frame_state",
+            "Node** effect",
+            "Node** control",
+            "bool should_create_cons_string"
+          ],
+          "return_type": "Reduction",
+          "logic": "Generates a string addition operation, handling length checks and potential RangeErrors."
+        },
+        {
+          "name": "UnwrapStringWrapper",
+          "parameters": [
+            "Node* string_or_wrapper",
+            "Node** effect",
+            "Node** control"
+          ],
+          "return_type": "Node*",
+          "logic": "Unwraps a StringWrapper object to obtain the underlying string value."
+        },
+        {
+          "name": "ReduceJSAdd",
+          "parameters": [
+            "Node* node"
+          ],
+          "return_type": "Reduction",
+          "logic": "Reduces a JSAdd operation, handling number and string additions."
+        },
+        {
+          "name": "ReduceNumberBinop",
+          "parameters": [
+            "Node* node"
+          ],
+          "return_type": "Reduction",
+          "logic": "Reduces a generic numeric binary operation when both inputs are plain primitives."
+        },
+        {
+          "name": "ReduceInt32Binop",
+          "parameters": [
+            "Node* node"
+          ],
+          "return_type": "Reduction",
+          "logic": "Reduces a generic int32 binary operation when both inputs are plain primitives."
+        },
+        {
+          "name": "ReduceUI32Shift",
+          "parameters": [
+            "Node* node",
+            "Signedness signedness"
+          ],
+          "return_type": "Reduction",
+          "logic": "Reduces a generic unsigned int32 shift operation when both inputs are plain primitives."
+        },
+        {
+          "name": "ReduceJSComparison",
+          "parameters": [
+            "Node* node"
+          ],
+          "return_type": "Reduction",
+          "logic": "Reduces a JS comparison operation, handling string and number comparisons."
+        },
+        {
+          "name": "ReduceJSEqual",
+          "parameters": [
+            "Node* node"
+          ],
+          "return_type": "Reduction",
+          "logic": "Reduces a JSEqual operation, handling various type comparisons."
+        },
+        {
+          "name": "ReduceJSStrictEqual",
+          "parameters": [
+            "Node* node"
+          ],
+          "return_type": "Reduction",
+          "logic": "Reduces a JSStrictEqual operation, handling various type comparisons."
+        },
+        {
+          "name": "ReduceJSToName",
+          "parameters": [
+            "Node* node"
+          ],
+          "return_type": "Reduction",
+          "logic": "Reduces a JSToName operation."
+        },
+        {
+          "name": "ReduceJSToLength",
+          "parameters": [
+            "Node* node"
+          ],
+          "return_type": "Reduction",
+          "logic": "Reduces a JSToLength operation."
+        },
+        {
+          "name": "ReduceJSToNumberInput",
+          "parameters": [
+            "Node* input"
+          ],
+          "return_type": "Reduction",
+          "logic": "Reduces a JSToNumberInput operation by checking if a constant input can be reduced to constant number"
+        },
+        {
+          "name": "ReduceJSToNumber",
+          "parameters": [
+            "Node* node"
+          ],
+          "return_type": "Reduction",
+          "logic": "Reduces a JSToNumber operation."
+        },
+        {
+          "name": "ReduceJSToBigInt",
+          "parameters": [
+            "Node* node"
+          ],
+          "return_type": "Reduction",
+          "logic": "Reduces a JSToBigInt operation."
+        },
+        {
+          "name": "ReduceJSToBigIntConvertNumber",
+          "parameters": [
+            "Node* node"
+          ],
+          "return_type": "Reduction",
+          "logic": "Reduces a JSToBigIntConvertNumber operation."
+        },
+        {
+          "name": "ReduceJSToNumeric",
+          "parameters": [
+            "Node* node"
+          ],
+          "return_type": "Reduction",
+          "logic": "Reduces a JSToNumeric operation."
+        },
+        {
+          "name": "ReduceJSToStringInput",
+          "parameters": [
+            "Node* input"
+          ],
+          "return_type": "Reduction",
+          "logic": "Reduces a JSToStringInput operation."
+        },
+        {
+          "name": "ReduceJSToString",
+          "parameters": [
+            "Node* node"
+          ],
+          "return_type": "Reduction",
+          "logic": "Reduces a JSToString operation."
+        },
+        {
+          "name": "ReduceJSToObject",
+          "parameters": [
+            "Node* node"
+          ],
+          "return_type": "Reduction",
+          "logic": "Reduces a JSToObject operation."
+        },
+        {
+          "name": "ReduceJSLoadNamed",
+          "parameters": [
+            "Node* node"
+          ],
+          "return_type": "Reduction",
+          "logic": "Reduces a JSLoadNamed operation."
+        },
+        {
+          "name": "ReduceJSHasInPrototypeChain",
+          "parameters": [
+            "Node* node"
+          ],
+          "return_type": "Reduction",
+          "logic": "Reduces a JSHasInPrototypeChain operation."
+        },
+        {
+          "name": "ReduceJSOrdinaryHasInstance",
+          "parameters": [
+            "Node* node"
+          ],
+          "return_type": "Reduction",
+          "logic": "Reduces a JSOrdinaryHasInstance operation."
+        },
+        {
+          "name": "ReduceJSHasContextExtension",
+          "parameters": [
+            "Node* node"
+          ],
+          "return_type": "Reduction",
+          "logic": "Reduces a JSHasContextExtension operation."
+        },
+        {
+          "name": "ReduceJSLoadContext",
+          "parameters": [
+            "Node* node"
+          ],
+          "return_type": "Reduction",
+          "logic": "Reduces a JSLoadContext operation."
+        },
+        {
+          "name": "ReduceJSLoadScriptContext",
+          "parameters": [
+            "Node* node"
+          ],
+          "return_type": "Reduction",
+          "logic": "Reduces a JSLoadScriptContext operation."
+        },
+        {
+          "name": "ReduceJSStoreContext",
+          "parameters": [
+            "Node* node"
+          ],
+          "return_type": "Reduction",
+          "logic": "Reduces a JSStoreContext operation."
+        },
+        {
+          "name": "ReduceJSStoreScriptContext",
+          "parameters": [
+            "Node* node"
+          ],
+          "return_type": "Reduction",
+          "logic": "Reduces a JSStoreScriptContext operation."
+        },
+        {
+          "name": "BuildGetModuleCell",
+          "parameters": [
+            "Node* node"
+          ],
+          "return_type": "Node*",
+          "logic": "Builds a node to get the module cell."
+        },
+        {
+          "name": "ReduceJSLoadModule",
+          "parameters": [
+            "Node* node"
+          ],
+          "return_type": "Reduction",
+          "logic": "Reduces a JSLoadModule operation."
+        },
+        {
+          "name": "ReduceJSStoreModule",
+          "parameters": [
+            "Node* node"
+          ],
+          "return_type": "Reduction",
+          "logic": "Reduces a JSStoreModule operation."
+        },
+        {
+          "name": "ReduceJSConstructForwardVarargs",
+          "parameters": [
+            "Node* node"
+          ],
+          "return_type": "Reduction",
+          "logic": "Reduces a JSConstructForwardVarargs operation by patching the node to a direct call via ConstructFunctionForwardVarargs."
+        },
+        {
+          "name": "ReduceJSConstruct",
+          "parameters": [
+            "Node* node"
+          ],
+          "return_type": "Reduction",
+          "logic": "Reduces a JSConstruct operation by patching the node to an indirect call via the {function}s construct stub."
+        },
+        {
+          "name": "ReduceJSCallForwardVarargs",
+          "parameters": [
+            "Node* node"
+          ],
+          "return_type": "Reduction",
+          "logic": "Reduces a JSCallForwardVarargs operation by patching the node to an indirect call via CallFunctionForwardVarargs."
+        },
+        {
+          "name": "ReduceJSCall",
+          "parameters": [
+            "Node* node"
+          ],
+          "return_type": "Reduction",
+          "logic": "Reduces a JSCall operation, potentially inlining direct calls to known functions or builtins."
+        },
+        {
+          "name": "ReduceJSForInNext",
+          "parameters": [
+            "Node* node"
+          ],
+          "return_type": "Reduction",
+          "logic": "Reduces a JSForInNext operation."
+        }
+      ]
+    }
+  ],
+  "functions": [],
+  "enums": []
+}

@@ -1,0 +1,571 @@
+{
+  "file_path": "/home/kathirks_gc/v8_go/codebase/src/compiler/escape-analysis.cc",
+  "imports": [
+    "src/codegen/tick-counter.h",
+    "src/compiler/frame-states.h",
+    "src/compiler/node-matchers.h",
+    "src/compiler/operator-properties.h",
+    "src/compiler/simplified-operator.h",
+    "src/compiler/state-values-utils.h",
+    "src/handles/handles-inl.h",
+    "src/objects/map-inl.h",
+    "src/compiler/escape-analysis.h"
+  ],
+  "classes": [
+    {
+      "name": "Sidetable",
+      "properties": [
+        "map_"
+      ],
+      "methods": [
+        {
+          "name": "Sidetable",
+          "parameters": [
+            "Zone* zone"
+          ],
+          "return_type": "explicit Sidetable",
+          "logic": "Constructor for Sidetable, initializes the map_ with the given zone."
+        },
+        {
+          "name": "operator[]",
+          "parameters": [
+            "const Node* node"
+          ],
+          "return_type": "T&",
+          "logic": "Accesses the element in the map_ associated with the given node's ID. Resizes the map_ if the ID is out of bounds."
+        }
+      ]
+    },
+    {
+      "name": "SparseSidetable",
+      "properties": [
+        "def_value_",
+        "map_"
+      ],
+      "methods": [
+        {
+          "name": "SparseSidetable",
+          "parameters": [
+            "Zone* zone",
+            "T def_value"
+          ],
+          "return_type": "explicit SparseSidetable",
+          "logic": "Constructor for SparseSidetable, initializes the map_ with the given zone and def_value_ with the given def_value."
+        },
+        {
+          "name": "Set",
+          "parameters": [
+            "const Node* node",
+            "T value"
+          ],
+          "return_type": "void",
+          "logic": "Sets the value associated with the given node's ID in the map_. If the value is the same as def_value_ and the node is already present, updates the existing node. If value differs from def_value_ creates a new entry."
+        },
+        {
+          "name": "Get",
+          "parameters": [
+            "const Node* node"
+          ],
+          "return_type": "const T&",
+          "logic": "Gets the value associated with the given node's ID in the map_. Returns def_value_ if the ID is not found."
+        }
+      ]
+    },
+    {
+      "name": "ReduceScope",
+      "properties": [
+        "current_node_",
+        "reduction_"
+      ],
+      "methods": [
+        {
+          "name": "ReduceScope",
+          "parameters": [
+            "Node* node",
+            "Reduction* reduction"
+          ],
+          "return_type": "explicit ReduceScope",
+          "logic": "Constructor for ReduceScope, initializes the current_node_ and reduction_."
+        },
+        {
+          "name": "SetValueChanged",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Sets the value_changed flag in the reduction_."
+        },
+        {
+          "name": "current_node",
+          "parameters": [],
+          "return_type": "Node*",
+          "logic": "Returns the current node being reduced."
+        },
+        {
+          "name": "reduction",
+          "parameters": [],
+          "return_type": "Reduction*",
+          "logic": "Returns the reduction pointer."
+        }
+      ]
+    },
+    {
+      "name": "VariableTracker",
+      "properties": [
+        "zone_",
+        "graph_",
+        "table_",
+        "buffer_",
+        "reducer_",
+        "next_variable_",
+        "tick_counter_"
+      ],
+      "methods": [
+        {
+          "name": "VariableTracker",
+          "parameters": [
+            "JSGraph* graph",
+            "EffectGraphReducer* reducer",
+            "Zone* zone"
+          ],
+          "return_type": "VariableTracker",
+          "logic": "Constructor for VariableTracker, initializes the fields."
+        },
+        {
+          "name": "NewVariable",
+          "parameters": [],
+          "return_type": "Variable",
+          "logic": "Creates and returns a new variable, incrementing next_variable_."
+        },
+        {
+          "name": "Get",
+          "parameters": [
+            "Variable var",
+            "Node* effect"
+          ],
+          "return_type": "Node*",
+          "logic": "Gets the node associated with the given variable and effect."
+        },
+        {
+          "name": "zone",
+          "parameters": [],
+          "return_type": "Zone*",
+          "logic": "Returns the zone."
+        }
+      ]
+    },
+    {
+      "name": "VariableTracker::State",
+      "properties": [
+        "map_"
+      ],
+      "methods": [
+        {
+          "name": "State",
+          "parameters": [
+            "Zone* zone"
+          ],
+          "return_type": "explicit State",
+          "logic": "Constructor for State, initializes the map_."
+        },
+        {
+          "name": "Get",
+          "parameters": [
+            "Variable var"
+          ],
+          "return_type": "Node*",
+          "logic": "Gets the node associated with the given variable."
+        },
+        {
+          "name": "Set",
+          "parameters": [
+            "Variable var",
+            "Node* node"
+          ],
+          "return_type": "void",
+          "logic": "Sets the node associated with the given variable."
+        },
+        {
+          "name": "begin",
+          "parameters": [],
+          "return_type": "Map::iterator",
+          "logic": "Returns an iterator to the beginning of the map."
+        },
+        {
+          "name": "end",
+          "parameters": [],
+          "return_type": "Map::iterator",
+          "logic": "Returns an iterator to the end of the map."
+        },
+        {
+          "name": "operator!=",
+          "parameters": [
+            "const State& other"
+          ],
+          "return_type": "bool",
+          "logic": "Checks whether this state is different from another State object."
+        }
+      ]
+    },
+    {
+      "name": "VariableTracker::Scope",
+      "properties": [
+        "states_",
+        "current_state_"
+      ],
+      "methods": [
+        {
+          "name": "Scope",
+          "parameters": [
+            "VariableTracker* tracker",
+            "Node* node",
+            "Reduction* reduction"
+          ],
+          "return_type": "Scope",
+          "logic": "Constructor for Scope, initializes the fields and calculates current_state_ based on the node's opcode."
+        },
+        {
+          "name": "~Scope",
+          "parameters": [],
+          "return_type": "Scope",
+          "logic": "Destructor for Scope. Sets the effect_changed flag if the current state is different from the state in table_. Sets the current state in table_."
+        },
+        {
+          "name": "Get",
+          "parameters": [
+            "Variable var"
+          ],
+          "return_type": "Maybe<Node*>",
+          "logic": "Retrieves node for variable 'var' in the current state. Returns Nothing if the node is Dead."
+        },
+        {
+          "name": "Set",
+          "parameters": [
+            "Variable var",
+            "Node* node"
+          ],
+          "return_type": "void",
+          "logic": "Sets the value of variable 'var' to 'node' in the current state."
+        }
+      ]
+    },
+    {
+      "name": "EscapeAnalysisTracker",
+      "properties": [
+        "virtual_objects_",
+        "replacements_",
+        "framestate_might_lazy_deopt_",
+        "variable_states_",
+        "jsgraph_",
+        "zone_",
+        "next_object_id_",
+        "number_of_tracked_bytes_"
+      ],
+      "methods": [
+        {
+          "name": "EscapeAnalysisTracker",
+          "parameters": [
+            "JSGraph* jsgraph",
+            "EffectGraphReducer* reducer",
+            "Zone* zone"
+          ],
+          "return_type": "EscapeAnalysisTracker",
+          "logic": "Constructor for EscapeAnalysisTracker, initializes the fields."
+        },
+        {
+          "name": "GetReplacementOf",
+          "parameters": [
+            "Node* node"
+          ],
+          "return_type": "Node*",
+          "logic": "Returns the replacement for the given node."
+        },
+        {
+          "name": "ResolveReplacement",
+          "parameters": [
+            "Node* node"
+          ],
+          "return_type": "Node*",
+          "logic": "Returns the replacement of the node if it exists, otherwise returns the node itself."
+        }
+      ]
+    },
+    {
+      "name": "EscapeAnalysisTracker::Scope",
+      "properties": [
+        "tracker_",
+        "reducer_",
+        "vobject_",
+        "replacement_"
+      ],
+      "methods": [
+        {
+          "name": "Scope",
+          "parameters": [
+            "EffectGraphReducer* reducer",
+            "EscapeAnalysisTracker* tracker",
+            "Node* node",
+            "Reduction* reduction"
+          ],
+          "return_type": "Scope",
+          "logic": "Constructor for Scope, initializes the fields. Also calls the VariableTracker::Scope constructor."
+        },
+        {
+          "name": "~Scope",
+          "parameters": [],
+          "return_type": "Scope",
+          "logic": "Destructor for Scope. Sets the value_changed flag if the replacement has changed. Sets the node's replacement in the tracker."
+        },
+        {
+          "name": "GetVirtualObject",
+          "parameters": [
+            "Node* node"
+          ],
+          "return_type": "const VirtualObject*",
+          "logic": "Returns the VirtualObject associated with the given node."
+        },
+        {
+          "name": "InitVirtualObject",
+          "parameters": [
+            "int size"
+          ],
+          "return_type": "const VirtualObject*",
+          "logic": "Creates or retrieves a virtual object of specified size."
+        },
+        {
+          "name": "SetVirtualObject",
+          "parameters": [
+            "Node* object"
+          ],
+          "return_type": "void",
+          "logic": "Sets the vobject_ field."
+        },
+        {
+          "name": "SetEscaped",
+          "parameters": [
+            "Node* node"
+          ],
+          "return_type": "void",
+          "logic": "Marks the object as escaped."
+        },
+        {
+          "name": "ValueInput",
+          "parameters": [
+            "int i"
+          ],
+          "return_type": "Node*",
+          "logic": "Returns the value input at the given index after resolving any replacements."
+        },
+        {
+          "name": "ContextInput",
+          "parameters": [],
+          "return_type": "Node*",
+          "logic": "Returns the context input after resolving any replacements."
+        },
+        {
+          "name": "CurrentNode",
+          "parameters": [],
+          "return_type": "Node*",
+          "logic": "Returns the current node (only for FrameState nodes)."
+        },
+        {
+          "name": "SetReplacement",
+          "parameters": [
+            "Node* replacement"
+          ],
+          "return_type": "void",
+          "logic": "Sets the replacement for the current node."
+        },
+        {
+          "name": "MarkForDeletion",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Sets the replacement to Dead()."
+        },
+        {
+          "name": "FrameStateMightLazyDeopt",
+          "parameters": [
+            "Node* framestate"
+          ],
+          "return_type": "bool",
+          "logic": "Checks if the given frame state might lead to a lazy deoptimization."
+        }
+      ]
+    },
+    {
+      "name": "EffectGraphReducer",
+      "properties": [
+        "graph_",
+        "state_",
+        "revisit_",
+        "stack_",
+        "reduce_",
+        "tick_counter_"
+      ],
+      "methods": [
+        {
+          "name": "EffectGraphReducer",
+          "parameters": [
+            "TFGraph* graph",
+            "std::function<void(Node*, Reduction*)> reduce",
+            "TickCounter* tick_counter",
+            "Zone* zone"
+          ],
+          "return_type": "EffectGraphReducer",
+          "logic": "Constructor for EffectGraphReducer, initializes fields."
+        },
+        {
+          "name": "ReduceFrom",
+          "parameters": [
+            "Node* node"
+          ],
+          "return_type": "void",
+          "logic": "Performs a depth-first search to reduce the graph starting from the given node."
+        },
+        {
+          "name": "Revisit",
+          "parameters": [
+            "Node* node"
+          ],
+          "return_type": "void",
+          "logic": "Queues the node for revisitation."
+        }
+      ]
+    },
+    {
+      "name": "EscapeAnalysis",
+      "properties": [
+        "tracker_",
+        "jsgraph_"
+      ],
+      "methods": [
+        {
+          "name": "EscapeAnalysis",
+          "parameters": [
+            "JSGraph* jsgraph",
+            "TickCounter* tick_counter",
+            "Zone* zone"
+          ],
+          "return_type": "EscapeAnalysis",
+          "logic": "Constructor for EscapeAnalysis, initializes the fields."
+        },
+        {
+          "name": "Reduce",
+          "parameters": [
+            "Node* node",
+            "Reduction* reduction"
+          ],
+          "return_type": "void",
+          "logic": "Reduces a single node."
+        }
+      ]
+    },
+    {
+      "name": "EscapeAnalysisResult",
+      "properties": [],
+      "methods": [
+        {
+          "name": "GetReplacementOf",
+          "parameters": [
+            "Node* node"
+          ],
+          "return_type": "Node*",
+          "logic": "Retrieves the replacement node for the given node, or null if none exists."
+        },
+        {
+          "name": "GetVirtualObjectField",
+          "parameters": [
+            "const VirtualObject* vobject",
+            "int field",
+            "Node* effect"
+          ],
+          "return_type": "Node*",
+          "logic": "Retrieves the node stored in a particular field of a virtual object, given a specific effect edge."
+        },
+        {
+          "name": "GetVirtualObject",
+          "parameters": [
+            "Node* node"
+          ],
+          "return_type": "const VirtualObject*",
+          "logic": "Retrieves the virtual object associated with a given node, or null if none exists."
+        }
+      ]
+    },
+    {
+      "name": "VirtualObject",
+      "properties": [
+        "id_",
+        "fields_"
+      ],
+      "methods": [
+        {
+          "name": "VirtualObject",
+          "parameters": [
+            "VariableTracker* var_states",
+            "VirtualObject::Id id",
+            "int size"
+          ],
+          "return_type": "VirtualObject",
+          "logic": "Constructor for the VirtualObject."
+        }
+      ]
+    }
+  ],
+  "functions": [
+    {
+      "name": "OffsetOfFieldAccess",
+      "parameters": [
+        "const Operator* op"
+      ],
+      "return_type": "int",
+      "logic": "Returns the offset of the field being accessed by the given LoadField or StoreField operator."
+    },
+    {
+      "name": "OffsetOfElementAt",
+      "parameters": [
+        "ElementAccess const& access",
+        "int index"
+      ],
+      "return_type": "Maybe<int>",
+      "logic": "Calculates the byte offset of an element in an array at the given index based on the element access information. Returns Nothing if unsupported."
+    },
+    {
+      "name": "OffsetOfElementsAccess",
+      "parameters": [
+        "const Operator* op",
+        "Node* index_node"
+      ],
+      "return_type": "Maybe<int>",
+      "logic": "Determines the memory offset for an element access operation on an array based on the provided index node. Returns Nothing if index is not a constant integer or is out of range."
+    },
+    {
+      "name": "LowerCompareMapsWithoutLoad",
+      "parameters": [
+        "Node* checked_map",
+        "ZoneRefSet<Map> const& checked_against",
+        "JSGraph* jsgraph"
+      ],
+      "return_type": "Node*",
+      "logic": "Replaces CompareMaps node with a series of ReferenceEqual checks against each map in the ZoneRefSet."
+    },
+    {
+      "name": "CheckMapsHelper",
+      "parameters": [
+        "EscapeAnalysisTracker::Scope* current",
+        "Node* checked",
+        "ZoneRefSet<Map> target"
+      ],
+      "return_type": "bool",
+      "logic": "Checks if the virtual object corresponding to the checked node has a known map that is in the target set.  If so, marks the node for deletion and returns true."
+    },
+    {
+      "name": "ReduceNode",
+      "parameters": [
+        "const Operator* op",
+        "EscapeAnalysisTracker::Scope* current",
+        "JSGraph* jsgraph"
+      ],
+      "return_type": "void",
+      "logic": "Reduces a single node based on its opcode."
+    }
+  ]
+}

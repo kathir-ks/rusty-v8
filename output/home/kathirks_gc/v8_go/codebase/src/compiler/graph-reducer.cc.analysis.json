@@ -1,0 +1,178 @@
+{
+  "file_path": "/home/kathirks_gc/v8_go/codebase/src/compiler/graph-reducer.cc",
+  "imports": [
+    "src/compiler/graph-reducer.h",
+    "functional",
+    "limits",
+    "src/codegen/tick-counter.h",
+    "src/compiler/js-heap-broker.h",
+    "src/compiler/node-observer.h",
+    "src/compiler/node-properties.h",
+    "src/compiler/node.h",
+    "src/compiler/turbofan-graph.h",
+    "src/compiler/verifier.h"
+  ],
+  "classes": [
+    {
+      "name": "GraphReducer",
+      "properties": [
+        "graph_",
+        "dead_",
+        "state_",
+        "reducers_",
+        "revisit_",
+        "stack_",
+        "tick_counter_",
+        "broker_",
+        "observe_node_manager_"
+      ],
+      "methods": [
+        {
+          "name": "GraphReducer",
+          "parameters": [
+            "Zone* zone",
+            "TFGraph* graph",
+            "TickCounter* tick_counter",
+            "JSHeapBroker* broker",
+            "Node* dead",
+            "ObserveNodeManager* observe_node_manager"
+          ],
+          "return_type": "void",
+          "logic": "Constructor for GraphReducer. Initializes the graph, dead node, state, reducers, revisit queue, stack, tick counter, broker, and observe node manager. Sets the type of the dead node to None."
+        },
+        {
+          "name": "~GraphReducer",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Destructor for GraphReducer (default implementation)."
+        },
+        {
+          "name": "AddReducer",
+          "parameters": [
+            "Reducer* reducer"
+          ],
+          "return_type": "void",
+          "logic": "Adds a reducer to the list of reducers."
+        },
+        {
+          "name": "ReduceNode",
+          "parameters": [
+            "Node* node"
+          ],
+          "return_type": "void",
+          "logic": "Reduces a single node and its transitive inputs in the graph using the registered reducers. Uses a stack and a revisit queue to handle cycles. Iterates through reducers to apply transformations to the node, and revisits nodes based on the reduction results. Finalizes all reducers after the main reduction loop."
+        },
+        {
+          "name": "ReduceGraph",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Reduces the entire graph by starting at the end node."
+        },
+        {
+          "name": "Reduce",
+          "parameters": [
+            "Node* const node"
+          ],
+          "return_type": "Reduction",
+          "logic": "Applies all registered reducers to a given node. If a reducer changes the node, the function returns the corresponding Reduction object. If a reducer performs an in-place update, the function restarts the reduction process from the beginning of the reducer list.  It handles tracing reductions via v8_flags."
+        },
+        {
+          "name": "ReduceTop",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Reduces the node at the top of the stack, recursively processing its inputs. If a reduction occurs, it might replace the node or update it in-place. Nodes are added to the stack using Push(), and visited and removed using Pop()."
+        },
+        {
+          "name": "Replace",
+          "parameters": [
+            "Node* node",
+            "Node* replacement"
+          ],
+          "return_type": "void",
+          "logic": "Replaces a node with another node in the graph, propagating the change to its users and killing the old node. Overload of Replace to use max_id as std::numeric_limits<NodeId>::max()."
+        },
+        {
+          "name": "Replace",
+          "parameters": [
+            "Node* node",
+            "Node* replacement",
+            "NodeId max_id"
+          ],
+          "return_type": "void",
+          "logic": "Replaces a node with another node in the graph, propagating the change to its users and killing the old node.  It also handles cases where the replacement node is old or new based on the max_id."
+        },
+        {
+          "name": "ReplaceWithValue",
+          "parameters": [
+            "Node* node",
+            "Node* value",
+            "Node* effect",
+            "Node* control"
+          ],
+          "return_type": "void",
+          "logic": "Replaces a node with separate value, effect, and control nodes. Updates the use edges of the original node according to the type of the edge (value, effect, or control)."
+        },
+        {
+          "name": "Pop",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Pops a node from the stack and marks it as visited."
+        },
+        {
+          "name": "Push",
+          "parameters": [
+            "Node* const node"
+          ],
+          "return_type": "void",
+          "logic": "Pushes a node onto the stack and marks it as being on the stack."
+        },
+        {
+          "name": "Recurse",
+          "parameters": [
+            "Node* node"
+          ],
+          "return_type": "bool",
+          "logic": "Recursively processes a node if it hasn't been visited yet. Returns true if the node was pushed onto the stack."
+        },
+        {
+          "name": "Revisit",
+          "parameters": [
+            "Node* node"
+          ],
+          "return_type": "void",
+          "logic": "Adds a node to the revisit queue if it has already been visited. This ensures the node will be processed again later."
+        }
+      ]
+    },
+    {
+      "name": "Reducer",
+      "properties": [],
+      "methods": [
+        {
+          "name": "Finalize",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "A virtual method that can be overridden by subclasses to perform finalization steps after the reduction process."
+        },
+        {
+          "name": "Reduce",
+          "parameters": [
+            "Node* node",
+            "ObserveNodeManager* observe_node_manager"
+          ],
+          "return_type": "Reduction",
+          "logic": "Reduces the given node by calling the Reduce(node) method and notifies the ObserveNodeManager if there is a change."
+        },
+        {
+          "name": "Reduce",
+          "parameters": [
+            "Node* node"
+          ],
+          "return_type": "Reduction",
+          "logic": "Pure virtual method to be implemented by subclasses."
+        }
+      ]
+    }
+  ],
+  "functions": []
+}

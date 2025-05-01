@@ -1,0 +1,120 @@
+{
+  "file_path": "/home/kathirks_gc/v8_go/codebase/src/torque/instance-type-generator.cc",
+  "imports": [
+    "<optional>",
+    "src/torque/implementation-visitor.h"
+  ],
+  "classes": [
+    {
+      "name": "InstanceTypeTree",
+      "properties": [
+        "type",
+        "children",
+        "start",
+        "end",
+        "value",
+        "num_values",
+        "num_own_values"
+      ],
+      "methods": [
+        {
+          "name": "InstanceTypeTree",
+          "parameters": [
+            "const ClassType* type"
+          ],
+          "return_type": "InstanceTypeTree",
+          "logic": "Constructor. Initializes the InstanceTypeTree with a given ClassType and sets default values for its properties (start to INT_MAX, end to INT_MIN, value to -1, num_values and num_own_values to 0)."
+        }
+      ]
+    },
+    {
+      "name": "CompareUnconstrainedTypes",
+      "properties": [],
+      "methods": [
+        {
+          "name": "operator()",
+          "parameters": [
+            "const InstanceTypeTree* a",
+            "const InstanceTypeTree* b"
+          ],
+          "return_type": "bool",
+          "logic": "Comparison function for sorting InstanceTypeTree nodes. Prioritizes nodes with a larger number of values, then sorts alphabetically by type name if the number of values is equal."
+        }
+      ]
+    }
+  ],
+  "functions": [
+    {
+      "name": "BuildInstanceTypeTree",
+      "parameters": [],
+      "return_type": "std::unique_ptr<InstanceTypeTree>",
+      "logic": "Builds a tree structure from the class hierarchy defined in GlobalContext::AllDeclarables(). It creates InstanceTypeTree nodes for each class, organizes them into a tree based on inheritance, and returns the root of the tree.  Errors if multiple root class types are found."
+    },
+    {
+      "name": "PropagateInstanceTypeConstraints",
+      "parameters": [
+        "InstanceTypeTree* root"
+      ],
+      "return_type": "void",
+      "logic": "Propagates constraints (start, end, num_values) about instance types from child nodes to their parent node in the InstanceTypeTree. It also processes the InstanceTypeConstraints of each class, potentially clearing the child vector if num_flag_bits is not -1. Also handles when a fixed instance type is requested."
+    },
+    {
+      "name": "SelectOwnValues",
+      "parameters": [
+        "InstanceTypeTree* root",
+        "int start_value"
+      ],
+      "return_type": "int",
+      "logic": "Assigns a concrete value to the 'value' field of an InstanceTypeTree node if it is not already assigned. It checks to see if the assigned value is less than start_value and reports error if that is the case. Returns the next available value for assignment."
+    },
+    {
+      "name": "SolveInstanceTypeConstraints",
+      "parameters": [
+        "std::unique_ptr<InstanceTypeTree> root",
+        "int start_value",
+        "std::vector<std::unique_ptr<InstanceTypeTree>>* destination"
+      ],
+      "return_type": "int",
+      "logic": "Recursively assigns concrete values to all instance types in the tree, taking into account constraints such as minimum and maximum values. It sorts child nodes based on whether they have value constraints. The newly-assigned tree appended to the destination vector. The function returns the next available instance type value after assigning values to the root and its descendants."
+    },
+    {
+      "name": "SolveInstanceTypeConstraints",
+      "parameters": [
+        "std::unique_ptr<InstanceTypeTree> root"
+      ],
+      "return_type": "std::unique_ptr<InstanceTypeTree>",
+      "logic": "Wrapper function for SolveInstanceTypeConstraints that simplifies the calling convention.  It just sets the destination vector to a local and calls the other SolveInstanceTypeConstraints."
+    },
+    {
+      "name": "AssignInstanceTypes",
+      "parameters": [],
+      "return_type": "std::unique_ptr<InstanceTypeTree>",
+      "logic": "Orchestrates the process of assigning instance types by first building the InstanceTypeTree, then propagating constraints, and finally solving the constraints to assign concrete values."
+    },
+    {
+      "name": "PrintInstanceTypes",
+      "parameters": [
+        "InstanceTypeTree* root",
+        "std::ostream& definitions",
+        "std::ostream& values",
+        "std::ostream& fully_defined_single_instance_types",
+        "std::ostream& fully_defined_multiple_instance_types",
+        "std::ostream& only_declared_single_instance_types",
+        "std::ostream& only_declared_multiple_instance_types",
+        "std::ostream& fully_defined_range_instance_types",
+        "std::ostream& only_declared_range_instance_types",
+        "const std::string& indent"
+      ],
+      "return_type": "void",
+      "logic": "Prints the instance type information to different output streams in macro list format. This information is used to generate C++ code for instance type checking and handling.  It distinguishes between classes that are fully defined in Torque and those that are only declared."
+    },
+    {
+      "name": "ImplementationVisitor::GenerateInstanceTypes",
+      "parameters": [
+        "const std::string& output_directory"
+      ],
+      "return_type": "void",
+      "logic": "Generates the instance-types.h file, which contains macro definitions for instance types, their values, and lists of classes with associated instance types. It uses the other functions to build the InstanceTypeTree, assign values, and print the necessary macro lists."
+    }
+  ]
+}

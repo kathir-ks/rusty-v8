@@ -1,0 +1,202 @@
+{
+  "file_path": "/home/kathirks_gc/v8_go/codebase/src/compiler/turboshaft/zone-with-name.h",
+  "imports": [
+    "src/base/template-meta-programming/string-literal.h",
+    "src/compiler/zone-stats.h"
+  ],
+  "classes": [
+    {
+      "name": "ZoneWithNamePointerImpl",
+      "properties": [
+        "pointer_type ptr_"
+      ],
+      "methods": [
+        {
+          "name": "ZoneWithNamePointerImpl",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Default constructor. Initializes the pointer to null."
+        },
+        {
+          "name": "ZoneWithNamePointerImpl",
+          "parameters": [
+            "std::nullptr_t"
+          ],
+          "return_type": "void",
+          "logic": "Constructor taking nullptr. Initializes the pointer to null."
+        },
+        {
+          "name": "ZoneWithNamePointerImpl",
+          "parameters": [
+            "pointer_type ptr"
+          ],
+          "return_type": "void",
+          "logic": "Constructor taking a raw pointer. Initializes the internal pointer with the provided pointer."
+        },
+        {
+          "name": "ZoneWithNamePointerImpl",
+          "parameters": [
+            "const ZoneWithNamePointerImpl&"
+          ],
+          "return_type": "void",
+          "logic": "Copy constructor. Creates a copy of another ZoneWithNamePointerImpl."
+        },
+        {
+          "name": "ZoneWithNamePointerImpl",
+          "parameters": [
+            "ZoneWithNamePointerImpl&&"
+          ],
+          "return_type": "void",
+          "logic": "Move constructor. Moves the contents of another ZoneWithNamePointerImpl."
+        },
+        {
+          "name": "ZoneWithNamePointerImpl",
+          "parameters": [
+            "const ZoneWithNamePointerImpl<U, Name>& other"
+          ],
+          "return_type": "void",
+          "logic": "Template constructor from another ZoneWithNamePointerImpl with potentially different type `U`. Converts `U*` to `pointer_type` and sets internal pointer."
+        },
+        {
+          "name": "operator=",
+          "parameters": [
+            "const ZoneWithNamePointerImpl&"
+          ],
+          "return_type": "ZoneWithNamePointerImpl&",
+          "logic": "Copy assignment operator. Assigns the value of another ZoneWithNamePointerImpl."
+        },
+        {
+          "name": "operator=",
+          "parameters": [
+            "ZoneWithNamePointerImpl&&"
+          ],
+          "return_type": "ZoneWithNamePointerImpl&",
+          "logic": "Move assignment operator. Moves the value of another ZoneWithNamePointerImpl."
+        },
+        {
+          "name": "operator=",
+          "parameters": [
+            "const ZoneWithNamePointerImpl<U, Name>& other"
+          ],
+          "return_type": "ZoneWithNamePointerImpl&",
+          "logic": "Template assignment operator from another ZoneWithNamePointerImpl with a potentially different type `U`. Converts `U*` to `pointer_type` and assigns internal pointer."
+        },
+        {
+          "name": "operator pointer_type",
+          "parameters": [],
+          "return_type": "pointer_type",
+          "logic": "Conversion operator to the underlying raw pointer type. Returns the stored raw pointer."
+        },
+        {
+          "name": "operator*",
+          "parameters": [],
+          "return_type": "T&",
+          "logic": "Dereference operator. Returns a reference to the object pointed to by the internal pointer."
+        },
+        {
+          "name": "operator->",
+          "parameters": [],
+          "return_type": "pointer_type",
+          "logic": "Arrow operator. Returns the internal raw pointer, allowing access to members of the pointed-to object."
+        },
+        {
+          "name": "get",
+          "parameters": [],
+          "return_type": "pointer_type",
+          "logic": "Helper function to return the internal pointer."
+        }
+      ]
+    },
+    {
+      "name": "ZoneWithName",
+      "properties": [
+        "ZoneStats::Scope scope_"
+      ],
+      "methods": [
+        {
+          "name": "ZoneWithName",
+          "parameters": [
+            "ZoneStats* pool",
+            "const char* name",
+            "bool support_zone_compression"
+          ],
+          "return_type": "void",
+          "logic": "Constructor. Initializes the ZoneStats::Scope, effectively creating a new zone with the given name."
+        },
+        {
+          "name": "ZoneWithName",
+          "parameters": [
+            "const ZoneWithName&"
+          ],
+          "return_type": "void",
+          "logic": "Deleted copy constructor."
+        },
+        {
+          "name": "ZoneWithName",
+          "parameters": [
+            "ZoneWithName&& other"
+          ],
+          "return_type": "void",
+          "logic": "Move constructor. Moves the ZoneStats::Scope from another ZoneWithName."
+        },
+        {
+          "name": "operator=",
+          "parameters": [
+            "const ZoneWithName&"
+          ],
+          "return_type": "ZoneWithName&",
+          "logic": "Deleted copy assignment operator."
+        },
+        {
+          "name": "operator=",
+          "parameters": [
+            "ZoneWithName&& other"
+          ],
+          "return_type": "ZoneWithName&",
+          "logic": "Move assignment operator. Moves the ZoneStats::Scope from another ZoneWithName."
+        },
+        {
+          "name": "New",
+          "parameters": [
+            "Args&&... args"
+          ],
+          "return_type": "ZoneWithNamePointer<T, Name>",
+          "logic": "Allocates a new object of type T in the zone using the provided arguments.  Returns a ZoneWithNamePointer to the allocated object."
+        },
+        {
+          "name": "AllocateArray",
+          "parameters": [
+            "size_t length"
+          ],
+          "return_type": "ZoneWithNamePointer<T, Name>",
+          "logic": "Allocates an array of type T in the zone with the specified length. Returns a ZoneWithNamePointer to the allocated array."
+        },
+        {
+          "name": "get",
+          "parameters": [],
+          "return_type": "Zone*",
+          "logic": "Returns a pointer to the underlying Zone object."
+        },
+        {
+          "name": "operator Zone*",
+          "parameters": [],
+          "return_type": "Zone*",
+          "logic": "Conversion operator to the underlying Zone* type. Returns the Zone pointer."
+        },
+        {
+          "name": "operator->",
+          "parameters": [],
+          "return_type": "Zone*",
+          "logic": "Arrow operator. Returns the Zone* pointer, allowing access to members of the Zone object."
+        },
+        {
+          "name": "Destroy",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Destroys the Zone, freeing all allocated memory."
+        }
+      ]
+    }
+  ],
+  "functions": []
+}

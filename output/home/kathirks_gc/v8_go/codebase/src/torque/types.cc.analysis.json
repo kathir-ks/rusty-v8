@@ -1,0 +1,799 @@
+{
+  "file_path": "/home/kathirks_gc/v8_go/codebase/src/torque/types.cc",
+  "imports": [
+    "src/torque/types.h",
+    "cmath",
+    "iostream",
+    "optional",
+    "src/base/bits.h",
+    "src/torque/ast.h",
+    "src/torque/declarable.h",
+    "src/torque/global-context.h",
+    "src/torque/source-positions.h",
+    "src/torque/type-oracle.h",
+    "src/torque/type-visitor.h"
+  ],
+  "classes": [
+    {
+      "name": "Type",
+      "properties": [
+        "parent_",
+        "aliases_",
+        "id_",
+        "constexpr_version_",
+        "specialized_from_"
+      ],
+      "methods": [
+        {
+          "name": "Type",
+          "parameters": [
+            "const Type& other"
+          ],
+          "return_type": "Type",
+          "logic": "Custom copy constructor that doesn't copy aliases_ and id_."
+        },
+        {
+          "name": "Type",
+          "parameters": [
+            "TypeBase::Kind kind",
+            "const Type* parent",
+            "MaybeSpecializationKey specialized_from"
+          ],
+          "return_type": "Type",
+          "logic": "Constructor for creating a new Type object."
+        },
+        {
+          "name": "ToString",
+          "parameters": [],
+          "return_type": "std::string",
+          "logic": "Returns a string representation of the type, using aliases if available."
+        },
+        {
+          "name": "SimpleName",
+          "parameters": [],
+          "return_type": "std::string",
+          "logic": "Returns a simplified name of the type, using aliases or computed name."
+        },
+        {
+          "name": "GetHandleTypeName",
+          "parameters": [
+            "HandleKind kind",
+            "const std::string& type_name"
+          ],
+          "return_type": "std::string",
+          "logic": "Returns the C++ handle type name based on HandleKind and type name."
+        },
+        {
+          "name": "HandlifiedCppTypeName",
+          "parameters": [
+            "HandleKind kind"
+          ],
+          "return_type": "std::string",
+          "logic": "Returns the C++ type name, wrapped in a Handle or DirectHandle if tagged."
+        },
+        {
+          "name": "TagglifiedCppTypeName",
+          "parameters": [],
+          "return_type": "std::string",
+          "logic": "Returns the C++ type name, wrapped in Tagged<> if tagged."
+        },
+        {
+          "name": "IsSubtypeOf",
+          "parameters": [
+            "const Type* supertype"
+          ],
+          "return_type": "bool",
+          "logic": "Checks if this type is a subtype of the given supertype."
+        },
+        {
+          "name": "GetConstexprGeneratedTypeName",
+          "parameters": [],
+          "return_type": "std::string",
+          "logic": "Returns the constexpr version's generated type name."
+        },
+        {
+          "name": "ClassSupertype",
+          "parameters": [],
+          "return_type": "std::optional<const ClassType*>",
+          "logic": "Finds the nearest ClassType supertype in the hierarchy."
+        },
+        {
+          "name": "StructSupertype",
+          "parameters": [],
+          "return_type": "std::optional<const StructType*>",
+          "logic": "Finds the nearest StructType supertype in the hierarchy."
+        },
+        {
+          "name": "AggregateSupertype",
+          "parameters": [],
+          "return_type": "std::optional<const AggregateType*>",
+          "logic": "Finds the nearest AggregateType supertype in the hierarchy."
+        },
+        {
+          "name": "CommonSupertype",
+          "parameters": [
+            "const Type* a",
+            "const Type* b"
+          ],
+          "return_type": "const Type*",
+          "logic": "Finds the common supertype between two types."
+        },
+        {
+          "name": "Depth",
+          "parameters": [],
+          "return_type": "int",
+          "logic": "Calculates the depth of the type in the inheritance hierarchy."
+        },
+        {
+          "name": "IsAbstractName",
+          "parameters": [
+            "const std::string& name"
+          ],
+          "return_type": "bool",
+          "logic": "Checks if the type is an abstract type with the given name."
+        },
+        {
+          "name": "GetGeneratedTypeName",
+          "parameters": [],
+          "return_type": "std::string",
+          "logic": "Returns the generated type name for the type."
+        },
+        {
+          "name": "GetGeneratedTNodeTypeName",
+          "parameters": [],
+          "return_type": "std::string",
+          "logic": "Returns the generated TNode type name for the type."
+        },
+        {
+          "name": "MatchUnaryGeneric",
+          "parameters": [
+            "const Type* type",
+            "GenericType* generic"
+          ],
+          "return_type": "std::optional<const Type*>",
+          "logic": "Matches the type to a unary generic type."
+        },
+        {
+          "name": "GetRuntimeType",
+          "parameters": [],
+          "return_type": "std::string",
+          "logic": "Returns the runtime type name for this type (Tagged<TNode<...>>, std::tuple<...>, uintptr_t)."
+        },
+        {
+          "name": "GetDebugType",
+          "parameters": [],
+          "return_type": "std::string",
+          "logic": "Returns the debug type name for this type (uintptr_t, std::tuple<...>)."
+        }
+      ]
+    },
+    {
+      "name": "AbstractType",
+      "properties": [
+        "generated_type_"
+      ],
+      "methods": [
+        {
+          "name": "GetGeneratedTypeNameImpl",
+          "parameters": [],
+          "return_type": "std::string",
+          "logic": "Implementation to get the generated type name (TNode<...> or std::function<...> for Lazy<T>)."
+        },
+        {
+          "name": "GetGeneratedTNodeTypeNameImpl",
+          "parameters": [],
+          "return_type": "std::string",
+          "logic": "Implementation to get the generated TNode type name."
+        },
+        {
+          "name": "GetTypeCheckers",
+          "parameters": [],
+          "return_type": "std::vector<TypeChecker>",
+          "logic": "Returns a vector of type checkers for this type."
+        }
+      ]
+    },
+    {
+      "name": "BuiltinPointerType",
+      "properties": [
+        "parameter_types_",
+        "return_type_"
+      ],
+      "methods": [
+        {
+          "name": "ToExplicitString",
+          "parameters": [],
+          "return_type": "std::string",
+          "logic": "Returns a string representation of the builtin pointer type."
+        },
+        {
+          "name": "SimpleNameImpl",
+          "parameters": [],
+          "return_type": "std::string",
+          "logic": "Returns a simplified name of the builtin pointer type."
+        },
+        {
+          "name": "HasContextParameter",
+          "parameters": [],
+          "return_type": "bool",
+          "logic": "Checks if the type has a context parameter."
+        }
+      ]
+    },
+    {
+      "name": "UnionType",
+      "properties": [
+        "types_"
+      ],
+      "methods": [
+        {
+          "name": "ToExplicitString",
+          "parameters": [],
+          "return_type": "std::string",
+          "logic": "Returns a string representation of the union type."
+        },
+        {
+          "name": "SimpleNameImpl",
+          "parameters": [],
+          "return_type": "std::string",
+          "logic": "Returns a simplified name of the union type."
+        },
+        {
+          "name": "InsertGeneratedTNodeTypeName",
+          "parameters": [
+            "std::set<std::string>& names",
+            "const Type* t"
+          ],
+          "return_type": "void",
+          "logic": "Inserts the generated TNode type name of a type into a set."
+        },
+        {
+          "name": "GetGeneratedTNodeTypeNameImpl",
+          "parameters": [],
+          "return_type": "std::string",
+          "logic": "Implementation to get the generated TNode type name for union types."
+        },
+        {
+          "name": "GetRuntimeType",
+          "parameters": [],
+          "return_type": "std::string",
+          "logic": "Returns the runtime type of the Union Type."
+        },
+        {
+          "name": "InsertConstexprGeneratedTypeName",
+          "parameters": [
+            "std::set<std::string>& names",
+            "const Type* t"
+          ],
+          "return_type": "void",
+          "logic": "Inserts the generated constexpr type name of a type into a set."
+        },
+        {
+          "name": "GetConstexprGeneratedTypeName",
+          "parameters": [],
+          "return_type": "std::string",
+          "logic": "Returns the constexpr generated type name for the union type."
+        },
+        {
+          "name": "GetDebugType",
+          "parameters": [],
+          "return_type": "std::string",
+          "logic": "Returns the debug type name of the Union Type."
+        },
+        {
+          "name": "RecomputeParent",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Recomputes the parent type of the union type."
+        },
+        {
+          "name": "Subtract",
+          "parameters": [
+            "const Type* t"
+          ],
+          "return_type": "void",
+          "logic": "Subtracts a type from the union type."
+        }
+      ]
+    },
+    {
+      "name": "BitFieldStructType",
+      "properties": [
+        "fields_"
+      ],
+      "methods": [
+        {
+          "name": "ToExplicitString",
+          "parameters": [],
+          "return_type": "std::string",
+          "logic": "Returns a string representation of the bitfield struct type."
+        },
+        {
+          "name": "LookupField",
+          "parameters": [
+            "const std::string& name"
+          ],
+          "return_type": "const BitField&",
+          "logic": "Looks up a bitfield by its name."
+        }
+      ]
+    },
+    {
+      "name": "AggregateType",
+      "properties": [
+        "fields_",
+        "methods_",
+        "nspace_",
+        "name_",
+        "is_finalized_",
+        "specialized_from_"
+      ],
+      "methods": [
+        {
+          "name": "CheckForDuplicateFields",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Checks the aggregate type for duplicate field declarations."
+        },
+        {
+          "name": "GetHierarchy",
+          "parameters": [],
+          "return_type": "std::vector<const AggregateType*>",
+          "logic": "Gets the hierarchy of aggregate types."
+        },
+        {
+          "name": "HasField",
+          "parameters": [
+            "const std::string& name"
+          ],
+          "return_type": "bool",
+          "logic": "Checks if the aggregate type has a field with the given name."
+        },
+        {
+          "name": "LookupFieldInternal",
+          "parameters": [
+            "const std::string& name"
+          ],
+          "return_type": "const Field&",
+          "logic": "Internal method to look up a field by its name."
+        },
+        {
+          "name": "LookupField",
+          "parameters": [
+            "const std::string& name"
+          ],
+          "return_type": "const Field&",
+          "logic": "Looks up a field by its name."
+        },
+        {
+          "name": "Methods",
+          "parameters": [
+            "const std::string& name"
+          ],
+          "return_type": "std::vector<Method*>",
+          "logic": "Looks up methods by name."
+        }
+      ]
+    },
+    {
+      "name": "StructType",
+      "properties": [
+        "decl_",
+        "generated_type_name_"
+      ],
+      "methods": [
+        {
+          "name": "StructType",
+          "parameters": [
+            "Namespace* nspace",
+            "const StructDeclaration* decl",
+            "MaybeSpecializationKey specialized_from"
+          ],
+          "return_type": "StructType",
+          "logic": "Constructor for creating a new StructType object."
+        },
+        {
+          "name": "GetGeneratedTypeNameImpl",
+          "parameters": [],
+          "return_type": "std::string",
+          "logic": "Implementation to get the generated type name."
+        },
+        {
+          "name": "PackedSize",
+          "parameters": [],
+          "return_type": "size_t",
+          "logic": "Calculates the packed size of the struct."
+        },
+        {
+          "name": "ClassifyContents",
+          "parameters": [],
+          "return_type": "StructType::Classification",
+          "logic": "Classifies the contents of the struct based on field types (tagged, untagged, etc.)."
+        },
+        {
+          "name": "SimpleNameImpl",
+          "parameters": [],
+          "return_type": "std::string",
+          "logic": "Returns the simple name (name of the struct)"
+        },
+        {
+          "name": "ToExplicitString",
+          "parameters": [],
+          "return_type": "std::string",
+          "logic": "Returns the string representaiton of the struct type"
+        },
+        {
+          "name": "Finalize",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Finalizes the struct type by visiting methods, setting flags, and ensuring no duplicate fields."
+        }
+      ]
+    },
+    {
+      "name": "ClassType",
+      "properties": [
+        "size_",
+        "flags_",
+        "generates_",
+        "decl_",
+        "alias_",
+        "own_instance_type_",
+        "instance_type_range_"
+      ],
+      "methods": [
+        {
+          "name": "ClassType",
+          "parameters": [
+            "const Type* parent",
+            "Namespace* nspace",
+            "const std::string& name",
+            "ClassFlags flags",
+            "const std::string& generates",
+            "const ClassDeclaration* decl",
+            "const TypeAlias* alias"
+          ],
+          "return_type": "ClassType",
+          "logic": "Constructor for creating a new ClassType object."
+        },
+        {
+          "name": "GetGeneratedTNodeTypeNameImpl",
+          "parameters": [],
+          "return_type": "std::string",
+          "logic": "Implementation to get the generated TNode type name."
+        },
+        {
+          "name": "GetGeneratedTypeNameImpl",
+          "parameters": [],
+          "return_type": "std::string",
+          "logic": "Implementation to get the generated type name."
+        },
+        {
+          "name": "ToExplicitString",
+          "parameters": [],
+          "return_type": "std::string",
+          "logic": "Returns a string representation of the class type."
+        },
+        {
+          "name": "AllowInstantiation",
+          "parameters": [],
+          "return_type": "bool",
+          "logic": "Checks if the class allows instantiation."
+        },
+        {
+          "name": "Finalize",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Finalizes the class type by visiting fields and methods, setting flags, and ensuring no duplicate fields."
+        },
+        {
+          "name": "ComputeAllFields",
+          "parameters": [],
+          "return_type": "std::vector<Field>",
+          "logic": "Computes all fields, including inherited fields."
+        },
+        {
+          "name": "ComputeHeaderFields",
+          "parameters": [],
+          "return_type": "std::vector<Field>",
+          "logic": "Computes header fields."
+        },
+        {
+          "name": "ComputeArrayFields",
+          "parameters": [],
+          "return_type": "std::vector<Field>",
+          "logic": "Computes array fields."
+        },
+        {
+          "name": "InitializeInstanceTypes",
+          "parameters": [
+            "std::optional<int> own",
+            "std::optional<std::pair<int, int>> range"
+          ],
+          "return_type": "void",
+          "logic": "Initializes instance types."
+        },
+        {
+          "name": "OwnInstanceType",
+          "parameters": [],
+          "return_type": "std::optional<int>",
+          "logic": "Returns the own instance type."
+        },
+        {
+          "name": "InstanceTypeRange",
+          "parameters": [],
+          "return_type": "std::optional<std::pair<int, int>>",
+          "logic": "Returns the instance type range."
+        },
+        {
+          "name": "ComputeHeaderSlotKinds",
+          "parameters": [],
+          "return_type": "std::vector<ObjectSlotKind>",
+          "logic": "Computes the slot kinds of the header."
+        },
+        {
+          "name": "ComputeArraySlotKind",
+          "parameters": [],
+          "return_type": "std::optional<ObjectSlotKind>",
+          "logic": "Computes the slot kind of the array."
+        },
+        {
+          "name": "HasNoPointerSlotsExceptMap",
+          "parameters": [],
+          "return_type": "bool",
+          "logic": "Checks if the class has no pointer slots except the map."
+        },
+        {
+          "name": "HasIndexedFieldsIncludingInParents",
+          "parameters": [],
+          "return_type": "bool",
+          "logic": "Checks if class or super class has indexed fields"
+        },
+        {
+          "name": "GetFieldPreceding",
+          "parameters": [
+            "size_t field_index"
+          ],
+          "return_type": "const Field*",
+          "logic": "Returns the preceding field"
+        },
+        {
+          "name": "GetClassDeclaringField",
+          "parameters": [
+            "const Field& f"
+          ],
+          "return_type": "const ClassType*",
+          "logic": "Returns the ClassType that declared Field f"
+        },
+        {
+          "name": "GetSliceMacroName",
+          "parameters": [
+            "const Field& field"
+          ],
+          "return_type": "std::string",
+          "logic": "Returns the name of the slice macro function for the field."
+        },
+        {
+          "name": "GenerateAccessors",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Generates accessor macros"
+        },
+        {
+          "name": "GenerateSliceAccessor",
+          "parameters": [
+            "size_t field_index"
+          ],
+          "return_type": "void",
+          "logic": "Generates slice macros"
+        },
+        {
+          "name": "HasStaticSize",
+          "parameters": [],
+          "return_type": "bool",
+          "logic": "Checks if the class has a static size."
+        },
+        {
+          "name": "AttributedToFile",
+          "parameters": [],
+          "return_type": "SourceId",
+          "logic": "Returns the source file to which this class should be attributed."
+        }
+      ]
+    }
+  ],
+  "functions": [
+    {
+      "name": "SubtractType",
+      "parameters": [
+        "const Type* a",
+        "const Type* b"
+      ],
+      "return_type": "const Type*",
+      "logic": "Subtracts type b from type a, returning the resulting type."
+    },
+    {
+      "name": "ComputeSlotKindsHelper",
+      "parameters": [
+        "std::vector<ObjectSlotKind>* slots",
+        "size_t start_offset",
+        "const std::vector<Field>& fields"
+      ],
+      "return_type": "void",
+      "logic": "Helper function to compute the slot kinds for a class/struct."
+    },
+    {
+      "name": "PrintSignature",
+      "parameters": [
+        "std::ostream& os",
+        "const Signature& sig",
+        "bool with_names"
+      ],
+      "return_type": "void",
+      "logic": "Prints a function signature to an output stream."
+    },
+    {
+      "name": "operator<<",
+      "parameters": [
+        "std::ostream& os",
+        "const NameAndType& name_and_type"
+      ],
+      "return_type": "std::ostream&",
+      "logic": "Overloads the << operator to print NameAndType objects."
+    },
+    {
+      "name": "operator<<",
+      "parameters": [
+        "std::ostream& os",
+        "const Field& field"
+      ],
+      "return_type": "std::ostream&",
+      "logic": "Overloads the << operator to print Field objects."
+    },
+    {
+      "name": "operator<<",
+      "parameters": [
+        "std::ostream& os",
+        "const Signature& sig"
+      ],
+      "return_type": "std::ostream&",
+      "logic": "Overloads the << operator to print Signature objects."
+    },
+    {
+      "name": "operator<<",
+      "parameters": [
+        "std::ostream& os",
+        "const TypeVector& types"
+      ],
+      "return_type": "std::ostream&",
+      "logic": "Overloads the << operator to print TypeVector objects."
+    },
+    {
+      "name": "operator<<",
+      "parameters": [
+        "std::ostream& os",
+        "const ParameterTypes& p"
+      ],
+      "return_type": "std::ostream&",
+      "logic": "Overloads the << operator to print ParameterTypes objects."
+    },
+    {
+      "name": "IsAssignableFrom",
+      "parameters": [
+        "const Type* to",
+        "const Type* from"
+      ],
+      "return_type": "bool",
+      "logic": "Checks if the 'from' type is assignable to the 'to' type."
+    },
+    {
+      "name": "operator<",
+      "parameters": [
+        "const Type& a",
+        "const Type& b"
+      ],
+      "return_type": "bool",
+      "logic": "Compares two types based on their IDs."
+    },
+    {
+      "name": "ProjectStructField",
+      "parameters": [
+        "VisitResult structure",
+        "const std::string& fieldname"
+      ],
+      "return_type": "VisitResult",
+      "logic": "Returns a VisitResult object after projecting a specific field on a struct"
+    },
+    {
+      "name": "AppendLoweredTypes",
+      "parameters": [
+        "const Type* type",
+        "std::vector<const Type*>* result"
+      ],
+      "return_type": "void",
+      "logic": "Appends lowered types to the result vector"
+    },
+    {
+      "name": "LowerType",
+      "parameters": [
+        "const Type* type"
+      ],
+      "return_type": "TypeVector",
+      "logic": "Lowers a type into a vector of types"
+    },
+    {
+      "name": "LoweredSlotCount",
+      "parameters": [
+        "const Type* type"
+      ],
+      "return_type": "size_t",
+      "logic": "Returns the count of lowered types"
+    },
+    {
+      "name": "LowerParameterTypes",
+      "parameters": [
+        "const TypeVector& parameters"
+      ],
+      "return_type": "TypeVector",
+      "logic": "Lowers a vector of parameters into a vector of types"
+    },
+    {
+      "name": "LowerParameterTypes",
+      "parameters": [
+        "const ParameterTypes& parameter_types",
+        "size_t arg_count"
+      ],
+      "return_type": "TypeVector",
+      "logic": "Lowers parameter types to a flat list."
+    },
+    {
+      "name": "SizeOf",
+      "parameters": [
+        "const Type* type"
+      ],
+      "return_type": "std::optional<std::tuple<size_t, std::string>>",
+      "logic": "Get the size of the Type in bytes"
+    },
+    {
+      "name": "IsAnyUnsignedInteger",
+      "parameters": [
+        "const Type* type"
+      ],
+      "return_type": "bool",
+      "logic": "Check if the type is any unsigned interger type"
+    },
+    {
+      "name": "IsAllowedAsBitField",
+      "parameters": [
+        "const Type* type"
+      ],
+      "return_type": "bool",
+      "logic": "Check if the type is allowed as bit field"
+    },
+    {
+      "name": "IsPointerSizeIntegralType",
+      "parameters": [
+        "const Type* type"
+      ],
+      "return_type": "bool",
+      "logic": "Check if the type is pointer size integral type"
+    },
+    {
+      "name": "Is32BitIntegralType",
+      "parameters": [
+        "const Type* type"
+      ],
+      "return_type": "bool",
+      "logic": "Check if the type is 32-bit integral type"
+    },
+    {
+      "name": "ExtractSimpleFieldArraySize",
+      "parameters": [
+        "const ClassType& class_type",
+        "Expression* array_size"
+      ],
+      "return_type": "std::optional<NameAndType>",
+      "logic": "Extracts the size field from a class."
+    }
+  ]
+}

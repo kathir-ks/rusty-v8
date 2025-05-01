@@ -1,0 +1,180 @@
+{
+  "file_path": "/home/kathirks_gc/v8_go/codebase/src/execution/microtask-queue.cc",
+  "imports": [
+    "src/execution/microtask-queue.h",
+    "algorithm",
+    "cstddef",
+    "optional",
+    "src/api/api-inl.h",
+    "src/base/logging.h",
+    "src/execution/isolate.h",
+    "src/handles/handles-inl.h",
+    "src/objects/microtask-inl.h",
+    "src/objects/visitors.h",
+    "src/roots/roots-inl.h",
+    "src/tracing/trace-event.h"
+  ],
+  "classes": [
+    {
+      "name": "MicrotaskQueue",
+      "properties": [
+        "kRingBufferOffset",
+        "kCapacityOffset",
+        "kSizeOffset",
+        "kStartOffset",
+        "kFinishedMicrotaskCountOffset",
+        "kMinimumCapacity",
+        "ring_buffer_",
+        "capacity_",
+        "size_",
+        "start_",
+        "finished_microtask_count_",
+        "next_",
+        "prev_",
+        "microtasks_policy_",
+        "microtasks_completed_callbacks_",
+        "microtasks_completed_callbacks_cow_",
+        "is_running_microtasks_",
+        "is_running_completed_callbacks_"
+      ],
+      "methods": [
+        {
+          "name": "SetUpDefaultMicrotaskQueue",
+          "parameters": [
+            "Isolate* isolate"
+          ],
+          "return_type": "void",
+          "logic": "Sets up the default microtask queue for an isolate."
+        },
+        {
+          "name": "New",
+          "parameters": [
+            "Isolate* isolate"
+          ],
+          "return_type": "std::unique_ptr<MicrotaskQueue>",
+          "logic": "Creates a new microtask queue and inserts it into the list of microtask queues."
+        },
+        {
+          "name": "MicrotaskQueue",
+          "parameters": [],
+          "return_type": "MicrotaskQueue",
+          "logic": "Default constructor."
+        },
+        {
+          "name": "~MicrotaskQueue",
+          "parameters": [],
+          "return_type": "MicrotaskQueue",
+          "logic": "Destructor, removes the queue from the list and frees the ring buffer."
+        },
+        {
+          "name": "CallEnqueueMicrotask",
+          "parameters": [
+            "Isolate* isolate",
+            "intptr_t microtask_queue_pointer",
+            "Address raw_microtask"
+          ],
+          "return_type": "Address",
+          "logic": "Static method used as a C entrypoint to enqueue a microtask."
+        },
+        {
+          "name": "EnqueueMicrotask",
+          "parameters": [
+            "v8::Isolate* v8_isolate",
+            "v8::Local<Function> function"
+          ],
+          "return_type": "void",
+          "logic": "Enqueues a microtask represented by a JavaScript function."
+        },
+        {
+          "name": "EnqueueMicrotask",
+          "parameters": [
+            "v8::Isolate* v8_isolate",
+            "v8::MicrotaskCallback callback",
+            "void* data"
+          ],
+          "return_type": "void",
+          "logic": "Enqueues a microtask represented by a C++ callback."
+        },
+        {
+          "name": "EnqueueMicrotask",
+          "parameters": [
+            "Tagged<Microtask> microtask"
+          ],
+          "return_type": "void",
+          "logic": "Enqueues a microtask into the ring buffer, resizing if necessary."
+        },
+        {
+          "name": "PerformCheckpointInternal",
+          "parameters": [
+            "v8::Isolate* v8_isolate"
+          ],
+          "return_type": "void",
+          "logic": "Performs a microtask checkpoint, running microtasks if needed."
+        },
+        {
+          "name": "RunMicrotasks",
+          "parameters": [
+            "Isolate* isolate"
+          ],
+          "return_type": "int",
+          "logic": "Runs all enqueued microtasks."
+        },
+        {
+          "name": "IterateMicrotasks",
+          "parameters": [
+            "RootVisitor* visitor"
+          ],
+          "return_type": "void",
+          "logic": "Iterates through the microtasks in the queue and visits them as root objects for garbage collection. Also shrinks the queue capacity if it is too large compared to the current size."
+        },
+        {
+          "name": "AddMicrotasksCompletedCallback",
+          "parameters": [
+            "MicrotasksCompletedCallbackWithData callback",
+            "void* data"
+          ],
+          "return_type": "void",
+          "logic": "Adds a callback to be executed after microtasks are completed."
+        },
+        {
+          "name": "RemoveMicrotasksCompletedCallback",
+          "parameters": [
+            "MicrotasksCompletedCallbackWithData callback",
+            "void* data"
+          ],
+          "return_type": "void",
+          "logic": "Removes a callback from the list of callbacks to be executed after microtasks are completed."
+        },
+        {
+          "name": "OnCompleted",
+          "parameters": [
+            "Isolate* isolate"
+          ],
+          "return_type": "void",
+          "logic": "Executes all registered microtask completed callbacks."
+        },
+        {
+          "name": "get",
+          "parameters": [
+            "intptr_t index"
+          ],
+          "return_type": "Tagged<Microtask>",
+          "logic": "Retrieves a microtask at a given index."
+        },
+        {
+          "name": "ResizeBuffer",
+          "parameters": [
+            "intptr_t new_capacity"
+          ],
+          "return_type": "void",
+          "logic": "Resizes the internal ring buffer to the given capacity."
+        }
+      ]
+    }
+  ],
+  "functions": [],
+  "namespaces": [
+    "v8",
+    "internal"
+  ]
+}

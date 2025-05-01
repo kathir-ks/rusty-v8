@@ -1,0 +1,983 @@
+{
+  "file_path": "/home/kathirks_gc/v8_go/codebase/src/json/json-stringifier.cc",
+  "imports": [
+    "src/json/json-stringifier.h",
+    "<string_view>",
+    "hwy/highway.h",
+    "src/base/strings.h",
+    "src/common/assert-scope.h",
+    "src/common/message-template.h",
+    "src/execution/protectors-inl.h",
+    "src/numbers/conversions.h",
+    "src/objects/elements-kind.h",
+    "src/objects/heap-number-inl.h",
+    "src/objects/js-array-inl.h",
+    "src/objects/js-raw-json-inl.h",
+    "src/objects/lookup.h",
+    "src/objects/objects-inl.h",
+    "src/objects/oddball-inl.h",
+    "src/objects/ordered-hash-table.h",
+    "src/objects/smi.h",
+    "src/objects/tagged.h",
+    "src/strings/string-builder-inl.h"
+  ],
+  "classes": [
+    {
+      "name": "JsonStringifier",
+      "properties": [
+        "isolate_",
+        "encoding_",
+        "property_list_",
+        "replacer_function_",
+        "one_byte_ptr_",
+        "gap_",
+        "two_byte_ptr_",
+        "part_ptr_",
+        "indent_",
+        "part_length_",
+        "current_index_",
+        "stack_nesting_level_",
+        "overflowed_",
+        "need_stack_",
+        "stack_",
+        "key_cache_",
+        "one_byte_array_"
+      ],
+      "methods": [
+        {
+          "name": "JsonStringifier",
+          "parameters": [
+            "Isolate* isolate"
+          ],
+          "return_type": "constructor",
+          "logic": "Constructor. Initializes JsonStringifier with the provided isolate and sets up initial values for properties."
+        },
+        {
+          "name": "~JsonStringifier",
+          "parameters": [],
+          "return_type": "destructor",
+          "logic": "Destructor. Frees dynamically allocated memory associated with string buffers (one_byte_ptr_, two_byte_ptr_, gap_)."
+        },
+        {
+          "name": "Stringify",
+          "parameters": [
+            "Handle<JSAny> object",
+            "Handle<JSAny> replacer",
+            "Handle<Object> gap"
+          ],
+          "return_type": "MaybeDirectHandle<Object>",
+          "logic": "Entry point. Converts a JavaScript object to a JSON string, using optional replacer function and gap parameter for formatting."
+        },
+        {
+          "name": "InitializeReplacer",
+          "parameters": [
+            "Handle<JSAny> replacer"
+          ],
+          "return_type": "bool",
+          "logic": "Initializes replacer. Processes replacer argument (either an array of keys or a replacer function) for JSON.stringify."
+        },
+        {
+          "name": "InitializeGap",
+          "parameters": [
+            "Handle<Object> gap"
+          ],
+          "return_type": "bool",
+          "logic": "Initializes gap. Processes gap argument for JSON.stringify formatting (determines indentation)."
+        },
+        {
+          "name": "ApplyToJsonFunction",
+          "parameters": [
+            "Handle<JSAny> object",
+            "DirectHandle<Object> key"
+          ],
+          "return_type": "MaybeHandle<JSAny>",
+          "logic": "Applies the 'toJSON' method of an object, if available, before serialization. Invokes the toJSON function on the object."
+        },
+        {
+          "name": "ApplyReplacerFunction",
+          "parameters": [
+            "Handle<JSAny> value",
+            "DirectHandle<Object> key",
+            "DirectHandle<Object> initial_holder"
+          ],
+          "return_type": "MaybeHandle<JSAny>",
+          "logic": "Applies the replacer function, if available, to the value and key before serialization. Invokes the replacer function specified in JSON.stringify."
+        },
+        {
+          "name": "SerializeObject",
+          "parameters": [
+            "Handle<JSAny> obj"
+          ],
+          "return_type": "Result",
+          "logic": "Serializes the entire object"
+        },
+        {
+          "name": "SerializeElement",
+          "parameters": [
+            "Isolate* isolate",
+            "Handle<JSAny> object",
+            "int i"
+          ],
+          "return_type": "Result",
+          "logic": "Serializes an element of an array"
+        },
+        {
+          "name": "SerializeProperty",
+          "parameters": [
+            "Handle<JSAny> object",
+            "bool deferred_comma",
+            "Handle<String> deferred_key"
+          ],
+          "return_type": "Result",
+          "logic": "Serializes a property of an object"
+        },
+        {
+          "name": "Append",
+          "parameters": [
+            "SrcChar c"
+          ],
+          "return_type": "void",
+          "logic": "Appends a character to the string buffer, handling encoding and buffer extension"
+        },
+        {
+          "name": "AppendCharacter",
+          "parameters": [
+            "uint8_t c"
+          ],
+          "return_type": "void",
+          "logic": "Appends a single byte character to the output buffer, handling different encodings."
+        },
+        {
+          "name": "AppendCStringLiteral",
+          "parameters": [
+            "const char (&literal)[N]"
+          ],
+          "return_type": "void",
+          "logic": "Appends a C-style string literal to the output buffer."
+        },
+        {
+          "name": "AppendCString",
+          "parameters": [
+            "const SrcChar* s"
+          ],
+          "return_type": "void",
+          "logic": "Appends a null-terminated C-style string to the output buffer."
+        },
+        {
+          "name": "AppendString",
+          "parameters": [
+            "std::basic_string_view<SrcChar> s"
+          ],
+          "return_type": "void",
+          "logic": "Appends a std::basic_string_view to the output buffer, handling different encodings."
+        },
+        {
+          "name": "CurrentPartCanFit",
+          "parameters": [
+            "size_t length"
+          ],
+          "return_type": "bool",
+          "logic": "Checks if the current string part has enough space for a given length."
+        },
+        {
+          "name": "EscapedLengthIfCurrentPartFits",
+          "parameters": [
+            "size_t length"
+          ],
+          "return_type": "bool",
+          "logic": "Estimates if the escaped version of string of length `length` can fit in the current part."
+        },
+        {
+          "name": "AppendStringByCopy",
+          "parameters": [
+            "Tagged<String> string",
+            "size_t length",
+            "const DisallowGarbageCollection& no_gc"
+          ],
+          "return_type": "void",
+          "logic": "Appends the content of a String (Tagged<String>) by copying its characters to the output buffer. The function optimizes copying based on the string's encoding."
+        },
+        {
+          "name": "AppendString",
+          "parameters": [
+            "Handle<String> string_handle"
+          ],
+          "return_type": "void",
+          "logic": "Appends a string to the string builder. If the string's internal representation is compatible with the builder's encoding, the string is copied directly. Otherwise, SerializeString is called to handle escaping."
+        },
+        {
+          "name": "AppendSubstringByCopy",
+          "parameters": [
+            "const SrcChar* src",
+            "size_t count"
+          ],
+          "return_type": "void",
+          "logic": "Appends a substring of a given character type to the output buffer by directly copying the characters."
+        },
+        {
+          "name": "AppendSubstring",
+          "parameters": [
+            "const SrcChar* src",
+            "size_t from",
+            "size_t to"
+          ],
+          "return_type": "void",
+          "logic": "Appends a substring from src[from] to src[to] to the buffer. Extends the buffer if necessary."
+        },
+        {
+          "name": "HasValidCurrentIndex",
+          "parameters": [],
+          "return_type": "bool",
+          "logic": "Checks if the current index is within the bounds of the part length."
+        },
+        {
+          "name": "Serialize_",
+          "parameters": [
+            "Handle<JSAny> object",
+            "bool comma",
+            "Handle<Object> key"
+          ],
+          "return_type": "Result",
+          "logic": "Serializes a JavaScript value based on its type, handling `toJSON` method, replacer function, and circular references."
+        },
+        {
+          "name": "SerializeDeferredKey",
+          "parameters": [
+            "bool deferred_comma",
+            "Handle<Object> deferred_key"
+          ],
+          "return_type": "void",
+          "logic": "Serializes the object key with quotes and commas, also handling caching of simple keys for optimization."
+        },
+        {
+          "name": "SerializeSmi",
+          "parameters": [
+            "Tagged<Smi> object"
+          ],
+          "return_type": "Result",
+          "logic": "Serializes a small integer (Smi)."
+        },
+        {
+          "name": "SerializeDouble",
+          "parameters": [
+            "double number"
+          ],
+          "return_type": "Result",
+          "logic": "Serializes a double-precision floating-point number."
+        },
+        {
+          "name": "SerializeHeapNumber",
+          "parameters": [
+            "DirectHandle<HeapNumber> object"
+          ],
+          "return_type": "Result",
+          "logic": "Serializes a HeapNumber object to its string representation."
+        },
+        {
+          "name": "SerializeJSPrimitiveWrapper",
+          "parameters": [
+            "Handle<JSPrimitiveWrapper> object",
+            "Handle<Object> key"
+          ],
+          "return_type": "Result",
+          "logic": "Serializes a JSPrimitiveWrapper object (e.g., Number, String, Boolean). Extracts the primitive value and serializes it."
+        },
+        {
+          "name": "SerializeJSArray",
+          "parameters": [
+            "Handle<JSArray> object",
+            "Handle<Object> key"
+          ],
+          "return_type": "Result",
+          "logic": "Serializes a JavaScript array."
+        },
+        {
+          "name": "SerializeJSObject",
+          "parameters": [
+            "Handle<JSObject> object",
+            "Handle<Object> key"
+          ],
+          "return_type": "Result",
+          "logic": "Serializes a JavaScript object."
+        },
+        {
+          "name": "SerializeJSProxy",
+          "parameters": [
+            "Handle<JSProxy> object",
+            "Handle<Object> key"
+          ],
+          "return_type": "Result",
+          "logic": "Serializes a JavaScript proxy object."
+        },
+        {
+          "name": "SerializeJSReceiverSlow",
+          "parameters": [
+            "DirectHandle<JSReceiver> object"
+          ],
+          "return_type": "Result",
+          "logic": "Serializes a generic JSReceiver (slow path, used when fast serialization is not possible)."
+        },
+        {
+          "name": "SerializeFixedArrayWithInterruptCheck",
+          "parameters": [
+            "DirectHandle<JSArray> array",
+            "uint32_t length",
+            "uint32_t* slow_path_index"
+          ],
+          "return_type": "Result",
+          "logic": "Serializes a FixedArray with interrupt checks."
+        },
+        {
+          "name": "SerializeFixedArrayWithPossibleTransitions",
+          "parameters": [
+            "DirectHandle<JSArray> array",
+            "uint32_t length",
+            "uint32_t* slow_path_index"
+          ],
+          "return_type": "Result",
+          "logic": "Serializes a FixedArray with possible transitions in its elements."
+        },
+        {
+          "name": "SerializeFixedArrayElement",
+          "parameters": [
+            "Tagged<T> elements",
+            "uint32_t i",
+            "Tagged<JSArray> array",
+            "bool can_treat_hole_as_undefined"
+          ],
+          "return_type": "Result",
+          "logic": "Serializes a single element in a fixed array."
+        },
+        {
+          "name": "SerializeArrayLikeSlow",
+          "parameters": [
+            "DirectHandle<JSReceiver> object",
+            "uint32_t start",
+            "uint32_t length"
+          ],
+          "return_type": "Result",
+          "logic": "Serializes an array-like object using a slow path when faster paths are not applicable."
+        },
+        {
+          "name": "SerializeString",
+          "parameters": [
+            "Handle<String> object"
+          ],
+          "return_type": "bool",
+          "logic": "Serializes a string, escaping special characters according to JSON rules."
+        },
+        {
+          "name": "NewLine",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Appends a newline character and indentation string."
+        },
+        {
+          "name": "NewLineOutline",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Appends a newline character and indent based on gap."
+        },
+        {
+          "name": "Indent",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Increments the indentation level."
+        },
+        {
+          "name": "Unindent",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Decrements the indentation level."
+        },
+        {
+          "name": "Separator",
+          "parameters": [
+            "bool first"
+          ],
+          "return_type": "void",
+          "logic": "Appends a separator (comma) and a newline/indentation if necessary."
+        },
+        {
+          "name": "CurrentHolder",
+          "parameters": [
+            "DirectHandle<Object> value",
+            "DirectHandle<Object> inital_holder"
+          ],
+          "return_type": "DirectHandle<JSReceiver>",
+          "logic": "Retrieves the current holder object for the replacer function call."
+        },
+        {
+          "name": "StackPush",
+          "parameters": [
+            "Handle<Object> object",
+            "Handle<Object> key"
+          ],
+          "return_type": "Result",
+          "logic": "Pushes an object and key onto the stack to detect circular structures."
+        },
+        {
+          "name": "StackPop",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Pops the last element from the stack."
+        },
+        {
+          "name": "ConstructCircularStructureErrorMessage",
+          "parameters": [
+            "DirectHandle<Object> last_key",
+            "size_t start_index"
+          ],
+          "return_type": "Handle<String>",
+          "logic": "Constructs a detailed error message indicating circular structure."
+        },
+        {
+          "name": "factory",
+          "parameters": [],
+          "return_type": "Factory*",
+          "logic": "Returns pointer to isolate's factory."
+        },
+        {
+          "name": "Extend",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Extends the string buffer."
+        },
+        {
+          "name": "ChangeEncoding",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Changes the string encoding from one-byte to two-byte."
+        }
+      ]
+    },
+    {
+      "name": "SimplePropertyKeyCache",
+      "properties": [
+        "isolate_",
+        "keys_"
+      ],
+      "methods": [
+        {
+          "name": "SimplePropertyKeyCache",
+          "parameters": [
+            "Isolate* isolate"
+          ],
+          "return_type": "constructor",
+          "logic": "Constructor for the SimplePropertyKeyCache. Initializes the cache and sets up a GC epilogue callback to clear the cache."
+        },
+        {
+          "name": "~SimplePropertyKeyCache",
+          "parameters": [],
+          "return_type": "destructor",
+          "logic": "Destructor for the SimplePropertyKeyCache. Removes the GC epilogue callback."
+        },
+        {
+          "name": "TryInsert",
+          "parameters": [
+            "Tagged<String> string"
+          ],
+          "return_type": "void",
+          "logic": "Tries to insert a string into the cache if it meets the criteria (internalized, one-byte, no escaping needed)."
+        },
+        {
+          "name": "Contains",
+          "parameters": [
+            "Tagged<String> string"
+          ],
+          "return_type": "bool",
+          "logic": "Checks if a given string is present in the cache."
+        }
+      ]
+    },
+    {
+      "name": "CircularStructureMessageBuilder",
+      "properties": [
+        "builder_"
+      ],
+      "methods": [
+        {
+          "name": "CircularStructureMessageBuilder",
+          "parameters": [
+            "Isolate* isolate"
+          ],
+          "return_type": "constructor",
+          "logic": "Initializes an instance of the message builder."
+        },
+        {
+          "name": "AppendStartLine",
+          "parameters": [
+            "DirectHandle<Object> start_object"
+          ],
+          "return_type": "void",
+          "logic": "Appends the start line of the circular structure message, including constructor name."
+        },
+        {
+          "name": "AppendNormalLine",
+          "parameters": [
+            "DirectHandle<Object> key",
+            "DirectHandle<Object> object"
+          ],
+          "return_type": "void",
+          "logic": "Appends a normal line showing a key-object pair with constructor name."
+        },
+        {
+          "name": "AppendClosingLine",
+          "parameters": [
+            "DirectHandle<Object> closing_key"
+          ],
+          "return_type": "void",
+          "logic": "Appends the closing line indicating the loop completion."
+        },
+        {
+          "name": "AppendEllipsis",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Appends an ellipsis to indicate skipped objects in a long loop."
+        },
+        {
+          "name": "Finish",
+          "parameters": [],
+          "return_type": "MaybeDirectHandle<String>",
+          "logic": "Finishes and retrieves the built message."
+        }
+      ]
+    },
+    {
+      "name": "OutBuffer",
+      "properties": [
+        "allocator_",
+        "stack_buffer_",
+        "cur_",
+        "segment_end_",
+        "zone_",
+        "segments_"
+      ],
+      "methods": [
+        {
+          "name": "OutBuffer",
+          "parameters": [
+            "AccountingAllocator* allocator"
+          ],
+          "return_type": "constructor",
+          "logic": "Initializes the OutBuffer. Allocates a stack buffer and sets up the current pointer and segment end pointer."
+        },
+        {
+          "name": "AppendCharacter",
+          "parameters": [
+            "SrcChar c"
+          ],
+          "return_type": "void",
+          "logic": "Appends a single character to the buffer. Extends the buffer if necessary."
+        },
+        {
+          "name": "Append",
+          "parameters": [
+            "const SrcChar* chars",
+            "size_t length"
+          ],
+          "return_type": "void",
+          "logic": "Appends a string to the buffer. Extends the buffer if necessary."
+        },
+        {
+          "name": "length",
+          "parameters": [],
+          "return_type": "size_t",
+          "logic": "Returns the current length of the buffer."
+        },
+        {
+          "name": "CopyTo",
+          "parameters": [
+            "Dst* dst"
+          ],
+          "return_type": "void",
+          "logic": "Copies the contents of the buffer to a destination buffer."
+        }
+      ]
+    },
+    {
+      "name": "ContinuationRecord",
+      "properties": [
+        "type_",
+        "object_",
+        "js_array_",
+        "js_object_",
+        "object_key_"
+      ],
+      "methods": []
+    },
+    {
+      "name": "FastJsonStringifier",
+      "properties": [
+        "isolate_",
+        "buffer_",
+        "stack_",
+        "initial_jsobject_proto_",
+        "initial_jsarray_proto_"
+      ],
+      "methods": [
+        {
+          "name": "FastJsonStringifier",
+          "parameters": [
+            "Isolate* isolate"
+          ],
+          "return_type": "constructor",
+          "logic": "Initializes a new FastJsonStringifier instance with a specified isolate."
+        },
+        {
+          "name": "ResultLength",
+          "parameters": [],
+          "return_type": "size_t",
+          "logic": "Returns the length of the current result string."
+        },
+        {
+          "name": "CopyResultTo",
+          "parameters": [
+            "DstChar* out_buffer"
+          ],
+          "return_type": "void",
+          "logic": "Copies the internal buffer to a provided output buffer."
+        },
+        {
+          "name": "SerializeObject",
+          "parameters": [
+            "Tagged<JSAny> object",
+            "const DisallowGarbageCollection& no_gc"
+          ],
+          "return_type": "FastJsonStringifierResult",
+          "logic": "Entry point. Serializes a generic object."
+        },
+        {
+          "name": "ResumeFrom",
+          "parameters": [
+            "FastJsonStringifier<OldChar>& old_stringifier",
+            "const DisallowGarbageCollection& no_gc"
+          ],
+          "return_type": "FastJsonStringifierResult",
+          "logic": "Resumes serialization after encoding change"
+        },
+        {
+          "name": "Separator",
+          "parameters": [
+            "bool comma"
+          ],
+          "return_type": "void",
+          "logic": "Adds a comma if not the first element."
+        },
+        {
+          "name": "SerializeSmi",
+          "parameters": [
+            "Tagged<Smi> object"
+          ],
+          "return_type": "void",
+          "logic": "Serializes Smi."
+        },
+        {
+          "name": "SerializeDouble",
+          "parameters": [
+            "double number"
+          ],
+          "return_type": "void",
+          "logic": "Serializes double."
+        },
+        {
+          "name": "SerializeObjectKey",
+          "parameters": [
+            "Tagged<String> key",
+            "bool comma",
+            "const DisallowGarbageCollection& no_gc"
+          ],
+          "return_type": "FastJsonStringifierResult",
+          "logic": "Serialize property key for a simple object."
+        },
+        {
+          "name": "SerializeObjectKey",
+          "parameters": [
+            "Tagged<String> key",
+            "bool comma",
+            "const DisallowGarbageCollection& no_gc"
+          ],
+          "return_type": "FastJsonStringifierResult",
+          "logic": "Serialize property key for a simple object."
+        },
+        {
+          "name": "SerializeString",
+          "parameters": [
+            "Tagged<HeapObject> str",
+            "bool comma",
+            "Tagged<String> key",
+            "const DisallowGarbageCollection& no_gc"
+          ],
+          "return_type": "FastJsonStringifierResult",
+          "logic": "Serializes a string with potentially deferred key"
+        },
+        {
+          "name": "TrySerializeSimpleObject",
+          "parameters": [
+            "Tagged<JSAny> object",
+            "bool comma",
+            "Tagged<String> key"
+          ],
+          "return_type": "FastJsonStringifierResult",
+          "logic": "Attempts to serialize a JS Any object with no need for the stack"
+        },
+        {
+          "name": "SerializeJSPrimitiveWrapper",
+          "parameters": [
+            "Tagged<JSPrimitiveWrapper> obj",
+            "bool comma",
+            "Tagged<String> key",
+            "const DisallowGarbageCollection& no_gc"
+          ],
+          "return_type": "FastJsonStringifierResult",
+          "logic": "Serializes primitive wrappers."
+        },
+        {
+          "name": "SerializeJSObject",
+          "parameters": [
+            "Tagged<JSObject> obj",
+            "const DisallowGarbageCollection& no_gc"
+          ],
+          "return_type": "FastJsonStringifierResult",
+          "logic": "Serializes JS objects."
+        },
+        {
+          "name": "ResumeJSObject",
+          "parameters": [
+            "Tagged<JSObject> obj",
+            "uint16_t start_descriptor_idx",
+            "uint16_t nof_descriptors",
+            "uint8_t in_object_properties",
+            "uint8_t in_object_properties_start",
+            "Tagged<DescriptorArray> descriptors",
+            "bool comma",
+            "const DisallowGarbageCollection& no_gc"
+          ],
+          "return_type": "FastJsonStringifierResult",
+          "logic": "Resumes serializing from descriptor."
+        },
+        {
+          "name": "SerializeJSArray",
+          "parameters": [
+            "Tagged<JSArray> array"
+          ],
+          "return_type": "FastJsonStringifierResult",
+          "logic": "Serializes a Javascript Array."
+        },
+        {
+          "name": "SerializeFixedArrayWithInterruptCheck",
+          "parameters": [
+            "Tagged<FixedArrayBase> elements",
+            "uint32_t start_index",
+            "uint32_t length"
+          ],
+          "return_type": "FastJsonStringifierResult",
+          "logic": "Serializes fixed length array with interrupt check."
+        },
+        {
+          "name": "SerializeFixedArray",
+          "parameters": [
+            "Tagged<FixedArrayBase> array",
+            "uint32_t start_idx",
+            "uint32_t length"
+          ],
+          "return_type": "FastJsonStringifierResult",
+          "logic": "Serializes FixedArray."
+        },
+        {
+          "name": "SerializeFixedArrayElement",
+          "parameters": [
+            "Tagged<T> elements",
+            "uint32_t i",
+            "uint32_t length"
+          ],
+          "return_type": "FastJsonStringifierResult",
+          "logic": "Serializes a single element in a fixed array."
+        },
+        {
+          "name": "HandleInterruptAndCheckCycle",
+          "parameters": [],
+          "return_type": "FastJsonStringifierResult",
+          "logic": "Handles interrupt."
+        },
+        {
+          "name": "CheckCycle",
+          "parameters": [],
+          "return_type": "bool",
+          "logic": "Checks for cycle."
+        },
+        {
+          "name": "AppendCharacter",
+          "parameters": [
+            "SrcChar c"
+          ],
+          "return_type": "void",
+          "logic": "Appends a character."
+        },
+        {
+          "name": "AppendCStringLiteral",
+          "parameters": [
+            "const char (&literal)[N]"
+          ],
+          "return_type": "void",
+          "logic": "Appends a c string literal."
+        },
+        {
+          "name": "AppendCString",
+          "parameters": [
+            "const char* chars",
+            "size_t len"
+          ],
+          "return_type": "void",
+          "logic": "Appends char array as a C string to the buffer"
+        },
+        {
+          "name": "AppendCString",
+          "parameters": [
+            "const char* chars"
+          ],
+          "return_type": "void",
+          "logic": "Appends c string."
+        },
+        {
+          "name": "AppendString",
+          "parameters": [
+            "std::string_view str"
+          ],
+          "return_type": "void",
+          "logic": "Appends string view."
+        },
+        {
+          "name": "AppendStringChecked",
+          "parameters": [
+            "Tagged<String> string"
+          ],
+          "return_type": "FastJsonStringifierResult",
+          "logic": "Appends string, escaping chars."
+        },
+        {
+          "name": "AppendStringChecked",
+          "parameters": [
+            "const SrcChar* chars",
+            "size_t length",
+            "const DisallowGarbageCollection& no_gc"
+          ],
+          "return_type": "FastJsonStringifierResult",
+          "logic": "Appends to the output."
+        },
+        {
+          "name": "AppendStringCheckedScalar",
+          "parameters": [
+            "const SrcChar* chars",
+            "size_t length",
+            "size_t start",
+            "size_t uncopied_src_index",
+            "const DisallowGarbageCollection& no_gc"
+          ],
+          "return_type": "FastJsonStringifierResult",
+          "logic": "Unclear purpose, low level append with escape logic"
+        },
+        {
+          "name": "AppendStringCheckedSWAR",
+          "parameters": [
+            "const SrcChar* chars",
+            "size_t length",
+            "size_t start",
+            "size_t uncopied_src_index",
+            "const DisallowGarbageCollection& no_gc"
+          ],
+          "return_type": "FastJsonStringifierResult",
+          "logic": "Unclear purpose, very low level append with escape logic"
+        },
+        {
+          "name": "AppendStringCheckedSIMD",
+          "parameters": [
+            "const SrcChar* chars",
+            "size_t length",
+            "const DisallowGarbageCollection& no_gc"
+          ],
+          "return_type": "FastJsonStringifierResult",
+          "logic": "Check escaping needed."
+        },
+        {
+          "name": "AppendStringChecked",
+          "parameters": [
+            "const SrcChar* chars",
+            "size_t length",
+            "const DisallowGarbageCollection& no_gc"
+          ],
+          "return_type": "FastJsonStringifierResult",
+          "logic": "Append string."
+        }
+      ]
+    }
+  ],
+  "functions": [
+    {
+      "name": "NeedsEscape",
+      "parameters": [
+        "uint32_t input"
+      ],
+      "return_type": "bool",
+      "logic": "Checks if any characters in a packed 4-byte input need escaping."
+    },
+    {
+      "name": "CanFastSerializeJSArray",
+      "parameters": [
+        "Isolate* isolate",
+        "Tagged<JSArray> object"
+      ],
+      "return_type": "bool",
+      "logic": "Determines if a JSArray can be fast-serialized based on protector checks and prototypes."
+    },
+    {
+      "name": "CanFastSerializeJSObject",
+      "parameters": [
+        "Tagged<JSObject> raw_object",
+        "Isolate* isolate"
+      ],
+      "return_type": "bool",
+      "logic": "Determines if a JSObject can be fast-serialized based on properties and prototypes."
+    },
+    {
+      "name": "MayHaveInterestingProperties",
+      "parameters": [
+        "Isolate* isolate",
+        "Tagged<JSReceiver> object"
+      ],
+      "return_type": "bool",
+      "logic": "Determine if objects have interesting properties."
+    },
+    {
+      "name": "GetBuiltin",
+      "parameters": [
+        "Isolate* isolate",
+        "Tagged<JSObject> obj",
+        "DirectHandle<Name> name"
+      ],
+      "return_type": "Builtin",
+      "logic": "If builtin, returns builtin id else, no id."
+    },
+    {
+      "name": "CanFastSerializeJSArrayFastPath",
+      "parameters": [
+        "Tagged<JSArray> object",
+        "Tagged<HeapObject> initial_proto",
+        "Isolate* isolate"
+      ],
+      "return_type": "bool",
+      "logic": "Check fast serializaed if it is on initial prototype"
+    },
+    {
+      "name": "CanFastSerializeJSObjectFastPath",
+      "parameters": [
+        "Tagged<JSObject> object",
+        "Tagged<HeapObject> initial_proto",
+        "Tagged<Map> map",
+        "Isolate* isolate"
+      ],
+      "return_type": "bool",
+      "logic": "Check if an object can be serialized by the fast way."
+    }
+  ]
+}

@@ -1,0 +1,91 @@
+{
+  "file_path": "/home/kathirks_gc/v8_go/codebase/src/compiler/refs-map.h",
+  "imports": [
+    "src/base/hashmap.h",
+    "src/zone/zone.h"
+  ],
+  "classes": [
+    {
+      "name": "AddressMatcher",
+      "properties": [],
+      "methods": [
+        {
+          "name": "operator()",
+          "parameters": [
+            "uint32_t hash1",
+            "uint32_t hash2",
+            "const Address& key1",
+            "const Address& key2"
+          ],
+          "return_type": "bool",
+          "logic": "Compares two Addresses for equality. Returns true if they are equal, false otherwise."
+        }
+      ]
+    },
+    {
+      "name": "RefsMap",
+      "properties": [],
+      "methods": [
+        {
+          "name": "RefsMap",
+          "parameters": [
+            "uint32_t capacity",
+            "AddressMatcher match",
+            "Zone* zone"
+          ],
+          "return_type": "RefsMap",
+          "logic": "Constructor for RefsMap, initializes the hash map with a given capacity, equality matcher, and zone allocator."
+        },
+        {
+          "name": "RefsMap",
+          "parameters": [
+            "const RefsMap* other",
+            "Zone* zone"
+          ],
+          "return_type": "RefsMap",
+          "logic": "Copy constructor for RefsMap, creates a new RefsMap by copying the contents of another RefsMap into a specified zone."
+        },
+        {
+          "name": "IsEmpty",
+          "parameters": [],
+          "return_type": "bool",
+          "logic": "Checks if the RefsMap is empty, i.e., contains no elements.  Returns true if empty, false otherwise."
+        },
+        {
+          "name": "Lookup",
+          "parameters": [
+            "const Address& key"
+          ],
+          "return_type": "Entry*",
+          "logic": "Looks up an entry in the hash map associated with the given Address (key). Returns a pointer to the Entry if found, otherwise returns nullptr."
+        },
+        {
+          "name": "LookupOrInsert",
+          "parameters": [
+            "const Address& key"
+          ],
+          "return_type": "Entry*",
+          "logic": "Looks up an entry in the hash map associated with the given Address (key). If the key is not found, it inserts a new entry with that key. Returns a pointer to the Entry."
+        },
+        {
+          "name": "Remove",
+          "parameters": [
+            "const Address& key"
+          ],
+          "return_type": "ObjectData*",
+          "logic": "Removes an entry from the hash map based on the given Address (key). Returns a pointer to the associated ObjectData if found, otherwise returns nullptr."
+        }
+      ]
+    }
+  ],
+  "functions": [
+    {
+      "name": "Hash",
+      "parameters": [
+        "Address addr"
+      ],
+      "return_type": "uint32_t",
+      "logic": "Computes the hash value for a given Address. (Static method, only declared, implementation not in this header)"
+    }
+  ]
+}

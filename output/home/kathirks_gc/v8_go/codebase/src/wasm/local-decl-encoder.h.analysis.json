@@ -1,0 +1,84 @@
+{
+  "file_path": "/home/kathirks_gc/v8_go/codebase/src/wasm/local-decl-encoder.h",
+  "imports": [
+    "src/common/globals.h",
+    "src/wasm/wasm-opcodes.h",
+    "src/zone/zone-containers.h",
+    "src/zone/zone.h"
+  ],
+  "classes": [
+    {
+      "name": "LocalDeclEncoder",
+      "properties": [
+        "sig",
+        "local_decls",
+        "total"
+      ],
+      "methods": [
+        {
+          "name": "LocalDeclEncoder",
+          "parameters": [
+            "Zone* zone",
+            "const FunctionSig* s = nullptr"
+          ],
+          "return_type": "void",
+          "logic": "Constructor. Initializes the FunctionSig pointer 'sig', the local_decls ZoneVector, and the total size counter."
+        },
+        {
+          "name": "Prepend",
+          "parameters": [
+            "Zone* zone",
+            "const uint8_t** start",
+            "const uint8_t** end"
+          ],
+          "return_type": "void",
+          "logic": "Prepends the local declarations to the existing function body. Creates a new buffer, copies the local declarations and the function body into it, and updates the start/end pointers.  The caller is responsible for managing the memory of the new buffer."
+        },
+        {
+          "name": "Emit",
+          "parameters": [
+            "uint8_t* buffer"
+          ],
+          "return_type": "size_t",
+          "logic": "Writes the encoded local declarations to the provided buffer. Returns the number of bytes written."
+        },
+        {
+          "name": "AddLocals",
+          "parameters": [
+            "uint32_t count",
+            "ValueType type"
+          ],
+          "return_type": "uint32_t",
+          "logic": "Adds a declaration for a specified number of local variables of a given type. Returns the index of the first newly added local."
+        },
+        {
+          "name": "Size",
+          "parameters": [],
+          "return_type": "size_t",
+          "logic": "Returns the total size (in bytes) that will be occupied by the encoded local declarations."
+        },
+        {
+          "name": "has_sig",
+          "parameters": [],
+          "return_type": "bool",
+          "logic": "Checks if there's an associated FunctionSig."
+        },
+        {
+          "name": "get_sig",
+          "parameters": [],
+          "return_type": "const FunctionSig*",
+          "logic": "Returns the associated FunctionSig."
+        },
+        {
+          "name": "set_sig",
+          "parameters": [
+            "const FunctionSig* s"
+          ],
+          "return_type": "void",
+          "logic": "Sets the associated FunctionSig."
+        }
+      ]
+    }
+  ],
+  "functions": []
+}

@@ -1,0 +1,639 @@
+{
+  "file_path": "/home/kathirks_gc/v8_go/codebase/src/compiler/backend/ia32/instruction-selector-ia32.cc",
+  "imports": [
+    "<stddef.h>",
+    "<stdint.h>",
+    "<limits>",
+    "<optional>",
+    "<type_traits>",
+    "<vector>",
+    "src/base/bits.h",
+    "src/base/flags.h",
+    "src/base/iterator.h",
+    "src/base/logging.h",
+    "src/base/macros.h",
+    "src/codegen/cpu-features.h",
+    "src/codegen/ia32/assembler-ia32.h",
+    "src/codegen/ia32/register-ia32.h",
+    "src/codegen/machine-type.h",
+    "src/codegen/macro-assembler-base.h",
+    "src/common/globals.h",
+    "src/compiler/backend/instruction-codes.h",
+    "src/compiler/backend/instruction-selector-adapter.h",
+    "src/compiler/backend/instruction-selector-impl.h",
+    "src/compiler/backend/instruction-selector.h",
+    "src/compiler/backend/instruction.h",
+    "src/compiler/frame.h",
+    "src/compiler/globals.h",
+    "src/compiler/turboshaft/opmasks.h",
+    "src/compiler/write-barrier-kind.h",
+    "src/flags/flags.h",
+    "src/utils/utils.h",
+    "src/zone/zone-containers.h",
+    "src/wasm/simd-shuffle.h"
+  ],
+  "classes": [
+    {
+      "name": "LoadStoreView",
+      "properties": [
+        "base",
+        "index",
+        "offset"
+      ],
+      "methods": [
+        {
+          "name": "LoadStoreView",
+          "parameters": [
+            "op"
+          ],
+          "return_type": "void",
+          "logic": "Constructor. Initializes the LoadStoreView with base, index and offset from a LoadOp or StoreOp."
+        }
+      ]
+    },
+    {
+      "name": "ScaledIndexMatch",
+      "properties": [
+        "base",
+        "index",
+        "scale"
+      ],
+      "methods": []
+    },
+    {
+      "name": "BaseWithScaledIndexAndDisplacementMatch",
+      "properties": [
+        "base",
+        "index",
+        "scale",
+        "displacement",
+        "displacement_mode"
+      ],
+      "methods": []
+    },
+    {
+      "name": "IA32OperandGeneratorT",
+      "properties": [],
+      "methods": [
+        {
+          "name": "IA32OperandGeneratorT",
+          "parameters": [
+            "selector"
+          ],
+          "return_type": "void",
+          "logic": "Constructor for the IA32OperandGeneratorT class."
+        },
+        {
+          "name": "UseByteRegister",
+          "parameters": [
+            "node"
+          ],
+          "return_type": "InstructionOperand",
+          "logic": "Returns an instruction operand representing a byte register for a given node."
+        },
+        {
+          "name": "CanBeMemoryOperand",
+          "parameters": [
+            "opcode",
+            "node",
+            "input",
+            "effect_level"
+          ],
+          "return_type": "bool",
+          "logic": "Determines if the specified node can be used as a memory operand for the given opcode."
+        },
+        {
+          "name": "CanBeImmediate",
+          "parameters": [
+            "node"
+          ],
+          "return_type": "bool",
+          "logic": "Determines if the specified node can be used as an immediate operand."
+        },
+        {
+          "name": "GetImmediateIntegerValue",
+          "parameters": [
+            "node"
+          ],
+          "return_type": "int32_t",
+          "logic": "Retrieves the integer value of an immediate operand node."
+        },
+        {
+          "name": "ValueFitsIntoImmediate",
+          "parameters": [
+            "value"
+          ],
+          "return_type": "bool",
+          "logic": "Checks if the given 64-bit value fits into an int32 for immediate use."
+        },
+        {
+          "name": "GenerateMemoryOperandInputs",
+          "parameters": [
+            "index",
+            "scale",
+            "base",
+            "displacement",
+            "displacement_mode",
+            "inputs[]",
+            "input_count",
+            "register_mode"
+          ],
+          "return_type": "AddressingMode",
+          "logic": "Generates instruction operands and addressing mode based on the base, index, scale, and displacement for a memory operand."
+        },
+        {
+          "name": "GetEffectiveAddressMemoryOperand",
+          "parameters": [
+            "node",
+            "inputs[]",
+            "input_count",
+            "register_mode"
+          ],
+          "return_type": "AddressingMode",
+          "logic": "Calculates the effective memory address for a given node and generates the necessary instruction operands."
+        },
+        {
+          "name": "GetEffectiveIndexOperand",
+          "parameters": [
+            "index",
+            "mode"
+          ],
+          "return_type": "InstructionOperand",
+          "logic": "Determines the operand representing an index, potentially as an immediate or register."
+        },
+        {
+          "name": "CanBeBetterLeftOperand",
+          "parameters": [
+            "node"
+          ],
+          "return_type": "bool",
+          "logic": "Determines whether the node is a better choice as the left operand in a binary operation based on liveness."
+        }
+      ]
+    }
+  ],
+  "functions": [
+    {
+      "name": "MatchScaledIndex",
+      "parameters": [
+        "selector",
+        "node",
+        "index",
+        "scale",
+        "power_of_two_plus_one"
+      ],
+      "return_type": "bool",
+      "logic": "Matches a scaled index pattern (index * scale) where scale is a constant.  Returns true if matched and populates index and scale."
+    },
+    {
+      "name": "TryMatchScaledIndex",
+      "parameters": [
+        "selector",
+        "node",
+        "allow_power_of_two_plus_one"
+      ],
+      "return_type": "std::optional<ScaledIndexMatch>",
+      "logic": "Tries to match a scaled index and base using MatchScaledIndex and returns a ScaledIndexMatch optional."
+    },
+    {
+      "name": "TryMatchBaseWithScaledIndexAndDisplacementForWordBinop",
+      "parameters": [
+        "selector",
+        "left",
+        "right"
+      ],
+      "return_type": "std::optional<BaseWithScaledIndexAndDisplacementMatch>",
+      "logic": "Tries to match a base, scaled index and displacement from two given operands of a WordBinop.  Returns an optional with matched parts."
+    },
+    {
+      "name": "TryMatchBaseWithScaledIndexAndDisplacement",
+      "parameters": [
+        "selector",
+        "node"
+      ],
+      "return_type": "std::optional<BaseWithScaledIndexAndDisplacementMatch>",
+      "logic": "Attempts to match a pattern consisting of a base, a scaled index, and a displacement within a given node, commonly for addressing calculations. Returns an optional containing the matched components or an empty optional if the pattern isn't found."
+    },
+    {
+      "name": "GetLoadOpcode",
+      "parameters": [
+        "load_rep"
+      ],
+      "return_type": "ArchOpcode",
+      "logic": "Returns the appropriate opcode for a load operation based on the LoadRepresentation."
+    },
+    {
+      "name": "VisitRO",
+      "parameters": [
+        "selector",
+        "node",
+        "opcode"
+      ],
+      "return_type": "void",
+      "logic": "Emits an instruction with a register-only operand."
+    },
+    {
+      "name": "VisitROWithTemp",
+      "parameters": [
+        "selector",
+        "node",
+        "opcode"
+      ],
+      "return_type": "void",
+      "logic": "Emits an instruction with a register-only operand, using a temporary register."
+    },
+    {
+      "name": "VisitROWithTempSimd",
+      "parameters": [
+        "selector",
+        "node",
+        "opcode"
+      ],
+      "return_type": "void",
+      "logic": "Emits an SIMD instruction with register only operands and a temp simd register"
+    },
+    {
+      "name": "VisitRR",
+      "parameters": [
+        "selector",
+        "node",
+        "opcode"
+      ],
+      "return_type": "void",
+      "logic": "Emits an instruction with two register operands."
+    },
+    {
+      "name": "VisitRROFloat",
+      "parameters": [
+        "selector",
+        "node",
+        "opcode"
+      ],
+      "return_type": "void",
+      "logic": "Emits an instruction with two register operands when using floating point numbers. Takes AVX into consideration."
+    },
+    {
+      "name": "VisitFloatUnop",
+      "parameters": [
+        "selector",
+        "node",
+        "input",
+        "opcode"
+      ],
+      "return_type": "void",
+      "logic": "Emits an instruction with a float register and temp general register."
+    },
+    {
+      "name": "VisitRRSimd",
+      "parameters": [
+        "selector",
+        "node",
+        "avx_opcode",
+        "sse_opcode"
+      ],
+      "return_type": "void",
+      "logic": "Emits a Simd instruction with two register operands, distinguishing between AVX and SSE opcodes."
+    },
+    {
+      "name": "VisitRRSimd",
+      "parameters": [
+        "selector",
+        "node",
+        "opcode"
+      ],
+      "return_type": "void",
+      "logic": "Emits an SIMD instruction with one register operand; uses the same opcode regardless of AVX/SSE."
+    },
+    {
+      "name": "VisitRROSimd",
+      "parameters": [
+        "selector",
+        "node",
+        "avx_opcode",
+        "sse_opcode"
+      ],
+      "return_type": "void",
+      "logic": "Emits a SIMD instruction with two register operands, differentiating between AVX and SSE opcodes."
+    },
+    {
+      "name": "VisitRRRSimd",
+      "parameters": [
+        "selector",
+        "node",
+        "opcode"
+      ],
+      "return_type": "void",
+      "logic": "Emits a SIMD instruction with three register operands."
+    },
+    {
+      "name": "GetSimdLaneConstant",
+      "parameters": [
+        "selector",
+        "node"
+      ],
+      "return_type": "int32_t",
+      "logic": "Extracts the lane constant for a Simd128ExtractLane operation."
+    },
+    {
+      "name": "VisitRRISimd",
+      "parameters": [
+        "selector",
+        "node",
+        "opcode"
+      ],
+      "return_type": "void",
+      "logic": "Emits a SIMD instruction with a register and an immediate operand."
+    },
+    {
+      "name": "VisitRRISimd",
+      "parameters": [
+        "selector",
+        "node",
+        "avx_opcode",
+        "sse_opcode"
+      ],
+      "return_type": "void",
+      "logic": "Emits a SIMD instruction with a register and an immediate operand, differentiating between AVX and SSE opcodes."
+    },
+    {
+      "name": "VisitRROSimdShift",
+      "parameters": [
+        "selector",
+        "node",
+        "opcode"
+      ],
+      "return_type": "void",
+      "logic": "Emits a SIMD shift instruction with two register operands and using either a register or an immediate as the shift amount."
+    },
+    {
+      "name": "VisitRRRR",
+      "parameters": [
+        "selector",
+        "node",
+        "opcode"
+      ],
+      "return_type": "void",
+      "logic": "Emits an instruction with four register operands."
+    },
+    {
+      "name": "VisitI8x16Shift",
+      "parameters": [
+        "selector",
+        "node",
+        "opcode"
+      ],
+      "return_type": "void",
+      "logic": "Emits an i8x16 shift instruction, handling cases with immediate and register operands for shift amount, considering AVX support."
+    },
+    {
+      "name": "GetStoreOpcode",
+      "parameters": [
+        "rep"
+      ],
+      "return_type": "ArchOpcode",
+      "logic": "Returns the store opcode based on the MachineRepresentation"
+    },
+    {
+      "name": "GetSeqCstStoreOpcode",
+      "parameters": [
+        "rep"
+      ],
+      "return_type": "ArchOpcode",
+      "logic": "Returns the opcode for a sequentially consistent store based on the MachineRepresentation"
+    },
+    {
+      "name": "VisitAtomicExchange",
+      "parameters": [
+        "selector",
+        "node",
+        "opcode",
+        "rep"
+      ],
+      "return_type": "void",
+      "logic": "Emits an atomic exchange instruction."
+    },
+    {
+      "name": "VisitStoreCommon",
+      "parameters": [
+        "selector",
+        "store"
+      ],
+      "return_type": "void",
+      "logic": "Handles the emission of the store instruction, including write barriers."
+    },
+    {
+      "name": "VisitBinop",
+      "parameters": [
+        "selector",
+        "node",
+        "opcode",
+        "cont"
+      ],
+      "return_type": "void",
+      "logic": "Emits the provided binary opcode, considering immediate values, memory operands and using the provided FlagsContinuation."
+    },
+    {
+      "name": "VisitBinop",
+      "parameters": [
+        "selector",
+        "node",
+        "opcode"
+      ],
+      "return_type": "void",
+      "logic": "Emits the provided binary opcode."
+    },
+    {
+      "name": "VisitShift",
+      "parameters": [
+        "selector",
+        "node",
+        "opcode"
+      ],
+      "return_type": "void",
+      "logic": "Emits a shift instruction. Uses ECX if the shift amount is not an immediate."
+    },
+    {
+      "name": "VisitMulHigh",
+      "parameters": [
+        "selector",
+        "node",
+        "opcode"
+      ],
+      "return_type": "void",
+      "logic": "Emits an instruction to calculate the high bits of a multiplication."
+    },
+    {
+      "name": "VisitDiv",
+      "parameters": [
+        "selector",
+        "node",
+        "opcode"
+      ],
+      "return_type": "void",
+      "logic": "Emits a division instruction."
+    },
+    {
+      "name": "VisitMod",
+      "parameters": [
+        "selector",
+        "node",
+        "opcode"
+      ],
+      "return_type": "void",
+      "logic": "Emits a modulo instruction."
+    },
+    {
+      "name": "EmitLea",
+      "parameters": [
+        "selector",
+        "result",
+        "index",
+        "scale",
+        "base",
+        "displacement",
+        "displacement_mode"
+      ],
+      "return_type": "void",
+      "logic": "Emits a LEA (Load Effective Address) instruction to calculate an address and store it in a register."
+    },
+    {
+      "name": "VisitCompareWithMemoryOperand",
+      "parameters": [
+        "selector",
+        "opcode",
+        "left",
+        "right",
+        "cont"
+      ],
+      "return_type": "void",
+      "logic": "Emits the provided compare opcode where the left operand is a memory location."
+    },
+    {
+      "name": "VisitCompare",
+      "parameters": [
+        "selector",
+        "opcode",
+        "left",
+        "right",
+        "cont"
+      ],
+      "return_type": "void",
+      "logic": "Emits the provided compare opcode with two instruction operands, using the FlagsContinuation to set flags."
+    },
+    {
+      "name": "VisitCompare",
+      "parameters": [
+        "selector",
+        "opcode",
+        "left",
+        "right",
+        "cont",
+        "commutative"
+      ],
+      "return_type": "void",
+      "logic": "Emits the provided compare opcode, potentially commuting inputs, using the FlagsContinuation to set flags."
+    },
+    {
+      "name": "MachineTypeForNarrow",
+      "parameters": [
+        "selector",
+        "node",
+        "hint_node"
+      ],
+      "return_type": "MachineType",
+      "logic": "Returns narrowed machine type based on node type."
+    },
+    {
+      "name": "TryNarrowOpcodeSize",
+      "parameters": [
+        "selector",
+        "opcode",
+        "left",
+        "right",
+        "cont"
+      ],
+      "return_type": "InstructionCode",
+      "logic": "Tries to use a narrower opcode based on the size of operands."
+    },
+    {
+      "name": "VisitFloat32Compare",
+      "parameters": [
+        "selector",
+        "node",
+        "cont"
+      ],
+      "return_type": "void",
+      "logic": "Emits a float32 comparison instruction."
+    },
+    {
+      "name": "VisitFloat64Compare",
+      "parameters": [
+        "selector",
+        "node",
+        "cont"
+      ],
+      "return_type": "void",
+      "logic": "Emits a float64 comparison instruction."
+    },
+    {
+      "name": "VisitWordCompare",
+      "parameters": [
+        "selector",
+        "node",
+        "opcode",
+        "cont"
+      ],
+      "return_type": "void",
+      "logic": "Emits the provided comparison opcode, potentially narrowing it based on the operands, using the provided FlagsContinuation."
+    },
+    {
+      "name": "VisitWordCompare",
+      "parameters": [
+        "selector",
+        "node",
+        "cont"
+      ],
+      "return_type": "void",
+      "logic": "Emits a word comparison instruction."
+    },
+    {
+      "name": "AtomicOrder",
+      "parameters": [
+        "selector",
+        "node"
+      ],
+      "return_type": "AtomicMemoryOrder",
+      "logic": "Returns AtomicMemoryOrder type"
+    },
+    {
+      "name": "VisitAtomicBinOp",
+      "parameters": [
+        "selector",
+        "node",
+        "opcode",
+        "rep"
+      ],
+      "return_type": "void",
+      "logic": "Emits an atomic binary operation instruction."
+    },
+    {
+      "name": "VisitPairAtomicBinOp",
+      "parameters": [
+        "selector",
+        "node",
+        "opcode"
+      ],
+      "return_type": "void",
+      "logic": "Emits a pair atomic binary operation instruction."
+    },
+    {
+      "name": "AtomicOpType",
+      "parameters": [
+        "selector",
+        "node"
+      ],
+      "return_type": "MachineType",
+      "logic": "Returns atomic operation type"
+    }
+  ]
+}

@@ -1,0 +1,499 @@
+{
+  "file_path": "/home/kathirks_gc/v8_go/codebase/src/compiler/backend/register-allocator-verifier.h",
+  "imports": [
+    "<optional>",
+    "src/compiler/backend/instruction.h",
+    "src/zone/zone-containers.h"
+  ],
+  "classes": [
+    {
+      "name": "Assessment",
+      "properties": [
+        "AssessmentKind kind_"
+      ],
+      "methods": [
+        {
+          "name": "Assessment",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Deleted copy constructor."
+        },
+        {
+          "name": "operator=",
+          "parameters": [],
+          "return_type": "Assessment&",
+          "logic": "Deleted assignment operator."
+        },
+        {
+          "name": "kind",
+          "parameters": [],
+          "return_type": "AssessmentKind",
+          "logic": "Returns the AssessmentKind of this assessment."
+        },
+        {
+          "name": "Assessment",
+          "parameters": [
+            "AssessmentKind kind"
+          ],
+          "return_type": "void",
+          "logic": "Protected constructor to initialize the kind_ member."
+        }
+      ]
+    },
+    {
+      "name": "PendingAssessment",
+      "properties": [
+        "const InstructionBlock* const origin_",
+        "InstructionOperand operand_",
+        "ZoneSet<int> aliases_"
+      ],
+      "methods": [
+        {
+          "name": "PendingAssessment",
+          "parameters": [
+            "Zone* zone",
+            "const InstructionBlock* origin",
+            "InstructionOperand operand"
+          ],
+          "return_type": "void",
+          "logic": "Constructor for PendingAssessment, initializes origin_, operand_ and aliases_."
+        },
+        {
+          "name": "PendingAssessment",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Deleted copy constructor."
+        },
+        {
+          "name": "operator=",
+          "parameters": [],
+          "return_type": "PendingAssessment&",
+          "logic": "Deleted assignment operator."
+        },
+        {
+          "name": "cast",
+          "parameters": [
+            "const Assessment* assessment"
+          ],
+          "return_type": "const PendingAssessment*",
+          "logic": "Static method to cast an Assessment pointer to a const PendingAssessment pointer, asserts the assessment is of the correct kind."
+        },
+        {
+          "name": "cast",
+          "parameters": [
+            "Assessment* assessment"
+          ],
+          "return_type": "PendingAssessment*",
+          "logic": "Static method to cast an Assessment pointer to a PendingAssessment pointer, asserts the assessment is of the correct kind."
+        },
+        {
+          "name": "origin",
+          "parameters": [],
+          "return_type": "const InstructionBlock*",
+          "logic": "Returns the origin block for this assessment."
+        },
+        {
+          "name": "operand",
+          "parameters": [],
+          "return_type": "InstructionOperand",
+          "logic": "Returns the operand associated with this assessment."
+        },
+        {
+          "name": "IsAliasOf",
+          "parameters": [
+            "int vreg"
+          ],
+          "return_type": "bool",
+          "logic": "Checks if the given virtual register is aliased by this assessment."
+        },
+        {
+          "name": "AddAlias",
+          "parameters": [
+            "int vreg"
+          ],
+          "return_type": "void",
+          "logic": "Adds a virtual register as an alias of this assessment."
+        }
+      ]
+    },
+    {
+      "name": "FinalAssessment",
+      "properties": [
+        "int virtual_register_"
+      ],
+      "methods": [
+        {
+          "name": "FinalAssessment",
+          "parameters": [
+            "int virtual_register"
+          ],
+          "return_type": "void",
+          "logic": "Constructor for FinalAssessment, initializes the virtual_register_ member."
+        },
+        {
+          "name": "FinalAssessment",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Deleted copy constructor."
+        },
+        {
+          "name": "operator=",
+          "parameters": [],
+          "return_type": "FinalAssessment&",
+          "logic": "Deleted assignment operator."
+        },
+        {
+          "name": "virtual_register",
+          "parameters": [],
+          "return_type": "int",
+          "logic": "Returns the virtual register associated with this assessment."
+        },
+        {
+          "name": "cast",
+          "parameters": [
+            "const Assessment* assessment"
+          ],
+          "return_type": "const FinalAssessment*",
+          "logic": "Static method to cast an Assessment pointer to a const FinalAssessment pointer, asserts the assessment is of the correct kind."
+        }
+      ]
+    },
+    {
+      "name": "OperandAsKeyLess",
+      "properties": [],
+      "methods": [
+        {
+          "name": "operator()",
+          "parameters": [
+            "const InstructionOperand& a",
+            "const InstructionOperand& b"
+          ],
+          "return_type": "bool",
+          "logic": "Comparison operator used to order InstructionOperands in the map."
+        }
+      ]
+    },
+    {
+      "name": "BlockAssessments",
+      "properties": [
+        "OperandMap map_",
+        "OperandMap map_for_moves_",
+        "OperandSet stale_ref_stack_slots_",
+        "int spill_slot_delta_",
+        "Zone* zone_",
+        "const InstructionSequence* sequence_"
+      ],
+      "methods": [
+        {
+          "name": "BlockAssessments",
+          "parameters": [
+            "Zone* zone",
+            "int spill_slot_delta",
+            "const InstructionSequence* sequence"
+          ],
+          "return_type": "void",
+          "logic": "Constructor.  Initializes the maps and sets."
+        },
+        {
+          "name": "BlockAssessments",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Deleted copy constructor."
+        },
+        {
+          "name": "operator=",
+          "parameters": [],
+          "return_type": "BlockAssessments&",
+          "logic": "Deleted assignment operator."
+        },
+        {
+          "name": "Drop",
+          "parameters": [
+            "InstructionOperand operand"
+          ],
+          "return_type": "void",
+          "logic": "Removes an operand from the maps, effectively dropping its assessment."
+        },
+        {
+          "name": "DropRegisters",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Implementation not provided in the header file."
+        },
+        {
+          "name": "AddDefinition",
+          "parameters": [
+            "InstructionOperand operand",
+            "int virtual_register"
+          ],
+          "return_type": "void",
+          "logic": "Adds a definition for an operand, associating it with a virtual register using a FinalAssessment. Removes any existing assessment for the operand."
+        },
+        {
+          "name": "PerformMoves",
+          "parameters": [
+            "const Instruction* instruction"
+          ],
+          "return_type": "void",
+          "logic": "Implementation not provided in the header file."
+        },
+        {
+          "name": "PerformParallelMoves",
+          "parameters": [
+            "const ParallelMove* moves"
+          ],
+          "return_type": "void",
+          "logic": "Implementation not provided in the header file."
+        },
+        {
+          "name": "CopyFrom",
+          "parameters": [
+            "const BlockAssessments* other"
+          ],
+          "return_type": "void",
+          "logic": "Copies the assessments from another BlockAssessments object."
+        },
+        {
+          "name": "CheckReferenceMap",
+          "parameters": [
+            "const ReferenceMap* reference_map"
+          ],
+          "return_type": "void",
+          "logic": "Implementation not provided in the header file."
+        },
+        {
+          "name": "IsStaleReferenceStackSlot",
+          "parameters": [
+            "InstructionOperand op",
+            "std::optional<int> vreg"
+          ],
+          "return_type": "bool",
+          "logic": "Checks if a stack slot is considered stale.  The implementation details are not present."
+        },
+        {
+          "name": "map",
+          "parameters": [],
+          "return_type": "OperandMap&",
+          "logic": "Returns the operand assessment map (mutable)."
+        },
+        {
+          "name": "map",
+          "parameters": [],
+          "return_type": "const OperandMap&",
+          "logic": "Returns the operand assessment map (const)."
+        },
+        {
+          "name": "stale_ref_stack_slots",
+          "parameters": [],
+          "return_type": "OperandSet&",
+          "logic": "Returns the set of stale reference stack slots (mutable)."
+        },
+        {
+          "name": "stale_ref_stack_slots",
+          "parameters": [],
+          "return_type": "const OperandSet&",
+          "logic": "Returns the set of stale reference stack slots (const)."
+        },
+        {
+          "name": "spill_slot_delta",
+          "parameters": [],
+          "return_type": "int",
+          "logic": "Returns the spill slot delta."
+        },
+        {
+          "name": "Print",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Implementation not provided in the header file."
+        }
+      ]
+    },
+    {
+      "name": "RegisterAllocatorVerifier",
+      "properties": [
+        "Zone* const zone_",
+        "const RegisterConfiguration* config_",
+        "const InstructionSequence* const sequence_",
+        "Constraints constraints_",
+        "ZoneMap<RpoNumber, BlockAssessments*> assessments_",
+        "ZoneMap<RpoNumber, DelayedAssessments*> outstanding_assessments_",
+        "int spill_slot_delta_",
+        "const char* caller_info_"
+      ],
+      "methods": [
+        {
+          "name": "RegisterAllocatorVerifier",
+          "parameters": [
+            "Zone* zone",
+            "const RegisterConfiguration* config",
+            "const InstructionSequence* sequence",
+            "const Frame* frame"
+          ],
+          "return_type": "void",
+          "logic": "Constructor for the register allocator verifier."
+        },
+        {
+          "name": "RegisterAllocatorVerifier",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Deleted copy constructor."
+        },
+        {
+          "name": "operator=",
+          "parameters": [],
+          "return_type": "RegisterAllocatorVerifier&",
+          "logic": "Deleted assignment operator."
+        },
+        {
+          "name": "VerifyAssignment",
+          "parameters": [
+            "const char* caller_info"
+          ],
+          "return_type": "void",
+          "logic": "Verifies the register assignment."
+        },
+        {
+          "name": "VerifyGapMoves",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Verifies the gap moves."
+        },
+        {
+          "name": "zone",
+          "parameters": [],
+          "return_type": "Zone*",
+          "logic": "Returns the zone."
+        },
+        {
+          "name": "config",
+          "parameters": [],
+          "return_type": "const RegisterConfiguration*",
+          "logic": "Returns the register configuration."
+        },
+        {
+          "name": "sequence",
+          "parameters": [],
+          "return_type": "const InstructionSequence*",
+          "logic": "Returns the instruction sequence."
+        },
+        {
+          "name": "constraints",
+          "parameters": [],
+          "return_type": "Constraints*",
+          "logic": "Returns a pointer to the constraints."
+        },
+        {
+          "name": "spill_slot_delta",
+          "parameters": [],
+          "return_type": "int",
+          "logic": "Returns the spill slot delta."
+        },
+        {
+          "name": "VerifyInput",
+          "parameters": [
+            "const OperandConstraint& constraint"
+          ],
+          "return_type": "void",
+          "logic": "Static method to verify an input operand constraint. Implementation not in header."
+        },
+        {
+          "name": "VerifyTemp",
+          "parameters": [
+            "const OperandConstraint& constraint"
+          ],
+          "return_type": "void",
+          "logic": "Static method to verify a temporary operand constraint. Implementation not in header."
+        },
+        {
+          "name": "VerifyOutput",
+          "parameters": [
+            "const OperandConstraint& constraint"
+          ],
+          "return_type": "void",
+          "logic": "Static method to verify an output operand constraint. Implementation not in header."
+        },
+        {
+          "name": "BuildConstraint",
+          "parameters": [
+            "const InstructionOperand* op",
+            "OperandConstraint* constraint"
+          ],
+          "return_type": "void",
+          "logic": "Builds an operand constraint for a given operand."
+        },
+        {
+          "name": "CheckConstraint",
+          "parameters": [
+            "const InstructionOperand* op",
+            "const OperandConstraint* constraint"
+          ],
+          "return_type": "void",
+          "logic": "Checks the constraints for a given operand."
+        },
+        {
+          "name": "CreateForBlock",
+          "parameters": [
+            "const InstructionBlock* block"
+          ],
+          "return_type": "BlockAssessments*",
+          "logic": "Creates a BlockAssessments object for a given block."
+        },
+        {
+          "name": "ValidatePendingAssessment",
+          "parameters": [
+            "RpoNumber block_id",
+            "InstructionOperand op",
+            "const BlockAssessments* current_assessments",
+            "PendingAssessment* const assessment",
+            "int virtual_register"
+          ],
+          "return_type": "void",
+          "logic": "Validates a pending assessment."
+        },
+        {
+          "name": "ValidateUse",
+          "parameters": [
+            "RpoNumber block_id",
+            "BlockAssessments* current_assessments",
+            "InstructionOperand op",
+            "int virtual_register"
+          ],
+          "return_type": "void",
+          "logic": "Validates the use of an operand."
+        }
+      ]
+    },
+    {
+      "name": "DelayedAssessments",
+      "properties": [
+        "ZoneMap<InstructionOperand, int, OperandAsKeyLess> map_"
+      ],
+      "methods": [
+        {
+          "name": "DelayedAssessments",
+          "parameters": [
+            "Zone* zone"
+          ],
+          "return_type": "void",
+          "logic": "Constructor for DelayedAssessments, initializes the map_ member."
+        },
+        {
+          "name": "map",
+          "parameters": [],
+          "return_type": "const ZoneMap<InstructionOperand, int, OperandAsKeyLess>&",
+          "logic": "Returns the map of delayed assessments."
+        },
+        {
+          "name": "AddDelayedAssessment",
+          "parameters": [
+            "InstructionOperand op",
+            "int vreg"
+          ],
+          "return_type": "void",
+          "logic": "Adds a delayed assessment to the map."
+        }
+      ]
+    }
+  ],
+  "functions": []
+}

@@ -1,0 +1,85 @@
+{
+  "file_path": "/home/kathirks_gc/v8_go/codebase/src/execution/arm64/pointer-authentication-arm64.h",
+  "imports": [
+    "src/common/globals.h",
+    "src/deoptimizer/deoptimizer.h",
+    "src/execution/arm64/simulator-arm64.h",
+    "src/execution/pointer-authentication.h"
+  ],
+  "classes": [
+    {
+      "name": "PointerAuthentication",
+      "properties": [],
+      "methods": [
+        {
+          "name": "AuthenticatePC",
+          "parameters": [
+            "Address* pc_address",
+            "unsigned offset_from_sp"
+          ],
+          "return_type": "Address",
+          "logic": "Authenticates the address stored in {pc_address} using the stack pointer calculated from the given offset, effectively verifying the address's integrity before using it."
+        },
+        {
+          "name": "StripPAC",
+          "parameters": [
+            "Address pc"
+          ],
+          "return_type": "Address",
+          "logic": "Removes the Pointer Authentication Code (PAC) from a given address, returning the raw, unauthenticated address."
+        },
+        {
+          "name": "ReplacePC",
+          "parameters": [
+            "Address* pc_address",
+            "Address new_pc",
+            "int offset_from_sp"
+          ],
+          "return_type": "void",
+          "logic": "Replaces the address at {pc_address} with {new_pc}, after signing {new_pc} with the stack pointer derived from {offset_from_sp} and verifying that the original address at {pc_address} was correctly signed. This ensures a secure replacement of the program counter."
+        },
+        {
+          "name": "SignAndCheckPC",
+          "parameters": [
+            "Isolate* isolate",
+            "Address pc",
+            "Address sp"
+          ],
+          "return_type": "Address",
+          "logic": "Signs the given address {pc} using the stack pointer {sp}, then ensures the resulting address is valid for a return address using `Deoptimizer::EnsureValidReturnAddress`, providing a mechanism for validating return addresses during deoptimization or other execution transitions."
+        },
+        {
+          "name": "MoveSignedPC",
+          "parameters": [
+            "Isolate* isolate",
+            "Address pc",
+            "Address new_sp",
+            "Address old_sp"
+          ],
+          "return_type": "Address",
+          "logic": "Verifies and re-signs a pointer (pc) that has been authenticated with an old stack pointer (old_sp) using a new stack pointer (new_sp). Used in WebAssembly deoptimizations or growable stacks where the stack pointer can change."
+        }
+      ]
+    }
+  ],
+  "functions": [
+    {
+      "name": "SignPC",
+      "parameters": [
+        "Address pc",
+        "Address sp"
+      ],
+      "return_type": "Address",
+      "logic": "Signs the program counter (pc) using the stack pointer (sp) as context.  This adds a Pointer Authentication Code (PAC) to the PC."
+    },
+    {
+      "name": "AuthPAC",
+      "parameters": [
+        "Address pc",
+        "Address sp"
+      ],
+      "return_type": "Address",
+      "logic": "Authenticates the program counter (pc) using the stack pointer (sp) as context.  This verifies the Pointer Authentication Code (PAC) against the PC and SP."
+    }
+  ]
+}

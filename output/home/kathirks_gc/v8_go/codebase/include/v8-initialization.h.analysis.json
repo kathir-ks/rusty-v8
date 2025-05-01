@@ -1,0 +1,229 @@
+{
+  "file_path": "/home/kathirks_gc/v8_go/codebase/include/v8-initialization.h",
+  "imports": [
+    "<stddef.h>",
+    "<stdint.h>",
+    "v8-callbacks.h",
+    "v8-internal.h",
+    "v8-isolate.h",
+    "v8-platform.h",
+    "v8config.h"
+  ],
+  "classes": [
+    {
+      "name": "V8",
+      "properties": [],
+      "methods": [
+        {
+          "name": "SetSnapshotDataBlob",
+          "parameters": [
+            "StartupData* startup_blob"
+          ],
+          "return_type": "void",
+          "logic": "Hands startup data to V8, in case the embedder has chosen to build V8 with external startup data. The embedder must keep the data around until V8 exits."
+        },
+        {
+          "name": "SetDcheckErrorHandler",
+          "parameters": [
+            "DcheckErrorCallback that"
+          ],
+          "return_type": "void",
+          "logic": "Sets the callback to invoke in case of Dcheck failures."
+        },
+        {
+          "name": "SetFatalErrorHandler",
+          "parameters": [
+            "V8FatalErrorCallback that"
+          ],
+          "return_type": "void",
+          "logic": "Sets the callback to invoke in the case of CHECK failures or fatal errors."
+        },
+        {
+          "name": "SetFlagsFromString",
+          "parameters": [
+            "const char* str"
+          ],
+          "return_type": "void",
+          "logic": "Sets V8 flags from a string."
+        },
+        {
+          "name": "SetFlagsFromString",
+          "parameters": [
+            "const char* str",
+            "size_t length"
+          ],
+          "return_type": "void",
+          "logic": "Sets V8 flags from a string with a specified length."
+        },
+        {
+          "name": "SetFlagsFromCommandLine",
+          "parameters": [
+            "int* argc",
+            "char** argv",
+            "bool remove_flags"
+          ],
+          "return_type": "void",
+          "logic": "Sets V8 flags from the command line."
+        },
+        {
+          "name": "GetVersion",
+          "parameters": [],
+          "return_type": "const char*",
+          "logic": "Gets the version string of V8."
+        },
+        {
+          "name": "Initialize",
+          "parameters": [],
+          "return_type": "bool",
+          "logic": "Initializes V8. This function needs to be called before the first Isolate is created.  It checks build configuration and calls the overloaded Initialize function."
+        },
+        {
+          "name": "SetEntropySource",
+          "parameters": [
+            "EntropySource source"
+          ],
+          "return_type": "void",
+          "logic": "Allows the host application to provide a callback which can be used as a source of entropy for random number generators."
+        },
+        {
+          "name": "SetReturnAddressLocationResolver",
+          "parameters": [
+            "ReturnAddressLocationResolver return_address_resolver"
+          ],
+          "return_type": "void",
+          "logic": "Allows the host application to provide a callback that allows v8 to cooperate with a profiler that rewrites return addresses on stack."
+        },
+        {
+          "name": "Dispose",
+          "parameters": [],
+          "return_type": "bool",
+          "logic": "Releases any resources used by v8 and stops any utility threads that may be running. Disposing v8 is permanent, it cannot be reinitialized."
+        },
+        {
+          "name": "InitializeICU",
+          "parameters": [
+            "const char* icu_data_file"
+          ],
+          "return_type": "bool",
+          "logic": "Initialize the ICU library bundled with V8, optionally providing the path to the ICU data file."
+        },
+        {
+          "name": "InitializeICUDefaultLocation",
+          "parameters": [
+            "const char* exec_path",
+            "const char* icu_data_file"
+          ],
+          "return_type": "bool",
+          "logic": "Initialize the ICU library bundled with V8 using the default ICU data file location. The location of the icu data file can be overwritten by the `icu_data_file` argument."
+        },
+        {
+          "name": "InitializeExternalStartupData",
+          "parameters": [
+            "const char* directory_path"
+          ],
+          "return_type": "void",
+          "logic": "Initializes the external startup data, looking for the snapshot_blob.bin file in the given directory."
+        },
+        {
+          "name": "InitializeExternalStartupDataFromFile",
+          "parameters": [
+            "const char* snapshot_blob"
+          ],
+          "return_type": "void",
+          "logic": "Initializes the external startup data from the specified snapshot_blob file."
+        },
+        {
+          "name": "InitializePlatform",
+          "parameters": [
+            "Platform* platform"
+          ],
+          "return_type": "void",
+          "logic": "Sets the v8::Platform to use."
+        },
+        {
+          "name": "DisposePlatform",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Clears all references to the v8::Platform."
+        },
+        {
+          "name": "IsSandboxConfiguredSecurely",
+          "parameters": [],
+          "return_type": "bool",
+          "logic": "Returns true if the sandbox is configured securely."
+        },
+        {
+          "name": "GetSandboxAddressSpace",
+          "parameters": [],
+          "return_type": "VirtualAddressSpace*",
+          "logic": "Provides access to the virtual address subspace backing the sandbox."
+        },
+        {
+          "name": "GetSandboxSizeInBytes",
+          "parameters": [],
+          "return_type": "size_t",
+          "logic": "Returns the size of the sandbox in bytes."
+        },
+        {
+          "name": "GetSandboxReservationSizeInBytes",
+          "parameters": [],
+          "return_type": "size_t",
+          "logic": "Returns the size of the address space reservation backing the sandbox."
+        },
+        {
+          "name": "EnableWebAssemblyTrapHandler",
+          "parameters": [
+            "bool use_v8_signal_handler"
+          ],
+          "return_type": "bool",
+          "logic": "Activate trap-based bounds checking for WebAssembly. Chooses whether V8 installs the signal handler or if the embedder does."
+        },
+        {
+          "name": "SetUnhandledExceptionCallback",
+          "parameters": [
+            "UnhandledExceptionCallback callback"
+          ],
+          "return_type": "void",
+          "logic": "Allows embedders to register a custom exception handler for exceptions in V8-generated code on Windows."
+        },
+        {
+          "name": "SetFatalMemoryErrorCallback",
+          "parameters": [
+            "OOMErrorCallback callback"
+          ],
+          "return_type": "void",
+          "logic": "Allows the host application to provide a callback that will be called when v8 has encountered a fatal failure to allocate memory and is about to terminate."
+        },
+        {
+          "name": "GetSharedMemoryStatistics",
+          "parameters": [
+            "SharedMemoryStatistics* statistics"
+          ],
+          "return_type": "void",
+          "logic": "Get statistics about the shared memory usage."
+        },
+        {
+          "name": "Initialize",
+          "parameters": [
+            "int build_config"
+          ],
+          "return_type": "bool",
+          "logic": "Checks that the embedder build configuration is compatible with the V8 binary and if so initializes V8."
+        }
+      ]
+    }
+  ],
+  "functions": [],
+  "enums": [
+    {
+      "name": "BuildConfigurationFeatures",
+      "values": [
+        "kPointerCompression",
+        "k31BitSmis",
+        "kSandbox",
+        "kTargetOsIsAndroid",
+        "kEnableChecks"
+      ]
+    }
+  ]
+}

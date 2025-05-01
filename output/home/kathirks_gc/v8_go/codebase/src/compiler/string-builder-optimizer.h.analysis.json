@@ -1,0 +1,281 @@
+{
+  "file_path": "/home/kathirks_gc/v8_go/codebase/src/compiler/string-builder-optimizer.h",
+  "imports": [
+    "<cstdint>",
+    "<optional>",
+    "<unordered_map>",
+    "<vector>",
+    "src/base/macros.h",
+    "src/compiler/graph-assembler.h",
+    "src/compiler/graph-reducer.h",
+    "src/compiler/js-graph.h",
+    "src/compiler/machine-operator.h",
+    "src/compiler/node-marker.h",
+    "src/compiler/node.h",
+    "src/compiler/schedule.h",
+    "src/zone/zone-containers.h"
+  ],
+  "classes": [
+    {
+      "name": "OneOrTwoByteAnalysis",
+      "properties": [
+        "states_",
+        "broker_"
+      ],
+      "methods": [
+        {
+          "name": "OneOrTwoByteAnalysis",
+          "parameters": [
+            "TFGraph* graph",
+            "Zone* zone",
+            "JSHeapBroker* broker"
+          ],
+          "return_type": "void",
+          "logic": "Constructor. Initializes the states_ vector with kUnknown and sets the broker_."
+        },
+        {
+          "name": "OneOrTwoByte",
+          "parameters": [
+            "Node* node"
+          ],
+          "return_type": "State",
+          "logic": "Computes and returns a State reflecting whether {node} is a 1-byte or 2-byte string."
+        },
+        {
+          "name": "ConcatResultIsOneOrTwoByte",
+          "parameters": [
+            "State a",
+            "State b"
+          ],
+          "return_type": "State",
+          "logic": "Computes whether the string builder will be on 1-byte or 2-byte if it contains two nodes that have states {a} and {b}."
+        },
+        {
+          "name": "TryGetRange",
+          "parameters": [
+            "Node* node"
+          ],
+          "return_type": "std::optional<std::pair<int64_t, int64_t>>",
+          "logic": "Returns the positive integral range that {node} can take.  If the range exceeds 2**32, returns nullopt as well."
+        },
+        {
+          "name": "broker",
+          "parameters": [],
+          "return_type": "JSHeapBroker*",
+          "logic": "Returns the JSHeapBroker pointer."
+        }
+      ]
+    },
+    {
+      "name": "StringBuilderOptimizer",
+      "properties": [
+        "jsgraph_",
+        "schedule_",
+        "temp_zone_",
+        "broker_",
+        "string_builder_count_",
+        "blocks_to_trimmings_map_",
+        "status_",
+        "string_builders_",
+        "loop_headers_"
+      ],
+      "methods": [
+        {
+          "name": "StringBuilderOptimizer",
+          "parameters": [
+            "JSGraph* jsgraph",
+            "Schedule* schedule",
+            "Zone* temp_zone",
+            "JSHeapBroker* broker"
+          ],
+          "return_type": "void",
+          "logic": "Constructor. Initializes the StringBuilderOptimizer with the provided JSGraph, Schedule, Zone, and JSHeapBroker."
+        },
+        {
+          "name": "BlockShouldFinalizeStringBuilders",
+          "parameters": [
+            "BasicBlock* block"
+          ],
+          "return_type": "bool",
+          "logic": "Returns true if some trimming code should be inserted at the beginning of {block} to finalize some string builders."
+        },
+        {
+          "name": "GetStringBuildersToFinalize",
+          "parameters": [
+            "BasicBlock* block"
+          ],
+          "return_type": "ZoneVector<Node*>",
+          "logic": "Returns which nodes should be trimmed at the beginning of {block} to finalize some string builders."
+        },
+        {
+          "name": "IsStringBuilderEnd",
+          "parameters": [
+            "Node* node"
+          ],
+          "return_type": "bool",
+          "logic": "Returns true if {node} is the last node of a StringBuilder."
+        },
+        {
+          "name": "IsNonLoopPhiStringBuilderEnd",
+          "parameters": [
+            "Node* node"
+          ],
+          "return_type": "bool",
+          "logic": "Returns true if {node} is the last node of a StringBuilder and is not a loop phi."
+        },
+        {
+          "name": "IsStringBuilderConcatInput",
+          "parameters": [
+            "Node* node"
+          ],
+          "return_type": "bool",
+          "logic": "Returns true if {node} is the input of a concatenation that is part of a StringBuilder."
+        },
+        {
+          "name": "ConcatIsInStringBuilder",
+          "parameters": [
+            "Node* node"
+          ],
+          "return_type": "bool",
+          "logic": "Returns true if {node} is part of a StringBuilder."
+        },
+        {
+          "name": "IsFirstConcatInStringBuilder",
+          "parameters": [
+            "Node* node"
+          ],
+          "return_type": "bool",
+          "logic": "Returns true if {node} is the 1st node of a StringBuilder."
+        },
+        {
+          "name": "GetOneOrTwoByte",
+          "parameters": [
+            "Node* node"
+          ],
+          "return_type": "OneOrTwoByteAnalysis::State",
+          "logic": "Returns an OneOrTwoByteAnalysis::State representing whether the StringBuilder that contains {node} is building a 1-byte or a 2-byte."
+        },
+        {
+          "name": "Run",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Runs the string builder optimization."
+        },
+        {
+          "name": "jsgraph",
+          "parameters": [],
+          "return_type": "JSGraph*",
+          "logic": "Returns the JSGraph pointer."
+        },
+        {
+          "name": "graph",
+          "parameters": [],
+          "return_type": "TFGraph*",
+          "logic": "Returns the TFGraph pointer (obtained from the JSGraph)."
+        },
+        {
+          "name": "schedule",
+          "parameters": [],
+          "return_type": "Schedule*",
+          "logic": "Returns the Schedule pointer."
+        },
+        {
+          "name": "temp_zone",
+          "parameters": [],
+          "return_type": "Zone*",
+          "logic": "Returns the temporary Zone pointer."
+        },
+        {
+          "name": "broker",
+          "parameters": [],
+          "return_type": "JSHeapBroker*",
+          "logic": "Returns the JSHeapBroker pointer."
+        },
+        {
+          "name": "IsLoopPhi",
+          "parameters": [
+            "Node* node"
+          ],
+          "return_type": "bool",
+          "logic": "Checks if a node is a loop phi."
+        },
+        {
+          "name": "LoopContains",
+          "parameters": [
+            "Node* loop_phi",
+            "Node* node"
+          ],
+          "return_type": "bool",
+          "logic": "Checks if a loop phi's block contains a given node's block."
+        },
+        {
+          "name": "GetStringBuilderIdForConcat",
+          "parameters": [
+            "Node* node"
+          ],
+          "return_type": "int",
+          "logic": "Retrieves the StringBuilder ID for a given concat node."
+        },
+        {
+          "name": "ReplaceConcatInputIfNeeded",
+          "parameters": [
+            "Node* node",
+            "int input_idx"
+          ],
+          "return_type": "void",
+          "logic": "Replaces the input of a concat node if needed."
+        },
+        {
+          "name": "CheckNodeUses",
+          "parameters": [
+            "Node* node",
+            "Node* concat_child",
+            "Status status"
+          ],
+          "return_type": "bool",
+          "logic": "Checks the uses of a node in the context of StringBuilder optimization."
+        },
+        {
+          "name": "CheckPreviousNodeUses",
+          "parameters": [
+            "Node* child",
+            "Status status",
+            "int input_if_loop_phi"
+          ],
+          "return_type": "bool",
+          "logic": "Checks the uses of a previous node in the context of StringBuilder optimization."
+        },
+        {
+          "name": "GetPhiPredecessorsCommonId",
+          "parameters": [
+            "Node* node"
+          ],
+          "return_type": "int",
+          "logic": "Gets the common StringBuilder ID from phi predecessors."
+        },
+        {
+          "name": "FinalizeStringBuilders",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Finalizes the string builders, inserting trimming code where necessary."
+        },
+        {
+          "name": "VisitNode",
+          "parameters": [
+            "Node* node",
+            "BasicBlock* block"
+          ],
+          "return_type": "void",
+          "logic": "Visits a node during the graph traversal for StringBuilder optimization."
+        },
+        {
+          "name": "VisitGraph",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Visits the graph to perform StringBuilder optimization."
+        }
+      ]
+    }
+  ],
+  "functions": []
+}

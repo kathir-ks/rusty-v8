@@ -1,0 +1,48 @@
+{
+  "file_path": "/home/kathirks_gc/v8_go/codebase/src/compiler/turboshaft/use-map.cc",
+  "imports": [
+    "src/compiler/turboshaft/use-map.h",
+    "src/compiler/turboshaft/graph.h"
+  ],
+  "classes": [
+    {
+      "name": "UseMap",
+      "properties": [
+        "table_",
+        "uses_",
+        "saturated_uses_"
+      ],
+      "methods": [
+        {
+          "name": "UseMap",
+          "parameters": [
+            "const Graph& graph",
+            "Zone* zone",
+            "FunctionType filter"
+          ],
+          "return_type": "UseMap",
+          "logic": "Constructor for UseMap. Builds a map of uses for each operation in the graph.  It iterates through each block and operation, allocating space for uses. It handles saturated uses (when the number of uses exceeds a limit) separately.  It also handles loop phi uses, delaying the back edge use to ensure proper ordering.  A `filter` function can be passed to exclude certain operations from use tracking."
+        },
+        {
+          "name": "uses",
+          "parameters": [
+            "OpIndex index"
+          ],
+          "return_type": "base::Vector<const OpIndex>",
+          "logic": "Returns a vector of OpIndices that use the given OpIndex. It retrieves the offset and count from the table_ and uses them to construct a base::Vector pointing to the correct section of the uses_ or saturated_uses_ vector."
+        },
+        {
+          "name": "AddUse",
+          "parameters": [
+            "const Graph* graph",
+            "OpIndex node",
+            "OpIndex use"
+          ],
+          "return_type": "void",
+          "logic": "Adds a use to the use map for a given node. It determines whether to store the use in the regular uses_ vector or the saturated_uses_ vector based on whether the node's use count is saturated.  It increments the use count for the node."
+        }
+      ]
+    }
+  ],
+  "functions": []
+}

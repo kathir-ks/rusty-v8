@@ -1,0 +1,129 @@
+{
+  "file_path": "/home/kathirks_gc/v8_go/codebase/src/ic/ic-stats.h",
+  "imports": [
+    "<memory>",
+    "<string>",
+    "<unordered_map>",
+    "<vector>",
+    "include/v8-internal.h",
+    "src/base/atomicops.h",
+    "src/base/lazy-instance.h",
+    "src/sandbox/isolate.h"
+  ],
+  "classes": [
+    {
+      "name": "ICInfo",
+      "properties": [
+        "type",
+        "function_name",
+        "script_offset",
+        "script_name",
+        "line_num",
+        "column_num",
+        "is_constructor",
+        "is_optimized",
+        "state",
+        "map",
+        "is_dictionary_map",
+        "number_of_own_descriptors",
+        "instance_type"
+      ],
+      "methods": [
+        {
+          "name": "ICInfo",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Default constructor for the ICInfo struct. Likely initializes member variables with default values."
+        },
+        {
+          "name": "Reset",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Resets the ICInfo struct to its initial state, clearing any collected data."
+        },
+        {
+          "name": "AppendToTracedValue",
+          "parameters": [
+            "v8::tracing::TracedValue* value"
+          ],
+          "return_type": "void",
+          "logic": "Appends the ICInfo's data to a tracing object, allowing for the collection and analysis of IC-related information."
+        }
+      ]
+    },
+    {
+      "name": "ICStats",
+      "properties": [
+        "MAX_IC_INFO",
+        "instance_",
+        "enabled_",
+        "ic_infos_",
+        "script_name_map_",
+        "function_name_map_",
+        "pos_"
+      ],
+      "methods": [
+        {
+          "name": "ICStats",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Constructor for the ICStats class. Likely initializes member variables, such as the vector of ICInfo objects."
+        },
+        {
+          "name": "Dump",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Dumps the collected IC statistics, likely to standard output or a log file, for analysis."
+        },
+        {
+          "name": "Begin",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Marks the beginning of an IC stats collection period.  May enable data collection."
+        },
+        {
+          "name": "End",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Marks the end of an IC stats collection period. May disable data collection."
+        },
+        {
+          "name": "Reset",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Resets the ICStats, clearing all collected ICInfo objects and resetting the current position."
+        },
+        {
+          "name": "Current",
+          "parameters": [],
+          "return_type": "ICInfo&",
+          "logic": "Returns a reference to the current ICInfo object being populated. Uses an index `pos_` and a size check to make sure the current index is valid."
+        },
+        {
+          "name": "GetOrCacheScriptName",
+          "parameters": [
+            "Tagged<Script> script"
+          ],
+          "return_type": "const char*",
+          "logic": "Retrieves the name of a script from a cache, or caches it if it's not already present. This avoids repeatedly extracting the script name."
+        },
+        {
+          "name": "GetOrCacheFunctionName",
+          "parameters": [
+            "IsolateForSandbox isolate",
+            "Tagged<JSFunction> function"
+          ],
+          "return_type": "const char*",
+          "logic": "Retrieves the name of a function from a cache, or caches it if it's not already present. This avoids repeatedly extracting the function name."
+        },
+        {
+          "name": "instance",
+          "parameters": [],
+          "return_type": "ICStats*",
+          "logic": "Returns a pointer to the singleton instance of the ICStats class using a lazy initialization pattern."
+        }
+      ]
+    }
+  ],
+  "functions": []
+}

@@ -1,0 +1,68 @@
+{
+  "file_path": "/home/kathirks_gc/v8_go/codebase/src/wasm/wasm-arguments.h",
+  "imports": [
+    "<stdint.h>",
+    "<vector>",
+    "src/base/memory.h",
+    "src/codegen/signature.h",
+    "src/common/globals.h",
+    "src/wasm/value-type.h"
+  ],
+  "classes": [
+    {
+      "name": "CWasmArgumentsPacker",
+      "properties": [
+        "kMaxOnStackBuffer",
+        "on_stack_buffer_",
+        "heap_buffer_",
+        "buffer_",
+        "offset_"
+      ],
+      "methods": [
+        {
+          "name": "CWasmArgumentsPacker",
+          "parameters": [
+            "size_t buffer_size"
+          ],
+          "return_type": "constructor",
+          "logic": "Constructor for the class. Initializes the buffer, either on the stack or on the heap, based on the buffer size."
+        },
+        {
+          "name": "argv",
+          "parameters": [],
+          "return_type": "i::Address",
+          "logic": "Returns the address of the internal buffer."
+        },
+        {
+          "name": "Reset",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Resets the internal offset pointer to the beginning of the buffer, allowing the packer to be reused for popping values."
+        },
+        {
+          "name": "Push",
+          "parameters": [
+            "T val"
+          ],
+          "return_type": "void",
+          "logic": "Pushes a value of type T onto the buffer at the current offset and increments the offset by the size of T.  Uses unaligned writes."
+        },
+        {
+          "name": "Pop",
+          "parameters": [],
+          "return_type": "T",
+          "logic": "Pops a value of type T from the buffer at the current offset, increments the offset by the size of T and returns the value. Uses unaligned reads."
+        },
+        {
+          "name": "TotalSize",
+          "parameters": [
+            "const CanonicalSig* sig"
+          ],
+          "return_type": "int",
+          "logic": "Calculates the total size required for arguments and return values based on the CanonicalSig. Returns the maximum of the return size and parameter size."
+        }
+      ]
+    }
+  ],
+  "functions": []
+}

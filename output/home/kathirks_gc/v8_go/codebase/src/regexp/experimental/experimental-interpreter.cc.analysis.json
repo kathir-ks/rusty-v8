@@ -1,0 +1,497 @@
+{
+  "file_path": "/home/kathirks_gc/v8_go/codebase/src/regexp/experimental/experimental-interpreter.cc",
+  "imports": [
+    "src/regexp/experimental/experimental-interpreter.h",
+    "src/objects/string-inl.h",
+    "src/regexp/experimental/experimental.h",
+    "src/sandbox/check.h"
+  ],
+  "classes": [
+    {
+      "name": "FilterGroups",
+      "properties": [
+        "pc_",
+        "max_clock_",
+        "pc_stack_",
+        "max_clock_stack_",
+        "bytecode_"
+      ],
+      "methods": [
+        {
+          "name": "Filter",
+          "parameters": [
+            "pc",
+            "registers",
+            "quantifiers_clocks",
+            "capture_clocks",
+            "lookaround_clocks",
+            "filtered_registers",
+            "bytecode",
+            "zone"
+          ],
+          "return_type": "base::Vector<int>",
+          "logic": "Filters capture groups that were not traversed in the last iteration of a quantifier.  It compares the last clock value of the group with the last clock value of its parent quantifier/group, keeping only groups that were defined after the parent quantifier/group last iteration.  The bytecode structure is explained in `FilterGroupsCompileVisitor`."
+        },
+        {
+          "name": "FilterGroups",
+          "parameters": [
+            "pc",
+            "bytecode",
+            "zone"
+          ],
+          "return_type": "N/A (Constructor)",
+          "logic": "Constructor for the FilterGroups class. Initializes the member variables."
+        },
+        {
+          "name": "Up",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Goes back to the parent node, restoring pc_ and max_clock_. If already at the root of the tree, completes the filtering process."
+        },
+        {
+          "name": "IncrementPC",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Increments pc_. When at the end of a node, goes back to the parent node."
+        },
+        {
+          "name": "IsAtNodeEnd",
+          "parameters": [],
+          "return_type": "bool",
+          "logic": "Checks if the current program counter is at the end of a node in the bytecode tree."
+        },
+        {
+          "name": "Run",
+          "parameters": [
+            "registers_",
+            "quantifiers_clocks_",
+            "capture_clocks_",
+            "lookaround_clocks",
+            "filtered_registers_"
+          ],
+          "return_type": "base::Vector<int>",
+          "logic": "Executes the filtering algorithm by iterating through the bytecode and updating the filtered registers based on quantifier and capture group clocks."
+        }
+      ]
+    },
+    {
+      "name": "NfaInterpreter",
+      "properties": [
+        "isolate_",
+        "call_origin_",
+        "bytecode_object_",
+        "bytecode_",
+        "register_count_per_match_",
+        "quantifier_count_",
+        "input_object_",
+        "input_",
+        "input_index_",
+        "clock",
+        "pc_last_input_index_",
+        "active_threads_",
+        "blocked_threads_",
+        "register_array_allocator_",
+        "lookaround_match_index_array_allocator_",
+        "lookaround_clock_array_allocator_",
+        "quantifier_array_allocator_",
+        "capture_clock_array_allocator_",
+        "best_match_thread_",
+        "lookarounds_",
+        "lookaround_table_",
+        "lookbehind_table_",
+        "only_captureless_lookbehinds_",
+        "reverse_",
+        "current_lookaround_",
+        "filter_groups_pc_",
+        "zone_",
+        "memory_consumption_per_thread_"
+      ],
+      "methods": [
+        {
+          "name": "NfaInterpreter",
+          "parameters": [
+            "isolate",
+            "call_origin",
+            "bytecode",
+            "register_count_per_match",
+            "input",
+            "input_index",
+            "zone"
+          ],
+          "return_type": "N/A (Constructor)",
+          "logic": "Constructor for the NfaInterpreter class. Initializes the interpreter with the given parameters, finds filter instructions, lookarounds and the number of quantifiers in the bytecode, and allocates memory for the different tables."
+        },
+        {
+          "name": "FindMatches",
+          "parameters": [
+            "output_registers",
+            "output_register_count"
+          ],
+          "return_type": "int",
+          "logic": "Finds matches in the input string and writes their capture registers to `output_registers`. The search continues until all remaining matches have been found or there is no space left in `output_registers`. Returns the number of matches found."
+        },
+        {
+          "name": "FillLookaroundTable",
+          "parameters": [],
+          "return_type": "int",
+          "logic": "Fills the lookaround table by running each lookaround's automaton independently on the whole input. The order of lookarounds in the lookarounds_ array determines the order in which lookarounds are verified."
+        },
+        {
+          "name": "FillLookaroundCaptures",
+          "parameters": [
+            "main_thread"
+          ],
+          "return_type": "int",
+          "logic": "Runs the lookarounds automata to fill capture groups within lookarounds."
+        },
+        {
+          "name": "RunActiveThreadsToEnd",
+          "parameters": [],
+          "return_type": "int",
+          "logic": "Runs the active threads until all threads are blocked or a match is found. It manages the input index and handles interrupts."
+        },
+        {
+          "name": "HandleInterrupts",
+          "parameters": [],
+          "return_type": "int",
+          "logic": "Handles interrupts, checking for stack overflows and interrupt requests."
+        },
+        {
+          "name": "SetInputIndex",
+          "parameters": [
+            "new_input_index"
+          ],
+          "return_type": "void",
+          "logic": "Change the current input index for future calls to `FindNextMatch`."
+        },
+        {
+          "name": "FindNextMatch",
+          "parameters": [],
+          "return_type": "int",
+          "logic": "Finds the next match in the input string starting from the current input index. It creates and runs threads until a match is found or the input is exhausted."
+        },
+        {
+          "name": "RunActiveThread",
+          "parameters": [
+            "t"
+          ],
+          "return_type": "int",
+          "logic": "Run an active thread `t` until it executes a CONSUME_RANGE or ACCEPT instruction, or its PC value was already processed."
+        },
+        {
+          "name": "RunActiveThreads",
+          "parameters": [],
+          "return_type": "int",
+          "logic": "Runs each active thread until it can't continue without further input. Active threads are removed and added to blocked threads."
+        },
+        {
+          "name": "FlushBlockedThreads",
+          "parameters": [
+            "input_char"
+          ],
+          "return_type": "void",
+          "logic": "Unblocks all blocked threads by feeding them an input character. Updates the active threads based on matching ranges."
+        },
+        {
+          "name": "FoundMatch",
+          "parameters": [],
+          "return_type": "bool",
+          "logic": "Checks if a match has been found."
+        },
+        {
+          "name": "ApproximateTotalMemoryUsage",
+          "parameters": [],
+          "return_type": "size_t",
+          "logic": "Approximates the total memory usage of the interpreter, based on the number of threads."
+        },
+        {
+          "name": "CheckMemoryConsumption",
+          "parameters": [],
+          "return_type": "int",
+          "logic": "Checks that the approximate memory usage does not exceed a fixed threshold."
+        },
+        {
+          "name": "GetRegisterArray",
+          "parameters": [
+            "t"
+          ],
+          "return_type": "base::Vector<int>",
+          "logic": "Returns a Vector wrapping the register array of the given thread."
+        },
+        {
+          "name": "GetLookaroundMatchIndexArray",
+          "parameters": [
+            "t"
+          ],
+          "return_type": "base::Vector<int>",
+          "logic": "Returns the lookaround match index array of the given thread."
+        },
+        {
+          "name": "GetQuantifierClockArray",
+          "parameters": [
+            "t"
+          ],
+          "return_type": "base::Vector<uint64_t>",
+          "logic": "Returns the quantifier clock array of the given thread."
+        },
+        {
+          "name": "GetCaptureClockArray",
+          "parameters": [
+            "t"
+          ],
+          "return_type": "base::Vector<uint64_t>",
+          "logic": "Returns the capture clock array of the given thread."
+        },
+        {
+          "name": "GetLookaroundClockArray",
+          "parameters": [
+            "t"
+          ],
+          "return_type": "base::Vector<uint64_t>",
+          "logic": "Returns the lookaround clock array of the given thread."
+        },
+        {
+          "name": "NewRegisterArrayUninitialized",
+          "parameters": [],
+          "return_type": "int*",
+          "logic": "Allocates a new register array without initializing it."
+        },
+        {
+          "name": "NewRegisterArray",
+          "parameters": [
+            "fill_value"
+          ],
+          "return_type": "int*",
+          "logic": "Allocates a new register array and initializes it with the given value."
+        },
+        {
+          "name": "FreeRegisterArray",
+          "parameters": [
+            "register_array_begin"
+          ],
+          "return_type": "void",
+          "logic": "Frees the memory allocated for the register array."
+        },
+        {
+          "name": "NewLookaroundMatchIndexArrayUninitialized",
+          "parameters": [],
+          "return_type": "int*",
+          "logic": "Allocates a new lookaround match index array without initializing it."
+        },
+        {
+          "name": "NewLookaroundMatchIndexArray",
+          "parameters": [
+            "fill_value"
+          ],
+          "return_type": "int*",
+          "logic": "Allocates a new lookaround match index array and initializes it with the given value."
+        },
+        {
+          "name": "FreeLookaroundMatchIndexArray",
+          "parameters": [
+            "lookaround_match_index_array_begin"
+          ],
+          "return_type": "void",
+          "logic": "Frees the memory allocated for the lookaround match index array."
+        },
+        {
+          "name": "NewQuantifierClockArrayUninitialized",
+          "parameters": [],
+          "return_type": "uint64_t*",
+          "logic": "Allocates a new quantifier clock array without initializing it."
+        },
+        {
+          "name": "NewQuantifierClockArray",
+          "parameters": [
+            "fill_value"
+          ],
+          "return_type": "uint64_t*",
+          "logic": "Allocates a new quantifier clock array and initializes it with the given value."
+        },
+        {
+          "name": "FreeQuantifierClockArray",
+          "parameters": [
+            "quantifier_clock_array_begin"
+          ],
+          "return_type": "void",
+          "logic": "Frees the memory allocated for the quantifier clock array."
+        },
+        {
+          "name": "NewCaptureClockArrayUninitialized",
+          "parameters": [],
+          "return_type": "uint64_t*",
+          "logic": "Allocates a new capture clock array without initializing it."
+        },
+        {
+          "name": "NewCaptureClockArray",
+          "parameters": [
+            "fill_value"
+          ],
+          "return_type": "uint64_t*",
+          "logic": "Allocates a new capture clock array and initializes it with the given value."
+        },
+        {
+          "name": "FreeCaptureClockArray",
+          "parameters": [
+            "capture_clock_array_begin"
+          ],
+          "return_type": "void",
+          "logic": "Frees the memory allocated for the capture clock array."
+        },
+        {
+          "name": "NewLookaroundClockArrayUninitialized",
+          "parameters": [],
+          "return_type": "uint64_t*",
+          "logic": "Allocates a new lookaround clock array without initializing it."
+        },
+        {
+          "name": "NewLookaroundClockArray",
+          "parameters": [
+            "fill_value"
+          ],
+          "return_type": "uint64_t*",
+          "logic": "Allocates a new lookaround clock array and initializes it with the given value."
+        },
+        {
+          "name": "FreeLookaroundClockArray",
+          "parameters": [
+            "lookaround_clock_array_begin"
+          ],
+          "return_type": "void",
+          "logic": "Frees the memory allocated for the lookaround clock array."
+        },
+        {
+          "name": "NewEmptyThread",
+          "parameters": [
+            "pc"
+          ],
+          "return_type": "InterpreterThread",
+          "logic": "Creates an `InterpreterThread` at the given pc and allocates its arrays. The register array is initialized to `kUndefinedRegisterValue`."
+        },
+        {
+          "name": "NewUninitializedThread",
+          "parameters": [
+            "pc"
+          ],
+          "return_type": "InterpreterThread",
+          "logic": "Creates an `InterpreterThread` at the given pc and allocates its arrays. All arrays are left uninitialized."
+        },
+        {
+          "name": "GetFilteredRegisters",
+          "parameters": [
+            "main_thread",
+            "filtered_registers"
+          ],
+          "return_type": "int",
+          "logic": "Fills the lookaround captures and returns the filtered registers."
+        },
+        {
+          "name": "DestroyThread",
+          "parameters": [
+            "t"
+          ],
+          "return_type": "void",
+          "logic": "Frees all the data allocated for a given thread."
+        },
+        {
+          "name": "IsPcProcessed",
+          "parameters": [
+            "pc",
+            "consumed_since_last_quantifier"
+          ],
+          "return_type": "bool",
+          "logic": "Checks if the PC value has already been processed for the current input index."
+        },
+        {
+          "name": "MarkPcProcessed",
+          "parameters": [
+            "pc",
+            "consumed_since_last_quantifier"
+          ],
+          "return_type": "void",
+          "logic": "Marks the PC value as having been processed for the current input index."
+        }
+      ],
+      "classes": [
+        {
+          "name": "InterpreterThread",
+          "properties": [
+            "pc",
+            "register_array_begin",
+            "lookaround_match_index_array_begin",
+            "quantifier_clock_array_begin",
+            "captures_clock_array_begin",
+            "lookaround_clock_array_begin",
+            "consumed_since_last_quantifier"
+          ],
+          "methods": [],
+          "classes": []
+        },
+        {
+          "name": "LastInputIndex",
+          "properties": [
+            "having_consumed_character",
+            "not_having_consumed_character"
+          ],
+          "methods": [],
+          "classes": []
+        }
+      ]
+    }
+  ],
+  "functions": [
+    {
+      "name": "SatisfiesAssertion",
+      "parameters": [
+        "type",
+        "context",
+        "position"
+      ],
+      "return_type": "bool",
+      "logic": "Checks if a given assertion type is satisfied at a given position in the input context."
+    },
+    {
+      "name": "ToInstructionVector",
+      "parameters": [
+        "raw_bytes",
+        "no_gc"
+      ],
+      "return_type": "base::Vector<RegExpInstruction>",
+      "logic": "Converts a TrustedByteArray to a Vector of RegExpInstructions."
+    },
+    {
+      "name": "ToCharacterVector",
+      "parameters": [
+        "str",
+        "no_gc"
+      ],
+      "return_type": "base::Vector<const uint8_t>",
+      "logic": "Converts a String to a Vector of characters (uint8_t specialization)."
+    },
+    {
+      "name": "ToCharacterVector",
+      "parameters": [
+        "str",
+        "no_gc"
+      ],
+      "return_type": "base::Vector<const base::uc16>",
+      "logic": "Converts a String to a Vector of characters (base::uc16 specialization)."
+    },
+    {
+      "name": "ExperimentalRegExpInterpreter::FindMatches",
+      "parameters": [
+        "isolate",
+        "call_origin",
+        "bytecode",
+        "register_count_per_match",
+        "input",
+        "start_index",
+        "output_registers",
+        "output_register_count",
+        "zone"
+      ],
+      "return_type": "int",
+      "logic": "Entry point for the experimental RegExp interpreter. It creates an NfaInterpreter instance and calls its FindMatches method, specializing on one-byte or two-byte input string."
+    }
+  ]
+}

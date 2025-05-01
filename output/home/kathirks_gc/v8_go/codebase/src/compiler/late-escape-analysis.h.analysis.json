@@ -1,0 +1,89 @@
+{
+  "file_path": "/home/kathirks_gc/v8_go/codebase/src/compiler/late-escape-analysis.h",
+  "imports": [
+    "src/compiler/graph-reducer.h"
+  ],
+  "classes": [
+    {
+      "name": "LateEscapeAnalysis",
+      "properties": [
+        "dead_",
+        "all_allocations_",
+        "escaping_allocations_",
+        "revisit_"
+      ],
+      "methods": [
+        {
+          "name": "LateEscapeAnalysis",
+          "parameters": [
+            "Editor* editor",
+            "TFGraph* graph",
+            "CommonOperatorBuilder* common",
+            "Zone* zone"
+          ],
+          "return_type": "void",
+          "logic": "Constructor for the LateEscapeAnalysis class. Likely initializes the member variables using the provided editor, graph, common operator builder, and zone."
+        },
+        {
+          "name": "reducer_name",
+          "parameters": [],
+          "return_type": "const char*",
+          "logic": "Returns the name of the reducer, which is 'LateEscapeAnalysis'."
+        },
+        {
+          "name": "Reduce",
+          "parameters": [
+            "Node* node"
+          ],
+          "return_type": "Reduction",
+          "logic": "Reduces the given node. This is the main entry point for the reduction process and likely involves checking if the node can be optimized based on escape analysis."
+        },
+        {
+          "name": "Finalize",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Finalizes the escape analysis process.  This might involve cleaning up data structures or performing any necessary post-processing."
+        },
+        {
+          "name": "IsEscaping",
+          "parameters": [
+            "Node* node"
+          ],
+          "return_type": "bool",
+          "logic": "Determines whether the given node (likely an allocation) escapes.  Returns true if the allocation escapes, false otherwise."
+        },
+        {
+          "name": "RemoveAllocation",
+          "parameters": [
+            "Node* node"
+          ],
+          "return_type": "void",
+          "logic": "Removes the given allocation node from the graph. This is performed when it's determined that the allocation does not escape and can be eliminated."
+        },
+        {
+          "name": "RecordEscapingAllocation",
+          "parameters": [
+            "Node* allocation"
+          ],
+          "return_type": "void",
+          "logic": "Records that a particular allocation is escaping.  Likely increments the witness counter in `escaping_allocations_`."
+        },
+        {
+          "name": "RemoveWitness",
+          "parameters": [
+            "Node* allocation"
+          ],
+          "return_type": "void",
+          "logic": "Removes a witness for an allocation escaping, likely decrementing the witness counter in `escaping_allocations_`."
+        },
+        {
+          "name": "dead",
+          "parameters": [],
+          "return_type": "Node*",
+          "logic": "Returns the 'dead' node, which represents an unreachable or unused value in the graph."
+        }
+      ]
+    }
+  ],
+  "functions": []
+}

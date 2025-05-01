@@ -1,0 +1,231 @@
+{
+  "file_path": "/home/kathirks_gc/v8_go/codebase/src/compiler/js-inlining.cc",
+  "imports": [
+    "src/compiler/js-inlining.h",
+    "<optional>",
+    "src/codegen/optimized-compilation-info.h",
+    "src/codegen/tick-counter.h",
+    "src/compiler/access-builder.h",
+    "src/compiler/all-nodes.h",
+    "src/compiler/bytecode-graph-builder.h",
+    "src/compiler/common-operator.h",
+    "src/compiler/compiler-source-position-table.h",
+    "src/compiler/graph-reducer.h",
+    "src/compiler/js-heap-broker.h",
+    "src/compiler/js-operator.h",
+    "src/compiler/node-matchers.h",
+    "src/compiler/node-properties.h",
+    "src/compiler/simplified-operator.h",
+    "src/execution/isolate-inl.h",
+    "src/objects/feedback-cell-inl.h",
+    "src/compiler/wasm-compiler.h",
+    "src/wasm/names-provider.h",
+    "src/wasm/string-builder.h"
+  ],
+  "classes": [
+    {
+      "name": "JSCallAccessor",
+      "properties": [
+        "call_"
+      ],
+      "methods": [
+        {
+          "name": "JSCallAccessor",
+          "parameters": [
+            "Node* call"
+          ],
+          "return_type": "void",
+          "logic": "Constructor that initializes the JSCallAccessor with a given JSCall or JSConstruct node. Performs a check to ensure the provided node is of the correct type."
+        },
+        {
+          "name": "target",
+          "parameters": [],
+          "return_type": "Node*",
+          "logic": "Returns the target node of the JSCall or JSConstruct node."
+        },
+        {
+          "name": "receiver",
+          "parameters": [],
+          "return_type": "Node*",
+          "logic": "Returns the receiver node of the JSCall node."
+        },
+        {
+          "name": "new_target",
+          "parameters": [],
+          "return_type": "Node*",
+          "logic": "Returns the new_target node of the JSConstruct node."
+        },
+        {
+          "name": "frame_state",
+          "parameters": [],
+          "return_type": "FrameState",
+          "logic": "Returns the FrameState associated with the JSCall or JSConstruct node."
+        },
+        {
+          "name": "argument_count",
+          "parameters": [],
+          "return_type": "int",
+          "logic": "Returns the number of arguments passed to the JSCall or JSConstruct node."
+        },
+        {
+          "name": "frequency",
+          "parameters": [],
+          "return_type": "CallFrequency const&",
+          "logic": "Returns the call frequency of the JSCall or JSConstruct node."
+        }
+      ]
+    },
+    {
+      "name": "JSInliner",
+      "properties": [
+        "jsgraph_",
+        "broker_",
+        "local_zone_",
+        "info_",
+        "source_positions_",
+        "node_origins_",
+        "wasm_module_",
+        "inline_wasm_fct_if_supported_",
+        "is_asmjs_module_",
+        "js_wasm_calls_sidetable_"
+      ],
+      "methods": [
+        {
+          "name": "InlineJSWasmCall",
+          "parameters": [
+            "Node* call",
+            "Node* new_target",
+            "Node* context",
+            "Node* frame_state",
+            "StartNode start",
+            "Node* end",
+            "Node* exception_target",
+            "const NodeVector& uncaught_subcalls"
+          ],
+          "return_type": "Reduction",
+          "logic": "Inlines a JSWasmCall node by delegating to InlineCall with the correct number of arguments."
+        },
+        {
+          "name": "InlineCall",
+          "parameters": [
+            "Node* call",
+            "Node* new_target",
+            "Node* context",
+            "Node* frame_state",
+            "StartNode start",
+            "Node* end",
+            "Node* exception_target",
+            "const NodeVector& uncaught_subcalls",
+            "int argument_count"
+          ],
+          "return_type": "Reduction",
+          "logic": "Core inlining logic. Replaces start node uses with appropriate inputs from the call node or constants. Handles exceptional edges and replaces the call node with the inlined code."
+        },
+        {
+          "name": "CreateArtificialFrameState",
+          "parameters": [
+            "Node* node",
+            "FrameState outer_frame_state",
+            "int argument_count",
+            "FrameStateType frame_state_type",
+            "SharedFunctionInfoRef shared",
+            "OptionalBytecodeArrayRef maybe_bytecode_array",
+            "Node* context",
+            "Node* callee"
+          ],
+          "return_type": "FrameState",
+          "logic": "Creates an artificial FrameState node for inlining, which is used for deoptimization."
+        },
+        {
+          "name": "DetermineCallTarget",
+          "parameters": [
+            "Node* node"
+          ],
+          "return_type": "OptionalSharedFunctionInfoRef",
+          "logic": "Determines if the target of a call node is statically known and returns the SharedFunctionInfo if so. Checks for constant function objects and JSCreateClosure nodes."
+        },
+        {
+          "name": "DetermineCallContext",
+          "parameters": [
+            "Node* node",
+            "Node** context_out"
+          ],
+          "return_type": "FeedbackCellRef",
+          "logic": "Determines the context and feedback vector of a statically known call target. Extracts the context from the JSFunction object or JSCreateClosure node."
+        },
+        {
+          "name": "TryWasmInlining",
+          "parameters": [
+            "const JSWasmCallNode& call_node"
+          ],
+          "return_type": "WasmInlineResult",
+          "logic": "Attempts to inline a Wasm function call. Checks if inlining is possible and builds a Wasm graph builder.  Determines whether the wasm can be fully inlined by Turboshaft"
+        },
+        {
+          "name": "ReduceJSWasmCall",
+          "parameters": [
+            "Node* node"
+          ],
+          "return_type": "Reduction",
+          "logic": "Reduces a JSWasmCall node by inlining the Wasm wrapper and potentially the Wasm function body. Sets up a continuation frame state and handles exceptions."
+        },
+        {
+          "name": "InlineWasmFunction",
+          "parameters": [
+            "Node* call",
+            "Node* inlinee_start",
+            "Node* inlinee_end",
+            "Node* frame_state",
+            "SharedFunctionInfoRef shared_fct_info",
+            "int argument_count",
+            "Node* context"
+          ],
+          "return_type": "void",
+          "logic": "Inlines the actual Wasm function body into the graph, rewiring control and data flow."
+        },
+        {
+          "name": "ReduceJSCall",
+          "parameters": [
+            "Node* node"
+          ],
+          "return_type": "Reduction",
+          "logic": "Reduces a JSCall or JSConstruct node by inlining the target function's bytecode. Performs checks for inlineability, creates a subgraph for the inlinee, and handles exceptional edges and constructor dispatch."
+        },
+        {
+          "name": "graph",
+          "parameters": [],
+          "return_type": "TFGraph*",
+          "logic": "Returns the TFGraph associated with this inliner."
+        },
+        {
+          "name": "javascript",
+          "parameters": [],
+          "return_type": "JSOperatorBuilder*",
+          "logic": "Returns the JSOperatorBuilder."
+        },
+        {
+          "name": "common",
+          "parameters": [],
+          "return_type": "CommonOperatorBuilder*",
+          "logic": "Returns the CommonOperatorBuilder."
+        },
+        {
+          "name": "simplified",
+          "parameters": [],
+          "return_type": "SimplifiedOperatorBuilder*",
+          "logic": "Returns the SimplifiedOperatorBuilder."
+        }
+      ]
+    }
+  ],
+  "functions": [
+    {
+      "name": "NeedsImplicitReceiver",
+      "parameters": [
+        "SharedFunctionInfoRef shared_info"
+      ],
+      "return_type": "bool",
+      "logic": "Determines if a function needs an implicit receiver when called as a constructor. Checks if it's a builtin constructor or a derived constructor."
+    }
+  ]
+}

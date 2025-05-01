@@ -1,0 +1,284 @@
+{
+  "file_path": "/home/kathirks_gc/v8_go/codebase/src/torque/declaration-visitor.h",
+  "imports": [
+    "<optional>",
+    "<string>",
+    "src/base/macros.h",
+    "src/torque/declarations.h",
+    "src/torque/global-context.h",
+    "src/torque/kythe-data.h",
+    "src/torque/types.h",
+    "src/torque/utils.h"
+  ],
+  "classes": [
+    {
+      "name": "PredeclarationVisitor",
+      "properties": [],
+      "methods": [
+        {
+          "name": "Predeclare",
+          "parameters": [
+            "Ast* ast"
+          ],
+          "return_type": "void",
+          "logic": "Predeclares all declarations within the given AST.  It sets up a default namespace and iterates through the AST's declarations, calling the Predeclare method on each."
+        },
+        {
+          "name": "ResolvePredeclarations",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Placeholder for resolving predeclarations, likely handled elsewhere."
+        },
+        {
+          "name": "Predeclare",
+          "parameters": [
+            "Declaration* decl"
+          ],
+          "return_type": "void",
+          "logic": "Private overload of Predeclare, dispatching to specific handlers based on the declaration type.  Not directly defined in header."
+        },
+        {
+          "name": "Predeclare",
+          "parameters": [
+            "NamespaceDeclaration* decl"
+          ],
+          "return_type": "void",
+          "logic": "Predeclares all declarations within a namespace declaration.  It creates or retrieves the namespace using GetOrCreateNamespace and then iterates through the namespace's declarations, calling the Predeclare method on each."
+        },
+        {
+          "name": "Predeclare",
+          "parameters": [
+            "TypeDeclaration* decl"
+          ],
+          "return_type": "void",
+          "logic": "Predeclares a type alias for a type declaration. It uses Declarations::PredeclareTypeAlias to create the alias, sets its position and identifier position, and adds Kythe data if enabled."
+        },
+        {
+          "name": "Predeclare",
+          "parameters": [
+            "StructDeclaration* decl"
+          ],
+          "return_type": "void",
+          "logic": "Predeclares a type alias for a struct declaration. It uses Declarations::PredeclareTypeAlias to create the alias, sets its position and identifier position, and adds Kythe data if enabled."
+        },
+        {
+          "name": "Predeclare",
+          "parameters": [
+            "GenericTypeDeclaration* generic_decl"
+          ],
+          "return_type": "void",
+          "logic": "Declares a generic type using Declarations::DeclareGenericType."
+        },
+        {
+          "name": "Predeclare",
+          "parameters": [
+            "GenericCallableDeclaration* generic_decl"
+          ],
+          "return_type": "void",
+          "logic": "Declares a generic callable using Declarations::DeclareGenericCallable."
+        }
+      ]
+    },
+    {
+      "name": "DeclarationVisitor",
+      "properties": [],
+      "methods": [
+        {
+          "name": "Visit",
+          "parameters": [
+            "Ast* ast"
+          ],
+          "return_type": "void",
+          "logic": "Visits all declarations within the given AST. It sets up a default namespace and iterates through the AST's declarations, calling the Visit method on each."
+        },
+        {
+          "name": "Visit",
+          "parameters": [
+            "Declaration* decl"
+          ],
+          "return_type": "void",
+          "logic": "Private overload of Visit, dispatching to specific handlers based on the declaration type.  Not directly defined in header."
+        },
+        {
+          "name": "Visit",
+          "parameters": [
+            "NamespaceDeclaration* decl"
+          ],
+          "return_type": "void",
+          "logic": "Visits all declarations within a namespace declaration. It creates or retrieves the namespace using GetOrCreateNamespace and then iterates through the namespace's declarations, calling the Visit method on each."
+        },
+        {
+          "name": "Visit",
+          "parameters": [
+            "TypeDeclaration* decl"
+          ],
+          "return_type": "void",
+          "logic": "Looks up the type, triggering type computation and reporting errors even if the type is unused."
+        },
+        {
+          "name": "Visit",
+          "parameters": [
+            "StructDeclaration* decl"
+          ],
+          "return_type": "void",
+          "logic": "Looks up the type, triggering type computation."
+        },
+        {
+          "name": "CreateBuiltin",
+          "parameters": [
+            "BuiltinDeclaration* decl",
+            "std::string external_name",
+            "std::string readable_name",
+            "Signature signature",
+            "std::optional<std::string> use_counter_name",
+            "std::optional<Statement*> body"
+          ],
+          "return_type": "Builtin*",
+          "logic": "Creates a Builtin object from a BuiltinDeclaration, external name, readable name, signature, use counter name, and body."
+        },
+        {
+          "name": "Visit",
+          "parameters": [
+            "ExternalBuiltinDeclaration* decl"
+          ],
+          "return_type": "void",
+          "logic": "Visits an external builtin declaration."
+        },
+        {
+          "name": "Visit",
+          "parameters": [
+            "ExternalRuntimeDeclaration* decl"
+          ],
+          "return_type": "void",
+          "logic": "Visits an external runtime declaration."
+        },
+        {
+          "name": "Visit",
+          "parameters": [
+            "ExternalMacroDeclaration* decl"
+          ],
+          "return_type": "void",
+          "logic": "Visits an external macro declaration."
+        },
+        {
+          "name": "Visit",
+          "parameters": [
+            "TorqueBuiltinDeclaration* decl"
+          ],
+          "return_type": "void",
+          "logic": "Visits a Torque builtin declaration."
+        },
+        {
+          "name": "Visit",
+          "parameters": [
+            "TorqueMacroDeclaration* decl"
+          ],
+          "return_type": "void",
+          "logic": "Visits a Torque macro declaration."
+        },
+        {
+          "name": "Visit",
+          "parameters": [
+            "IntrinsicDeclaration* decl"
+          ],
+          "return_type": "void",
+          "logic": "Visits an intrinsic declaration."
+        },
+        {
+          "name": "Visit",
+          "parameters": [
+            "ConstDeclaration* decl"
+          ],
+          "return_type": "void",
+          "logic": "Visits a const declaration."
+        },
+        {
+          "name": "Visit",
+          "parameters": [
+            "GenericCallableDeclaration* decl"
+          ],
+          "return_type": "void",
+          "logic": "Visits a generic callable declaration.  Since predeclaration handles this, nothing specific is done here."
+        },
+        {
+          "name": "Visit",
+          "parameters": [
+            "GenericTypeDeclaration* decl"
+          ],
+          "return_type": "void",
+          "logic": "Visits a generic type declaration. Since predeclaration handles this, nothing specific is done here."
+        },
+        {
+          "name": "Visit",
+          "parameters": [
+            "SpecializationDeclaration* decl"
+          ],
+          "return_type": "void",
+          "logic": "Visits a specialization declaration."
+        },
+        {
+          "name": "Visit",
+          "parameters": [
+            "ExternConstDeclaration* decl"
+          ],
+          "return_type": "void",
+          "logic": "Visits an extern const declaration."
+        },
+        {
+          "name": "Visit",
+          "parameters": [
+            "CppIncludeDeclaration* decl"
+          ],
+          "return_type": "void",
+          "logic": "Visits a C++ include declaration."
+        },
+        {
+          "name": "MakeSpecializedSignature",
+          "parameters": [
+            "const SpecializationKey<GenericCallable>& key"
+          ],
+          "return_type": "Signature",
+          "logic": "Makes a specialized signature based on a specialization key."
+        },
+        {
+          "name": "SpecializeImplicit",
+          "parameters": [
+            "const SpecializationKey<GenericCallable>& key"
+          ],
+          "return_type": "Callable*",
+          "logic": "Specializes a generic callable implicitly based on a specialization key."
+        },
+        {
+          "name": "Specialize",
+          "parameters": [
+            "const SpecializationKey<GenericCallable>& key",
+            "CallableDeclaration* declaration",
+            "std::optional<const SpecializationDeclaration*> explicit_specialization",
+            "std::optional<Statement*> body",
+            "SourcePosition position"
+          ],
+          "return_type": "Callable*",
+          "logic": "Specializes a generic callable based on a specialization key, callable declaration, explicit specialization, body, and position."
+        },
+        {
+          "name": "DeclareSpecializedTypes",
+          "parameters": [
+            "const SpecializationKey<GenericCallable>& key"
+          ],
+          "return_type": "void",
+          "logic": "Declares specialized types based on a specialization key."
+        }
+      ]
+    }
+  ],
+  "functions": [
+    {
+      "name": "GetOrCreateNamespace",
+      "parameters": [
+        "const std::string& name"
+      ],
+      "return_type": "Namespace*",
+      "logic": "Gets or creates a namespace with the given name. It's likely a wrapper around a global namespace registry."
+    }
+  ]
+}

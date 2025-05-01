@@ -1,0 +1,59 @@
+{
+  "file_path": "/home/kathirks_gc/v8_go/codebase/src/compiler/backend/arm/unwinding-info-writer-arm.cc",
+  "imports": [
+    "src/compiler/backend/arm/unwinding-info-writer-arm.h",
+    "src/compiler/backend/instruction.h"
+  ],
+  "classes": [],
+  "functions": [
+    {
+      "name": "UnwindingInfoWriter::BeginInstructionBlock",
+      "parameters": [
+        "int pc_offset",
+        "const InstructionBlock* block"
+      ],
+      "return_type": "void",
+      "logic": "This function begins processing an instruction block. It checks if the unwinding information writer is enabled and then compares the current state of the link register (saved_lr_) with the initial state of the block. If they differ, it advances the eh_frame writer and records the necessary information about the link register (whether it's saved on the stack or follows the initial rule). It then updates the saved_lr_ to match the block's initial state."
+    },
+    {
+      "name": "UnwindingInfoWriter::EndInstructionBlock",
+      "parameters": [
+        "const InstructionBlock* block"
+      ],
+      "return_type": "void",
+      "logic": "This function ends processing an instruction block. It iterates through the block's successors and checks if there's already an initial state recorded for each successor. If a state exists, it verifies that the saved_lr_ value is consistent. If no state exists, it creates a new BlockInitialState for the successor with the current saved_lr_ value."
+    },
+    {
+      "name": "UnwindingInfoWriter::MarkFrameConstructed",
+      "parameters": [
+        "int at_pc"
+      ],
+      "return_type": "void",
+      "logic": "This function is called when a stack frame is constructed. It advances the eh_frame writer to the given program counter offset and records that the link register (lr) has been saved to the stack. It also updates the saved_lr_ flag to true."
+    },
+    {
+      "name": "UnwindingInfoWriter::MarkFrameDeconstructed",
+      "parameters": [
+        "int at_pc"
+      ],
+      "return_type": "void",
+      "logic": "This function is called when a stack frame is deconstructed. It advances the eh_frame writer to the given program counter offset and records that the link register (lr) now follows its initial rule (typically meaning it's been restored). It also updates the saved_lr_ flag to false."
+    },
+    {
+      "name": "UnwindingInfoWriter::MarkLinkRegisterOnTopOfStack",
+      "parameters": [
+        "int pc_offset"
+      ],
+      "return_type": "void",
+      "logic": "This function records that the link register is currently on the top of the stack.  It advances the eh_frame writer, sets the base address register to the stack pointer (sp) with an offset of 0, and then records that the link register is saved to the stack at offset 0 from the base address register."
+    },
+    {
+      "name": "UnwindingInfoWriter::MarkPopLinkRegisterFromTopOfStack",
+      "parameters": [
+        "int pc_offset"
+      ],
+      "return_type": "void",
+      "logic": "This function records that the link register is popped from the top of the stack. It advances the eh_frame writer, sets the base address register to the frame pointer (fp) with an offset of 0, and records that the link register follows the initial rule, indicating it has been restored."
+    }
+  ]
+}

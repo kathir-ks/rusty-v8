@@ -1,0 +1,69 @@
+{
+  "file_path": "/home/kathirks_gc/v8_go/codebase/src/wasm/well-known-imports.h",
+  "imports": [
+    "<atomic>",
+    "<memory>",
+    "src/base/vector.h"
+  ],
+  "classes": [
+    {
+      "name": "WellKnownImportsList",
+      "properties": [
+        "statuses_",
+        "size_"
+      ],
+      "methods": [
+        {
+          "name": "Initialize",
+          "parameters": [
+            "int size"
+          ],
+          "return_type": "void",
+          "logic": "Regular initialization. Allocates size-dependent internal data. Initializes the statuses_ array with kUninstantiated."
+        },
+        {
+          "name": "Initialize",
+          "parameters": [
+            "base::Vector<const WellKnownImport> entries"
+          ],
+          "return_type": "void",
+          "logic": "Intended for deserialization.  Initializes the statuses_ array based on the given entries. Does not check consistency with code."
+        },
+        {
+          "name": "get",
+          "parameters": [
+            "int index"
+          ],
+          "return_type": "WellKnownImport",
+          "logic": "Retrieves the WellKnownImport status at the given index from the statuses_ array."
+        },
+        {
+          "name": "Update",
+          "parameters": [
+            "base::Vector<WellKnownImport> entries"
+          ],
+          "return_type": "UpdateResult",
+          "logic": "Updates the statuses_ array based on the provided entries.  Returns kFoundIncompatibility if an incompatibility is found during the update, otherwise returns kOK."
+        }
+      ]
+    }
+  ],
+  "functions": [
+    {
+      "name": "WellKnownImportName",
+      "parameters": [
+        "WellKnownImport wki"
+      ],
+      "return_type": "const char*",
+      "logic": "Returns a string representation of the WellKnownImport for debugging/tracing purposes."
+    },
+    {
+      "name": "IsCompileTimeImport",
+      "parameters": [
+        "WellKnownImport wki"
+      ],
+      "return_type": "bool",
+      "logic": "Checks if the given WellKnownImport is a compile-time import, i.e., falls within the range defined by kFirstCompileTimeImport and kLastCompileTimeImport."
+    }
+  ]
+}

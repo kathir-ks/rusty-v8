@@ -1,0 +1,112 @@
+{
+  "file_path": "/home/kathirks_gc/v8_go/codebase/src/maglev/maglev-compilation-unit.cc",
+  "imports": [
+    "src/maglev/maglev-compilation-unit.h",
+    "src/compiler/heap-refs.h",
+    "src/compiler/js-heap-broker.h",
+    "src/maglev/maglev-compilation-info.h",
+    "src/maglev/maglev-graph-labeller.h",
+    "src/objects/js-function-inl.h"
+  ],
+  "classes": [
+    {
+      "name": "MaglevCompilationUnit",
+      "properties": [
+        "info_",
+        "caller_",
+        "shared_function_info_",
+        "bytecode_",
+        "feedback_cell_",
+        "register_count_",
+        "parameter_count_",
+        "max_arguments_",
+        "inlining_depth_"
+      ],
+      "methods": [
+        {
+          "name": "MaglevCompilationUnit",
+          "parameters": [
+            "MaglevCompilationInfo* info",
+            "DirectHandle<JSFunction> function"
+          ],
+          "return_type": "MaglevCompilationUnit",
+          "logic": "Constructor for top-level compilation unit from a JSFunction. It initializes the unit with information from the function and its shared function info and feedback cell."
+        },
+        {
+          "name": "MaglevCompilationUnit",
+          "parameters": [
+            "MaglevCompilationInfo* info",
+            "const MaglevCompilationUnit* caller",
+            "compiler::SharedFunctionInfoRef shared_function_info",
+            "compiler::FeedbackCellRef feedback_cell"
+          ],
+          "return_type": "MaglevCompilationUnit",
+          "logic": "Constructor for inlined compilation unit. It initializes the unit with shared function info, feedback cell, and bytecode. Also calculates inlining depth."
+        },
+        {
+          "name": "MaglevCompilationUnit",
+          "parameters": [
+            "MaglevCompilationInfo* info",
+            "const MaglevCompilationUnit* caller",
+            "int register_count",
+            "uint16_t parameter_count",
+            "uint16_t max_arguments"
+          ],
+          "return_type": "MaglevCompilationUnit",
+          "logic": "Constructor for compilation unit with specific register, parameter, and argument counts. Calculates inlining depth."
+        },
+        {
+          "name": "broker",
+          "parameters": [],
+          "return_type": "compiler::JSHeapBroker*",
+          "logic": "Returns the JSHeapBroker associated with this compilation unit."
+        },
+        {
+          "name": "zone",
+          "parameters": [],
+          "return_type": "Zone*",
+          "logic": "Returns the Zone associated with this compilation unit."
+        },
+        {
+          "name": "has_graph_labeller",
+          "parameters": [],
+          "return_type": "bool",
+          "logic": "Checks if the compilation info has a graph labeller."
+        },
+        {
+          "name": "graph_labeller",
+          "parameters": [],
+          "return_type": "MaglevGraphLabeller*",
+          "logic": "Returns the graph labeller associated with this compilation unit. Asserts that it exists."
+        },
+        {
+          "name": "RegisterNodeInGraphLabeller",
+          "parameters": [
+            "const Node* node"
+          ],
+          "return_type": "void",
+          "logic": "Registers a node in the graph labeller, if one exists."
+        },
+        {
+          "name": "GetTopLevelCompilationUnit",
+          "parameters": [],
+          "return_type": "const MaglevCompilationUnit*",
+          "logic": "Traverses the chain of inlined compilation units to find the top-level unit."
+        },
+        {
+          "name": "is_osr",
+          "parameters": [],
+          "return_type": "bool",
+          "logic": "Checks if this compilation unit is an on-stack replacement (OSR) compilation."
+        },
+        {
+          "name": "osr_offset",
+          "parameters": [],
+          "return_type": "BytecodeOffset",
+          "logic": "Returns the bytecode offset for OSR if this unit is an OSR compilation, otherwise returns BytecodeOffset::None()."
+        }
+      ]
+    }
+  ],
+  "functions": []
+}

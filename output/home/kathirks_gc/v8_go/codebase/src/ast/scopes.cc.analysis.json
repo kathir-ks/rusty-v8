@@ -1,0 +1,781 @@
+{
+  "file_path": "/home/kathirks_gc/v8_go/codebase/src/ast/scopes.cc",
+  "imports": [
+    "src/ast/scopes.h",
+    "<optional>",
+    "<set>",
+    "src/ast/ast.h",
+    "src/base/logging.h",
+    "src/builtins/accessors.h",
+    "src/common/message-template.h",
+    "src/heap/local-factory-inl.h",
+    "src/logging/runtime-call-stats-scope.h",
+    "src/objects/scope-info.h",
+    "src/objects/string-inl.h",
+    "src/objects/string-set.h",
+    "src/parsing/parse-info.h",
+    "src/parsing/parser.h",
+    "src/parsing/preparse-data.h",
+    "src/zone/zone.h"
+  ],
+  "classes": [
+    {
+      "name": "VariableMap",
+      "properties": [],
+      "methods": [
+        {
+          "name": "VariableMap",
+          "parameters": [
+            "Zone* zone"
+          ],
+          "return_type": "constructor",
+          "logic": "Constructor that initializes the ZoneHashMap with a specified zone and initial size."
+        },
+        {
+          "name": "VariableMap",
+          "parameters": [
+            "const VariableMap& other, Zone* zone"
+          ],
+          "return_type": "constructor",
+          "logic": "Copy constructor that creates a new VariableMap as a copy of an existing one within a specified zone."
+        },
+        {
+          "name": "Declare",
+          "parameters": [
+            "Zone* zone",
+            "Scope* scope",
+            "const AstRawString* name",
+            "VariableMode mode",
+            "VariableKind kind",
+            "InitializationFlag initialization_flag",
+            "MaybeAssignedFlag maybe_assigned_flag",
+            "IsStaticFlag is_static_flag",
+            "bool* was_added"
+          ],
+          "return_type": "Variable*",
+          "logic": "Declares a new variable in the map. It inserts the variable into the map if it doesn't already exist, and returns a pointer to the variable."
+        },
+        {
+          "name": "Remove",
+          "parameters": [
+            "Variable* var"
+          ],
+          "return_type": "void",
+          "logic": "Removes a variable from the map."
+        },
+        {
+          "name": "Add",
+          "parameters": [
+            "Variable* var"
+          ],
+          "return_type": "void",
+          "logic": "Adds a variable to the map."
+        },
+        {
+          "name": "Lookup",
+          "parameters": [
+            "const AstRawString* name"
+          ],
+          "return_type": "Variable*",
+          "logic": "Looks up a variable in the map by name and returns a pointer to it, or nullptr if not found."
+        }
+      ]
+    },
+    {
+      "name": "Scope",
+      "properties": [
+        "outer_scope_",
+        "variables_",
+        "scope_type_"
+      ],
+      "methods": [
+        {
+          "name": "Scope",
+          "parameters": [
+            "Zone* zone",
+            "ScopeType scope_type"
+          ],
+          "return_type": "constructor",
+          "logic": "Constructor for creating a script scope."
+        },
+        {
+          "name": "Scope",
+          "parameters": [
+            "Zone* zone",
+            "Scope* outer_scope",
+            "ScopeType scope_type"
+          ],
+          "return_type": "constructor",
+          "logic": "Constructor for creating a non-script scope with an outer scope."
+        },
+        {
+          "name": "DeclareHomeObjectVariable",
+          "parameters": [
+            "AstValueFactory* ast_value_factory"
+          ],
+          "return_type": "Variable*",
+          "logic": "Declares a '.home_object' variable, often used for object literals within class scopes."
+        },
+        {
+          "name": "DeclareStaticHomeObjectVariable",
+          "parameters": [
+            "AstValueFactory* ast_value_factory"
+          ],
+          "return_type": "Variable*",
+          "logic": "Declares a '.static_home_object' variable, similar to home_object but for static members."
+        },
+        {
+          "name": "DeserializeScopeChain",
+          "parameters": [
+            "IsolateT* isolate",
+            "Zone* zone",
+            "Tagged<ScopeInfo> scope_info",
+            "DeclarationScope* script_scope",
+            "AstValueFactory* ast_value_factory",
+            "DeserializationMode deserialization_mode",
+            "ParseInfo* parse_info"
+          ],
+          "return_type": "Scope*",
+          "logic": "Reconstructs a scope chain from serialized ScopeInfo objects, during deserialization."
+        },
+        {
+          "name": "AsDeclarationScope",
+          "parameters": [],
+          "return_type": "DeclarationScope*",
+          "logic": "Casts the Scope to a DeclarationScope, asserting that the Scope is indeed a DeclarationScope."
+        },
+        {
+          "name": "AsModuleScope",
+          "parameters": [],
+          "return_type": "ModuleScope*",
+          "logic": "Casts the Scope to a ModuleScope, asserting that the Scope is indeed a ModuleScope."
+        },
+        {
+          "name": "AsClassScope",
+          "parameters": [],
+          "return_type": "ClassScope*",
+          "logic": "Casts the Scope to a ClassScope, asserting that the Scope is indeed a ClassScope."
+        },
+        {
+          "name": "FinalizeBlockScope",
+          "parameters": [],
+          "return_type": "Scope*",
+          "logic": "Finalizes a block scope, potentially removing it if it contains no variables or declarations."
+        },
+        {
+          "name": "Snapshot::Reparent",
+          "parameters": [
+            "DeclarationScope* new_parent"
+          ],
+          "return_type": "void",
+          "logic": "Reparents the inner scopes of a snapshot to a new parent declaration scope."
+        },
+        {
+          "name": "LookupInScopeInfo",
+          "parameters": [
+            "const AstRawString* name",
+            "Scope* cache"
+          ],
+          "return_type": "Variable*",
+          "logic": "Looks up a variable based on information from a ScopeInfo object, which contains serialized scope data."
+        },
+        {
+          "name": "HasReceiverToDeserialize",
+          "parameters": [],
+          "return_type": "bool",
+          "logic": "Checks if a receiver needs to be deserialized for this scope."
+        },
+        {
+          "name": "HasThisReference",
+          "parameters": [],
+          "return_type": "bool",
+          "logic": "Checks if the scope or any inner scopes have a reference to 'this'."
+        },
+        {
+          "name": "AllowsLazyParsingWithoutUnresolvedVariables",
+          "parameters": [
+            "const Scope* outer"
+          ],
+          "return_type": "bool",
+          "logic": "Determines whether lazy parsing can be used without needing to resolve unresolved variables."
+        },
+        {
+          "name": "ContextChainLength",
+          "parameters": [
+            "Scope* scope"
+          ],
+          "return_type": "int",
+          "logic": "Calculates the length of the context chain from the current scope to a given scope."
+        },
+        {
+          "name": "ContextChainLengthUntilOutermostSloppyEval",
+          "parameters": [],
+          "return_type": "int",
+          "logic": "Calculates the length of the context chain until it reaches the outermost sloppy eval scope."
+        },
+        {
+          "name": "GetDeclarationScope",
+          "parameters": [],
+          "return_type": "DeclarationScope*",
+          "logic": "Retrieves the nearest enclosing DeclarationScope."
+        },
+        {
+          "name": "GetNonEvalDeclarationScope",
+          "parameters": [],
+          "return_type": "DeclarationScope*",
+          "logic": "Retrieves the nearest enclosing DeclarationScope that is not an EvalScope."
+        },
+        {
+          "name": "GetClosureScope",
+          "parameters": [],
+          "return_type": "DeclarationScope*",
+          "logic": "Retrieves the nearest enclosing ClosureScope."
+        },
+        {
+          "name": "NeedsScopeInfo",
+          "parameters": [],
+          "return_type": "bool",
+          "logic": "Determines whether this scope needs a ScopeInfo object for serialization."
+        },
+        {
+          "name": "ShouldBanArguments",
+          "parameters": [],
+          "return_type": "bool",
+          "logic": "Determines whether the 'arguments' object should be banned in this scope."
+        },
+        {
+          "name": "GetReceiverScope",
+          "parameters": [],
+          "return_type": "DeclarationScope*",
+          "logic": "Retrieves the nearest enclosing scope that has a 'this' declaration."
+        },
+        {
+          "name": "GetConstructorScope",
+          "parameters": [],
+          "return_type": "DeclarationScope*",
+          "logic": "Retrieves the nearest enclosing constructor scope, if any."
+        },
+        {
+          "name": "GetHomeObjectScope",
+          "parameters": [],
+          "return_type": "Scope*",
+          "logic": "Retrieves the scope that represents the home object."
+        },
+        {
+          "name": "GetScriptScope",
+          "parameters": [],
+          "return_type": "DeclarationScope*",
+          "logic": "Retrieves the nearest enclosing script scope."
+        },
+        {
+          "name": "GetOuterScopeWithContext",
+          "parameters": [],
+          "return_type": "Scope*",
+          "logic": "Retrieves the nearest outer scope that needs a context."
+        },
+        {
+          "name": "ForEach",
+          "parameters": [
+            "FunctionType callback"
+          ],
+          "return_type": "void",
+          "logic": "Iterates through the scope tree in a depth-first manner, applying a callback function to each scope."
+        },
+        {
+          "name": "IsConstructorScope",
+          "parameters": [],
+          "return_type": "bool",
+          "logic": "Determines if the scope is the scope of a constructor."
+        },
+        {
+          "name": "IsOuterScopeOf",
+          "parameters": [
+            "Scope* other"
+          ],
+          "return_type": "bool",
+          "logic": "Checks if the current scope is an outer scope of another scope."
+        },
+        {
+          "name": "AnalyzePartially",
+          "parameters": [
+            "DeclarationScope* max_outer_scope",
+            "AstNodeFactory* ast_node_factory",
+            "UnresolvedList* new_unresolved_list",
+            "bool maybe_in_arrowhead"
+          ],
+          "return_type": "void",
+          "logic": "Performs a partial analysis of the scope, resolving variables and handling unresolved references."
+        },
+        {
+          "name": "IsSkippableFunctionScope",
+          "parameters": [],
+          "return_type": "bool",
+          "logic": "Determines whether the current function scope can be skipped during parsing."
+        },
+        {
+          "name": "SavePreparseData",
+          "parameters": [
+            "Parser* parser"
+          ],
+          "return_type": "void",
+          "logic": "Saves preparse data for all skippable scopes within the current scope tree."
+        },
+        {
+          "name": "RewriteReplGlobalVariables",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Rewrites the location of global variables in the REPL scope."
+        },
+        {
+          "name": "UniqueIdInScript",
+          "parameters": [],
+          "return_type": "int",
+          "logic": "Calculates a unique ID for the scope within the script."
+        },
+        {
+          "name": "AllocateVariablesRecursively",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Recursively allocates variables within the scope and its inner scopes."
+        },
+        {
+          "name": "AllocateScopeInfosRecursively",
+          "parameters": [
+            "IsolateT* isolate",
+            "MaybeHandle<ScopeInfo> outer_scope",
+            "std::unordered_map<int, Handle<ScopeInfo>>& scope_infos_to_reuse"
+          ],
+          "return_type": "void",
+          "logic": "Allocates ScopeInfo objects for the scope and its inner scopes recursively."
+        },
+        {
+          "name": "DeclareLocal",
+          "parameters": [
+            "const AstRawString* name",
+            "VariableMode mode",
+            "VariableKind kind",
+            "bool* was_added",
+            "InitializationFlag init_flag"
+          ],
+          "return_type": "Variable*",
+          "logic": "Declares a local variable in the scope."
+        },
+        {
+          "name": "DeclareVariable",
+          "parameters": [
+            "Declaration* declaration",
+            "const AstRawString* name",
+            "int pos",
+            "VariableMode mode",
+            "VariableKind kind",
+            "InitializationFlag init",
+            "bool* was_added",
+            "bool* sloppy_mode_block_scope_function_redefinition",
+            "bool* ok"
+          ],
+          "return_type": "Variable*",
+          "logic": "Declares a variable within a scope, handling redeclarations and conflicts."
+        },
+        {
+          "name": "DeclareVariableName",
+          "parameters": [
+            "const AstRawString* name",
+            "VariableMode mode",
+            "bool* was_added",
+            "VariableKind kind"
+          ],
+          "return_type": "Variable*",
+          "logic": "Declares a variable name during preparsing, handling variable redeclarations and errors."
+        },
+        {
+          "name": "DeclareCatchVariableName",
+          "parameters": [
+            "const AstRawString* name"
+          ],
+          "return_type": "Variable*",
+          "logic": "Declares the catch variable name within a catch scope."
+        },
+        {
+          "name": "AddUnresolved",
+          "parameters": [
+            "VariableProxy* proxy"
+          ],
+          "return_type": "void",
+          "logic": "Adds an unresolved variable proxy to the scope's unresolved list."
+        },
+        {
+          "name": "DeclareDynamicGlobal",
+          "parameters": [
+            "const AstRawString* name",
+            "VariableKind kind",
+            "Scope* cache"
+          ],
+          "return_type": "Variable*",
+          "logic": "Declares a dynamically-typed global variable in a script scope."
+        },
+        {
+          "name": "DeleteUnresolved",
+          "parameters": [
+            "VariableProxy* var"
+          ],
+          "return_type": "void",
+          "logic": "Marks a variable proxy as removed from the list of unresolved variables."
+        },
+        {
+          "name": "NewTemporary",
+          "parameters": [
+            "const AstRawString* name"
+          ],
+          "return_type": "Variable*",
+          "logic": "Creates a new temporary variable within a closure scope."
+        },
+        {
+          "name": "ResolveVariable",
+          "parameters": [
+            "VariableProxy* proxy"
+          ],
+          "return_type": "void",
+          "logic": "Resolves a variable proxy by finding and binding it to a variable."
+        },
+        {
+          "name": "ResolveVariablesRecursively",
+          "parameters": [
+            "Scope* end"
+          ],
+          "return_type": "bool",
+          "logic": "Recursively resolves unresolved variables in the scope and its inner scopes."
+        },
+        {
+          "name": "MustAllocate",
+          "parameters": [
+            "Variable* var"
+          ],
+          "return_type": "bool",
+          "logic": "Determines if the given variable needs to be allocated."
+        },
+        {
+          "name": "MustAllocateInContext",
+          "parameters": [
+            "Variable* var"
+          ],
+          "return_type": "bool",
+          "logic": "Determines if a variable needs to be allocated in the context."
+        },
+        {
+          "name": "AllocateStackSlot",
+          "parameters": [
+            "Variable* var"
+          ],
+          "return_type": "void",
+          "logic": "Allocates a stack slot for a variable."
+        },
+        {
+          "name": "AllocateHeapSlot",
+          "parameters": [
+            "Variable* var"
+          ],
+          "return_type": "void",
+          "logic": "Allocates a heap slot for a variable."
+        }
+      ]
+    },
+    {
+      "name": "DeclarationScope",
+      "properties": [],
+      "methods": [
+        {
+          "name": "DeclarationScope",
+          "parameters": [
+            "Zone* zone",
+            "AstValueFactory* ast_value_factory",
+            "REPLMode repl_mode"
+          ],
+          "return_type": "constructor",
+          "logic": "Constructor for creating a script scope or a REPL mode scope."
+        },
+        {
+          "name": "DeclarationScope",
+          "parameters": [
+            "Zone* zone",
+            "Scope* outer_scope",
+            "ScopeType scope_type",
+            "FunctionKind function_kind"
+          ],
+          "return_type": "constructor",
+          "logic": "Constructor for creating a DeclarationScope with a specified scope type and function kind."
+        },
+        {
+          "name": "DeclareSloppyBlockFunction",
+          "parameters": [
+            "SloppyBlockFunctionStatement* sloppy_block_function"
+          ],
+          "return_type": "void",
+          "logic": "Adds a sloppy block function to the list of sloppy block functions."
+        },
+        {
+          "name": "HoistSloppyBlockFunctions",
+          "parameters": [
+            "AstNodeFactory* factory"
+          ],
+          "return_type": "void",
+          "logic": "Hoists function declarations in sloppy blocks to the top of the scope."
+        },
+        {
+          "name": "TakeUnresolvedReferencesFromParent",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Takes unresolved references from the parent scope during class initialization."
+        },
+        {
+          "name": "Analyze",
+          "parameters": [
+            "ParseInfo* info"
+          ],
+          "return_type": "bool",
+          "logic": "Analyzes the scope, including hoisting sloppy block functions, allocating variables, and rewriting REPL global variables."
+        },
+        {
+          "name": "DeclareThis",
+          "parameters": [
+            "AstValueFactory* ast_value_factory"
+          ],
+          "return_type": "void",
+          "logic": "Declares the 'this' variable in the scope."
+        },
+        {
+          "name": "DeclareArguments",
+          "parameters": [
+            "AstValueFactory* ast_value_factory"
+          ],
+          "return_type": "void",
+          "logic": "Declares the 'arguments' variable in the scope, if it doesn't shadow a lexical declaration."
+        },
+        {
+          "name": "DeclareDefaultFunctionVariables",
+          "parameters": [
+            "AstValueFactory* ast_value_factory"
+          ],
+          "return_type": "void",
+          "logic": "Declares default function variables like 'this' and 'new.target'."
+        },
+        {
+          "name": "DeclareFunctionVar",
+          "parameters": [
+            "const AstRawString* name",
+            "Scope* cache"
+          ],
+          "return_type": "Variable*",
+          "logic": "Declares a function variable."
+        },
+        {
+          "name": "DeclareGeneratorObjectVar",
+          "parameters": [
+            "const AstRawString* name"
+          ],
+          "return_type": "Variable*",
+          "logic": "Declares a generator object variable."
+        },
+        {
+          "name": "AddLocal",
+          "parameters": [
+            "Variable* var"
+          ],
+          "return_type": "void",
+          "logic": "Adds a local variable to the scope."
+        },
+        {
+          "name": "DeclareParameter",
+          "parameters": [
+            "const AstRawString* name",
+            "VariableMode mode",
+            "bool is_optional",
+            "bool is_rest",
+            "AstValueFactory* ast_value_factory",
+            "int position"
+          ],
+          "return_type": "Variable*",
+          "logic": "Declares a parameter in a function scope."
+        },
+        {
+          "name": "RecordParameter",
+          "parameters": [
+            "bool is_rest"
+          ],
+          "return_type": "void",
+          "logic": "Records a parameter during lazy parsing."
+        },
+        {
+          "name": "DeserializeReceiver",
+          "parameters": [
+            "AstValueFactory* ast_value_factory"
+          ],
+          "return_type": "void",
+          "logic": "Deserialize the receiver variable."
+        },
+        {
+          "name": "CheckConflictingVarDeclarations",
+          "parameters": [
+            "bool* allowed_catch_binding_var_redeclaration"
+          ],
+          "return_type": "Declaration*",
+          "logic": "Checks if there are conflicting var declarations. Returns declaration that conflicts."
+        },
+        {
+          "name": "AllowsLazyCompilation",
+          "parameters": [],
+          "return_type": "bool",
+          "logic": "Determines if lazy compilation is permitted for the function scope."
+        },
+        {
+          "name": "SavePreparseDataForDeclarationScope",
+          "parameters": [
+            "Parser* parser"
+          ],
+          "return_type": "void",
+          "logic": "Save the preparse data for declaration scope."
+        },
+        {
+          "name": "ResetAfterPreparsing",
+          "parameters": [
+            "AstValueFactory* ast_value_factory",
+            "bool aborted"
+          ],
+          "return_type": "void",
+          "logic": "Reset the scope data after preparsing."
+        },
+        {
+          "name": "AllocateParameterLocals",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Allocate the parameter for the local variable."
+        },
+        {
+          "name": "AllocateReceiver",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Allocate the receiver for the local variable."
+        },
+        {
+          "name": "AllocateLocals",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Allocate locals for the variables."
+        }
+      ]
+    },
+    {
+      "name": "ModuleScope",
+      "properties": [],
+      "methods": [
+        {
+          "name": "ModuleScope",
+          "parameters": [
+            "DeclarationScope* script_scope",
+            "AstValueFactory* avfactory"
+          ],
+          "return_type": "constructor",
+          "logic": "Constructs a module scope with given script scope and ast factory."
+        },
+        {
+          "name": "ModuleScope",
+          "parameters": [
+            "Handle<ScopeInfo> scope_info",
+            "AstValueFactory* avfactory"
+          ],
+          "return_type": "constructor",
+          "logic": "Constructs a module scope from given scope information and ast factory."
+        },
+        {
+          "name": "AllocateModuleVariables",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Allocate variables for Module Scope."
+        }
+      ]
+    },
+    {
+      "name": "ClassScope",
+      "properties": [],
+      "methods": [
+        {
+          "name": "ClassScope",
+          "parameters": [
+            "Zone* zone",
+            "Scope* outer_scope",
+            "bool is_anonymous"
+          ],
+          "return_type": "constructor",
+          "logic": "Constructs a class scope with a given zone, outer scope, and whether the class is anonymous."
+        },
+        {
+          "name": "ClassScope",
+          "parameters": [
+            "IsolateT* isolate",
+            "Zone* zone",
+            "AstValueFactory* ast_value_factory",
+            "Handle<ScopeInfo> scope_info"
+          ],
+          "return_type": "constructor",
+          "logic": "Constructs a class scope from a serialized ScopeInfo object, during deserialization."
+        }
+      ]
+    }
+  ],
+  "functions": [
+    {
+      "name": "SetNeedsHoleCheck",
+      "parameters": [
+        "Variable* var",
+        "VariableProxy* proxy",
+        "Variable::ForceHoleInitializationFlag flag"
+      ],
+      "return_type": "void",
+      "logic": "Sets the hole check flag for the variable proxy and variable."
+    },
+    {
+      "name": "UpdateNeedsHoleCheck",
+      "parameters": [
+        "Variable* var",
+        "VariableProxy* proxy",
+        "Scope* scope"
+      ],
+      "return_type": "void",
+      "logic": "Updates whether a hole check is necessary for the given variable and proxy, taking into consideration context and scope dynamics."
+    },
+    {
+      "name": "NonLocal",
+      "parameters": [
+        "const AstRawString* name",
+        "VariableMode mode"
+      ],
+      "return_type": "Variable*",
+      "logic": "Declares a new non-local variable in the given scope."
+    },
+    {
+      "name": "ForceDynamicLookup",
+      "parameters": [
+        "VariableProxy* proxy"
+      ],
+      "return_type": "void",
+      "logic": "Forces the variable proxy to be dynamically resolved by looking it up from the global object."
+    },
+    {
+      "name": "ResolvePreparsedVariable",
+      "parameters": [
+        "VariableProxy* proxy",
+        "Scope* scope",
+        "Scope* end"
+      ],
+      "return_type": "void",
+      "logic": "Resolve Preparsed Variable by context allocation."
+    },
+    {
+      "name": "AllocateNonParameterLocal",
+      "parameters": [
+        "Variable* var"
+      ],
+      "return_type": "void",
+      "logic": "Allocate Non Parameter Local Variable."
+    }
+  ]
+}

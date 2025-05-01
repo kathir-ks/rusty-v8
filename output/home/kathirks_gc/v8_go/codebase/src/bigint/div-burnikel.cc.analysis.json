@@ -1,0 +1,96 @@
+{
+  "file_path": "/home/kathirks_gc/v8_go/codebase/src/bigint/div-burnikel.cc",
+  "imports": [
+    "<string.h>",
+    "src/bigint/bigint-internal.h",
+    "src/bigint/digit-arithmetic.h",
+    "src/bigint/div-helpers.h",
+    "src/bigint/util.h",
+    "src/bigint/vector-arithmetic.h"
+  ],
+  "classes": [
+    {
+      "name": "BZ",
+      "properties": [
+        "proc_",
+        "scratch_mem_"
+      ],
+      "methods": [
+        {
+          "name": "BZ",
+          "parameters": [
+            "ProcessorImpl* proc",
+            "int scratch_space"
+          ],
+          "return_type": "void",
+          "logic": "Constructor for the BZ class. Initializes the processor and allocates scratch memory if the requested scratch space is above a threshold."
+        },
+        {
+          "name": "DivideBasecase",
+          "parameters": [
+            "RWDigits Q",
+            "RWDigits R",
+            "Digits A",
+            "Digits B"
+          ],
+          "return_type": "void",
+          "logic": "Handles the base case division when the divisor is small or the recursion depth exceeds a limit. Uses either single-digit or schoolbook division."
+        },
+        {
+          "name": "D3n2n",
+          "parameters": [
+            "RWDigits Q",
+            "RWDigits R",
+            "Digits A1A2",
+            "Digits A3",
+            "Digits B"
+          ],
+          "return_type": "void",
+          "logic": "Implements Algorithm 2 from Burnikel-Ziegler paper. Divides a 3n-digit number by a 2n-digit number using recursion."
+        },
+        {
+          "name": "D2n1n",
+          "parameters": [
+            "RWDigits Q",
+            "RWDigits R",
+            "Digits A",
+            "Digits B"
+          ],
+          "return_type": "void",
+          "logic": "Implements Algorithm 1 from Burnikel-Ziegler paper. Divides a 2n-digit number by an n-digit number using recursion."
+        }
+      ]
+    }
+  ],
+  "functions": [
+    {
+      "name": "SpecialCompare",
+      "parameters": [
+        "digit_t a_high",
+        "Digits A",
+        "Digits B"
+      ],
+      "return_type": "int",
+      "logic": "Compares [a_high, A] with B. Returns -1 if [a_high, A] < B, 0 if equal, 1 if greater."
+    },
+    {
+      "name": "SetOnes",
+      "parameters": [
+        "RWDigits X"
+      ],
+      "return_type": "void",
+      "logic": "Sets all digits in the RWDigits X to ones (0xFF)."
+    },
+    {
+      "name": "ProcessorImpl::DivideBurnikelZiegler",
+      "parameters": [
+        "RWDigits Q",
+        "RWDigits R",
+        "Digits A",
+        "Digits B"
+      ],
+      "return_type": "void",
+      "logic": "Implements Algorithm 3 from Burnikel-Ziegler paper. Divides A by B (no size restrictions) using the recursive D2n1n and D3n2n algorithms."
+    }
+  ]
+}

@@ -1,0 +1,418 @@
+{
+  "file_path": "/home/kathirks_gc/v8_go/codebase/src/compiler/persistent-map.h",
+  "imports": [
+    "<array>",
+    "<tuple>",
+    "src/base/hashing.h",
+    "src/zone/zone-containers.h"
+  ],
+  "classes": [
+    {
+      "name": "may_be_unequal<T>",
+      "properties": [],
+      "methods": [
+        {
+          "name": "operator()",
+          "parameters": [
+            "const T& a",
+            "const T& b"
+          ],
+          "return_type": "bool",
+          "logic": "A fast and possibly incomplete equality check. Returns false if the values are certainly not equal, otherwise we don't know."
+        }
+      ]
+    },
+    {
+      "name": "PersistentMap<Key, Value, Hasher>",
+      "properties": [
+        "tree_",
+        "def_value_",
+        "zone_"
+      ],
+      "methods": [
+        {
+          "name": "last_depth",
+          "parameters": [],
+          "return_type": "size_t",
+          "logic": "Returns the depth of the last added element, which is a cheap estimate for the size of the hash tree."
+        },
+        {
+          "name": "Get",
+          "parameters": [
+            "const Key& key"
+          ],
+          "return_type": "const Value&",
+          "logic": "Retrieves the value associated with the given key from the map. Returns the default value if the key is not found."
+        },
+        {
+          "name": "Set",
+          "parameters": [
+            "Key key",
+            "Value value"
+          ],
+          "return_type": "void",
+          "logic": "Adds or overwrites an existing key-value pair in the map."
+        },
+        {
+          "name": "Modify",
+          "parameters": [
+            "Key key",
+            "F f"
+          ],
+          "return_type": "void",
+          "logic": "Modifies an entry in-place using a functional `F` that takes a `Value*` to modify."
+        },
+        {
+          "name": "operator==",
+          "parameters": [
+            "const PersistentMap& other"
+          ],
+          "return_type": "bool",
+          "logic": "Checks if two PersistentMap objects are equal. Compares the trees and default values, and then iterates through the maps to compare values for common keys."
+        },
+        {
+          "name": "operator!=",
+          "parameters": [
+            "const PersistentMap& other"
+          ],
+          "return_type": "bool",
+          "logic": "Checks if two PersistentMap objects are not equal."
+        },
+        {
+          "name": "begin",
+          "parameters": [],
+          "return_type": "iterator",
+          "logic": "Returns an iterator to the beginning of the map."
+        },
+        {
+          "name": "end",
+          "parameters": [],
+          "return_type": "iterator",
+          "logic": "Returns an iterator to the end of the map."
+        },
+        {
+          "name": "Zip",
+          "parameters": [
+            "const PersistentMap& other"
+          ],
+          "return_type": "ZipIterable",
+          "logic": "Creates a ZipIterable to iterate over two maps in lockstep."
+        },
+        {
+          "name": "PersistentMap",
+          "parameters": [
+            "Zone* zone",
+            "Value def_value"
+          ],
+          "return_type": "PersistentMap",
+          "logic": "Constructor for PersistentMap. Initializes the tree, default value, and zone."
+        },
+        {
+          "name": "FindHash",
+          "parameters": [
+            "HashValue hash"
+          ],
+          "return_type": "const FocusedTree*",
+          "logic": "Finds the FocusedTree that contains a key-value pair with the given hash."
+        },
+        {
+          "name": "FindHash",
+          "parameters": [
+            "HashValue hash",
+            "std::array<const FocusedTree*, kHashBits>* path",
+            "int* length"
+          ],
+          "return_type": "const FocusedTree*",
+          "logic": "Finds the FocusedTree that contains a key-value pair with the given hash. Outputs the path and length."
+        },
+        {
+          "name": "GetFocusedValue",
+          "parameters": [
+            "const FocusedTree* tree",
+            "const Key& key"
+          ],
+          "return_type": "const Value&",
+          "logic": "Loads value from the leaf node on the focused path of the tree."
+        },
+        {
+          "name": "GetChild",
+          "parameters": [
+            "const FocusedTree* tree",
+            "int level",
+            "Bit bit"
+          ],
+          "return_type": "const FocusedTree*",
+          "logic": "Returns the FocusedTree representing the left or right child of the node at the given level."
+        },
+        {
+          "name": "FindLeftmost",
+          "parameters": [
+            "const FocusedTree* start",
+            "int* level",
+            "std::array<const FocusedTree*, kHashBits>* path"
+          ],
+          "return_type": "const FocusedTree*",
+          "logic": "Finds the leftmost path in the tree, starting at the given node and level."
+        },
+        {
+          "name": "PersistentMap",
+          "parameters": [
+            "const FocusedTree* tree",
+            "Zone* zone",
+            "Value def_value"
+          ],
+          "return_type": "PersistentMap",
+          "logic": "Private constructor. Initializes the tree, default value, and zone."
+        },
+        {
+          "name": "Set",
+          "parameters": [
+            "Key key",
+            "Value new_value"
+          ],
+          "return_type": "void",
+          "logic": "See public set"
+        },
+        {
+          "name": "Modify",
+          "parameters": [
+            "Key key",
+            "F f"
+          ],
+          "return_type": "void",
+          "logic": "See public Modify"
+        }
+      ]
+    },
+    {
+      "name": "PersistentMap<Key, Value, Hasher>::HashValue",
+      "properties": [
+        "bits_"
+      ],
+      "methods": [
+        {
+          "name": "operator[]",
+          "parameters": [
+            "int pos"
+          ],
+          "return_type": "Bit",
+          "logic": "Accesses a specific bit of the hash value."
+        },
+        {
+          "name": "operator<",
+          "parameters": [
+            "HashValue other"
+          ],
+          "return_type": "bool",
+          "logic": "Compares two hash values."
+        },
+        {
+          "name": "operator==",
+          "parameters": [
+            "HashValue other"
+          ],
+          "return_type": "bool",
+          "logic": "Checks if two hash values are equal."
+        },
+        {
+          "name": "operator!=",
+          "parameters": [
+            "HashValue other"
+          ],
+          "return_type": "bool",
+          "logic": "Checks if two hash values are not equal."
+        },
+        {
+          "name": "operator^",
+          "parameters": [
+            "HashValue other"
+          ],
+          "return_type": "HashValue",
+          "logic": "Performs XOR operation on two hash values."
+        },
+        {
+          "name": "HashValue",
+          "parameters": [
+            "size_t hash"
+          ],
+          "return_type": "HashValue",
+          "logic": "Constructor for HashValue, initializes the bits_ member"
+        }
+      ]
+    },
+    {
+      "name": "PersistentMap<Key, Value, Hasher>::FocusedTree",
+      "properties": [
+        "key_value",
+        "length",
+        "key_hash",
+        "more",
+        "path_array"
+      ],
+      "methods": []
+    },
+    {
+      "name": "PersistentMap<Key, Value, Hasher>::iterator",
+      "properties": [
+        "level_",
+        "more_iter_",
+        "current_",
+        "path_",
+        "def_value_"
+      ],
+      "methods": [
+        {
+          "name": "operator*",
+          "parameters": [],
+          "return_type": "const value_type",
+          "logic": "Returns the key-value pair pointed to by the iterator."
+        },
+        {
+          "name": "operator++",
+          "parameters": [],
+          "return_type": "iterator&",
+          "logic": "Advances the iterator to the next key-value pair."
+        },
+        {
+          "name": "operator==",
+          "parameters": [
+            "const iterator& other"
+          ],
+          "return_type": "bool",
+          "logic": "Checks if two iterators are equal."
+        },
+        {
+          "name": "operator!=",
+          "parameters": [
+            "const iterator& other"
+          ],
+          "return_type": "bool",
+          "logic": "Checks if two iterators are not equal."
+        },
+        {
+          "name": "operator<",
+          "parameters": [
+            "const iterator& other"
+          ],
+          "return_type": "bool",
+          "logic": "Checks if one iterator is less than another."
+        },
+        {
+          "name": "is_end",
+          "parameters": [],
+          "return_type": "bool",
+          "logic": "Checks if the iterator is at the end of the map."
+        },
+        {
+          "name": "def_value",
+          "parameters": [],
+          "return_type": "const Value&",
+          "logic": "Returns the default value of the associated PersistentMap."
+        },
+        {
+          "name": "begin",
+          "parameters": [
+            "const FocusedTree* tree",
+            "Value def_value"
+          ],
+          "return_type": "iterator",
+          "logic": "Creates an iterator pointing to the first element of the persistent map."
+        },
+        {
+          "name": "end",
+          "parameters": [
+            "Value def_value"
+          ],
+          "return_type": "iterator",
+          "logic": "Creates an iterator pointing to the end of the persistent map."
+        },
+        {
+          "name": "iterator",
+          "parameters": [
+            "Value def_value"
+          ],
+          "return_type": "iterator",
+          "logic": "Constructor for the PersistentMap iterator."
+        }
+      ]
+    },
+    {
+      "name": "PersistentMap<Key, Value, Hasher>::double_iterator",
+      "properties": [
+        "first_",
+        "second_",
+        "first_current_",
+        "second_current_"
+      ],
+      "methods": [
+        {
+          "name": "operator*",
+          "parameters": [],
+          "return_type": "std::tuple<Key, Value, Value>",
+          "logic": "Returns a tuple containing the key and the values from both iterators."
+        },
+        {
+          "name": "operator++",
+          "parameters": [],
+          "return_type": "double_iterator&",
+          "logic": "Advances both iterators to the next key-value pair."
+        },
+        {
+          "name": "double_iterator",
+          "parameters": [
+            "iterator first",
+            "iterator second"
+          ],
+          "return_type": "double_iterator",
+          "logic": "Constructor for the double iterator. Determines which iterator to advance."
+        },
+        {
+          "name": "operator!=",
+          "parameters": [
+            "const double_iterator& other"
+          ],
+          "return_type": "bool",
+          "logic": "Checks if two double iterators are not equal."
+        },
+        {
+          "name": "is_end",
+          "parameters": [],
+          "return_type": "bool",
+          "logic": "Checks if both iterators are at the end."
+        }
+      ]
+    },
+    {
+      "name": "PersistentMap<Key, Value, Hasher>::ZipIterable",
+      "properties": [
+        "a",
+        "b"
+      ],
+      "methods": [
+        {
+          "name": "begin",
+          "parameters": [],
+          "return_type": "double_iterator",
+          "logic": "Returns a double iterator to the beginning of the iterable."
+        },
+        {
+          "name": "end",
+          "parameters": [],
+          "return_type": "double_iterator",
+          "logic": "Returns a double iterator to the end of the iterable."
+        }
+      ]
+    }
+  ],
+  "functions": [
+    {
+      "name": "operator<<",
+      "parameters": [
+        "std::ostream& os",
+        "const PersistentMap<Key, Value, Hasher>& map"
+      ],
+      "return_type": "std::ostream&",
+      "logic": "Overloads the << operator to print the contents of a PersistentMap to an output stream."
+    }
+  ]
+}

@@ -1,0 +1,463 @@
+{
+  "file_path": "/home/kathirks_gc/v8_go/codebase/include/v8-array-buffer.h",
+  "imports": [
+    "<stddef.h>",
+    "<memory>",
+    "v8-local-handle.h",
+    "v8-memory-span.h",
+    "v8-object.h",
+    "v8-platform.h",
+    "v8config.h"
+  ],
+  "classes": [
+    {
+      "name": "BackingStore",
+      "properties": [],
+      "methods": [
+        {
+          "name": "~BackingStore",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Destructor for the BackingStore class."
+        },
+        {
+          "name": "Data",
+          "parameters": [],
+          "return_type": "void*",
+          "logic": "Returns a pointer to the beginning of the memory block."
+        },
+        {
+          "name": "ByteLength",
+          "parameters": [],
+          "return_type": "size_t",
+          "logic": "Returns the length (in bytes) of the backing store."
+        },
+        {
+          "name": "MaxByteLength",
+          "parameters": [],
+          "return_type": "size_t",
+          "logic": "Returns the maximum length (in bytes) that this backing store may grow to."
+        },
+        {
+          "name": "IsShared",
+          "parameters": [],
+          "return_type": "bool",
+          "logic": "Indicates whether the backing store was created for an ArrayBuffer or a SharedArrayBuffer."
+        },
+        {
+          "name": "IsResizableByUserJavaScript",
+          "parameters": [],
+          "return_type": "bool",
+          "logic": "Indicates whether the backing store was created for a resizable ArrayBuffer or a growable SharedArrayBuffer."
+        },
+        {
+          "name": "operator delete",
+          "parameters": [
+            "void* ptr"
+          ],
+          "return_type": "void",
+          "logic": "Overrides the delete operator to avoid incorrect size_t argument when deleting the BackingStore."
+        },
+        {
+          "name": "EmptyDeleter",
+          "parameters": [
+            "void* data",
+            "size_t length",
+            "void* deleter_data"
+          ],
+          "return_type": "void",
+          "logic": "Empty deleter callback for BackingStore when memory block is static or managed manually."
+        }
+      ]
+    },
+    {
+      "name": "ArrayBuffer::Allocator",
+      "properties": [],
+      "methods": [
+        {
+          "name": "~Allocator",
+          "parameters": [],
+          "return_type": "virtual",
+          "logic": "Virtual destructor for the Allocator class."
+        },
+        {
+          "name": "Allocate",
+          "parameters": [
+            "size_t length"
+          ],
+          "return_type": "virtual void*",
+          "logic": "Allocate |length| bytes. Return nullptr if allocation is not successful. Memory should be initialized to zeroes."
+        },
+        {
+          "name": "AllocateUninitialized",
+          "parameters": [
+            "size_t length"
+          ],
+          "return_type": "virtual void*",
+          "logic": "Allocate |length| bytes. Return nullptr if allocation is not successful. Memory does not have to be initialized."
+        },
+        {
+          "name": "Free",
+          "parameters": [
+            "void* data",
+            "size_t length"
+          ],
+          "return_type": "virtual void",
+          "logic": "Free the memory block of size |length|, pointed to by |data|."
+        },
+        {
+          "name": "MaxAllocationSize",
+          "parameters": [],
+          "return_type": "virtual size_t",
+          "logic": "Returns the largest ArrayBuffer that can be allocated."
+        },
+        {
+          "name": "GetPageAllocator",
+          "parameters": [],
+          "return_type": "virtual PageAllocator*",
+          "logic": "Returns page allocator used by this Allocator instance."
+        },
+        {
+          "name": "NewDefaultAllocator",
+          "parameters": [
+            "const IsolateGroup& group"
+          ],
+          "return_type": "static Allocator*",
+          "logic": "Convenience allocator that allocates backing memory inside the sandbox."
+        },
+        {
+          "name": "NewDefaultAllocator",
+          "parameters": [],
+          "return_type": "static Allocator*",
+          "logic": "Convenience allocator that allocates backing memory inside the default global sandbox."
+        }
+      ]
+    },
+    {
+      "name": "ArrayBuffer",
+      "properties": [
+        "kInternalFieldCount",
+        "kEmbedderFieldCount",
+        "kMaxByteLength"
+      ],
+      "methods": [
+        {
+          "name": "ByteLength",
+          "parameters": [],
+          "return_type": "size_t",
+          "logic": "Returns the data length in bytes."
+        },
+        {
+          "name": "MaxByteLength",
+          "parameters": [],
+          "return_type": "size_t",
+          "logic": "Returns the maximum length in bytes."
+        },
+        {
+          "name": "MaybeNew",
+          "parameters": [
+            "Isolate* isolate",
+            "size_t byte_length",
+            "BackingStoreInitializationMode initialization_mode"
+          ],
+          "return_type": "static MaybeLocal<ArrayBuffer>",
+          "logic": "Attempt to create a new ArrayBuffer. If allocation fails, the Maybe returned will be empty."
+        },
+        {
+          "name": "New",
+          "parameters": [
+            "Isolate* isolate",
+            "size_t byte_length",
+            "BackingStoreInitializationMode initialization_mode"
+          ],
+          "return_type": "static Local<ArrayBuffer>",
+          "logic": "Create a new ArrayBuffer. Allocate |byte_length| bytes, which are either zero-initialized or uninitialized."
+        },
+        {
+          "name": "New",
+          "parameters": [
+            "Isolate* isolate",
+            "std::shared_ptr<BackingStore> backing_store"
+          ],
+          "return_type": "static Local<ArrayBuffer>",
+          "logic": "Create a new ArrayBuffer with an existing backing store."
+        },
+        {
+          "name": "NewBackingStore",
+          "parameters": [
+            "Isolate* isolate",
+            "size_t byte_length",
+            "BackingStoreInitializationMode initialization_mode",
+            "BackingStoreOnFailureMode on_failure"
+          ],
+          "return_type": "static std::unique_ptr<BackingStore>",
+          "logic": "Returns a new standalone BackingStore that is allocated using the array buffer allocator of the isolate."
+        },
+        {
+          "name": "NewBackingStore",
+          "parameters": [
+            "void* data",
+            "size_t byte_length",
+            "v8::BackingStore::DeleterCallback deleter",
+            "void* deleter_data"
+          ],
+          "return_type": "static std::unique_ptr<BackingStore>",
+          "logic": "Returns a new standalone BackingStore that takes over the ownership of the given buffer."
+        },
+        {
+          "name": "NewResizableBackingStore",
+          "parameters": [
+            "size_t byte_length",
+            "size_t max_byte_length"
+          ],
+          "return_type": "static std::unique_ptr<BackingStore>",
+          "logic": "Returns a new resizable standalone BackingStore."
+        },
+        {
+          "name": "IsDetachable",
+          "parameters": [],
+          "return_type": "bool",
+          "logic": "Returns true if this ArrayBuffer may be detached."
+        },
+        {
+          "name": "WasDetached",
+          "parameters": [],
+          "return_type": "bool",
+          "logic": "Returns true if this ArrayBuffer has been detached."
+        },
+        {
+          "name": "Detach",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Detaches this ArrayBuffer and all its views (typed arrays)."
+        },
+        {
+          "name": "Detach",
+          "parameters": [
+            "v8::Local<v8::Value> key"
+          ],
+          "return_type": "Maybe<bool>",
+          "logic": "Detaches this ArrayBuffer and all its views (typed arrays).  Returns Nothing if the key didn't pass the [[ArrayBufferDetachKey]] check, Just(true) otherwise."
+        },
+        {
+          "name": "SetDetachKey",
+          "parameters": [
+            "v8::Local<v8::Value> key"
+          ],
+          "return_type": "void",
+          "logic": "Sets the ArrayBufferDetachKey."
+        },
+        {
+          "name": "GetBackingStore",
+          "parameters": [],
+          "return_type": "std::shared_ptr<BackingStore>",
+          "logic": "Get a shared pointer to the backing store of this array buffer."
+        },
+        {
+          "name": "IsResizableByUserJavaScript",
+          "parameters": [],
+          "return_type": "bool",
+          "logic": "More efficient shortcut for GetBackingStore()->IsResizableByUserJavaScript()."
+        },
+        {
+          "name": "Data",
+          "parameters": [],
+          "return_type": "void*",
+          "logic": "More efficient shortcut for GetBackingStore()->Data()."
+        },
+        {
+          "name": "Cast",
+          "parameters": [
+            "Value* value"
+          ],
+          "return_type": "ArrayBuffer*",
+          "logic": "Casts a Value to an ArrayBuffer."
+        }
+      ]
+    },
+    {
+      "name": "ArrayBufferView",
+      "properties": [
+        "kInternalFieldCount",
+        "kEmbedderFieldCount"
+      ],
+      "methods": [
+        {
+          "name": "Buffer",
+          "parameters": [],
+          "return_type": "Local<ArrayBuffer>",
+          "logic": "Returns underlying ArrayBuffer."
+        },
+        {
+          "name": "ByteOffset",
+          "parameters": [],
+          "return_type": "size_t",
+          "logic": "Returns byte offset in |Buffer|."
+        },
+        {
+          "name": "ByteLength",
+          "parameters": [],
+          "return_type": "size_t",
+          "logic": "Returns size of a view in bytes."
+        },
+        {
+          "name": "CopyContents",
+          "parameters": [
+            "void* dest",
+            "size_t byte_length"
+          ],
+          "return_type": "size_t",
+          "logic": "Copy the contents of the ArrayBufferView's buffer to an embedder defined memory."
+        },
+        {
+          "name": "GetContents",
+          "parameters": [
+            "v8::MemorySpan<uint8_t> storage"
+          ],
+          "return_type": "v8::MemorySpan<uint8_t>",
+          "logic": "Returns the contents of the ArrayBufferView's buffer as a MemorySpan."
+        },
+        {
+          "name": "HasBuffer",
+          "parameters": [],
+          "return_type": "bool",
+          "logic": "Returns true if ArrayBufferView's backing ArrayBuffer has already been allocated."
+        },
+        {
+          "name": "Cast",
+          "parameters": [
+            "Value* value"
+          ],
+          "return_type": "ArrayBufferView*",
+          "logic": "Casts a Value to an ArrayBufferView."
+        }
+      ]
+    },
+    {
+      "name": "DataView",
+      "properties": [],
+      "methods": [
+        {
+          "name": "New",
+          "parameters": [
+            "Local<ArrayBuffer> array_buffer",
+            "size_t byte_offset",
+            "size_t length"
+          ],
+          "return_type": "static Local<DataView>",
+          "logic": "Creates a new DataView from an ArrayBuffer."
+        },
+        {
+          "name": "New",
+          "parameters": [
+            "Local<SharedArrayBuffer> shared_array_buffer",
+            "size_t byte_offset",
+            "size_t length"
+          ],
+          "return_type": "static Local<DataView>",
+          "logic": "Creates a new DataView from a SharedArrayBuffer."
+        },
+        {
+          "name": "Cast",
+          "parameters": [
+            "Value* value"
+          ],
+          "return_type": "DataView*",
+          "logic": "Casts a Value to a DataView."
+        }
+      ]
+    },
+    {
+      "name": "SharedArrayBuffer",
+      "properties": [
+        "kInternalFieldCount"
+      ],
+      "methods": [
+        {
+          "name": "ByteLength",
+          "parameters": [],
+          "return_type": "size_t",
+          "logic": "Returns the data length in bytes."
+        },
+        {
+          "name": "MaxByteLength",
+          "parameters": [],
+          "return_type": "size_t",
+          "logic": "Returns the maximum length in bytes."
+        },
+        {
+          "name": "New",
+          "parameters": [
+            "Isolate* isolate",
+            "size_t byte_length",
+            "BackingStoreInitializationMode initialization_mode"
+          ],
+          "return_type": "static Local<SharedArrayBuffer>",
+          "logic": "Create a new SharedArrayBuffer. Allocate |byte_length| bytes, which are either zero-initialized or uninitialized."
+        },
+        {
+          "name": "MaybeNew",
+          "parameters": [
+            "Isolate* isolate",
+            "size_t byte_length",
+            "BackingStoreInitializationMode initialization_mode"
+          ],
+          "return_type": "static MaybeLocal<SharedArrayBuffer>",
+          "logic": "Create a new SharedArrayBuffer. Allocate |byte_length| bytes, which are either zero-initialized or uninitialized.  If allocation fails, the Maybe returned will be empty."
+        },
+        {
+          "name": "New",
+          "parameters": [
+            "Isolate* isolate",
+            "std::shared_ptr<BackingStore> backing_store"
+          ],
+          "return_type": "static Local<SharedArrayBuffer>",
+          "logic": "Create a new SharedArrayBuffer with an existing backing store."
+        },
+        {
+          "name": "NewBackingStore",
+          "parameters": [
+            "Isolate* isolate",
+            "size_t byte_length",
+            "BackingStoreInitializationMode initialization_mode",
+            "BackingStoreOnFailureMode on_failure"
+          ],
+          "return_type": "static std::unique_ptr<BackingStore>",
+          "logic": "Returns a new standalone BackingStore that is allocated using the array buffer allocator of the isolate."
+        },
+        {
+          "name": "NewBackingStore",
+          "parameters": [
+            "void* data",
+            "size_t byte_length",
+            "v8::BackingStore::DeleterCallback deleter",
+            "void* deleter_data"
+          ],
+          "return_type": "static std::unique_ptr<BackingStore>",
+          "logic": "Returns a new standalone BackingStore that takes over the ownership of the given buffer."
+        },
+        {
+          "name": "GetBackingStore",
+          "parameters": [],
+          "return_type": "std::shared_ptr<BackingStore>",
+          "logic": "Get a shared pointer to the backing store of this array buffer."
+        },
+        {
+          "name": "Data",
+          "parameters": [],
+          "return_type": "void*",
+          "logic": "More efficient shortcut for GetBackingStore()->Data()."
+        },
+        {
+          "name": "Cast",
+          "parameters": [
+            "Value* value"
+          ],
+          "return_type": "SharedArrayBuffer*",
+          "logic": "Casts a Value to a SharedArrayBuffer."
+        }
+      ]
+    }
+  ],
+  "functions": []
+}

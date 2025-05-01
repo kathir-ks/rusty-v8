@@ -1,0 +1,68 @@
+{
+  "file_path": "/home/kathirks_gc/v8_go/codebase/src/snapshot/roots-serializer.cc",
+  "imports": [
+    "src/snapshot/roots-serializer.h",
+    "src/execution/isolate.h",
+    "src/heap/heap.h",
+    "src/objects/slots.h"
+  ],
+  "classes": [
+    {
+      "name": "RootsSerializer",
+      "properties": [
+        "first_root_to_be_serialized_",
+        "object_cache_index_map_",
+        "can_be_rehashed_",
+        "root_has_been_serialized_"
+      ],
+      "methods": [
+        {
+          "name": "RootsSerializer",
+          "parameters": [
+            "Isolate* isolate",
+            "Snapshot::SerializerFlags flags",
+            "RootIndex first_root_to_be_serialized"
+          ],
+          "return_type": "void",
+          "logic": "Constructor for the RootsSerializer. Initializes the serializer with the isolate, flags, and the index of the first root to be serialized.  It also initializes an object cache index map and sets up an array tracking which roots have been serialized."
+        },
+        {
+          "name": "SerializeInObjectCache",
+          "parameters": [
+            "Handle<HeapObject> heap_object"
+          ],
+          "return_type": "int",
+          "logic": "Serializes an object into the object cache. If the object is not already in the cache, it serializes the object and adds it to the cache. Returns the index of the object in the cache."
+        },
+        {
+          "name": "Synchronize",
+          "parameters": [
+            "VisitorSynchronization::SyncTag tag"
+          ],
+          "return_type": "void",
+          "logic": "Adds a synchronization point to the serialized data stream. This allows the deserializer to synchronize its state with the serializer."
+        },
+        {
+          "name": "VisitRootPointers",
+          "parameters": [
+            "Root root",
+            "const char* description",
+            "FullObjectSlot start",
+            "FullObjectSlot end"
+          ],
+          "return_type": "void",
+          "logic": "Visits root pointers in the specified range. If the range corresponds to the root list being serialized, it serializes each root object individually and marks it as serialized. Otherwise, it calls the base class's VisitRootPointers method."
+        },
+        {
+          "name": "CheckRehashability",
+          "parameters": [
+            "Tagged<HeapObject> obj"
+          ],
+          "return_type": "void",
+          "logic": "Checks if a given object can be rehashed. If the object needs rehashing but cannot be rehashed, the `can_be_rehashed_` flag is set to false, indicating that rehashing is not possible during deserialization."
+        }
+      ]
+    }
+  ],
+  "functions": []
+}

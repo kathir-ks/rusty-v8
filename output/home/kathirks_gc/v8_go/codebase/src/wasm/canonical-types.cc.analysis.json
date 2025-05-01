@@ -1,0 +1,247 @@
+{
+  "file_path": "/home/kathirks_gc/v8_go/codebase/src/wasm/canonical-types.cc",
+  "imports": [
+    "src/wasm/canonical-types.h",
+    "src/base/hashing.h",
+    "src/execution/isolate.h",
+    "src/handles/handles-inl.h",
+    "src/heap/heap-inl.h",
+    "src/init/v8.h",
+    "src/roots/roots-inl.h",
+    "src/utils/utils.h",
+    "src/wasm/names-provider.h",
+    "src/wasm/std-object-sizes.h",
+    "src/wasm/wasm-engine.h"
+  ],
+  "classes": [
+    {
+      "name": "TypeCanonicalizer",
+      "properties": [
+        "mutex_",
+        "canonical_types_",
+        "canonical_supertypes_",
+        "canonical_groups_",
+        "canonical_singleton_groups_",
+        "zone_",
+        "allocator_"
+      ],
+      "methods": [
+        {
+          "name": "TypeCanonicalizer",
+          "parameters": [],
+          "return_type": null,
+          "logic": "Constructor. Adds predefined array types."
+        },
+        {
+          "name": "CheckMaxCanonicalIndex",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Checks if the number of canonical types exceeds the maximum limit and throws a fatal out of memory error if it does."
+        },
+        {
+          "name": "AddRecursiveGroup",
+          "parameters": [
+            "WasmModule* module",
+            "uint32_t size"
+          ],
+          "return_type": "void",
+          "logic": "Adds a recursive group of types to the canonicalizer. If the group already exists, it maps new types to existing canonical representatives. If it doesn't exist, it creates a new canonical group and adds it to the canonicalizer."
+        },
+        {
+          "name": "AddRecursiveSingletonGroup",
+          "parameters": [
+            "WasmModule* module"
+          ],
+          "return_type": "void",
+          "logic": "Adds a recursive singleton group (a group of size 1) of types to the canonicalizer. Similar to AddRecursiveGroup, it checks for existing groups and creates a new one if necessary."
+        },
+        {
+          "name": "AddRecursiveGroup",
+          "parameters": [
+            "const FunctionSig* sig"
+          ],
+          "return_type": "CanonicalTypeIndex",
+          "logic": "Adds a recursive group for function signatures to the canonicalizer, ensuring the signature becomes canonical and module-independent."
+        },
+        {
+          "name": "LookupFunctionSignature",
+          "parameters": [
+            "CanonicalTypeIndex index"
+          ],
+          "return_type": "const CanonicalSig*",
+          "logic": "Looks up the function signature associated with a given canonical type index."
+        },
+        {
+          "name": "LookupStruct",
+          "parameters": [
+            "CanonicalTypeIndex index"
+          ],
+          "return_type": "const CanonicalStructType*",
+          "logic": "Looks up the struct type associated with a given canonical type index."
+        },
+        {
+          "name": "LookupArray",
+          "parameters": [
+            "CanonicalTypeIndex index"
+          ],
+          "return_type": "const CanonicalArrayType*",
+          "logic": "Looks up the array type associated with a given canonical type index."
+        },
+        {
+          "name": "AddPredefinedArrayTypes",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Adds predefined array types (e.g., i8, i16 arrays) to the canonicalizer."
+        },
+        {
+          "name": "IsCanonicalSubtype",
+          "parameters": [
+            "CanonicalTypeIndex sub_index",
+            "CanonicalTypeIndex super_index"
+          ],
+          "return_type": "bool",
+          "logic": "Checks if a canonical type is a subtype of another. It first attempts a fast path check before acquiring the mutex for a more robust check."
+        },
+        {
+          "name": "IsCanonicalSubtype_Locked",
+          "parameters": [
+            "CanonicalTypeIndex sub_index",
+            "CanonicalTypeIndex super_index"
+          ],
+          "return_type": "bool",
+          "logic": "The locked version of IsCanonicalSubtype which checks if a canonical type is a subtype of another, using the canonical_supertypes_ vector to walk up the hierarchy."
+        },
+        {
+          "name": "IsCanonicalSubtype",
+          "parameters": [
+            "ModuleTypeIndex sub_index",
+            "ModuleTypeIndex super_index",
+            "const WasmModule* sub_module",
+            "const WasmModule* super_module"
+          ],
+          "return_type": "bool",
+          "logic": "Checks if a module type is a subtype of another module type by delegating to the canonical type subtype check."
+        },
+        {
+          "name": "IsHeapSubtype",
+          "parameters": [
+            "CanonicalTypeIndex sub",
+            "CanonicalTypeIndex super"
+          ],
+          "return_type": "bool",
+          "logic": "Checks if a given subtype is a subtype of a given supertype, specifically in the context of heap types."
+        },
+        {
+          "name": "EmptyStorageForTesting",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Clears all internal storage for testing purposes. This ensures a clean state before running tests."
+        },
+        {
+          "name": "CanonicalizeTypeDef",
+          "parameters": [
+            "const WasmModule* module",
+            "ModuleTypeIndex module_type_idx",
+            "ModuleTypeIndex recgroup_start",
+            "CanonicalTypeIndex canonical_recgroup_start"
+          ],
+          "return_type": "TypeCanonicalizer::CanonicalType",
+          "logic": "Canonicalizes a type definition, creating a canonical representation of the type. It handles function signatures, structs, and arrays. This is a core logic of the canonicalization process."
+        },
+        {
+          "name": "FindCanonicalGroup",
+          "parameters": [
+            "const CanonicalGroup& group"
+          ],
+          "return_type": "CanonicalTypeIndex",
+          "logic": "Finds a canonical group by comparing a given group with stored canonical groups. Returns the index if found, otherwise invalid."
+        },
+        {
+          "name": "FindCanonicalGroup",
+          "parameters": [
+            "const CanonicalSingletonGroup& group"
+          ],
+          "return_type": "CanonicalTypeIndex",
+          "logic": "Finds a canonical singleton group (size 1 group). Returns the index if found, otherwise invalid."
+        },
+        {
+          "name": "EstimateCurrentMemoryConsumption",
+          "parameters": [],
+          "return_type": "size_t",
+          "logic": "Estimates the current memory consumption of the type canonicalizer. It sums up the sizes of internal data structures."
+        },
+        {
+          "name": "GetCurrentNumberOfTypes",
+          "parameters": [],
+          "return_type": "size_t",
+          "logic": "Returns the current number of canonical types stored."
+        },
+        {
+          "name": "PrepareForCanonicalTypeId",
+          "parameters": [
+            "Isolate* isolate",
+            "CanonicalTypeIndex id"
+          ],
+          "return_type": "void",
+          "logic": "Prepares the isolate's heap for storing canonical type IDs by resizing WeakFixedArrays for RTTs and wrappers as needed."
+        },
+        {
+          "name": "ClearWasmCanonicalTypesForTesting",
+          "parameters": [
+            "Isolate* isolate"
+          ],
+          "return_type": "void",
+          "logic": "Clears the isolate's wasm canonical type data for testing purposes."
+        },
+        {
+          "name": "IsFunctionSignature",
+          "parameters": [
+            "CanonicalTypeIndex index"
+          ],
+          "return_type": "bool",
+          "logic": "Checks if a type at given index is a function signature type."
+        },
+        {
+          "name": "IsStruct",
+          "parameters": [
+            "CanonicalTypeIndex index"
+          ],
+          "return_type": "bool",
+          "logic": "Checks if a type at given index is a struct type."
+        },
+        {
+          "name": "IsArray",
+          "parameters": [
+            "CanonicalTypeIndex index"
+          ],
+          "return_type": "bool",
+          "logic": "Checks if a type at given index is an array type."
+        },
+        {
+          "name": "FindIndex_Slow",
+          "parameters": [
+            "const CanonicalSig* sig"
+          ],
+          "return_type": "CanonicalTypeIndex",
+          "logic": "Finds the index of a canonical signature, but using a slow, brute force approach."
+        },
+        {
+          "name": "Contains",
+          "parameters": [
+            "const CanonicalSig* sig"
+          ],
+          "return_type": "bool",
+          "logic": "Checks if the provided signature is present in the Zone allocator"
+        }
+      ]
+    }
+  ],
+  "functions": [
+    {
+      "name": "GetTypeCanonicalizer",
+      "parameters": [],
+      "return_type": "TypeCanonicalizer*",
+      "logic": "Returns the TypeCanonicalizer instance from the WasmEngine."
+    }
+  ]
+}

@@ -1,0 +1,364 @@
+{
+  "file_path": "/home/kathirks_gc/v8_go/codebase/include/cppgc/persistent.h",
+  "imports": [
+    "<type_traits>",
+    "cppgc/internal/persistent-node.h",
+    "cppgc/internal/pointer-policies.h",
+    "cppgc/sentinel-pointer.h",
+    "cppgc/source-location.h",
+    "cppgc/type-traits.h",
+    "cppgc/visitor.h",
+    "v8config.h"
+  ],
+  "classes": [
+    {
+      "name": "PersistentBase",
+      "properties": [
+        "mutable const void* raw_",
+        "mutable PersistentNode* node_"
+      ],
+      "methods": [
+        {
+          "name": "PersistentBase",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Default constructor."
+        },
+        {
+          "name": "PersistentBase",
+          "parameters": [
+            "const void* raw"
+          ],
+          "return_type": "void",
+          "logic": "Constructor taking a raw pointer. Stores the raw pointer."
+        },
+        {
+          "name": "GetValue",
+          "parameters": [],
+          "return_type": "const void*",
+          "logic": "Returns the stored raw pointer."
+        },
+        {
+          "name": "SetValue",
+          "parameters": [
+            "const void* value"
+          ],
+          "return_type": "void",
+          "logic": "Sets the stored raw pointer."
+        },
+        {
+          "name": "GetNode",
+          "parameters": [],
+          "return_type": "PersistentNode*",
+          "logic": "Returns the associated PersistentNode."
+        },
+        {
+          "name": "SetNode",
+          "parameters": [
+            "PersistentNode* node"
+          ],
+          "return_type": "void",
+          "logic": "Sets the associated PersistentNode."
+        },
+        {
+          "name": "ClearFromGC",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Clears the raw pointer and PersistentNode, effectively disconnecting the persistent handle. Assumes internal persistent nodes are destroyed elsewhere."
+        }
+      ]
+    },
+    {
+      "name": "BasicPersistent",
+      "properties": [],
+      "methods": [
+        {
+          "name": "BasicPersistent",
+          "parameters": [
+            "const SourceLocation& loc"
+          ],
+          "return_type": "void",
+          "logic": "Null-state constructor with source location."
+        },
+        {
+          "name": "BasicPersistent",
+          "parameters": [
+            "std::nullptr_t",
+            "const SourceLocation& loc"
+          ],
+          "return_type": "void",
+          "logic": "Null-state constructor with nullptr and source location."
+        },
+        {
+          "name": "BasicPersistent",
+          "parameters": [
+            "SentinelPointer s",
+            "const SourceLocation& loc"
+          ],
+          "return_type": "void",
+          "logic": "Null-state constructor with SentinelPointer and source location."
+        },
+        {
+          "name": "BasicPersistent",
+          "parameters": [
+            "T* raw",
+            "const SourceLocation& loc"
+          ],
+          "return_type": "void",
+          "logic": "Constructor taking a raw pointer. Associates the pointer with a PersistentNode and registers it as a root."
+        },
+        {
+          "name": "BasicPersistent",
+          "parameters": [
+            "T& raw",
+            "const SourceLocation& loc"
+          ],
+          "return_type": "void",
+          "logic": "Constructor taking a reference. Associates the pointer with a PersistentNode and registers it as a root."
+        },
+        {
+          "name": "BasicPersistent",
+          "parameters": [
+            "const BasicPersistent& other",
+            "const SourceLocation& loc"
+          ],
+          "return_type": "void",
+          "logic": "Copy constructor. Creates a new Persistent from another Persistent, pointing to the same object."
+        },
+        {
+          "name": "BasicPersistent",
+          "parameters": [
+            "const BasicPersistent<U, OtherWeaknessPolicy, OtherLocationPolicy, OtherCheckingPolicy>& other",
+            "const SourceLocation& loc"
+          ],
+          "return_type": "void",
+          "logic": "Heterogeneous copy constructor. Allows creating a Persistent of a base class from a Persistent of a derived class."
+        },
+        {
+          "name": "BasicPersistent",
+          "parameters": [
+            "BasicPersistent&& other",
+            "const SourceLocation& loc"
+          ],
+          "return_type": "void",
+          "logic": "Move constructor. Transfers ownership of the PersistentNode from one Persistent to another."
+        },
+        {
+          "name": "BasicPersistent",
+          "parameters": [
+            "const internal::BasicMember< U, MemberBarrierPolicy, MemberWeaknessTag, MemberCheckingPolicy, MemberStorageType>& member",
+            "const SourceLocation& loc"
+          ],
+          "return_type": "void",
+          "logic": "Constructor from a BasicMember, allowing Persistent handles to be created from members."
+        },
+        {
+          "name": "~BasicPersistent",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Destructor. Clears the Persistent, freeing the associated PersistentNode."
+        },
+        {
+          "name": "operator=",
+          "parameters": [
+            "const BasicPersistent& other"
+          ],
+          "return_type": "BasicPersistent&",
+          "logic": "Copy assignment operator."
+        },
+        {
+          "name": "operator=",
+          "parameters": [
+            "const BasicPersistent<U, OtherWeaknessPolicy, OtherLocationPolicy, OtherCheckingPolicy>& other"
+          ],
+          "return_type": "BasicPersistent&",
+          "logic": "Heterogeneous copy assignment operator."
+        },
+        {
+          "name": "operator=",
+          "parameters": [
+            "BasicPersistent&& other"
+          ],
+          "return_type": "BasicPersistent&",
+          "logic": "Move assignment operator."
+        },
+        {
+          "name": "operator=",
+          "parameters": [
+            "const internal::BasicMember<U, MemberBarrierPolicy, MemberWeaknessTag, MemberCheckingPolicy, MemberStorageType>& member"
+          ],
+          "return_type": "BasicPersistent&",
+          "logic": "Assignment from a BasicMember."
+        },
+        {
+          "name": "operator=",
+          "parameters": [
+            "T* other"
+          ],
+          "return_type": "BasicPersistent&",
+          "logic": "Assignment from a raw pointer."
+        },
+        {
+          "name": "operator=",
+          "parameters": [
+            "std::nullptr_t"
+          ],
+          "return_type": "BasicPersistent&",
+          "logic": "Assignment from nullptr."
+        },
+        {
+          "name": "operator=",
+          "parameters": [
+            "SentinelPointer s"
+          ],
+          "return_type": "BasicPersistent&",
+          "logic": "Assignment from SentinelPointer."
+        },
+        {
+          "name": "operator bool",
+          "parameters": [],
+          "return_type": "bool",
+          "logic": "Conversion to bool, indicating whether the Persistent is valid."
+        },
+        {
+          "name": "operator T*",
+          "parameters": [],
+          "return_type": "T*",
+          "logic": "Implicit conversion to T*."
+        },
+        {
+          "name": "operator->",
+          "parameters": [],
+          "return_type": "T*",
+          "logic": "Dereference operator."
+        },
+        {
+          "name": "operator*",
+          "parameters": [],
+          "return_type": "T&",
+          "logic": "Dereference operator."
+        },
+        {
+          "name": "Get",
+          "parameters": [],
+          "return_type": "T*",
+          "logic": "Returns the raw pointer. Uses const_cast and static_cast to handle constness correctly."
+        },
+        {
+          "name": "Clear",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Clears the Persistent, freeing the associated PersistentNode."
+        },
+        {
+          "name": "Release",
+          "parameters": [],
+          "return_type": "T*",
+          "logic": "Releases ownership of the pointed-to object and returns the raw pointer. The Persistent becomes invalid."
+        },
+        {
+          "name": "To",
+          "parameters": [],
+          "return_type": "BasicPersistent<U, OtherWeaknessPolicy, OtherLocationPolicy, OtherCheckingPolicy>",
+          "logic": "Casts the persistent to another type U. This relies on a static cast to allow for safe casts."
+        },
+        {
+          "name": "TraceAsRoot",
+          "parameters": [
+            "RootVisitor& root_visitor",
+            "const void* ptr"
+          ],
+          "return_type": "void",
+          "logic": "Callback function used by the GC to trace the Persistent as a root."
+        },
+        {
+          "name": "IsValid",
+          "parameters": [],
+          "return_type": "bool",
+          "logic": "Checks if the Persistent is valid (not null and not a sentinel pointer)."
+        },
+        {
+          "name": "Assign",
+          "parameters": [
+            "T* ptr"
+          ],
+          "return_type": "void",
+          "logic": "Assigns a new pointer to the Persistent, updating the associated PersistentNode."
+        },
+        {
+          "name": "ClearFromGC",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Clears the persistent handle specifically when garbage collection is occurring."
+        },
+        {
+          "name": "GetFromGC",
+          "parameters": [],
+          "return_type": "T*",
+          "logic": "Returns the raw pointer without triggering any checking policies specifically for garbage collection access."
+        }
+      ]
+    },
+    {
+      "name": "IsWeak<BasicPersistent<T, internal::WeakPersistentPolicy, LocationPolicy, CheckingPolicy>>",
+      "properties": [],
+      "methods": []
+    }
+  ],
+  "functions": [
+    {
+      "name": "operator==",
+      "parameters": [
+        "const BasicPersistent<T1, WeaknessPolicy1, LocationPolicy1, CheckingPolicy1>& p1",
+        "const BasicPersistent<T2, WeaknessPolicy2, LocationPolicy2, CheckingPolicy2>& p2"
+      ],
+      "return_type": "bool",
+      "logic": "Equality operator for two BasicPersistent objects. Compares the raw pointers."
+    },
+    {
+      "name": "operator!=",
+      "parameters": [
+        "const BasicPersistent<T1, WeaknessPolicy1, LocationPolicy1, CheckingPolicy1>& p1",
+        "const BasicPersistent<T2, WeaknessPolicy2, LocationPolicy2, CheckingPolicy2>& p2"
+      ],
+      "return_type": "bool",
+      "logic": "Inequality operator for two BasicPersistent objects. Compares the raw pointers."
+    },
+    {
+      "name": "operator==",
+      "parameters": [
+        "const BasicPersistent<T1, PersistentWeaknessPolicy, PersistentLocationPolicy, PersistentCheckingPolicy>& p",
+        "const BasicMember<T2, MemberWeaknessTag, MemberWriteBarrierPolicy, MemberCheckingPolicy, MemberStorageType>& m"
+      ],
+      "return_type": "bool",
+      "logic": "Equality operator between a BasicPersistent and a BasicMember. Compares the raw pointers."
+    },
+    {
+      "name": "operator!=",
+      "parameters": [
+        "const BasicPersistent<T1, PersistentWeaknessPolicy, PersistentLocationPolicy, PersistentCheckingPolicy>& p",
+        "const BasicMember<T2, MemberWeaknessTag, MemberWriteBarrierPolicy, MemberCheckingPolicy, MemberStorageType>& m"
+      ],
+      "return_type": "bool",
+      "logic": "Inequality operator between a BasicPersistent and a BasicMember. Compares the raw pointers."
+    },
+    {
+      "name": "operator==",
+      "parameters": [
+        "const BasicMember<T2, MemberWeaknessTag, MemberWriteBarrierPolicy, MemberCheckingPolicy, MemberStorageType>& m",
+        "const BasicPersistent<T1, PersistentWeaknessPolicy, PersistentLocationPolicy, PersistentCheckingPolicy>& p"
+      ],
+      "return_type": "bool",
+      "logic": "Equality operator between a BasicMember and a BasicPersistent. Compares the raw pointers."
+    },
+    {
+      "name": "operator!=",
+      "parameters": [
+        "const BasicMember<T2, MemberWeaknessTag, MemberWriteBarrierPolicy, MemberCheckingPolicy, MemberStorageType>& m",
+        "const BasicPersistent<T1, PersistentWeaknessPolicy, PersistentLocationPolicy, PersistentCheckingPolicy>& p"
+      ],
+      "return_type": "bool",
+      "logic": "Inequality operator between a BasicMember and a BasicPersistent. Compares the raw pointers."
+    }
+  ]
+}

@@ -1,0 +1,74 @@
+{
+  "file_path": "/home/kathirks_gc/v8_go/codebase/src/regexp/regexp-interpreter.h",
+  "imports": [
+    "src/regexp/regexp.h"
+  ],
+  "classes": [
+    {
+      "name": "IrregexpInterpreter",
+      "properties": [],
+      "methods": [
+        {
+          "name": "MatchForCallFromRuntime",
+          "parameters": [
+            "Isolate* isolate",
+            "DirectHandle<IrRegExpData> regexp_data",
+            "DirectHandle<String> subject_string",
+            "int* output_registers",
+            "int output_register_count",
+            "int start_position"
+          ],
+          "return_type": "int",
+          "logic": "Matches a regexp against a string when called from the runtime. Handles stack overflows and returns a specific error code (EXCEPTION) if one occurs. Returns the number of matches or an error code (FAILURE, SUCCESS, EXCEPTION, RETRY, FALLBACK_TO_EXPERIMENTAL)."
+        },
+        {
+          "name": "MatchForCallFromJs",
+          "parameters": [
+            "Address subject",
+            "int32_t start_position",
+            "Address input_start",
+            "Address input_end",
+            "int* output_registers",
+            "int32_t output_register_count",
+            "RegExp::CallOrigin call_origin",
+            "Isolate* isolate",
+            "Address regexp_data"
+          ],
+          "return_type": "int",
+          "logic": "Matches a regexp against a string when called from JavaScript. Returns the number of matches, or an error code (EXCEPTION or RETRY). input_start and input_end are unused, but are kept for interface compatibility. Handles stack overflows and returns EXCEPTION in that case."
+        },
+        {
+          "name": "MatchInternal",
+          "parameters": [
+            "Isolate* isolate",
+            "Tagged<TrustedByteArray>* code_array",
+            "Tagged<String>* subject_string",
+            "int* output_registers",
+            "int output_register_count",
+            "int total_register_count",
+            "int start_position",
+            "RegExp::CallOrigin call_origin",
+            "uint32_t backtrack_limit"
+          ],
+          "return_type": "Result",
+          "logic": "The core matching logic of the interpreter. Takes the bytecode array, subject string, output registers, and other parameters as input. Performs the matching and returns a Result enum value (FAILURE, SUCCESS, EXCEPTION, RETRY, FALLBACK_TO_EXPERIMENTAL)."
+        },
+        {
+          "name": "Match",
+          "parameters": [
+            "Isolate* isolate",
+            "Tagged<IrRegExpData> regexp_data",
+            "Tagged<String> subject_string",
+            "int* output_registers",
+            "int output_register_count",
+            "int start_position",
+            "RegExp::CallOrigin call_origin"
+          ],
+          "return_type": "int",
+          "logic": "A private helper function that performs the regular expression matching. This method is likely the entry point for actual matching after preparing arguments. It uses precompiled regexp data to run efficiently."
+        }
+      ]
+    }
+  ],
+  "functions": []
+}

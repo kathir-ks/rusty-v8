@@ -1,0 +1,58 @@
+{
+  "file_path": "/home/kathirks_gc/v8_go/codebase/src/sandbox/indirect-pointer-tag.h",
+  "imports": [
+    "src/common/globals.h",
+    "src/objects/instance-type.h"
+  ],
+  "classes": [],
+  "functions": [
+    {
+      "name": "IsSharedTrustedPointerType",
+      "parameters": [
+        "IndirectPointerTag tag"
+      ],
+      "return_type": "bool",
+      "logic": "Checks if the provided IndirectPointerTag belongs to the shared trusted pointer tag range. These pointers are owned by the shared Isolate and accessible from multiple threads."
+    },
+    {
+      "name": "IsPerIsolateTrustedPointerType",
+      "parameters": [
+        "IndirectPointerTag tag"
+      ],
+      "return_type": "bool",
+      "logic": "Checks if the provided IndirectPointerTag belongs to the per-Isolate trusted pointer tag range. These pointers are kept in a per-Isolate table and only accessible when the Isolate is active."
+    },
+    {
+      "name": "IsValidIndirectPointerTag",
+      "parameters": [
+        "IndirectPointerTag tag"
+      ],
+      "return_type": "bool",
+      "logic": "Checks if the provided IndirectPointerTag is either a shared or per-Isolate trusted pointer tag."
+    },
+    {
+      "name": "IsTrustedSpaceMigrationInProgressForObjectsWithTag",
+      "parameters": [
+        "IndirectPointerTag tag"
+      ],
+      "return_type": "bool",
+      "logic": "Indicates whether a migration of objects to trusted space is in progress for the objects with a given tag. This is currently always false.  This allows disabling checks that trusted pointers point outside the sandbox while migration is in progress."
+    },
+    {
+      "name": "IndirectPointerTagFromInstanceType",
+      "parameters": [
+        "InstanceType instance_type"
+      ],
+      "return_type": "IndirectPointerTag",
+      "logic": "Converts an InstanceType enum value to its corresponding IndirectPointerTag. Returns the specific tag associated with given InstanceType."
+    },
+    {
+      "name": "InstanceTypeFromIndirectPointerTag",
+      "parameters": [
+        "IndirectPointerTag tag"
+      ],
+      "return_type": "InstanceType",
+      "logic": "Converts an IndirectPointerTag to its corresponding InstanceType. Returns the InstanceType associated with a given tag."
+    }
+  ]
+}

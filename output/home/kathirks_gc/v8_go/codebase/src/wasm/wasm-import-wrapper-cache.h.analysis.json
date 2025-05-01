@@ -1,0 +1,146 @@
+{
+  "file_path": "/home/kathirks_gc/v8_go/codebase/src/wasm/wasm-import-wrapper-cache.h",
+  "imports": [
+    "<unordered_map>",
+    "src/base/platform/mutex.h",
+    "src/wasm/module-instantiate.h",
+    "src/wasm/wasm-code-manager.h"
+  ],
+  "classes": [
+    {
+      "name": "WasmImportWrapperCache",
+      "properties": [
+        "code_allocator_",
+        "mutex_",
+        "entry_map_",
+        "codes_"
+      ],
+      "methods": [
+        {
+          "name": "LazyInitialize",
+          "parameters": [
+            "Isolate* triggering_isolate"
+          ],
+          "return_type": "void",
+          "logic": "Performs lazy initialization of the cache, likely setting up resources or internal structures. The 'Isolate*' suggests it's specific to a V8 isolate."
+        },
+        {
+          "name": "Free",
+          "parameters": [
+            "std::vector<WasmCode*>& wrappers"
+          ],
+          "return_type": "void",
+          "logic": "Frees the memory associated with a vector of WasmCode wrappers, likely when the cache is being shut down or cleared. Takes a vector of WasmCode pointers as input."
+        },
+        {
+          "name": "MaybeGet",
+          "parameters": [
+            "ImportCallKind kind",
+            "CanonicalTypeIndex type_index",
+            "int expected_arity",
+            "Suspend suspend"
+          ],
+          "return_type": "WasmCode*",
+          "logic": "Attempts to retrieve a cached import wrapper based on the provided key (import call kind, type index, arity, and suspend). Returns nullptr if the wrapper isn't found. Adds the returned code to the WasmCodeRefScope."
+        },
+        {
+          "name": "Lookup",
+          "parameters": [
+            "Address pc"
+          ],
+          "return_type": "WasmCode*",
+          "logic": "Looks up a WasmCode object based on the program counter (PC) address. This suggests it's used to find the wrapper corresponding to a specific point in the code."
+        },
+        {
+          "name": "LogForIsolate",
+          "parameters": [
+            "Isolate* isolate"
+          ],
+          "return_type": "void",
+          "logic": "Logs information about the cache for debugging or profiling purposes, related to a specific isolate."
+        },
+        {
+          "name": "EstimateCurrentMemoryConsumption",
+          "parameters": [],
+          "return_type": "size_t",
+          "logic": "Estimates the total memory currently used by the cache.  Useful for monitoring and managing memory usage."
+        },
+        {
+          "name": "FindWrapper",
+          "parameters": [
+            "WasmCodePointer call_target"
+          ],
+          "return_type": "WasmCode*",
+          "logic": "Finds the WasmCode wrapper corresponding to a given call target address. Returns nullptr if the call target doesn't belong to a known wrapper."
+        },
+        {
+          "name": "CompileWasmImportCallWrapper",
+          "parameters": [
+            "Isolate* isolate",
+            "ImportCallKind kind",
+            "const CanonicalSig* sig",
+            "CanonicalTypeIndex sig_index",
+            "bool source_positions",
+            "int expected_arity",
+            "Suspend suspend"
+          ],
+          "return_type": "WasmCode*",
+          "logic": "Compiles a new import call wrapper. Takes information about the import (kind, signature, arity) and compilation options. Creates a new WasmCode object and adds it to the cache if not already present."
+        }
+      ]
+    },
+    {
+      "name": "WasmImportWrapperCache::CacheKey",
+      "properties": [
+        "kind",
+        "type_index",
+        "expected_arity",
+        "suspend"
+      ],
+      "methods": []
+    },
+    {
+      "name": "WasmImportWrapperCache::CacheKeyHash",
+      "properties": [],
+      "methods": [
+        {
+          "name": "operator()",
+          "parameters": [
+            "const CacheKey& key"
+          ],
+          "return_type": "size_t",
+          "logic": "Hash function for CacheKey. Combines the hash values of 'kind', 'type_index', and 'expected_arity' to generate a unique hash for each key."
+        }
+      ]
+    },
+    {
+      "name": "WasmImportWrapperCache::ModificationScope",
+      "properties": [
+        "cache_",
+        "guard_"
+      ],
+      "methods": [
+        {
+          "name": "operator[]",
+          "parameters": [
+            "const CacheKey& key"
+          ],
+          "return_type": "WasmCode*",
+          "logic": "Allows accessing the cache using the [] operator, returning the WasmCode associated with the key.  Modifies the cache under a lock, so thread safe."
+        },
+        {
+          "name": "AddWrapper",
+          "parameters": [
+            "const CacheKey& key",
+            "WasmCompilationResult result",
+            "WasmCode::Kind kind",
+            "uint64_t signature_hash"
+          ],
+          "return_type": "WasmCode*",
+          "logic": "Adds a new wrapper to the cache, storing the WasmCode and its compilation result. The signature hash is included for verification purposes."
+        }
+      ]
+    }
+  ],
+  "functions": []
+}

@@ -1,0 +1,102 @@
+{
+  "file_path": "/home/kathirks_gc/v8_go/codebase/src/maglev/maglev-register-frame-array.h",
+  "imports": [
+    "src/interpreter/bytecode-register.h",
+    "src/maglev/maglev-compilation-unit.h",
+    "src/zone/zone.h"
+  ],
+  "classes": [
+    {
+      "name": "RegisterFrameArray",
+      "properties": [
+        "frame_start_"
+      ],
+      "methods": [
+        {
+          "name": "RegisterFrameArray",
+          "parameters": [
+            "const MaglevCompilationUnit& info"
+          ],
+          "return_type": "RegisterFrameArray",
+          "logic": "Constructor. Allocates memory for the register frame based on information from the MaglevCompilationUnit. Calculates the size of the frame needed for parameters, frame header and local variables. Sets frame_start_ to a butterfly pointer, positioning it to allow access to locals with positive indices and parameters with negative indices via interpreter::Register."
+        },
+        {
+          "name": "RegisterFrameArray",
+          "parameters": [
+            "const RegisterFrameArray& other"
+          ],
+          "return_type": "RegisterFrameArray",
+          "logic": "Deleted copy constructor to prevent implicit copying."
+        },
+        {
+          "name": "operator=",
+          "parameters": [
+            "const RegisterFrameArray& other"
+          ],
+          "return_type": "RegisterFrameArray&",
+          "logic": "Deleted assignment operator to prevent implicit copying."
+        },
+        {
+          "name": "RegisterFrameArray",
+          "parameters": [
+            "RegisterFrameArray&& other"
+          ],
+          "return_type": "RegisterFrameArray",
+          "logic": "Move constructor to allow moving RegisterFrameArrays."
+        },
+        {
+          "name": "operator=",
+          "parameters": [
+            "RegisterFrameArray&& other"
+          ],
+          "return_type": "RegisterFrameArray&",
+          "logic": "Move assignment operator to allow moving RegisterFrameArrays."
+        },
+        {
+          "name": "CopyFrom",
+          "parameters": [
+            "const MaglevCompilationUnit& info",
+            "const RegisterFrameArray& other",
+            "const compiler::BytecodeLivenessState* liveness"
+          ],
+          "return_type": "void",
+          "logic": "Copies values from another RegisterFrameArray. It copies parameters, and either all the locals, or just the live ones if liveness information is provided."
+        },
+        {
+          "name": "operator[]",
+          "parameters": [
+            "interpreter::Register reg"
+          ],
+          "return_type": "T&",
+          "logic": "Accesses the register value at the specified index (interpreter::Register). Returns a reference to the value."
+        },
+        {
+          "name": "operator[]",
+          "parameters": [
+            "interpreter::Register reg"
+          ],
+          "return_type": "const T&",
+          "logic": "Const overload. Accesses the register value at the specified index (interpreter::Register). Returns a const reference to the value."
+        },
+        {
+          "name": "DataSize",
+          "parameters": [
+            "int register_count",
+            "int parameter_count"
+          ],
+          "return_type": "static int",
+          "logic": "Calculates the required size of the data based on register count and parameter count. Returns total number of elements required."
+        },
+        {
+          "name": "data_begin",
+          "parameters": [
+            "int parameter_count"
+          ],
+          "return_type": "T*",
+          "logic": "Calculates the beginning of the array of data that corresponds to the parameters. Returns a pointer to this location."
+        }
+      ]
+    }
+  ],
+  "functions": []
+}

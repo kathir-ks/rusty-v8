@@ -1,0 +1,286 @@
+{
+  "file_path": "/home/kathirks_gc/v8_go/codebase/include/v8-memory-span.h",
+  "imports": [
+    "<stddef.h>",
+    "<array>",
+    "<cstddef>",
+    "<iterator>",
+    "<type_traits>",
+    "v8config.h",
+    "<version>",
+    "<ranges>"
+  ],
+  "classes": [
+    {
+      "name": "MemorySpan",
+      "properties": [
+        "T* data_",
+        "size_t size_"
+      ],
+      "methods": [
+        {
+          "name": "MemorySpan",
+          "parameters": [],
+          "return_type": "constexpr MemorySpan",
+          "logic": "Default constructor, creates an empty span."
+        },
+        {
+          "name": "MemorySpan",
+          "parameters": [
+            "std::nullptr_t",
+            "size_t"
+          ],
+          "return_type": "constexpr MemorySpan",
+          "logic": "Constructor from nullptr and count (for backwards compatibility)."
+        },
+        {
+          "name": "MemorySpan",
+          "parameters": [
+            "Iterator",
+            "size_t"
+          ],
+          "return_type": "constexpr MemorySpan",
+          "logic": "Constructor from an iterator and count."
+        },
+        {
+          "name": "MemorySpan",
+          "parameters": [
+            "Iterator",
+            "Iterator"
+          ],
+          "return_type": "constexpr MemorySpan",
+          "logic": "Constructor from two iterators. Calculates the size as the difference between the two iterators."
+        },
+        {
+          "name": "MemorySpan",
+          "parameters": [
+            "T (&a)[N]"
+          ],
+          "return_type": "constexpr MemorySpan",
+          "logic": "Implicit conversion from C-style array."
+        },
+        {
+          "name": "MemorySpan",
+          "parameters": [
+            "std::array<U, N>& a"
+          ],
+          "return_type": "constexpr MemorySpan",
+          "logic": "Implicit conversion from std::array."
+        },
+        {
+          "name": "MemorySpan",
+          "parameters": [
+            "const std::array<U, N>& a"
+          ],
+          "return_type": "constexpr MemorySpan",
+          "logic": "Implicit conversion from const std::array."
+        },
+        {
+          "name": "data",
+          "parameters": [],
+          "return_type": "T*",
+          "logic": "Returns a pointer to the beginning of the buffer."
+        },
+        {
+          "name": "size",
+          "parameters": [],
+          "return_type": "size_t",
+          "logic": "Returns the number of elements that the buffer holds."
+        },
+        {
+          "name": "operator[]",
+          "parameters": [
+            "size_t i"
+          ],
+          "return_type": "T&",
+          "logic": "Returns a reference to the element at the given index."
+        },
+        {
+          "name": "empty",
+          "parameters": [],
+          "return_type": "bool",
+          "logic": "Returns true if the buffer is empty."
+        },
+        {
+          "name": "begin",
+          "parameters": [],
+          "return_type": "Iterator",
+          "logic": "Returns an iterator to the beginning of the span."
+        },
+        {
+          "name": "end",
+          "parameters": [],
+          "return_type": "Iterator",
+          "logic": "Returns an iterator to the end of the span."
+        }
+      ]
+    },
+    {
+      "name": "MemorySpan::Iterator",
+      "properties": [
+        "T* ptr_"
+      ],
+      "methods": [
+        {
+          "name": "Iterator",
+          "parameters": [],
+          "return_type": "constexpr Iterator",
+          "logic": "Default constructor."
+        },
+        {
+          "name": "operator==",
+          "parameters": [
+            "const Iterator& a",
+            "const Iterator& b"
+          ],
+          "return_type": "friend constexpr bool",
+          "logic": "Equality comparison operator for iterators."
+        },
+        {
+          "name": "operator++",
+          "parameters": [],
+          "return_type": "constexpr Iterator&",
+          "logic": "Prefix increment operator."
+        },
+        {
+          "name": "operator++",
+          "parameters": [
+            "int"
+          ],
+          "return_type": "constexpr Iterator",
+          "logic": "Postfix increment operator."
+        },
+        {
+          "name": "operator--",
+          "parameters": [],
+          "return_type": "constexpr Iterator&",
+          "logic": "Prefix decrement operator."
+        },
+        {
+          "name": "operator--",
+          "parameters": [
+            "int"
+          ],
+          "return_type": "constexpr Iterator",
+          "logic": "Postfix decrement operator."
+        },
+        {
+          "name": "operator+=",
+          "parameters": [
+            "difference_type rhs"
+          ],
+          "return_type": "constexpr Iterator&",
+          "logic": "Adds a value to the iterator."
+        },
+        {
+          "name": "operator+",
+          "parameters": [
+            "Iterator lhs",
+            "difference_type rhs"
+          ],
+          "return_type": "friend constexpr Iterator",
+          "logic": "Adds a value to the iterator (friend function)."
+        },
+        {
+          "name": "operator+",
+          "parameters": [
+            "difference_type lhs",
+            "const Iterator& rhs"
+          ],
+          "return_type": "friend constexpr Iterator",
+          "logic": "Adds a value to the iterator (friend function, commutative)."
+        },
+        {
+          "name": "operator-=",
+          "parameters": [
+            "difference_type rhs"
+          ],
+          "return_type": "constexpr Iterator&",
+          "logic": "Subtracts a value from the iterator."
+        },
+        {
+          "name": "operator-",
+          "parameters": [
+            "Iterator lhs",
+            "difference_type rhs"
+          ],
+          "return_type": "friend constexpr Iterator",
+          "logic": "Subtracts a value from the iterator (friend function)."
+        },
+        {
+          "name": "operator-",
+          "parameters": [
+            "const Iterator& lhs",
+            "const Iterator& rhs"
+          ],
+          "return_type": "friend constexpr difference_type",
+          "logic": "Subtracts two iterators and returns the difference."
+        },
+        {
+          "name": "operator*",
+          "parameters": [],
+          "return_type": "constexpr reference",
+          "logic": "Dereferences the iterator and returns a reference to the value."
+        },
+        {
+          "name": "operator->",
+          "parameters": [],
+          "return_type": "constexpr pointer",
+          "logic": "Returns a pointer to the value the iterator points to."
+        },
+        {
+          "name": "operator[]",
+          "parameters": [
+            "size_t offset"
+          ],
+          "return_type": "constexpr reference",
+          "logic": "Returns a reference to the element at a given offset from the iterator."
+        },
+        {
+          "name": "Iterator",
+          "parameters": [
+            "T* ptr"
+          ],
+          "return_type": "constexpr explicit Iterator",
+          "logic": "Constructor, initializes the iterator with a pointer."
+        }
+      ]
+    }
+  ],
+  "functions": [
+    {
+      "name": "to_array_lvalue_impl",
+      "parameters": [
+        "T (&a)[N]",
+        "std::index_sequence<I...>"
+      ],
+      "return_type": "constexpr std::array<std::remove_cv_t<T>, N>",
+      "logic": "Helper function for to_array to create a std::array from an lvalue array."
+    },
+    {
+      "name": "to_array_rvalue_impl",
+      "parameters": [
+        "T (&&a)[N]",
+        "std::index_sequence<I...>"
+      ],
+      "return_type": "constexpr std::array<std::remove_cv_t<T>, N>",
+      "logic": "Helper function for to_array to create a std::array from an rvalue array."
+    },
+    {
+      "name": "to_array",
+      "parameters": [
+        "T (&a)[N]"
+      ],
+      "return_type": "constexpr std::array<std::remove_cv_t<T>, N>",
+      "logic": "Creates a std::array from a C-style array (lvalue version)."
+    },
+    {
+      "name": "to_array",
+      "parameters": [
+        "T (&&a)[N]"
+      ],
+      "return_type": "constexpr std::array<std::remove_cv_t<T>, N>",
+      "logic": "Creates a std::array from a C-style array (rvalue version)."
+    }
+  ]
+}

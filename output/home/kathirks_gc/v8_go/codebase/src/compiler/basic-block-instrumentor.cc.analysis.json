@@ -1,0 +1,111 @@
+{
+  "file_path": "/home/kathirks_gc/v8_go/codebase/src/compiler/basic-block-instrumentor.cc",
+  "imports": [
+    "src/compiler/basic-block-instrumentor.h",
+    "sstream",
+    "src/codegen/optimized-compilation-info.h",
+    "src/compiler/common-operator.h",
+    "src/compiler/linkage.h",
+    "src/compiler/machine-operator.h",
+    "src/compiler/node.h",
+    "src/compiler/operator-properties.h",
+    "src/compiler/schedule.h",
+    "src/compiler/turbofan-graph.h",
+    "src/compiler/turboshaft/graph.h",
+    "src/compiler/turboshaft/operation-matcher.h",
+    "src/compiler/turboshaft/operations.h",
+    "src/objects/objects-inl.h"
+  ],
+  "classes": [
+    {
+      "name": "BasicBlockInstrumentor",
+      "properties": [],
+      "methods": [
+        {
+          "name": "Instrument",
+          "parameters": [
+            "OptimizedCompilationInfo* info",
+            "TFGraph* graph",
+            "Schedule* schedule",
+            "Isolate* isolate"
+          ],
+          "return_type": "BasicBlockProfilerData*",
+          "logic": "Instruments the given schedule by adding increment instructions to the start of each basic block to track execution counts.  It allocates a BasicBlockProfilerData object and populates it with the block IDs and successor information.  Depending on whether the code is generating embedded builtins, the counters are stored either in a heap object or in the BasicBlockProfilerData directly.  Saturates the incremented counts to prevent overflows, introducing load and store operations."
+        }
+      ]
+    },
+    {
+      "name": "BasicBlockCallGraphProfiler",
+      "properties": [],
+      "methods": [
+        {
+          "name": "StoreCallGraph",
+          "parameters": [
+            "OptimizedCompilationInfo* info",
+            "Schedule* schedule"
+          ],
+          "return_type": "void",
+          "logic": "Traverses the schedule's basic blocks and identifies call sites within each block. For each call site, it checks if the callee is a builtin function and records the call in the BuiltinsCallGraph profiler, associating the caller builtin, callee builtin, and the block ID."
+        },
+        {
+          "name": "StoreCallGraph",
+          "parameters": [
+            "OptimizedCompilationInfo* info",
+            "const turboshaft::Graph& graph"
+          ],
+          "return_type": "void",
+          "logic": "Traverses the turboshaft graph's basic blocks and identifies call sites within each block. For each call site, it checks if the callee is a builtin function and records the call in the BuiltinsCallGraph profiler, associating the caller builtin, callee builtin, and the block ID."
+        }
+      ]
+    }
+  ],
+  "functions": [
+    {
+      "name": "FindInsertionPoint",
+      "parameters": [
+        "BasicBlock* block"
+      ],
+      "return_type": "NodeVector::iterator",
+      "logic": "Finds the first suitable insertion point in a scheduled basic block where new nodes can be inserted without disrupting the register allocator. It skips nodes related to block beginnings, parameters, phis, and effect phis."
+    },
+    {
+      "name": "IntPtrConstant",
+      "parameters": [
+        "CommonOperatorBuilder* common",
+        "intptr_t value"
+      ],
+      "return_type": "const Operator*",
+      "logic": "Creates an integer constant operator based on the system's pointer size (32 or 64 bits)."
+    },
+    {
+      "name": "PointerConstant",
+      "parameters": [
+        "CommonOperatorBuilder* common",
+        "const void* ptr"
+      ],
+      "return_type": "const Operator*",
+      "logic": "Creates a constant operator representing a pointer value by converting the pointer to an integer."
+    },
+    {
+      "name": "StoreBuiltinCallForNode",
+      "parameters": [
+        "Node* n",
+        "Builtin builtin",
+        "int block_id",
+        "BuiltinsCallGraph* bcc_profiler"
+      ],
+      "return_type": "void",
+      "logic": "Checks if a given node represents a call to a builtin function. If it is, it stores the call information (caller builtin, callee builtin, and block ID) in the BuiltinsCallGraph profiler."
+    },
+    {
+      "name": "IsBuiltinCall",
+      "parameters": [
+        "const turboshaft::Operation& op",
+        "const turboshaft::Graph& graph",
+        "Builtin* called_builtin"
+      ],
+      "return_type": "bool",
+      "logic": "Determines if a given Turboshaft operation is a call or tail call to a builtin function. If it is, it returns true and sets the `called_builtin` output parameter to the ID of the called builtin. It uses pattern matching to find call/tail-call operations with HeapConstant callees representing Code objects that are builtins."
+    }
+  ]
+}

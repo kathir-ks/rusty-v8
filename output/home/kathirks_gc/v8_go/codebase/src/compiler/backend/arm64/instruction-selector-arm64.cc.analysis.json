@@ -1,0 +1,785 @@
+{
+  "file_path": "/home/kathirks_gc/v8_go/codebase/src/compiler/backend/arm64/instruction-selector-arm64.cc",
+  "imports": [
+    "<optional>",
+    "src/base/bits.h",
+    "src/base/logging.h",
+    "src/codegen/assembler-inl.h",
+    "src/codegen/machine-type.h",
+    "src/common/globals.h",
+    "src/compiler/backend/instruction-codes.h",
+    "src/compiler/backend/instruction-selector-impl.h",
+    "src/compiler/backend/instruction-selector.h",
+    "src/compiler/machine-operator.h",
+    "src/compiler/turboshaft/operation-matcher.h",
+    "src/compiler/turboshaft/operations.h",
+    "src/compiler/turboshaft/opmasks.h",
+    "src/compiler/turboshaft/representations.h",
+    "src/flags/flags.h"
+  ],
+  "classes": [
+    {
+      "name": "Arm64OperandGeneratorT",
+      "properties": [],
+      "methods": [
+        {
+          "name": "Arm64OperandGeneratorT",
+          "parameters": [
+            "InstructionSelectorT* selector"
+          ],
+          "return_type": "explicit",
+          "logic": "Constructor for Arm64OperandGeneratorT, initializes the base class."
+        },
+        {
+          "name": "UseOperand",
+          "parameters": [
+            "OpIndex node",
+            "ImmediateMode mode"
+          ],
+          "return_type": "InstructionOperand",
+          "logic": "Chooses between using an immediate or a register for the given node, based on whether it can be represented as an immediate in the given mode."
+        },
+        {
+          "name": "IsImmediateZero",
+          "parameters": [
+            "OpIndex node"
+          ],
+          "return_type": "bool",
+          "logic": "Checks if the given node represents the immediate value zero (integer, float32, or float64)."
+        },
+        {
+          "name": "UseRegisterOrImmediateZero",
+          "parameters": [
+            "OpIndex node"
+          ],
+          "return_type": "InstructionOperand",
+          "logic": "Uses the zero register if the node is an immediate zero, otherwise assigns a register."
+        },
+        {
+          "name": "UseRegisterAtEndOrImmediateZero",
+          "parameters": [
+            "OpIndex node"
+          ],
+          "return_type": "InstructionOperand",
+          "logic": "Uses the zero register if the node is an immediate zero, otherwise assigns a register, keeping it alive for the whole sequence of continuation instructions."
+        },
+        {
+          "name": "UseImmediateOrTemp",
+          "parameters": [
+            "OpIndex node",
+            "int32_t value"
+          ],
+          "return_type": "InstructionOperand",
+          "logic": "Uses the provided node if it has the required value, or creates a TempImmediate otherwise."
+        },
+        {
+          "name": "IsIntegerConstant",
+          "parameters": [
+            "OpIndex node"
+          ],
+          "return_type": "bool",
+          "logic": "Checks if the given node is an integer constant."
+        },
+        {
+          "name": "GetOptionalIntegerConstant",
+          "parameters": [
+            "OpIndex operation"
+          ],
+          "return_type": "std::optional<int64_t>",
+          "logic": "Returns the integer constant value of a node if it's a constant, otherwise returns nullopt."
+        },
+        {
+          "name": "CanBeImmediate",
+          "parameters": [
+            "OpIndex node",
+            "ImmediateMode mode"
+          ],
+          "return_type": "bool",
+          "logic": "Checks if the given node (assumed to be a constant) can be represented as an immediate in the given mode."
+        },
+        {
+          "name": "CanBeImmediate",
+          "parameters": [
+            "int64_t value",
+            "ImmediateMode mode"
+          ],
+          "return_type": "bool",
+          "logic": "Checks if the given integer value can be represented as an immediate in the given mode, considering the Arm64 instruction set limitations."
+        },
+        {
+          "name": "CanBeLoadStoreShiftImmediate",
+          "parameters": [
+            "OpIndex node",
+            "MachineRepresentation rep"
+          ],
+          "return_type": "bool",
+          "logic": "Checks if the given node represents a constant that can be used as a shifted immediate for load/store operations."
+        },
+        {
+          "name": "IsLoadStoreImmediate",
+          "parameters": [
+            "int64_t value",
+            "unsigned size"
+          ],
+          "return_type": "bool",
+          "logic": "Checks if the provided value is a valid immediate for load and store instructions, considering the specified size."
+        }
+      ]
+    },
+    {
+      "name": "ExtendingLoadMatcher",
+      "properties": [],
+      "methods": [
+        {
+          "name": "ExtendingLoadMatcher",
+          "parameters": [
+            "OpIndex node",
+            "InstructionSelectorT* selector"
+          ],
+          "return_type": "explicit",
+          "logic": "Constructor for the ExtendingLoadMatcher class"
+        },
+        {
+          "name": "Matches",
+          "parameters": [],
+          "return_type": "bool",
+          "logic": "Returns true if the node matches extending load pattern."
+        },
+        {
+          "name": "base",
+          "parameters": [],
+          "return_type": "OpIndex",
+          "logic": "Returns the base of the load if the match succeeds."
+        },
+        {
+          "name": "immediate",
+          "parameters": [],
+          "return_type": "int64_t",
+          "logic": "Returns the immediate of the load if the match succeeds."
+        },
+        {
+          "name": "opcode",
+          "parameters": [],
+          "return_type": "ArchOpcode",
+          "logic": "Returns the opcode if the match succeeds."
+        }
+      ]
+    },
+    {
+      "name": "CompareSequence",
+      "properties": [],
+      "methods": [
+        {
+          "name": "InitialCompare",
+          "parameters": [
+            "OpIndex op",
+            "OpIndex l",
+            "OpIndex r",
+            "RegisterRepresentation rep"
+          ],
+          "return_type": "void",
+          "logic": "Initializes the compare sequence with the first compare operation."
+        },
+        {
+          "name": "HasCompare",
+          "parameters": [],
+          "return_type": "bool",
+          "logic": "Returns true if the compare sequence has been initialized."
+        },
+        {
+          "name": "cmp",
+          "parameters": [],
+          "return_type": "OpIndex",
+          "logic": "Returns the OpIndex of the initial compare operation."
+        },
+        {
+          "name": "left",
+          "parameters": [],
+          "return_type": "OpIndex",
+          "logic": "Returns the OpIndex of the left operand of the initial compare operation."
+        },
+        {
+          "name": "right",
+          "parameters": [],
+          "return_type": "OpIndex",
+          "logic": "Returns the OpIndex of the right operand of the initial compare operation."
+        },
+        {
+          "name": "opcode",
+          "parameters": [],
+          "return_type": "InstructionCode",
+          "logic": "Returns the instruction code for the initial compare operation."
+        },
+        {
+          "name": "num_ccmps",
+          "parameters": [],
+          "return_type": "uint32_t",
+          "logic": "Returns the number of conditional compares in the sequence."
+        },
+        {
+          "name": "ccmps",
+          "parameters": [],
+          "return_type": "FlagsContinuationT::compare_chain_t&",
+          "logic": "Returns a reference to the compare chain for the flags continuation."
+        },
+        {
+          "name": "AddConditionalCompare",
+          "parameters": [
+            "RegisterRepresentation rep",
+            "FlagsCondition ccmp_condition",
+            "FlagsCondition default_flags",
+            "OpIndex ccmp_lhs",
+            "OpIndex ccmp_rhs"
+          ],
+          "return_type": "void",
+          "logic": "Adds a conditional compare to the compare sequence."
+        }
+      ]
+    },
+    {
+      "name": "CompareChainNode",
+      "properties": [],
+      "methods": [
+        {
+          "name": "CompareChainNode",
+          "parameters": [
+            "OpIndex n",
+            "FlagsCondition condition"
+          ],
+          "return_type": "explicit",
+          "logic": "Constructor for FlagSetting node kind."
+        },
+        {
+          "name": "CompareChainNode",
+          "parameters": [
+            "OpIndex n",
+            "CompareChainNode* l",
+            "CompareChainNode* r"
+          ],
+          "return_type": "explicit",
+          "logic": "Constructor for LogicalCombine node kind."
+        },
+        {
+          "name": "SetCondition",
+          "parameters": [
+            "FlagsCondition condition"
+          ],
+          "return_type": "void",
+          "logic": "Sets condition and negates flags if required."
+        },
+        {
+          "name": "MarkRequiresNegation",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Marks the node to require flag negation."
+        },
+        {
+          "name": "NegateFlags",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Negates the flags (condition)."
+        },
+        {
+          "name": "CommuteFlags",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Commutes the flags(condition)."
+        },
+        {
+          "name": "IsLegalFirstCombine",
+          "parameters": [],
+          "return_type": "bool",
+          "logic": "Check if it's a legal first combination(lhs&rhs are flag setting nodes)"
+        },
+        {
+          "name": "IsFlagSetting",
+          "parameters": [],
+          "return_type": "bool",
+          "logic": "Checks if the current node is a flag setting node."
+        },
+        {
+          "name": "IsLogicalCombine",
+          "parameters": [],
+          "return_type": "bool",
+          "logic": "Checks if the current node is a logical combine node."
+        },
+        {
+          "name": "node",
+          "parameters": [],
+          "return_type": "OpIndex",
+          "logic": "Returns the OpIndex for the current node."
+        },
+        {
+          "name": "user_condition",
+          "parameters": [],
+          "return_type": "FlagsCondition",
+          "logic": "Returns the flag condition."
+        },
+        {
+          "name": "lhs",
+          "parameters": [],
+          "return_type": "CompareChainNode*",
+          "logic": "Returns the left node"
+        },
+        {
+          "name": "rhs",
+          "parameters": [],
+          "return_type": "CompareChainNode*",
+          "logic": "Returns the right node"
+        }
+      ]
+    }
+  ],
+  "functions": [
+    {
+      "name": "VisitRR",
+      "parameters": [
+        "InstructionSelectorT* selector",
+        "ArchOpcode opcode",
+        "OpIndex node"
+      ],
+      "return_type": "void",
+      "logic": "Emits an instruction with two register operands."
+    },
+    {
+      "name": "VisitRRR",
+      "parameters": [
+        "InstructionSelectorT* selector",
+        "InstructionCode opcode",
+        "OpIndex node"
+      ],
+      "return_type": "void",
+      "logic": "Emits an instruction with three register operands."
+    },
+    {
+      "name": "VisitRR",
+      "parameters": [
+        "InstructionSelectorT* selector",
+        "InstructionCode opcode",
+        "OpIndex node"
+      ],
+      "return_type": "void",
+      "logic": "For WebAssembly: Emits an instruction with two register operands."
+    },
+    {
+      "name": "VisitSimdShiftRRR",
+      "parameters": [
+        "InstructionSelectorT* selector",
+        "ArchOpcode opcode",
+        "OpIndex node",
+        "int width"
+      ],
+      "return_type": "void",
+      "logic": "For WebAssembly: Emits a SIMD shift instruction with three operands, handling immediate shifts appropriately."
+    },
+    {
+      "name": "VisitRRI",
+      "parameters": [
+        "InstructionSelectorT* selector",
+        "InstructionCode opcode",
+        "OpIndex node"
+      ],
+      "return_type": "void",
+      "logic": "For WebAssembly: Emits an instruction with two register operands and one immediate operand. (Extract Lane)"
+    },
+    {
+      "name": "VisitRRIR",
+      "parameters": [
+        "InstructionSelectorT* selector",
+        "InstructionCode opcode",
+        "OpIndex node"
+      ],
+      "return_type": "void",
+      "logic": "For WebAssembly: Emits an instruction with two register operands, one immediate and a unique register. (Replace Lane)"
+    },
+    {
+      "name": "VisitRRO",
+      "parameters": [
+        "InstructionSelectorT* selector",
+        "ArchOpcode opcode",
+        "OpIndex node",
+        "ImmediateMode operand_mode"
+      ],
+      "return_type": "void",
+      "logic": "Emits an instruction with two register operands and one operand that can be either a register or an immediate."
+    },
+    {
+      "name": "TryMatchExtendingLoad",
+      "parameters": [
+        "InstructionSelectorT* selector",
+        "OpIndex node"
+      ],
+      "return_type": "bool",
+      "logic": "Tries to match an extending load instruction (e.g., Ldrsw) and returns true if a match is found."
+    },
+    {
+      "name": "TryEmitExtendingLoad",
+      "parameters": [
+        "InstructionSelectorT* selector",
+        "OpIndex node"
+      ],
+      "return_type": "bool",
+      "logic": "Tries to emit an extending load instruction based on the matched pattern. Returns true if successfully emitted."
+    },
+    {
+      "name": "TryMatchAnyShift",
+      "parameters": [
+        "InstructionSelectorT* selector",
+        "OpIndex node",
+        "OpIndex input_node",
+        "InstructionCode* opcode",
+        "bool try_ror",
+        "RegisterRepresentation rep"
+      ],
+      "return_type": "bool",
+      "logic": "Tries to match a shift operation. Updates the opcode with addressing mode and returns true if there is a match."
+    },
+    {
+      "name": "TryMatchBitwiseAndSmallMask",
+      "parameters": [
+        "OperationMatcher& matcher",
+        "OpIndex op",
+        "OpIndex* left",
+        "int32_t* mask"
+      ],
+      "return_type": "bool",
+      "logic": "Tries to match a bitwise AND operation with a small mask."
+    },
+    {
+      "name": "TryMatchSignExtendShift",
+      "parameters": [
+        "InstructionSelectorT* selector",
+        "OpIndex op",
+        "OpIndex* left",
+        "int32_t* shift_by"
+      ],
+      "return_type": "bool",
+      "logic": "Tries to match a sign extend shift operation."
+    },
+    {
+      "name": "TryMatchAnyExtend",
+      "parameters": [
+        "Arm64OperandGeneratorT* g",
+        "InstructionSelectorT* selector",
+        "OpIndex node",
+        "OpIndex left_node",
+        "OpIndex right_node",
+        "InstructionOperand* left_op",
+        "InstructionOperand* right_op",
+        "InstructionCode* opcode"
+      ],
+      "return_type": "bool",
+      "logic": "Tries to match an extend operation, such as sign or zero extension. Updates the opcode and operands if successful."
+    },
+    {
+      "name": "TryMatchLoadStoreShift",
+      "parameters": [
+        "Arm64OperandGeneratorT* g",
+        "InstructionSelectorT* selector",
+        "MachineRepresentation rep",
+        "OpIndex node",
+        "OpIndex index",
+        "InstructionOperand* index_op",
+        "InstructionOperand* shift_immediate_op"
+      ],
+      "return_type": "bool",
+      "logic": "Tries to match a load/store operation with a shifted index."
+    },
+    {
+      "name": "GetBinopProperties",
+      "parameters": [
+        "InstructionCode opcode"
+      ],
+      "return_type": "uint8_t",
+      "logic": "Returns the properties of a binary operator as a bitfield (CanCommute, MustCommuteCond, IsComparison, IsAddSub)."
+    },
+    {
+      "name": "VisitBinopImpl",
+      "parameters": [
+        "InstructionSelectorT* selector",
+        "OpIndex binop_idx",
+        "OpIndex left_node",
+        "OpIndex right_node",
+        "RegisterRepresentation rep",
+        "InstructionCode opcode",
+        "ImmediateMode operand_mode",
+        "FlagsContinuationT* cont"
+      ],
+      "return_type": "void",
+      "logic": "Shared routine to emit a binary operation using instruction code, immediate mode and flags continuation"
+    },
+    {
+      "name": "VisitBinop",
+      "parameters": [
+        "InstructionSelectorT* selector",
+        "OpIndex binop_idx",
+        "RegisterRepresentation rep",
+        "InstructionCode opcode",
+        "ImmediateMode operand_mode",
+        "FlagsContinuationT* cont"
+      ],
+      "return_type": "void",
+      "logic": "Shared routine for multiple binary operations with continuation."
+    },
+    {
+      "name": "VisitBinop",
+      "parameters": [
+        "InstructionSelectorT* selector",
+        "OpIndex node",
+        "RegisterRepresentation rep",
+        "ArchOpcode opcode",
+        "ImmediateMode operand_mode"
+      ],
+      "return_type": "void",
+      "logic": "Shared routine for multiple binary operations."
+    },
+    {
+      "name": "GetBinopLeftRightCstOnTheRight",
+      "parameters": [
+        "InstructionSelectorT* selector",
+        "const WordBinopOp& binop"
+      ],
+      "return_type": "std::tuple<OpIndex, OpIndex>",
+      "logic": "Returns the left and right operands of a binary operation, ensuring that the constant operand is on the right."
+    },
+    {
+      "name": "VisitAddSub",
+      "parameters": [
+        "InstructionSelectorT* selector",
+        "OpIndex node",
+        "ArchOpcode opcode",
+        "ArchOpcode negate_opcode"
+      ],
+      "return_type": "void",
+      "logic": "Shared routine for add and subtract operations, handling immediate operands."
+    },
+    {
+      "name": "LeftShiftForReducedMultiply",
+      "parameters": [
+        "Matcher* m"
+      ],
+      "return_type": "int32_t",
+      "logic": "Calculates the left shift amount needed to reduce a multiplication by an immediate to an addition with left shift."
+    },
+    {
+      "name": "LeftShiftForReducedMultiply",
+      "parameters": [
+        "InstructionSelectorT* selector",
+        "OpIndex rhs"
+      ],
+      "return_type": "int32_t",
+      "logic": "Calculates the left shift amount needed to reduce a multiplication by an immediate to an addition with left shift using InstructionSelectorT."
+    },
+    {
+      "name": "TryEmitMulitplyAdd",
+      "parameters": [
+        "InstructionSelectorT* selector",
+        "OpIndex add",
+        "OpIndex lhs",
+        "OpIndex rhs",
+        "InstructionCode madd_opcode"
+      ],
+      "return_type": "bool",
+      "logic": "Try to emit a Multiply-Add instruction by matching a pattern."
+    },
+    {
+      "name": "TryEmitMultiplyAddInt32",
+      "parameters": [
+        "InstructionSelectorT* selector",
+        "OpIndex add",
+        "OpIndex lhs",
+        "OpIndex rhs"
+      ],
+      "return_type": "bool",
+      "logic": "Try to emit a Multiply-Add instruction for int32."
+    },
+    {
+      "name": "TryEmitMultiplyAddInt64",
+      "parameters": [
+        "InstructionSelectorT* selector",
+        "OpIndex add",
+        "OpIndex lhs",
+        "OpIndex rhs"
+      ],
+      "return_type": "bool",
+      "logic": "Try to emit a Multiply-Add instruction for int64."
+    },
+    {
+      "name": "TryEmitMultiplyNegate",
+      "parameters": [
+        "InstructionSelectorT* selector",
+        "OpIndex mul",
+        "OpIndex lhs",
+        "OpIndex rhs",
+        "InstructionCode mneg_opcode"
+      ],
+      "return_type": "bool",
+      "logic": "Try to emit a Multiply-Negate instruction by matching a pattern."
+    },
+    {
+      "name": "TryEmitMultiplyNegateInt32",
+      "parameters": [
+        "InstructionSelectorT* selector",
+        "OpIndex mul",
+        "OpIndex lhs",
+        "OpIndex rhs"
+      ],
+      "return_type": "bool",
+      "logic": "Try to emit a Multiply-Negate instruction for int32."
+    },
+    {
+      "name": "TryEmitMultiplyNegateInt64",
+      "parameters": [
+        "InstructionSelectorT* selector",
+        "OpIndex mul",
+        "OpIndex lhs",
+        "OpIndex rhs"
+      ],
+      "return_type": "bool",
+      "logic": "Try to emit a Multiply-Negate instruction for int64."
+    },
+    {
+      "name": "TryEmitMultiplySub",
+      "parameters": [
+        "InstructionSelectorT* selector",
+        "OpIndex node",
+        "InstructionCode msub_opbocde"
+      ],
+      "return_type": "bool",
+      "logic": "Try to emit a Multiply-Subtract instruction by matching a pattern."
+    },
+    {
+      "name": "GetStoreOpcodeAndImmediate",
+      "parameters": [
+        "MemoryRepresentation stored_rep",
+        "bool paired"
+      ],
+      "return_type": "std::tuple<InstructionCode, ImmediateMode>",
+      "logic": "Returns store instruction code and immediate mode based on storage representation and pairing."
+    },
+    {
+      "name": "EmitLoad",
+      "parameters": [
+        "InstructionSelectorT* selector",
+        "OpIndex node",
+        "InstructionCode opcode",
+        "ImmediateMode immediate_mode",
+        "MachineRepresentation rep",
+        "OptionalOpIndex output"
+      ],
+      "return_type": "void",
+      "logic": "Emits a load instruction, handling different addressing modes, root register access, and immediates."
+    },
+    {
+      "name": "EmitAddBeforeLoadOrStore",
+      "parameters": [
+        "InstructionSelectorT* selector",
+        "OpIndex node",
+        "InstructionCode* opcode"
+      ],
+      "return_type": "InstructionOperand",
+      "logic": "Manually add base and index into a register to get the actual address."
+    },
+    {
+      "name": "GetLoadOpcodeAndImmediate",
+      "parameters": [
+        "MemoryRepresentation loaded_rep",
+        "RegisterRepresentation result_rep"
+      ],
+      "return_type": "std::tuple<InstructionCode, ImmediateMode>",
+      "logic": "Returns the load opcode and immediate mode depending on the memory and register representations."
+    },
+    {
+      "name": "GetLoadOpcodeAndImmediate",
+      "parameters": [
+        "LoadRepresentation load_rep"
+      ],
+      "return_type": "std::tuple<InstructionCode, ImmediateMode>",
+      "logic": "Returns the load opcode and immediate mode from LoadRepresentation."
+    },
+    {
+      "name": "GetFlagsCondition",
+      "parameters": [
+        "OpIndex node",
+        "InstructionSelectorT* selector"
+      ],
+      "return_type": "std::optional<FlagsCondition>",
+      "logic": "Determines the FlagsCondition for a given comparison node."
+    },
+    {
+      "name": "FindCompareChain",
+      "parameters": [
+        "OpIndex user",
+        "OpIndex node",
+        "InstructionSelectorT* selector",
+        "Zone* zone",
+        "ZoneVector<CompareChainNode*>& nodes"
+      ],
+      "return_type": "std::optional<CompareChainNode*>",
+      "logic": "Recursively finds a chain of compare and logical operations, building a CompareChainNode tree."
+    },
+    {
+      "name": "CombineFlagSettingOps",
+      "parameters": [
+        "CompareChainNode* logic_node",
+        "InstructionSelectorT* selector",
+        "CompareSequence* sequence"
+      ],
+      "return_type": "void",
+      "logic": "Combines flag setting operations (comparisons) into a conditional compare sequence."
+    },
+    {
+      "name": "TryMatchConditionalCompareChainShared",
+      "parameters": [
+        "InstructionSelectorT* selector",
+        "Zone* zone",
+        "OpIndex node",
+        "CompareSequence* sequence"
+      ],
+      "return_type": "std::optional<FlagsCondition>",
+      "logic": "Tries to match a chain of conditional compare operations to optimize flag setting."
+    },
+    {
+      "name": "TryMatchConditionalCompareChainBranch",
+      "parameters": [
+        "InstructionSelectorT* selector",
+        "Zone* zone",
+        "OpIndex node",
+        "FlagsContinuationT* cont"
+      ],
+      "return_type": "bool",
+      "logic": "Tries to match a conditional compare chain for a branch instruction."
+    },
+    {
+      "name": "TryMatchConditionalCompareChainSet",
+      "parameters": [
+        "InstructionSelectorT* selector",
+        "Zone* zone",
+        "OpIndex node"
+      ],
+      "return_type": "bool",
+      "logic": "Tries to match a conditional compare chain to generate conditional set instructions."
+    },
+    {
+      "name": "VisitLogical",
+      "parameters": [
+        "InstructionSelectorT* selector",
+        "Zone* zone",
+        "OpIndex node",
+        "WordRepresentation rep",
+        "ArchOpcode opcode",
+        "bool left_can_cover",
+        "bool right_can_cover",
+        "ImmediateMode imm_mode"
+      ],
+      "return_type": "void",
+      "logic": "Visit logical operation"
+    },
+    {
+      "name": "EmitInt32MulWith",
+      "parameters": [],
+      "return_type": "void",
+      "logic": "Placeholder for a function that has been truncated due to the output size limitation."
+    }
+  ]
+}

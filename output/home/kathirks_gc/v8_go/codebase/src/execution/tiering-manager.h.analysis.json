@@ -1,0 +1,130 @@
+{
+  "file_path": "/home/kathirks_gc/v8_go/codebase/src/execution/tiering-manager.h",
+  "imports": [
+    "<optional>",
+    "src/common/assert-scope.h",
+    "src/handles/handles.h",
+    "src/utils/allocation.h"
+  ],
+  "classes": [
+    {
+      "name": "TieringManager",
+      "properties": [
+        "isolate_"
+      ],
+      "methods": [
+        {
+          "name": "TieringManager",
+          "parameters": [
+            "Isolate* isolate"
+          ],
+          "return_type": "void",
+          "logic": "Constructor. Initializes the TieringManager with a pointer to the Isolate."
+        },
+        {
+          "name": "OnInterruptTick",
+          "parameters": [
+            "DirectHandle<JSFunction> function",
+            "CodeKind code_kind"
+          ],
+          "return_type": "void",
+          "logic": "Called on interrupt ticks to potentially trigger tiering (optimization).  Checks if a function is eligible for optimization and possibly initiates the process."
+        },
+        {
+          "name": "NotifyICChanged",
+          "parameters": [
+            "Tagged<FeedbackVector> vector"
+          ],
+          "return_type": "void",
+          "logic": "Notifies the TieringManager that the inline cache (IC) state has changed for a given FeedbackVector. This might influence optimization decisions."
+        },
+        {
+          "name": "RequestOsrAtNextOpportunity",
+          "parameters": [
+            "Tagged<JSFunction> function"
+          ],
+          "return_type": "void",
+          "logic": "Requests an on-stack replacement (OSR) optimization for a given function at the next suitable opportunity (JumpLoop)."
+        },
+        {
+          "name": "InterruptBudgetFor",
+          "parameters": [
+            "Isolate* isolate",
+            "Tagged<JSFunction> function",
+            "std::optional<CodeKind> override_active_tier"
+          ],
+          "return_type": "int",
+          "logic": "Determines the interrupt budget for a given JSFunction.  The interrupt budget controls how often a function can be interrupted for tiering checks. It can be overridden by optional CodeKind argument."
+        },
+        {
+          "name": "MarkForTurboFanOptimization",
+          "parameters": [
+            "Tagged<JSFunction> function"
+          ],
+          "return_type": "void",
+          "logic": "Marks a function for TurboFan optimization without any further checks."
+        },
+        {
+          "name": "MaybeOptimizeFrame",
+          "parameters": [
+            "Tagged<JSFunction> function",
+            "CodeKind code_kind"
+          ],
+          "return_type": "void",
+          "logic": "Makes a decision whether to optimize the given function, and marks it for optimization if the decision was 'yes'. It also takes care of bumping the OSR urgency."
+        },
+        {
+          "name": "ShouldOptimize",
+          "parameters": [
+            "Tagged<FeedbackVector> feedback_vector",
+            "CodeKind code_kind"
+          ],
+          "return_type": "OptimizationDecision",
+          "logic": "Determines whether a function should be optimized based on its FeedbackVector and CodeKind."
+        },
+        {
+          "name": "Optimize",
+          "parameters": [
+            "Tagged<JSFunction> function",
+            "OptimizationDecision decision"
+          ],
+          "return_type": "void",
+          "logic": "Initiates the optimization process for a given function based on the optimization decision."
+        },
+        {
+          "name": "Baseline",
+          "parameters": [
+            "Tagged<JSFunction> function",
+            "OptimizationReason reason"
+          ],
+          "return_type": "void",
+          "logic": "Compiles a function to Baseline code. This is usually a faster, simpler compiler target than TurboFan."
+        }
+      ]
+    },
+    {
+      "name": "OnInterruptTickScope",
+      "properties": [],
+      "methods": [
+        {
+          "name": "OnInterruptTickScope",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Constructor. Disallows garbage collection during the scope of the object. RAII style."
+        }
+      ]
+    }
+  ],
+  "functions": [
+    {
+      "name": "TraceManualRecompile",
+      "parameters": [
+        "Tagged<JSFunction> function",
+        "CodeKind code_kind",
+        "ConcurrencyMode concurrency_mode"
+      ],
+      "return_type": "void",
+      "logic": "Logs a trace event when a function is manually recompiled. ConcurrencyMode is from base/threading."
+    }
+  ]
+}

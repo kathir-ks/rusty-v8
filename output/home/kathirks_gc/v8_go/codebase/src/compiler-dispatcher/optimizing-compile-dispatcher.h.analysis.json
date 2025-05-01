@@ -1,0 +1,365 @@
+{
+  "file_path": "/home/kathirks_gc/v8_go/codebase/src/compiler-dispatcher/optimizing-compile-dispatcher.h",
+  "imports": [
+    "<atomic>",
+    "<queue>",
+    "src/base/platform/condition-variable.h",
+    "src/base/platform/mutex.h",
+    "src/base/vector.h",
+    "src/common/globals.h",
+    "src/flags/flags.h",
+    "src/utils/allocation.h"
+  ],
+  "classes": [
+    {
+      "name": "OptimizingCompileTaskState",
+      "properties": [
+        "Isolate* isolate"
+      ],
+      "methods": []
+    },
+    {
+      "name": "OptimizingCompileInputQueue",
+      "properties": [
+        "std::deque<TurbofanCompilationJob*> queue_",
+        "size_t capacity_",
+        "base::Mutex mutex_",
+        "base::ConditionVariable task_finished_"
+      ],
+      "methods": [
+        {
+          "name": "IsAvailable",
+          "parameters": [],
+          "return_type": "bool",
+          "logic": "Checks if there is space available in the input queue."
+        },
+        {
+          "name": "Length",
+          "parameters": [],
+          "return_type": "size_t",
+          "logic": "Returns the number of elements in the queue."
+        },
+        {
+          "name": "OptimizingCompileInputQueue",
+          "parameters": [
+            "int capacity"
+          ],
+          "return_type": "explicit",
+          "logic": "Constructor that initializes the queue with a given capacity."
+        },
+        {
+          "name": "Dequeue",
+          "parameters": [
+            "OptimizingCompileTaskState& task_state"
+          ],
+          "return_type": "TurbofanCompilationJob*",
+          "logic": "Removes and returns a job from the queue."
+        },
+        {
+          "name": "DequeueIfIsolateMatches",
+          "parameters": [
+            "Isolate* isolate"
+          ],
+          "return_type": "TurbofanCompilationJob*",
+          "logic": "Removes and returns a job from the queue if the job's isolate matches the given isolate."
+        },
+        {
+          "name": "Enqueue",
+          "parameters": [
+            "std::unique_ptr<TurbofanCompilationJob>& job"
+          ],
+          "return_type": "bool",
+          "logic": "Adds a job to the end of the queue."
+        },
+        {
+          "name": "FlushJobsForIsolate",
+          "parameters": [
+            "Isolate* isolate"
+          ],
+          "return_type": "void",
+          "logic": "Removes all jobs from the queue that belong to the given isolate."
+        },
+        {
+          "name": "HasJobForIsolate",
+          "parameters": [
+            "Isolate* isolate"
+          ],
+          "return_type": "bool",
+          "logic": "Checks if there exists a job in the queue for the given isolate."
+        },
+        {
+          "name": "Prioritize",
+          "parameters": [
+            "Isolate* isolate",
+            "Tagged<SharedFunctionInfo> function"
+          ],
+          "return_type": "void",
+          "logic": "Prioritizes a specific compilation job within the queue based on the SharedFunctionInfo."
+        }
+      ]
+    },
+    {
+      "name": "OptimizingCompileTaskExecutor",
+      "properties": [
+        "OptimizingCompileInputQueue input_queue_",
+        "int recompilation_delay_",
+        "std::unique_ptr<JobHandle> job_handle_",
+        "base::OwnedVector<OptimizingCompileTaskState> task_states_",
+        "bool is_initialized_"
+      ],
+      "methods": [
+        {
+          "name": "OptimizingCompileTaskExecutor",
+          "parameters": [],
+          "return_type": "",
+          "logic": "Constructor for the OptimizingCompileTaskExecutor."
+        },
+        {
+          "name": "~OptimizingCompileTaskExecutor",
+          "parameters": [],
+          "return_type": "",
+          "logic": "Destructor for the OptimizingCompileTaskExecutor."
+        },
+        {
+          "name": "EnsureInitialized",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Ensures the compilation job is initialized."
+        },
+        {
+          "name": "CompileNext",
+          "parameters": [
+            "Isolate* isolate",
+            "LocalIsolate& local_isolate",
+            "TurbofanCompilationJob* job"
+          ],
+          "return_type": "void",
+          "logic": "Compiles the given job using Turbofan."
+        },
+        {
+          "name": "NextInput",
+          "parameters": [
+            "OptimizingCompileTaskState& task_state"
+          ],
+          "return_type": "TurbofanCompilationJob*",
+          "logic": "Gets the next job from the input queue."
+        },
+        {
+          "name": "NextInputIfIsolateMatches",
+          "parameters": [
+            "Isolate* isolate"
+          ],
+          "return_type": "TurbofanCompilationJob*",
+          "logic": "Gets the next job from the input queue if the job's isolate matches the given isolate."
+        },
+        {
+          "name": "IsTaskRunningForIsolate",
+          "parameters": [
+            "Isolate* isolate"
+          ],
+          "return_type": "bool",
+          "logic": "Checks if any of the currently running tasks are operating on the given isolate."
+        },
+        {
+          "name": "ClearTaskState",
+          "parameters": [
+            "OptimizingCompileTaskState& task_state"
+          ],
+          "return_type": "void",
+          "logic": "Clears the state for a task/thread once it is done with a job."
+        },
+        {
+          "name": "TryQueueForOptimization",
+          "parameters": [
+            "std::unique_ptr<TurbofanCompilationJob>& job"
+          ],
+          "return_type": "bool",
+          "logic": "Tries to add a new job to the input queue."
+        },
+        {
+          "name": "WaitUntilCompilationJobsDoneForIsolate",
+          "parameters": [
+            "Isolate* isolate"
+          ],
+          "return_type": "void",
+          "logic": "Waits until all running and queued compilation jobs for this isolate are done."
+        },
+        {
+          "name": "HasCompilationJobsForIsolate",
+          "parameters": [
+            "Isolate* isolate"
+          ],
+          "return_type": "bool",
+          "logic": "Checks if there exists a running or queued job for this isolate."
+        }
+      ]
+    },
+    {
+      "name": "OptimizingCompileOutputQueue",
+      "properties": [
+        "std::deque<TurbofanCompilationJob*> queue_",
+        "base::Mutex mutex_"
+      ],
+      "methods": [
+        {
+          "name": "Enqueue",
+          "parameters": [
+            "TurbofanCompilationJob* job"
+          ],
+          "return_type": "void",
+          "logic": "Adds a job to the output queue."
+        },
+        {
+          "name": "Dequeue",
+          "parameters": [],
+          "return_type": "std::unique_ptr<TurbofanCompilationJob>",
+          "logic": "Removes and returns a job from the output queue."
+        },
+        {
+          "name": "InstallGeneratedBuiltins",
+          "parameters": [
+            "Isolate* isolate",
+            "int installed_count"
+          ],
+          "return_type": "int",
+          "logic": "Installs generated builtins from the output queue."
+        },
+        {
+          "name": "size",
+          "parameters": [],
+          "return_type": "size_t",
+          "logic": "Returns the number of elements in the queue."
+        },
+        {
+          "name": "empty",
+          "parameters": [],
+          "return_type": "bool",
+          "logic": "Checks if the queue is empty."
+        }
+      ]
+    },
+    {
+      "name": "OptimizingCompileDispatcher",
+      "properties": [
+        "Isolate* isolate_",
+        "OptimizingCompileTaskExecutor* task_executor_",
+        "OptimizingCompileOutputQueue output_queue_",
+        "bool finalize_"
+      ],
+      "methods": [
+        {
+          "name": "OptimizingCompileDispatcher",
+          "parameters": [
+            "Isolate* isolate",
+            "OptimizingCompileTaskExecutor* task_executor"
+          ],
+          "return_type": "explicit",
+          "logic": "Constructor for the OptimizingCompileDispatcher."
+        },
+        {
+          "name": "~OptimizingCompileDispatcher",
+          "parameters": [],
+          "return_type": "",
+          "logic": "Destructor for the OptimizingCompileDispatcher."
+        },
+        {
+          "name": "Flush",
+          "parameters": [
+            "BlockingBehavior blocking_behavior"
+          ],
+          "return_type": "void",
+          "logic": "Flushes the input and output queues."
+        },
+        {
+          "name": "TryQueueForOptimization",
+          "parameters": [
+            "std::unique_ptr<TurbofanCompilationJob>& job"
+          ],
+          "return_type": "bool",
+          "logic": "Tries to append the compilation job to the input queue."
+        },
+        {
+          "name": "WaitUntilCompilationJobsDone",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Waits until all running and queued compilation jobs have finished."
+        },
+        {
+          "name": "InstallOptimizedFunctions",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Installs optimized functions."
+        },
+        {
+          "name": "InstallGeneratedBuiltins",
+          "parameters": [
+            "int installed_count"
+          ],
+          "return_type": "int",
+          "logic": "Install generated builtins in the output queue in contiguous finalization order."
+        },
+        {
+          "name": "IsQueueAvailable",
+          "parameters": [],
+          "return_type": "bool",
+          "logic": "Checks if there is space available in the input queue."
+        },
+        {
+          "name": "Enabled",
+          "parameters": [],
+          "return_type": "bool",
+          "logic": "Checks if concurrent recompilation is enabled."
+        },
+        {
+          "name": "HasJobs",
+          "parameters": [],
+          "return_type": "bool",
+          "logic": "Checks if there are any jobs."
+        },
+        {
+          "name": "finalize",
+          "parameters": [],
+          "return_type": "bool",
+          "logic": "Returns whether to finalize and thus install the optimized code."
+        },
+        {
+          "name": "set_finalize",
+          "parameters": [
+            "bool finalize"
+          ],
+          "return_type": "void",
+          "logic": "Sets whether to finalize and thus install the optimized code."
+        },
+        {
+          "name": "Prioritize",
+          "parameters": [
+            "Tagged<SharedFunctionInfo> function"
+          ],
+          "return_type": "void",
+          "logic": "Prioritizes a specific compilation job."
+        },
+        {
+          "name": "StartTearDown",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Starts the tear down process."
+        },
+        {
+          "name": "FinishTearDown",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Finishes the tear down process."
+        },
+        {
+          "name": "QueueFinishedJob",
+          "parameters": [
+            "TurbofanCompilationJob* job"
+          ],
+          "return_type": "void",
+          "logic": "Queues the given finished job to the output queue"
+        }
+      ]
+    }
+  ],
+  "functions": []
+}

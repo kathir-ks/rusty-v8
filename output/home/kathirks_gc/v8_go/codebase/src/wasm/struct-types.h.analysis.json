@@ -1,0 +1,338 @@
+{
+  "file_path": "/home/kathirks_gc/v8_go/codebase/src/wasm/struct-types.h",
+  "imports": [
+    "src/base/iterator.h",
+    "src/base/macros.h",
+    "src/common/globals.h",
+    "src/wasm/value-type.h",
+    "src/zone/zone.h"
+  ],
+  "classes": [
+    {
+      "name": "StructTypeBase",
+      "properties": [
+        "field_count_",
+        "offsets_initialized_",
+        "field_offsets_",
+        "reps_",
+        "mutabilities_",
+        "kMaxFieldOffset"
+      ],
+      "methods": [
+        {
+          "name": "StructTypeBase",
+          "parameters": [
+            "uint32_t field_count",
+            "uint32_t* field_offsets",
+            "const ValueTypeBase* reps",
+            "const bool* mutabilities"
+          ],
+          "return_type": "void",
+          "logic": "Constructor for StructTypeBase, initializes the member variables: field_count_, field_offsets_, reps_, and mutabilities_."
+        },
+        {
+          "name": "field_count",
+          "parameters": [],
+          "return_type": "uint32_t",
+          "logic": "Returns the number of fields in the struct."
+        },
+        {
+          "name": "field",
+          "parameters": [
+            "uint32_t index"
+          ],
+          "return_type": "ValueTypeBase",
+          "logic": "Returns the ValueTypeBase of the field at the given index."
+        },
+        {
+          "name": "mutability",
+          "parameters": [
+            "uint32_t index"
+          ],
+          "return_type": "bool",
+          "logic": "Returns the mutability of the field at the given index."
+        },
+        {
+          "name": "fields",
+          "parameters": [],
+          "return_type": "base::iterator_range<const ValueTypeBase*>",
+          "logic": "Returns an iterator range for iterating over the ValueTypeBase fields."
+        },
+        {
+          "name": "mutabilities",
+          "parameters": [],
+          "return_type": "base::iterator_range<const bool*>",
+          "logic": "Returns an iterator range for iterating over the mutabilities of the fields."
+        },
+        {
+          "name": "field_offset",
+          "parameters": [
+            "uint32_t index"
+          ],
+          "return_type": "uint32_t",
+          "logic": "Returns the offset of the specified field within the struct. Returns 0 for index 0."
+        },
+        {
+          "name": "total_fields_size",
+          "parameters": [],
+          "return_type": "uint32_t",
+          "logic": "Returns the total size of all fields in the struct."
+        },
+        {
+          "name": "Align",
+          "parameters": [
+            "uint32_t offset",
+            "uint32_t alignment"
+          ],
+          "return_type": "uint32_t",
+          "logic": "Aligns the given offset to the specified alignment (or kTaggedSize if alignment is larger)."
+        },
+        {
+          "name": "InitializeOffsets",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Calculates and initializes the offsets of each field in the struct to optimize memory layout while respecting alignment requirements and looking for free space left by previous alignments. This algorithm is designed to be subtyping-safe."
+        }
+      ]
+    },
+    {
+      "name": "StructType",
+      "properties": [],
+      "methods": [
+        {
+          "name": "StructType",
+          "parameters": [
+            "uint32_t field_count",
+            "uint32_t* field_offsets",
+            "const ValueType* reps",
+            "const bool* mutabilities"
+          ],
+          "return_type": "void",
+          "logic": "Constructor for StructType, calls the base class constructor StructTypeBase."
+        },
+        {
+          "name": "operator==",
+          "parameters": [
+            "const StructType& other"
+          ],
+          "return_type": "bool",
+          "logic": "Compares two StructType objects for equality based on field count, types and mutabilities."
+        },
+        {
+          "name": "field",
+          "parameters": [
+            "uint32_t index"
+          ],
+          "return_type": "ValueType",
+          "logic": "Returns the ValueType of the field at the given index. Wraps the ValueTypeBase result."
+        },
+        {
+          "name": "fields",
+          "parameters": [],
+          "return_type": "base::iterator_range<const ValueType*>",
+          "logic": "Returns an iterator range for iterating over the ValueType fields. Casts the ValueTypeBase reps_ to ValueType*."
+        }
+      ]
+    },
+    {
+      "name": "CanonicalStructType",
+      "properties": [],
+      "methods": [
+        {
+          "name": "CanonicalStructType",
+          "parameters": [
+            "uint32_t field_count",
+            "uint32_t* field_offsets",
+            "const CanonicalValueType* reps",
+            "const bool* mutabilities"
+          ],
+          "return_type": "void",
+          "logic": "Constructor for CanonicalStructType, calls the base class constructor StructTypeBase."
+        },
+        {
+          "name": "field",
+          "parameters": [
+            "uint32_t index"
+          ],
+          "return_type": "CanonicalValueType",
+          "logic": "Returns the CanonicalValueType of the field at the given index. Wraps the ValueTypeBase result."
+        },
+        {
+          "name": "operator==",
+          "parameters": [
+            "const CanonicalStructType& other"
+          ],
+          "return_type": "bool",
+          "logic": "Compares two CanonicalStructType objects for equality based on field count, types and mutabilities."
+        },
+        {
+          "name": "fields",
+          "parameters": [],
+          "return_type": "base::iterator_range<const CanonicalValueType*>",
+          "logic": "Returns an iterator range for iterating over the CanonicalValueType fields. Casts the ValueTypeBase reps_ to CanonicalValueType*."
+        }
+      ]
+    },
+    {
+      "name": "ArrayTypeBase",
+      "properties": [
+        "mutability_"
+      ],
+      "methods": [
+        {
+          "name": "ArrayTypeBase",
+          "parameters": [
+            "bool mutability"
+          ],
+          "return_type": "constexpr explicit",
+          "logic": "Constructor for ArrayTypeBase, initializes the mutability_ member."
+        },
+        {
+          "name": "mutability",
+          "parameters": [],
+          "return_type": "bool",
+          "logic": "Returns the mutability of the array."
+        }
+      ]
+    },
+    {
+      "name": "ArrayType",
+      "properties": [
+        "rep_"
+      ],
+      "methods": [
+        {
+          "name": "ArrayType",
+          "parameters": [
+            "ValueType rep",
+            "bool mutability"
+          ],
+          "return_type": "constexpr",
+          "logic": "Constructor for ArrayType, initializes the rep_ and calls the ArrayTypeBase constructor."
+        },
+        {
+          "name": "operator==",
+          "parameters": [
+            "const ArrayType& other"
+          ],
+          "return_type": "bool",
+          "logic": "Compares two ArrayType objects for equality based on element type and mutability."
+        },
+        {
+          "name": "element_type",
+          "parameters": [],
+          "return_type": "ValueType",
+          "logic": "Returns the element type of the array."
+        },
+        {
+          "name": "element_type_writable_ptr",
+          "parameters": [],
+          "return_type": "ValueType*",
+          "logic": "Returns a writable pointer to the element type. Only for ModuleDecoder."
+        }
+      ]
+    },
+    {
+      "name": "CanonicalArrayType",
+      "properties": [
+        "rep_"
+      ],
+      "methods": [
+        {
+          "name": "CanonicalArrayType",
+          "parameters": [
+            "CanonicalValueType rep",
+            "bool mutability"
+          ],
+          "return_type": "",
+          "logic": "Constructor for CanonicalArrayType, initializes the rep_ and calls the ArrayTypeBase constructor."
+        },
+        {
+          "name": "operator==",
+          "parameters": [
+            "const CanonicalArrayType& other"
+          ],
+          "return_type": "bool",
+          "logic": "Compares two CanonicalArrayType objects for equality based on element type and mutability."
+        },
+        {
+          "name": "element_type",
+          "parameters": [],
+          "return_type": "CanonicalValueType",
+          "logic": "Returns the element type of the array."
+        }
+      ]
+    },
+    {
+      "name": "ContType",
+      "properties": [
+        "index_"
+      ],
+      "methods": [
+        {
+          "name": "ContType",
+          "parameters": [
+            "ModuleTypeIndex idx"
+          ],
+          "return_type": "constexpr explicit",
+          "logic": "Constructor for ContType, initializes the index_ member."
+        },
+        {
+          "name": "operator==",
+          "parameters": [
+            "const ContType& other"
+          ],
+          "return_type": "bool",
+          "logic": "Compares two ContType objects for equality based on their index."
+        },
+        {
+          "name": "contfun_typeindex",
+          "parameters": [],
+          "return_type": "ModuleTypeIndex",
+          "logic": "Returns the ModuleTypeIndex associated with this continuation type."
+        }
+      ]
+    },
+    {
+      "name": "CanonicalContType",
+      "properties": [
+        "index_"
+      ],
+      "methods": [
+        {
+          "name": "CanonicalContType",
+          "parameters": [
+            "CanonicalTypeIndex idx"
+          ],
+          "return_type": "explicit",
+          "logic": "Constructor for CanonicalContType, initializes the index_ member."
+        },
+        {
+          "name": "operator==",
+          "parameters": [
+            "const CanonicalContType& other"
+          ],
+          "return_type": "bool",
+          "logic": "Compares two CanonicalContType objects for equality based on their index."
+        },
+        {
+          "name": "contfun_typeindex",
+          "parameters": [],
+          "return_type": "CanonicalTypeIndex",
+          "logic": "Returns the CanonicalTypeIndex associated with this continuation type."
+        }
+      ]
+    }
+  ],
+  "functions": [
+    {
+      "name": "operator<<",
+      "parameters": [
+        "std::ostream& out",
+        "StructTypeBase type"
+      ],
+      "return_type": "std::ostream&",
+      "logic": "Overloads the << operator to print a StructTypeBase object to an output stream.  Prints the field names within square brackets."
+    }
+  ]
+}

@@ -1,0 +1,92 @@
+{
+  "file_path": "/home/kathirks_gc/v8_go/codebase/src/torque/cc-generator.h",
+  "imports": [
+    "<optional>",
+    "src/torque/torque-code-generator.h"
+  ],
+  "classes": [
+    {
+      "name": "CCGenerator",
+      "properties": [
+        "is_cc_debug_"
+      ],
+      "methods": [
+        {
+          "name": "CCGenerator",
+          "parameters": [
+            "const ControlFlowGraph& cfg",
+            "std::ostream& out",
+            "bool is_cc_debug = false"
+          ],
+          "return_type": "constructor",
+          "logic": "Constructor for the CCGenerator class. Initializes the TorqueCodeGenerator base class and the is_cc_debug_ member variable."
+        },
+        {
+          "name": "EmitGraph",
+          "parameters": [
+            "Stack<std::string> parameters"
+          ],
+          "return_type": "std::optional<Stack<std::string>>",
+          "logic": "Emits the code for the entire control flow graph, potentially returning a stack of string values representing the result."
+        },
+        {
+          "name": "EmitCCValue",
+          "parameters": [
+            "VisitResult result",
+            "const Stack<std::string>& values",
+            "std::ostream& out"
+          ],
+          "return_type": "static void",
+          "logic": "Emits a C++ value based on the provided VisitResult and a stack of values.  This is a static helper function."
+        },
+        {
+          "name": "EmitSourcePosition",
+          "parameters": [
+            "SourcePosition pos",
+            "bool always_emit = false"
+          ],
+          "return_type": "void",
+          "logic": "Emits the source position information (e.g., line number) into the generated C++ code for debugging purposes."
+        },
+        {
+          "name": "EmitGoto",
+          "parameters": [
+            "const Block* destination",
+            "Stack<std::string>* stack",
+            "std::string indentation"
+          ],
+          "return_type": "void",
+          "logic": "Emits a 'goto' statement to the specified block in the generated C++ code. Manages the stack as needed."
+        },
+        {
+          "name": "ProcessArgumentsCommon",
+          "parameters": [
+            "const TypeVector& parameter_types",
+            "std::vector<std::string> constexpr_arguments",
+            "Stack<std::string>* stack"
+          ],
+          "return_type": "std::vector<std::string>",
+          "logic": "Processes arguments to a Torque function or builtin. This common logic might handle constexpr arguments and manage the stack."
+        },
+        {
+          "name": "EmitBlock",
+          "parameters": [
+            "const Block* block"
+          ],
+          "return_type": "Stack<std::string>",
+          "logic": "Emits the C++ code for a single block in the control flow graph, returning the resulting stack of values."
+        },
+        {
+          "name": "EmitInstruction",
+          "parameters": [
+            "const T& instruction",
+            "Stack<std::string>* stack"
+          ],
+          "return_type": "void",
+          "logic": "Emits the C++ code for a specific Torque instruction. This method is overloaded for each instruction type using a macro. This is the primary code generation function."
+        }
+      ]
+    }
+  ],
+  "functions": []
+}

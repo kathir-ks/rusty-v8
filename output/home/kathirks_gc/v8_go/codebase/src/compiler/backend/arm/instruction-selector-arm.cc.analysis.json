@@ -1,0 +1,508 @@
+{
+  "file_path": "/home/kathirks_gc/v8_go/codebase/src/compiler/backend/arm/instruction-selector-arm.cc",
+  "imports": [
+    "<optional>",
+    "src/base/bits.h",
+    "src/base/enum-set.h",
+    "src/base/iterator.h",
+    "src/base/logging.h",
+    "src/codegen/arm/assembler-arm.h",
+    "src/codegen/machine-type.h",
+    "src/compiler/backend/instruction-selector-adapter.h",
+    "src/compiler/backend/instruction-selector-impl.h",
+    "src/compiler/backend/instruction-selector.h",
+    "src/compiler/turboshaft/operations.h",
+    "src/compiler/turboshaft/opmasks.h"
+  ],
+  "classes": [
+    {
+      "name": "ArmOperandGeneratorT",
+      "properties": [],
+      "methods": [
+        {
+          "name": "ArmOperandGeneratorT",
+          "parameters": [
+            "InstructionSelectorT* selector"
+          ],
+          "return_type": "explicit",
+          "logic": "Constructor for the ArmOperandGeneratorT class, initializes the base class with the given instruction selector."
+        },
+        {
+          "name": "CanBeImmediate",
+          "parameters": [
+            "int32_t value"
+          ],
+          "return_type": "bool",
+          "logic": "Checks if a 32-bit integer value can be used as an immediate operand in an ARM instruction using Assembler::ImmediateFitsAddrMode1Instruction."
+        },
+        {
+          "name": "CanBeImmediate",
+          "parameters": [
+            "uint32_t value"
+          ],
+          "return_type": "bool",
+          "logic": "Checks if a 32-bit unsigned integer value can be used as an immediate operand in an ARM instruction, by casting to a signed integer."
+        },
+        {
+          "name": "CanBeImmediate",
+          "parameters": [
+            "OpIndex node",
+            "InstructionCode opcode"
+          ],
+          "return_type": "bool",
+          "logic": "Determines if a given node can be represented as an immediate value for a specific instruction opcode. Handles various ARM instructions (AND, MOV, MVN, BIC, ADD, SUB, CMP, CMN, TST, TEQ, ORR, EOR, RSB, Vldr/Vstr for F32/F64, Ldrb/Ldrsb/Strb/Ldr/Str, Ldrh/Ldrsh/Strh) and checks their immediate ranges."
+        }
+      ]
+    }
+  ],
+  "functions": [
+    {
+      "name": "VisitRR",
+      "parameters": [
+        "InstructionSelectorT* selector",
+        "InstructionCode opcode",
+        "OpIndex node"
+      ],
+      "return_type": "void",
+      "logic": "Emits an instruction with two register operands. Defines the result node as a register and uses the first input node as a register operand."
+    },
+    {
+      "name": "VisitRRR",
+      "parameters": [
+        "InstructionSelectorT* selector",
+        "InstructionCode opcode",
+        "OpIndex node"
+      ],
+      "return_type": "void",
+      "logic": "Emits an instruction with three register operands. Defines the result node as a register and uses the first and second input nodes as register operands."
+    },
+    {
+      "name": "VisitSimdShiftRRR",
+      "parameters": [
+        "InstructionSelectorT* selector",
+        "ArchOpcode opcode",
+        "OpIndex node",
+        "int width"
+      ],
+      "return_type": "void",
+      "logic": "Emits an SIMD shift instruction, handling constant shift values by emitting identity when shift is divisible by width and emitting the shift instruction otherwise. If the shift value is not constant, calls VisitRRR."
+    },
+    {
+      "name": "VisitRRRShuffle",
+      "parameters": [
+        "InstructionSelectorT* selector",
+        "ArchOpcode opcode",
+        "OpIndex node",
+        "OpIndex input0",
+        "OpIndex input1"
+      ],
+      "return_type": "void",
+      "logic": "Emits a SIMD shuffle instruction with two register inputs, potentially swapping the inputs for efficiency."
+    },
+    {
+      "name": "VisitRRI",
+      "parameters": [
+        "InstructionSelectorT* selector",
+        "ArchOpcode opcode",
+        "OpIndex node"
+      ],
+      "return_type": "void",
+      "logic": "Emits an instruction with two register operands and one immediate operand. The immediate operand is extracted from a Simd128ExtractLaneOp."
+    },
+    {
+      "name": "VisitRRIR",
+      "parameters": [
+        "InstructionSelectorT* selector",
+        "ArchOpcode opcode",
+        "OpIndex node"
+      ],
+      "return_type": "void",
+      "logic": "Emits an instruction with two register operands, one immediate operand, and another register operand. Uses the lane and new_lane values from Simd128ReplaceLaneOp as operands."
+    },
+    {
+      "name": "TryMatchShift",
+      "parameters": [
+        "InstructionSelectorT* selector",
+        "InstructionCode* opcode_return",
+        "OpIndex node",
+        "InstructionOperand* value_return",
+        "InstructionOperand* shift_return"
+      ],
+      "return_type": "bool",
+      "logic": "Tries to match a shift operation with either an immediate or register shift amount. Returns true and sets the opcode, value and shift operands if matched."
+    },
+    {
+      "name": "TryMatchShiftImmediate",
+      "parameters": [
+        "InstructionSelectorT* selector",
+        "InstructionCode* opcode_return",
+        "OpIndex node",
+        "InstructionOperand* value_return",
+        "InstructionOperand* shift_return"
+      ],
+      "return_type": "bool",
+      "logic": "Tries to match a shift operation with immediate shift amount. Returns true and sets the opcode, value and shift operands if matched."
+    },
+    {
+      "name": "TryMatchROR",
+      "parameters": [
+        "InstructionSelectorT* selector",
+        "InstructionCode* opcode_return",
+        "OpIndex node",
+        "InstructionOperand* value_return",
+        "InstructionOperand* shift_return"
+      ],
+      "return_type": "bool",
+      "logic": "Tries to match ROR shift operations."
+    },
+    {
+      "name": "TryMatchASR",
+      "parameters": [
+        "InstructionSelectorT* selector",
+        "InstructionCode* opcode_return",
+        "OpIndex node",
+        "InstructionOperand* value_return",
+        "InstructionOperand* shift_return"
+      ],
+      "return_type": "bool",
+      "logic": "Tries to match arithmetic right shift operations."
+    },
+    {
+      "name": "TryMatchLSL",
+      "parameters": [
+        "InstructionSelectorT* selector",
+        "InstructionCode* opcode_return",
+        "OpIndex node",
+        "InstructionOperand* value_return",
+        "InstructionOperand* shift_return"
+      ],
+      "return_type": "bool",
+      "logic": "Tries to match logical left shift operations."
+    },
+    {
+      "name": "TryMatchLSLImmediate",
+      "parameters": [
+        "InstructionSelectorT* selector",
+        "InstructionCode* opcode_return",
+        "OpIndex node",
+        "InstructionOperand* value_return",
+        "InstructionOperand* shift_return"
+      ],
+      "return_type": "bool",
+      "logic": "Tries to match logical left shift operations with an immediate shift amount."
+    },
+    {
+      "name": "TryMatchLSR",
+      "parameters": [
+        "InstructionSelectorT* selector",
+        "InstructionCode* opcode_return",
+        "OpIndex node",
+        "InstructionOperand* value_return",
+        "InstructionOperand* shift_return"
+      ],
+      "return_type": "bool",
+      "logic": "Tries to match logical right shift operations."
+    },
+    {
+      "name": "TryMatchShift",
+      "parameters": [
+        "InstructionSelectorT* selector",
+        "InstructionCode* opcode_return",
+        "OpIndex node",
+        "InstructionOperand* value_return",
+        "InstructionOperand* shift_return"
+      ],
+      "return_type": "bool",
+      "logic": "Tries to match any of the supported shift operations: ASR, LSL, LSR, or ROR."
+    },
+    {
+      "name": "TryMatchImmediateOrShift",
+      "parameters": [
+        "InstructionSelectorT* selector",
+        "InstructionCode* opcode_return",
+        "OpIndex node",
+        "size_t* input_count_return",
+        "InstructionOperand* inputs"
+      ],
+      "return_type": "bool",
+      "logic": "Attempts to match either an immediate operand or a shift operation for a given node. Returns true if either is matched, updating the opcode and input parameters accordingly."
+    },
+    {
+      "name": "VisitBinop",
+      "parameters": [
+        "InstructionSelectorT* selector",
+        "OpIndex node",
+        "InstructionCode opcode",
+        "InstructionCode reverse_opcode",
+        "FlagsContinuationT* cont"
+      ],
+      "return_type": "void",
+      "logic": "Visits a binary operation node and emits the appropriate instruction based on whether the right-hand side can be represented as an immediate or a shift operation. Also handles commuting operands if necessary."
+    },
+    {
+      "name": "VisitBinop",
+      "parameters": [
+        "InstructionSelectorT* selector",
+        "OpIndex node",
+        "InstructionCode opcode",
+        "InstructionCode reverse_opcode"
+      ],
+      "return_type": "void",
+      "logic": "A wrapper around the other VisitBinop that creates an empty flags continuation."
+    },
+    {
+      "name": "EmitDiv",
+      "parameters": [
+        "InstructionSelectorT* selector",
+        "ArchOpcode div_opcode",
+        "ArchOpcode f64i32_opcode",
+        "ArchOpcode i32f64_opcode",
+        "InstructionOperand result_operand",
+        "InstructionOperand left_operand",
+        "InstructionOperand right_operand"
+      ],
+      "return_type": "void",
+      "logic": "Emits instructions for integer division. If native division is supported, emit that. If not, converts to float, divides and converts back."
+    },
+    {
+      "name": "VisitDiv",
+      "parameters": [
+        "InstructionSelectorT* selector",
+        "OpIndex node",
+        "ArchOpcode div_opcode",
+        "ArchOpcode f64i32_opcode",
+        "ArchOpcode i32f64_opcode"
+      ],
+      "return_type": "void",
+      "logic": "Visits a division node and emits the appropriate division instruction using EmitDiv function."
+    },
+    {
+      "name": "VisitMod",
+      "parameters": [
+        "InstructionSelectorT* selector",
+        "OpIndex node",
+        "ArchOpcode div_opcode",
+        "ArchOpcode f64i32_opcode",
+        "ArchOpcode i32f64_opcode"
+      ],
+      "return_type": "void",
+      "logic": "Visits a modulo node and emits the appropriate instruction. It computes div and then subtracts that value to find mod."
+    },
+    {
+      "name": "EmitAddBeforeS128LoadStore",
+      "parameters": [
+        "InstructionSelectorT* selector",
+        "InstructionCode* opcode_return",
+        "size_t* input_count_return",
+        "InstructionOperand* inputs"
+      ],
+      "return_type": "void",
+      "logic": "Emits an add instruction to add the base and offset registers into a temporary register and then update the main instruction to use temporary registers for the address."
+    },
+    {
+      "name": "EmitLoad",
+      "parameters": [
+        "InstructionSelectorT* selector",
+        "InstructionCode opcode",
+        "InstructionOperand* output",
+        "OpIndex base",
+        "OpIndex index"
+      ],
+      "return_type": "void",
+      "logic": "Emits a load instruction, handling different addressing modes (immediate offset, register offset, root register offset, immediate LSL shift). Supports external constant and LoadRootRegister optimization."
+    },
+    {
+      "name": "EmitStore",
+      "parameters": [
+        "InstructionSelectorT* selector",
+        "InstructionCode opcode",
+        "size_t input_count",
+        "InstructionOperand* inputs",
+        "OpIndex index"
+      ],
+      "return_type": "void",
+      "logic": "Emits a store instruction, handling different addressing modes (immediate offset, register offset, root register offset, immediate LSL shift). Supports external constant."
+    },
+    {
+      "name": "VisitPairAtomicBinOp",
+      "parameters": [
+        "InstructionSelectorT* selector",
+        "OpIndex node",
+        "ArchOpcode opcode"
+      ],
+      "return_type": "void",
+      "logic": "Emits a pair of atomic binary operation, using inputs from the given node."
+    },
+    {
+      "name": "MachineRepresentationOf",
+      "parameters": [
+        "Simd128LaneMemoryOp::LaneKind lane_kind"
+      ],
+      "return_type": "MachineRepresentation",
+      "logic": "Returns machine representation based on LaneKind"
+    },
+    {
+      "name": "GetStoreOpcode",
+      "parameters": [
+        "MachineRepresentation rep"
+      ],
+      "return_type": "ArchOpcode",
+      "logic": "Returns the appropriate ArchOpcode for store instruction depending on the MachineRepresentation"
+    },
+    {
+      "name": "GetAtomicStoreOpcode",
+      "parameters": [
+        "MachineRepresentation rep"
+      ],
+      "return_type": "ArchOpcode",
+      "logic": "Returns the appropriate ArchOpcode for atomic store depending on the MachineRepresentation"
+    },
+    {
+      "name": "VisitStoreCommon",
+      "parameters": [
+        "InstructionSelectorT* selector",
+        "OpIndex node",
+        "StoreRepresentation store_rep",
+        "std::optional<AtomicMemoryOrder> atomic_order"
+      ],
+      "return_type": "void",
+      "logic": "Handles the emission of store instructions, including write barriers when necessary. Uses immediate or register offsets.  Also, supports external constants and LoadRootRegister."
+    },
+    {
+      "name": "EmitBic",
+      "parameters": [
+        "InstructionSelectorT* selector",
+        "OpIndex node",
+        "OpIndex left",
+        "OpIndex right"
+      ],
+      "return_type": "void",
+      "logic": "Emit bit clear instruction."
+    },
+    {
+      "name": "EmitUbfx",
+      "parameters": [
+        "InstructionSelectorT* selector",
+        "OpIndex node",
+        "OpIndex left",
+        "uint32_t lsb",
+        "uint32_t width"
+      ],
+      "return_type": "void",
+      "logic": "Emit unsigned bit field extract instruction."
+    },
+    {
+      "name": "VisitShift",
+      "parameters": [
+        "InstructionSelectorT* selector",
+        "OpIndex node",
+        "TryMatchShift try_match_shift",
+        "FlagsContinuationT* cont"
+      ],
+      "return_type": "void",
+      "logic": "Visits a shift operation and emits the appropriate instruction based on whether the shift amount can be represented as an immediate or register."
+    },
+    {
+      "name": "VisitShift",
+      "parameters": [
+        "InstructionSelectorT* selector",
+        "OpIndex node",
+        "TryMatchShift try_match_shift"
+      ],
+      "return_type": "void",
+      "logic": "Visits a shift operation and emits the appropriate instruction based on whether the shift amount can be represented as an immediate or register."
+    },
+    {
+      "name": "EmitInt32MulWithOverflow",
+      "parameters": [
+        "InstructionSelectorT* selector",
+        "OpIndex node",
+        "FlagsContinuationT* cont"
+      ],
+      "return_type": "void",
+      "logic": "Implements signed multiplication with overflow check using SMULL instruction."
+    },
+    {
+      "name": "VisitCompare",
+      "parameters": [
+        "InstructionSelectorT* selector",
+        "InstructionCode opcode",
+        "InstructionOperand left",
+        "InstructionOperand right",
+        "FlagsContinuationT* cont"
+      ],
+      "return_type": "void",
+      "logic": "Emits a comparison instruction and passes the operands to the FlagsContinuation."
+    },
+    {
+      "name": "VisitFloat32Compare",
+      "parameters": [
+        "InstructionSelectorT* selector",
+        "OpIndex node",
+        "FlagsContinuationT* cont"
+      ],
+      "return_type": "void",
+      "logic": "Emits a float32 comparison instruction with the appropriate zero check. Commutes input if necessary."
+    },
+    {
+      "name": "VisitFloat64Compare",
+      "parameters": [
+        "InstructionSelectorT* selector",
+        "OpIndex node",
+        "FlagsContinuationT* cont"
+      ],
+      "return_type": "void",
+      "logic": "Emits a float64 comparison instruction with the appropriate zero check. Commutes input if necessary."
+    },
+    {
+      "name": "CanUseFlagSettingBinop",
+      "parameters": [
+        "FlagsCondition cond"
+      ],
+      "return_type": "bool",
+      "logic": "Check if we can convert ((a <op> b) cmp 0), b.<cond> to (a <ops> b), b.<cond'> where <ops> is the flag setting version of <op>"
+    },
+    {
+      "name": "MapForFlagSettingBinop",
+      "parameters": [
+        "FlagsCondition cond"
+      ],
+      "return_type": "FlagsCondition",
+      "logic": "Map <cond> to <cond'> so that the following transformation is possible: ((a <op> b) cmp 0), b.<cond> to: (a <ops> b), b.<cond'>"
+    },
+    {
+      "name": "MaybeReplaceCmpZeroWithFlagSettingBinop",
+      "parameters": [
+        "InstructionSelectorT* selector",
+        "OpIndex* node",
+        "OpIndex binop",
+        "InstructionCode* opcode",
+        "FlagsCondition cond",
+        "FlagsContinuationT* cont"
+      ],
+      "return_type": "void",
+      "logic": "Check if we can perform the transformation: ((a <op> b) cmp 0), b.<cond> to (a <ops> b), b.<cond'> if possible."
+    },
+    {
+      "name": "VisitWordCompare",
+      "parameters": [
+        "InstructionSelectorT* selector",
+        "OpIndex node",
+        "InstructionCode opcode",
+        "FlagsContinuationT* cont"
+      ],
+      "return_type": "void",
+      "logic": "Emit comparison instructions, also handles immediates and shifts and combines operations"
+    },
+    {
+      "name": "VisitWordCompare",
+      "parameters": [
+        "InstructionSelectorT* selector",
+        "OpIndex node",
+        "FlagsContinuationT* cont"
+      ],
+      "return_type": "void",
+      "logic": "Emit comparison instructions and try to combine with CMP zero instruction"
+    }
+  ]
+}

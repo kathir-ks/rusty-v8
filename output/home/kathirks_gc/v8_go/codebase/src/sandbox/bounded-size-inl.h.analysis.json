@@ -1,0 +1,30 @@
+{
+  "file_path": "/home/kathirks_gc/v8_go/codebase/src/sandbox/bounded-size-inl.h",
+  "imports": [
+    "src/sandbox/bounded-size.h",
+    "include/v8-internal.h",
+    "src/common/ptr-compr-inl.h",
+    "src/sandbox/sandbox.h",
+    "src/sandbox/sandboxed-pointer.h"
+  ],
+  "classes": [],
+  "functions": [
+    {
+      "name": "ReadBoundedSizeField",
+      "parameters": [
+        "Address field_address"
+      ],
+      "return_type": "size_t",
+      "logic": "Reads a size_t value from the given address, taking into account the sandbox's size bounding if enabled. If the sandbox is enabled, it reads the raw value, right-shifts it by `kBoundedSizeShift` to recover the original bounded size. If the sandbox is disabled, it reads the size_t value directly."
+    },
+    {
+      "name": "WriteBoundedSizeField",
+      "parameters": [
+        "Address field_address",
+        "size_t value"
+      ],
+      "return_type": "void",
+      "logic": "Writes a size_t value to the given address, taking into account the sandbox's size bounding if enabled. If the sandbox is enabled, it first checks if the value exceeds `kMaxSafeBufferSizeForSandbox`, then left-shifts the value by `kBoundedSizeShift` to store it, and finally writes the raw value to memory. If the sandbox is disabled, it writes the size_t value directly."
+    }
+  ]
+}

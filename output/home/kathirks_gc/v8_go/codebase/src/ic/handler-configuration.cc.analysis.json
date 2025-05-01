@@ -1,0 +1,202 @@
+{
+  "file_path": "/home/kathirks_gc/v8_go/codebase/src/ic/handler-configuration.cc",
+  "imports": [
+    "src/ic/handler-configuration.h",
+    "src/codegen/code-factory.h",
+    "src/ic/handler-configuration-inl.h",
+    "src/objects/data-handler-inl.h",
+    "src/objects/maybe-object.h",
+    "src/objects/transitions.h"
+  ],
+  "classes": [
+    {
+      "name": "LoadHandler",
+      "properties": [],
+      "methods": [
+        {
+          "name": "LoadFromPrototype",
+          "parameters": [
+            "Isolate* isolate",
+            "DirectHandle<Map> lookup_start_object_map",
+            "DirectHandle<JSReceiver> holder",
+            "Tagged<Smi> smi_handler",
+            "MaybeObjectDirectHandle maybe_data1",
+            "MaybeObjectDirectHandle maybe_data2"
+          ],
+          "return_type": "Handle<Object>",
+          "logic": "Creates a LoadHandler for loading from a prototype object.  It determines the data size required based on the prototype chain, creates the handler, sets its validity cell and initialises prototype checks."
+        },
+        {
+          "name": "LoadFullChain",
+          "parameters": [
+            "Isolate* isolate",
+            "DirectHandle<Map> lookup_start_object_map",
+            "const MaybeObjectDirectHandle& holder",
+            "Handle<Smi> smi_handler_handle"
+          ],
+          "return_type": "Handle<Object>",
+          "logic": "Creates a LoadHandler for loading from the full prototype chain. Similar to LoadFromPrototype, but optimized for the full chain scenario."
+        },
+        {
+          "name": "GetKeyedAccessLoadMode",
+          "parameters": [
+            "Tagged<MaybeObject> handler"
+          ],
+          "return_type": "KeyedAccessLoadMode",
+          "logic": "Determines the KeyedAccessLoadMode based on the handler. If the handler is a Smi, it decodes the kind and checks flags related to out-of-bounds access and handling of holes in arrays."
+        },
+        {
+          "name": "PrintHandler",
+          "parameters": [
+            "Tagged<Object> handler",
+            "std::ostream& os"
+          ],
+          "return_type": "void",
+          "logic": "Prints a human-readable representation of the LoadHandler to the given output stream. It handles different handler types (Smi, Code, Symbol, LoadHandler) and decodes their properties for printing."
+        },
+        {
+          "name": "CanHandleHolderNotLookupStart",
+          "parameters": [
+            "Tagged<Object> handler"
+          ],
+          "return_type": "bool",
+          "logic": "Determines if the load handler can handle cases where the holder is not the lookup start. This is true for slow or non-existent cases."
+        }
+      ]
+    },
+    {
+      "name": "StoreHandler",
+      "properties": [],
+      "methods": [
+        {
+          "name": "GetKeyedAccessStoreMode",
+          "parameters": [
+            "Tagged<MaybeObject> handler"
+          ],
+          "return_type": "KeyedAccessStoreMode",
+          "logic": "Determines the KeyedAccessStoreMode based on the handler. If the handler is a Smi and the kind is slow, it decodes the store mode; otherwise, it defaults to kInBounds."
+        },
+        {
+          "name": "StoreElementTransition",
+          "parameters": [
+            "Isolate* isolate",
+            "DirectHandle<Map> receiver_map",
+            "DirectHandle<Map> transition",
+            "KeyedAccessStoreMode store_mode",
+            "MaybeDirectHandle<UnionOf<Smi, Cell>> prev_validity_cell"
+          ],
+          "return_type": "Handle<Object>",
+          "logic": "Creates a StoreHandler for element transitions. It retrieves or creates a validity cell and constructs the handler with a code object based on the store mode, also using a weak reference to the transition map in the data1 field."
+        },
+        {
+          "name": "StoreOwnTransition",
+          "parameters": [
+            "Isolate* isolate",
+            "Handle<Map> transition_map"
+          ],
+          "return_type": "MaybeObjectHandle",
+          "logic": "Creates a StoreHandler for own property transitions (e.g., adding a property directly to an object). Returns a Smi if it's a dictionary map or a weak reference to the transition map otherwise."
+        },
+        {
+          "name": "StoreTransition",
+          "parameters": [
+            "Isolate* isolate",
+            "Handle<Map> transition_map"
+          ],
+          "return_type": "MaybeObjectHandle",
+          "logic": "Creates a StoreHandler for property transitions (e.g., transitioning to a different map). It handles validity cells and dictionary maps similar to StoreOwnTransition."
+        },
+        {
+          "name": "StoreThroughPrototype",
+          "parameters": [
+            "Isolate* isolate",
+            "DirectHandle<Map> receiver_map",
+            "DirectHandle<JSReceiver> holder",
+            "Tagged<Smi> smi_handler",
+            "MaybeObjectDirectHandle maybe_data1",
+            "MaybeObjectDirectHandle maybe_data2"
+          ],
+          "return_type": "Handle<Object>",
+          "logic": "Creates a StoreHandler for storing through a prototype. Similar to LoadFromPrototype, it determines the data size, creates the handler, sets the validity cell, and initializes prototype checks."
+        },
+        {
+          "name": "StoreGlobal",
+          "parameters": [
+            "Handle<PropertyCell> cell"
+          ],
+          "return_type": "MaybeObjectHandle",
+          "logic": "Creates a StoreHandler for storing to a global property. It creates a weak reference to the property cell."
+        },
+        {
+          "name": "StoreProxy",
+          "parameters": [
+            "Isolate* isolate",
+            "DirectHandle<Map> receiver_map",
+            "Handle<JSProxy> proxy",
+            "DirectHandle<JSReceiver> receiver"
+          ],
+          "return_type": "Handle<Object>",
+          "logic": "Creates a StoreHandler for storing to a proxy object. If the receiver is the same as the proxy, return a Smi handler, else call `StoreThroughPrototype` with the proxy as data."
+        },
+        {
+          "name": "PrintHandler",
+          "parameters": [
+            "Tagged<Object> handler",
+            "std::ostream& os"
+          ],
+          "return_type": "void",
+          "logic": "Prints a human-readable representation of the StoreHandler to the given output stream. Handles various handler types and their properties."
+        }
+      ]
+    }
+  ],
+  "functions": [
+    {
+      "name": "SetBitFieldValue",
+      "parameters": [
+        "Isolate* isolate",
+        "Tagged<Smi> smi_handler",
+        "typename BitField::FieldType value"
+      ],
+      "return_type": "Tagged<Smi>",
+      "logic": "Sets a specific bit field within a Smi handler. It extracts the current configuration from the Smi, updates the bit field with the provided value, and returns the updated Smi."
+    },
+    {
+      "name": "InitPrototypeChecksImpl",
+      "parameters": [
+        "Isolate* isolate",
+        "DirectHandle<ICHandler> handler",
+        "Tagged<Smi>* smi_handler",
+        "DirectHandle<Map> lookup_start_object_map",
+        "MaybeObjectDirectHandle data1",
+        "MaybeObjectDirectHandle maybe_data2"
+      ],
+      "return_type": "int",
+      "logic": "Initializes prototype checks for an IC handler. This function determines the data size and potentially populates data fields within the handler. Also sets native context for primitive maps to avoid cross-context usage."
+    },
+    {
+      "name": "GetHandlerDataSize",
+      "parameters": [
+        "Isolate* isolate",
+        "Tagged<Smi>* smi_handler",
+        "DirectHandle<Map> lookup_start_object_map",
+        "MaybeObjectDirectHandle data1",
+        "MaybeObjectDirectHandle maybe_data2"
+      ],
+      "return_type": "int",
+      "logic": "Calculates the required data size for an IC handler based on prototype checks. It uses InitPrototypeChecksImpl with `fill_handler = false` to determine the necessary size without modifying the handler."
+    },
+    {
+      "name": "InitPrototypeChecks",
+      "parameters": [
+        "Isolate* isolate",
+        "DirectHandle<ICHandler> handler",
+        "DirectHandle<Map> lookup_start_object_map",
+        "MaybeObjectDirectHandle data1",
+        "MaybeObjectDirectHandle maybe_data2"
+      ],
+      "return_type": "void",
+      "logic": "Initializes prototype checks for an IC handler by calling InitPrototypeChecksImpl with `fill_handler = true`. It populates the data fields of the handler."
+    }
+  ]
+}

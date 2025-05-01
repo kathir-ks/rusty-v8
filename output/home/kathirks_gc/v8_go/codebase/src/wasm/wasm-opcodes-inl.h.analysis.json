@@ -1,0 +1,165 @@
+{
+  "file_path": "/home/kathirks_gc/v8_go/codebase/src/wasm/wasm-opcodes-inl.h",
+  "imports": [
+    "<array>",
+    "src/base/template-utils.h",
+    "src/codegen/signature.h",
+    "src/execution/messages.h",
+    "src/wasm/wasm-opcodes.h"
+  ],
+  "classes": [
+    {
+      "name": "WasmOpcodes",
+      "properties": [],
+      "methods": [
+        {
+          "name": "OpcodeName",
+          "parameters": [
+            "WasmOpcode opcode"
+          ],
+          "return_type": "const char*",
+          "logic": "Returns the name of a given WebAssembly opcode as a string. Uses a switch statement based on the opcode value and preprocessor macros (FOREACH_OPCODE) to define the name for each known opcode. Handles invalid opcodes by returning \"invalid opcode\"."
+        },
+        {
+          "name": "IsPrefixOpcode",
+          "parameters": [
+            "WasmOpcode opcode"
+          ],
+          "return_type": "bool",
+          "logic": "Checks if a given WebAssembly opcode is a prefix opcode (like kNumericPrefix, kSimdPrefix). Uses a switch statement and the FOREACH_PREFIX macro to identify prefix opcodes."
+        },
+        {
+          "name": "IsControlOpcode",
+          "parameters": [
+            "WasmOpcode opcode"
+          ],
+          "return_type": "bool",
+          "logic": "Checks if a given WebAssembly opcode is a control opcode (like block, if, loop). Uses a switch statement and the FOREACH_CONTROL_OPCODE macro to identify control opcodes."
+        },
+        {
+          "name": "IsUnconditionalJump",
+          "parameters": [
+            "WasmOpcode opcode"
+          ],
+          "return_type": "bool",
+          "logic": "Checks if a given WebAssembly opcode is an unconditional jump (like unreachable, br, return). Uses a switch statement to check for specific jump opcodes."
+        },
+        {
+          "name": "IsBreakable",
+          "parameters": [
+            "WasmOpcode opcode"
+          ],
+          "return_type": "bool",
+          "logic": "Checks if a given WebAssembly opcode can be the target of a break statement.  Returns true if it is not a block, try, catch, loop, or else. This effectively says, is this opcode inside a breakable region."
+        },
+        {
+          "name": "IsExternRefOpcode",
+          "parameters": [
+            "WasmOpcode opcode"
+          ],
+          "return_type": "bool",
+          "logic": "Checks if a given WebAssembly opcode is related to extern references (ref.null, ref.is_null, ref.func, ref.as_non_null).  Uses a switch statement for explicit checking."
+        },
+        {
+          "name": "IsThrowingOpcode",
+          "parameters": [
+            "WasmOpcode opcode"
+          ],
+          "return_type": "bool",
+          "logic": "Checks if a given WebAssembly opcode can throw an exception (throw, rethrow, call_function, call_indirect).  Uses a switch statement for explicit checking."
+        },
+        {
+          "name": "IsRelaxedSimdOpcode",
+          "parameters": [
+            "WasmOpcode opcode"
+          ],
+          "return_type": "bool",
+          "logic": "Checks if a given WebAssembly opcode is a relaxed SIMD opcode. Verifies if the opcode's encoding falls within the relaxed SIMD range (0xfd100 - 0xfd1ff)."
+        },
+        {
+          "name": "IsFP16SimdOpcode",
+          "parameters": [
+            "WasmOpcode opcode"
+          ],
+          "return_type": "bool",
+          "logic": "Checks if a given WebAssembly opcode is an FP16 SIMD opcode based on its opcode value range."
+        },
+        {
+          "name": "IsMemoryAccessOpcode",
+          "parameters": [
+            "WasmOpcode opcode"
+          ],
+          "return_type": "bool",
+          "logic": "Debug-only check that determines if a given opcode performs a memory access. Checks against all load, store, atomic, and simd memory opcodes.",
+          "conditional": "DEBUG"
+        },
+        {
+          "name": "ExtractPrefix",
+          "parameters": [
+            "WasmOpcode opcode"
+          ],
+          "return_type": "uint8_t",
+          "logic": "Extracts the prefix byte from a WebAssembly opcode. The prefix is used to distinguish different opcode sets (e.g., SIMD, numeric)."
+        },
+        {
+          "name": "Signature",
+          "parameters": [
+            "WasmOpcode opcode"
+          ],
+          "return_type": "const FunctionSig*",
+          "logic": "Returns the function signature associated with a given WebAssembly opcode.  Uses the extracted prefix to determine the correct signature table to consult, and uses a set of precomputed function signatures."
+        },
+        {
+          "name": "SignatureForAtomicOp",
+          "parameters": [
+            "WasmOpcode opcode",
+            "bool is_memory64"
+          ],
+          "return_type": "const FunctionSig*",
+          "logic": "Returns the function signature for atomic operations, taking into account whether the operation operates on 32-bit or 64-bit memory."
+        },
+        {
+          "name": "AsmjsSignature",
+          "parameters": [
+            "WasmOpcode opcode"
+          ],
+          "return_type": "const FunctionSig*",
+          "logic": "Returns the function signature associated with a given Asm.js opcode.  Retrieves the signature from the precomputed Asmjs signature table."
+        },
+        {
+          "name": "TrapReasonToMessageId",
+          "parameters": [
+            "TrapReason reason"
+          ],
+          "return_type": "MessageTemplate",
+          "logic": "Converts a WebAssembly trap reason to a corresponding message template ID for error reporting."
+        },
+        {
+          "name": "MessageIdToTrapReason",
+          "parameters": [
+            "MessageTemplate message"
+          ],
+          "return_type": "TrapReason",
+          "logic": "Converts a message template ID to the corresponding WebAssembly trap reason.  This is the inverse of TrapReasonToMessageId."
+        },
+        {
+          "name": "TrapReasonMessage",
+          "parameters": [
+            "TrapReason reason"
+          ],
+          "return_type": "const char*",
+          "logic": "Retrieves the message string associated with a given trap reason by using the MessageFormatter."
+        }
+      ]
+    }
+  ],
+  "functions": [],
+  "enums": [
+    {
+      "name": "WasmOpcodeSig",
+      "values": [
+        "kSigEnum_None"
+      ]
+    }
+  ]
+}

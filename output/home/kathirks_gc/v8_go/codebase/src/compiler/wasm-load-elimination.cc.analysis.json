@@ -1,0 +1,286 @@
+{
+  "file_path": "/home/kathirks_gc/v8_go/codebase/src/compiler/wasm-load-elimination.cc",
+  "imports": [
+    "src/compiler/wasm-load-elimination.h",
+    "src/compiler/common-operator.h",
+    "src/compiler/js-graph.h",
+    "src/compiler/node-matchers.h",
+    "src/compiler/node-properties.h",
+    "src/compiler/simplified-operator.h",
+    "src/compiler/turbofan-graph.h",
+    "src/wasm/struct-types.h",
+    "src/wasm/wasm-subtyping.h"
+  ],
+  "classes": [
+    {
+      "name": "WasmLoadElimination",
+      "properties": [
+        "empty_state_",
+        "node_states_",
+        "jsgraph_",
+        "dead_",
+        "zone_"
+      ],
+      "methods": [
+        {
+          "name": "UpdateState",
+          "parameters": [
+            "Node* node",
+            "AbstractState const* state"
+          ],
+          "return_type": "Reduction",
+          "logic": "Updates the abstract state of a node and returns a `Changed` reduction if the state changed."
+        },
+        {
+          "name": "TruncateAndExtendOrType",
+          "parameters": [
+            "Node* value",
+            "Node* effect",
+            "Node* control",
+            "wasm::ValueType field_type",
+            "bool is_signed"
+          ],
+          "return_type": "std::tuple<Node*, Node*>",
+          "logic": "Truncates or extends a value to match a field type, potentially inserting a type guard if needed."
+        },
+        {
+          "name": "Reduce",
+          "parameters": [
+            "Node* node"
+          ],
+          "return_type": "Reduction",
+          "logic": "The main reduction function that dispatches to specific reducers based on the node's opcode."
+        },
+        {
+          "name": "ReduceWasmStructGet",
+          "parameters": [
+            "Node* node"
+          ],
+          "return_type": "Reduction",
+          "logic": "Attempts to eliminate a WasmStructGet node by looking up the field's value in the current abstract state."
+        },
+        {
+          "name": "ReduceWasmStructSet",
+          "parameters": [
+            "Node* node"
+          ],
+          "return_type": "Reduction",
+          "logic": "Updates the abstract state with the value being set by a WasmStructSet node."
+        },
+        {
+          "name": "ReduceLoadLikeFromImmutable",
+          "parameters": [
+            "Node* node",
+            "int index"
+          ],
+          "return_type": "Reduction",
+          "logic": "Handles load-like operations that are treated as immutable fields (e.g., array length). Attempts to eliminate the load using the abstract state."
+        },
+        {
+          "name": "ReduceWasmArrayLength",
+          "parameters": [
+            "Node* node"
+          ],
+          "return_type": "Reduction",
+          "logic": "Reduces a WasmArrayLength node by treating it as a load from an immutable field."
+        },
+        {
+          "name": "ReduceWasmArrayInitializeLength",
+          "parameters": [
+            "Node* node"
+          ],
+          "return_type": "Reduction",
+          "logic": "Handles the initial assignment of an array's length, updating the abstract state."
+        },
+        {
+          "name": "ReduceStringPrepareForGetCodeunit",
+          "parameters": [
+            "Node* node"
+          ],
+          "return_type": "Reduction",
+          "logic": "Handles StringPrepareForGetCodeunit nodes, caching them in the abstract state."
+        },
+        {
+          "name": "ReduceStringAsWtf16",
+          "parameters": [
+            "Node* node"
+          ],
+          "return_type": "Reduction",
+          "logic": "Reduces a StringAsWtf16 node by treating it as a load from an immutable field."
+        },
+        {
+          "name": "ReduceAnyConvertExtern",
+          "parameters": [
+            "Node* node"
+          ],
+          "return_type": "Reduction",
+          "logic": "Reduces a WasmAnyConvertExtern node by treating it as a load from an immutable field."
+        },
+        {
+          "name": "ReduceOtherNode",
+          "parameters": [
+            "Node* node"
+          ],
+          "return_type": "Reduction",
+          "logic": "Handles other nodes by propagating the abstract state, taking into account potential side effects."
+        },
+        {
+          "name": "ReduceStart",
+          "parameters": [
+            "Node* node"
+          ],
+          "return_type": "Reduction",
+          "logic": "Initializes the abstract state at the start of the graph."
+        },
+        {
+          "name": "ReduceEffectPhi",
+          "parameters": [
+            "Node* node"
+          ],
+          "return_type": "Reduction",
+          "logic": "Handles EffectPhi nodes by merging the abstract states of its inputs."
+        },
+        {
+          "name": "WasmLoadElimination",
+          "parameters": [
+            "Editor* editor",
+            "JSGraph* jsgraph",
+            "Zone* zone"
+          ],
+          "return_type": "void",
+          "logic": "Constructor for the WasmLoadElimination class, initializing member variables."
+        },
+        {
+          "name": "common",
+          "parameters": [],
+          "return_type": "CommonOperatorBuilder*",
+          "logic": "Returns the CommonOperatorBuilder."
+        },
+        {
+          "name": "machine",
+          "parameters": [],
+          "return_type": "MachineOperatorBuilder*",
+          "logic": "Returns the MachineOperatorBuilder."
+        },
+        {
+          "name": "graph",
+          "parameters": [],
+          "return_type": "TFGraph*",
+          "logic": "Returns the Turbofan graph."
+        },
+        {
+          "name": "isolate",
+          "parameters": [],
+          "return_type": "Isolate*",
+          "logic": "Returns the isolate."
+        }
+      ]
+    },
+    {
+      "name": "WasmLoadElimination::HalfState",
+      "properties": [
+        "fields_",
+        "zone_"
+      ],
+      "methods": [
+        {
+          "name": "LookupField",
+          "parameters": [
+            "int field_index",
+            "Node* object"
+          ],
+          "return_type": "FieldOrElementValue",
+          "logic": "Looks up the value of a field for a given object in the HalfState."
+        },
+        {
+          "name": "AddField",
+          "parameters": [
+            "int field_index",
+            "Node* object",
+            "Node* value"
+          ],
+          "return_type": "WasmLoadElimination::HalfState const*",
+          "logic": "Adds or updates the value of a field for a given object in the HalfState, returning a new HalfState."
+        },
+        {
+          "name": "KillField",
+          "parameters": [
+            "int field_index",
+            "Node* object"
+          ],
+          "return_type": "WasmLoadElimination::HalfState const*",
+          "logic": "Removes the value of a field for a given object in the HalfState (due to mutation), returning a new HalfState."
+        },
+        {
+          "name": "IntersectWith",
+          "parameters": [
+            "HalfState const* that"
+          ],
+          "return_type": "void",
+          "logic": "Intersects the current halfstate with another halfstate to determine which values can be known for certain between the two"
+        }
+      ]
+    },
+    {
+      "name": "WasmLoadElimination::AbstractState",
+      "properties": [
+        "mutable_state",
+        "immutable_state"
+      ],
+      "methods": [
+        {
+          "name": "IntersectWith",
+          "parameters": [
+            "AbstractState const* that"
+          ],
+          "return_type": "void",
+          "logic": "Intersects the mutable and immutable states of the current state with another abstract state"
+        }
+      ]
+    }
+  ],
+  "functions": [
+    {
+      "name": "TypesUnrelated",
+      "parameters": [
+        "Node* lhs",
+        "Node* rhs"
+      ],
+      "return_type": "bool",
+      "logic": "Checks if two wasm types are unrelated (i.e., there's no subtyping relationship)."
+    },
+    {
+      "name": "IsFresh",
+      "parameters": [
+        "Node* node"
+      ],
+      "return_type": "bool",
+      "logic": "Checks if a node represents a fresh allocation."
+    },
+    {
+      "name": "IsConstant",
+      "parameters": [
+        "Node* node"
+      ],
+      "return_type": "bool",
+      "logic": "Checks if a node represents a constant value."
+    },
+    {
+      "name": "MayAlias",
+      "parameters": [
+        "Node* lhs",
+        "Node* rhs"
+      ],
+      "return_type": "bool",
+      "logic": "Checks if two nodes may alias each other, taking into account type information and allocation freshness."
+    },
+    {
+      "name": "ResolveAliases",
+      "parameters": [
+        "Node* node"
+      ],
+      "return_type": "Node*",
+      "logic": "Resolves aliases by traversing through type casts, assert not null, and type guards to find the underlying value node."
+    }
+  ]
+}

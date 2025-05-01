@@ -1,0 +1,86 @@
+{
+  "file_path": "/home/kathirks_gc/v8_go/codebase/src/wasm/wasm-module-sourcemap.cc",
+  "imports": [
+    "src/wasm/wasm-module-sourcemap.h",
+    "algorithm",
+    "include/v8-context.h",
+    "include/v8-json.h",
+    "include/v8-local-handle.h",
+    "include/v8-object.h",
+    "include/v8-primitive.h",
+    "src/base/vlq-base64.h",
+    "src/wasm/std-object-sizes.h"
+  ],
+  "classes": [
+    {
+      "name": "WasmModuleSourceMap",
+      "properties": [
+        "offsets",
+        "filenames",
+        "file_idxs",
+        "source_row",
+        "valid_"
+      ],
+      "methods": [
+        {
+          "name": "WasmModuleSourceMap",
+          "parameters": [
+            "v8::Isolate* v8_isolate",
+            "v8::Local<v8::String> src_map_str"
+          ],
+          "return_type": "void",
+          "logic": "Constructor. Parses the source map string from a v8::String, extracts version, sources, and mappings. Populates internal vectors (filenames, file_idxs, source_row, offsets) with data extracted from the source map."
+        },
+        {
+          "name": "GetSourceLine",
+          "parameters": [
+            "size_t wasm_offset"
+          ],
+          "return_type": "size_t",
+          "logic": "Given a wasm offset, finds the corresponding source line number using binary search (upper_bound on offsets)."
+        },
+        {
+          "name": "GetFilename",
+          "parameters": [
+            "size_t wasm_offset"
+          ],
+          "return_type": "std::string",
+          "logic": "Given a wasm offset, finds the corresponding filename using binary search (upper_bound on offsets) and then looks up the filename in the filenames vector."
+        },
+        {
+          "name": "HasSource",
+          "parameters": [
+            "size_t start",
+            "size_t end"
+          ],
+          "return_type": "bool",
+          "logic": "Checks if the given range (start, end) has any source information available."
+        },
+        {
+          "name": "HasValidEntry",
+          "parameters": [
+            "size_t start",
+            "size_t addr"
+          ],
+          "return_type": "bool",
+          "logic": "Checks if there's a valid source map entry for a given address within a specified start range."
+        },
+        {
+          "name": "DecodeMapping",
+          "parameters": [
+            "const std::string& s"
+          ],
+          "return_type": "bool",
+          "logic": "Decodes the VLQ encoded mapping string from the source map.  Parses the string and populates the offsets, file_idxs, and source_row vectors."
+        },
+        {
+          "name": "EstimateCurrentMemoryConsumption",
+          "parameters": [],
+          "return_type": "size_t",
+          "logic": "Estimates the memory consumption of the WasmModuleSourceMap object."
+        }
+      ]
+    }
+  ],
+  "functions": []
+}

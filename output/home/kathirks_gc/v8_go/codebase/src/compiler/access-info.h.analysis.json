@@ -1,0 +1,478 @@
+{
+  "file_path": "/home/kathirks_gc/v8_go/codebase/src/compiler/access-info.h",
+  "imports": [
+    "<optional>",
+    "src/compiler/heap-refs.h",
+    "src/compiler/turbofan-types.h",
+    "src/zone/zone-containers.h"
+  ],
+  "classes": [
+    {
+      "name": "ElementAccessInfo",
+      "properties": [
+        "elements_kind_",
+        "lookup_start_object_maps_",
+        "transition_sources_"
+      ],
+      "methods": [
+        {
+          "name": "ElementAccessInfo",
+          "parameters": [
+            "ZoneVector<MapRef>&& lookup_start_object_maps",
+            "ElementsKind elements_kind",
+            "Zone* zone"
+          ],
+          "return_type": "void",
+          "logic": "Constructor. Initializes the member variables with provided values."
+        },
+        {
+          "name": "elements_kind",
+          "parameters": [],
+          "return_type": "ElementsKind",
+          "logic": "Returns the elements_kind_ member variable."
+        },
+        {
+          "name": "lookup_start_object_maps",
+          "parameters": [],
+          "return_type": "ZoneVector<MapRef> const&",
+          "logic": "Returns a const reference to the lookup_start_object_maps_ member variable."
+        },
+        {
+          "name": "transition_sources",
+          "parameters": [],
+          "return_type": "ZoneVector<MapRef> const&",
+          "logic": "Returns a const reference to the transition_sources_ member variable."
+        },
+        {
+          "name": "AddTransitionSource",
+          "parameters": [
+            "MapRef map"
+          ],
+          "return_type": "void",
+          "logic": "Adds a map to the transition_sources_ vector, used for tracking map transitions during property access."
+        }
+      ]
+    },
+    {
+      "name": "PropertyAccessInfo",
+      "properties": [
+        "kind_",
+        "lookup_start_object_maps_",
+        "constant_",
+        "holder_",
+        "api_holder_",
+        "unrecorded_dependencies_",
+        "transition_map_",
+        "field_index_",
+        "field_representation_",
+        "field_type_",
+        "field_owner_map_",
+        "field_map_",
+        "dictionary_index_",
+        "name_",
+        "elements_kind_"
+      ],
+      "methods": [
+        {
+          "name": "NotFound",
+          "parameters": [
+            "Zone* zone",
+            "MapRef receiver_map",
+            "OptionalJSObjectRef holder"
+          ],
+          "return_type": "PropertyAccessInfo",
+          "logic": "Creates a PropertyAccessInfo object representing a property that was not found."
+        },
+        {
+          "name": "DataField",
+          "parameters": [
+            "JSHeapBroker* broker",
+            "Zone* zone",
+            "MapRef receiver_map",
+            "ZoneVector<CompilationDependency const*>&& unrecorded_dependencies",
+            "FieldIndex field_index",
+            "Representation field_representation",
+            "Type field_type",
+            "MapRef field_owner_map",
+            "OptionalMapRef field_map",
+            "OptionalJSObjectRef holder",
+            "OptionalMapRef transition_map"
+          ],
+          "return_type": "PropertyAccessInfo",
+          "logic": "Creates a PropertyAccessInfo object representing a direct data field access."
+        },
+        {
+          "name": "FastDataConstant",
+          "parameters": [
+            "Zone* zone",
+            "MapRef receiver_map",
+            "ZoneVector<CompilationDependency const*>&& unrecorded_dependencies",
+            "FieldIndex field_index",
+            "Representation field_representation",
+            "Type field_type",
+            "MapRef field_owner_map",
+            "OptionalMapRef field_map",
+            "OptionalJSObjectRef holder",
+            "OptionalMapRef transition_map"
+          ],
+          "return_type": "PropertyAccessInfo",
+          "logic": "Creates a PropertyAccessInfo object representing a direct data field access with constant value."
+        },
+        {
+          "name": "FastAccessorConstant",
+          "parameters": [
+            "Zone* zone",
+            "MapRef receiver_map",
+            "OptionalJSObjectRef holder",
+            "OptionalObjectRef constant",
+            "OptionalJSObjectRef api_holder"
+          ],
+          "return_type": "PropertyAccessInfo",
+          "logic": "Creates a PropertyAccessInfo object representing a fast accessor with constant value."
+        },
+        {
+          "name": "ModuleExport",
+          "parameters": [
+            "Zone* zone",
+            "MapRef receiver_map",
+            "CellRef cell"
+          ],
+          "return_type": "PropertyAccessInfo",
+          "logic": "Creates a PropertyAccessInfo object representing a module export."
+        },
+        {
+          "name": "StringLength",
+          "parameters": [
+            "Zone* zone",
+            "MapRef receiver_map"
+          ],
+          "return_type": "PropertyAccessInfo",
+          "logic": "Creates a PropertyAccessInfo object representing access to the length of a string."
+        },
+        {
+          "name": "StringWrapperLength",
+          "parameters": [
+            "Zone* zone",
+            "MapRef receiver_map"
+          ],
+          "return_type": "PropertyAccessInfo",
+          "logic": "Creates a PropertyAccessInfo object representing access to the length of a StringWrapper."
+        },
+        {
+          "name": "TypedArrayLength",
+          "parameters": [
+            "Zone* zone",
+            "MapRef receiver_map"
+          ],
+          "return_type": "PropertyAccessInfo",
+          "logic": "Creates a PropertyAccessInfo object representing access to the length of a TypedArray."
+        },
+        {
+          "name": "Invalid",
+          "parameters": [
+            "Zone* zone"
+          ],
+          "return_type": "PropertyAccessInfo",
+          "logic": "Creates a PropertyAccessInfo object representing an invalid access."
+        },
+        {
+          "name": "DictionaryProtoDataConstant",
+          "parameters": [
+            "Zone* zone",
+            "MapRef receiver_map",
+            "JSObjectRef holder",
+            "InternalIndex dict_index",
+            "NameRef name"
+          ],
+          "return_type": "PropertyAccessInfo",
+          "logic": "Creates a PropertyAccessInfo object representing a data field access in a dictionary prototype."
+        },
+        {
+          "name": "DictionaryProtoAccessorConstant",
+          "parameters": [
+            "Zone* zone",
+            "MapRef receiver_map",
+            "OptionalJSObjectRef holder",
+            "ObjectRef constant",
+            "OptionalJSObjectRef api_holder",
+            "NameRef name"
+          ],
+          "return_type": "PropertyAccessInfo",
+          "logic": "Creates a PropertyAccessInfo object representing an accessor in a dictionary prototype."
+        },
+        {
+          "name": "Merge",
+          "parameters": [
+            "PropertyAccessInfo const* that",
+            "AccessMode access_mode",
+            "Zone* zone"
+          ],
+          "return_type": "bool",
+          "logic": "Merges two PropertyAccessInfo objects, combining their information if possible. Returns true if successful, false otherwise."
+        },
+        {
+          "name": "RecordDependencies",
+          "parameters": [
+            "CompilationDependencies* dependencies"
+          ],
+          "return_type": "void",
+          "logic": "Records the dependencies of the access info for compilation purposes."
+        },
+        {
+          "name": "IsInvalid",
+          "parameters": [],
+          "return_type": "bool",
+          "logic": "Checks if the access info is invalid."
+        },
+        {
+          "name": "IsNotFound",
+          "parameters": [],
+          "return_type": "bool",
+          "logic": "Checks if the property was not found."
+        },
+        {
+          "name": "IsDataField",
+          "parameters": [],
+          "return_type": "bool",
+          "logic": "Checks if the access is a data field access."
+        },
+        {
+          "name": "IsFastDataConstant",
+          "parameters": [],
+          "return_type": "bool",
+          "logic": "Checks if the access is a fast data field access."
+        },
+        {
+          "name": "IsFastAccessorConstant",
+          "parameters": [],
+          "return_type": "bool",
+          "logic": "Checks if the access is a fast accessor."
+        },
+        {
+          "name": "IsModuleExport",
+          "parameters": [],
+          "return_type": "bool",
+          "logic": "Checks if the access is a module export."
+        },
+        {
+          "name": "IsStringLength",
+          "parameters": [],
+          "return_type": "bool",
+          "logic": "Checks if the access is the length of a string."
+        },
+        {
+          "name": "IsStringWrapperLength",
+          "parameters": [],
+          "return_type": "bool",
+          "logic": "Checks if the access is the length of a StringWrapper."
+        },
+        {
+          "name": "IsTypedArrayLength",
+          "parameters": [],
+          "return_type": "bool",
+          "logic": "Checks if the access is the length of a TypedArray."
+        },
+        {
+          "name": "IsDictionaryProtoDataConstant",
+          "parameters": [],
+          "return_type": "bool",
+          "logic": "Checks if the access is a constant data field in a dictionary prototype."
+        },
+        {
+          "name": "IsDictionaryProtoAccessorConstant",
+          "parameters": [],
+          "return_type": "bool",
+          "logic": "Checks if the access is an accessor in a dictionary prototype."
+        },
+        {
+          "name": "HasTransitionMap",
+          "parameters": [],
+          "return_type": "bool",
+          "logic": "Checks if the access info has a transition map."
+        },
+        {
+          "name": "HasDictionaryHolder",
+          "parameters": [],
+          "return_type": "bool",
+          "logic": "Checks if the property access info represents property of dictionary object."
+        },
+        {
+          "name": "GetConstFieldInfo",
+          "parameters": [],
+          "return_type": "ConstFieldInfo",
+          "logic": "Returns information about the const field, if the property access is a const field access."
+        },
+        {
+          "name": "kind",
+          "parameters": [],
+          "return_type": "Kind",
+          "logic": "Returns the Kind of property access."
+        },
+        {
+          "name": "holder",
+          "parameters": [],
+          "return_type": "OptionalJSObjectRef",
+          "logic": "Returns the holder object."
+        },
+        {
+          "name": "transition_map",
+          "parameters": [],
+          "return_type": "OptionalMapRef",
+          "logic": "Returns the transition map, if present."
+        },
+        {
+          "name": "constant",
+          "parameters": [],
+          "return_type": "OptionalObjectRef",
+          "logic": "Returns the constant value, if present."
+        },
+        {
+          "name": "field_index",
+          "parameters": [],
+          "return_type": "FieldIndex",
+          "logic": "Returns the index of the field."
+        },
+        {
+          "name": "field_type",
+          "parameters": [],
+          "return_type": "Type",
+          "logic": "Returns the type of the field."
+        },
+        {
+          "name": "field_representation",
+          "parameters": [],
+          "return_type": "Representation",
+          "logic": "Returns the representation of the field."
+        },
+        {
+          "name": "field_map",
+          "parameters": [],
+          "return_type": "OptionalMapRef",
+          "logic": "Returns the field map."
+        },
+        {
+          "name": "lookup_start_object_maps",
+          "parameters": [],
+          "return_type": "ZoneVector<MapRef> const&",
+          "logic": "Returns the lookup_start_object_maps_ member."
+        },
+        {
+          "name": "dictionary_index",
+          "parameters": [],
+          "return_type": "InternalIndex",
+          "logic": "Returns the index in dictionary."
+        },
+        {
+          "name": "name",
+          "parameters": [],
+          "return_type": "NameRef",
+          "logic": "Returns the name of dictionary property."
+        },
+        {
+          "name": "set_elements_kind",
+          "parameters": [
+            "ElementsKind elements_kind"
+          ],
+          "return_type": "void",
+          "logic": "Sets the elements kind of the property."
+        },
+        {
+          "name": "elements_kind",
+          "parameters": [],
+          "return_type": "ElementsKind",
+          "logic": "Gets the elements kind of the property."
+        }
+      ]
+    },
+    {
+      "name": "AccessInfoFactory",
+      "properties": [
+        "broker_",
+        "type_cache_",
+        "zone_"
+      ],
+      "methods": [
+        {
+          "name": "AccessInfoFactory",
+          "parameters": [
+            "JSHeapBroker* broker",
+            "Zone* zone"
+          ],
+          "return_type": "void",
+          "logic": "Constructor. Initializes the member variables."
+        },
+        {
+          "name": "ComputeElementAccessInfo",
+          "parameters": [
+            "MapRef map",
+            "AccessMode access_mode"
+          ],
+          "return_type": "std::optional<ElementAccessInfo>",
+          "logic": "Computes ElementAccessInfo for element access on a given map."
+        },
+        {
+          "name": "ComputeElementAccessInfos",
+          "parameters": [
+            "ElementAccessFeedback const& feedback",
+            "ZoneVector<ElementAccessInfo>* access_infos"
+          ],
+          "return_type": "bool",
+          "logic": "Computes multiple ElementAccessInfos based on feedback."
+        },
+        {
+          "name": "ComputePropertyAccessInfo",
+          "parameters": [
+            "MapRef map",
+            "NameRef name",
+            "AccessMode access_mode"
+          ],
+          "return_type": "PropertyAccessInfo",
+          "logic": "Computes PropertyAccessInfo for a property access on a given map and name."
+        },
+        {
+          "name": "ComputeDictionaryProtoAccessInfo",
+          "parameters": [
+            "MapRef receiver_map",
+            "NameRef name",
+            "JSObjectRef holder",
+            "InternalIndex dict_index",
+            "AccessMode access_mode",
+            "PropertyDetails details"
+          ],
+          "return_type": "PropertyAccessInfo",
+          "logic": "Computes PropertyAccessInfo for a dictionary prototype access."
+        },
+        {
+          "name": "FinalizePropertyAccessInfos",
+          "parameters": [
+            "ZoneVector<PropertyAccessInfo> infos",
+            "AccessMode access_mode",
+            "ZoneVector<PropertyAccessInfo>* result"
+          ],
+          "return_type": "bool",
+          "logic": "Merges a vector of PropertyAccessInfos, recording dependencies and returning whether the merge was fully valid."
+        },
+        {
+          "name": "FinalizePropertyAccessInfosAsOne",
+          "parameters": [
+            "ZoneVector<PropertyAccessInfo> infos",
+            "AccessMode access_mode"
+          ],
+          "return_type": "PropertyAccessInfo",
+          "logic": "Merges a vector of PropertyAccessInfos into a single one. If not possible sets Kind to kInvalid."
+        }
+      ]
+    }
+  ],
+  "functions": [
+    {
+      "name": "operator<<",
+      "parameters": [
+        "std::ostream&",
+        "AccessMode"
+      ],
+      "return_type": "std::ostream&",
+      "logic": "Overloads the << operator for AccessMode enum, probably for printing/debugging."
+    }
+  ]
+}

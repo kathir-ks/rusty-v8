@@ -1,0 +1,37 @@
+{
+  "file_path": "/home/kathirks_gc/v8_go/codebase/src/compiler/backend/arm/instruction-scheduler-arm.cc",
+  "imports": [
+    "src/compiler/backend/instruction-scheduler.h"
+  ],
+  "classes": [
+    {
+      "name": "InstructionScheduler",
+      "properties": [],
+      "methods": [
+        {
+          "name": "SchedulerSupported",
+          "parameters": [],
+          "return_type": "bool",
+          "logic": "Indicates whether instruction scheduling is supported on this architecture (ARM).  This always returns true, signifying that scheduling is enabled."
+        },
+        {
+          "name": "GetTargetInstructionFlags",
+          "parameters": [
+            "const Instruction* instr"
+          ],
+          "return_type": "int",
+          "logic": "Determines and returns instruction-specific flags that influence scheduling decisions based on the instruction's architecture opcode (arch_opcode). A large switch statement maps ARM opcodes to flag values.  Returns kNoOpcodeFlags for many instructions, kIsLoadOperation for load instructions, and kHasSideEffect for store instructions.  It also has a default case that should be unreachable."
+        },
+        {
+          "name": "GetInstructionLatency",
+          "parameters": [
+            "const Instruction* instr"
+          ],
+          "return_type": "int",
+          "logic": "Returns the estimated latency of an instruction. Currently, it always returns 1, indicating a uniform cost for all instructions, but is intended to be extended with instruction cost modeling."
+        }
+      ]
+    }
+  ],
+  "functions": []
+}

@@ -1,0 +1,84 @@
+{
+  "file_path": "/home/kathirks_gc/v8_go/codebase/src/compiler/verifier.h",
+  "imports": [
+    "src/base/macros.h"
+  ],
+  "classes": [
+    {
+      "name": "Verifier",
+      "properties": [
+        "Typing",
+        "CheckInputs",
+        "CodeType"
+      ],
+      "methods": [
+        {
+          "name": "Run",
+          "parameters": [
+            "TFGraph* graph",
+            "Typing typing = TYPED",
+            "CheckInputs check_inputs = kAll",
+            "CodeType code_type = kDefault"
+          ],
+          "return_type": "void",
+          "logic": "Static method to run the verifier on a given TFGraph, checking for well-formedness of inputs to each node and other graph properties.  It takes optional parameters to specify the type of typing, input checking, and code type to use."
+        },
+        {
+          "name": "VerifyNode",
+          "parameters": [
+            "Node* node"
+          ],
+          "return_type": "void",
+          "logic": "Static method to verify the consistency of node inputs and uses. This function is only active when DEBUG is defined. Otherwise, it's an empty function."
+        },
+        {
+          "name": "VerifyEdgeInputReplacement",
+          "parameters": [
+            "const Edge& edge",
+            "const Node* replacement"
+          ],
+          "return_type": "void",
+          "logic": "Static method to verify that the replacement node has the required outputs (effect, control or frame state) to be used as an input for the given edge.  This function is only active when DEBUG is defined. Otherwise, it's an empty function."
+        }
+      ]
+    },
+    {
+      "name": "ScheduleVerifier",
+      "properties": [],
+      "methods": [
+        {
+          "name": "Run",
+          "parameters": [
+            "Schedule* schedule"
+          ],
+          "return_type": "void",
+          "logic": "Static method to run the schedule verifier on a given schedule, checking properties such as dominance and phi placement."
+        }
+      ]
+    }
+  ],
+  "functions": [],
+  "enums": [
+    {
+      "name": "Typing",
+      "values": [
+        "TYPED",
+        "UNTYPED"
+      ]
+    },
+    {
+      "name": "CheckInputs",
+      "values": [
+        "kValuesOnly",
+        "kAll"
+      ]
+    },
+    {
+      "name": "CodeType",
+      "values": [
+        "kDefault",
+        "kWasm"
+      ]
+    }
+  ]
+}

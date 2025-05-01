@@ -1,0 +1,106 @@
+{
+  "file_path": "/home/kathirks_gc/v8_go/codebase/src/compiler/turboshaft/fast-api-call-lowering-reducer.h",
+  "imports": [
+    "include/v8-fast-api-calls.h",
+    "src/compiler/fast-api-calls.h",
+    "src/compiler/globals.h",
+    "src/compiler/turboshaft/assembler.h",
+    "src/compiler/turboshaft/copying-phase.h",
+    "src/compiler/turboshaft/index.h",
+    "src/compiler/turboshaft/operations.h",
+    "src/compiler/turboshaft/phase.h",
+    "src/compiler/turboshaft/representations.h",
+    "src/compiler/turboshaft/define-assembler-macros.inc",
+    "src/compiler/turboshaft/undef-assembler-macros.inc"
+  ],
+  "classes": [
+    {
+      "name": "FastApiCallLoweringReducer",
+      "properties": [
+        "isolate_",
+        "factory_"
+      ],
+      "methods": [
+        {
+          "name": "REDUCE(FastApiCall)",
+          "parameters": [
+            "V<FrameState> frame_state",
+            "V<Object> data_argument",
+            "V<Context> context",
+            "base::Vector<const OpIndex> arguments",
+            "const FastApiCallParameters* parameters",
+            "base::Vector<const RegisterRepresentation> out_reps"
+          ],
+          "return_type": "OpIndex",
+          "logic": "This method is the core of the reducer. It lowers a FastApiCall operation. It takes a frame state, data argument, context, list of arguments, FastApiCallParameters and output representations. It adapts the arguments to the C function's expected types, calls the C function, handles potential exceptions, converts the return value, and returns the result or a default value if an error occurred. It also handles profiler support."
+        },
+        {
+          "name": "Checked",
+          "parameters": [
+            "V<Tuple<T, Word32>> result",
+            "Label<>& otherwise"
+          ],
+          "return_type": "V<T>",
+          "logic": "Checks the result of a TryChange operation. If the operation was successful, it returns the value. Otherwise, it jumps to the specified label to handle the error."
+        },
+        {
+          "name": "AdaptFastCallArgument",
+          "parameters": [
+            "OpIndex argument",
+            "CTypeInfo arg_type",
+            "Label<>& handle_error"
+          ],
+          "return_type": "OpIndex",
+          "logic": "Adapts a single Turboshaft operation to the type expected by the C function. This includes truncation, clamping, converting V8 values to C types, and handling special cases like strings and external objects. If the argument cannot be adapted, it jumps to the specified error label."
+        },
+        {
+          "name": "ClampFastCallArgument",
+          "parameters": [
+            "V<Float64> argument",
+            "CTypeInfo::Type scalar_type"
+          ],
+          "return_type": "OpIndex",
+          "logic": "Clamps a Float64 value to a specified range depending on the scalar_type (Int32, Uint32, Int64, Uint64) and returns a value that's safe to cast. It uses std::numeric_limits to define the min/max and the kMinSafeInteger and kMaxSafeInteger consts for integer clamping."
+        },
+        {
+          "name": "DefaultReturnValue",
+          "parameters": [
+            "const CFunctionInfo* c_signature"
+          ],
+          "return_type": "V<Any>",
+          "logic": "Returns a default value for the C function's return type if an error occurred or if the return type is void.  This could be undefined, zeroed integers, floats, or null."
+        },
+        {
+          "name": "ConvertReturnValue",
+          "parameters": [
+            "const CFunctionInfo* c_signature",
+            "OpIndex result"
+          ],
+          "return_type": "V<Any>",
+          "logic": "Converts the result of the C function call to a V8 value. This may involve boxing primitive types or creating a JSExternalObject for pointer return types."
+        },
+        {
+          "name": "BuildAllocateJSExternalObject",
+          "parameters": [
+            "V<WordPtr> pointer"
+          ],
+          "return_type": "V<HeapObject>",
+          "logic": "Allocates a JSExternalObject and initializes it with the given pointer. Handles null pointers by returning the null_value.  Also, includes sandbox support where isolate allocations are handled. "
+        },
+        {
+          "name": "WrapFastCall",
+          "parameters": [
+            "const TSCallDescriptor* descriptor",
+            "OpIndex callee",
+            "V<FrameState> frame_state",
+            "V<Context> context",
+            "base::Vector<const OpIndex> arguments"
+          ],
+          "return_type": "OpIndex",
+          "logic": "Wraps the actual call to the C function. It sets up the CPU profiler and context, then calls the function using the Turboshaft Call operation and resets them after the call.  Also resets the context in debug mode to catch issues."
+        }
+      ]
+    }
+  ],
+  "functions": []
+}

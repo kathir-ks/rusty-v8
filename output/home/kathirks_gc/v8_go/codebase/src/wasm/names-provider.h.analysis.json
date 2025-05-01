@@ -1,0 +1,312 @@
+{
+  "file_path": "/home/kathirks_gc/v8_go/codebase/src/wasm/names-provider.h",
+  "imports": [
+    "<map>",
+    "<string>",
+    "src/base/vector.h",
+    "src/utils/utils.h",
+    "src/wasm/wasm-module.h"
+  ],
+  "classes": [
+    {
+      "name": "NamesProvider",
+      "properties": [
+        "mutex_",
+        "has_decoded_",
+        "has_computed_function_import_names_",
+        "has_computed_import_names_",
+        "module_",
+        "wire_bytes_",
+        "name_section_names_",
+        "import_export_function_names_",
+        "import_export_table_names_",
+        "import_export_memory_names_",
+        "import_export_global_names_",
+        "import_export_tag_names_"
+      ],
+      "methods": [
+        {
+          "name": "NamesProvider",
+          "parameters": [
+            "const WasmModule* module",
+            "base::Vector<const uint8_t> wire_bytes"
+          ],
+          "return_type": "void",
+          "logic": "Constructor for the NamesProvider class. Initializes the provider with a WasmModule and the wire bytes of the module."
+        },
+        {
+          "name": "~NamesProvider",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Destructor for the NamesProvider class. Performs cleanup, such as releasing resources held by the provider."
+        },
+        {
+          "name": "PrintFunctionName",
+          "parameters": [
+            "StringBuilder& out",
+            "uint32_t function_index",
+            "FunctionNamesBehavior behavior",
+            "IndexAsComment index_as_comment"
+          ],
+          "return_type": "void",
+          "logic": "Prints the name of a function to the provided StringBuilder, using different naming strategies depending on the 'behavior' parameter and optionally including the index as a comment."
+        },
+        {
+          "name": "PrintLocalName",
+          "parameters": [
+            "StringBuilder& out",
+            "uint32_t function_index",
+            "uint32_t local_index",
+            "IndexAsComment index_as_comment"
+          ],
+          "return_type": "void",
+          "logic": "Prints the name of a local variable within a function to the StringBuilder, optionally including the index as a comment."
+        },
+        {
+          "name": "PrintLabelName",
+          "parameters": [
+            "StringBuilder& out",
+            "uint32_t function_index",
+            "uint32_t label_index",
+            "uint32_t fallback_index"
+          ],
+          "return_type": "void",
+          "logic": "Prints the name of a label within a function to the StringBuilder."
+        },
+        {
+          "name": "PrintTypeName",
+          "parameters": [
+            "StringBuilder& out",
+            "uint32_t type_index",
+            "IndexAsComment index_as_comment"
+          ],
+          "return_type": "void",
+          "logic": "Prints the name of a type to the StringBuilder, optionally including the index as a comment."
+        },
+        {
+          "name": "PrintTypeName",
+          "parameters": [
+            "StringBuilder& out",
+            "ModuleTypeIndex type_index",
+            "IndexAsComment index_as_comment"
+          ],
+          "return_type": "void",
+          "logic": "Overload of PrintTypeName that takes a ModuleTypeIndex and prints the name of a type to the StringBuilder, optionally including the index as a comment."
+        },
+        {
+          "name": "PrintTableName",
+          "parameters": [
+            "StringBuilder& out",
+            "uint32_t table_index",
+            "IndexAsComment index_as_comment"
+          ],
+          "return_type": "void",
+          "logic": "Prints the name of a table to the StringBuilder, optionally including the index as a comment."
+        },
+        {
+          "name": "PrintMemoryName",
+          "parameters": [
+            "StringBuilder& out",
+            "uint32_t memory_index",
+            "IndexAsComment index_as_comment"
+          ],
+          "return_type": "void",
+          "logic": "Prints the name of a memory to the StringBuilder, optionally including the index as a comment."
+        },
+        {
+          "name": "PrintGlobalName",
+          "parameters": [
+            "StringBuilder& out",
+            "uint32_t global_index",
+            "IndexAsComment index_as_comment"
+          ],
+          "return_type": "void",
+          "logic": "Prints the name of a global variable to the StringBuilder, optionally including the index as a comment."
+        },
+        {
+          "name": "PrintElementSegmentName",
+          "parameters": [
+            "StringBuilder& out",
+            "uint32_t element_segment_index",
+            "IndexAsComment index_as_comment"
+          ],
+          "return_type": "void",
+          "logic": "Prints the name of an element segment to the StringBuilder, optionally including the index as a comment."
+        },
+        {
+          "name": "PrintDataSegmentName",
+          "parameters": [
+            "StringBuilder& out",
+            "uint32_t data_segment_index",
+            "IndexAsComment index_as_comment"
+          ],
+          "return_type": "void",
+          "logic": "Prints the name of a data segment to the StringBuilder, optionally including the index as a comment."
+        },
+        {
+          "name": "PrintFieldName",
+          "parameters": [
+            "StringBuilder& out",
+            "uint32_t struct_index",
+            "uint32_t field_index",
+            "IndexAsComment index_as_comment"
+          ],
+          "return_type": "void",
+          "logic": "Prints the name of a field in a struct to the StringBuilder, optionally including the index as a comment."
+        },
+        {
+          "name": "PrintTagName",
+          "parameters": [
+            "StringBuilder& out",
+            "uint32_t tag_index",
+            "IndexAsComment index_as_comment"
+          ],
+          "return_type": "void",
+          "logic": "Prints the name of a tag to the StringBuilder, optionally including the index as a comment."
+        },
+        {
+          "name": "PrintHeapType",
+          "parameters": [
+            "StringBuilder& out",
+            "HeapType type"
+          ],
+          "return_type": "void",
+          "logic": "Prints the name of a heap type to the StringBuilder."
+        },
+        {
+          "name": "PrintValueType",
+          "parameters": [
+            "StringBuilder& out",
+            "ValueType type"
+          ],
+          "return_type": "void",
+          "logic": "Prints the name of a value type to the StringBuilder."
+        },
+        {
+          "name": "EstimateCurrentMemoryConsumption",
+          "parameters": [],
+          "return_type": "size_t",
+          "logic": "Estimates the current memory consumption of the NamesProvider object."
+        },
+        {
+          "name": "DecodeNamesIfNotYetDone",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Decodes the name section if it hasn't been decoded yet. Uses a mutex to prevent concurrent modifications."
+        },
+        {
+          "name": "ComputeFunctionNamesFromImportsExports",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Computes function names based on import and export information."
+        },
+        {
+          "name": "ComputeNamesFromImportsExports",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Computes names of globals, memories, etc. based on import and export information."
+        },
+        {
+          "name": "ComputeImportName",
+          "parameters": [
+            "const WasmImport& import",
+            "std::map<uint32_t, std::string>& target"
+          ],
+          "return_type": "void",
+          "logic": "Computes the name of an import and adds it to the target map."
+        },
+        {
+          "name": "ComputeExportName",
+          "parameters": [
+            "const WasmExport& ex",
+            "std::map<uint32_t, std::string>& target"
+          ],
+          "return_type": "void",
+          "logic": "Computes the name of an export and adds it to the target map."
+        },
+        {
+          "name": "WriteRef",
+          "parameters": [
+            "StringBuilder& out",
+            "WireBytesRef ref"
+          ],
+          "return_type": "void",
+          "logic": "Writes a reference to the wire bytes to the StringBuilder."
+        }
+      ]
+    },
+    {
+      "name": "CanonicalTypeNamesProvider",
+      "properties": [
+        "type_names_",
+        "field_names_",
+        "mutex_",
+        "payload_size_estimate_"
+      ],
+      "methods": [
+        {
+          "name": "CanonicalTypeNamesProvider",
+          "parameters": [],
+          "return_type": "CanonicalTypeNamesProvider",
+          "logic": "Default constructor for the CanonicalTypeNamesProvider class."
+        },
+        {
+          "name": "DecodeNameSections",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Decodes the name sections for canonical types."
+        },
+        {
+          "name": "DecodeNames",
+          "parameters": [
+            "NativeModule* native_module"
+          ],
+          "return_type": "void",
+          "logic": "Decodes names for canonical types in a NativeModule."
+        },
+        {
+          "name": "PrintTypeName",
+          "parameters": [
+            "StringBuilder& out",
+            "CanonicalTypeIndex type_index",
+            "NamesProvider::IndexAsComment index_as_comment"
+          ],
+          "return_type": "void",
+          "logic": "Prints the name of a canonical type to the StringBuilder, optionally including the index as a comment."
+        },
+        {
+          "name": "PrintValueType",
+          "parameters": [
+            "StringBuilder& out",
+            "CanonicalValueType type"
+          ],
+          "return_type": "void",
+          "logic": "Prints the name of a canonical value type to the StringBuilder."
+        },
+        {
+          "name": "PrintFieldName",
+          "parameters": [
+            "StringBuilder& out",
+            "CanonicalTypeIndex struct_index",
+            "uint32_t field_index"
+          ],
+          "return_type": "void",
+          "logic": "Prints the name of a field in a canonical struct to the StringBuilder."
+        },
+        {
+          "name": "EstimateCurrentMemoryConsumption",
+          "parameters": [],
+          "return_type": "size_t",
+          "logic": "Estimates the current memory consumption of the CanonicalTypeNamesProvider object."
+        },
+        {
+          "name": "DetectInlineStringThreshold",
+          "parameters": [],
+          "return_type": "size_t",
+          "logic": "Detects the threshold for inline string storage."
+        }
+      ]
+    }
+  ],
+  "functions": []
+}

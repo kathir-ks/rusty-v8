@@ -1,0 +1,344 @@
+{
+  "file_path": "/home/kathirks_gc/v8_go/codebase/src/execution/isolate-data.h",
+  "imports": [
+    "src/builtins/builtins.h",
+    "src/codegen/constants-arch.h",
+    "src/codegen/external-reference-table.h",
+    "src/execution/stack-guard.h",
+    "src/execution/thread-local-top.h",
+    "src/heap/linear-allocation-area.h",
+    "src/init/isolate-group.h",
+    "src/roots/roots.h",
+    "src/sandbox/code-pointer-table.h",
+    "src/sandbox/cppheap-pointer-table.h",
+    "src/sandbox/external-pointer-table.h",
+    "src/sandbox/trusted-pointer-table.h",
+    "src/utils/utils.h",
+    "testing/gtest/include/gtest/gtest_prod.h"
+  ],
+  "classes": [
+    {
+      "name": "JSBuiltinDispatchHandleRoot",
+      "properties": [
+        "Idx",
+        "kPadding",
+        "kTableSize"
+      ],
+      "methods": [
+        {
+          "name": "to_builtin",
+          "parameters": [
+            "Idx idx"
+          ],
+          "return_type": "Builtin",
+          "logic": "Converts an index to a Builtin enum value using a lookup table."
+        },
+        {
+          "name": "to_idx",
+          "parameters": [
+            "Builtin builtin"
+          ],
+          "return_type": "Idx",
+          "logic": "Converts a Builtin enum value to its index using a switch statement."
+        },
+        {
+          "name": "to_idx",
+          "parameters": [
+            "RootIndex root_idx"
+          ],
+          "return_type": "Idx",
+          "logic": "Converts a RootIndex to its index using a switch statement."
+        }
+      ]
+    },
+    {
+      "name": "IsolateData",
+      "properties": [
+        "cage_base_",
+        "stack_guard_",
+        "is_marking_flag_",
+        "is_minor_marking_flag_",
+        "is_shared_space_isolate_flag_",
+        "uses_shared_heap_flag_",
+        "execution_mode_",
+        "stack_is_iterable_",
+        "error_message_param_",
+        "tables_alignment_padding_",
+        "regexp_static_result_offsets_vector_",
+        "builtin_tier0_entry_table_",
+        "builtin_tier0_table_",
+        "new_allocation_info_",
+        "old_allocation_info_",
+        "fast_c_call_alignment_padding_",
+        "fast_c_call_caller_fp_",
+        "fast_c_call_caller_pc_",
+        "fast_api_call_target_",
+        "long_task_stats_counter_",
+        "thread_local_top_",
+        "handle_scope_data_",
+        "embedder_data_",
+        "external_pointer_table_",
+        "shared_external_pointer_table_",
+        "cpp_heap_pointer_table_",
+        "trusted_cage_base_",
+        "trusted_pointer_table_",
+        "shared_trusted_pointer_table_",
+        "trusted_pointer_publishing_scope_",
+        "code_pointer_table_base_address_",
+        "api_callback_thunk_argument_",
+        "regexp_exec_vector_argument_",
+        "continuation_preserved_embedder_data_",
+        "roots_table_",
+        "external_reference_table_",
+        "builtin_entry_table_",
+        "builtin_table_",
+        "builtin_dispatch_table_",
+        "padding_"
+      ],
+      "methods": [
+        {
+          "name": "IsolateData",
+          "parameters": [
+            "Isolate* isolate",
+            "IsolateGroup* group"
+          ],
+          "return_type": "void",
+          "logic": "Constructor for IsolateData, initializes various fields including the cage base, stack guard, and trusted cage base."
+        },
+        {
+          "name": "isolate_root",
+          "parameters": [],
+          "return_type": "Address",
+          "logic": "Returns the isolate root address by adding kIsolateRootBias to the address of the IsolateData object."
+        },
+        {
+          "name": "hacker_name_offset",
+          "parameters": [],
+          "return_type": "int",
+          "logic": "Returns the offset of the specified field relative to the isolate root."
+        },
+        {
+          "name": "root_slot_offset",
+          "parameters": [
+            "RootIndex root_index"
+          ],
+          "return_type": "int",
+          "logic": "Returns the offset of a specific root slot in the roots table."
+        },
+        {
+          "name": "BuiltinEntrySlotOffset",
+          "parameters": [
+            "Builtin id"
+          ],
+          "return_type": "int",
+          "logic": "Returns the offset of a builtin entry slot based on the Builtin ID."
+        },
+        {
+          "name": "builtin_slot_offset",
+          "parameters": [
+            "int builtin_index"
+          ],
+          "return_type": "int",
+          "logic": "Returns the offset of a specific builtin slot in either tier0 or regular tables. Deprecated."
+        },
+        {
+          "name": "BuiltinSlotOffset",
+          "parameters": [
+            "Builtin id"
+          ],
+          "return_type": "int",
+          "logic": "Returns the offset of a specific builtin slot in either tier0 or regular tables."
+        },
+        {
+          "name": "jslimit_offset",
+          "parameters": [],
+          "return_type": "int",
+          "logic": "Returns the offset of the jslimit field within the StackGuard."
+        },
+        {
+          "name": "real_jslimit_offset",
+          "parameters": [],
+          "return_type": "int",
+          "logic": "Returns the offset of the real_jslimit field within the StackGuard."
+        },
+        {
+          "name": "Name_address",
+          "parameters": [],
+          "return_type": "Address",
+          "logic": "Returns the address of the specified member."
+        },
+        {
+          "name": "fast_c_call_caller_fp",
+          "parameters": [],
+          "return_type": "Address",
+          "logic": "Returns the fast_c_call_caller_fp_ address."
+        },
+        {
+          "name": "fast_c_call_caller_pc",
+          "parameters": [],
+          "return_type": "Address",
+          "logic": "Returns the fast_c_call_caller_pc_ address."
+        },
+        {
+          "name": "fast_api_call_target",
+          "parameters": [],
+          "return_type": "Address",
+          "logic": "Returns the fast_api_call_target_ address."
+        },
+        {
+          "name": "exception_offset",
+          "parameters": [],
+          "return_type": "int",
+          "logic": "Returns the offset of the exception field within the ThreadLocalTop."
+        },
+        {
+          "name": "cage_base",
+          "parameters": [],
+          "return_type": "Address",
+          "logic": "Returns the cage base address."
+        },
+        {
+          "name": "stack_guard",
+          "parameters": [],
+          "return_type": "StackGuard*",
+          "logic": "Returns a pointer to the StackGuard object."
+        },
+        {
+          "name": "regexp_static_result_offsets_vector",
+          "parameters": [],
+          "return_type": "int32_t*",
+          "logic": "Returns a pointer to the regexp static result offsets vector."
+        },
+        {
+          "name": "set_regexp_static_result_offsets_vector",
+          "parameters": [
+            "int32_t* value"
+          ],
+          "return_type": "void",
+          "logic": "Sets the value of the regexp static result offsets vector."
+        },
+        {
+          "name": "builtin_tier0_entry_table",
+          "parameters": [],
+          "return_type": "Address*",
+          "logic": "Returns a pointer to the builtin tier 0 entry table."
+        },
+        {
+          "name": "builtin_tier0_table",
+          "parameters": [],
+          "return_type": "Address*",
+          "logic": "Returns a pointer to the builtin tier 0 table."
+        },
+        {
+          "name": "roots",
+          "parameters": [],
+          "return_type": "RootsTable&",
+          "logic": "Returns a reference to the RootsTable object."
+        },
+        {
+          "name": "api_callback_thunk_argument",
+          "parameters": [],
+          "return_type": "Address",
+          "logic": "Returns the API callback thunk argument."
+        },
+        {
+          "name": "regexp_exec_vector_argument",
+          "parameters": [],
+          "return_type": "Address",
+          "logic": "Returns the regexp execution vector argument."
+        },
+        {
+          "name": "continuation_preserved_embedder_data",
+          "parameters": [],
+          "return_type": "Tagged<Object>",
+          "logic": "Returns continuation preserved embedder data."
+        },
+        {
+          "name": "set_continuation_preserved_embedder_data",
+          "parameters": [
+            "Tagged<Object> data"
+          ],
+          "return_type": "void",
+          "logic": "Sets continuation preserved embedder data."
+        },
+        {
+          "name": "roots",
+          "parameters": [],
+          "return_type": "const RootsTable&",
+          "logic": "Returns a const reference to the RootsTable object."
+        },
+        {
+          "name": "external_reference_table",
+          "parameters": [],
+          "return_type": "ExternalReferenceTable*",
+          "logic": "Returns a pointer to the ExternalReferenceTable object."
+        },
+        {
+          "name": "thread_local_top",
+          "parameters": [],
+          "return_type": "ThreadLocalTop&",
+          "logic": "Returns a reference to the ThreadLocalTop object."
+        },
+        {
+          "name": "thread_local_top",
+          "parameters": [],
+          "return_type": "ThreadLocalTop const&",
+          "logic": "Returns a const reference to the ThreadLocalTop object."
+        },
+        {
+          "name": "builtin_entry_table",
+          "parameters": [],
+          "return_type": "Address*",
+          "logic": "Returns a pointer to the builtin entry table."
+        },
+        {
+          "name": "builtin_table",
+          "parameters": [],
+          "return_type": "Address*",
+          "logic": "Returns a pointer to the builtin table."
+        },
+        {
+          "name": "builtin_dispatch_handle",
+          "parameters": [
+            "Builtin builtin"
+          ],
+          "return_type": "JSDispatchHandle",
+          "logic": "Returns the dispatch handle for a specific builtin (only if leap-tiering is enabled and static dispatch handles are disabled)."
+        },
+        {
+          "name": "stack_is_iterable",
+          "parameters": [],
+          "return_type": "bool",
+          "logic": "Returns whether the stack is iterable."
+        },
+        {
+          "name": "is_marking",
+          "parameters": [],
+          "return_type": "bool",
+          "logic": "Returns whether garbage collection marking is in progress."
+        },
+        {
+          "name": "contains",
+          "parameters": [
+            "Address address"
+          ],
+          "return_type": "bool",
+          "logic": "Checks if a given address falls within the memory region occupied by this IsolateData instance."
+        },
+        {
+          "name": "AssertPredictableLayout",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Static method to assert that the IsolateData layout is predictable and standard."
+        },
+        {
+          "name": "builtin_dispatch_table",
+          "parameters": [],
+          "return_type": "JSDispatchHandle*",
+          "logic": "Returns pointer to dispatch table."
+        }
+      ]
+    }
+  ],
+  "functions": []
+}

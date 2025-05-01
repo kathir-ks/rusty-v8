@@ -1,0 +1,129 @@
+{
+  "file_path": "/home/kathirks_gc/v8_go/codebase/src/compiler/fast-api-calls.cc",
+  "imports": [
+    "src/compiler/fast-api-calls.h",
+    "src/codegen/cpu-features.h",
+    "src/compiler/globals.h"
+  ],
+  "classes": [
+    {
+      "name": "FastApiCallBuilder",
+      "properties": [
+        "isolate_",
+        "graph_",
+        "graph_assembler_",
+        "get_parameter_",
+        "convert_return_value_",
+        "initialize_options_",
+        "generate_slow_api_call_"
+      ],
+      "methods": [
+        {
+          "name": "FastApiCallBuilder",
+          "parameters": [
+            "Isolate* isolate",
+            "TFGraph* graph",
+            "GraphAssembler* graph_assembler",
+            "const GetParameter& get_parameter",
+            "const ConvertReturnValue& convert_return_value",
+            "const InitializeOptions& initialize_options",
+            "const GenerateSlowApiCall& generate_slow_api_call"
+          ],
+          "return_type": "void",
+          "logic": "Constructor for FastApiCallBuilder, initializes member variables with provided dependencies."
+        },
+        {
+          "name": "Build",
+          "parameters": [
+            "FastApiCallFunction c_function",
+            "Node* data_argument"
+          ],
+          "return_type": "Node*",
+          "logic": "Builds the fast API call graph.  It retrieves the function signature, generates the fast call, handles exceptions, and returns the result."
+        },
+        {
+          "name": "WrapFastCall",
+          "parameters": [
+            "const CallDescriptor* call_descriptor",
+            "int inputs_size",
+            "Node** inputs",
+            "Node* target",
+            "const CFunctionInfo* c_signature",
+            "int c_arg_count",
+            "Node* stack_slot"
+          ],
+          "return_type": "Node*",
+          "logic": "Wraps the actual C function call with profiling code, updates effect and control dependencies, and creates the call node."
+        },
+        {
+          "name": "PropagateException",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Generates code to propagate exceptions from the C function call to the JavaScript environment."
+        },
+        {
+          "name": "isolate",
+          "parameters": [],
+          "return_type": "Isolate*",
+          "logic": "Getter method for the isolate_ property."
+        },
+        {
+          "name": "graph",
+          "parameters": [],
+          "return_type": "TFGraph*",
+          "logic": "Getter method for the graph_ property."
+        },
+        {
+          "name": "gasm",
+          "parameters": [],
+          "return_type": "GraphAssembler*",
+          "logic": "Getter method for the graph_assembler_ property."
+        }
+      ]
+    }
+  ],
+  "functions": [
+    {
+      "name": "GetTypedArrayElementsKind",
+      "parameters": [
+        "CTypeInfo::Type type"
+      ],
+      "return_type": "ElementsKind",
+      "logic": "Maps a CTypeInfo::Type to the corresponding ElementsKind for typed arrays."
+    },
+    {
+      "name": "CanOptimizeFastSignature",
+      "parameters": [
+        "const CFunctionInfo* c_signature"
+      ],
+      "return_type": "bool",
+      "logic": "Determines whether a C function signature is suitable for fast API calls based on various architecture-specific and feature-flag-controlled constraints such as argument counts, floating point usage, 64 bit types, and SSE4.2 support."
+    },
+    {
+      "name": "BuildFastApiCall",
+      "parameters": [
+        "Isolate* isolate",
+        "TFGraph* graph",
+        "GraphAssembler* graph_assembler",
+        "FastApiCallFunction c_function",
+        "Node* data_argument",
+        "const GetParameter& get_parameter",
+        "const ConvertReturnValue& convert_return_value",
+        "const InitializeOptions& initialize_options",
+        "const GenerateSlowApiCall& generate_slow_api_call"
+      ],
+      "return_type": "Node*",
+      "logic": "Creates a FastApiCallBuilder and uses it to build the fast API call graph."
+    },
+    {
+      "name": "GetFastApiCallTarget",
+      "parameters": [
+        "JSHeapBroker* broker",
+        "FunctionTemplateInfoRef function_template_info",
+        "size_t arg_count"
+      ],
+      "return_type": "FastApiCallFunction",
+      "logic": "Determines if a given FunctionTemplateInfo and argument count can be used for a fast API call and, if so, retrieves the corresponding function address and signature.  It checks if turbo_fast_api_calls is enabled, iterates through available C signatures for the function, checks if the signature has a compatible argument count, and calls CanOptimizeFastSignature to assess suitability, then returns the appropriate function and signature if possible. Checks for flags such as kEnforceRangeBit for 32 bit builds."
+    }
+  ]
+}

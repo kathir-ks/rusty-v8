@@ -1,0 +1,216 @@
+{
+  "file_path": "/home/kathirks_gc/v8_go/codebase/src/compiler/turboshaft/maglev-early-lowering-reducer-inl.h",
+  "imports": [
+    "<optional>",
+    "src/compiler/feedback-source.h",
+    "src/compiler/globals.h",
+    "src/compiler/turboshaft/assembler.h",
+    "src/compiler/turboshaft/index.h",
+    "src/compiler/turboshaft/representations.h",
+    "src/deoptimizer/deoptimize-reason.h",
+    "src/objects/contexts.h",
+    "src/objects/instance-type-inl.h",
+    "src/compiler/turboshaft/define-assembler-macros.inc",
+    "src/compiler/turboshaft/undef-assembler-macros.inc"
+  ],
+  "classes": [
+    {
+      "name": "MaglevEarlyLoweringReducer",
+      "properties": [
+        "isolate_",
+        "local_isolate_",
+        "broker_",
+        "factory_"
+      ],
+      "methods": [
+        {
+          "name": "CheckInstanceType",
+          "parameters": [
+            "V<Object> input",
+            "V<FrameState> frame_state",
+            "const FeedbackSource& feedback",
+            "InstanceType first_instance_type",
+            "InstanceType last_instance_type",
+            "bool check_smi"
+          ],
+          "return_type": "void",
+          "logic": "Checks if the instance type of an object falls within a specified range. Deoptimizes if the check fails.  Handles Smi checks and different instance type scenarios (single type vs range)."
+        },
+        {
+          "name": "CheckedInternalizedString",
+          "parameters": [
+            "V<Object> object",
+            "V<FrameState> frame_state",
+            "bool check_smi",
+            "const FeedbackSource& feedback"
+          ],
+          "return_type": "V<InternalizedString>",
+          "logic": "Checks if an object is an internalized string and returns it, deoptimizing if not. Handles Smi checks, thin strings, and non-string cases."
+        },
+        {
+          "name": "CheckValueEqualsString",
+          "parameters": [
+            "V<Object> object",
+            "InternalizedStringRef value",
+            "V<FrameState> frame_state",
+            "const FeedbackSource& feedback"
+          ],
+          "return_type": "void",
+          "logic": "Checks if an object is equal to a given internalized string. Deoptimizes if the object is not a string or not equal to the provided value."
+        },
+        {
+          "name": "CheckConstructResult",
+          "parameters": [
+            "V<Object> construct_result",
+            "V<Object> implicit_receiver"
+          ],
+          "return_type": "V<Object>",
+          "logic": "Checks the result of a constructor invocation. If the result is an object (in the ECMA sense), it returns the result; otherwise, it returns the implicit receiver."
+        },
+        {
+          "name": "LoadScriptContextSideData",
+          "parameters": [
+            "V<Context> script_context",
+            "int index"
+          ],
+          "return_type": "V<Object>",
+          "logic": "Loads side data from a script context at a given index."
+        },
+        {
+          "name": "LoadScriptContextPropertyFromSideData",
+          "parameters": [
+            "V<Object> side_data"
+          ],
+          "return_type": "V<Object>",
+          "logic": "Loads a property from the side data of a script context. Handles cases where the side data is a Smi."
+        },
+        {
+          "name": "LoadHeapNumberFromScriptContext",
+          "parameters": [
+            "V<Context> script_context",
+            "int index",
+            "V<HeapNumber> heap_number"
+          ],
+          "return_type": "V<Object>",
+          "logic": "Loads a HeapNumber from the script context based on provided index and associated property cell. Handles different property cell types like MutableInt32 and MutableHeapNumber, allocating a new HeapNumber with corresponding values."
+        },
+        {
+          "name": "StoreScriptContextSlowPath",
+          "parameters": [
+            "V<Context> script_context",
+            "V<Object> old_value",
+            "V<Object> new_value",
+            "V<Object> side_data",
+            "V<FrameState> frame_state",
+            "const FeedbackSource& feedback",
+            "Label<>& done"
+          ],
+          "return_type": "void",
+          "logic": "Implements slow path for storing values in script contexts, deoptimizing in cases of undefined side data or if trying to modify const values. Handles Smi cases, mutable heap int32, and mutable heap number scenarios."
+        },
+        {
+          "name": "CheckDerivedConstructResult",
+          "parameters": [
+            "V<Object> construct_result",
+            "V<FrameState> frame_state",
+            "V<NativeContext> native_context",
+            "LazyDeoptOnThrow lazy_deopt_on_throw"
+          ],
+          "return_type": "void",
+          "logic": "Checks if the result of a derived construct is an object (in the ECMA sense). Throws an exception if not."
+        },
+        {
+          "name": "UpdateJSArrayLength",
+          "parameters": [
+            "V<Word32> length_raw",
+            "V<JSArray> object",
+            "V<Word32> index"
+          ],
+          "return_type": "V<Smi>",
+          "logic": "Updates the length of a JSArray. If the new index is greater than the current length, the length is updated to index + 1."
+        },
+        {
+          "name": "TransitionMultipleElementsKind",
+          "parameters": [
+            "V<Object> object",
+            "V<Map> map",
+            "const ZoneVector<compiler::MapRef>& transition_sources",
+            "const MapRef transition_target"
+          ],
+          "return_type": "V<Map>",
+          "logic": "Transitions an object's elements kind to a new kind. Uses a vector of possible source maps for the transition."
+        },
+        {
+          "name": "TransitionElementsKind",
+          "parameters": [
+            "V<Object> object",
+            "V<Map> map",
+            "const ZoneVector<compiler::MapRef>& transition_sources",
+            "const MapRef transition_target",
+            "Label<Map>& end"
+          ],
+          "return_type": "void",
+          "logic": "Transitions an object's elements kind. If a transition is simple, it directly stores the new map; otherwise, it calls the runtime TransitionElementsKind function."
+        },
+        {
+          "name": "JSAnyIsNotPrimitive",
+          "parameters": [
+            "V<HeapObject> heap_object"
+          ],
+          "return_type": "V<Word32>",
+          "logic": "Checks if a HeapObject is not a primitive value in javascript."
+        },
+        {
+          "name": "HasInPrototypeChain",
+          "parameters": [
+            "V<Object> object",
+            "HeapObjectRef prototype",
+            "V<FrameState> frame_state",
+            "V<NativeContext> native_context",
+            "LazyDeoptOnThrow lazy_deopt_on_throw"
+          ],
+          "return_type": "V<Boolean>",
+          "logic": "Checks if an object has a given prototype in its prototype chain. Uses a loop and handles special receiver types and interceptors."
+        },
+        {
+          "name": "MigrateMapIfNeeded",
+          "parameters": [
+            "V<HeapObject> object",
+            "V<Map> map",
+            "V<FrameState> frame_state",
+            "const FeedbackSource& feedback"
+          ],
+          "return_type": "V<Map>",
+          "logic": "Migrates the map of an object if it is deprecated. Calls runtime TryMigrateInstance and reloads the map after migration."
+        },
+        {
+          "name": "ExtendPropertiesBackingStore",
+          "parameters": [
+            "V<PropertyArray> old_property_array",
+            "V<JSObject> object",
+            "int old_length",
+            "V<FrameState> frame_state",
+            "const FeedbackSource& feedback"
+          ],
+          "return_type": "V<PropertyArray>",
+          "logic": "Extends the backing store of a JSObject's properties. Allocates a new PropertyArray, copies existing properties, initializes new properties to undefined, and updates the length-and-hash field."
+        },
+        {
+          "name": "GeneratorStore",
+          "parameters": [
+            "V<Context> context",
+            "V<JSGeneratorObject> generator",
+            "base::SmallVector<OpIndex, 32> parameters_and_registers",
+            "int suspend_id",
+            "int bytecode_offset"
+          ],
+          "return_type": "void",
+          "logic": "Stores the parameters and registers of a JSGeneratorObject into its FixedArray backing store, and also store the suspend_id, bytecode_offset, and context into the generator object."
+        }
+      ]
+    }
+  ],
+  "functions": [],
+  "enums": [],
+  "structs": []
+}

@@ -1,0 +1,62 @@
+{
+  "file_path": "/home/kathirks_gc/v8_go/codebase/src/compiler/value-numbering-reducer.cc",
+  "imports": [
+    "src/compiler/value-numbering-reducer.h",
+    "<cstring>",
+    "src/compiler/node-properties.h",
+    "src/compiler/node.h"
+  ],
+  "classes": [
+    {
+      "name": "ValueNumberingReducer",
+      "properties": [
+        "entries_",
+        "capacity_",
+        "size_",
+        "temp_zone_",
+        "graph_zone_"
+      ],
+      "methods": [
+        {
+          "name": "ValueNumberingReducer",
+          "parameters": [
+            "Zone* temp_zone",
+            "Zone* graph_zone"
+          ],
+          "return_type": "void",
+          "logic": "Constructor for the ValueNumberingReducer class. Initializes member variables, including allocating memory for the hash table."
+        },
+        {
+          "name": "~ValueNumberingReducer",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Destructor for the ValueNumberingReducer class.  Currently defaulted and empty as no explicit memory management is needed besides the zones which are managed separately"
+        },
+        {
+          "name": "Reduce",
+          "parameters": [
+            "Node* node"
+          ],
+          "return_type": "Reduction",
+          "logic": "Attempts to reduce the given node by finding an equivalent node already present in the hash table. If a match is found, it returns a 'Replace' reduction. If no match is found, it adds the node to the hash table and returns 'NoChange'. It also handles collisions in the hash table and grows the table if necessary."
+        },
+        {
+          "name": "ReplaceIfTypesMatch",
+          "parameters": [
+            "Node* node",
+            "Node* replacement"
+          ],
+          "return_type": "Reduction",
+          "logic": "Checks if the replacement node has at least as good a type as the original node. If the types are comparable, potentially sets the replacement's type to the original node's type if more specific. Then returns a 'Replace' reduction with the replacement node. If the types are incompatible, it returns 'NoChange'."
+        },
+        {
+          "name": "Grow",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Doubles the capacity of the hash table, rehashes all existing entries, and inserts them into the new table."
+        }
+      ]
+    }
+  ],
+  "functions": []
+}

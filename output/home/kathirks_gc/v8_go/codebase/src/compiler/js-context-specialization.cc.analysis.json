@@ -1,0 +1,162 @@
+{
+  "file_path": "/home/kathirks_gc/v8_go/codebase/src/compiler/js-context-specialization.cc",
+  "imports": [
+    "src/compiler/js-context-specialization.h",
+    "src/base/logging.h",
+    "src/compiler/access-builder.h",
+    "src/compiler/common-operator.h",
+    "src/compiler/compilation-dependencies.h",
+    "src/compiler/feedback-source.h",
+    "src/compiler/js-graph.h",
+    "src/compiler/js-heap-broker.h",
+    "src/compiler/js-operator.h",
+    "src/compiler/linkage.h",
+    "src/compiler/node-properties.h",
+    "src/compiler/property-access-builder.h",
+    "src/compiler/simplified-operator.h",
+    "src/deoptimizer/deoptimize-reason.h",
+    "src/objects/contexts-inl.h",
+    "src/objects/property-cell.h"
+  ],
+  "classes": [
+    {
+      "name": "JSContextSpecialization",
+      "properties": [],
+      "methods": [
+        {
+          "name": "Reduce",
+          "parameters": [
+            "Node* node"
+          ],
+          "return_type": "Reduction",
+          "logic": "Dispatches to specialized reduction methods based on the node's opcode.  Handles Parameter, JSLoadContext, JSLoadScriptContext, JSStoreContext, JSStoreScriptContext and JSGetImportMeta opcodes."
+        },
+        {
+          "name": "ReduceParameter",
+          "parameters": [
+            "Node* node"
+          ],
+          "return_type": "Reduction",
+          "logic": "Constant-folds the function parameter node if a JSFunction handle is available."
+        },
+        {
+          "name": "SimplifyJSLoadContext",
+          "parameters": [
+            "Node* node",
+            "Node* new_context",
+            "size_t new_depth"
+          ],
+          "return_type": "Reduction",
+          "logic": "Partially reduces a JSLoadContext node by folding-in the outer context node, creating a new LoadContext operator with a possibly updated depth and context input."
+        },
+        {
+          "name": "SimplifyJSLoadScriptContext",
+          "parameters": [
+            "Node* node",
+            "Node* new_context",
+            "size_t new_depth"
+          ],
+          "return_type": "Reduction",
+          "logic": "Partially reduces a JSLoadScriptContext node by folding-in the outer context node, creating a new LoadScriptContext operator with a possibly updated depth and context input."
+        },
+        {
+          "name": "SimplifyJSStoreContext",
+          "parameters": [
+            "Node* node",
+            "Node* new_context",
+            "size_t new_depth"
+          ],
+          "return_type": "Reduction",
+          "logic": "Partially reduces a JSStoreContext node by folding-in the outer context node, creating a new StoreContext operator with a possibly updated depth and context input."
+        },
+        {
+          "name": "SimplifyJSStoreScriptContext",
+          "parameters": [
+            "Node* node",
+            "Node* new_context",
+            "size_t new_depth"
+          ],
+          "return_type": "Reduction",
+          "logic": "Partially reduces a JSStoreScriptContext node by folding-in the outer context node, creating a new StoreScriptContext operator with a possibly updated depth and context input."
+        },
+        {
+          "name": "ReduceJSLoadContext",
+          "parameters": [
+            "Node* node"
+          ],
+          "return_type": "Reduction",
+          "logic": "Attempts to completely reduce a JSLoadContext node by walking up the context chain (both in the graph and concretely) and replacing the node with a constant if possible. Checks for immutability and slot initialization."
+        },
+        {
+          "name": "ReduceJSLoadScriptContext",
+          "parameters": [
+            "Node* node"
+          ],
+          "return_type": "Reduction",
+          "logic": "Attempts to completely reduce a JSLoadScriptContext node by walking up the context chain (both in the graph and concretely) and replacing the node with a constant or a LoadField node depending on ContextSideProperty. It also depends on ContextSideProperty"
+        },
+        {
+          "name": "ReduceJSStoreContext",
+          "parameters": [
+            "Node* node"
+          ],
+          "return_type": "Reduction",
+          "logic": "Attempts to simplify a JSStoreContext node by walking up the context chain in the graph and concretely. It simplifies the store by changing the context and depth of the store operation."
+        },
+        {
+          "name": "ReduceJSStoreScriptContext",
+          "parameters": [
+            "Node* node"
+          ],
+          "return_type": "Reduction",
+          "logic": "Attempts to simplify a JSStoreScriptContext node by walking up the context chain in the graph and concretely. Depending on ContextSideProperty, it replaces the node with store or type check."
+        },
+        {
+          "name": "ReduceJSGetImportMeta",
+          "parameters": [
+            "Node* node"
+          ],
+          "return_type": "Reduction",
+          "logic": "Attempts to reduce a JSGetImportMeta node by finding the module context and extracting the import.meta object. Replaces the node with the constant import.meta if found. Returns NoChange if the import.meta object hasn't been created yet."
+        },
+        {
+          "name": "isolate",
+          "parameters": [],
+          "return_type": "Isolate*",
+          "logic": "Returns the isolate associated with the JSGraph."
+        }
+      ]
+    }
+  ],
+  "functions": [
+    {
+      "name": "IsContextParameter",
+      "parameters": [
+        "Node* node"
+      ],
+      "return_type": "bool",
+      "logic": "Checks if a given parameter node represents a context parameter.  Determines this by comparing the parameter index to the ContextParameterIndex from the StartNode."
+    },
+    {
+      "name": "GetSpecializationContext",
+      "parameters": [
+        "JSHeapBroker* broker",
+        "Node* node",
+        "size_t* distance",
+        "Maybe<OuterContext> maybe_outer"
+      ],
+      "return_type": "OptionalContextRef",
+      "logic": "Tries to determine a concrete context object from a given node and distance.  Handles HeapConstant (checks if it's a Context) and Parameter (checks OuterContext) opcodes. Updates the distance if an OuterContext is used."
+    },
+    {
+      "name": "GetModuleContext",
+      "parameters": [
+        "JSHeapBroker* broker",
+        "Node* node",
+        "Maybe<OuterContext> maybe_context"
+      ],
+      "return_type": "OptionalContextRef",
+      "logic": "Attempts to find the module context by traversing up the context chain from the given node.  Returns the module context if found."
+    }
+  ]
+}

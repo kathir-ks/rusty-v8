@@ -1,0 +1,554 @@
+{
+  "file_path": "/home/kathirks_gc/v8_go/codebase/src/ast/ast-traversal-visitor.h",
+  "imports": [
+    "src/ast/ast.h",
+    "src/ast/scopes.h",
+    "src/execution/isolate.h"
+  ],
+  "classes": [
+    {
+      "name": "AstTraversalVisitor",
+      "properties": [
+        "root_",
+        "depth_"
+      ],
+      "methods": [
+        {
+          "name": "AstTraversalVisitor",
+          "parameters": [
+            "Isolate* isolate",
+            "AstNode* root = nullptr"
+          ],
+          "return_type": "constructor",
+          "logic": "Constructor that initializes the visitor with an Isolate and an optional root node. Initializes depth to 0 and calls InitializeAstVisitor."
+        },
+        {
+          "name": "AstTraversalVisitor",
+          "parameters": [
+            "uintptr_t stack_limit",
+            "AstNode* root = nullptr"
+          ],
+          "return_type": "constructor",
+          "logic": "Constructor that initializes the visitor with a stack limit and an optional root node. Initializes depth to 0 and calls InitializeAstVisitor."
+        },
+        {
+          "name": "Run",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Starts the traversal from the root node by calling Visit(root_)."
+        },
+        {
+          "name": "VisitNode",
+          "parameters": [
+            "AstNode* node"
+          ],
+          "return_type": "bool",
+          "logic": "A dummy implementation that always returns true. Subclasses can override this method to perform actions on each node before its children are visited."
+        },
+        {
+          "name": "VisitExpression",
+          "parameters": [
+            "Expression* node"
+          ],
+          "return_type": "bool",
+          "logic": "A dummy implementation that always returns true. Subclasses can override this method to perform actions on each expression node before its children are visited."
+        },
+        {
+          "name": "VisitDeclarations",
+          "parameters": [
+            "Declaration::List* declarations"
+          ],
+          "return_type": "void",
+          "logic": "Visits all declarations in the provided list."
+        },
+        {
+          "name": "VisitStatements",
+          "parameters": [
+            "const ZonePtrList<Statement>* statements"
+          ],
+          "return_type": "void",
+          "logic": "Visits all statements in the provided list."
+        },
+        {
+          "name": "VisitVariableDeclaration",
+          "parameters": [
+            "VariableDeclaration* decl"
+          ],
+          "return_type": "void",
+          "logic": "Visits a VariableDeclaration node."
+        },
+        {
+          "name": "VisitFunctionDeclaration",
+          "parameters": [
+            "FunctionDeclaration* decl"
+          ],
+          "return_type": "void",
+          "logic": "Visits a FunctionDeclaration node and then recurses on its function literal."
+        },
+        {
+          "name": "VisitBlock",
+          "parameters": [
+            "Block* stmt"
+          ],
+          "return_type": "void",
+          "logic": "Visits a Block statement. It first visits the declarations in its scope, then the statements in the block."
+        },
+        {
+          "name": "VisitExpressionStatement",
+          "parameters": [
+            "ExpressionStatement* stmt"
+          ],
+          "return_type": "void",
+          "logic": "Visits an ExpressionStatement node and recurses on its expression."
+        },
+        {
+          "name": "VisitEmptyStatement",
+          "parameters": [
+            "EmptyStatement* stmt"
+          ],
+          "return_type": "void",
+          "logic": "Visits an EmptyStatement node."
+        },
+        {
+          "name": "VisitSloppyBlockFunctionStatement",
+          "parameters": [
+            "SloppyBlockFunctionStatement* stmt"
+          ],
+          "return_type": "void",
+          "logic": "Visits a SloppyBlockFunctionStatement node and then recurses on its statement."
+        },
+        {
+          "name": "VisitIfStatement",
+          "parameters": [
+            "IfStatement* stmt"
+          ],
+          "return_type": "void",
+          "logic": "Visits an IfStatement node and recurses on its condition, then statement, and else statement."
+        },
+        {
+          "name": "VisitContinueStatement",
+          "parameters": [
+            "ContinueStatement* stmt"
+          ],
+          "return_type": "void",
+          "logic": "Visits a ContinueStatement node."
+        },
+        {
+          "name": "VisitBreakStatement",
+          "parameters": [
+            "BreakStatement* stmt"
+          ],
+          "return_type": "void",
+          "logic": "Visits a BreakStatement node."
+        },
+        {
+          "name": "VisitReturnStatement",
+          "parameters": [
+            "ReturnStatement* stmt"
+          ],
+          "return_type": "void",
+          "logic": "Visits a ReturnStatement node and recurses on its expression."
+        },
+        {
+          "name": "VisitWithStatement",
+          "parameters": [
+            "WithStatement* stmt"
+          ],
+          "return_type": "void",
+          "logic": "Visits a WithStatement node and recurses on its expression and statement."
+        },
+        {
+          "name": "VisitSwitchStatement",
+          "parameters": [
+            "SwitchStatement* stmt"
+          ],
+          "return_type": "void",
+          "logic": "Visits a SwitchStatement node and recurses on its tag and case clauses."
+        },
+        {
+          "name": "VisitDoWhileStatement",
+          "parameters": [
+            "DoWhileStatement* stmt"
+          ],
+          "return_type": "void",
+          "logic": "Visits a DoWhileStatement node and recurses on its body and condition."
+        },
+        {
+          "name": "VisitWhileStatement",
+          "parameters": [
+            "WhileStatement* stmt"
+          ],
+          "return_type": "void",
+          "logic": "Visits a WhileStatement node and recurses on its condition and body."
+        },
+        {
+          "name": "VisitForStatement",
+          "parameters": [
+            "ForStatement* stmt"
+          ],
+          "return_type": "void",
+          "logic": "Visits a ForStatement node and recurses on its init, cond, next, and body."
+        },
+        {
+          "name": "VisitForInStatement",
+          "parameters": [
+            "ForInStatement* stmt"
+          ],
+          "return_type": "void",
+          "logic": "Visits a ForInStatement node and recurses on its each, subject, and body."
+        },
+        {
+          "name": "VisitForOfStatement",
+          "parameters": [
+            "ForOfStatement* stmt"
+          ],
+          "return_type": "void",
+          "logic": "Visits a ForOfStatement node and recurses on its each, subject, and body."
+        },
+        {
+          "name": "VisitTryCatchStatement",
+          "parameters": [
+            "TryCatchStatement* stmt"
+          ],
+          "return_type": "void",
+          "logic": "Visits a TryCatchStatement node and recurses on its try block and catch block."
+        },
+        {
+          "name": "VisitTryFinallyStatement",
+          "parameters": [
+            "TryFinallyStatement* stmt"
+          ],
+          "return_type": "void",
+          "logic": "Visits a TryFinallyStatement node and recurses on its try block and finally block."
+        },
+        {
+          "name": "VisitDebuggerStatement",
+          "parameters": [
+            "DebuggerStatement* stmt"
+          ],
+          "return_type": "void",
+          "logic": "Visits a DebuggerStatement node."
+        },
+        {
+          "name": "VisitFunctionLiteral",
+          "parameters": [
+            "FunctionLiteral* expr"
+          ],
+          "return_type": "void",
+          "logic": "Visits a FunctionLiteral node. First visits declarations within its scope and then the statements in the function body. Skips the body if the function was lazily parsed."
+        },
+        {
+          "name": "VisitNativeFunctionLiteral",
+          "parameters": [
+            "NativeFunctionLiteral* expr"
+          ],
+          "return_type": "void",
+          "logic": "Visits a NativeFunctionLiteral node."
+        },
+        {
+          "name": "VisitConditionalChain",
+          "parameters": [
+            "ConditionalChain* expr"
+          ],
+          "return_type": "void",
+          "logic": "Visits a ConditionalChain node and its sub-expressions in the chain, along with the final else expression."
+        },
+        {
+          "name": "VisitConditional",
+          "parameters": [
+            "Conditional* expr"
+          ],
+          "return_type": "void",
+          "logic": "Visits a Conditional node (ternary operator) and recurses on its condition, then expression, and else expression."
+        },
+        {
+          "name": "VisitVariableProxy",
+          "parameters": [
+            "VariableProxy* expr"
+          ],
+          "return_type": "void",
+          "logic": "Visits a VariableProxy node."
+        },
+        {
+          "name": "VisitLiteral",
+          "parameters": [
+            "Literal* expr"
+          ],
+          "return_type": "void",
+          "logic": "Visits a Literal node."
+        },
+        {
+          "name": "VisitRegExpLiteral",
+          "parameters": [
+            "RegExpLiteral* expr"
+          ],
+          "return_type": "void",
+          "logic": "Visits a RegExpLiteral node."
+        },
+        {
+          "name": "VisitObjectLiteral",
+          "parameters": [
+            "ObjectLiteral* expr"
+          ],
+          "return_type": "void",
+          "logic": "Visits an ObjectLiteral node and recurses on the key and value of each property."
+        },
+        {
+          "name": "VisitArrayLiteral",
+          "parameters": [
+            "ArrayLiteral* expr"
+          ],
+          "return_type": "void",
+          "logic": "Visits an ArrayLiteral node and recurses on each element."
+        },
+        {
+          "name": "VisitAssignment",
+          "parameters": [
+            "Assignment* expr"
+          ],
+          "return_type": "void",
+          "logic": "Visits an Assignment node and recurses on the target and the value."
+        },
+        {
+          "name": "VisitCompoundAssignment",
+          "parameters": [
+            "CompoundAssignment* expr"
+          ],
+          "return_type": "void",
+          "logic": "Visits a CompoundAssignment node by calling VisitAssignment"
+        },
+        {
+          "name": "VisitYield",
+          "parameters": [
+            "Yield* expr"
+          ],
+          "return_type": "void",
+          "logic": "Visits a Yield expression node and recurses on its expression."
+        },
+        {
+          "name": "VisitYieldStar",
+          "parameters": [
+            "YieldStar* expr"
+          ],
+          "return_type": "void",
+          "logic": "Visits a YieldStar expression node and recurses on its expression."
+        },
+        {
+          "name": "VisitAwait",
+          "parameters": [
+            "Await* expr"
+          ],
+          "return_type": "void",
+          "logic": "Visits an Await expression node and recurses on its expression."
+        },
+        {
+          "name": "VisitThrow",
+          "parameters": [
+            "Throw* expr"
+          ],
+          "return_type": "void",
+          "logic": "Visits a Throw node and recurses on its exception."
+        },
+        {
+          "name": "VisitOptionalChain",
+          "parameters": [
+            "OptionalChain* expr"
+          ],
+          "return_type": "void",
+          "logic": "Visits an OptionalChain expression node and recurses on its expression."
+        },
+        {
+          "name": "VisitProperty",
+          "parameters": [
+            "Property* expr"
+          ],
+          "return_type": "void",
+          "logic": "Visits a Property node (e.g., obj.key) and recurses on its object and key."
+        },
+        {
+          "name": "VisitCall",
+          "parameters": [
+            "Call* expr"
+          ],
+          "return_type": "void",
+          "logic": "Visits a Call node (function call) and recurses on the function expression and each argument."
+        },
+        {
+          "name": "VisitCallNew",
+          "parameters": [
+            "CallNew* expr"
+          ],
+          "return_type": "void",
+          "logic": "Visits a CallNew node (new operator) and recurses on the constructor expression and each argument."
+        },
+        {
+          "name": "VisitCallRuntime",
+          "parameters": [
+            "CallRuntime* expr"
+          ],
+          "return_type": "void",
+          "logic": "Visits a CallRuntime node (internal runtime function call) and recurses on each argument."
+        },
+        {
+          "name": "VisitUnaryOperation",
+          "parameters": [
+            "UnaryOperation* expr"
+          ],
+          "return_type": "void",
+          "logic": "Visits a UnaryOperation node and recurses on its expression."
+        },
+        {
+          "name": "VisitCountOperation",
+          "parameters": [
+            "CountOperation* expr"
+          ],
+          "return_type": "void",
+          "logic": "Visits a CountOperation node (e.g., ++x) and recurses on its expression."
+        },
+        {
+          "name": "VisitBinaryOperation",
+          "parameters": [
+            "BinaryOperation* expr"
+          ],
+          "return_type": "void",
+          "logic": "Visits a BinaryOperation node and recurses on its left and right operands."
+        },
+        {
+          "name": "VisitNaryOperation",
+          "parameters": [
+            "NaryOperation* expr"
+          ],
+          "return_type": "void",
+          "logic": "Visits a NaryOperation node and recurses on its first expression and subsequent expressions."
+        },
+        {
+          "name": "VisitCompareOperation",
+          "parameters": [
+            "CompareOperation* expr"
+          ],
+          "return_type": "void",
+          "logic": "Visits a CompareOperation node and recurses on its left and right operands."
+        },
+        {
+          "name": "VisitThisExpression",
+          "parameters": [
+            "ThisExpression* expr"
+          ],
+          "return_type": "void",
+          "logic": "Visits a ThisExpression node."
+        },
+        {
+          "name": "VisitClassLiteral",
+          "parameters": [
+            "ClassLiteral* expr"
+          ],
+          "return_type": "void",
+          "logic": "Visits a ClassLiteral node. Visits the 'extends' clause, the constructor, static initializer, instance members initializer function and all properties. Distinguishes between public and private members."
+        },
+        {
+          "name": "VisitInitializeClassMembersStatement",
+          "parameters": [
+            "InitializeClassMembersStatement* stmt"
+          ],
+          "return_type": "void",
+          "logic": "Visits an InitializeClassMembersStatement node. Visits the keys and values of class properties."
+        },
+        {
+          "name": "VisitInitializeClassStaticElementsStatement",
+          "parameters": [
+            "InitializeClassStaticElementsStatement* stmt"
+          ],
+          "return_type": "void",
+          "logic": "Visits an InitializeClassStaticElementsStatement node. Visits the keys and values of static class properties or static blocks."
+        },
+        {
+          "name": "VisitAutoAccessorGetterBody",
+          "parameters": [
+            "AutoAccessorGetterBody* stmt"
+          ],
+          "return_type": "void",
+          "logic": "Visits an AutoAccessorGetterBody node."
+        },
+        {
+          "name": "VisitAutoAccessorSetterBody",
+          "parameters": [
+            "AutoAccessorSetterBody* stmt"
+          ],
+          "return_type": "void",
+          "logic": "Visits an AutoAccessorSetterBody node."
+        },
+        {
+          "name": "VisitSpread",
+          "parameters": [
+            "Spread* expr"
+          ],
+          "return_type": "void",
+          "logic": "Visits a Spread expression node and recurses on its expression."
+        },
+        {
+          "name": "VisitEmptyParentheses",
+          "parameters": [
+            "EmptyParentheses* expr"
+          ],
+          "return_type": "void",
+          "logic": "Visits an EmptyParentheses expression node."
+        },
+        {
+          "name": "VisitGetTemplateObject",
+          "parameters": [
+            "GetTemplateObject* expr"
+          ],
+          "return_type": "void",
+          "logic": "Visits a GetTemplateObject expression node."
+        },
+        {
+          "name": "VisitTemplateLiteral",
+          "parameters": [
+            "TemplateLiteral* expr"
+          ],
+          "return_type": "void",
+          "logic": "Visits a TemplateLiteral node and recurses on each substitution."
+        },
+        {
+          "name": "VisitImportCallExpression",
+          "parameters": [
+            "ImportCallExpression* expr"
+          ],
+          "return_type": "void",
+          "logic": "Visits an ImportCallExpression node and recurses on its specifier and import options."
+        },
+        {
+          "name": "VisitSuperPropertyReference",
+          "parameters": [
+            "SuperPropertyReference* expr"
+          ],
+          "return_type": "void",
+          "logic": "Visits a SuperPropertyReference expression node."
+        },
+        {
+          "name": "VisitSuperCallReference",
+          "parameters": [
+            "SuperCallReference* expr"
+          ],
+          "return_type": "void",
+          "logic": "Visits a SuperCallReference expression node.  Recurses on the new.target and this_function variable proxies."
+        },
+        {
+          "name": "VisitSuperCallForwardArgs",
+          "parameters": [
+            "SuperCallForwardArgs* expr"
+          ],
+          "return_type": "void",
+          "logic": "Visits a SuperCallForwardArgs expression node, and recurses on the expression being forwarded."
+        },
+        {
+          "name": "depth",
+          "parameters": [],
+          "return_type": "int",
+          "logic": "Returns the current depth of the traversal."
+        }
+      ]
+    }
+  ],
+  "functions": []
+}

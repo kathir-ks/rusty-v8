@@ -1,0 +1,112 @@
+{
+  "file_path": "/home/kathirks_gc/v8_go/codebase/src/execution/simulator-base.cc",
+  "imports": [
+    "src/execution/simulator-base.h",
+    "src/execution/isolate.h",
+    "src/execution/simulator.h"
+  ],
+  "classes": [
+    {
+      "name": "Redirection",
+      "properties": [
+        "external_function_",
+        "type_",
+        "next_",
+        "instruction_",
+        "function_descriptor_"
+      ],
+      "methods": [
+        {
+          "name": "Redirection",
+          "parameters": [
+            "Address external_function",
+            "ExternalReference::Type type"
+          ],
+          "return_type": "void",
+          "logic": "Constructor for the Redirection class. Initializes the external function address, type, and sets up the instruction redirection in memory, also flushes the ICache."
+        },
+        {
+          "name": "Get",
+          "parameters": [
+            "Address external_function",
+            "ExternalReference::Type type"
+          ],
+          "return_type": "Redirection*",
+          "logic": "Static method to retrieve an existing Redirection object or create a new one if it doesn't exist for the given external function and type. Uses a linked list to check for existing redirections."
+        },
+        {
+          "name": "UnwrapRedirection",
+          "parameters": [
+            "Address redirection_trampoline"
+          ],
+          "return_type": "void*",
+          "logic": "Unwraps the address from the Redirection trampoline"
+        },
+        {
+          "name": "DeleteChain",
+          "parameters": [
+            "Redirection* redirection"
+          ],
+          "return_type": "void",
+          "logic": "Static method to deallocate a linked list of Redirection objects. Iteratively deletes each redirection object in the list."
+        },
+        {
+          "name": "address_of_instruction",
+          "parameters": [],
+          "return_type": "Address",
+          "logic": "Return the address of the instruction of redirection"
+        }
+      ]
+    },
+    {
+      "name": "SimulatorData",
+      "properties": [
+        "target_to_signature_table_",
+        "signature_map_mutex_"
+      ],
+      "methods": [
+        {
+          "name": "RegisterFunctionsAndSignatures",
+          "parameters": [
+            "Address* c_functions",
+            "const CFunctionInfo* const* c_signatures",
+            "unsigned num_functions"
+          ],
+          "return_type": "void",
+          "logic": "Registers C functions and their signatures. Stores the mapping between function addresses and signatures in the target_to_signature_table_."
+        },
+        {
+          "name": "GetSignatureForTarget",
+          "parameters": [
+            "Address target"
+          ],
+          "return_type": "const EncodedCSignature&",
+          "logic": "Retrieves the signature associated with a given target address from the target_to_signature_table_. Returns Invalid signature if no matching target is found."
+        }
+      ]
+    }
+  ],
+  "functions": [
+    {
+      "name": "SimulatorBase::InitializeOncePerProcess",
+      "parameters": [],
+      "return_type": "void",
+      "logic": "Static method to initialize static members of the SimulatorBase class. Creates the mutexes and the instruction cache hash map."
+    },
+    {
+      "name": "SimulatorBase::GlobalTearDown",
+      "parameters": [],
+      "return_type": "void",
+      "logic": "Static method to clean up static members of the SimulatorBase class. Deletes mutexes, the instruction cache, and resets pointers to nullptr.  Frees any allocated cache pages within the i_cache_."
+    },
+    {
+      "name": "SimulatorBase::RedirectExternalReference",
+      "parameters": [
+        "Address external_function",
+        "ExternalReference::Type type"
+      ],
+      "return_type": "Address",
+      "logic": "Static method to redirect an external function call. Retrieves or creates a Redirection object for the given function and returns the address of the redirection instruction."
+    }
+  ]
+}

@@ -1,0 +1,839 @@
+{
+  "file_path": "/home/kathirks_gc/v8_go/codebase/src/wasm/wasm-js.cc",
+  "imports": [
+    "src/wasm/wasm-js.h",
+    "<cinttypes>",
+    "<cstring>",
+    "<optional>",
+    "include/v8-function.h",
+    "include/v8-persistent-handle.h",
+    "include/v8-promise.h",
+    "include/v8-wasm.h",
+    "src/api/api-inl.h",
+    "src/api/api-natives.h",
+    "src/base/fpu.h",
+    "src/base/logging.h",
+    "src/execution/execution.h",
+    "src/execution/isolate.h",
+    "src/execution/messages.h",
+    "src/flags/flags.h",
+    "src/handles/handles.h",
+    "src/heap/factory.h",
+    "src/objects/fixed-array.h",
+    "src/objects/instance-type.h",
+    "src/objects/js-function.h",
+    "src/objects/managed-inl.h",
+    "src/objects/objects-inl.h",
+    "src/objects/shared-function-info.h",
+    "src/objects/templates.h",
+    "src/wasm/function-compiler.h",
+    "src/wasm/streaming-decoder.h",
+    "src/wasm/value-type.h",
+    "src/wasm/wasm-debug.h",
+    "src/wasm/wasm-engine.h",
+    "src/wasm/wasm-limits.h",
+    "src/wasm/wasm-objects-inl.h",
+    "src/wasm/wasm-serialization.h",
+    "src/wasm/wasm-value.h"
+  ],
+  "classes": [
+    {
+      "name": "WasmStreaming::WasmStreamingImpl",
+      "properties": [
+        "i_isolate_",
+        "enabled_features_",
+        "streaming_decoder_",
+        "resolver_"
+      ],
+      "methods": [
+        {
+          "name": "WasmStreamingImpl",
+          "parameters": [
+            "i::Isolate* isolate",
+            "const char* api_method_name",
+            "CompileTimeImports compile_imports",
+            "std::shared_ptr<internal::wasm::CompilationResultResolver> resolver"
+          ],
+          "return_type": "void",
+          "logic": "Constructor for WasmStreamingImpl. Initializes the isolate, enabled features, streaming decoder, and resolver."
+        },
+        {
+          "name": "OnBytesReceived",
+          "parameters": [
+            "const uint8_t* bytes",
+            "size_t size"
+          ],
+          "return_type": "void",
+          "logic": "Passes received bytes to the streaming decoder."
+        },
+        {
+          "name": "Finish",
+          "parameters": [
+            "bool can_use_compiled_module"
+          ],
+          "return_type": "void",
+          "logic": "Signals the streaming decoder that the byte stream is complete."
+        },
+        {
+          "name": "Abort",
+          "parameters": [
+            "MaybeLocal<Value> exception"
+          ],
+          "return_type": "void",
+          "logic": "Aborts the streaming compilation and rejects the promise with the given exception."
+        },
+        {
+          "name": "SetCompiledModuleBytes",
+          "parameters": [
+            "base::Vector<const uint8_t> bytes"
+          ],
+          "return_type": "bool",
+          "logic": "Sets pre-compiled module bytes to the streaming decoder, checking for version support."
+        },
+        {
+          "name": "SetMoreFunctionsCanBeSerializedCallback",
+          "parameters": [
+            "std::function<void(CompiledWasmModule)> callback"
+          ],
+          "return_type": "void",
+          "logic": "Sets a callback to be invoked when more functions can be serialized."
+        },
+        {
+          "name": "SetUrl",
+          "parameters": [
+            "base::Vector<const char> url"
+          ],
+          "return_type": "void",
+          "logic": "Sets the URL for the streaming decoder."
+        }
+      ]
+    },
+    {
+      "name": "WasmStreaming",
+      "properties": [
+        "impl_"
+      ],
+      "methods": [
+        {
+          "name": "WasmStreaming",
+          "parameters": [
+            "std::unique_ptr<WasmStreamingImpl> impl"
+          ],
+          "return_type": "n/a",
+          "logic": "Constructor for WasmStreaming, initializes the implementation."
+        },
+        {
+          "name": "~WasmStreaming",
+          "parameters": [],
+          "return_type": "n/a",
+          "logic": "Destructor for WasmStreaming."
+        },
+        {
+          "name": "OnBytesReceived",
+          "parameters": [
+            "const uint8_t* bytes",
+            "size_t size"
+          ],
+          "return_type": "void",
+          "logic": "Forwards the call to the implementation's OnBytesReceived."
+        },
+        {
+          "name": "Finish",
+          "parameters": [
+            "bool can_use_compiled_module"
+          ],
+          "return_type": "void",
+          "logic": "Forwards the call to the implementation's Finish."
+        },
+        {
+          "name": "Abort",
+          "parameters": [
+            "MaybeLocal<Value> exception"
+          ],
+          "return_type": "void",
+          "logic": "Forwards the call to the implementation's Abort."
+        },
+        {
+          "name": "SetCompiledModuleBytes",
+          "parameters": [
+            "const uint8_t* bytes",
+            "size_t size"
+          ],
+          "return_type": "bool",
+          "logic": "Forwards the call to the implementation's SetCompiledModuleBytes."
+        },
+        {
+          "name": "SetMoreFunctionsCanBeSerializedCallback",
+          "parameters": [
+            "std::function<void(CompiledWasmModule)> callback"
+          ],
+          "return_type": "void",
+          "logic": "Forwards the call to the implementation's SetMoreFunctionsCanBeSerializedCallback."
+        },
+        {
+          "name": "SetUrl",
+          "parameters": [
+            "const char* url",
+            "size_t length"
+          ],
+          "return_type": "void",
+          "logic": "Forwards the call to the implementation's SetUrl."
+        },
+        {
+          "name": "Unpack",
+          "parameters": [
+            "Isolate* isolate",
+            "Local<Value> value"
+          ],
+          "return_type": "std::shared_ptr<WasmStreaming>",
+          "logic": "Unpacks a WasmStreaming object from a v8::Value."
+        }
+      ]
+    },
+    {
+      "name": "AsyncCompilationResolver",
+      "properties": [
+        "finished_",
+        "isolate_",
+        "context_",
+        "promise_resolver_"
+      ],
+      "methods": [
+        {
+          "name": "AsyncCompilationResolver",
+          "parameters": [
+            "Isolate* isolate",
+            "Local<Context> context",
+            "Local<Promise::Resolver> promise_resolver"
+          ],
+          "return_type": "n/a",
+          "logic": "Constructor for AsyncCompilationResolver. Stores the isolate, context, and promise resolver."
+        },
+        {
+          "name": "OnCompilationSucceeded",
+          "parameters": [
+            "i::DirectHandle<i::WasmModuleObject> result"
+          ],
+          "return_type": "void",
+          "logic": "Resolves the promise with the compiled WasmModuleObject."
+        },
+        {
+          "name": "OnCompilationFailed",
+          "parameters": [
+            "i::DirectHandle<i::Object> error_reason"
+          ],
+          "return_type": "void",
+          "logic": "Rejects the promise with the given error reason."
+        }
+      ]
+    },
+    {
+      "name": "InstantiateModuleResultResolver",
+      "properties": [
+        "isolate_",
+        "context_",
+        "promise_resolver_"
+      ],
+      "methods": [
+        {
+          "name": "InstantiateModuleResultResolver",
+          "parameters": [
+            "Isolate* isolate",
+            "Local<Context> context",
+            "Local<Promise::Resolver> promise_resolver"
+          ],
+          "return_type": "n/a",
+          "logic": "Constructor for InstantiateModuleResultResolver. Stores the isolate, context, and promise resolver."
+        },
+        {
+          "name": "OnInstantiationSucceeded",
+          "parameters": [
+            "i::DirectHandle<i::WasmInstanceObject> instance"
+          ],
+          "return_type": "void",
+          "logic": "Resolves the promise with the instantiated WasmInstanceObject."
+        },
+        {
+          "name": "OnInstantiationFailed",
+          "parameters": [
+            "i::DirectHandle<i::Object> error_reason"
+          ],
+          "return_type": "void",
+          "logic": "Rejects the promise with the given error reason."
+        }
+      ]
+    },
+    {
+      "name": "InstantiateBytesResultResolver",
+      "properties": [
+        "isolate_",
+        "context_",
+        "promise_resolver_",
+        "module_"
+      ],
+      "methods": [
+        {
+          "name": "InstantiateBytesResultResolver",
+          "parameters": [
+            "Isolate* isolate",
+            "Local<Context> context",
+            "Local<Promise::Resolver> promise_resolver",
+            "Local<Value> module"
+          ],
+          "return_type": "n/a",
+          "logic": "Constructor for InstantiateBytesResultResolver. Stores the isolate, context, promise resolver and the module."
+        },
+        {
+          "name": "OnInstantiationSucceeded",
+          "parameters": [
+            "i::DirectHandle<i::WasmInstanceObject> instance"
+          ],
+          "return_type": "void",
+          "logic": "Resolves the promise with an object containing the module and instance."
+        },
+        {
+          "name": "OnInstantiationFailed",
+          "parameters": [
+            "i::DirectHandle<i::Object> error_reason"
+          ],
+          "return_type": "void",
+          "logic": "Rejects the promise with the given error reason."
+        }
+      ]
+    },
+    {
+      "name": "AsyncInstantiateCompileResultResolver",
+      "properties": [
+        "finished_",
+        "isolate_",
+        "context_",
+        "promise_resolver_",
+        "imports_"
+      ],
+      "methods": [
+        {
+          "name": "AsyncInstantiateCompileResultResolver",
+          "parameters": [
+            "Isolate* isolate",
+            "Local<Context> context",
+            "Local<Promise::Resolver> promise_resolver",
+            "Local<Value> imports"
+          ],
+          "return_type": "n/a",
+          "logic": "Constructor for AsyncInstantiateCompileResultResolver. Stores the isolate, context, promise resolver, and imports."
+        },
+        {
+          "name": "OnCompilationSucceeded",
+          "parameters": [
+            "i::DirectHandle<i::WasmModuleObject> result"
+          ],
+          "return_type": "void",
+          "logic": "Starts asynchronous instantiation after successful compilation."
+        },
+        {
+          "name": "OnCompilationFailed",
+          "parameters": [
+            "i::DirectHandle<i::Object> error_reason"
+          ],
+          "return_type": "void",
+          "logic": "Rejects the promise with the given error reason."
+        }
+      ]
+    },
+    {
+      "name": "WasmJSApiScope",
+      "properties": [
+        "callback_info_",
+        "isolate_",
+        "handle_scope_",
+        "thrower_"
+      ],
+      "methods": [
+        {
+          "name": "WasmJSApiScope",
+          "parameters": [
+            "const v8::FunctionCallbackInfo<v8::Value>& callback_info",
+            "const char* api_name"
+          ],
+          "return_type": "n/a",
+          "logic": "Constructor for WasmJSApiScope. Initializes the callback info, isolate, handle scope, and error thrower."
+        },
+        {
+          "name": "AssertException",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Asserts that an exception has been thrown."
+        },
+        {
+          "name": "callback_info",
+          "parameters": [],
+          "return_type": "const v8::FunctionCallbackInfo<v8::Value>&",
+          "logic": "Getter for the callback info."
+        },
+        {
+          "name": "api_name",
+          "parameters": [],
+          "return_type": "const char*",
+          "logic": "Getter for the api name."
+        },
+        {
+          "name": "isolates_and_thrower",
+          "parameters": [],
+          "return_type": "std::tuple<v8::Isolate*, i::Isolate*, ErrorThrower&>",
+          "logic": "Getter for all essential scopes"
+        }
+      ]
+    }
+  ],
+  "functions": [
+    {
+      "name": "ToUtf8Lossy",
+      "parameters": [
+        "Isolate* isolate",
+        "DirectHandle<String> string",
+        "std::string& out"
+      ],
+      "return_type": "void",
+      "logic": "Converts a v8::String to a UTF-8 std::string."
+    },
+    {
+      "name": "GetFirstArgumentAsModule",
+      "parameters": [
+        "const v8::FunctionCallbackInfo<v8::Value>& info",
+        "ErrorThrower* thrower"
+      ],
+      "return_type": "i::MaybeDirectHandle<i::WasmModuleObject>",
+      "logic": "Retrieves the first argument as a WasmModuleObject."
+    },
+    {
+      "name": "GetFirstArgumentAsTag",
+      "parameters": [
+        "const v8::FunctionCallbackInfo<v8::Value>& info",
+        "ErrorThrower* thrower"
+      ],
+      "return_type": "i::MaybeDirectHandle<i::WasmTagObject>",
+      "logic": "Retrieves the first argument as a WasmTagObject."
+    },
+    {
+      "name": "GetFirstArgumentAsBytes",
+      "parameters": [
+        "const v8::FunctionCallbackInfo<v8::Value>& info",
+        "size_t max_length",
+        "ErrorThrower* thrower",
+        "bool* is_shared"
+      ],
+      "return_type": "base::Vector<const uint8_t>",
+      "logic": "Retrieves the first argument as a byte array from ArrayBuffer or TypedArray."
+    },
+    {
+      "name": "GetAndCopyFirstArgumentAsBytes",
+      "parameters": [
+        "const v8::FunctionCallbackInfo<v8::Value>& info",
+        "size_t max_length",
+        "ErrorThrower* thrower"
+      ],
+      "return_type": "base::OwnedVector<const uint8_t>",
+      "logic": "Retrieves the first argument as a byte array, copies it, and returns the copy."
+    },
+    {
+      "name": "ImportsAsMaybeReceiver",
+      "parameters": [
+        "Local<Value> ffi"
+      ],
+      "return_type": "i::MaybeDirectHandle<i::JSReceiver>",
+      "logic": "Casts the argument to a JSReceiver if it's defined and an object."
+    },
+    {
+      "name": "RecordCompilationMethod",
+      "parameters": [
+        "i::Isolate* isolate",
+        "CompilationMethod method"
+      ],
+      "return_type": "void",
+      "logic": "Records the compilation method used for WebAssembly."
+    },
+    {
+      "name": "ArgumentToCompileOptions",
+      "parameters": [
+        "Local<Value> arg_value",
+        "i::Isolate* isolate",
+        "WasmEnabledFeatures enabled_features"
+      ],
+      "return_type": "CompileTimeImports",
+      "logic": "Extracts compile time import options from the given v8 value"
+    },
+    {
+      "name": "WebAssemblyCompileImpl",
+      "parameters": [
+        "const v8::FunctionCallbackInfo<v8::Value>& info"
+      ],
+      "return_type": "void",
+      "logic": "Implementation of WebAssembly.compile, compiles WASM asynchronously."
+    },
+    {
+      "name": "WasmStreamingCallbackForTesting",
+      "parameters": [
+        "const v8::FunctionCallbackInfo<v8::Value>& info"
+      ],
+      "return_type": "void",
+      "logic": "Callback for testing streaming compilation."
+    },
+    {
+      "name": "WasmStreamingPromiseFailedCallback",
+      "parameters": [
+        "const v8::FunctionCallbackInfo<v8::Value>& info"
+      ],
+      "return_type": "void",
+      "logic": "Callback for handling promise rejections during streaming compilation."
+    },
+    {
+      "name": "StartAsyncCompilationWithResolver",
+      "parameters": [
+        "WasmJSApiScope& js_api_scope",
+        "Local<Value> response_or_promise",
+        "Local<Value> options_arg_value",
+        "std::shared_ptr<i::wasm::CompilationResultResolver> resolver",
+        "ReturnValue<Value> return_value"
+      ],
+      "return_type": "void",
+      "logic": "Starts async compilation with a compilation result resolver."
+    },
+    {
+      "name": "WebAssemblyCompileStreaming",
+      "parameters": [
+        "const v8::FunctionCallbackInfo<v8::Value>& info"
+      ],
+      "return_type": "void",
+      "logic": "Implementation of WebAssembly.compileStreaming, compiles WASM from a stream."
+    },
+    {
+      "name": "WebAssemblyValidateImpl",
+      "parameters": [
+        "const v8::FunctionCallbackInfo<v8::Value>& info"
+      ],
+      "return_type": "void",
+      "logic": "Implementation of WebAssembly.validate, validates WASM synchronously."
+    },
+    {
+      "name": "TransferPrototype",
+      "parameters": [
+        "i::Isolate* isolate",
+        "i::DirectHandle<i::JSObject> destination",
+        "i::DirectHandle<i::JSReceiver> source"
+      ],
+      "return_type": "bool",
+      "logic": "Copies the prototype from source to destination."
+    },
+    {
+      "name": "WebAssemblyModuleImpl",
+      "parameters": [
+        "const v8::FunctionCallbackInfo<v8::Value>& info"
+      ],
+      "return_type": "void",
+      "logic": "Implementation of WebAssembly.Module constructor, compiles WASM synchronously."
+    },
+    {
+      "name": "WebAssemblyModuleImportsImpl",
+      "parameters": [
+        "const v8::FunctionCallbackInfo<v8::Value>& info"
+      ],
+      "return_type": "void",
+      "logic": "Implementation of WebAssembly.Module.imports, returns imports of module."
+    },
+    {
+      "name": "WebAssemblyModuleExportsImpl",
+      "parameters": [
+        "const v8::FunctionCallbackInfo<v8::Value>& info"
+      ],
+      "return_type": "void",
+      "logic": "Implementation of WebAssembly.Module.exports, returns exports of module."
+    },
+    {
+      "name": "WebAssemblyModuleCustomSectionsImpl",
+      "parameters": [
+        "const v8::FunctionCallbackInfo<v8::Value>& info"
+      ],
+      "return_type": "void",
+      "logic": "Implementation of WebAssembly.Module.customSections, returns custom sections."
+    },
+    {
+      "name": "WebAssemblyInstanceImpl",
+      "parameters": [
+        "const v8::FunctionCallbackInfo<v8::Value>& info"
+      ],
+      "return_type": "void",
+      "logic": "Implementation of WebAssembly.Instance constructor, instantiates WASM."
+    },
+    {
+      "name": "WebAssemblyInstantiateStreaming",
+      "parameters": [
+        "const v8::FunctionCallbackInfo<v8::Value>& info"
+      ],
+      "return_type": "void",
+      "logic": "Implementation of WebAssembly.instantiateStreaming, instantiates WASM from a stream."
+    },
+    {
+      "name": "WebAssemblyInstantiateImpl",
+      "parameters": [
+        "const v8::FunctionCallbackInfo<v8::Value>& info"
+      ],
+      "return_type": "void",
+      "logic": "Implementation of WebAssembly.instantiate, instantiates WASM either from a module or bytes."
+    },
+    {
+      "name": "AddressValueToU64",
+      "parameters": [
+        "ErrorThrower* thrower",
+        "Local<Context> context",
+        "v8::Local<v8::Value> value",
+        "Name property_name",
+        "AddressType address_type"
+      ],
+      "return_type": "std::optional<uint64_t>",
+      "logic": "Converts an address value from a v8::Value to a uint64_t."
+    },
+    {
+      "name": "AddressValueToBoundedU64",
+      "parameters": [
+        "ErrorThrower* thrower",
+        "Local<Context> context",
+        "v8::Local<v8::Value> value",
+        "i::DirectHandle<i::String> property_name",
+        "AddressType address_type",
+        "uint64_t lower_bound",
+        "uint64_t upper_bound"
+      ],
+      "return_type": "std::optional<uint64_t>",
+      "logic": "Converts an address to a bounded u64."
+    },
+    {
+      "name": "GetOptionalAddressValue",
+      "parameters": [
+        "ErrorThrower* thrower",
+        "Local<Context> context",
+        "Local<v8::Object> descriptor",
+        "Local<String> property",
+        "AddressType address_type",
+        "int64_t lower_bound",
+        "uint64_t upper_bound"
+      ],
+      "return_type": "std::optional<std::optional<uint64_t>>",
+      "logic": "Gets the specified property from the given descriptor, returning std::nullopt if the property is not defined, otherwise containing the property value."
+    },
+    {
+      "name": "GetInitialOrMinimumProperty",
+      "parameters": [
+        "v8::Isolate* isolate",
+        "ErrorThrower* thrower",
+        "Local<Context> context",
+        "Local<v8::Object> descriptor",
+        "AddressType address_type",
+        "uint64_t upper_bound"
+      ],
+      "return_type": "std::optional<uint64_t>",
+      "logic": "Fetches 'initial' or 'minimum' property from descriptor."
+    },
+    {
+      "name": "AddressValueFromUnsigned",
+      "parameters": [
+        "Isolate* isolate",
+        "i::wasm::AddressType type",
+        "unsigned value"
+      ],
+      "return_type": "v8::Local<Value>",
+      "logic": "Creates a v8::Value from an unsigned integer based on the specified address type."
+    },
+    {
+      "name": "DefaultReferenceValue",
+      "parameters": [
+        "i::Isolate* isolate",
+        "i::wasm::ValueType type"
+      ],
+      "return_type": "i::DirectHandle<i::HeapObject>",
+      "logic": "Returns the default reference value (undefined or null) based on the value type."
+    },
+    {
+      "name": "GetAddressType",
+      "parameters": [
+        "Isolate* isolate",
+        "Local<Context> context",
+        "Local<v8::Object> descriptor",
+        "ErrorThrower* thrower"
+      ],
+      "return_type": "std::optional<AddressType>",
+      "logic": "Gets the address type from the memory descriptor."
+    },
+    {
+      "name": "WebAssemblyTableImpl",
+      "parameters": [
+        "const v8::FunctionCallbackInfo<v8::Value>& info"
+      ],
+      "return_type": "void",
+      "logic": "Implementation of WebAssembly.Table constructor, creates a WebAssembly table."
+    },
+    {
+      "name": "WebAssemblyMemoryImpl",
+      "parameters": [
+        "const v8::FunctionCallbackInfo<v8::Value>& info"
+      ],
+      "return_type": "void",
+      "logic": "Implementation of WebAssembly.Memory constructor, creates a WebAssembly memory."
+    },
+    {
+      "name": "WebAssemblyMemoryMapDescriptorImpl",
+      "parameters": [
+        "const v8::FunctionCallbackInfo<v8::Value>& info"
+      ],
+      "return_type": "void",
+      "logic": "Implementation of WebAssembly.MemoryMapDescriptor constructor. Creates a descriptor for a MemoryMap."
+    },
+    {
+      "name": "GetValueType",
+      "parameters": [
+        "Isolate* isolate",
+        "MaybeLocal<Value> maybe",
+        "Local<Context> context",
+        "WasmEnabledFeatures enabled_features"
+      ],
+      "return_type": "std::optional<i::wasm::ValueType>",
+      "logic": "Determines the value type from a value type string."
+    },
+    {
+      "name": "ToI32",
+      "parameters": [
+        "Local<v8::Value> value",
+        "Local<Context> context",
+        "int32_t* i32_value"
+      ],
+      "return_type": "bool",
+      "logic": "Converts a v8::Value to an int32_t."
+    },
+    {
+      "name": "ToI64",
+      "parameters": [
+        "Local<v8::Value> value",
+        "Local<Context> context",
+        "int64_t* i64_value"
+      ],
+      "return_type": "bool",
+      "logic": "Converts a v8::Value to an int64_t (BigInt)."
+    },
+    {
+      "name": "ToF32",
+      "parameters": [
+        "Local<v8::Value> value",
+        "Local<Context> context",
+        "float* f32_value"
+      ],
+      "return_type": "bool",
+      "logic": "Converts a v8::Value to a float."
+    },
+    {
+      "name": "ToF64",
+      "parameters": [
+        "Local<v8::Value> value",
+        "Local<Context> context",
+        "double* f64_value"
+      ],
+      "return_type": "bool",
+      "logic": "Converts a v8::Value to a double."
+    },
+    {
+      "name": "WebAssemblyGlobalImpl",
+      "parameters": [
+        "const v8::FunctionCallbackInfo<v8::Value>& info"
+      ],
+      "return_type": "void",
+      "logic": "Implementation of WebAssembly.Global constructor, creates a WebAssembly global."
+    },
+    {
+      "name": "GetIterableLength",
+      "parameters": [
+        "i::Isolate* isolate",
+        "Local<Context> context",
+        "Local<Object> iterable"
+      ],
+      "return_type": "uint32_t",
+      "logic": "Gets the length of an iterable object in JS."
+    },
+    {
+      "name": "WebAssemblyTagImpl",
+      "parameters": [
+        "const v8::FunctionCallbackInfo<v8::Value>& info"
+      ],
+      "return_type": "void",
+      "logic": "Implementation of WebAssembly.Tag constructor, creates a WebAssembly exception tag."
+    },
+    {
+      "name": "GetEncodedSize",
+      "parameters": [
+        "i::DirectHandle<i::WasmTagObject> tag_object"
+      ],
+      "return_type": "uint32_t",
+      "logic": "Determines the size of data encoded"
+    },
+    {
+      "name": "EncodeExceptionValues",
+      "parameters": [
+        "v8::Isolate* isolate",
+        "i::DirectHandle<i::PodArray<i::wasm::ValueType>> signature",
+        "i::DirectHandle<i::WasmTagObject> tag_object",
+        "const Local<Value>& arg",
+        "ErrorThrower* thrower",
+        "i::DirectHandle<i::FixedArray> values_out"
+      ],
+      "return_type": "V8_WARN_UNUSED_RESULT bool",
+      "logic": "Encodes exception values into an array."
+    },
+    {
+      "name": "WebAssemblyExceptionImpl",
+      "parameters": [
+        "const v8::FunctionCallbackInfo<v8::Value>& info"
+      ],
+      "return_type": "void",
+      "logic": "Implementation of WebAssembly.Exception constructor, creates a new WebAssembly exception object."
+    },
+    {
+      "name": "NewPromisingWasmExportedFunction",
+      "parameters": [
+        "i::Isolate* i_isolate",
+        "i::DirectHandle<i::WasmExportedFunctionData> data",
+        "ErrorThrower& thrower"
+      ],
+      "return_type": "i::DirectHandle<i::JSFunction>",
+      "logic": "Creates a new promising WebAssembly exported function."
+    },
+    {
+      "name": "WebAssemblyFunction",
+      "parameters": [
+        "const v8::FunctionCallbackInfo<v8::Value>& info"
+      ],
+      "return_type": "void",
+      "logic": "Implementation of WebAssembly.Function constructor, Creates callable JavaScript functions from WebAssembly value types."
+    },
+    {
+      "name": "WebAssemblyPromising",
+      "parameters": [
+        "const v8::FunctionCallbackInfo<v8::Value>& info"
+      ],
+      "return_type": "void",
+      "logic": "Implementation of WebAssembly.promising, convert a WebAssembly exported function to be promise-aware."
+    },
+    {
+      "name": "WebAssemblySuspendingImpl",
+      "parameters": [
+        "const v8::FunctionCallbackInfo<v8::Value>& info"
+      ],
+      "return_type": "void",
+      "logic": "Implementation of WebAssembly.Suspending, creates Suspending objects."
+    },
+    {
+      "name": "WebAssemblyFunctionType",
+      "parameters": [
+        "const v8::FunctionCallbackInfo<v8::Value>& info"
+      ],
+      "return_type": "void",
+      "logic": "Getter of WebAssembly.Function 's signature."
+    }
+  ]
+}

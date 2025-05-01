@@ -1,0 +1,279 @@
+{
+  "file_path": "/home/kathirks_gc/v8_go/codebase/src/compiler/turboshaft/copying-phase.h",
+  "imports": [
+    "<algorithm>",
+    "<cstddef>",
+    "<cstdint>",
+    "<optional>",
+    "<utility>",
+    "\"src/base/iterator.h\"",
+    "\"src/base/logging.h\"",
+    "\"src/base/small-vector.h\"",
+    "\"src/base/vector.h\"",
+    "\"src/codegen/optimized-compilation-info.h\"",
+    "\"src/codegen/source-position.h\"",
+    "\"src/compiler/node-origin-table.h\"",
+    "\"src/compiler/turboshaft/assembler.h\"",
+    "\"src/compiler/turboshaft/graph.h\"",
+    "\"src/compiler/turboshaft/index.h\"",
+    "\"src/compiler/turboshaft/operations.h\"",
+    "\"src/compiler/turboshaft/phase.h\"",
+    "\"src/compiler/turboshaft/reducer-traits.h\"",
+    "\"src/compiler/turboshaft/representations.h\"",
+    "\"src/compiler/turboshaft/snapshot-table.h\"",
+    "\"src/compiler/turboshaft/variable-reducer.h\"",
+    "\"src/zone/zone-containers.h\""
+  ],
+  "classes": [
+    {
+      "name": "PaddingSpace",
+      "properties": [
+        "int spaces"
+      ],
+      "methods": []
+    },
+    {
+      "name": "OutputGraphAssembler",
+      "properties": [],
+      "methods": [
+        {
+          "name": "Map(OpIndex index)",
+          "parameters": [
+            "OpIndex index"
+          ],
+          "return_type": "OpIndex",
+          "logic": "Maps an OpIndex to a new OpIndex in the new graph by calling derived_this()->MapToNewGraph(index)."
+        },
+        {
+          "name": "Map(OptionalOpIndex index)",
+          "parameters": [
+            "OptionalOpIndex index"
+          ],
+          "return_type": "OptionalOpIndex",
+          "logic": "Maps an OptionalOpIndex to a new OptionalOpIndex in the new graph by calling derived_this()->MapToNewGraph(index)."
+        },
+        {
+          "name": "Map(base::Vector<const OpIndex> indices)",
+          "parameters": [
+            "base::Vector<const OpIndex> indices"
+          ],
+          "return_type": "base::SmallVector<OpIndex, N>",
+          "logic": "Maps a vector of OpIndices to a new vector of OpIndices in the new graph by calling derived_this()->MapToNewGraph<N>(indices)."
+        },
+        {
+          "name": "AssembleOutputGraph[OperationName]",
+          "parameters": [
+            "const [OperationName]Op& op"
+          ],
+          "return_type": "OpIndex",
+          "logic": "Assembles a specific operation for the output graph by calling the Reduce method on the assembler."
+        }
+      ]
+    },
+    {
+      "name": "GraphVisitor",
+      "properties": [
+        "Graph& input_graph_",
+        "OptimizedCompilationInfo* info_",
+        "TickCounter* const tick_counter_",
+        "const Block* current_input_block_",
+        "FixedOpIndexSidetable<OpIndex> op_mapping_",
+        "FixedBlockSidetable<Block*> block_mapping_",
+        "bool current_block_needs_variables_",
+        "bool turn_loop_without_backedge_into_merge_",
+        "BitVector blocks_needing_variables_",
+        "FixedOpIndexSidetable<MaybeVariable> old_opindex_to_variables",
+        "Block* block_to_inline_now_",
+        "ZoneVector<BlockToClone> blocks_to_clone_",
+        "bool is_in_recursive_inlining_"
+      ],
+      "methods": [
+        {
+          "name": "GraphVisitor()",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Constructor. Initializes member variables, especially the graph mappings and resets the output graph."
+        },
+        {
+          "name": "VisitGraph()",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Visits the entire graph block by block, mapping the old graph to the new graph, and finalizes the graph."
+        },
+        {
+          "name": "Bind(Block* block)",
+          "parameters": [
+            "Block* block"
+          ],
+          "return_type": "void",
+          "logic": "Binds the given block, setting its origin to the current input block."
+        },
+        {
+          "name": "Finalize()",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Finalizes the graph by updating the source positions and operation origins."
+        },
+        {
+          "name": "current_input_block()",
+          "parameters": [],
+          "return_type": "const Block*",
+          "logic": "Returns the current input block being processed."
+        },
+        {
+          "name": "turn_loop_without_backedge_into_merge()",
+          "parameters": [],
+          "return_type": "bool*",
+          "logic": "Returns a pointer to the flag that determines if loops without backedges are converted to merge blocks."
+        },
+        {
+          "name": "CloneBlockAndGoto(const Block* input_block)",
+          "parameters": [
+            "const Block* input_block"
+          ],
+          "return_type": "void",
+          "logic": "Clones the given input block and emits a Goto to its cloned version."
+        },
+        {
+          "name": "CloneAndInlineBlock(const Block* input_block)",
+          "parameters": [
+            "const Block* input_block"
+          ],
+          "return_type": "void",
+          "logic": "Clones and inlines the given input block into the current block."
+        },
+        {
+          "name": "InlineOp(OpIndex index, const Block* input_block)",
+          "parameters": [
+            "OpIndex index",
+            "const Block* input_block"
+          ],
+          "return_type": "bool",
+          "logic": "Inlines an operation, ensuring it is not emitted multiple times."
+        },
+        {
+          "name": "MapToNewGraph(OpIndex old_index, int predecessor_index = -1)",
+          "parameters": [
+            "OpIndex old_index",
+            "int predecessor_index"
+          ],
+          "return_type": "OpIndex",
+          "logic": "Maps an old OpIndex to a new OpIndex. If no mapping exists, it retrieves it from a VariableReducer."
+        },
+        {
+          "name": "MapToNewGraph(V<T> old_index, int predecessor_index = -1)",
+          "parameters": [
+            "V<T> old_index",
+            "int predecessor_index"
+          ],
+          "return_type": "V<T>",
+          "logic": "Maps an old V<T> index to a new V<T> index."
+        },
+        {
+          "name": "MapToNewGraph(const Block* block) const",
+          "parameters": [
+            "const Block* block"
+          ],
+          "return_type": "Block*",
+          "logic": "Maps an old block to its new block."
+        },
+        {
+          "name": "ResolvePhi(const PhiOp& op, FunctionType&& map, RegisterRepresentation rep)",
+          "parameters": [
+            "const PhiOp& op",
+            "FunctionType&& map",
+            "RegisterRepresentation rep"
+          ],
+          "return_type": "OpIndex",
+          "logic": "Resolves a Phi operation by mapping its inputs and creating a new Phi in the new graph."
+        },
+        {
+          "name": "OriginForBlockStart(Block* block) const",
+          "parameters": [
+            "Block* block"
+          ],
+          "return_type": "const Block*",
+          "logic": "Determines the origin block for the start of the provided block, considering block inlining."
+        },
+        {
+          "name": "CloneSubGraph(Set sub_graph, bool keep_loop_kinds, bool is_loop_after_peeling = false)",
+          "parameters": [
+            "Set sub_graph",
+            "bool keep_loop_kinds",
+            "bool is_loop_after_peeling"
+          ],
+          "return_type": "Block*",
+          "logic": "Clones a subgraph, remapping the blocks and emitting a goto to the start block."
+        },
+        {
+          "name": "MapToNewGraph(OptionalOpIndex old_index, int predecessor_index = -1)",
+          "parameters": [
+            "OptionalOpIndex old_index",
+            "int predecessor_index"
+          ],
+          "return_type": "OptionalOpIndex",
+          "logic": "Maps optional old OpIndex to a new optional OpIndex."
+        },
+        {
+          "name": "MapToNewGraph(base::Vector<const OpIndex> inputs)",
+          "parameters": [
+            "base::Vector<const OpIndex> inputs"
+          ],
+          "return_type": "base::SmallVector<OpIndex, expected_size>",
+          "logic": "Maps a vector of old OpIndices to a new vector of OpIndices."
+        }
+      ]
+    },
+    {
+      "name": "CopyingPhaseImpl",
+      "properties": [],
+      "methods": [
+        {
+          "name": "Run(PipelineData* data, Graph& input_graph, Zone* phase_zone, bool trace_reductions = false)",
+          "parameters": [
+            "PipelineData* data",
+            "Graph& input_graph",
+            "Zone* phase_zone",
+            "bool trace_reductions"
+          ],
+          "return_type": "static void",
+          "logic": "Runs the copying phase using TSAssembler and GraphVisitor."
+        }
+      ]
+    },
+    {
+      "name": "CopyingPhase",
+      "properties": [],
+      "methods": [
+        {
+          "name": "Run(PipelineData* data, Zone* phase_zone)",
+          "parameters": [
+            "PipelineData* data",
+            "Zone* phase_zone"
+          ],
+          "return_type": "static void",
+          "logic": "Entry point to run the CopyingPhase, retrieves input graph, and executes CopyingPhaseImpl."
+        }
+      ]
+    }
+  ],
+  "functions": [
+    {
+      "name": "CountDecimalDigits(uint32_t value)",
+      "parameters": [
+        "uint32_t value"
+      ],
+      "return_type": "int",
+      "logic": "Counts the number of decimal digits in a 32-bit unsigned integer."
+    },
+    {
+      "name": "operator<<(std::ostream& os, PaddingSpace padding)",
+      "parameters": [
+        "std::ostream& os",
+        "PaddingSpace padding"
+      ],
+      "return_type": "std::ostream&",
+      "logic": "Overloads the output stream operator for PaddingSpace, outputting a specific number of spaces."
+    }
+  ]
+}

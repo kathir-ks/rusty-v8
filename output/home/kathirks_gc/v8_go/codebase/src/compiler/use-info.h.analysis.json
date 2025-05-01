@@ -1,0 +1,490 @@
+{
+  "file_path": "/home/kathirks_gc/v8_go/codebase/src/compiler/use-info.h",
+  "imports": [
+    "src/base/hashing.h",
+    "src/codegen/machine-type.h",
+    "src/compiler/feedback-source.h",
+    "src/compiler/globals.h"
+  ],
+  "classes": [
+    {
+      "name": "Truncation",
+      "properties": [
+        "kind_",
+        "identify_zeros_"
+      ],
+      "methods": [
+        {
+          "name": "None",
+          "parameters": [],
+          "return_type": "Truncation",
+          "logic": "Returns a Truncation object representing no truncation."
+        },
+        {
+          "name": "Bool",
+          "parameters": [],
+          "return_type": "Truncation",
+          "logic": "Returns a Truncation object representing boolean truncation."
+        },
+        {
+          "name": "Word32",
+          "parameters": [],
+          "return_type": "Truncation",
+          "logic": "Returns a Truncation object representing 32-bit word truncation."
+        },
+        {
+          "name": "Word64",
+          "parameters": [],
+          "return_type": "Truncation",
+          "logic": "Returns a Truncation object representing 64-bit word truncation."
+        },
+        {
+          "name": "OddballAndBigIntToNumber",
+          "parameters": [
+            "IdentifyZeros identify_zeros = kDistinguishZeros"
+          ],
+          "return_type": "Truncation",
+          "logic": "Returns a Truncation object representing truncation to a number, treating oddballs and BigInts."
+        },
+        {
+          "name": "Any",
+          "parameters": [
+            "IdentifyZeros identify_zeros = kDistinguishZeros"
+          ],
+          "return_type": "Truncation",
+          "logic": "Returns a Truncation object representing no specific truncation."
+        },
+        {
+          "name": "Generalize",
+          "parameters": [
+            "Truncation t1",
+            "Truncation t2"
+          ],
+          "return_type": "Truncation",
+          "logic": "Returns the least general Truncation that encompasses both input Truncations."
+        },
+        {
+          "name": "IsUnused",
+          "parameters": [],
+          "return_type": "bool",
+          "logic": "Checks if the truncation kind is kNone."
+        },
+        {
+          "name": "IsUsedAsBool",
+          "parameters": [],
+          "return_type": "bool",
+          "logic": "Checks if the truncation is used as a boolean."
+        },
+        {
+          "name": "IsUsedAsWord32",
+          "parameters": [],
+          "return_type": "bool",
+          "logic": "Checks if the truncation is used as a 32-bit word."
+        },
+        {
+          "name": "IsUsedAsWord64",
+          "parameters": [],
+          "return_type": "bool",
+          "logic": "Checks if the truncation is used as a 64-bit word."
+        },
+        {
+          "name": "TruncatesOddballAndBigIntToNumber",
+          "parameters": [],
+          "return_type": "bool",
+          "logic": "Checks if the truncation truncates oddballs and BigInts to a number."
+        },
+        {
+          "name": "IdentifiesUndefinedAndZero",
+          "parameters": [],
+          "return_type": "bool",
+          "logic": "Checks if the truncation identifies undefined and zero."
+        },
+        {
+          "name": "IdentifiesZeroAndMinusZero",
+          "parameters": [],
+          "return_type": "bool",
+          "logic": "Checks if the truncation identifies zero and minus zero as the same value."
+        },
+        {
+          "name": "operator==",
+          "parameters": [
+            "Truncation other"
+          ],
+          "return_type": "bool",
+          "logic": "Checks if two Truncation objects are equal."
+        },
+        {
+          "name": "operator!=",
+          "parameters": [
+            "Truncation other"
+          ],
+          "return_type": "bool",
+          "logic": "Checks if two Truncation objects are not equal."
+        },
+        {
+          "name": "description",
+          "parameters": [],
+          "return_type": "const char*",
+          "logic": "Returns a string representation of the truncation."
+        },
+        {
+          "name": "IsLessGeneralThan",
+          "parameters": [
+            "Truncation other"
+          ],
+          "return_type": "bool",
+          "logic": "Checks if one Truncation is less general than another."
+        },
+        {
+          "name": "identify_zeros",
+          "parameters": [],
+          "return_type": "IdentifyZeros",
+          "logic": "Returns the IdentifyZeros setting for this truncation."
+        }
+      ]
+    },
+    {
+      "name": "UseInfo",
+      "properties": [
+        "representation_",
+        "truncation_",
+        "type_check_",
+        "feedback_"
+      ],
+      "methods": [
+        {
+          "name": "UseInfo",
+          "parameters": [
+            "MachineRepresentation representation",
+            "Truncation truncation",
+            "TypeCheckKind type_check = TypeCheckKind::kNone",
+            "const FeedbackSource& feedback = FeedbackSource()"
+          ],
+          "return_type": "void",
+          "logic": "Constructor for the UseInfo class."
+        },
+        {
+          "name": "TruncatingWord32",
+          "parameters": [],
+          "return_type": "UseInfo",
+          "logic": "Returns a UseInfo object representing a 32-bit word truncation."
+        },
+        {
+          "name": "TruncatingWord64",
+          "parameters": [],
+          "return_type": "UseInfo",
+          "logic": "Returns a UseInfo object representing a 64-bit word truncation."
+        },
+        {
+          "name": "CheckedBigIntTruncatingWord64",
+          "parameters": [
+            "const FeedbackSource& feedback"
+          ],
+          "return_type": "UseInfo",
+          "logic": "Returns a UseInfo object for a BigInt that is truncated to a 64-bit word with type checking."
+        },
+        {
+          "name": "CheckedBigInt64AsWord64",
+          "parameters": [
+            "const FeedbackSource& feedback"
+          ],
+          "return_type": "UseInfo",
+          "logic": "Returns a UseInfo object for a BigInt64 represented as a 64-bit word with type checking."
+        },
+        {
+          "name": "Word64",
+          "parameters": [
+            "IdentifyZeros identify_zeros = kDistinguishZeros"
+          ],
+          "return_type": "UseInfo",
+          "logic": "Returns a UseInfo object representing a 64-bit word."
+        },
+        {
+          "name": "Word",
+          "parameters": [],
+          "return_type": "UseInfo",
+          "logic": "Returns a UseInfo object representing a word, using PointerRepresentation."
+        },
+        {
+          "name": "Bool",
+          "parameters": [],
+          "return_type": "UseInfo",
+          "logic": "Returns a UseInfo object representing a boolean."
+        },
+        {
+          "name": "Float32",
+          "parameters": [],
+          "return_type": "UseInfo",
+          "logic": "Returns a UseInfo object representing a 32-bit float."
+        },
+        {
+          "name": "Float16RawBits",
+          "parameters": [],
+          "return_type": "UseInfo",
+          "logic": "Returns a UseInfo object representing a 16-bit float (raw bits)."
+        },
+        {
+          "name": "Float64",
+          "parameters": [],
+          "return_type": "UseInfo",
+          "logic": "Returns a UseInfo object representing a 64-bit float."
+        },
+        {
+          "name": "TruncatingFloat64",
+          "parameters": [
+            "IdentifyZeros identify_zeros = kDistinguishZeros"
+          ],
+          "return_type": "UseInfo",
+          "logic": "Returns a UseInfo object representing a 64-bit float truncation."
+        },
+        {
+          "name": "TruncatingFloat16RawBits",
+          "parameters": [
+            "IdentifyZeros identify_zeros = kDistinguishZeros"
+          ],
+          "return_type": "UseInfo",
+          "logic": "Returns a UseInfo object representing a 16-bit float (raw bits) truncation."
+        },
+        {
+          "name": "CheckedSafeIntTruncatingWord32",
+          "parameters": [
+            "const FeedbackSource& feedback"
+          ],
+          "return_type": "UseInfo",
+          "logic": "Returns a UseInfo object for a safe integer that is truncated to a 32-bit word with type checking."
+        },
+        {
+          "name": "CheckedSafeIntAsWord64",
+          "parameters": [
+            "const FeedbackSource& feedback"
+          ],
+          "return_type": "UseInfo",
+          "logic": "Returns a UseInfo object for a safe integer represented as a 64-bit word with type checking."
+        },
+        {
+          "name": "AnyTagged",
+          "parameters": [],
+          "return_type": "UseInfo",
+          "logic": "Returns a UseInfo object representing any tagged value."
+        },
+        {
+          "name": "TaggedSigned",
+          "parameters": [],
+          "return_type": "UseInfo",
+          "logic": "Returns a UseInfo object representing a tagged signed value."
+        },
+        {
+          "name": "TaggedPointer",
+          "parameters": [],
+          "return_type": "UseInfo",
+          "logic": "Returns a UseInfo object representing a tagged pointer."
+        },
+        {
+          "name": "CheckedTaggedAsArrayIndex",
+          "parameters": [
+            "const FeedbackSource& feedback"
+          ],
+          "return_type": "UseInfo",
+          "logic": "Returns a UseInfo object for a tagged value that is checked to be an array index."
+        },
+        {
+          "name": "CheckedHeapObjectAsTaggedPointer",
+          "parameters": [
+            "const FeedbackSource& feedback"
+          ],
+          "return_type": "UseInfo",
+          "logic": "Returns a UseInfo object for a heap object represented as a tagged pointer with type checking."
+        },
+        {
+          "name": "CheckedBigIntAsTaggedPointer",
+          "parameters": [
+            "const FeedbackSource& feedback"
+          ],
+          "return_type": "UseInfo",
+          "logic": "Returns a UseInfo object for a BigInt represented as a tagged pointer with type checking."
+        },
+        {
+          "name": "CheckedSignedSmallAsTaggedSigned",
+          "parameters": [
+            "const FeedbackSource& feedback",
+            "IdentifyZeros identify_zeros = kDistinguishZeros"
+          ],
+          "return_type": "UseInfo",
+          "logic": "Returns a UseInfo object for a signed small integer represented as a tagged signed value with type checking."
+        },
+        {
+          "name": "CheckedSignedSmallAsWord32",
+          "parameters": [
+            "IdentifyZeros identify_zeros",
+            "const FeedbackSource& feedback"
+          ],
+          "return_type": "UseInfo",
+          "logic": "Returns a UseInfo object for a signed small integer represented as a 32-bit word with type checking."
+        },
+        {
+          "name": "CheckedSigned32AsWord32",
+          "parameters": [
+            "IdentifyZeros identify_zeros",
+            "const FeedbackSource& feedback"
+          ],
+          "return_type": "UseInfo",
+          "logic": "Returns a UseInfo object for a signed 32-bit integer represented as a 32-bit word with type checking."
+        },
+        {
+          "name": "CheckedSigned64AsWord64",
+          "parameters": [
+            "IdentifyZeros identify_zeros",
+            "const FeedbackSource& feedback"
+          ],
+          "return_type": "UseInfo",
+          "logic": "Returns a UseInfo object for a signed 64-bit integer represented as a 64-bit word with type checking."
+        },
+        {
+          "name": "CheckedNumberAsFloat64",
+          "parameters": [
+            "IdentifyZeros identify_zeros",
+            "const FeedbackSource& feedback"
+          ],
+          "return_type": "UseInfo",
+          "logic": "Returns a UseInfo object for a number represented as a 64-bit float with type checking."
+        },
+        {
+          "name": "CheckedNumberAsWord32",
+          "parameters": [
+            "const FeedbackSource& feedback"
+          ],
+          "return_type": "UseInfo",
+          "logic": "Returns a UseInfo object for a number represented as a 32-bit word with type checking."
+        },
+        {
+          "name": "CheckedNumberOrBooleanAsFloat64",
+          "parameters": [
+            "IdentifyZeros identify_zeros",
+            "const FeedbackSource& feedback"
+          ],
+          "return_type": "UseInfo",
+          "logic": "Returns a UseInfo object for a number or boolean represented as a 64-bit float with type checking."
+        },
+        {
+          "name": "CheckedNumberOrOddballAsFloat64",
+          "parameters": [
+            "IdentifyZeros identify_zeros",
+            "const FeedbackSource& feedback"
+          ],
+          "return_type": "UseInfo",
+          "logic": "Returns a UseInfo object for a number or oddball represented as a 64-bit float with type checking."
+        },
+        {
+          "name": "CheckedNumberOrOddballAsWord32",
+          "parameters": [
+            "const FeedbackSource& feedback"
+          ],
+          "return_type": "UseInfo",
+          "logic": "Returns a UseInfo object for a number or oddball represented as a 32-bit word with type checking."
+        },
+        {
+          "name": "Any",
+          "parameters": [],
+          "return_type": "UseInfo",
+          "logic": "Returns a UseInfo object representing any value."
+        },
+        {
+          "name": "AnyTruncatingToBool",
+          "parameters": [],
+          "return_type": "UseInfo",
+          "logic": "Returns a UseInfo object representing any value truncating to boolean."
+        },
+        {
+          "name": "None",
+          "parameters": [],
+          "return_type": "UseInfo",
+          "logic": "Returns a UseInfo object representing no value is used."
+        },
+        {
+          "name": "representation",
+          "parameters": [],
+          "return_type": "MachineRepresentation",
+          "logic": "Returns the machine representation of this use."
+        },
+        {
+          "name": "truncation",
+          "parameters": [],
+          "return_type": "Truncation",
+          "logic": "Returns the truncation of this use."
+        },
+        {
+          "name": "type_check",
+          "parameters": [],
+          "return_type": "TypeCheckKind",
+          "logic": "Returns the type check kind of this use."
+        },
+        {
+          "name": "minus_zero_check",
+          "parameters": [],
+          "return_type": "CheckForMinusZeroMode",
+          "logic": "Determines if minus zero needs to be checked during conversion."
+        },
+        {
+          "name": "feedback",
+          "parameters": [],
+          "return_type": "const FeedbackSource&",
+          "logic": "Returns the feedback source of this use."
+        }
+      ]
+    }
+  ],
+  "functions": [
+    {
+      "name": "hash_value",
+      "parameters": [
+        "const Truncation& truncation"
+      ],
+      "return_type": "size_t",
+      "logic": "Calculates the hash value of a Truncation object."
+    },
+    {
+      "name": "operator<<",
+      "parameters": [
+        "std::ostream& os",
+        "const Truncation& truncation"
+      ],
+      "return_type": "std::ostream&",
+      "logic": "Overloads the << operator to print a Truncation object to an ostream."
+    },
+    {
+      "name": "operator<<",
+      "parameters": [
+        "std::ostream& os",
+        "TypeCheckKind type_check"
+      ],
+      "return_type": "std::ostream&",
+      "logic": "Overloads the << operator to print a TypeCheckKind enum to an ostream."
+    },
+    {
+      "name": "operator==",
+      "parameters": [
+        "const UseInfo& lhs",
+        "const UseInfo& rhs"
+      ],
+      "return_type": "bool",
+      "logic": "Compares two UseInfo objects for equality."
+    },
+    {
+      "name": "hash_value",
+      "parameters": [
+        "const UseInfo& use_info"
+      ],
+      "return_type": "size_t",
+      "logic": "Calculates the hash value of a UseInfo object."
+    },
+    {
+      "name": "operator<<",
+      "parameters": [
+        "std::ostream& os",
+        "const UseInfo& use_info"
+      ],
+      "return_type": "std::ostream&",
+      "logic": "Overloads the << operator to print a UseInfo object to an ostream."
+    }
+  ]
+}

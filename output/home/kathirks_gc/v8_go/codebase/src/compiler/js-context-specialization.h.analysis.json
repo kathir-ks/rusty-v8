@@ -1,0 +1,189 @@
+{
+  "file_path": "/home/kathirks_gc/v8_go/codebase/src/compiler/js-context-specialization.h",
+  "imports": [
+    "src/compiler/graph-reducer.h",
+    "src/handles/maybe-handles.h"
+  ],
+  "classes": [
+    {
+      "name": "OuterContext",
+      "properties": [
+        "context",
+        "distance"
+      ],
+      "methods": [
+        {
+          "name": "OuterContext",
+          "parameters": [],
+          "return_type": "OuterContext",
+          "logic": "Default constructor. Initializes context and distance (implicitly to 0)."
+        },
+        {
+          "name": "OuterContext",
+          "parameters": [
+            "context_",
+            "distance_"
+          ],
+          "return_type": "OuterContext",
+          "logic": "Constructor. Initializes the context and distance fields with the given values."
+        }
+      ]
+    },
+    {
+      "name": "JSContextSpecialization",
+      "properties": [
+        "jsgraph_",
+        "outer_",
+        "closure_",
+        "broker_"
+      ],
+      "methods": [
+        {
+          "name": "JSContextSpecialization",
+          "parameters": [
+            "editor",
+            "jsgraph",
+            "broker",
+            "outer",
+            "closure"
+          ],
+          "return_type": "JSContextSpecialization",
+          "logic": "Constructor. Initializes the JSContextSpecialization object with the given editor, JSGraph, JSHeapBroker, outer context (if any), and closure (if any)."
+        },
+        {
+          "name": "reducer_name",
+          "parameters": [],
+          "return_type": "const char*",
+          "logic": "Returns the name of the reducer, which is \"JSContextSpecialization\"."
+        },
+        {
+          "name": "Reduce",
+          "parameters": [
+            "node"
+          ],
+          "return_type": "Reduction",
+          "logic": "The main reduction function. Dispatches to different handlers based on the type of the node."
+        },
+        {
+          "name": "ReduceParameter",
+          "parameters": [
+            "node"
+          ],
+          "return_type": "Reduction",
+          "logic": "Reduces a parameter node (presumably function parameters). Attempts to constant-fold the parameter if a closure is available."
+        },
+        {
+          "name": "ReduceJSLoadContext",
+          "parameters": [
+            "node"
+          ],
+          "return_type": "Reduction",
+          "logic": "Reduces a JSLoadContext node. Attempts to constant-fold the load if the context can be determined."
+        },
+        {
+          "name": "ReduceJSLoadScriptContext",
+          "parameters": [
+            "node"
+          ],
+          "return_type": "Reduction",
+          "logic": "Reduces a JSLoadScriptContext node. Attempts to constant-fold the load if the context can be determined."
+        },
+        {
+          "name": "ReduceJSStoreContext",
+          "parameters": [
+            "node"
+          ],
+          "return_type": "Reduction",
+          "logic": "Reduces a JSStoreContext node. Potentially strength-reduces the store if the context can be determined."
+        },
+        {
+          "name": "ReduceJSStoreScriptContext",
+          "parameters": [
+            "node"
+          ],
+          "return_type": "Reduction",
+          "logic": "Reduces a JSStoreScriptContext node. Potentially strength-reduces the store if the context can be determined."
+        },
+        {
+          "name": "ReduceJSGetImportMeta",
+          "parameters": [
+            "node"
+          ],
+          "return_type": "Reduction",
+          "logic": "Reduces a JSGetImportMeta node. Attempts to constant-fold the load if the corresponding object already exists."
+        },
+        {
+          "name": "SimplifyJSLoadContext",
+          "parameters": [
+            "node",
+            "new_context",
+            "new_depth"
+          ],
+          "return_type": "Reduction",
+          "logic": "Simplifies a JSLoadContext node by replacing it with a constant if the context and depth are known."
+        },
+        {
+          "name": "SimplifyJSLoadScriptContext",
+          "parameters": [
+            "node",
+            "new_context",
+            "new_depth"
+          ],
+          "return_type": "Reduction",
+          "logic": "Simplifies a JSLoadScriptContext node by replacing it with a constant if the context and depth are known."
+        },
+        {
+          "name": "SimplifyJSStoreContext",
+          "parameters": [
+            "node",
+            "new_context",
+            "new_depth"
+          ],
+          "return_type": "Reduction",
+          "logic": "Simplifies a JSStoreContext node by replacing it with a more efficient operation if the context and depth are known."
+        },
+        {
+          "name": "SimplifyJSStoreScriptContext",
+          "parameters": [
+            "node",
+            "new_context",
+            "new_depth"
+          ],
+          "return_type": "Reduction",
+          "logic": "Simplifies a JSStoreScriptContext node by replacing it with a more efficient operation if the context and depth are known."
+        },
+        {
+          "name": "isolate",
+          "parameters": [],
+          "return_type": "Isolate*",
+          "logic": "Returns a pointer to the Isolate object."
+        },
+        {
+          "name": "jsgraph",
+          "parameters": [],
+          "return_type": "JSGraph*",
+          "logic": "Returns a pointer to the JSGraph object."
+        },
+        {
+          "name": "outer",
+          "parameters": [],
+          "return_type": "Maybe<OuterContext>",
+          "logic": "Returns the outer context (if any)."
+        },
+        {
+          "name": "closure",
+          "parameters": [],
+          "return_type": "MaybeHandle<JSFunction>",
+          "logic": "Returns the closure (if any)."
+        },
+        {
+          "name": "broker",
+          "parameters": [],
+          "return_type": "JSHeapBroker*",
+          "logic": "Returns a pointer to the JSHeapBroker object."
+        }
+      ]
+    }
+  ],
+  "functions": []
+}

@@ -1,0 +1,55 @@
+{
+  "file_path": "/home/kathirks_gc/v8_go/codebase/src/bigint/fromstring.cc",
+  "imports": [
+    "src/bigint/bigint-internal.h",
+    "src/bigint/vector-arithmetic.h"
+  ],
+  "classes": [],
+  "functions": [
+    {
+      "name": "ProcessorImpl::FromStringClassic",
+      "parameters": [
+        "RWDigits Z",
+        "FromStringAccumulator* accumulator"
+      ],
+      "return_type": "void",
+      "logic": "Implements the classic algorithm for converting a string to a BigInt.  It iterates through the parts of the number, multiplying the accumulator by the multiplier and adding the next part. It is an O(n^2) algorithm."
+    },
+    {
+      "name": "ProcessorImpl::FromStringLarge",
+      "parameters": [
+        "RWDigits Z",
+        "FromStringAccumulator* accumulator"
+      ],
+      "return_type": "void",
+      "logic": "Implements a faster algorithm for converting a string to a BigInt using a balanced binary tree approach.  It combines neighboring parts and their multipliers until only one part remains. Optimizes by skipping the first multiplier, de-duplicating multipliers, and reusing memory."
+    },
+    {
+      "name": "ProcessorImpl::FromStringBasePowerOfTwo",
+      "parameters": [
+        "RWDigits Z",
+        "FromStringAccumulator* accumulator"
+      ],
+      "return_type": "void",
+      "logic": "Specialized algorithm for power-of-two radixes. Assembles bit sequences (parts) into the final BigInt value, handling potential shifts and unused bits in the last part. The parts are already in a list of correct bit sequences, and the function puts them together in the right way."
+    },
+    {
+      "name": "ProcessorImpl::FromString",
+      "parameters": [
+        "RWDigits Z",
+        "FromStringAccumulator* accumulator"
+      ],
+      "return_type": "void",
+      "logic": "Selects and calls the appropriate FromString implementation based on the accumulator's state and radix.  It first checks if `inline_everything_` is set, then if the radix is a power of two, and finally if the number of result length is less than `kFromStringLargeThreshold` to determine which `FromString` implementation to use (either classic or large)."
+    },
+    {
+      "name": "Processor::FromString",
+      "parameters": [
+        "RWDigits Z",
+        "FromStringAccumulator* accumulator"
+      ],
+      "return_type": "Status",
+      "logic": "A public interface function that calls the ProcessorImpl::FromString method and returns a status code after converting the string to a BigInt.  It also gets and clears the status of the implementation object."
+    }
+  ]
+}

@@ -1,0 +1,114 @@
+{
+  "file_path": "/home/kathirks_gc/v8_go/codebase/src/sandbox/compactible-external-entity-table-inl.h",
+  "imports": [
+    "<algorithm>",
+    "src/logging/counters.h",
+    "src/sandbox/compactible-external-entity-table.h",
+    "src/sandbox/external-entity-table-inl.h",
+    "src/sandbox/external-pointer.h"
+  ],
+  "classes": [
+    {
+      "name": "CompactibleExternalEntityTable<Entry, size>",
+      "properties": [],
+      "methods": [
+        {
+          "name": "AllocateEntry",
+          "parameters": [
+            "Space* space"
+          ],
+          "return_type": "uint32_t",
+          "logic": "Allocates a new entry in the external entity table. It extends the base class allocation, but also checks if the allocated index is within the evacuation area. If it is, it aborts compaction to avoid issues with sweeping and deallocation."
+        },
+        {
+          "name": "FinishCompaction",
+          "parameters": [
+            "Space* space",
+            "Histogram* counter"
+          ],
+          "return_type": "typename CompactibleExternalEntityTable<Entry, size>::CompactionResult",
+          "logic": "Finishes the compaction process. Determines if compaction was successful or aborted, stops compaction, and records the outcome in a histogram counter.  It returns the start of evacuation area, and a flag indicating if evacuation was successful."
+        },
+        {
+          "name": "MaybeCreateEvacuationEntry",
+          "parameters": [
+            "Space* space",
+            "uint32_t index",
+            "Address handle_location"
+          ],
+          "return_type": "void",
+          "logic": "Checks if the given entry needs to be evacuated. If so, it allocates a new entry below the start of the evacuation area and marks the original entry as an evacuation entry pointing to the new location. If allocation fails, it aborts compaction."
+        }
+      ]
+    },
+    {
+      "name": "CompactibleExternalEntityTable<Entry, size>::Space",
+      "properties": [],
+      "methods": [
+        {
+          "name": "StartCompacting",
+          "parameters": [
+            "uint32_t start_of_evacuation_area"
+          ],
+          "return_type": "void",
+          "logic": "Starts the compaction process by setting the start_of_evacuation_area_."
+        },
+        {
+          "name": "StopCompacting",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Stops the compaction process by setting the start_of_evacuation_area_ to kNotCompactingMarker."
+        },
+        {
+          "name": "AbortCompacting",
+          "parameters": [
+            "uint32_t start_of_evacuation_area"
+          ],
+          "return_type": "void",
+          "logic": "Aborts the compaction process by setting the start_of_evacuation_area_ to a value indicating compaction was aborted. It stores original area alongside an aborted marker bit."
+        },
+        {
+          "name": "IsCompacting",
+          "parameters": [],
+          "return_type": "bool",
+          "logic": "Returns true if the space is currently compacting."
+        },
+        {
+          "name": "CompactingWasAborted",
+          "parameters": [],
+          "return_type": "bool",
+          "logic": "Returns true if the compaction process was aborted."
+        },
+        {
+          "name": "FieldWasInvalidated",
+          "parameters": [
+            "Address field_address"
+          ],
+          "return_type": "bool",
+          "logic": "Checks if a field address was invalidated during compaction."
+        },
+        {
+          "name": "ClearInvalidatedFields",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Clears the list of invalidated fields. This is used after sweeping."
+        },
+        {
+          "name": "AddInvalidatedField",
+          "parameters": [
+            "Address field_address"
+          ],
+          "return_type": "void",
+          "logic": "Adds a field address to the list of invalidated fields during compaction, if compaction is active."
+        },
+        {
+          "name": "StartCompactingIfNeeded",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Determines whether compaction should be started based on the space size, the amount of free entries, and whether stress compaction is enabled.  If conditions met, it initiates the compaction process by setting the start_of_evacuation_area_."
+        }
+      ]
+    }
+  ],
+  "functions": []
+}

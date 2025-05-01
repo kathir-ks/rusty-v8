@@ -1,0 +1,151 @@
+{
+  "file_path": "/home/kathirks_gc/v8_go/codebase/src/ic/unary-op-assembler.cc",
+  "imports": [
+    "src/ic/unary-op-assembler.h",
+    "src/common/globals.h",
+    "torque-generated/src/objects/oddball-tq-csa.h",
+    "src/codegen/define-code-stub-assembler-macros.inc",
+    "src/codegen/undef-code-stub-assembler-macros.inc"
+  ],
+  "classes": [
+    {
+      "name": "UnaryOpAssemblerImpl",
+      "properties": [],
+      "methods": [
+        {
+          "name": "UnaryOpAssemblerImpl",
+          "parameters": [
+            "compiler::CodeAssemblerState* state"
+          ],
+          "return_type": "explicit",
+          "logic": "Constructor for the UnaryOpAssemblerImpl class, initializes the CodeStubAssembler with the given state."
+        },
+        {
+          "name": "BitwiseNot",
+          "parameters": [
+            "TNode<Context> context",
+            "TNode<Object> value",
+            "TNode<UintPtrT> slot",
+            "TNode<HeapObject> maybe_feedback_vector",
+            "UpdateFeedbackMode update_feedback_mode"
+          ],
+          "return_type": "TNode<Object>",
+          "logic": "Implements the bitwise NOT operator. Converts the input value to a 32-bit integer or BigInt. Performs bitwise NOT on the integer or calls the BigInt unary operator runtime function. Updates feedback information about the operation."
+        },
+        {
+          "name": "Decrement",
+          "parameters": [
+            "TNode<Context> context",
+            "TNode<Object> value",
+            "TNode<UintPtrT> slot",
+            "TNode<HeapObject> maybe_feedback_vector",
+            "UpdateFeedbackMode update_feedback_mode"
+          ],
+          "return_type": "TNode<Object>",
+          "logic": "Implements the decrement operator. Calls IncrementOrDecrement with the kDecrement operation."
+        },
+        {
+          "name": "Increment",
+          "parameters": [
+            "TNode<Context> context",
+            "TNode<Object> value",
+            "TNode<UintPtrT> slot",
+            "TNode<HeapObject> maybe_feedback_vector",
+            "UpdateFeedbackMode update_feedback_mode"
+          ],
+          "return_type": "TNode<Object>",
+          "logic": "Implements the increment operator. Calls IncrementOrDecrement with the kIncrement operation."
+        },
+        {
+          "name": "Negate",
+          "parameters": [
+            "TNode<Context> context",
+            "TNode<Object> value",
+            "TNode<UintPtrT> slot",
+            "TNode<HeapObject> maybe_feedback_vector",
+            "UpdateFeedbackMode update_feedback_mode"
+          ],
+          "return_type": "TNode<Object>",
+          "logic": "Implements the negation operator. Uses UnaryOpWithFeedback to handle Smi, Float64, and BigInt cases.  For Smis, special cases 0 and Smi::kMinValue to avoid overflow. For BigInts, it calls the BigInt unary operator runtime function."
+        },
+        {
+          "name": "UnaryOpWithFeedback",
+          "parameters": [
+            "TNode<Context> context",
+            "TNode<Object> value",
+            "TNode<UintPtrT> slot",
+            "TNode<HeapObject> maybe_feedback_vector",
+            "const SmiOperation& smi_op",
+            "const FloatOperation& float_op",
+            "const BigIntOperation& bigint_op",
+            "UpdateFeedbackMode update_feedback_mode"
+          ],
+          "return_type": "TNode<Object>",
+          "logic": "Generic helper function for unary operations that handles different types (Smi, HeapNumber, BigInt, Oddball) and updates feedback.  It converts the input value to a numeric type if needed, then calls the appropriate operation based on the type.  It also handles exceptions thrown during conversion to numeric types and updates feedback with type information."
+        },
+        {
+          "name": "IncrementOrDecrement",
+          "parameters": [
+            "TNode<Context> context",
+            "TNode<Object> value",
+            "TNode<UintPtrT> slot",
+            "TNode<HeapObject> maybe_feedback_vector",
+            "UpdateFeedbackMode update_feedback_mode"
+          ],
+          "return_type": "TNode<Object>",
+          "logic": "Template function to implement increment or decrement operations. It calls UnaryOpWithFeedback with appropriate functions for Smi, Float64, and BigInt types. Smi operations handles overflow."
+        }
+      ]
+    }
+  ],
+  "functions": [
+    {
+      "name": "Generate_BitwiseNotWithFeedback",
+      "parameters": [
+        "TNode<Context> context",
+        "TNode<Object> value",
+        "TNode<UintPtrT> slot",
+        "TNode<HeapObject> maybe_feedback_vector",
+        "UpdateFeedbackMode update_feedback_mode"
+      ],
+      "return_type": "TNode<Object>",
+      "logic": "Generates code for the bitwise NOT operator with feedback. Creates a UnaryOpAssemblerImpl instance and calls its BitwiseNot method."
+    },
+    {
+      "name": "Generate_DecrementWithFeedback",
+      "parameters": [
+        "TNode<Context> context",
+        "TNode<Object> value",
+        "TNode<UintPtrT> slot",
+        "TNode<HeapObject> maybe_feedback_vector",
+        "UpdateFeedbackMode update_feedback_mode"
+      ],
+      "return_type": "TNode<Object>",
+      "logic": "Generates code for the decrement operator with feedback. Creates a UnaryOpAssemblerImpl instance and calls its Decrement method."
+    },
+    {
+      "name": "Generate_IncrementWithFeedback",
+      "parameters": [
+        "TNode<Context> context",
+        "TNode<Object> value",
+        "TNode<UintPtrT> slot",
+        "TNode<HeapObject> maybe_feedback_vector",
+        "UpdateFeedbackMode update_feedback_mode"
+      ],
+      "return_type": "TNode<Object>",
+      "logic": "Generates code for the increment operator with feedback. Creates a UnaryOpAssemblerImpl instance and calls its Increment method."
+    },
+    {
+      "name": "Generate_NegateWithFeedback",
+      "parameters": [
+        "TNode<Context> context",
+        "TNode<Object> value",
+        "TNode<UintPtrT> slot",
+        "TNode<HeapObject> maybe_feedback_vector",
+        "UpdateFeedbackMode update_feedback_mode"
+      ],
+      "return_type": "TNode<Object>",
+      "logic": "Generates code for the negation operator with feedback. Creates a UnaryOpAssemblerImpl instance and calls its Negate method."
+    }
+  ]
+}

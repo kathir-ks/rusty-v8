@@ -1,0 +1,320 @@
+{
+  "file_path": "/home/kathirks_gc/v8_go/codebase/src/ast/modules.h",
+  "imports": [
+    "src/parsing/import-attributes.h",
+    "src/parsing/scanner.h",
+    "src/zone/zone-containers.h"
+  ],
+  "classes": [
+    {
+      "name": "SourceTextModuleDescriptor",
+      "properties": [
+        "module_requests_",
+        "special_exports_",
+        "namespace_imports_",
+        "regular_exports_",
+        "regular_imports_"
+      ],
+      "methods": [
+        {
+          "name": "SourceTextModuleDescriptor",
+          "parameters": [
+            "Zone* zone"
+          ],
+          "return_type": "void",
+          "logic": "Constructor for the SourceTextModuleDescriptor. Initializes the member collections using the provided zone."
+        },
+        {
+          "name": "AddImport",
+          "parameters": [
+            "const AstRawString* import_name",
+            "const AstRawString* local_name",
+            "const AstRawString* specifier",
+            "const ModuleImportPhase import_phase",
+            "const ImportAttributes* import_attributes",
+            "const Scanner::Location loc",
+            "const Scanner::Location specifier_loc",
+            "Zone* zone"
+          ],
+          "return_type": "void",
+          "logic": "Adds an import statement to the module descriptor, handling various import forms (e.g., 'import x from \"foo.js\"')."
+        },
+        {
+          "name": "AddStarImport",
+          "parameters": [
+            "const AstRawString* local_name",
+            "const AstRawString* specifier",
+            "const ImportAttributes* import_attributes",
+            "const Scanner::Location loc",
+            "const Scanner::Location specifier_loc",
+            "Zone* zone"
+          ],
+          "return_type": "void",
+          "logic": "Adds a star import statement (e.g., 'import * as x from \"foo.js\"') to the module descriptor."
+        },
+        {
+          "name": "AddEmptyImport",
+          "parameters": [
+            "const AstRawString* specifier",
+            "const ImportAttributes* import_attributes",
+            "const Scanner::Location specifier_loc",
+            "Zone* zone"
+          ],
+          "return_type": "void",
+          "logic": "Adds an empty import statement (e.g., 'import \"foo.js\"') to the module descriptor."
+        },
+        {
+          "name": "AddExport",
+          "parameters": [
+            "const AstRawString* local_name",
+            "const AstRawString* export_name",
+            "const Scanner::Location loc",
+            "Zone* zone"
+          ],
+          "return_type": "void",
+          "logic": "Adds an export statement (e.g., 'export {x}') to the module descriptor."
+        },
+        {
+          "name": "AddExport",
+          "parameters": [
+            "const AstRawString* export_name",
+            "const AstRawString* import_name",
+            "const AstRawString* specifier",
+            "const ImportAttributes* import_attributes",
+            "const Scanner::Location loc",
+            "const Scanner::Location specifier_loc",
+            "Zone* zone"
+          ],
+          "return_type": "void",
+          "logic": "Adds an export-from statement (e.g., 'export {x} from \"foo.js\"') to the module descriptor."
+        },
+        {
+          "name": "AddStarExport",
+          "parameters": [
+            "const AstRawString* specifier",
+            "const ImportAttributes* import_attributes",
+            "const Scanner::Location loc",
+            "const Scanner::Location specifier_loc",
+            "Zone* zone"
+          ],
+          "return_type": "void",
+          "logic": "Adds a star export statement (e.g., 'export * from \"foo.js\"') to the module descriptor."
+        },
+        {
+          "name": "Validate",
+          "parameters": [
+            "ModuleScope* module_scope",
+            "PendingCompilationErrorHandler* error_handler",
+            "Zone* zone"
+          ],
+          "return_type": "bool",
+          "logic": "Validates the module descriptor, checking for well-formedness and canonicalizing indirect exports. Reports errors through the error handler."
+        },
+        {
+          "name": "module_requests",
+          "parameters": [],
+          "return_type": "const ModuleRequestMap&",
+          "logic": "Returns the map of module requests."
+        },
+        {
+          "name": "namespace_imports",
+          "parameters": [],
+          "return_type": "const ZoneVector<const Entry*>&",
+          "logic": "Returns the vector of namespace imports."
+        },
+        {
+          "name": "regular_imports",
+          "parameters": [],
+          "return_type": "const RegularImportMap&",
+          "logic": "Returns the map of regular imports."
+        },
+        {
+          "name": "special_exports",
+          "parameters": [],
+          "return_type": "const ZoneVector<const Entry*>&",
+          "logic": "Returns the vector of special exports (star exports and explicitly indirect exports)."
+        },
+        {
+          "name": "regular_exports",
+          "parameters": [],
+          "return_type": "const RegularExportMap&",
+          "logic": "Returns the map of regular exports."
+        },
+        {
+          "name": "AddRegularExport",
+          "parameters": [
+            "Entry* entry"
+          ],
+          "return_type": "void",
+          "logic": "Adds a regular export entry to the regular_exports_ map."
+        },
+        {
+          "name": "AddSpecialExport",
+          "parameters": [
+            "const Entry* entry",
+            "Zone* zone"
+          ],
+          "return_type": "void",
+          "logic": "Adds a special export entry to the special_exports_ vector."
+        },
+        {
+          "name": "AddRegularImport",
+          "parameters": [
+            "Entry* entry"
+          ],
+          "return_type": "void",
+          "logic": "Adds a regular import entry to the regular_imports_ map."
+        },
+        {
+          "name": "AddNamespaceImport",
+          "parameters": [
+            "const Entry* entry",
+            "Zone* zone"
+          ],
+          "return_type": "void",
+          "logic": "Adds a namespace import entry to the namespace_imports_ vector."
+        },
+        {
+          "name": "SerializeRegularExports",
+          "parameters": [
+            "IsolateT* isolate",
+            "Zone* zone"
+          ],
+          "return_type": "DirectHandle<FixedArray>",
+          "logic": "Serializes the regular exports into a FixedArray."
+        }
+      ]
+    },
+    {
+      "name": "SourceTextModuleDescriptor::Entry",
+      "properties": [
+        "location",
+        "export_name",
+        "local_name",
+        "import_name",
+        "module_request",
+        "cell_index"
+      ],
+      "methods": [
+        {
+          "name": "Entry",
+          "parameters": [
+            "Scanner::Location loc"
+          ],
+          "return_type": "void",
+          "logic": "Constructor for the Entry struct. Initializes the location and other members."
+        },
+        {
+          "name": "Serialize",
+          "parameters": [
+            "IsolateT* isolate"
+          ],
+          "return_type": "DirectHandle<SourceTextModuleInfoEntry>",
+          "logic": "Serializes the entry to a SourceTextModuleInfoEntry object."
+        }
+      ]
+    },
+    {
+      "name": "SourceTextModuleDescriptor::AstModuleRequest",
+      "properties": [
+        "specifier_",
+        "phase_",
+        "import_attributes_",
+        "position_",
+        "index_"
+      ],
+      "methods": [
+        {
+          "name": "AstModuleRequest",
+          "parameters": [
+            "const AstRawString* specifier",
+            "const ModuleImportPhase phase",
+            "const ImportAttributes* import_attributes",
+            "int position",
+            "int index"
+          ],
+          "return_type": "void",
+          "logic": "Constructor for the AstModuleRequest class."
+        },
+        {
+          "name": "Serialize",
+          "parameters": [
+            "IsolateT* isolate"
+          ],
+          "return_type": "DirectHandle<v8::internal::ModuleRequest>",
+          "logic": "Serializes the ModuleRequest."
+        },
+        {
+          "name": "specifier",
+          "parameters": [],
+          "return_type": "const AstRawString*",
+          "logic": "Returns the module specifier."
+        },
+        {
+          "name": "import_attributes",
+          "parameters": [],
+          "return_type": "const ImportAttributes*",
+          "logic": "Returns the import attributes."
+        },
+        {
+          "name": "phase",
+          "parameters": [],
+          "return_type": "ModuleImportPhase",
+          "logic": "Returns the import phase."
+        },
+        {
+          "name": "position",
+          "parameters": [],
+          "return_type": "int",
+          "logic": "Returns the position of the request in the JS source."
+        },
+        {
+          "name": "index",
+          "parameters": [],
+          "return_type": "int",
+          "logic": "Returns the index of the request in SourceTextModuleInfo's module_requests FixedArray."
+        }
+      ]
+    },
+    {
+      "name": "SourceTextModuleDescriptor::AstRawStringComparer",
+      "properties": [],
+      "methods": [
+        {
+          "name": "operator()",
+          "parameters": [
+            "const AstRawString* lhs",
+            "const AstRawString* rhs"
+          ],
+          "return_type": "bool",
+          "logic": "Compares two AstRawString pointers for content equality. Used for custom map comparators."
+        }
+      ]
+    },
+    {
+      "name": "SourceTextModuleDescriptor::ModuleRequestComparer",
+      "properties": [],
+      "methods": [
+        {
+          "name": "operator()",
+          "parameters": [
+            "const AstModuleRequest* lhs",
+            "const AstModuleRequest* rhs"
+          ],
+          "return_type": "bool",
+          "logic": "Compares two AstModuleRequest objects. Used in the ModuleRequestMap."
+        }
+      ]
+    }
+  ],
+  "functions": [
+    {
+      "name": "GetCellIndexKind",
+      "parameters": [
+        "int cell_index"
+      ],
+      "return_type": "CellIndexKind",
+      "logic": "Returns the kind of cell index (kInvalid, kExport, or kImport) based on its value."
+    }
+  ]
+}

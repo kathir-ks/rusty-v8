@@ -1,0 +1,132 @@
+{
+  "file_path": "/home/kathirks_gc/v8_go/codebase/src/debug/debug-wasm-objects.h",
+  "imports": [
+    "<memory>",
+    "src/objects/js-objects.h",
+    "src/objects/object-macros.h",
+    "torque-generated/src/debug/debug-wasm-objects-tq.inc"
+  ],
+  "classes": [
+    {
+      "name": "WasmValueObject",
+      "properties": [
+        "kTypeOffset",
+        "kValueOffset",
+        "kSize",
+        "kTypeIndex",
+        "kValueIndex"
+      ],
+      "methods": [
+        {
+          "name": "type",
+          "parameters": [],
+          "return_type": "Tagged<String>",
+          "logic": "Accessor for the 'type' field of the WasmValueObject, representing the type of the WASM value."
+        },
+        {
+          "name": "value",
+          "parameters": [],
+          "return_type": "Tagged<Object>",
+          "logic": "Accessor for the 'value' field of the WasmValueObject, representing the actual WASM value."
+        },
+        {
+          "name": "Print",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Printer for debugging purposes. Outputs the contents of the WasmValueObject."
+        },
+        {
+          "name": "Verify",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Verifier for checking the validity of the WasmValueObject's contents during debugging."
+        },
+        {
+          "name": "New",
+          "parameters": [
+            "Isolate* isolate",
+            "DirectHandle<String> type",
+            "DirectHandle<Object> value"
+          ],
+          "return_type": "DirectHandle<WasmValueObject>",
+          "logic": "Static factory method to create a new WasmValueObject with a specified type and value. Takes String type and Object value."
+        },
+        {
+          "name": "New",
+          "parameters": [
+            "Isolate* isolate",
+            "const wasm::WasmValue& value"
+          ],
+          "return_type": "DirectHandle<WasmValueObject>",
+          "logic": "Static factory method to create a new WasmValueObject from a wasm::WasmValue. Takes pre-existing WASM value struct."
+        }
+      ]
+    }
+  ],
+  "functions": [
+    {
+      "name": "GetWasmDebugProxy",
+      "parameters": [
+        "WasmFrame* frame"
+      ],
+      "return_type": "DirectHandle<JSObject>",
+      "logic": "Retrieves a debug proxy object for a given WasmFrame. Used for inspecting the state of the WASM execution during debugging."
+    },
+    {
+      "name": "GetWasmScopeIterator",
+      "parameters": [
+        "WasmFrame* frame"
+      ],
+      "return_type": "std::unique_ptr<debug::ScopeIterator>",
+      "logic": "Creates a scope iterator for a given WasmFrame.  The iterator allows walking the scope chain of the WasmFrame during debugging."
+    },
+    {
+      "name": "GetWasmInterpreterScopeIterator",
+      "parameters": [
+        "WasmInterpreterEntryFrame* frame"
+      ],
+      "return_type": "std::unique_ptr<debug::ScopeIterator>",
+      "logic": "Creates a scope iterator for a given WasmInterpreterEntryFrame. Only available if DRUMBRAKE is enabled. Allows debugging inside the interpreter."
+    },
+    {
+      "name": "GetWasmFunctionDebugName",
+      "parameters": [
+        "Isolate* isolate",
+        "DirectHandle<WasmTrustedInstanceData> instance_data",
+        "uint32_t func_index"
+      ],
+      "return_type": "DirectHandle<String>",
+      "logic": "Retrieves the debug name for a WASM function given its instance data and index. Useful for displaying function names in debugging tools."
+    },
+    {
+      "name": "AddWasmInstanceObjectInternalProperties",
+      "parameters": [
+        "Isolate* isolate",
+        "DirectHandle<ArrayList> result",
+        "DirectHandle<WasmInstanceObject> instance"
+      ],
+      "return_type": "DirectHandle<ArrayList>",
+      "logic": "Adds internal properties of a WasmInstanceObject to a given ArrayList. Used for displaying internal WASM instance data in debugging tools."
+    },
+    {
+      "name": "AddWasmModuleObjectInternalProperties",
+      "parameters": [
+        "Isolate* isolate",
+        "DirectHandle<ArrayList> result",
+        "DirectHandle<WasmModuleObject> module_object"
+      ],
+      "return_type": "DirectHandle<ArrayList>",
+      "logic": "Adds internal properties of a WasmModuleObject to a given ArrayList. Used for displaying internal WASM module data in debugging tools."
+    },
+    {
+      "name": "AddWasmTableObjectInternalProperties",
+      "parameters": [
+        "Isolate* isolate",
+        "DirectHandle<ArrayList> result",
+        "DirectHandle<WasmTableObject> table"
+      ],
+      "return_type": "DirectHandle<ArrayList>",
+      "logic": "Adds internal properties of a WasmTableObject to a given ArrayList. Used for displaying internal WASM table data in debugging tools."
+    }
+  ]
+}

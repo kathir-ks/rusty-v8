@@ -1,0 +1,144 @@
+{
+  "file_path": "/home/kathirks_gc/v8_go/codebase/src/snapshot/embedded/platform-embedded-file-writer-mac.cc",
+  "imports": [
+    "src/snapshot/embedded/platform-embedded-file-writer-mac.h",
+    "src/objects/instruction-stream.h"
+  ],
+  "classes": [
+    {
+      "name": "PlatformEmbeddedFileWriterMac",
+      "properties": [],
+      "methods": [
+        {
+          "name": "SectionText",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Outputs the '.text' assembly directive to the file, indicating the start of the text (code) section."
+        },
+        {
+          "name": "SectionRoData",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Outputs the '.const_data' assembly directive to the file, indicating the start of the read-only data section."
+        },
+        {
+          "name": "DeclareUint32",
+          "parameters": [
+            "const char* name",
+            "uint32_t value"
+          ],
+          "return_type": "void",
+          "logic": "Declares a 32-bit unsigned integer symbol in the assembly file. It declares the symbol as global, defines a label for it, emits a '.long' directive, and writes the integer value."
+        },
+        {
+          "name": "DeclareSymbolGlobal",
+          "parameters": [
+            "const char* name"
+          ],
+          "return_type": "void",
+          "logic": "Declares a symbol as globally visible in the assembly file using '.private_extern'. This is done to prevent issues during the compilation process."
+        },
+        {
+          "name": "AlignToCodeAlignment",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Aligns the current position in the assembly file to the code alignment boundary. The alignment size depends on the target architecture, using .balign directive. It ensures proper memory layout for code."
+        },
+        {
+          "name": "AlignToPageSizeIfNeeded",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Aligns the current position in the assembly file to the page size boundary if the target architecture is ARM64. Used for remapping builtins on the heap."
+        },
+        {
+          "name": "AlignToDataAlignment",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Aligns the current position in the assembly file to the data alignment boundary (8 bytes). Uses .balign directive to ensure data is properly aligned."
+        },
+        {
+          "name": "Comment",
+          "parameters": [
+            "const char* string"
+          ],
+          "return_type": "void",
+          "logic": "Writes a comment to the assembly file, using '//' prefix."
+        },
+        {
+          "name": "DeclareLabel",
+          "parameters": [
+            "const char* name"
+          ],
+          "return_type": "void",
+          "logic": "Declares a label in the assembly file. The label is prefixed with an underscore."
+        },
+        {
+          "name": "SourceInfo",
+          "parameters": [
+            "int fileid",
+            "const char* filename",
+            "int line"
+          ],
+          "return_type": "void",
+          "logic": "Emits source location information into the assembly file, using the '.loc' directive. This assists debuggers to map assembly code to source code lines."
+        },
+        {
+          "name": "DeclareFunctionBegin",
+          "parameters": [
+            "const char* name",
+            "uint32_t size"
+          ],
+          "return_type": "void",
+          "logic": "Marks the beginning of a function in the assembly file by declaring a label. Intended to include proper OSX function markings."
+        },
+        {
+          "name": "DeclareFunctionEnd",
+          "parameters": [
+            "const char* name"
+          ],
+          "return_type": "void",
+          "logic": "Marks the end of a function. Currently does nothing on OSX (empty function body)."
+        },
+        {
+          "name": "FilePrologue",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Emits a prologue for the assembly file.  Currently does nothing (empty function body)."
+        },
+        {
+          "name": "DeclareExternalFilename",
+          "parameters": [
+            "int fileid",
+            "const char* filename"
+          ],
+          "return_type": "void",
+          "logic": "Emits the filename for external references using '.file' directive."
+        },
+        {
+          "name": "FileEpilogue",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Emits an epilogue for the assembly file. Currently does nothing (empty function body)."
+        },
+        {
+          "name": "IndentedDataDirective",
+          "parameters": [
+            "DataDirective directive"
+          ],
+          "return_type": "int",
+          "logic": "Outputs a data directive (e.g., .byte, .long) with indentation to the assembly file."
+        }
+      ]
+    }
+  ],
+  "functions": [
+    {
+      "name": "DirectiveAsString",
+      "parameters": [
+        "DataDirective directive"
+      ],
+      "return_type": "const char*",
+      "logic": "Converts a DataDirective enum value to its corresponding string representation (e.g., kByte -> \".byte\")."
+    }
+  ]
+}

@@ -1,0 +1,197 @@
+{
+  "file_path": "/home/kathirks_gc/v8_go/codebase/src/sandbox/cppheap-pointer-table.h",
+  "imports": [
+    "include/v8-sandbox.h",
+    "include/v8config.h",
+    "src/base/atomicops.h",
+    "src/base/bounds.h",
+    "src/base/memory.h",
+    "src/common/globals.h",
+    "src/sandbox/compactible-external-entity-table.h",
+    "src/sandbox/tagged-payload.h",
+    "src/utils/allocation.h"
+  ],
+  "classes": [
+    {
+      "name": "CppHeapPointerTableEntry",
+      "properties": [
+        "std::atomic<Payload> payload_"
+      ],
+      "methods": [
+        {
+          "name": "MakePointerEntry",
+          "parameters": [
+            "Address value",
+            "CppHeapPointerTag tag",
+            "bool mark_as_alive"
+          ],
+          "return_type": "void",
+          "logic": "Makes this entry a cpp heap pointer entry containing the given pointer tagged with the given tag."
+        },
+        {
+          "name": "GetPointer",
+          "parameters": [
+            "CppHeapPointerTagRange tag_range"
+          ],
+          "return_type": "Address",
+          "logic": "Loads and untags the pointer stored in this entry. Returns invalid pointer if tag is not in specified range."
+        },
+        {
+          "name": "SetPointer",
+          "parameters": [
+            "Address value",
+            "CppHeapPointerTag tag"
+          ],
+          "return_type": "void",
+          "logic": "Tags and stores the given pointer in this entry."
+        },
+        {
+          "name": "HasPointer",
+          "parameters": [
+            "CppHeapPointerTagRange tag_range"
+          ],
+          "return_type": "bool",
+          "logic": "Returns true if this entry contains a pointer whose tag is within the specified tag range."
+        },
+        {
+          "name": "MakeZappedEntry",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Invalidates the entry. Accessing a zapped entry will cause a crash."
+        },
+        {
+          "name": "MakeFreelistEntry",
+          "parameters": [
+            "uint32_t next_entry_index"
+          ],
+          "return_type": "void",
+          "logic": "Makes this entry a freelist entry, containing the index of the next entry on the freelist."
+        },
+        {
+          "name": "GetNextFreelistEntryIndex",
+          "parameters": [],
+          "return_type": "uint32_t",
+          "logic": "Gets the index of the next entry on the freelist. The result is only valid if this is a freelist entry."
+        },
+        {
+          "name": "MakeEvacuationEntry",
+          "parameters": [
+            "Address handle_location"
+          ],
+          "return_type": "void",
+          "logic": "Makes this entry an evacuation entry containing the address of the handle to the entry being evacuated."
+        },
+        {
+          "name": "HasEvacuationEntry",
+          "parameters": [],
+          "return_type": "bool",
+          "logic": "Returns true if this entry contains an evacuation entry."
+        },
+        {
+          "name": "Evacuate",
+          "parameters": [
+            "CppHeapPointerTableEntry& dest"
+          ],
+          "return_type": "void",
+          "logic": "Moves the content of this entry into the provided entry, possibly clearing the marking bit. Invalidates the source entry. Used during table compaction and promotion."
+        },
+        {
+          "name": "Mark",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Marks this entry as alive during table garbage collection."
+        }
+      ]
+    },
+    {
+      "name": "CppHeapPointerTable",
+      "properties": [],
+      "methods": [
+        {
+          "name": "Get",
+          "parameters": [
+            "CppHeapPointerHandle handle",
+            "CppHeapPointerTagRange tag_range"
+          ],
+          "return_type": "Address",
+          "logic": "Retrieves the entry referenced by the given handle. The tag of the entry must be within the specified range of tags.  This method is atomic and can be called from background threads."
+        },
+        {
+          "name": "Set",
+          "parameters": [
+            "CppHeapPointerHandle handle",
+            "Address value",
+            "CppHeapPointerTag tag"
+          ],
+          "return_type": "void",
+          "logic": "Sets the entry referenced by the given handle.  This method is atomic and can be called from background threads."
+        },
+        {
+          "name": "AllocateAndInitializeEntry",
+          "parameters": [
+            "Space* space",
+            "Address initial_value",
+            "CppHeapPointerTag tag"
+          ],
+          "return_type": "CppHeapPointerHandle",
+          "logic": "Allocates a new entry in the given space. The caller must provide the initial value and tag for the entry.  This method is atomic and can be called from background threads."
+        },
+        {
+          "name": "Mark",
+          "parameters": [
+            "Space* space",
+            "CppHeapPointerHandle handle",
+            "Address handle_location"
+          ],
+          "return_type": "void",
+          "logic": "Marks the specified entry as alive. If the space to which the entry belongs is currently being compacted, this may also mark the entry for evacuation for which the location of the handle is required.  This method is atomic and can be called from background threads."
+        },
+        {
+          "name": "SweepAndCompact",
+          "parameters": [
+            "Space* space",
+            "Counters* counters"
+          ],
+          "return_type": "uint32_t",
+          "logic": "Sweeps the table to free dead entries and compacts the table to reduce fragmentation."
+        },
+        {
+          "name": "Contains",
+          "parameters": [
+            "Space* space",
+            "CppHeapPointerHandle handle"
+          ],
+          "return_type": "bool",
+          "logic": "Checks if the CppHeapPointerTable contains the handle."
+        }
+      ]
+    },
+    {
+      "name": "CppHeapPointerTable::Space",
+      "properties": [
+        "bool allocate_black_"
+      ],
+      "methods": [
+        {
+          "name": "allocate_black",
+          "parameters": [],
+          "return_type": "bool",
+          "logic": "Getter for the allocate_black flag"
+        },
+        {
+          "name": "set_allocate_black",
+          "parameters": [
+            "bool allocate_black"
+          ],
+          "return_type": "void",
+          "logic": "Setter for the allocate_black flag"
+        }
+      ]
+    }
+  ],
+  "functions": [],
+  "static_asserts": [
+    "sizeof(CppHeapPointerTableEntry) == 8",
+    "kMaxCppHeapPointers == kMaxCapacity"
+  ]
+}

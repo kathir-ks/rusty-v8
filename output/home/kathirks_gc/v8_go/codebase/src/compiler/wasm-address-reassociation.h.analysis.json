@@ -1,0 +1,187 @@
+{
+  "file_path": "/home/kathirks_gc/v8_go/codebase/src/compiler/wasm-address-reassociation.h",
+  "imports": [
+    "src/compiler/node-marker.h",
+    "src/zone/zone-containers.h"
+  ],
+  "classes": [
+    {
+      "name": "WasmAddressReassociation",
+      "properties": [
+        "graph_",
+        "common_",
+        "machine_",
+        "candidate_base_addrs_",
+        "candidates_",
+        "zone_"
+      ],
+      "methods": [
+        {
+          "name": "WasmAddressReassociation",
+          "parameters": [
+            "JSGraph* jsgraph",
+            "Zone* zone"
+          ],
+          "return_type": "",
+          "logic": "Constructor for the WasmAddressReassociation class. Initializes the necessary fields."
+        },
+        {
+          "name": "operator=",
+          "parameters": [
+            "const WasmAddressReassociation&"
+          ],
+          "return_type": "WasmAddressReassociation&",
+          "logic": "Deleted copy assignment operator to prevent copying of this class."
+        },
+        {
+          "name": "WasmAddressReassociation",
+          "parameters": [
+            "const WasmAddressReassociation&"
+          ],
+          "return_type": "",
+          "logic": "Deleted copy constructor to prevent copying of this class."
+        },
+        {
+          "name": "Optimize",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Performs the address reassociation optimization."
+        },
+        {
+          "name": "VisitProtectedMemOp",
+          "parameters": [
+            "Node* node",
+            "NodeId effect_chain"
+          ],
+          "return_type": "void",
+          "logic": "Visits a protected memory operation and attempts to optimize it."
+        },
+        {
+          "name": "ShouldTryOptimize",
+          "parameters": [
+            "const CandidateAddressKey& key"
+          ],
+          "return_type": "bool",
+          "logic": "Determines whether to attempt optimization based on the candidate address key."
+        },
+        {
+          "name": "CreateNewBase",
+          "parameters": [
+            "const CandidateAddressKey& key"
+          ],
+          "return_type": "Node*",
+          "logic": "Creates a new base address node based on the candidate address key."
+        },
+        {
+          "name": "HasCandidateBaseAddr",
+          "parameters": [
+            "const CandidateAddressKey& key"
+          ],
+          "return_type": "bool",
+          "logic": "Checks if a candidate base address exists for the given key."
+        },
+        {
+          "name": "AddCandidate",
+          "parameters": [
+            "Node* mem_op",
+            "Node* base",
+            "Node* reg_offset",
+            "int64_t imm_offset",
+            "NodeId effect_chain"
+          ],
+          "return_type": "void",
+          "logic": "Adds a memory operation as a candidate for address reassociation."
+        },
+        {
+          "name": "ReplaceInputs",
+          "parameters": [
+            "Node* mem_op",
+            "Node* object",
+            "Node* index"
+          ],
+          "return_type": "void",
+          "logic": "Replaces the inputs of a memory operation with the new object and index."
+        }
+      ]
+    },
+    {
+      "name": "CandidateBaseAddr",
+      "properties": [
+        "base_reg_",
+        "offset_reg_"
+      ],
+      "methods": [
+        {
+          "name": "CandidateBaseAddr",
+          "parameters": [
+            "Node* base",
+            "Node* offset"
+          ],
+          "return_type": "",
+          "logic": "Constructor for CandidateBaseAddr, initializes base and offset nodes."
+        },
+        {
+          "name": "base",
+          "parameters": [],
+          "return_type": "Node*",
+          "logic": "Returns the base node."
+        },
+        {
+          "name": "offset",
+          "parameters": [],
+          "return_type": "Node*",
+          "logic": "Returns the offset node."
+        }
+      ]
+    },
+    {
+      "name": "CandidateMemOps",
+      "properties": [
+        "mem_ops_",
+        "imm_offsets_"
+      ],
+      "methods": [
+        {
+          "name": "CandidateMemOps",
+          "parameters": [
+            "Zone* zone"
+          ],
+          "return_type": "",
+          "logic": "Constructor for CandidateMemOps, initializes the data structures."
+        },
+        {
+          "name": "AddCandidate",
+          "parameters": [
+            "Node* mem_op",
+            "int64_t imm_offset"
+          ],
+          "return_type": "void",
+          "logic": "Adds a candidate memory operation and its immediate offset to the data structures."
+        },
+        {
+          "name": "GetNumNodes",
+          "parameters": [],
+          "return_type": "size_t",
+          "logic": "Returns the number of nodes in the candidate list."
+        },
+        {
+          "name": "mem_op",
+          "parameters": [
+            "size_t i"
+          ],
+          "return_type": "Node*",
+          "logic": "Returns the memory operation at the given index."
+        },
+        {
+          "name": "imm_offset",
+          "parameters": [
+            "size_t i"
+          ],
+          "return_type": "int64_t",
+          "logic": "Returns the immediate offset at the given index."
+        }
+      ]
+    }
+  ],
+  "functions": []
+}

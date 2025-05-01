@@ -1,0 +1,192 @@
+{
+  "file_path": "/home/kathirks_gc/v8_go/codebase/src/compiler/turboshaft/memory-optimization-reducer.h",
+  "imports": [
+    "<optional>",
+    "src/base/template-utils.h",
+    "src/builtins/builtins.h",
+    "src/codegen/external-reference.h",
+    "src/compiler/turboshaft/assembler.h",
+    "src/compiler/turboshaft/copying-phase.h",
+    "src/compiler/turboshaft/operations.h",
+    "src/compiler/turboshaft/opmasks.h",
+    "src/compiler/turboshaft/phase.h",
+    "src/compiler/turboshaft/utils.h",
+    "src/compiler/write-barrier-kind.h",
+    "src/zone/zone-containers.h",
+    "src/compiler/turboshaft/define-assembler-macros.inc",
+    "src/compiler/turboshaft/undef-assembler-macros.inc"
+  ],
+  "classes": [
+    {
+      "name": "MemoryAnalyzer",
+      "properties": [
+        "data",
+        "phase_zone",
+        "input_graph",
+        "isolate_",
+        "allocation_folding",
+        "is_wasm",
+        "block_states",
+        "folded_into",
+        "skipped_write_barriers",
+        "reserved_size",
+        "current_block",
+        "state",
+        "pipeline_kind"
+      ],
+      "methods": [
+        {
+          "name": "IsPartOfLastAllocation",
+          "parameters": [
+            "op"
+          ],
+          "return_type": "bool",
+          "logic": "Checks if the given operation is part of the last non-folded allocation. It unwraps the operation to find an AllocateOp and compares it with the last allocation."
+        },
+        {
+          "name": "SkipWriteBarrier",
+          "parameters": [
+            "store"
+          ],
+          "return_type": "bool",
+          "logic": "Determines if a write barrier can be skipped for a given store operation. It checks if the store's base object is part of the last allocation or if the value being stored doesn't need a write barrier."
+        },
+        {
+          "name": "IsFoldedAllocation",
+          "parameters": [
+            "op"
+          ],
+          "return_type": "bool",
+          "logic": "Checks if a given allocation operation is folded into another allocation."
+        },
+        {
+          "name": "ReservedSize",
+          "parameters": [
+            "alloc"
+          ],
+          "return_type": "std::optional<uint32_t>",
+          "logic": "Returns the reserved size for a given allocation, if it exists."
+        },
+        {
+          "name": "Run",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "The main entry point for the memory analysis. It iterates through the graph and processes each operation."
+        },
+        {
+          "name": "Process",
+          "parameters": [
+            "op"
+          ],
+          "return_type": "void",
+          "logic": "Processes a given operation. It determines the type of operation and calls the appropriate processing function."
+        },
+        {
+          "name": "ProcessBlockTerminator",
+          "parameters": [
+            "op"
+          ],
+          "return_type": "void",
+          "logic": "Processes the terminator operation of a basic block."
+        },
+        {
+          "name": "ProcessAllocation",
+          "parameters": [
+            "alloc"
+          ],
+          "return_type": "void",
+          "logic": "Processes an allocation operation. It updates the state of the MemoryAnalyzer with the latest allocation."
+        },
+        {
+          "name": "ProcessStore",
+          "parameters": [
+            "store"
+          ],
+          "return_type": "void",
+          "logic": "Processes a store operation. Checks if the write barrier can be skipped and updates the `skipped_write_barriers` set if it can."
+        },
+        {
+          "name": "MemoryAnalyzer",
+          "parameters": [
+            "data",
+            "phase_zone",
+            "input_graph",
+            "allocation_folding",
+            "is_wasm"
+          ],
+          "return_type": "MemoryAnalyzer",
+          "logic": "Constructor for the MemoryAnalyzer class. Initializes the analyzer with the provided pipeline data, zone, graph, allocation folding setting and wasm setting."
+        }
+      ]
+    },
+    {
+      "name": "MemoryOptimizationReducer",
+      "properties": [],
+      "methods": [
+        {
+          "name": "Analyze",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Initializes and runs the MemoryAnalyzer, then calls the Analyze method of the next reducer in the pipeline."
+        },
+        {
+          "name": "REDUCE_INPUT_GRAPH(Store)",
+          "parameters": [
+            "ig_index",
+            "store"
+          ],
+          "return_type": "V<None>",
+          "logic": "Reduces a Store operation in the input graph. If the write barrier can be skipped (as determined by the MemoryAnalyzer), it emits a new Store operation with no write barrier; otherwise, it delegates to the next reducer."
+        },
+        {
+          "name": "REDUCE(Allocate)",
+          "parameters": [
+            "size",
+            "type"
+          ],
+          "return_type": "V<HeapObject>",
+          "logic": "Reduces an Allocate operation. If the allocation can be folded, it performs an inline bump pointer allocation. Otherwise, it calls the runtime for allocation."
+        },
+        {
+          "name": "REDUCE(DecodeExternalPointer)",
+          "parameters": [
+            "handle",
+            "tag_range"
+          ],
+          "return_type": "OpIndex",
+          "logic": "Reduces a DecodeExternalPointer operation, loading the pointer from the external pointer table based on the handle and tag range. Performs tag checking and extracts the payload."
+        }
+      ]
+    }
+  ],
+  "functions": [
+    {
+      "name": "CreateAllocateBuiltinDescriptor",
+      "parameters": [
+        "zone",
+        "isolate"
+      ],
+      "return_type": "const TSCallDescriptor*",
+      "logic": "Creates a call descriptor for the allocate builtin function."
+    },
+    {
+      "name": "ValueNeedsWriteBarrier",
+      "parameters": [
+        "graph",
+        "value",
+        "isolate"
+      ],
+      "return_type": "bool",
+      "logic": "Determines if a value needs a write barrier. It checks if the value is a constant, a bitcast of a word pointer to a Smi, or a Phi. If it is a Phi, it recursively checks if any of the Phi's inputs need a write barrier."
+    },
+    {
+      "name": "UnwrapAllocate",
+      "parameters": [
+        "graph",
+        "op"
+      ],
+      "return_type": "const AllocateOp*",
+      "logic": "Unwraps a given operation to find an AllocateOp. It traverses through TaggedBitcastOps and WordBinopOps to get to the underlying AllocateOp."
+    }
+  ]
+}

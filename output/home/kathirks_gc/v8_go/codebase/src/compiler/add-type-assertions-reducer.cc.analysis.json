@@ -1,0 +1,57 @@
+{
+  "file_path": "/home/kathirks_gc/v8_go/codebase/src/compiler/add-type-assertions-reducer.cc",
+  "imports": [
+    "src/compiler/add-type-assertions-reducer.h",
+    "src/compiler/node-properties.h",
+    "src/compiler/schedule.h"
+  ],
+  "classes": [
+    {
+      "name": "AddTypeAssertionsImpl",
+      "properties": [
+        "jsgraph",
+        "schedule",
+        "phase_zone",
+        "simplified",
+        "graph"
+      ],
+      "methods": [
+        {
+          "name": "Run",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Iterates through the basic blocks in reverse postorder and processes each block to insert type assertions."
+        },
+        {
+          "name": "ProcessBlock",
+          "parameters": [
+            "BasicBlock* block"
+          ],
+          "return_type": "void",
+          "logic": "Iterates through nodes within a basic block, identifying nodes where type assertions can be inserted. It maintains a list of pending nodes and inserts an assertion before an effectful operation."
+        },
+        {
+          "name": "InsertAssertion",
+          "parameters": [
+            "Node* asserted",
+            "Node* effect_successor"
+          ],
+          "return_type": "void",
+          "logic": "Inserts a type assertion node after the 'asserted' node and before the 'effect_successor' node in the effect chain."
+        }
+      ]
+    }
+  ],
+  "functions": [
+    {
+      "name": "AddTypeAssertions",
+      "parameters": [
+        "JSGraph* jsgraph",
+        "Schedule* schedule",
+        "Zone* phase_zone"
+      ],
+      "return_type": "void",
+      "logic": "Creates an instance of the `AddTypeAssertionsImpl` class and calls its `Run` method to perform the type assertion insertion process."
+    }
+  ]
+}

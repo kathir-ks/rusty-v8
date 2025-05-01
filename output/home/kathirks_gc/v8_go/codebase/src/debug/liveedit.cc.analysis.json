@@ -1,0 +1,558 @@
+{
+  "file_path": "/home/kathirks_gc/v8_go/codebase/src/debug/liveedit.cc",
+  "imports": [
+    "src/debug/liveedit.h",
+    "<optional>",
+    "src/api/api-inl.h",
+    "src/ast/ast-traversal-visitor.h",
+    "src/ast/ast.h",
+    "src/ast/scopes.h",
+    "src/codegen/compilation-cache.h",
+    "src/codegen/compiler.h",
+    "src/codegen/source-position-table.h",
+    "src/common/globals.h",
+    "src/debug/debug-interface.h",
+    "src/debug/debug-stack-trace-iterator.h",
+    "src/debug/debug.h",
+    "src/debug/liveedit-diff.h",
+    "src/execution/frames-inl.h",
+    "src/execution/v8threads.h",
+    "src/logging/log.h",
+    "src/objects/js-generator-inl.h",
+    "src/objects/js-objects.h",
+    "src/objects/objects-inl.h",
+    "src/parsing/parse-info.h",
+    "src/parsing/parsing.h"
+  ],
+  "classes": [
+    {
+      "name": "SubrangableInput",
+      "properties": [],
+      "methods": [
+        {
+          "name": "SetSubrange1",
+          "parameters": [
+            "int offset",
+            "int len"
+          ],
+          "return_type": "virtual void",
+          "logic": "Abstract method to set the subrange for the first input string."
+        },
+        {
+          "name": "SetSubrange2",
+          "parameters": [
+            "int offset",
+            "int len"
+          ],
+          "return_type": "virtual void",
+          "logic": "Abstract method to set the subrange for the second input string."
+        },
+        {
+          "name": "GetLength1",
+          "parameters": [],
+          "return_type": "int",
+          "logic": "Gets the length of the first string."
+        },
+        {
+          "name": "GetLength2",
+          "parameters": [],
+          "return_type": "int",
+          "logic": "Gets the length of the second string."
+        },
+        {
+          "name": "Equals",
+          "parameters": [
+            "int index1",
+            "int index2"
+          ],
+          "return_type": "bool",
+          "logic": "Compares characters at given indexes."
+        }
+      ]
+    },
+    {
+      "name": "SubrangableOutput",
+      "properties": [],
+      "methods": [
+        {
+          "name": "SetSubrange1",
+          "parameters": [
+            "int offset",
+            "int len"
+          ],
+          "return_type": "virtual void",
+          "logic": "Abstract method to set the subrange for the first output string."
+        },
+        {
+          "name": "SetSubrange2",
+          "parameters": [
+            "int offset",
+            "int len"
+          ],
+          "return_type": "virtual void",
+          "logic": "Abstract method to set the subrange for the second output string."
+        }
+      ]
+    },
+    {
+      "name": "TokensCompareInput",
+      "properties": [
+        "Handle<String> s1_",
+        "int offset1_",
+        "int len1_",
+        "Handle<String> s2_",
+        "int offset2_",
+        "int len2_"
+      ],
+      "methods": [
+        {
+          "name": "TokensCompareInput",
+          "parameters": [
+            "Handle<String> s1",
+            "int offset1",
+            "int len1",
+            "Handle<String> s2",
+            "int offset2",
+            "int len2"
+          ],
+          "return_type": "n/a",
+          "logic": "Constructor that initializes the input strings and their offsets and lengths."
+        },
+        {
+          "name": "GetLength1",
+          "parameters": [],
+          "return_type": "int",
+          "logic": "Returns the length of the first string."
+        },
+        {
+          "name": "GetLength2",
+          "parameters": [],
+          "return_type": "int",
+          "logic": "Returns the length of the second string."
+        },
+        {
+          "name": "Equals",
+          "parameters": [
+            "int index1",
+            "int index2"
+          ],
+          "return_type": "bool",
+          "logic": "Compares characters at the given indices of the two strings."
+        }
+      ]
+    },
+    {
+      "name": "TokensCompareOutput",
+      "properties": [
+        "std::vector<SourceChangeRange>* output_",
+        "int offset1_",
+        "int offset2_"
+      ],
+      "methods": [
+        {
+          "name": "TokensCompareOutput",
+          "parameters": [
+            "int offset1",
+            "int offset2",
+            "std::vector<SourceChangeRange>* output"
+          ],
+          "return_type": "n/a",
+          "logic": "Constructor that initializes the output vector and offsets."
+        },
+        {
+          "name": "AddChunk",
+          "parameters": [
+            "int pos1",
+            "int pos2",
+            "int len1",
+            "int len2"
+          ],
+          "return_type": "void",
+          "logic": "Adds a chunk of difference to the output vector, converting relative positions to absolute."
+        }
+      ]
+    },
+    {
+      "name": "LineEndsWrapper",
+      "properties": [
+        "Handle<FixedArray> ends_array_",
+        "int string_len_"
+      ],
+      "methods": [
+        {
+          "name": "LineEndsWrapper",
+          "parameters": [
+            "Isolate* isolate",
+            "DirectHandle<String> string"
+          ],
+          "return_type": "n/a",
+          "logic": "Constructor, calculates and stores line ends for the input string."
+        },
+        {
+          "name": "length",
+          "parameters": [],
+          "return_type": "int",
+          "logic": "Returns the number of lines in the string."
+        },
+        {
+          "name": "GetLineStart",
+          "parameters": [
+            "int index"
+          ],
+          "return_type": "int",
+          "logic": "Returns the start position of a given line."
+        },
+        {
+          "name": "GetLineEnd",
+          "parameters": [
+            "int index"
+          ],
+          "return_type": "int",
+          "logic": "Returns the end position of a given line."
+        }
+      ]
+    },
+    {
+      "name": "LineArrayCompareInput",
+      "properties": [
+        "Handle<String> s1_",
+        "Handle<String> s2_",
+        "LineEndsWrapper line_ends1_",
+        "LineEndsWrapper line_ends2_",
+        "int subrange_offset1_",
+        "int subrange_offset2_",
+        "int subrange_len1_",
+        "int subrange_len2_"
+      ],
+      "methods": [
+        {
+          "name": "LineArrayCompareInput",
+          "parameters": [
+            "Handle<String> s1",
+            "Handle<String> s2",
+            "LineEndsWrapper line_ends1",
+            "LineEndsWrapper line_ends2"
+          ],
+          "return_type": "n/a",
+          "logic": "Constructor that initializes the input strings and line ends wrappers."
+        },
+        {
+          "name": "GetLength1",
+          "parameters": [],
+          "return_type": "int",
+          "logic": "Returns the length of the first line array (number of lines)."
+        },
+        {
+          "name": "GetLength2",
+          "parameters": [],
+          "return_type": "int",
+          "logic": "Returns the length of the second line array (number of lines)."
+        },
+        {
+          "name": "Equals",
+          "parameters": [
+            "int index1",
+            "int index2"
+          ],
+          "return_type": "bool",
+          "logic": "Compares the content of two lines at given indices."
+        },
+        {
+          "name": "SetSubrange1",
+          "parameters": [
+            "int offset",
+            "int len"
+          ],
+          "return_type": "void",
+          "logic": "Sets the subrange for the first line array."
+        },
+        {
+          "name": "SetSubrange2",
+          "parameters": [
+            "int offset",
+            "int len"
+          ],
+          "return_type": "void",
+          "logic": "Sets the subrange for the second line array."
+        }
+      ]
+    },
+    {
+      "name": "TokenizingLineArrayCompareOutput",
+      "properties": [
+        "Isolate* isolate_",
+        "LineEndsWrapper line_ends1_",
+        "LineEndsWrapper line_ends2_",
+        "Handle<String> s1_",
+        "Handle<String> s2_",
+        "int subrange_offset1_",
+        "int subrange_offset2_",
+        "std::vector<SourceChangeRange>* output_"
+      ],
+      "methods": [
+        {
+          "name": "TokenizingLineArrayCompareOutput",
+          "parameters": [
+            "Isolate* isolate",
+            "LineEndsWrapper line_ends1",
+            "LineEndsWrapper line_ends2",
+            "Handle<String> s1",
+            "Handle<String> s2",
+            "std::vector<SourceChangeRange>* output"
+          ],
+          "return_type": "n/a",
+          "logic": "Constructor that initializes the necessary data for tokenizing line comparison."
+        },
+        {
+          "name": "AddChunk",
+          "parameters": [
+            "int line_pos1",
+            "int line_pos2",
+            "int line_len1",
+            "int line_len2"
+          ],
+          "return_type": "void",
+          "logic": "Adds a chunk of different lines. If the chunk is small enough, it performs a token-level diff. Otherwise, it adds the whole chunk as a difference."
+        },
+        {
+          "name": "SetSubrange1",
+          "parameters": [
+            "int offset",
+            "int len"
+          ],
+          "return_type": "void",
+          "logic": "Sets subrange offset for string 1"
+        },
+        {
+          "name": "SetSubrange2",
+          "parameters": [
+            "int offset",
+            "int len"
+          ],
+          "return_type": "void",
+          "logic": "Sets subrange offset for string 2"
+        }
+      ]
+    },
+    {
+      "name": "CollectFunctionLiterals",
+      "properties": [
+        "std::vector<FunctionLiteral*>* literals_ = nullptr"
+      ],
+      "methods": [
+        {
+          "name": "CollectFunctionLiterals",
+          "parameters": [
+            "Isolate* isolate",
+            "AstNode* root"
+          ],
+          "return_type": "n/a",
+          "logic": "Constructor for the CollectFunctionLiterals class."
+        },
+        {
+          "name": "VisitFunctionLiteral",
+          "parameters": [
+            "FunctionLiteral* lit"
+          ],
+          "return_type": "void",
+          "logic": "Overrides the VisitFunctionLiteral method to collect all FunctionLiteral nodes."
+        },
+        {
+          "name": "Run",
+          "parameters": [
+            "std::vector<FunctionLiteral*>* literals"
+          ],
+          "return_type": "void",
+          "logic": "Runs the AST traversal and collects the function literals."
+        }
+      ]
+    },
+    {
+      "name": "FunctionDataMap",
+      "properties": [
+        "std::map<FuncId, FunctionData> map_"
+      ],
+      "methods": [
+        {
+          "name": "AddInterestingLiteral",
+          "parameters": [
+            "int script_id",
+            "FunctionLiteral* literal"
+          ],
+          "return_type": "void",
+          "logic": "Adds a function literal to the map for tracking."
+        },
+        {
+          "name": "Lookup",
+          "parameters": [
+            "Tagged<SharedFunctionInfo> sfi",
+            "FunctionData** data"
+          ],
+          "return_type": "bool",
+          "logic": "Looks up function data based on SharedFunctionInfo."
+        },
+        {
+          "name": "Lookup",
+          "parameters": [
+            "DirectHandle<Script> script",
+            "FunctionLiteral* literal",
+            "FunctionData** data"
+          ],
+          "return_type": "bool",
+          "logic": "Looks up function data based on Script and FunctionLiteral."
+        },
+        {
+          "name": "Fill",
+          "parameters": [
+            "Isolate* isolate"
+          ],
+          "return_type": "void",
+          "logic": "Iterates the heap and threads to gather information about SharedFunctionInfos, JSFunctions, and JSGeneratorObjects for tracking."
+        }
+      ]
+    }
+  ],
+  "functions": [
+    {
+      "name": "CompareSubstrings",
+      "parameters": [
+        "DirectHandle<String> s1",
+        "int pos1",
+        "DirectHandle<String> s2",
+        "int pos2",
+        "int len"
+      ],
+      "return_type": "bool",
+      "logic": "Compares two substrings of given strings and returns true if they are equal, false otherwise."
+    },
+    {
+      "name": "NarrowDownInput",
+      "parameters": [
+        "SubrangableInput* input",
+        "SubrangableOutput* output"
+      ],
+      "return_type": "void",
+      "logic": "Finds common prefix and suffix in the input strings to reduce the comparison range, enabling subranging in input and output objects."
+    },
+    {
+      "name": "CalculateFunctionLiteralChanges",
+      "parameters": [
+        "const std::vector<FunctionLiteral*>& literals",
+        "const std::vector<SourceChangeRange>& diffs",
+        "FunctionLiteralChanges* result"
+      ],
+      "return_type": "void",
+      "logic": "Calculates changes in the start and end positions of function literals based on source code differences."
+    },
+    {
+      "name": "HasChangedScope",
+      "parameters": [
+        "FunctionLiteral* a",
+        "FunctionLiteral* b"
+      ],
+      "return_type": "bool",
+      "logic": "Checks if the outer scope of two function literals has changed (e.g., variables added/removed), indicating the function should be considered damaged."
+    },
+    {
+      "name": "MapLiterals",
+      "parameters": [
+        "const FunctionLiteralChanges& changes",
+        "const std::vector<FunctionLiteral*>& new_literals",
+        "LiteralMap* unchanged",
+        "LiteralMap* changed"
+      ],
+      "return_type": "void",
+      "logic": "Maps old function literals to new function literals based on their positions and scope changes.  Categorizes literals as unchanged, changed, or damaged."
+    },
+    {
+      "name": "ParseScript",
+      "parameters": [
+        "Isolate* isolate",
+        "Handle<Script> script",
+        "ParseInfo* parse_info",
+        "MaybeDirectHandle<ScopeInfo> outer_scope_info",
+        "bool compile_as_well",
+        "std::vector<FunctionLiteral*>* literals",
+        "debug::LiveEditResult* result"
+      ],
+      "return_type": "bool",
+      "logic": "Parses and optionally compiles a script.  Populates a vector of function literals. Returns true on success, false otherwise (compilation error)."
+    },
+    {
+      "name": "CanPatchScript",
+      "parameters": [
+        "const LiteralMap& changed",
+        "DirectHandle<Script> script",
+        "DirectHandle<Script> new_script",
+        "FunctionDataMap& function_data_map",
+        "bool allow_top_frame_live_editing",
+        "debug::LiveEditResult* result"
+      ],
+      "return_type": "bool",
+      "logic": "Checks if a script can be patched based on the changes, considering factors like active functions, running generators, and whether top-frame live editing is allowed."
+    },
+    {
+      "name": "TranslateSourcePositionTable",
+      "parameters": [
+        "Isolate* isolate",
+        "DirectHandle<BytecodeArray> code",
+        "const std::vector<SourceChangeRange>& diffs"
+      ],
+      "return_type": "void",
+      "logic": "Translates the source position table of a bytecode array based on the source code differences."
+    },
+    {
+      "name": "UpdatePositions",
+      "parameters": [
+        "Isolate* isolate",
+        "DirectHandle<SharedFunctionInfo> sfi",
+        "FunctionLiteral* new_function",
+        "const std::vector<SourceChangeRange>& diffs"
+      ],
+      "return_type": "void",
+      "logic": "Updates the start and end positions of a SharedFunctionInfo and translates its source position table."
+    },
+    {
+      "name": "DetermineOuterScopeInfo",
+      "parameters": [
+        "Isolate* isolate",
+        "DirectHandle<Script> script"
+      ],
+      "return_type": "MaybeDirectHandle<ScopeInfo>",
+      "logic": "Determines the outer scope information for sloppy eval scripts to reuse it when compiling the new version."
+    },
+    {
+      "name": "LiveEdit::PatchScript",
+      "parameters": [
+        "Isolate* isolate",
+        "Handle<Script> script",
+        "Handle<String> new_source",
+        "bool preview",
+        "bool allow_top_frame_live_editing",
+        "debug::LiveEditResult* result"
+      ],
+      "return_type": "void",
+      "logic": "Patches a script with new source code, applying changes and updating function positions. This is the main entry point for the live edit functionality."
+    },
+    {
+      "name": "LiveEdit::CompareStrings",
+      "parameters": [
+        "Isolate* isolate",
+        "Handle<String> s1",
+        "Handle<String> s2",
+        "std::vector<SourceChangeRange>* diffs"
+      ],
+      "return_type": "void",
+      "logic": "Compares two strings and identifies differences, storing the changes in a vector of SourceChangeRange objects."
+    },
+    {
+      "name": "LiveEdit::TranslatePosition",
+      "parameters": [
+        "const std::vector<SourceChangeRange>& diffs",
+        "int position"
+      ],
+      "return_type": "int",
+      "logic": "Translates a source position based on the source code differences (diffs), adjusting for insertions and deletions."
+    }
+  ]
+}
