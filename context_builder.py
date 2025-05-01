@@ -190,7 +190,7 @@ class ContextBuilder:
         return analysis.text
 
 def main():
-    api_key = "AIzaSyAhjHmTzJb8wDy-ty6FyLj-qSU3Tj58JeQ"
+    api_key = "Your-gemini-api-key"
     root_dir = "/home/kathirks_gc/v8/v8/include/cppgc/internal"
     
     builder = ContextBuilder(api_key, root_dir)
