@@ -1,2 +1,29 @@
 // Module declarations for converted snapshot code
 
+pub mod startup-deserializer;
+pub mod object-deserializer;
+pub mod snapshot;
+pub mod snapshot-source-sink;
+pub mod references;
+pub mod serializer;
+pub mod shared-heap-deserializer;
+pub mod snapshot-compression;
+pub mod read-only-serializer-deserializer;
+pub mod mksnapshot;
+pub mod startup-serializer;
+pub mod context-serializer;
+pub mod snapshot-external;
+pub mod shared-heap-serializer;
+pub mod code-serializer;
+pub mod static-roots-gen;
+pub mod deserializer;
+pub mod serializer-inl;
+pub mod snapshot-data;
+pub mod serializer-deserializer;
+pub mod read-only-deserializer;
+pub mod context-deserializer;
+pub mod sort-builtins;
+pub mod roots-serializer;
+pub mod snapshot-utils;
+pub mod read-only-serializer;
+pub mod snapshot-empty;

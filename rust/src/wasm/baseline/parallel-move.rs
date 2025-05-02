@@ -2,449 +2,273 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-pub mod parallel_move {
-    use crate::wasm::baseline::liftoff_assembler::LiftoffAssembler;
-    use crate::wasm::baseline::liftoff_register::LiftoffRegister;
-    use crate::wasm::wasm_value::ValueKind;
-    use bit_set::BitSet;
-    use std::mem::MaybeUninit;
+mod liftoff_assembler; // Assuming this exists and is adjacent
+use liftoff_assembler::*;
 
-    #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-    pub enum RegPairHalf {
-        LowWord,
-        HighWord,
+mod var_state; // Assuming this exists and is adjacent
+use var_state::VarState;
+
+mod liftoff_register;
+use liftoff_register::*;
+
+mod wasm_value;
+use wasm_value::*;
+
+const kInt32Size: usize = 4;
+
+fn value_kind_size(kind: ValueKind) -> usize {
+    match kind {
+        ValueKind::I32 => 4,
+        ValueKind::I64 => 8,
+        ValueKind::F32 => 4,
+        ValueKind::F64 => 8,
+        ValueKind::S128 => 16,
+        ValueKind::Ref => 8, // Assuming Ref is a pointer-sized type
     }
+}
 
-    struct RegisterMove {
-        src: LiftoffRegister,
-        kind: ValueKind,
-    }
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum RegisterLoadKind {
+    kNop,
+    kConstant,
+    kStack,
+    kLowHalfStack,
+    kHighHalfStack,
+}
 
-    impl RegisterMove {
-        const fn new(src: LiftoffRegister, kind: ValueKind) -> Self {
-            RegisterMove { src, kind }
-        }
-    }
+#[derive(Debug)]
+struct RegisterLoad {
+    load_kind: RegisterLoadKind,
+    value: i32, // Or appropriate integer type
+    kind: ValueKind,
+}
 
-    struct RegisterLoad {
-        load_kind: LoadKind,
-        kind: ValueKind,
-        value: i32,
-    }
+struct RegisterMove {
+    src: LiftoffRegister,
+    kind: ValueKind,
+}
 
-    impl RegisterLoad {
-        fn const_val(kind: ValueKind, constant: i32) -> Self {
-            assert!(kind == ValueKind::I32 || kind == ValueKind::I64);
-            RegisterLoad {
-                load_kind: LoadKind::Constant,
-                kind,
-                value: constant,
-            }
-        }
+struct ParallelMove<'a> {
+    asm_: &'a mut LiftoffAssembler,
+    move_dst_regs_: LiftoffRegisterSet,
+    load_dst_regs_: LiftoffRegisterSet,
+    src_reg_use_counts_: std::collections::HashMap<LiftoffRegister, u32>, // Replace LiftoffRegisterMap<uint32_t>
+    register_moves_: std::collections::HashMap<LiftoffRegister, RegisterMove>, // Replace LiftoffRegisterMap<RegisterMove>
+    register_loads_: std::collections::HashMap<LiftoffRegister, RegisterLoad>, // Replace LiftoffRegisterMap<RegisterLoad>
+    last_spill_offset_: i32,
+}
 
-        fn stack(offset: i32, kind: ValueKind) -> Self {
-            RegisterLoad {
-                load_kind: LoadKind::Stack,
-                kind,
-                value: offset,
-            }
-        }
-
-        fn half_stack(offset: i32, half: RegPairHalf) -> Self {
-            RegisterLoad {
-                load_kind: match half {
-                    RegPairHalf::LowWord => LoadKind::LowHalfStack,
-                    RegPairHalf::HighWord => LoadKind::HighHalfStack,
-                },
-                kind: ValueKind::I32,
-                value: offset,
-            }
-        }
-
-        fn nop() -> Self {
-            RegisterLoad {
-                load_kind: LoadKind::Nop,
-                kind: ValueKind::I32, // ValueKind does not matter.
-                value: 0,
-            }
-        }
-
-        fn new(load_kind: LoadKind, kind: ValueKind, value: i32) -> Self {
-            RegisterLoad {
-                load_kind,
-                kind,
-                value,
-            }
+impl<'a> ParallelMove<'a> {
+    pub fn new(asm_: &'a mut LiftoffAssembler) -> Self {
+        ParallelMove {
+            asm_,
+            move_dst_regs_: LiftoffRegisterSet::new(),
+            load_dst_regs_: LiftoffRegisterSet::new(),
+            src_reg_use_counts_: std::collections::HashMap::new(),
+            register_moves_: std::collections::HashMap::new(),
+            register_loads_: std::collections::HashMap::new(),
+            last_spill_offset_: 0,
         }
     }
 
-    #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-    enum LoadKind {
-        Nop,
-        Constant,
-        Stack,
-        LowHalfStack,
-        HighHalfStack,
+    fn src_reg_use_count(&mut self, reg: LiftoffRegister) -> &mut u32 {
+        self.src_reg_use_counts_.entry(reg).or_insert(0)
     }
 
-    const K_AFTER_MAX_LIFTOFF_REG_CODE: usize = 128; // Placeholder value
-                                                      // needs to be replaced with the actual const
-
-    /// `ParallelMove` is a utility class that encodes multiple moves from registers to
-    /// registers (`RegisterMove`), constants to registers (`RegisterLoad` with
-    /// `LoadKind::kConstant`), or stack slots to registers (other
-    /// `RegisterLoad`s).
-    /// It can handle cyclic moves, e.g., swaps between registers.
-    /// The moves are typically prepared/encoded into an instance via the high-level
-    /// entry point `Transfer`, which takes two Wasm value stack configurations
-    /// (`VarState`) as input.
-    /// Code is actually emitted to the underlying `LiftoffAssembler` only at the
-    /// end via `Execute` or implicitly in the destructor.
-    pub struct ParallelMove<'a> {
-        register_moves: [MaybeUninit<RegisterMove>; K_AFTER_MAX_LIFTOFF_REG_CODE],
-        register_loads: [MaybeUninit<RegisterLoad>; K_AFTER_MAX_LIFTOFF_REG_CODE],
-        src_reg_use_count: [i32; K_AFTER_MAX_LIFTOFF_REG_CODE],
-        move_dst_regs: BitSet,
-        load_dst_regs: BitSet,
-        asm: &'a mut LiftoffAssembler,
-        last_spill_offset: i32,
+    fn register_move(&self, dst: LiftoffRegister) -> &RegisterMove {
+        self.register_moves_.get(&dst).expect("RegisterMove not found")
     }
 
-    impl<'a> ParallelMove<'a> {
-        pub fn new(wasm_asm: &'a mut LiftoffAssembler) -> Self {
-            ParallelMove {
-                register_moves: unsafe { MaybeUninit::uninit().assume_init() },
-                register_loads: unsafe { MaybeUninit::uninit().assume_init() },
-                src_reg_use_count: [0; K_AFTER_MAX_LIFTOFF_REG_CODE],
-                move_dst_regs: BitSet::new(),
-                load_dst_regs: BitSet::new(),
-                asm: wasm_asm,
-                last_spill_offset: 0,
-            }
-        }
+    fn register_load(&self, dst: LiftoffRegister) -> &RegisterLoad {
+        self.register_loads_.get(&dst).expect("RegisterLoad not found")
+    }
 
-        /// Executes all pending moves and loads.
-        pub fn execute(&mut self) {
-            // First, execute register moves. Then load constants and stack values into
-            // registers.
-            if !self.move_dst_regs.is_empty() {
-                self.execute_moves();
-            }
-            assert!(self.move_dst_regs.is_empty());
-            if !self.load_dst_regs.is_empty() {
-                self.execute_loads();
-            }
-            assert!(self.load_dst_regs.is_empty());
-            // Tell the compiler that the ParallelMove is empty after this, so it
-            // can eliminate a second {Execute} in the destructor.
-            let all_done = self.move_dst_regs.is_empty() && self.load_dst_regs.is_empty();
-            assert!(all_done);
-        }
-
-        /// Transfers a value from src to dst.
-        pub fn transfer(&mut self, dst: &LiftoffAssembler::VarState, src: &LiftoffAssembler::VarState) {
-            assert!(LiftoffAssembler::compatible_stack_slot_types(dst.kind(), src.kind()));
-            if dst.is_stack() {
-                if src.is_stack() && src.offset() == dst.offset() {
-                   //do nothing, source and destination are the same
-                } else {
-                    self.transfer_to_stack(dst.offset(), src);
+    pub fn transfer_to_stack(&mut self, dst_offset: i32, src: &VarState) {
+        match src.loc() {
+            VarState::Location::Stack => {
+                // Same offsets can happen even if we move values down in the value stack,
+                // because of alignment.
+                if src.offset() == dst_offset {
+                    return;
                 }
-            } else if dst.is_reg() {
-                self.load_into_register(dst.reg(), src);
-            } else {
-                assert!(dst.is_const());
-                assert_eq!(dst.i32_const(), src.i32_const());
-            }
-        }
-
-        fn transfer_to_stack(&mut self, dst_offset: i32, src: &LiftoffAssembler::VarState) {
-            todo!()
-        }
-
-        /// Loads a value from src into register dst.
-        pub fn load_into_register(&mut self, dst: LiftoffRegister, src: &LiftoffAssembler::VarState) {
-            if src.is_reg() {
-                assert_eq!(dst.reg_class(), src.reg_class());
-                if dst != src.reg() {
-                    self.move_register(dst, src.reg(), src.kind());
-                }
-            } else if src.is_stack() {
-                self.load_stack_slot(dst, src.offset(), src.kind());
-            } else {
-                assert!(src.is_const());
-                self.load_constant(dst, src.kind(), src.i32_const());
-            }
-        }
-
-        fn load_i64_half_into_register(
-            &mut self,
-            dst: LiftoffRegister,
-            src: &LiftoffAssembler::VarState,
-            half: RegPairHalf,
-        ) {
-            // Use CHECK such that the remaining code is statically dead if
-            // {kNeedI64RegPair} is false.
-            // CHECK(kNeedI64RegPair);
-            const K_NEED_I64_REG_PAIR: bool = true; // Placeholder value, replace with actual const if applicable.
-            assert!(K_NEED_I64_REG_PAIR);
-            assert_eq!(ValueKind::I64, src.kind());
-
-            match src.loc() {
-                LiftoffAssembler::VarStateLoc::Stack => {
-                    self.load_i64_half_stack_slot(dst, src.offset(), half);
-                }
-                LiftoffAssembler::VarStateLoc::Register => {
-                    let src_half = match half {
-                        RegPairHalf::LowWord => src.reg().low(),
-                        RegPairHalf::HighWord => src.reg().high(),
-                    };
-                    if dst != src_half {
-                        self.move_register(dst, src_half, ValueKind::I32);
+                #[cfg(debug_assertions)]
+                {
+                    // Check that the stack value at `dst_offset` is not used in a pending
+                    // register load.
+                    for reg in self.load_dst_regs_.iter() {
+                        // Assuming that LiftoffRegisterSet can be iterated
+                        if reg.is_pair() { continue; }
+                        if let Some(load) = self.register_loads_.get(&reg) {
+                            if load.load_kind == RegisterLoadKind::kStack ||
+                               load.load_kind == RegisterLoadKind::kLowHalfStack {
+                                // We overwrite the lower half of the stack value for sure.
+                                assert_ne!(load.value, dst_offset);
+                            } else if load.load_kind == RegisterLoadKind::kHighHalfStack &&
+                                       value_kind_size(src.kind()) > kInt32Size {
+                                // We overwrite the full stack slot, but we still need the higher half
+                                // later.
+                                assert_ne!(load.value, dst_offset);
+                            }
+                        }
                     }
                 }
-                LiftoffAssembler::VarStateLoc::IntConst => {
-                    let mut value = src.i32_const();
-                    // The high word is the sign extension of the low word.
-                    if half == RegPairHalf::HighWord {
-                        value = value >> 31;
-                    }
-                    self.load_constant(dst, ValueKind::I32, value);
-                }
+                self.asm_.move_stack_value(dst_offset, src.offset(), src.kind());
+            }
+            VarState::Location::Register => {
+                self.asm_.spill(dst_offset, src.reg(), src.kind());
+            }
+            VarState::Location::IntConst => {
+                self.asm_.spill_const(dst_offset, src.constant());
             }
         }
+    }
 
-        /// Moves the value from register src to register dst.
-        fn move_register(&mut self, dst: LiftoffRegister, src: LiftoffRegister, kind: ValueKind) {
-            assert_ne!(dst, src);
-            assert_eq!(dst.reg_class(), src.reg_class());
-            assert_eq!(
-                LiftoffAssembler::reg_class_for(kind),
-                src.reg_class()
-            );
-
-            if src.is_gp_pair() {
-                assert_eq!(ValueKind::I64, kind);
-                if dst.low() != src.low() {
-                    self.move_register(dst.low(), src.low(), ValueKind::I32);
-                }
-                if dst.high() != src.high() {
-                    self.move_register(dst.high(), src.high(), ValueKind::I32);
-                }
-                return;
+    pub fn execute_moves(&mut self) {
+        // Execute all moves whose {dst} is not being used as src in another move.
+        // If any src count drops to zero, also (transitively) execute the
+        // corresponding move to that register.
+        let mut dsts_to_remove = Vec::new();
+        for dst in self.move_dst_regs_.iter() {
+            // Check if already handled via transitivity in {ClearExecutedMove}.
+            if !self.move_dst_regs_.has(dst) {
+                continue;
             }
-
-            if src.is_fp_pair() {
-                assert_eq!(ValueKind::S128, kind);
-                if dst.low() != src.low() {
-                    self.move_register(dst.low(), src.low(), ValueKind::F64);
-                    self.move_register(dst.high(), src.high(), ValueKind::F64);
-                }
-                return;
+            if *self.src_reg_use_count(dst) > 0 {
+                continue;
             }
-
-            if self.move_dst_regs.contains(dst.liftoff_code() as usize) {
-                assert_eq!(self.register_move(dst).src, src);
-                // Check for compatible value kinds.
-                // - references can occur with mixed kRef / kRefNull kinds.
-                // - FP registers can only occur with f32 / f64 / s128 kinds (mixed kinds
-                //   only if they hold the initial zero value).
-                // - others must match exactly.
-                assert_eq!(
-                    LiftoffAssembler::is_object_reference(self.register_move(dst).kind),
-                    LiftoffAssembler::is_object_reference(kind)
-                );
-                assert_eq!(
-                    dst.is_fp(),
-                    self.register_move(dst).kind == ValueKind::F32
-                        || self.register_move(dst).kind == ValueKind::F64
-                        || self.register_move(dst).kind == ValueKind::S128
-                );
-                if !LiftoffAssembler::is_object_reference(kind) && !dst.is_fp() {
-                    assert_eq!(self.register_move(dst).kind, kind);
-                }
-                // Potentially upgrade an existing `kF32` move to a `kF64` move.
-                if kind == ValueKind::F64 {
-                    self.register_move_mut(dst).kind = ValueKind::F64;
-                }
-                return;
-            }
-
-            self.move_dst_regs.insert(dst.liftoff_code() as usize);
-            *self.src_reg_use_count_mut(src) += 1;
-            *self.register_move_mut(dst) = RegisterMove::new(src, kind);
+            self.execute_move(dst);
+            dsts_to_remove.push(dst); //Avoid mutating while iterating
+        }
+        for dst in dsts_to_remove {
+            self.move_dst_regs_.remove(dst);
         }
 
-        /// Loads a constant value into register dst.
-        fn load_constant(&mut self, dst: LiftoffRegister, kind: ValueKind, constant: i32) {
-            assert!(!self.load_dst_regs.contains(dst.liftoff_code() as usize));
-            self.load_dst_regs.insert(dst.liftoff_code() as usize);
-
-            if dst.is_gp_pair() {
-                assert_eq!(ValueKind::I64, kind);
-                *self.register_load_mut(dst.low()) = RegisterLoad::const_val(ValueKind::I32, constant);
-                // The high word is either 0 or 0xffffffff.
-                *self.register_load_mut(dst.high()) = RegisterLoad::const_val(ValueKind::I32, constant >> 31);
-            } else {
-                *self.register_load_mut(dst) = RegisterLoad::const_val(kind, constant);
-            }
-        }
-
-        /// Loads a value from a stack slot into register dst.
-        fn load_stack_slot(&mut self, dst: LiftoffRegister, stack_offset: i32, kind: ValueKind) {
-            assert!(stack_offset > 0);
-            if self.load_dst_regs.contains(dst.liftoff_code() as usize) {
-                // It can happen that we spilled the same register to different stack
-                // slots, and then we reload them later into the same dst register.
-                // In that case, it is enough to load one of the stack slots.
-                return;
-            }
-            self.load_dst_regs.insert(dst.liftoff_code() as usize);
-            // Make sure that we only spill to positions after this stack offset to
-            // avoid overwriting the content.
-            if stack_offset > self.last_spill_offset {
-                self.last_spill_offset = stack_offset;
-            }
-            if dst.is_gp_pair() {
-                assert_eq!(ValueKind::I64, kind);
-                *self.register_load_mut(dst.low()) =
-                    RegisterLoad::half_stack(stack_offset, RegPairHalf::LowWord);
-                *self.register_load_mut(dst.high()) =
-                    RegisterLoad::half_stack(stack_offset, RegPairHalf::HighWord);
-            } else if dst.is_fp_pair() {
-                assert_eq!(ValueKind::S128, kind);
-                // Only need register_load for low_gp since we load 128 bits at one go.
-                // Both low and high need to be set in load_dst_regs_ but when iterating
-                // over it, both low and high will be cleared, so we won't load twice.
-                *self.register_load_mut(dst.low()) = RegisterLoad::stack(stack_offset, kind);
-                *self.register_load_mut(dst.high()) = RegisterLoad::nop();
-            } else {
-                *self.register_load_mut(dst) = RegisterLoad::stack(stack_offset, kind);
-            }
-        }
-
-        fn load_i64_half_stack_slot(&mut self, dst: LiftoffRegister, offset: i32, half: RegPairHalf) {
-            if self.load_dst_regs.contains(dst.liftoff_code() as usize) {
-                // It can happen that we spilled the same register to different stack
-                // slots, and then we reload them later into the same dst register.
-                // In that case, it is enough to load one of the stack slots.
-                return;
-            }
-            self.load_dst_regs.insert(dst.liftoff_code() as usize);
-            *self.register_load_mut(dst) = RegisterLoad::half_stack(offset, half);
-        }
-
-        fn register_move(&self, reg: LiftoffRegister) -> &RegisterMove {
-            unsafe {
-                self.register_moves[reg.liftoff_code() as usize]
-                    .assume_init_ref()
-            }
-        }
-
-        fn register_move_mut(&mut self, reg: LiftoffRegister) -> &mut RegisterMove {
-            unsafe {
-                self.register_moves[reg.liftoff_code() as usize]
-                    .assume_init_mut()
-            }
-        }
-
-        fn register_load(&self, reg: LiftoffRegister) -> &RegisterLoad {
-            unsafe {
-                self.register_loads[reg.liftoff_code() as usize]
-                    .assume_init_ref()
-            }
-        }
-
-        fn register_load_mut(&mut self, reg: LiftoffRegister) -> &mut RegisterLoad {
-            unsafe {
-                self.register_loads[reg.liftoff_code() as usize]
-                    .assume_init_mut()
-            }
-        }
-
-        fn src_reg_use_count(&self, reg: LiftoffRegister) -> &i32 {
-            &self.src_reg_use_count[reg.liftoff_code() as usize]
-        }
-
-        fn src_reg_use_count_mut(&mut self, reg: LiftoffRegister) -> &mut i32 {
-            &mut self.src_reg_use_count[reg.liftoff_code() as usize]
-        }
-
-        fn execute_move(&mut self, dst: LiftoffRegister) {
-            let move_data = self.register_move(dst);
-            assert_eq!(0, *self.src_reg_use_count(dst));
-            self.asm.move_val(dst, move_data.src, move_data.kind);
+        // All remaining moves are parts of a cycle. Just spill the first one, then
+        // process all remaining moves in that cycle. Repeat for all cycles.
+        while !self.move_dst_regs_.is_empty() {
+            // TODO(clemensb): Use an unused register if available.
+            let dst = self.move_dst_regs_.get_first_reg_set();
+            let move_ = self.register_move(dst);
+            self.last_spill_offset_ += LiftoffAssembler::slot_size_for_type(move_.kind);
+            let spill_reg = move_.src;
+            self.asm_.spill(self.last_spill_offset_, spill_reg, move_.kind);
+            // Remember to reload into the destination register later.
+            self.load_stack_slot(dst, self.last_spill_offset_, move_.kind);
             self.clear_executed_move(dst);
         }
+    }
 
-        fn clear_executed_move(&mut self, dst: LiftoffRegister) {
-            assert!(self.move_dst_regs.contains(dst.liftoff_code() as usize));
-            self.move_dst_regs.remove(dst.liftoff_code() as usize);
-            let move_data = self.register_move(dst);
-            assert!(0 < *self.src_reg_use_count(move_data.src));
-            *self.src_reg_use_count_mut(move_data.src) -= 1;
-            if *self.src_reg_use_count(move_data.src) > 0 {
-                return;
-            }
+    fn execute_move(&mut self, dst: LiftoffRegister) {
+        let move_ = self.register_moves_.remove(&dst).expect("Register move missing");
+        self.asm_.move_reg(dst, move_.src, move_.kind);
+        self.clear_executed_move(dst);
+    }
 
-            // src count dropped to zero. If this is a destination register, execute
-            // that move now.
-            if !self.move_dst_regs.contains(move_data.src.liftoff_code() as usize) {
-                return;
-            }
-            self.execute_move(move_data.src);
-        }
-
-        #[inline(never)]
-        fn execute_moves(&mut self) {
-            // This is a placeholder implementation.  The original C++ code has
-            // V8_NOINLINE and V8_PRESERVE_MOST attributes which are hints to the
-            // compiler about inlining and code preservation. The Rust equivalent
-            // may require specific attributes depending on the target compiler and optimization
-            // goals.
-            let mut dst_regs: Vec<LiftoffRegister> = self.move_dst_regs.iter().map(|i| LiftoffRegister::from_code(i as i32)).collect();
-            for &dst in &dst_regs {
-                if self.move_dst_regs.contains(dst.liftoff_code() as usize) {
-                    self.execute_move(dst);
-                }
-            }
-        }
-
-        #[inline(never)]
-        fn execute_loads(&mut self) {
-           // This is a placeholder implementation.  The original C++ code has
-            // V8_NOINLINE and V8_PRESERVE_MOST attributes which are hints to the
-            // compiler about inlining and code preservation. The Rust equivalent
-            // may require specific attributes depending on the target compiler and optimization
-            // goals.
-            let mut dst_regs: Vec<LiftoffRegister> = self.load_dst_regs.iter().map(|i| LiftoffRegister::from_code(i as i32)).collect();
-            for &dst in &dst_regs {
-                if self.load_dst_regs.contains(dst.liftoff_code() as usize) {
-                    let load = self.register_load(dst);
-                    match load.load_kind {
-                        LoadKind::Constant => {
-                            self.asm.load_constant(dst, load.kind, load.value);
-                        }
-                        LoadKind::Stack => {
-                            self.asm.load_stack_slot(dst, load.value, load.kind);
-                        }
-                        LoadKind::LowHalfStack => {
-                            self.asm.load_i64_half_stack_slot(dst, load.value, RegPairHalf::LowWord);
-                        }
-                        LoadKind::HighHalfStack => {
-                            self.asm.load_i64_half_stack_slot(dst, load.value, RegPairHalf::HighWord);
-                        }
-                        LoadKind::Nop => {}
-                    }
-                    self.load_dst_regs.remove(dst.liftoff_code() as usize);
-                }
-            }
+    fn clear_executed_move(&mut self, dst: LiftoffRegister) {
+        if let Some(move_) = self.register_moves_.get(&dst) {
+            let src = move_.src;
+            let count = self.src_reg_use_counts_.get_mut(&src).expect("Src use count missing");
+            *count -= 1;
         }
     }
 
-    impl<'a> Drop for ParallelMove<'a> {
-        fn drop(&mut self) {
-            self.execute();
+    fn load_stack_slot(&mut self, dst: LiftoffRegister, offset: i32, kind: ValueKind) {
+        self.load_dst_regs_.insert(dst);
+        self.register_loads_.insert(dst, RegisterLoad {
+            load_kind: RegisterLoadKind::kStack,
+            value: offset,
+            kind,
+        });
+    }
+
+    pub fn execute_loads(&mut self) {
+        let dsts_to_remove: Vec<LiftoffRegister> = self.load_dst_regs_.iter().collect();
+        for dst in dsts_to_remove {
+            if let Some(load) = self.register_loads_.get(&dst) {
+                match load.load_kind {
+                    RegisterLoadKind::kNop => {}
+                    RegisterLoadKind::kConstant => {
+                        self.asm_.load_constant(dst, if load.kind == ValueKind::I64 {
+                            WasmValue::I64(load.value as i64)
+                        } else {
+                            WasmValue::I32(load.value)
+                        });
+                    }
+                    RegisterLoadKind::kStack => {
+                        if kNeedS128RegPair && load.kind == ValueKind::S128 {
+                            let fp_pair = LiftoffRegister::for_fp_pair(dst.fp());
+                            self.asm_.fill(fp_pair, load.value, load.kind);
+                        } else {
+                            self.asm_.fill(dst, load.value, load.kind);
+                        }
+                    }
+                    RegisterLoadKind::kLowHalfStack => {
+                        // Half of a register pair, {dst} must be a gp register.
+                        self.asm_.fill_i64_half(dst.gp(), load.value, Half::LowWord);
+                    }
+                    RegisterLoadKind::kHighHalfStack => {
+                        // Half of a register pair, {dst} must be a gp register.
+                        self.asm_.fill_i64_half(dst.gp(), load.value, Half::HighWord);
+                    }
+                }
+            }
+            self.register_loads_.remove(&dst);
         }
+        self.load_dst_regs_ = LiftoffRegisterSet::new();
+    }
+
+    pub fn queue_move(&mut self, dst: LiftoffRegister, src: LiftoffRegister, kind: ValueKind) {
+        if dst == src {
+            return;
+        }
+        if !self.move_dst_regs_.has(dst) {
+            self.move_dst_regs_.insert(dst);
+        }
+        self.register_moves_.insert(dst, RegisterMove { src, kind });
+        *self.src_reg_use_count(src) += 1;
+    }
+
+    pub fn queue_load_const(&mut self, dst: LiftoffRegister, value: i32, kind: ValueKind) {
+        if !self.load_dst_regs_.has(dst) {
+            self.load_dst_regs_.insert(dst);
+        }
+        self.register_loads_.insert(dst, RegisterLoad {
+            load_kind: RegisterLoadKind::kConstant,
+            value,
+            kind,
+        });
+    }
+
+    pub fn queue_load_stack(&mut self, dst: LiftoffRegister, offset: i32, kind: ValueKind) {
+        if !self.load_dst_regs_.has(dst) {
+            self.load_dst_regs_.insert(dst);
+        }
+        self.register_loads_.insert(dst, RegisterLoad {
+            load_kind: RegisterLoadKind::kStack,
+            value: offset,
+            kind,
+        });
+    }
+
+    pub fn queue_load_low_half_stack(&mut self, dst: LiftoffRegister, offset: i32) {
+        if !self.load_dst_regs_.has(dst) {
+            self.load_dst_regs_.insert(dst);
+        }
+        self.register_loads_.insert(dst, RegisterLoad {
+            load_kind: RegisterLoadKind::kLowHalfStack,
+            value: offset,
+            kind: ValueKind::I64, // Assuming I64 for halves
+        });
+    }
+
+    pub fn queue_load_high_half_stack(&mut self, dst: LiftoffRegister, offset: i32) {
+        if !self.load_dst_regs_.has(dst) {
+            self.load_dst_regs_.insert(dst);
+        }
+        self.register_loads_.insert(dst, RegisterLoad {
+            load_kind: RegisterLoadKind::kHighHalfStack,
+            value: offset,
+            kind: ValueKind::I64, // Assuming I64 for halves
+        });
     }
 }

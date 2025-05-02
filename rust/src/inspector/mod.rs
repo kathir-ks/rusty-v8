@@ -1,2 +1,32 @@
 // Module declarations for converted inspector code
 
+pub mod v8-console-agent-impl;
+pub mod v8-inspector-impl;
+pub mod v8-console;
+pub mod injected-script;
+pub mod crc32;
+pub mod v8-deep-serializer;
+pub mod string-util;
+pub mod string-16;
+pub mod v8-regex;
+pub mod v8-serialization-duplicate-tracker;
+pub mod v8-value-utils;
+pub mod v8-heap-profiler-agent-impl;
+pub mod v8-debugger-barrier;
+pub mod v8-console-message;
+pub mod test-interface;
+pub mod remote-object-id;
+pub mod v8-debugger;
+pub mod v8-debugger-script;
+pub mod search-util;
+pub mod value-mirror;
+pub mod v8-stack-trace-impl;
+pub mod inspected-context;
+pub mod v8-debugger-agent-impl;
+pub mod v8-debugger-id;
+pub mod v8-inspector-session-impl;
+pub mod v8-profiler-agent-impl;
+pub mod v8-runtime-agent-impl;
+pub mod custom-preview;
+pub mod v8-string-conversions;
+pub mod v8-schema-agent-impl;
