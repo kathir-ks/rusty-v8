@@ -41,7 +41,7 @@ pub mod d8 {
             self.name_[..len].copy_from_slice(&name_bytes[..len]);
             self.name_[len] = 0;
             self.is_histogram_ = histogram;
-        }
+        }z
 
         pub fn ptr(&self) -> *const AtomicI32 {
             &self.count_

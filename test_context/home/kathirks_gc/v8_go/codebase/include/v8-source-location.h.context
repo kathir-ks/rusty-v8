@@ -1,0 +1,203 @@
+{
+  "metadata": {
+    "path": "/home/kathirks_gc/v8_go/codebase/include/v8-source-location.h",
+    "file_name": "v8-source-location.h",
+    "language": "cpp",
+    "purpose": "Defines the SourceLocation class, which encapsulates source code location information (file, function, line number)."
+  },
+  "imports": {
+    "metadata": {
+      "language": "cpp",
+      "purpose": "Includes standard library headers for size definitions, string manipulation, and V8 configuration."
+    },
+    "code": "#include <cstddef>\n            #include <string>\n\n            #include \"v8config.h\"  // NOLINT(build/include_directory)"
+  },
+  "classes": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "SourceLocation",
+        "extends": null,
+        "implements": [],
+        "about": "Encapsulates source location information (function name, file name, line number), mimicking C++20's std::source_location.",
+        "attributes": [
+          {
+            "name": "function_",
+            "type": "const char*",
+            "access": "private",
+            "purpose": "Stores the name of the function."
+          },
+          {
+            "name": "file_",
+            "type": "const char*",
+            "access": "private",
+            "purpose": "Stores the name of the source file."
+          },
+          {
+            "name": "line_",
+            "type": "size_t",
+            "access": "private",
+            "purpose": "Stores the line number."
+          }
+        ],
+        "dependencies": []
+      },
+      "code": "class V8_EXPORT SourceLocation final {\n            public:\n            /**\n             * Construct source location information corresponding to the location of the\n             * call site.\n             */\n            #if V8_SUPPORTS_SOURCE_LOCATION\n            static constexpr SourceLocation Current(\n                const char* function = __builtin_FUNCTION(),\n                const char* file = __builtin_FILE(), size_t line = __builtin_LINE()) {\n                return SourceLocation(function, file, line);\n            }\n            #else\n            static constexpr SourceLocation Current() { return SourceLocation(); }\n            #endif  // V8_SUPPORTS_SOURCE_LOCATION\n\n            /**\n             * Constructs unspecified source location information.\n             */\n            constexpr SourceLocation() = default;\n\n            /**\n             * Returns the name of the function associated with the position represented\n             * by this object, if any.\n             *\n             * \\returns the function name as cstring.\n             */\n            constexpr const char* Function() const { return function_; }\n\n            /**\n             * Returns the name of the current source file represented by this object.\n             *\n             * \\returns the file name as cstring.\n             */\n            constexpr const char* FileName() const { return file_; }\n\n            /**\n             * Returns the line number represented by this object.\n             *\n             * \\returns the line number.\n             */\n            constexpr size_t Line() const { return line_; }\n\n            /**\n             * Returns a human-readable string representing this object.\n             *\n             * \\returns a human-readable string representing source location information.\n             */\n            std::string ToString() const {\n                if (!file_) {\n                return {};\n                }\n                return std::string(function_) + \"@\" + file_ + \":\" + std::to_string(line_);\n            }\n\n            private:\n            constexpr SourceLocation(const char* function, const char* file, size_t line)\n                : function_(function), file_(file), line_(line) {}\n\n            const char* function_ = nullptr;\n            const char* file_ = nullptr;\n            size_t line_ = 0u;\n            };"
+    }
+  ],
+  "functions": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "method",
+        "name": "Current",
+        "parent": "SourceLocation",
+        "about": "Static method to construct a SourceLocation object representing the current location in the code.",
+        "logic": "Uses compiler built-ins (__builtin_FUNCTION, __builtin_FILE, __builtin_LINE) when available to capture the current function, file, and line. If built-ins are not supported, it returns a default-constructed SourceLocation.",
+        "parameters": [
+          {
+            "name": "function",
+            "type": "const char*",
+            "purpose": "The name of the function (defaults to __builtin_FUNCTION())."
+          },
+          {
+            "name": "file",
+            "type": "const char*",
+            "purpose": "The name of the file (defaults to __builtin_FILE())."
+          },
+          {
+            "name": "line",
+            "type": "size_t",
+            "purpose": "The line number (defaults to __builtin_LINE())."
+          }
+        ],
+        "return": {
+          "type": "SourceLocation",
+          "description": "A SourceLocation object representing the current location."
+        },
+        "dependencies": []
+      },
+      "code": "#if V8_SUPPORTS_SOURCE_LOCATION\n            static constexpr SourceLocation Current(\n                const char* function = __builtin_FUNCTION(),\n                const char* file = __builtin_FILE(), size_t line = __builtin_LINE()) {\n                return SourceLocation(function, file, line);\n            }\n            #else\n            static constexpr SourceLocation Current() { return SourceLocation(); }\n            #endif  // V8_SUPPORTS_SOURCE_LOCATION"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "method",
+        "name": "SourceLocation",
+        "parent": "SourceLocation",
+        "about": "Default constructor for the SourceLocation class.",
+        "logic": "Uses the default initialization for member variables, setting function_ and file_ to nullptr and line_ to 0.",
+        "parameters": [],
+        "return": {
+          "type": "SourceLocation",
+          "description": "A default-constructed SourceLocation object."
+        },
+        "dependencies": []
+      },
+      "code": "constexpr SourceLocation() = default;"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "method",
+        "name": "Function",
+        "parent": "SourceLocation",
+        "about": "Returns the name of the function associated with the SourceLocation.",
+        "logic": "Returns the value of the function_ member variable.",
+        "parameters": [],
+        "return": {
+          "type": "const char*",
+          "description": "The name of the function as a C-style string."
+        },
+        "dependencies": []
+      },
+      "code": "constexpr const char* Function() const { return function_; }"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "method",
+        "name": "FileName",
+        "parent": "SourceLocation",
+        "about": "Returns the name of the file associated with the SourceLocation.",
+        "logic": "Returns the value of the file_ member variable.",
+        "parameters": [],
+        "return": {
+          "type": "const char*",
+          "description": "The name of the file as a C-style string."
+        },
+        "dependencies": []
+      },
+      "code": "constexpr const char* FileName() const { return file_; }"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "method",
+        "name": "Line",
+        "parent": "SourceLocation",
+        "about": "Returns the line number associated with the SourceLocation.",
+        "logic": "Returns the value of the line_ member variable.",
+        "parameters": [],
+        "return": {
+          "type": "size_t",
+          "description": "The line number."
+        },
+        "dependencies": []
+      },
+      "code": "constexpr size_t Line() const { return line_; }"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "method",
+        "name": "ToString",
+        "parent": "SourceLocation",
+        "about": "Returns a human-readable string representation of the SourceLocation.",
+        "logic": "Concatenates the function name, file name, and line number into a string of the form 'function@file:line'. Returns an empty string if the file_ is null.",
+        "parameters": [],
+        "return": {
+          "type": "std::string",
+          "description": "A string representation of the SourceLocation."
+        },
+        "dependencies": []
+      },
+      "code": "std::string ToString() const {\n                if (!file_) {\n                return {};\n                }\n                return std::string(function_) + \"@\" + file_ + \":\" + std::to_string(line_);\n            }"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "method",
+        "name": "SourceLocation",
+        "parent": "SourceLocation",
+        "about": "Private constructor for the SourceLocation class.",
+        "logic": "Initializes the member variables function_, file_, and line_ with the provided arguments.",
+        "parameters": [
+          {
+            "name": "function",
+            "type": "const char*",
+            "purpose": "The function name."
+          },
+          {
+            "name": "file",
+            "type": "const char*",
+            "purpose": "The file name."
+          },
+          {
+            "name": "line",
+            "type": "size_t",
+            "purpose": "The line number."
+          }
+        ],
+        "return": {
+          "type": "SourceLocation",
+          "description": "A SourceLocation object."
+        },
+        "dependencies": []
+      },
+      "code": "constexpr SourceLocation(const char* function, const char* file, size_t line)\n                : function_(function), file_(file), line_(line) {}"
+    }
+  ],
+  "file_path": "/home/kathirks_gc/v8_go/codebase/include/v8-source-location.h"
+}

@@ -1,0 +1,99 @@
+{
+  "metadata": {
+    "path": "/home/kathirks_gc/v8_go/codebase/include/v8-date.h",
+    "file_name": "v8-date.h",
+    "language": "cpp",
+    "purpose": "Declares the v8::Date class, which represents JavaScript Date objects."
+  },
+  "imports": {
+    "metadata": {
+      "language": "cpp",
+      "purpose": "Include necessary V8 headers for local handles, objects, and configuration."
+    },
+    "code": "#include \"v8-local-handle.h\"  // NOLINT(build/include_directory)\n#include \"v8-object.h\"        // NOLINT(build/include_directory)\n#include \"v8config.h\"         // NOLINT(build/include_directory)"
+  },
+  "classes": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "Date",
+        "extends": "Object",
+        "about": "Represents a JavaScript Date object (ECMA-262, 15.9).",
+        "attributes": [],
+        "dependencies": [
+          "Object",
+          "Context",
+          "Local",
+          "Value",
+          "String",
+          "MaybeLocal"
+        ]
+      },
+      "code": "class V8_EXPORT Date : public Object {\n public:\n  static V8_WARN_UNUSED_RESULT MaybeLocal<Value> New(Local<Context> context,\n                                                     double time);\n\n  static V8_WARN_UNUSED_RESULT MaybeLocal<Value> Parse(\n      Local<Context> context,\n      Local<String> date_string);\n\n  /**\n   * A specialization of Value::NumberValue that is more efficient\n   * because we know the structure of this object.\n   */\n  double ValueOf() const;\n\n  /**\n   * Generates ISO string representation.\n   */\n  v8::Local<v8::String> ToISOString() const;\n\n  /**\n   * Generates UTC string representation.\n   */\n  v8::Local<v8::String> ToUTCString() const;\n\n  V8_INLINE static Date* Cast(Value* value) {\n#ifdef V8_ENABLE_CHECKS\n    CheckCast(value);\n#endif\n    return static_cast<Date*>(value);\n  }\n\n private:\n  static void CheckCast(Value* obj);\n};"
+    }
+  ],
+  "dependencies": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "Object",
+        "about": "Base class for all JavaScript objects."
+      },
+      "code": "class Object {};",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "Context",
+        "about": "Represents a JavaScript execution context."
+      },
+      "code": "class Context {};",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "template class",
+        "name": "Local",
+        "about": "Represents a local handle to a V8 object."
+      },
+      "code": "template <typename T> class Local {};",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "Value",
+        "about": "Base class for all JavaScript values."
+      },
+      "code": "class Value {};",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "String",
+        "about": "Represents a JavaScript string."
+      },
+      "code": "class String {};",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "template class",
+        "name": "MaybeLocal",
+        "about": "Represents an optional local handle to a V8 object."
+      },
+      "code": "template <typename T> class MaybeLocal {};",
+      "type": "class"
+    }
+  ],
+  "file_path": "/home/kathirks_gc/v8_go/codebase/include/v8-date.h"
+}

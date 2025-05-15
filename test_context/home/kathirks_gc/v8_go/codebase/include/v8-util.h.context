@@ -1,0 +1,131 @@
+{
+  "metadata": {
+    "path": "/home/kathirks_gc/v8_go/codebase/include/v8-util.h",
+    "file_name": "v8-util.h",
+    "language": "cpp",
+    "purpose": "Provides utility classes and templates for managing Persistent and Global handles in V8, particularly for pre-C++11 environments where STL containers cannot directly hold Global values.",
+    "note": "This file includes a variety of template classes related to managing persistent handles, with special consideration for weak references and pre-C++11 compatibility. Pay special attention to the use of PersistentContainerValue and the various Traits classes that customize the behavior of the maps."
+  },
+  "imports": {
+    "metadata": {
+      "language": "cpp",
+      "purpose": "Includes standard library headers and V8-specific headers required for the utility classes."
+    },
+    "code": "#include <assert.h>\n\n            #include <map>\n            #include <vector>\n\n            #include \"v8-function-callback.h\"  // NOLINT(build/include_directory)\n            #include \"v8-persistent-handle.h\"  // NOLINT(build/include_directory)"
+  },
+  "classes": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "GlobalValueMap",
+        "about": "Forward declaration of the GlobalValueMap class template.",
+        "dependencies": []
+      },
+      "code": "template <typename K, typename V, typename Traits>\n            class GlobalValueMap;"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "StdMapTraits",
+        "about": "A trait class that provides a default implementation for using std::map as the underlying storage for PersistentValueMap. It defines the necessary types and static methods to interact with the map.",
+        "dependencies": []
+      },
+      "code": "template<typename K, typename V>\n            class StdMapTraits {\n             public:\n              // STL map & related:\n              typedef std::map<K, PersistentContainerValue> Impl;\n              typedef typename Impl::iterator Iterator;\n\n              static bool Empty(Impl* impl) { return impl->empty(); }\n              static size_t Size(Impl* impl) { return impl->size(); }\n              static void Swap(Impl& a, Impl& b) { std::swap(a, b); }\n              static Iterator Begin(Impl* impl) { return impl->begin(); }\n              static Iterator End(Impl* impl) { return impl->end(); }\n              static K Key(Iterator it) { return it->first; }\n              static PersistentContainerValue Value(Iterator it) { return it->second; }\n              static PersistentContainerValue Set(Impl* impl, K key,\n                  PersistentContainerValue value) {\n                std::pair<Iterator, bool> res = impl->insert(std::make_pair(key, value));\n                PersistentContainerValue old_value = kPersistentContainerNotFound;\n                if (!res.second) {\n                  old_value = res.first->second;\n                  res.first->second = value;\n                }\n                return old_value;\n              }\n              static PersistentContainerValue Get(Impl* impl, K key) {\n                Iterator it = impl->find(key);\n                if (it == impl->end()) return kPersistentContainerNotFound;\n                return it->second;\n              }\n              static PersistentContainerValue Remove(Impl* impl, K key) {\n                Iterator it = impl->find(key);\n                if (it == impl->end()) return kPersistentContainerNotFound;\n                PersistentContainerValue value = it->second;\n                impl->erase(it);\n                return value;\n              }\n            };"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "DefaultPersistentValueMapTraits",
+        "extends": "StdMapTraits",
+        "about": "A trait class that inherits from StdMapTraits and provides a default implementation for PersistentValueMap with non-weak persistent objects and no special disposal handling.",
+        "dependencies": [
+          "StdMapTraits",
+          "PersistentValueMap"
+        ]
+      },
+      "code": "template<typename K, typename V>\n            class DefaultPersistentValueMapTraits : public StdMapTraits<K, V> {\n             public:\n              // Weak callback & friends:\n              static const PersistentContainerCallbackType kCallbackType = kNotWeak;\n              typedef PersistentValueMap<K, V, DefaultPersistentValueMapTraits<K, V> >\n                  MapType;\n              typedef void WeakCallbackDataType;\n\n              static WeakCallbackDataType* WeakCallbackParameter(\n                  MapType* map, const K& key, Local<V> value) {\n                return nullptr;\n              }\n              static MapType* MapFromWeakCallbackInfo(\n                  const WeakCallbackInfo<WeakCallbackDataType>& data) {\n                return nullptr;\n              }\n              static K KeyFromWeakCallbackInfo(\n                  const WeakCallbackInfo<WeakCallbackDataType>& data) {\n                return K();\n              }\n              static void DisposeCallbackData(WeakCallbackDataType* data) { }\n              static void Dispose(Isolate* isolate, Global<V> value, K key) {}\n            };"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "DefaultGlobalMapTraits",
+        "extends": "StdMapTraits",
+        "about": "A trait class that inherits from StdMapTraits and provides a default implementation for GlobalValueMap. Globals are held non-weak.",
+        "dependencies": [
+          "StdMapTraits",
+          "GlobalValueMap"
+        ]
+      },
+      "code": "template <typename K, typename V>\n            class DefaultGlobalMapTraits : public StdMapTraits<K, V> {\n             private:\n              template <typename T>\n              struct RemovePointer;\n\n             public:\n              // Weak callback & friends:\n              static const PersistentContainerCallbackType kCallbackType = kNotWeak;\n              typedef GlobalValueMap<K, V, DefaultGlobalMapTraits<K, V> > MapType;\n              typedef void WeakCallbackDataType;\n\n              static WeakCallbackDataType* WeakCallbackParameter(MapType* map, const K& key,\n                                                                 Local<V> value) {\n                return nullptr;\n              }\n              static MapType* MapFromWeakCallbackInfo(\n                  const WeakCallbackInfo<WeakCallbackDataType>& data) {\n                return nullptr;\n              }\n              static K KeyFromWeakCallbackInfo(\n                  const WeakCallbackInfo<WeakCallbackDataType>& data) {\n                return K();\n              }\n              static void DisposeCallbackData(WeakCallbackDataType* data) {}\n              static void OnWeakCallback(\n                  const WeakCallbackInfo<WeakCallbackDataType>& data) {}\n              static void Dispose(Isolate* isolate, Global<V> value, K key) {}\n              // This is a second pass callback, so SetSecondPassCallback cannot be called.\n              static void DisposeWeak(const WeakCallbackInfo<WeakCallbackDataType>& data) {}\n\n             private:\n              template <typename T>\n              struct RemovePointer<T*> {\n                typedef T Type;\n              };\n            };"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "PersistentValueMapBase",
+        "about": "A base class for map wrappers that allow using Global handles as mapped values. It relies on a Traits class to provide the backing map implementation.",
+        "dependencies": []
+      },
+      "code": "template <typename K, typename V, typename Traits>\n            class PersistentValueMapBase {\n             public:\n              Isolate* GetIsolate() { return isolate_; }\n\n              /**\n               * Return size of the map.\n               */\n              size_t Size() { return Traits::Size(&impl_); }\n\n              /**\n               * Return whether the map holds weak persistents.\n               */\n              bool IsWeak() { return Traits::kCallbackType != kNotWeak; }\n\n              /**\n               * Get value stored in map.\n               */\n              Local<V> Get(const K& key) {\n                V* p = FromVal(Traits::Get(&impl_, key));\n            #ifdef V8_ENABLE_DIRECT_HANDLE\n                if (p == nullptr) return Local<V>();\n            #endif\n                return Local<V>::New(isolate_, p);\n              }\n\n              /**\n               * Check whether a value is contained in the map.\n               */\n              bool Contains(const K& key) {\n                return Traits::Get(&impl_, key) != kPersistentContainerNotFound;\n              }\n\n              /**\n               * Get value stored in map and set it in returnValue.\n               * Return true if a value was found.\n               */\n              bool SetReturnValue(const K& key,\n                  ReturnValue<Value> returnValue) {\n                return SetReturnValueFromVal(&returnValue, Traits::Get(&impl_, key));\n              }\n\n              /**\n               * Return value for key and remove it from the map.\n               */\n              Global<V> Remove(const K& key) {\n                return Release(Traits::Remove(&impl_, key)).Pass();\n              }\n\n              /**\n              * Traverses the map repeatedly,\n              * in case side effects of disposal cause insertions.\n              **/\n              void Clear() {\n                typedef typename Traits::Iterator It;\n                HandleScope handle_scope(isolate_);\n                // TODO(dcarney): figure out if this swap and loop is necessary.\n                while (!Traits::Empty(&impl_)) {\n                  typename Traits::Impl impl;\n                  Traits::Swap(impl_, impl);\n                  for (It i = Traits::Begin(&impl); i != Traits::End(&impl); ++i) {\n                    Traits::Dispose(isolate_, Release(Traits::Value(i)).Pass(),\n                                    Traits::Key(i));\n                  }\n                }\n              }\n\n              /**\n               * Helper class for GetReference/SetWithReference. Do not use outside\n               * that context.\n               */\n              class PersistentValueReference {\n               public:\n                PersistentValueReference() : value_(kPersistentContainerNotFound) { }\n                PersistentValueReference(const PersistentValueReference& other)\n                    : value_(other.value_) { }\n\n                Local<V> NewLocal(Isolate* isolate) const {\n                  return Local<V>::New(isolate,\n                                       internal::ValueHelper::SlotAsValue<V>(\n                                           reinterpret_cast<internal::Address*>(value_)));\n                }\n                bool IsEmpty() const {\n                  return value_ == kPersistentContainerNotFound;\n                }\n                template<typename T>\n                bool SetReturnValue(ReturnValue<T> returnValue) {\n                  return SetReturnValueFromVal(&returnValue, value_);\n                }\n                void Reset() {\n                  value_ = kPersistentContainerNotFound;\n                }\n                void operator=(const PersistentValueReference& other) {\n                  value_ = other.value_;\n                }\n\n               private:\n                friend class PersistentValueMapBase;\n                friend class PersistentValueMap<K, V, Traits>;\n                friend class GlobalValueMap<K, V, Traits>;\n\n                explicit PersistentValueReference(PersistentContainerValue value)\n                    : value_(value) { }\n\n                void operator=(PersistentContainerValue value) {\n                  value_ = value;\n                }\n\n                PersistentContainerValue value_;\n              };\n\n              /**\n               * Get a reference to a map value. This enables fast, repeated access\n               * to a value stored in the map while the map remains unchanged.\n               *\n               * Careful: This is potentially unsafe, so please use with care.\n               * The value will become invalid if the value for this key changes\n               * in the underlying map, as a result of Set or Remove for the same\n               * key; as a result of the weak callback for the same key; or as a\n               * result of calling Clear() or destruction of the map.\n               */\n              PersistentValueReference GetReference(const K& key) {\n                return PersistentValueReference(Traits::Get(&impl_, key));\n              }\n\n             protected:\n              explicit PersistentValueMapBase(Isolate* isolate)\n                  : isolate_(isolate), label_(nullptr) {}\n              PersistentValueMapBase(Isolate* isolate, const char* label)\n                  : isolate_(isolate), label_(label) {}\n\n              ~PersistentValueMapBase() { Clear(); }\n\n              Isolate* isolate() { return isolate_; }\n              typename Traits::Impl* impl() { return &impl_; }\n\n              static V* FromVal(PersistentContainerValue v) {\n                return internal::ValueHelper::SlotAsValue<V>(\n                    reinterpret_cast<internal::Address*>(v));\n              }\n\n              static PersistentContainerValue ClearAndLeak(Global<V>* persistent) {\n                internal::Address* address = persistent->slot();\n                persistent->Clear();\n                return reinterpret_cast<PersistentContainerValue>(address);\n              }\n\n              static PersistentContainerValue Leak(Global<V>* persistent) {\n                return reinterpret_cast<PersistentContainerValue>(persistent->slot());\n              }\n\n              /**\n               * Return a container value as Global and make sure the weak\n               * callback is properly disposed of. All remove functionality should go\n               * through this.\n               */\n              static Global<V> Release(PersistentContainerValue v) {\n                Global<V> p;\n                p.slot() = reinterpret_cast<internal::Address*>(v);\n                if (Traits::kCallbackType != kNotWeak && p.IsWeak()) {\n                  Traits::DisposeCallbackData(\n                      p.template ClearWeak<typename Traits::WeakCallbackDataType>());\n                }\n                return p.Pass();\n              }\n\n              void RemoveWeak(const K& key) {\n                Global<V> p;\n                p.slot() =\n                    reinterpret_cast<internal::Address*>(Traits::Remove(&impl_, key));\n                p.Reset();\n              }\n\n              void AnnotateStrongRetainer(Global<V>* persistent) {\n                persistent->AnnotateStrongRetainer(label_);\n              }\n\n             private:\n              PersistentValueMapBase(PersistentValueMapBase&);\n              void operator=(PersistentValueMapBase&);\n\n              static bool SetReturnValueFromVal(ReturnValue<Value>* returnValue,\n                                                PersistentContainerValue value) {\n                bool hasValue = value != kPersistentContainerNotFound;\n                if (hasValue) {\n                  returnValue->SetInternal(*reinterpret_cast<internal::Address*>(value));\n                }\n                return hasValue;\n              }\n\n              Isolate* isolate_;\n              typename Traits::Impl impl_;\n              const char* label_;\n            };"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "PersistentValueMap",
+        "extends": "PersistentValueMapBase",
+        "about": "A map wrapper that allows using Global handles as mapped values. It inherits from PersistentValueMapBase and provides methods for setting and managing persistent handles in the map.",
+        "dependencies": [
+          "PersistentValueMapBase"
+        ]
+      },
+      "code": "template <typename K, typename V, typename Traits>\n            class PersistentValueMap : public PersistentValueMapBase<K, V, Traits> {\n             public:\n              explicit PersistentValueMap(Isolate* isolate)\n                  : PersistentValueMapBase<K, V, Traits>(isolate) {}\n              PersistentValueMap(Isolate* isolate, const char* label)\n                  : PersistentValueMapBase<K, V, Traits>(isolate, label) {}\n\n              typedef\n                  typename PersistentValueMapBase<K, V, Traits>::PersistentValueReference\n                      PersistentValueReference;\n\n              /**\n               * Put value into map. Depending on Traits::kIsWeak, the value will be held\n               * by the map strongly or weakly.\n               * Returns old value as Global.\n               */\n              Global<V> Set(const K& key, Local<V> value) {\n                Global<V> persistent(this->isolate(), value);\n                return SetUnique(key, &persistent);\n              }\n\n              /**\n               * Put value into map, like Set(const K&, Local<V>).\n               */\n              Global<V> Set(const K& key, Global<V> value) {\n                return SetUnique(key, &value);\n              }\n\n              /**\n               * Put the value into the map, and set the 'weak' callback when demanded\n               * by the Traits class.\n               */\n              Global<V> SetUnique(const K& key, Global<V>* persistent) {\n                if (Traits::kCallbackType == kNotWeak) {\n                  this->AnnotateStrongRetainer(persistent);\n                } else {\n                  WeakCallbackType callback_type =\n                      Traits::kCallbackType == kWeakWithInternalFields\n                          ? WeakCallbackType::kInternalFields\n                          : WeakCallbackType::kParameter;\n                  auto value = Local<V>::New(this->isolate(), *persistent);\n                  persistent->template SetWeak<typename Traits::WeakCallbackDataType>(\n                      Traits::WeakCallbackParameter(this, key, value), WeakCallback,\n                      callback_type);\n                }\n                PersistentContainerValue old_value =\n                    Traits::Set(this->impl(), key, this->ClearAndLeak(persistent));\n                return this->Release(old_value).Pass();\n              }\n\n              /**\n               * Put a value into the map and update the reference.\n               * Restrictions of GetReference apply here as well.\n               */\n              Global<V> Set(const K& key, Global<V> value,\n                            PersistentValueReference* reference) {\n                *reference = this->Leak(&value);\n                return SetUnique(key, &value);\n              }\n\n             private:\n              static void WeakCallback(\n                  const WeakCallbackInfo<typename Traits::WeakCallbackDataType>& data) {\n                if (Traits::kCallbackType != kNotWeak) {\n                  PersistentValueMap<K, V, Traits>* persistentValueMap =\n                      Traits::MapFromWeakCallbackInfo(data);\n                  K key = Traits::KeyFromWeakCallbackInfo(data);\n                  Traits::Dispose(data.GetIsolate(),\n                                  persistentValueMap->Remove(key).Pass(), key);\n                  Traits::DisposeCallbackData(data.GetParameter());\n                }\n              }\n            };"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "GlobalValueMap",
+        "extends": "PersistentValueMapBase",
+        "about": "A map wrapper that allows using Global handles as mapped values. It inherits from PersistentValueMapBase and provides methods for setting and managing global handles in the map.",
+        "dependencies": [
+          "PersistentValueMapBase"
+        ]
+      },
+      "code": "template <typename K, typename V, typename Traits>\n            class GlobalValueMap : public PersistentValueMapBase<K, V, Traits> {\n             public:\n              explicit GlobalValueMap(Isolate* isolate)\n                  : PersistentValueMapBase<K, V, Traits>(isolate) {}\n              GlobalValueMap(Isolate* isolate, const char* label)\n                  : PersistentValueMapBase<K, V, Traits>(isolate, label) {}\n\n              typedef\n                  typename PersistentValueMapBase<K, V, Traits>::PersistentValueReference\n                      PersistentValueReference;\n\n              /**\n               * Put value into map. Depending on Traits::kIsWeak, the value will be held\n               * by the map strongly or weakly.\n               * Returns old value as Global.\n               */\n              Global<V> Set(const K& key, Local<V> value) {\n                Global<V> persistent(this->isolate(), value);\n                return SetUnique(key, &persistent);\n              }\n\n              /**\n               * Put value into map, like Set(const K&, Local<V>).\n               */\n              Global<V> Set(const K& key, Global<V> value) {\n                return SetUnique(key, &value);\n              }\n\n              /**\n               * Put the value into the map, and set the 'weak' callback when demanded\n               * by the Traits class.\n               */\n              Global<V> SetUnique(const K& key, Global<V>* persistent) {\n                if (Traits::kCallbackType == kNotWeak) {\n                  this->AnnotateStrongRetainer(persistent);\n                } else {\n                  WeakCallbackType callback_type =\n                      Traits::kCallbackType == kWeakWithInternalFields\n                          ? WeakCallbackType::kInternalFields\n                          : WeakCallbackType::kParameter;\n                  auto value = Local<V>::New(this->isolate(), *persistent);\n                  persistent->template SetWeak<typename Traits::WeakCallbackDataType>(\n                      Traits::WeakCallbackParameter(this, key, value), OnWeakCallback,\n                      callback_type);\n                }\n                PersistentContainerValue old_value =\n                    Traits::Set(this->impl(), key, this->ClearAndLeak(persistent));\n                return this->Release(old_value).Pass();\n              }\n\n              /**\n               * Put a value into the map and update the reference.\n               * Restrictions of GetReference apply here as well.\n               */\n              Global<V> Set(const K& key, Global<V> value,\n                            PersistentValueReference* reference) {\n                *reference = this->Leak(&value);\n                return SetUnique(key, &value);\n              }\n\n             private:\n              static void OnWeakCallback(\n                  const WeakCallbackInfo<typename Traits::WeakCallbackDataType>& data) {\n                if (Traits::kCallbackType != kNotWeak) {\n                  auto map = Traits::MapFromWeakCallbackInfo(data);\n                  K key = Traits::KeyFromWeakCallbackInfo(data);\n                  map->RemoveWeak(key);\n                  Traits::OnWeakCallback(data);\n                  data.SetSecondPassCallback(SecondWeakCallback);\n                }\n              }\n\n              static void SecondWeakCallback(\n                  const WeakCallbackInfo<typename Traits::WeakCallbackDataType>& data) {\n                Traits::DisposeWeak(data);\n              }\n            };"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "StdPersistentValueMap",
+        "extends": "PersistentValueMap",
+        "about": "A map that uses Global as value and std::map as the backing implementation. Persistents are held non-weak.",
+        "dependencies": [
+          "PersistentValueMap",
+          "DefaultPersistentValueMapTraits"
+        ]
+      },
+      "code": "template<typename K, typename V,\n                typename Traits = DefaultPersistentValueMapTraits<K, V> >\n            class StdPersistentValueMap : public PersistentValueMap<K, V, Traits> {\n             public:\n              explicit StdPersistentValueMap(Isolate* isolate)\n                  : PersistentValueMap<K, V, Traits>(isolate) {}\n            };"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "StdGlobalValueMap",
+        "extends": "GlobalValueMap",
+        "about": "A map that uses Global as value and std::map as the backing implementation. Globals are held non-weak.",
+        "dependencies": [
+          "GlobalValueMap",
+          "DefaultGlobalMapTraits"
+        ]
+      },
+      "code": "template <typename K, typename V,\n                      typename Traits = DefaultGlobalMapTraits<K, V> >\n            class StdGlobalValueMap : public GlobalValueMap<K, V, Traits> {\n             public:\n              explicit StdGlobalValueMap(Isolate* isolate)\n                  : GlobalValueMap<K, V, Traits>(isolate) {}\n            };"
+    }
+  ],
+  "file_path": "/home/kathirks_gc/v8_go/codebase/include/v8-util.h"
+}

@@ -1,0 +1,134 @@
+{
+  "metadata": {
+    "path": "/home/kathirks_gc/v8_go/codebase/include/v8-sandbox.h",
+    "file_name": "v8-sandbox.h",
+    "language": "cpp",
+    "purpose": "Defines interfaces and data structures related to the V8 sandbox feature, including CppHeapPointer tagging and hardware support initialization."
+  },
+  "imports": {
+    "metadata": {
+      "language": "cpp",
+      "purpose": "Includes standard C++ headers and V8-specific headers."
+    },
+    "code": "#include <cstdint>\n\n            #include \"v8-internal.h\"  // NOLINT(build/include_directory)\n            #include \"v8config.h\"     // NOLINT(build/include_directory)"
+  },
+  "classes": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "struct",
+        "name": "CppHeapPointerTagRange",
+        "about": "Represents a range of CppHeapPointerTags for type checking.",
+        "attributes": [
+          {
+            "name": "lower_bound",
+            "type": "CppHeapPointerTag",
+            "access": "public",
+            "purpose": "The lower bound of the tag range (inclusive)."
+          },
+          {
+            "name": "upper_bound",
+            "type": "CppHeapPointerTag",
+            "access": "public",
+            "purpose": "The upper bound of the tag range (inclusive)."
+          }
+        ],
+        "dependencies": [
+          "CppHeapPointerTag"
+        ]
+      },
+      "code": "struct CppHeapPointerTagRange {\n            constexpr CppHeapPointerTagRange(CppHeapPointerTag lower,\n                                            CppHeapPointerTag upper)\n                : lower_bound(lower), upper_bound(upper) {}\n            CppHeapPointerTag lower_bound;\n            CppHeapPointerTag upper_bound;\n\n            // Check whether the tag of the given CppHeapPointerTable entry is within\n            // this range. This method encodes implementation details of the\n            // CppHeapPointerTable, which is necessary as it is used by\n            // ReadCppHeapPointerField below.\n            // Returns true if the check is successful and the tag of the given entry is\n            // within this range, false otherwise.\n            bool CheckTagOf(uint64_t entry) {\n                // Note: the cast to uint32_t is important here. Otherwise, the uint16_t's\n                // would be promoted to int in the range check below, which would result in\n                // undefined behavior (signed integer undeflow) if the actual value is less\n                // than the lower bound. Then, the compiler would take advantage of the\n                // undefined behavior and turn the range check into a simple\n                // `actual_tag <= last_tag` comparison, which is incorrect.\n                uint32_t actual_tag = static_cast<uint16_t>(entry);\n                // The actual_tag is shifted to the left by one and contains the marking\n                // bit in the LSB. To ignore that during the type check, simply add one to\n                // the (shifted) range.\n                constexpr int kTagShift = internal::kCppHeapPointerTagShift;\n                uint32_t first_tag = static_cast<uint32_t>(lower_bound) << kTagShift;\n                uint32_t last_tag = (static_cast<uint32_t>(upper_bound) << kTagShift) + 1;\n                return actual_tag >= first_tag && actual_tag <= last_tag;\n            }\n            };"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "SandboxHardwareSupport",
+        "about": "Provides an interface to initialize sandbox hardware support.",
+        "attributes": [],
+        "dependencies": []
+      },
+      "code": "class SandboxHardwareSupport {\n            public:\n            /**\n             * Initialize sandbox hardware support. This needs to be called before\n             * creating any thread that might access sandbox memory since it sets up\n             * hardware permissions to the memory that will be inherited on clone.\n             */\n            V8_EXPORT static void InitializeBeforeThreadCreation();\n            };"
+    }
+  ],
+  "dependencies": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "v8::Isolate",
+        "about": "Represents an isolated instance of the V8 JavaScript engine.",
+        "dependencies": []
+      },
+      "code": "namespace v8 {\n                class Isolate;\n                }",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "typedef",
+        "name": "Address",
+        "about": "Represents a memory address.",
+        "dependencies": []
+      },
+      "code": "typedef uintptr_t Address;",
+      "type": "typedef"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "namespace",
+        "name": "Internals",
+        "about": "Namespace for internal V8 implementation details.",
+        "dependencies": []
+      },
+      "code": "namespace Internals {\n                constexpr int kIsolateCppHeapPointerTableOffset = 0;\n                constexpr int kExternalPointerTableBasePointerOffset = 0;\n                template <typename T> T ReadRawField(Address heap_object_ptr, int offset);\n                }",
+      "type": "namespace"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "typedef",
+        "name": "CppHeapPointerHandle",
+        "about": "Handle for CppHeap pointers.",
+        "dependencies": []
+      },
+      "code": "typedef uint32_t CppHeapPointerHandle;",
+      "type": "typedef"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "constexpr int",
+        "name": "kCppHeapPointerTagShift",
+        "about": "Bit shift amount for CppHeapPointerTag.",
+        "dependencies": []
+      },
+      "code": "constexpr int kCppHeapPointerTagShift = 1;",
+      "type": "variable"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "constexpr int",
+        "name": "kExternalPointerIndexShift",
+        "about": "Bit shift amount for external pointer index.",
+        "dependencies": []
+      },
+      "code": "constexpr int kExternalPointerIndexShift = 1;",
+      "type": "variable"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "constexpr int",
+        "name": "kCppHeapPointerPayloadShift",
+        "about": "Bit shift amount for CppHeap pointer payload.",
+        "dependencies": []
+      },
+      "code": "constexpr int kCppHeapPointerPayloadShift = 1;",
+      "type": "variable"
+    }
+  ],
+  "file_path": "/home/kathirks_gc/v8_go/codebase/include/v8-sandbox.h"
+}
