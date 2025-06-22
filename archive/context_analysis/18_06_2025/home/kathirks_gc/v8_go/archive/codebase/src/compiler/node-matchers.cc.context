@@ -1,0 +1,170 @@
+{
+  "metadata": {
+    "path": "/home/kathirks_gc/v8_go/archive/codebase/src/compiler/node-matchers.cc",
+    "file_name": "node-matchers.cc",
+    "language": "cpp",
+    "purpose": "Provides utility classes for matching specific patterns of nodes in the compiler's graph representation.  Includes matchers for comparisons, branches, and diamond control flow structures."
+  },
+  "imports": {
+    "metadata": {
+      "language": "cpp",
+      "purpose": "Includes necessary headers for the node matchers functionality."
+    },
+    "code": "#include \"src/compiler/node-matchers.h\""
+  },
+  "classes": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "NodeMatcher",
+        "extends": null,
+        "implements": [],
+        "about": "Base class for node matchers. Provides basic functionality to check node properties.",
+        "attributes": [],
+        "dependencies": [
+          "IrOpcode"
+        ]
+      },
+      "code": "class NodeMatcher {\n public:\n  explicit NodeMatcher(Node* node) : node_(node) {}\n\n  bool IsComparison() const {\n    return IrOpcode::IsComparisonOpcode(opcode());\n  }\n\n protected:\n  Node* node() const { return node_; }\n  const Operator* op() const { return node_->op(); }\n  IrOpcode::Value opcode() const { return op()->opcode(); }\n\n private:\n  Node* node_;\n};"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "BranchMatcher",
+        "extends": "NodeMatcher",
+        "implements": [],
+        "about": "Matcher for branch nodes in the control flow graph.",
+        "attributes": [
+          {
+            "name": "if_true_",
+            "type": "Node*",
+            "access": "private",
+            "purpose": "The IfTrue node associated with the branch."
+          },
+          {
+            "name": "if_false_",
+            "type": "Node*",
+            "access": "private",
+            "purpose": "The IfFalse node associated with the branch."
+          }
+        ],
+        "dependencies": [
+          "IrOpcode",
+          "Node"
+        ]
+      },
+      "code": "class BranchMatcher : public NodeMatcher {\n public:\n  explicit BranchMatcher(Node* branch);\n\n  Node* IfTrue() const { return if_true_; }\n  Node* IfFalse() const { return if_false_; }\n\n private:\n  Node* if_true_;\n  Node* if_false_;\n};"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "DiamondMatcher",
+        "extends": "NodeMatcher",
+        "implements": [],
+        "about": "Matcher for diamond-shaped control flow structures (if-then-else).",
+        "attributes": [
+          {
+            "name": "branch_",
+            "type": "Node*",
+            "access": "private",
+            "purpose": "The branch node at the top of the diamond."
+          },
+          {
+            "name": "if_true_",
+            "type": "Node*",
+            "access": "private",
+            "purpose": "The IfTrue node in the diamond."
+          },
+          {
+            "name": "if_false_",
+            "type": "Node*",
+            "access": "private",
+            "purpose": "The IfFalse node in the diamond."
+          }
+        ],
+        "dependencies": [
+          "IrOpcode",
+          "Node"
+        ]
+      },
+      "code": "class DiamondMatcher : public NodeMatcher {\n public:\n  explicit DiamondMatcher(Node* merge);\n\n  Node* Branch() const { return branch_; }\n  Node* IfTrue() const { return if_true_; }\n  Node* IfFalse() const { return if_false_; }\n\n private:\n  Node* branch_;\n  Node* if_true_;\n  Node* if_false_;\n};"
+    }
+  ],
+  "functions": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "method",
+        "name": "IsComparison",
+        "parent": "NodeMatcher",
+        "about": "Checks if the node's opcode represents a comparison operation.",
+        "logic": "Delegates to IrOpcode::IsComparisonOpcode to determine if the opcode is a comparison.",
+        "parameters": [],
+        "return": {
+          "type": "bool",
+          "description": "True if the node is a comparison, false otherwise."
+        },
+        "dependencies": [
+          "IrOpcode"
+        ]
+      },
+      "code": "bool NodeMatcher::IsComparison() const {\n  return IrOpcode::IsComparisonOpcode(opcode());\n}"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "method",
+        "name": "BranchMatcher",
+        "parent": "BranchMatcher",
+        "about": "Constructor for BranchMatcher.  Identifies the IfTrue and IfFalse nodes associated with the branch.",
+        "logic": "Iterates through the uses of the branch node, identifying IfTrue and IfFalse nodes based on their opcodes.  If multiple IfTrue or IfFalse nodes are found, it indicates an error (DCHECK_NULL).",
+        "parameters": [
+          {
+            "name": "branch",
+            "type": "Node*",
+            "purpose": "The branch node to match."
+          }
+        ],
+        "return": {
+          "type": "void",
+          "description": "No return value"
+        },
+        "dependencies": [
+          "IrOpcode",
+          "Node"
+        ]
+      },
+      "code": "BranchMatcher::BranchMatcher(Node* branch)\n    : NodeMatcher(branch), if_true_(nullptr), if_false_(nullptr) {\n  if (branch->opcode() != IrOpcode::kBranch) return;\n  for (Node* use : branch->uses()) {\n    if (use->opcode() == IrOpcode::kIfTrue) {\n      DCHECK_NULL(if_true_);\n      if_true_ = use;\n    } else if (use->opcode() == IrOpcode::kIfFalse) {\n      DCHECK_NULL(if_false_);\n      if_false_ = use;\n    }\n  }\n}"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "method",
+        "name": "DiamondMatcher",
+        "parent": "DiamondMatcher",
+        "about": "Constructor for DiamondMatcher. Identifies the branch, IfTrue, and IfFalse nodes forming the diamond shape.",
+        "logic": "Verifies the structure of the diamond.  The merge node must have two inputs, both of which have one input (the IfTrue and IfFalse nodes).  Both IfTrue and IfFalse nodes must have the same branch node as their input. Checks if the input nodes are IfTrue and IfFalse in either order to match the diamond pattern.",
+        "parameters": [
+          {
+            "name": "merge",
+            "type": "Node*",
+            "purpose": "The merge node at the bottom of the diamond."
+          }
+        ],
+        "return": {
+          "type": "void",
+          "description": "No return value"
+        },
+        "dependencies": [
+          "IrOpcode",
+          "Node"
+        ]
+      },
+      "code": "DiamondMatcher::DiamondMatcher(Node* merge)\n    : NodeMatcher(merge),\n      branch_(nullptr),\n      if_true_(nullptr),\n      if_false_(nullptr) {\n  if (merge->InputCount() != 2) return;\n  if (merge->opcode() != IrOpcode::kMerge) return;\n  Node* input0 = merge->InputAt(0);\n  if (input0->InputCount() != 1) return;\n  Node* input1 = merge->InputAt(1);\n  if (input1->InputCount() != 1) return;\n  Node* branch = input0->InputAt(0);\n  if (branch != input1->InputAt(0)) return;\n  if (branch->opcode() != IrOpcode::kBranch) return;\n  if (input0->opcode() == IrOpcode::kIfTrue &&\n      input1->opcode() == IrOpcode::kIfFalse) {\n    branch_ = branch;\n    if_true_ = input0;\n    if_false_ = input1;\n  } else if (input0->opcode() == IrOpcode::kIfFalse &&\n             input1->opcode() == IrOpcode::kIfTrue) {\n    branch_ = branch;\n    if_true_ = input1;\n    if_false_ = input0;\n  }\n}"
+    }
+  ],
+  "file_path": "/home/kathirks_gc/v8_go/archive/codebase/src/compiler/node-matchers.cc"
+}

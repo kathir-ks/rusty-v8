@@ -1,0 +1,117 @@
+{
+  "metadata": {
+    "path": "/home/kathirks_gc/v8_go/archive/codebase/src/torque/cc-generator.h",
+    "file_name": "cc-generator.h",
+    "language": "cpp",
+    "purpose": "Declares the CCGenerator class, which generates C++ code from a Torque Control Flow Graph (CFG)."
+  },
+  "imports": {
+    "metadata": {
+      "language": "cpp",
+      "purpose": "Includes necessary standard and project-specific headers."
+    },
+    "code": "#include <optional>\n\n#include \"src/torque/torque-code-generator.h\""
+  },
+  "classes": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "CCGenerator",
+        "extends": "TorqueCodeGenerator",
+        "about": "Generates C++ code from a Torque Control Flow Graph (CFG).",
+        "attributes": [
+          {
+            "name": "is_cc_debug_",
+            "type": "bool",
+            "access": "private",
+            "purpose": "Indicates whether debug information should be included in the generated C++ code."
+          }
+        ],
+        "dependencies": [
+          "ControlFlowGraph",
+          "TorqueCodeGenerator",
+          "SourcePosition",
+          "Block",
+          "TypeVector",
+          "VisitResult",
+          "Stack"
+        ]
+      },
+      "code": "class CCGenerator : public TorqueCodeGenerator {\n public:\n  CCGenerator(const ControlFlowGraph& cfg, std::ostream& out,\n              bool is_cc_debug = false)\n      : TorqueCodeGenerator(cfg, out), is_cc_debug_(is_cc_debug) {}\n  std::optional<Stack<std::string>> EmitGraph(Stack<std::string> parameters);\n\n  static void EmitCCValue(VisitResult result, const Stack<std::string>& values,\n                          std::ostream& out);\n\n private:\n  bool is_cc_debug_;\n\n  void EmitSourcePosition(SourcePosition pos,\n                          bool always_emit = false) override;\n\n  void EmitGoto(const Block* destination, Stack<std::string>* stack,\n                std::string indentation);\n\n  std::vector<std::string> ProcessArgumentsCommon(\n      const TypeVector& parameter_types,\n      std::vector<std::string> constexpr_arguments, Stack<std::string>* stack);\n\n  Stack<std::string> EmitBlock(const Block* block);\n#define EMIT_INSTRUCTION_DECLARATION(T)                                 \\\n  void EmitInstruction(const T& instruction, Stack<std::string>* stack) \\\n      override;\n  TORQUE_BACKEND_DEPENDENT_INSTRUCTION_LIST(EMIT_INSTRUCTION_DECLARATION)\n#undef EMIT_INSTRUCTION_DECLARATION\n};"
+    }
+  ],
+  "dependencies": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "ControlFlowGraph",
+        "about": "Represents a control flow graph."
+      },
+      "code": "class ControlFlowGraph {};",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "TorqueCodeGenerator",
+        "about": "Base class for code generators that operate on Torque CFGs."
+      },
+      "code": "class TorqueCodeGenerator {\n            public:\n                TorqueCodeGenerator(const ControlFlowGraph& cfg, std::ostream& out) {}\n            };",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "SourcePosition",
+        "about": "Represents a position in the source code."
+      },
+      "code": "class SourcePosition {};",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "Block",
+        "about": "Represents a block of code in the CFG."
+      },
+      "code": "class Block {};",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "TypeVector",
+        "about": "Represents a vector of types."
+      },
+      "code": "class TypeVector {};",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "VisitResult",
+        "about": "Represents the result of a visit operation."
+      },
+      "code": "class VisitResult {};",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "Stack",
+        "about": "Represents a stack of strings."
+      },
+      "code": "template <typename T>\n            class Stack {};",
+      "type": "class"
+    }
+  ],
+  "file_path": "/home/kathirks_gc/v8_go/archive/codebase/src/torque/cc-generator.h"
+}

@@ -1,0 +1,192 @@
+{
+  "file_path": "/home/kathirks_gc/v8_go/codebase/src/debug/wasm/gdb-server/packet.cc",
+  "imports": [
+    "src/debug/wasm/gdb-server/packet.h",
+    "src/debug/wasm/gdb-server/gdb-remote-util.h"
+  ],
+  "classes": [
+    {
+      "name": "Packet",
+      "properties": [
+        "seq_",
+        "data_",
+        "read_index_"
+      ],
+      "methods": [
+        {
+          "name": "Packet",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Constructor: Initializes seq_ to -1 and calls Clear() to initialize the data buffer."
+        },
+        {
+          "name": "Clear",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Clears the data buffer (data_) and resets the read index (read_index_)."
+        },
+        {
+          "name": "Rewind",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Resets the read index (read_index_) to the beginning of the packet (0)."
+        },
+        {
+          "name": "EndOfPacket",
+          "parameters": [],
+          "return_type": "bool",
+          "logic": "Checks if the read index has reached the end of the packet data."
+        },
+        {
+          "name": "AddRawChar",
+          "parameters": [
+            "char ch"
+          ],
+          "return_type": "void",
+          "logic": "Appends a raw character (ch) to the data buffer (data_)."
+        },
+        {
+          "name": "AddWord8",
+          "parameters": [
+            "uint8_t byte"
+          ],
+          "return_type": "void",
+          "logic": "Converts a uint8_t to its hexadecimal representation and appends it to the data buffer as two ASCII characters."
+        },
+        {
+          "name": "AddBlock",
+          "parameters": [
+            "const void* ptr",
+            "uint32_t len"
+          ],
+          "return_type": "void",
+          "logic": "Adds a block of memory (ptr) of a given length (len) to the data buffer by converting each byte to its hexadecimal representation."
+        },
+        {
+          "name": "AddString",
+          "parameters": [
+            "const char* str"
+          ],
+          "return_type": "void",
+          "logic": "Adds a null-terminated string (str) to the data buffer."
+        },
+        {
+          "name": "AddHexString",
+          "parameters": [
+            "const char* str"
+          ],
+          "return_type": "void",
+          "logic": "Adds a string (str) to the data buffer, where each character of the string is represented as two hexadecimal characters."
+        },
+        {
+          "name": "AddNumberSep",
+          "parameters": [
+            "uint64_t val",
+            "char sep"
+          ],
+          "return_type": "void",
+          "logic": "Adds a 64-bit unsigned integer (val) to the data buffer as a big-endian hexadecimal string. An optional separator character (sep) is added after the number."
+        },
+        {
+          "name": "GetNumberSep",
+          "parameters": [
+            "uint64_t* val",
+            "char* sep"
+          ],
+          "return_type": "bool",
+          "logic": "Parses a big-endian hexadecimal string from the data buffer into a 64-bit unsigned integer (val). An optional separator character (sep) is also parsed. Returns true on success, false otherwise."
+        },
+        {
+          "name": "GetRawChar",
+          "parameters": [
+            "char* ch"
+          ],
+          "return_type": "bool",
+          "logic": "Reads a raw character from the data buffer. It also handles RLE encoding where `X*N` means character `X` is repeated `N-28` times. Returns true on success, false if end of packet is reached or the RLE encoding is invalid."
+        },
+        {
+          "name": "GetWord8",
+          "parameters": [
+            "uint8_t* value"
+          ],
+          "return_type": "bool",
+          "logic": "Reads two hexadecimal characters from the data buffer and converts them to a uint8_t value. Returns true on success, false if end of packet is reached or the conversion fails."
+        },
+        {
+          "name": "GetBlock",
+          "parameters": [
+            "void* ptr",
+            "uint32_t len"
+          ],
+          "return_type": "bool",
+          "logic": "Reads a block of memory (len bytes) from the data buffer, interpreting each byte as a two-character hexadecimal representation. Returns true on success, false otherwise."
+        },
+        {
+          "name": "GetString",
+          "parameters": [
+            "std::string* str"
+          ],
+          "return_type": "bool",
+          "logic": "Reads the remaining data in the data buffer as a string (str). Returns true on success, false if the end of the packet is reached."
+        },
+        {
+          "name": "GetHexString",
+          "parameters": [
+            "std::string* str"
+          ],
+          "return_type": "bool",
+          "logic": "Reads a string encoded as a series of 2-hex digit pairs from the data buffer and decodes it into the provided string (str).  Stops when a non-hex character is encountered. Returns true on success, false if an error occurs (like an incomplete pair of hex digits)."
+        },
+        {
+          "name": "GetPayload",
+          "parameters": [],
+          "return_type": "const char*",
+          "logic": "Returns a pointer to the underlying data buffer as a C-style string."
+        },
+        {
+          "name": "GetPayloadSize",
+          "parameters": [],
+          "return_type": "size_t",
+          "logic": "Returns the size (number of bytes) of the data buffer."
+        },
+        {
+          "name": "GetSequence",
+          "parameters": [
+            "int32_t* ch"
+          ],
+          "return_type": "bool",
+          "logic": "Retrieves the sequence number (seq_) if it's been parsed. Returns true on success, false otherwise."
+        },
+        {
+          "name": "ParseSequence",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Attempts to parse a sequence number from the beginning of the data buffer. The sequence number is expected to be a 2-digit hex number followed by a colon."
+        },
+        {
+          "name": "SetSequence",
+          "parameters": [
+            "int32_t val"
+          ],
+          "return_type": "void",
+          "logic": "Sets the sequence number (seq_) to the given value (val)."
+        },
+        {
+          "name": "SetError",
+          "parameters": [
+            "ErrDef error"
+          ],
+          "return_type": "void",
+          "logic": "Clears the existing packet data and sets an error code in the packet, encoded as 'E' followed by a hex representation of the error code."
+        },
+        {
+          "name": "GetPacketData",
+          "parameters": [],
+          "return_type": "std::string",
+          "logic": "Formats the packet data according to the GDB remote protocol. This includes adding the start character ('$'), the sequence number (if present), the payload, and the checksum (preceded by '#')."
+        }
+      ]
+    }
+  ],
+  "functions": []
+}

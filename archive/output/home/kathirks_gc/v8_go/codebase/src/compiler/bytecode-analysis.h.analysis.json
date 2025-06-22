@@ -1,0 +1,376 @@
+{
+  "file_path": "/home/kathirks_gc/v8_go/codebase/src/compiler/bytecode-analysis.h",
+  "imports": [
+    "<optional>",
+    "src/compiler/bytecode-liveness-map.h",
+    "src/handles/handles.h",
+    "src/interpreter/bytecode-register.h",
+    "src/utils/bit-vector.h",
+    "src/utils/utils.h",
+    "src/zone/zone-containers.h"
+  ],
+  "classes": [
+    {
+      "name": "BytecodeLoopAssignments",
+      "properties": [
+        "parameter_count_",
+        "bit_vector_"
+      ],
+      "methods": [
+        {
+          "name": "BytecodeLoopAssignments",
+          "parameters": [
+            "int parameter_count",
+            "int register_count",
+            "Zone* zone"
+          ],
+          "return_type": "void",
+          "logic": "Constructor. Initializes the BytecodeLoopAssignments object with the given parameter count, register count, and zone."
+        },
+        {
+          "name": "Add",
+          "parameters": [
+            "interpreter::Register r"
+          ],
+          "return_type": "void",
+          "logic": "Adds a register to the set of assigned registers within the loop."
+        },
+        {
+          "name": "AddList",
+          "parameters": [
+            "interpreter::Register r",
+            "uint32_t count"
+          ],
+          "return_type": "void",
+          "logic": "Adds a list of registers to the set of assigned registers within the loop."
+        },
+        {
+          "name": "Union",
+          "parameters": [
+            "const BytecodeLoopAssignments& other"
+          ],
+          "return_type": "void",
+          "logic": "Unions the current set of assigned registers with those of another BytecodeLoopAssignments object."
+        },
+        {
+          "name": "ContainsParameter",
+          "parameters": [
+            "int index"
+          ],
+          "return_type": "bool",
+          "logic": "Checks if a parameter with the given index is assigned within the loop."
+        },
+        {
+          "name": "ContainsLocal",
+          "parameters": [
+            "int index"
+          ],
+          "return_type": "bool",
+          "logic": "Checks if a local variable with the given index is assigned within the loop."
+        },
+        {
+          "name": "parameter_count",
+          "parameters": [],
+          "return_type": "int",
+          "logic": "Returns the number of parameters."
+        },
+        {
+          "name": "local_count",
+          "parameters": [],
+          "return_type": "int",
+          "logic": "Returns the number of local variables."
+        }
+      ]
+    },
+    {
+      "name": "ResumeJumpTarget",
+      "properties": [
+        "suspend_id_",
+        "target_offset_",
+        "final_target_offset_"
+      ],
+      "methods": [
+        {
+          "name": "Leaf",
+          "parameters": [
+            "int suspend_id",
+            "int target_offset"
+          ],
+          "return_type": "ResumeJumpTarget",
+          "logic": "Creates a resume jump target representing an actual resume (leaf node)."
+        },
+        {
+          "name": "AtLoopHeader",
+          "parameters": [
+            "int loop_header_offset",
+            "const ResumeJumpTarget& next"
+          ],
+          "return_type": "ResumeJumpTarget",
+          "logic": "Creates a resume jump target at a loop header, indicating a potential resume point after crossing the header."
+        },
+        {
+          "name": "suspend_id",
+          "parameters": [],
+          "return_type": "int",
+          "logic": "Returns the suspend id of the resume."
+        },
+        {
+          "name": "target_offset",
+          "parameters": [],
+          "return_type": "int",
+          "logic": "Returns the target offset of this resume jump."
+        },
+        {
+          "name": "is_leaf",
+          "parameters": [],
+          "return_type": "bool",
+          "logic": "Checks if this is a leaf node (actual resume point)."
+        },
+        {
+          "name": "ResumeJumpTarget",
+          "parameters": [
+            "int suspend_id",
+            "int target_offset",
+            "int final_target_offset"
+          ],
+          "return_type": "void",
+          "logic": "Constructor. Initializes the ResumeJumpTarget object with the given suspend id, target offset, and final target offset."
+        }
+      ]
+    },
+    {
+      "name": "LoopInfo",
+      "properties": [
+        "parent_offset_",
+        "loop_start_",
+        "loop_end_",
+        "resumable_",
+        "innermost_",
+        "assignments_",
+        "resume_jump_targets_"
+      ],
+      "methods": [
+        {
+          "name": "LoopInfo",
+          "parameters": [
+            "int parent_offset",
+            "int loop_start",
+            "int loop_end",
+            "int parameter_count",
+            "int register_count",
+            "Zone* zone"
+          ],
+          "return_type": "void",
+          "logic": "Constructor. Initializes the LoopInfo object with loop properties and a BytecodeLoopAssignments object."
+        },
+        {
+          "name": "parent_offset",
+          "parameters": [],
+          "return_type": "int",
+          "logic": "Returns the offset to the parent loop."
+        },
+        {
+          "name": "loop_start",
+          "parameters": [],
+          "return_type": "int",
+          "logic": "Returns the starting offset of the loop."
+        },
+        {
+          "name": "loop_end",
+          "parameters": [],
+          "return_type": "int",
+          "logic": "Returns the ending offset of the loop."
+        },
+        {
+          "name": "resumable",
+          "parameters": [],
+          "return_type": "bool",
+          "logic": "Returns whether the loop is resumable."
+        },
+        {
+          "name": "mark_resumable",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Marks the loop as resumable."
+        },
+        {
+          "name": "innermost",
+          "parameters": [],
+          "return_type": "bool",
+          "logic": "Returns whether the loop is innermost."
+        },
+        {
+          "name": "mark_not_innermost",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Marks the loop as not innermost."
+        },
+        {
+          "name": "Contains",
+          "parameters": [
+            "int offset"
+          ],
+          "return_type": "bool",
+          "logic": "Checks if the given offset falls within the loop's range."
+        },
+        {
+          "name": "resume_jump_targets",
+          "parameters": [],
+          "return_type": "const ZoneVector<ResumeJumpTarget>&",
+          "logic": "Returns the resume jump targets associated with the loop."
+        },
+        {
+          "name": "AddResumeTarget",
+          "parameters": [
+            "const ResumeJumpTarget& target"
+          ],
+          "return_type": "void",
+          "logic": "Adds a resume jump target to the loop's list of targets."
+        },
+        {
+          "name": "assignments",
+          "parameters": [],
+          "return_type": "BytecodeLoopAssignments&",
+          "logic": "Returns a reference to the BytecodeLoopAssignments object."
+        },
+        {
+          "name": "assignments",
+          "parameters": [],
+          "return_type": "const BytecodeLoopAssignments&",
+          "logic": "Returns a const reference to the BytecodeLoopAssignments object."
+        }
+      ]
+    },
+    {
+      "name": "BytecodeAnalysis",
+      "properties": [
+        "osr_bailout_id_",
+        "analyze_liveness_",
+        "resume_jump_targets_",
+        "end_to_header_",
+        "header_to_info_",
+        "osr_entry_point_",
+        "liveness_map_",
+        "bytecode_count_"
+      ],
+      "methods": [
+        {
+          "name": "BytecodeAnalysis",
+          "parameters": [
+            "Handle<BytecodeArray> bytecode_array",
+            "Zone* zone",
+            "BytecodeOffset osr_bailout_id",
+            "bool analyze_liveness"
+          ],
+          "return_type": "void",
+          "logic": "Constructor. Analyzes the bytecode array to find loop ranges, nesting, assignments, and liveness."
+        },
+        {
+          "name": "IsLoopHeader",
+          "parameters": [
+            "int offset"
+          ],
+          "return_type": "bool",
+          "logic": "Checks if the given offset represents a loop header."
+        },
+        {
+          "name": "GetLoopOffsetFor",
+          "parameters": [
+            "int offset"
+          ],
+          "return_type": "int",
+          "logic": "Gets the loop header offset of the containing loop for arbitrary offset, or -1 if the offset is not inside any loop."
+        },
+        {
+          "name": "GetLoopEndOffsetForInnermost",
+          "parameters": [
+            "int header_offset"
+          ],
+          "return_type": "int",
+          "logic": "Gets the loop end offset given the header offset of an innermost loop."
+        },
+        {
+          "name": "GetLoopInfoFor",
+          "parameters": [
+            "int header_offset"
+          ],
+          "return_type": "const LoopInfo&",
+          "logic": "Gets the loop info of the loop header at header_offset."
+        },
+        {
+          "name": "TryGetLoopInfoFor",
+          "parameters": [
+            "int header_offset"
+          ],
+          "return_type": "const LoopInfo*",
+          "logic": "Tries to get the loop info of the loop header at header_offset, returning null if there isn't any."
+        },
+        {
+          "name": "GetLoopInfos",
+          "parameters": [],
+          "return_type": "const ZoneMap<int, LoopInfo>&",
+          "logic": "Returns the map of loop header offsets to loop information."
+        },
+        {
+          "name": "resume_jump_targets",
+          "parameters": [],
+          "return_type": "const ZoneVector<ResumeJumpTarget>&",
+          "logic": "Gets the top-level resume jump targets."
+        },
+        {
+          "name": "GetInLivenessFor",
+          "parameters": [
+            "int offset"
+          ],
+          "return_type": "const BytecodeLivenessState*",
+          "logic": "Gets the in-liveness for the bytecode at offset."
+        },
+        {
+          "name": "GetOutLivenessFor",
+          "parameters": [
+            "int offset"
+          ],
+          "return_type": "const BytecodeLivenessState*",
+          "logic": "Gets the out-liveness for the bytecode at offset."
+        },
+        {
+          "name": "osr_entry_point",
+          "parameters": [],
+          "return_type": "int",
+          "logic": "Returns the bytecode offset of the OSR entry point."
+        },
+        {
+          "name": "osr_bailout_id",
+          "parameters": [],
+          "return_type": "BytecodeOffset",
+          "logic": "Returns the osr_bailout_id."
+        },
+        {
+          "name": "liveness_analyzed",
+          "parameters": [],
+          "return_type": "bool",
+          "logic": "Returns whether liveness analysis was performed."
+        },
+        {
+          "name": "bytecode_count",
+          "parameters": [],
+          "return_type": "int",
+          "logic": "Returns the number of bytecodes."
+        },
+        {
+          "name": "liveness_map",
+          "parameters": [],
+          "return_type": "BytecodeLivenessMap&",
+          "logic": "Returns a reference to the BytecodeLivenessMap object."
+        },
+        {
+          "name": "liveness_map",
+          "parameters": [],
+          "return_type": "const BytecodeLivenessMap&",
+          "logic": "Returns a const reference to the BytecodeLivenessMap object."
+        }
+      ]
+    }
+  ],
+  "functions": []
+}

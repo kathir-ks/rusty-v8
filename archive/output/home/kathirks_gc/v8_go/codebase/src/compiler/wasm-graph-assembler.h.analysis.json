@@ -1,0 +1,921 @@
+{
+  "file_path": "/home/kathirks_gc/v8_go/codebase/src/compiler/wasm-graph-assembler.h",
+  "imports": [
+    "src/compiler/graph-assembler.h",
+    "src/wasm/wasm-code-manager.h"
+  ],
+  "classes": [
+    {
+      "name": "WasmGraphAssembler",
+      "properties": [
+        "simplified_"
+      ],
+      "methods": [
+        {
+          "name": "WasmGraphAssembler",
+          "parameters": [
+            "MachineGraph* mcgraph",
+            "Zone* zone"
+          ],
+          "return_type": "void",
+          "logic": "Constructor. Initializes the base GraphAssembler and the simplified_ member."
+        },
+        {
+          "name": "CallBuiltinThroughJumptable",
+          "parameters": [
+            "Builtin builtin",
+            "Operator::Properties properties",
+            "Args... args"
+          ],
+          "return_type": "Node*",
+          "logic": "Generates a call to a builtin through a jump table.  This is a 'near' call, shorter than direct call to builtin.  Patches the call at relocation."
+        },
+        {
+          "name": "GetBuiltinPointerTarget",
+          "parameters": [
+            "Builtin builtin"
+          ],
+          "return_type": "Node*",
+          "logic": "Returns a NumberConstant representing the Builtin pointer. Casts the `builtin` enum to an int."
+        },
+        {
+          "name": "CallBuiltin",
+          "parameters": [
+            "Builtin name",
+            "Operator::Properties properties",
+            "Args... args"
+          ],
+          "return_type": "Node*",
+          "logic": "Generates a call to a builtin function. Calls CallBuiltinImpl without frame state."
+        },
+        {
+          "name": "CallBuiltinWithFrameState",
+          "parameters": [
+            "Builtin name",
+            "Operator::Properties properties",
+            "Node* frame_state",
+            "Args... args"
+          ],
+          "return_type": "Node*",
+          "logic": "Generates a call to a builtin function with a frame state. Calls CallBuiltinImpl with frame state."
+        },
+        {
+          "name": "Branch",
+          "parameters": [
+            "Node* cond",
+            "Node** true_node",
+            "Node** false_node",
+            "BranchHint hint"
+          ],
+          "return_type": "Node*",
+          "logic": "Creates a branch node in the graph and sets the true_node and false_node pointers to the outputs of the branch."
+        },
+        {
+          "name": "NumberConstant",
+          "parameters": [
+            "double value"
+          ],
+          "return_type": "Node*",
+          "logic": "Creates a NumberConstant node in the graph."
+        },
+        {
+          "name": "SmiConstant",
+          "parameters": [
+            "Tagged_t value"
+          ],
+          "return_type": "Node*",
+          "logic": "Creates a SmiConstant node in the graph. Converts the tagged value to a Smi before creating the constant."
+        },
+        {
+          "name": "MergeControlToEnd",
+          "parameters": [
+            "Node* control"
+          ],
+          "return_type": "void",
+          "logic": "Merges the provided control node into the end of the graph's control flow."
+        },
+        {
+          "name": "BuildTruncateIntPtrToInt32",
+          "parameters": [
+            "Node* value"
+          ],
+          "return_type": "Node*",
+          "logic": "Builds a node that truncates an IntPtr value to an Int32 value."
+        },
+        {
+          "name": "BuildChangeInt32ToIntPtr",
+          "parameters": [
+            "Node* value"
+          ],
+          "return_type": "Node*",
+          "logic": "Builds a node that changes an Int32 value to an IntPtr value."
+        },
+        {
+          "name": "BuildChangeIntPtrToInt64",
+          "parameters": [
+            "Node* value"
+          ],
+          "return_type": "Node*",
+          "logic": "Builds a node that changes an IntPtr value to an Int64 value."
+        },
+        {
+          "name": "BuildChangeUint32ToUintPtr",
+          "parameters": [
+            "Node* node"
+          ],
+          "return_type": "Node*",
+          "logic": "Builds a node that changes a Uint32 value to a UintPtr value."
+        },
+        {
+          "name": "BuildSmiShiftBitsConstant",
+          "parameters": [],
+          "return_type": "Node*",
+          "logic": "Builds a node representing the Smi shift bits constant."
+        },
+        {
+          "name": "BuildSmiShiftBitsConstant32",
+          "parameters": [],
+          "return_type": "Node*",
+          "logic": "Builds a node representing the Smi shift bits constant (32-bit version)."
+        },
+        {
+          "name": "BuildChangeInt32ToSmi",
+          "parameters": [
+            "Node* value"
+          ],
+          "return_type": "Node*",
+          "logic": "Builds a node that converts an Int32 value to a Smi value."
+        },
+        {
+          "name": "BuildChangeUint31ToSmi",
+          "parameters": [
+            "Node* value"
+          ],
+          "return_type": "Node*",
+          "logic": "Builds a node that converts a Uint31 value to a Smi value."
+        },
+        {
+          "name": "BuildChangeSmiToInt32",
+          "parameters": [
+            "Node* value"
+          ],
+          "return_type": "Node*",
+          "logic": "Builds a node that converts a Smi value to an Int32 value."
+        },
+        {
+          "name": "BuildConvertUint32ToSmiWithSaturation",
+          "parameters": [
+            "Node* value",
+            "uint32_t maxval"
+          ],
+          "return_type": "Node*",
+          "logic": "Builds a node that converts a Uint32 value to a Smi value with saturation. It saturates the result to maxval if it is larger."
+        },
+        {
+          "name": "BuildChangeSmiToIntPtr",
+          "parameters": [
+            "Node* value"
+          ],
+          "return_type": "Node*",
+          "logic": "Builds a node that converts a Smi value to an IntPtr value."
+        },
+        {
+          "name": "Allocate",
+          "parameters": [
+            "int size"
+          ],
+          "return_type": "Node*",
+          "logic": "Allocates a HeapObject of the given size."
+        },
+        {
+          "name": "Allocate",
+          "parameters": [
+            "Node* size"
+          ],
+          "return_type": "Node*",
+          "logic": "Allocates a HeapObject with a size provided as a Node."
+        },
+        {
+          "name": "LoadFromObject",
+          "parameters": [
+            "MachineType type",
+            "Node* base",
+            "Node* offset"
+          ],
+          "return_type": "Node*",
+          "logic": "Loads a value of the given type from an object at the given base and offset."
+        },
+        {
+          "name": "LoadFromObject",
+          "parameters": [
+            "MachineType type",
+            "Node* base",
+            "int offset"
+          ],
+          "return_type": "Node*",
+          "logic": "Loads a value of the given type from an object at the given base and offset (offset is an integer)."
+        },
+        {
+          "name": "LoadProtectedPointerFromObject",
+          "parameters": [
+            "Node* object",
+            "Node* offset"
+          ],
+          "return_type": "Node*",
+          "logic": "Loads a protected pointer from an object at the given offset."
+        },
+        {
+          "name": "LoadProtectedPointerFromObject",
+          "parameters": [
+            "Node* object",
+            "int offset"
+          ],
+          "return_type": "Node*",
+          "logic": "Loads a protected pointer from an object at a constant offset."
+        },
+        {
+          "name": "LoadImmutableProtectedPointerFromObject",
+          "parameters": [
+            "Node* object",
+            "Node* offset"
+          ],
+          "return_type": "Node*",
+          "logic": "Loads an immutable protected pointer from an object at the given offset."
+        },
+        {
+          "name": "LoadImmutableProtectedPointerFromObject",
+          "parameters": [
+            "Node* object",
+            "int offset"
+          ],
+          "return_type": "Node*",
+          "logic": "Loads an immutable protected pointer from an object at a constant offset."
+        },
+        {
+          "name": "LoadImmutableFromObject",
+          "parameters": [
+            "MachineType type",
+            "Node* base",
+            "Node* offset"
+          ],
+          "return_type": "Node*",
+          "logic": "Loads an immutable value of the given type from an object at the given base and offset."
+        },
+        {
+          "name": "LoadImmutableFromObject",
+          "parameters": [
+            "MachineType type",
+            "Node* base",
+            "int offset"
+          ],
+          "return_type": "Node*",
+          "logic": "Loads an immutable value of the given type from an object at the given base and offset (offset is an integer)."
+        },
+        {
+          "name": "LoadImmutable",
+          "parameters": [
+            "LoadRepresentation rep",
+            "Node* base",
+            "Node* offset"
+          ],
+          "return_type": "Node*",
+          "logic": "Loads an immutable value with the given representation from a base address and offset."
+        },
+        {
+          "name": "LoadImmutable",
+          "parameters": [
+            "LoadRepresentation rep",
+            "Node* base",
+            "int offset"
+          ],
+          "return_type": "Node*",
+          "logic": "Loads an immutable value with the given representation from a base address and integer offset."
+        },
+        {
+          "name": "LoadWasmCodePointer",
+          "parameters": [
+            "Node* code_pointer"
+          ],
+          "return_type": "Node*",
+          "logic": "Loads the Wasm code pointer from the given pointer."
+        },
+        {
+          "name": "StoreToObject",
+          "parameters": [
+            "ObjectAccess access",
+            "Node* base",
+            "Node* offset",
+            "Node* value"
+          ],
+          "return_type": "Node*",
+          "logic": "Stores a value to an object at the given base and offset with the given access properties."
+        },
+        {
+          "name": "StoreToObject",
+          "parameters": [
+            "ObjectAccess access",
+            "Node* base",
+            "int offset",
+            "Node* value"
+          ],
+          "return_type": "Node*",
+          "logic": "Stores a value to an object at the given base and offset (offset is an integer) with the given access properties."
+        },
+        {
+          "name": "InitializeImmutableInObject",
+          "parameters": [
+            "ObjectAccess access",
+            "Node* base",
+            "Node* offset",
+            "Node* value"
+          ],
+          "return_type": "Node*",
+          "logic": "Initializes an immutable value in an object at the given base and offset with the given access properties."
+        },
+        {
+          "name": "InitializeImmutableInObject",
+          "parameters": [
+            "ObjectAccess access",
+            "Node* base",
+            "int offset",
+            "Node* value"
+          ],
+          "return_type": "Node*",
+          "logic": "Initializes an immutable value in an object at the given base and offset (offset is an integer) with the given access properties."
+        },
+        {
+          "name": "BuildDecodeSandboxedExternalPointer",
+          "parameters": [
+            "Node* handle",
+            "ExternalPointerTagRange tag_range",
+            "Node* isolate_root"
+          ],
+          "return_type": "Node*",
+          "logic": "Builds a node that decodes a sandboxed external pointer."
+        },
+        {
+          "name": "BuildLoadExternalPointerFromObject",
+          "parameters": [
+            "Node* object",
+            "int offset",
+            "ExternalPointerTagRange tag_range",
+            "Node* isolate_root"
+          ],
+          "return_type": "Node*",
+          "logic": "Builds a node that loads an external pointer from an object at a constant offset."
+        },
+        {
+          "name": "BuildLoadExternalPointerFromObject",
+          "parameters": [
+            "Node* object",
+            "int offset",
+            "Node* index",
+            "ExternalPointerTagRange tag_range",
+            "Node* isolate_root"
+          ],
+          "return_type": "Node*",
+          "logic": "Builds a node that loads an external pointer from an object at a dynamic offset."
+        },
+        {
+          "name": "LoadImmutableTrustedPointerFromObject",
+          "parameters": [
+            "Node* object",
+            "int offset",
+            "IndirectPointerTag tag"
+          ],
+          "return_type": "Node*",
+          "logic": "Loads an immutable trusted pointer from the object at the specified offset."
+        },
+        {
+          "name": "LoadTrustedPointerFromObject",
+          "parameters": [
+            "Node* object",
+            "int offset",
+            "IndirectPointerTag tag"
+          ],
+          "return_type": "Node*",
+          "logic": "Loads a trusted pointer from the object at the specified offset."
+        },
+        {
+          "name": "LoadTrustedPointerFromObjectTrapOnNull",
+          "parameters": [
+            "Node* object",
+            "int offset",
+            "IndirectPointerTag tag"
+          ],
+          "return_type": "std::pair<Node*, Node*>",
+          "logic": "Loads a trusted pointer from an object. If the pointer is null, trap."
+        },
+        {
+          "name": "BuildDecodeTrustedPointer",
+          "parameters": [
+            "Node* handle",
+            "IndirectPointerTag tag"
+          ],
+          "return_type": "Node*",
+          "logic": "Builds a node that decodes a trusted pointer."
+        },
+        {
+          "name": "IsSmi",
+          "parameters": [
+            "Node* object"
+          ],
+          "return_type": "Node*",
+          "logic": "Checks if an object is a Smi."
+        },
+        {
+          "name": "LoadMap",
+          "parameters": [
+            "Node* object"
+          ],
+          "return_type": "Node*",
+          "logic": "Loads the map of an object."
+        },
+        {
+          "name": "StoreMap",
+          "parameters": [
+            "Node* heap_object",
+            "Node* map"
+          ],
+          "return_type": "void",
+          "logic": "Stores a map to a heap object."
+        },
+        {
+          "name": "LoadInstanceType",
+          "parameters": [
+            "Node* map"
+          ],
+          "return_type": "Node*",
+          "logic": "Loads the instance type from a map."
+        },
+        {
+          "name": "LoadWasmTypeInfo",
+          "parameters": [
+            "Node* map"
+          ],
+          "return_type": "Node*",
+          "logic": "Loads Wasm type information from a map."
+        },
+        {
+          "name": "LoadFixedArrayLengthAsSmi",
+          "parameters": [
+            "Node* fixed_array"
+          ],
+          "return_type": "Node*",
+          "logic": "Loads the length of a fixed array as a Smi."
+        },
+        {
+          "name": "LoadFixedArrayElement",
+          "parameters": [
+            "Node* fixed_array",
+            "Node* index_intptr",
+            "MachineType type"
+          ],
+          "return_type": "Node*",
+          "logic": "Loads an element from a fixed array at the given index."
+        },
+        {
+          "name": "LoadImmutableFixedArrayElement",
+          "parameters": [
+            "Node* fixed_array",
+            "Node* index_intptr",
+            "MachineType type"
+          ],
+          "return_type": "Node*",
+          "logic": "Loads an immutable element from a fixed array at the given index."
+        },
+        {
+          "name": "LoadFixedArrayElement",
+          "parameters": [
+            "Node* array",
+            "int index",
+            "MachineType type"
+          ],
+          "return_type": "Node*",
+          "logic": "Loads a fixed array element at the given index."
+        },
+        {
+          "name": "LoadFixedArrayElementSmi",
+          "parameters": [
+            "Node* array",
+            "int index"
+          ],
+          "return_type": "Node*",
+          "logic": "Loads a fixed array element as a Smi."
+        },
+        {
+          "name": "LoadFixedArrayElementPtr",
+          "parameters": [
+            "Node* array",
+            "int index"
+          ],
+          "return_type": "Node*",
+          "logic": "Loads a fixed array element as a TaggedPointer."
+        },
+        {
+          "name": "LoadFixedArrayElementAny",
+          "parameters": [
+            "Node* array",
+            "int index"
+          ],
+          "return_type": "Node*",
+          "logic": "Loads a fixed array element as AnyTagged."
+        },
+        {
+          "name": "LoadProtectedFixedArrayElement",
+          "parameters": [
+            "Node* array",
+            "int index"
+          ],
+          "return_type": "Node*",
+          "logic": "Loads a protected fixed array element at a constant index."
+        },
+        {
+          "name": "LoadProtectedFixedArrayElement",
+          "parameters": [
+            "Node* array",
+            "Node* index_intptr"
+          ],
+          "return_type": "Node*",
+          "logic": "Loads a protected fixed array element at a dynamic index."
+        },
+        {
+          "name": "LoadByteArrayElement",
+          "parameters": [
+            "Node* byte_array",
+            "Node* index_intptr",
+            "MachineType type"
+          ],
+          "return_type": "Node*",
+          "logic": "Loads a byte array element at the given index."
+        },
+        {
+          "name": "StoreFixedArrayElement",
+          "parameters": [
+            "Node* array",
+            "int index",
+            "Node* value",
+            "ObjectAccess access"
+          ],
+          "return_type": "Node*",
+          "logic": "Stores a value to a fixed array element at the given index."
+        },
+        {
+          "name": "StoreFixedArrayElementSmi",
+          "parameters": [
+            "Node* array",
+            "int index",
+            "Node* value"
+          ],
+          "return_type": "Node*",
+          "logic": "Stores a Smi value to a fixed array element at the given index."
+        },
+        {
+          "name": "StoreFixedArrayElementAny",
+          "parameters": [
+            "Node* array",
+            "int index",
+            "Node* value"
+          ],
+          "return_type": "Node*",
+          "logic": "Stores any tagged value to a fixed array element at the given index."
+        },
+        {
+          "name": "LoadWeakFixedArrayElement",
+          "parameters": [
+            "Node* fixed_array",
+            "Node* index_intptr"
+          ],
+          "return_type": "Node*",
+          "logic": "Loads a weak fixed array element at the given index."
+        },
+        {
+          "name": "LoadSharedFunctionInfo",
+          "parameters": [
+            "Node* js_function"
+          ],
+          "return_type": "Node*",
+          "logic": "Loads the SharedFunctionInfo from a JSFunction."
+        },
+        {
+          "name": "LoadContextFromJSFunction",
+          "parameters": [
+            "Node* js_function"
+          ],
+          "return_type": "Node*",
+          "logic": "Loads the context from a JSFunction."
+        },
+        {
+          "name": "LoadFunctionDataFromJSFunction",
+          "parameters": [
+            "Node* js_function"
+          ],
+          "return_type": "Node*",
+          "logic": "Loads the function data from a JSFunction."
+        },
+        {
+          "name": "LoadExportedFunctionIndexAsSmi",
+          "parameters": [
+            "Node* exported_function_data"
+          ],
+          "return_type": "Node*",
+          "logic": "Loads the exported function index as a Smi."
+        },
+        {
+          "name": "LoadExportedFunctionInstanceData",
+          "parameters": [
+            "Node* exported_function_data"
+          ],
+          "return_type": "Node*",
+          "logic": "Loads the exported function instance data."
+        },
+        {
+          "name": "LoadJSArrayElements",
+          "parameters": [
+            "Node* js_array"
+          ],
+          "return_type": "Node*",
+          "logic": "Loads the elements of a JSArray."
+        },
+        {
+          "name": "FieldOffset",
+          "parameters": [
+            "const wasm::StructType* type",
+            "uint32_t field_index"
+          ],
+          "return_type": "Node*",
+          "logic": "Calculates the offset of a field within a Wasm struct type."
+        },
+        {
+          "name": "WasmArrayElementOffset",
+          "parameters": [
+            "Node* index",
+            "wasm::ValueType element_type"
+          ],
+          "return_type": "Node*",
+          "logic": "Calculates the offset of an element within a Wasm array."
+        },
+        {
+          "name": "IsDataRefMap",
+          "parameters": [
+            "Node* map"
+          ],
+          "return_type": "Node*",
+          "logic": "Checks if a map is a DataRefMap."
+        },
+        {
+          "name": "WasmTypeCheck",
+          "parameters": [
+            "Node* object",
+            "Node* rtt",
+            "WasmTypeCheckConfig config"
+          ],
+          "return_type": "Node*",
+          "logic": "Performs a Wasm type check."
+        },
+        {
+          "name": "WasmTypeCheckAbstract",
+          "parameters": [
+            "Node* object",
+            "WasmTypeCheckConfig config"
+          ],
+          "return_type": "Node*",
+          "logic": "Performs an abstract wasm type check."
+        },
+        {
+          "name": "WasmTypeCast",
+          "parameters": [
+            "Node* object",
+            "Node* rtt",
+            "WasmTypeCheckConfig config"
+          ],
+          "return_type": "Node*",
+          "logic": "Performs a Wasm type cast."
+        },
+        {
+          "name": "WasmTypeCastAbstract",
+          "parameters": [
+            "Node* object",
+            "WasmTypeCheckConfig config"
+          ],
+          "return_type": "Node*",
+          "logic": "Performs an abstract wasm type cast."
+        },
+        {
+          "name": "Null",
+          "parameters": [
+            "wasm::ValueType type"
+          ],
+          "return_type": "Node*",
+          "logic": "Returns a null value of the specified Wasm type."
+        },
+        {
+          "name": "IsNull",
+          "parameters": [
+            "Node* object",
+            "wasm::ValueType type"
+          ],
+          "return_type": "Node*",
+          "logic": "Checks if an object is null of the specified Wasm type."
+        },
+        {
+          "name": "IsNotNull",
+          "parameters": [
+            "Node* object",
+            "wasm::ValueType type"
+          ],
+          "return_type": "Node*",
+          "logic": "Checks if an object is not null of the specified Wasm type."
+        },
+        {
+          "name": "AssertNotNull",
+          "parameters": [
+            "Node* object",
+            "wasm::ValueType type",
+            "TrapId trap_id"
+          ],
+          "return_type": "Node*",
+          "logic": "Asserts that an object is not null of the specified Wasm type. Traps if it is."
+        },
+        {
+          "name": "WasmAnyConvertExtern",
+          "parameters": [
+            "Node* object"
+          ],
+          "return_type": "Node*",
+          "logic": "Converts wasm anyref to externref"
+        },
+        {
+          "name": "WasmExternConvertAny",
+          "parameters": [
+            "Node* object"
+          ],
+          "return_type": "Node*",
+          "logic": "Converts wasm externref to anyref"
+        },
+        {
+          "name": "StructGet",
+          "parameters": [
+            "Node* object",
+            "const wasm::StructType* type",
+            "int field_index",
+            "bool is_signed",
+            "CheckForNull null_check"
+          ],
+          "return_type": "Node*",
+          "logic": "Gets the value of a field in a Wasm struct."
+        },
+        {
+          "name": "StructSet",
+          "parameters": [
+            "Node* object",
+            "Node* value",
+            "const wasm::StructType* type",
+            "int field_index",
+            "CheckForNull null_check"
+          ],
+          "return_type": "void",
+          "logic": "Sets the value of a field in a Wasm struct."
+        },
+        {
+          "name": "ArrayGet",
+          "parameters": [
+            "Node* array",
+            "Node* index",
+            "const wasm::ArrayType* type",
+            "bool is_signed"
+          ],
+          "return_type": "Node*",
+          "logic": "Gets the value of an element in a Wasm array."
+        },
+        {
+          "name": "ArraySet",
+          "parameters": [
+            "Node* array",
+            "Node* index",
+            "Node* value",
+            "const wasm::ArrayType* type"
+          ],
+          "return_type": "void",
+          "logic": "Sets the value of an element in a Wasm array."
+        },
+        {
+          "name": "ArrayLength",
+          "parameters": [
+            "Node* array",
+            "CheckForNull null_check"
+          ],
+          "return_type": "Node*",
+          "logic": "Gets the length of a Wasm array."
+        },
+        {
+          "name": "ArrayInitializeLength",
+          "parameters": [
+            "Node* array",
+            "Node* length"
+          ],
+          "return_type": "void",
+          "logic": "Initializes the length of a Wasm array."
+        },
+        {
+          "name": "LoadStringLength",
+          "parameters": [
+            "Node* string"
+          ],
+          "return_type": "Node*",
+          "logic": "Loads the length of a String object."
+        },
+        {
+          "name": "StringAsWtf16",
+          "parameters": [
+            "Node* string"
+          ],
+          "return_type": "Node*",
+          "logic": "Get string content as WTF16."
+        },
+        {
+          "name": "StringPrepareForGetCodeunit",
+          "parameters": [
+            "Node* string"
+          ],
+          "return_type": "Node*",
+          "logic": "Prepares string for get codeunit."
+        },
+        {
+          "name": "HasInstanceType",
+          "parameters": [
+            "Node* heap_object",
+            "InstanceType type"
+          ],
+          "return_type": "Node*",
+          "logic": "Checks if a heap object has the given instance type."
+        },
+        {
+          "name": "TrapIf",
+          "parameters": [
+            "Node* condition",
+            "TrapId reason"
+          ],
+          "return_type": "void",
+          "logic": "Traps if the given condition is true."
+        },
+        {
+          "name": "TrapUnless",
+          "parameters": [
+            "Node* condition",
+            "TrapId reason"
+          ],
+          "return_type": "void",
+          "logic": "Traps unless the given condition is true."
+        },
+        {
+          "name": "LoadTrustedDataFromInstanceObject",
+          "parameters": [
+            "Node* instance_object"
+          ],
+          "return_type": "Node*",
+          "logic": "Loads trusted data from the instance object."
+        },
+        {
+          "name": "simplified",
+          "parameters": [],
+          "return_type": "SimplifiedOperatorBuilder*",
+          "logic": "Returns a pointer to the SimplifiedOperatorBuilder member."
+        },
+        {
+          "name": "CallBuiltinImpl",
+          "parameters": [
+            "Builtin name",
+            "bool needs_frame_state",
+            "Operator::Properties properties",
+            "Args... args"
+          ],
+          "return_type": "Node*",
+          "logic": "Internal helper for generating calls to builtin functions, handling frame states, and properties."
+        }
+      ]
+    }
+  ],
+  "functions": [
+    {
+      "name": "GetBuiltinCallDescriptor",
+      "parameters": [
+        "Builtin name",
+        "Zone* zone",
+        "StubCallMode stub_mode",
+        "bool needs_frame_state",
+        "Operator::Properties properties"
+      ],
+      "return_type": "CallDescriptor*",
+      "logic": "Returns a CallDescriptor for a given builtin."
+    },
+    {
+      "name": "ObjectAccessForGCStores",
+      "parameters": [
+        "wasm::ValueType type"
+      ],
+      "return_type": "ObjectAccess",
+      "logic": "Returns the appropriate ObjectAccess for GC stores of a given value type."
+    }
+  ]
+}

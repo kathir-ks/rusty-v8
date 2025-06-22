@@ -1,0 +1,427 @@
+{
+  "file_path": "/home/kathirks_gc/v8_go/codebase/src/compiler/csa-load-elimination.h",
+  "imports": [
+    "src/base/compiler-specific.h",
+    "src/codegen/machine-type.h",
+    "src/compiler/graph-reducer.h",
+    "src/compiler/js-graph.h",
+    "src/compiler/node-aux-data.h",
+    "src/compiler/persistent-map.h"
+  ],
+  "classes": [
+    {
+      "name": "CsaLoadElimination",
+      "properties": [
+        "empty_state_",
+        "node_states_",
+        "jsgraph_",
+        "zone_"
+      ],
+      "methods": [
+        {
+          "name": "CsaLoadElimination",
+          "parameters": [
+            "Editor* editor",
+            "JSGraph* jsgraph",
+            "Zone* zone"
+          ],
+          "return_type": "void",
+          "logic": "Constructor for the CsaLoadElimination class. Initializes the AdvancedReducer, empty_state_, node_states_, jsgraph_, and zone_ members."
+        },
+        {
+          "name": "~CsaLoadElimination",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Default destructor for the CsaLoadElimination class."
+        },
+        {
+          "name": "operator=",
+          "parameters": [
+            "const CsaLoadElimination&"
+          ],
+          "return_type": "CsaLoadElimination&",
+          "logic": "Deleted copy assignment operator."
+        },
+        {
+          "name": "CsaLoadElimination",
+          "parameters": [
+            "const CsaLoadElimination&"
+          ],
+          "return_type": "void",
+          "logic": "Deleted copy constructor."
+        },
+        {
+          "name": "reducer_name",
+          "parameters": [],
+          "return_type": "const char*",
+          "logic": "Returns the name of the reducer, which is \"CsaLoadElimination\"."
+        },
+        {
+          "name": "Reduce",
+          "parameters": [
+            "Node* node"
+          ],
+          "return_type": "Reduction",
+          "logic": "The main method of the reducer. It attempts to reduce the given node."
+        },
+        {
+          "name": "common",
+          "parameters": [],
+          "return_type": "CommonOperatorBuilder*",
+          "logic": "Returns a pointer to the CommonOperatorBuilder."
+        },
+        {
+          "name": "machine",
+          "parameters": [],
+          "return_type": "MachineOperatorBuilder*",
+          "logic": "Returns a pointer to the MachineOperatorBuilder."
+        },
+        {
+          "name": "isolate",
+          "parameters": [],
+          "return_type": "Isolate*",
+          "logic": "Returns a pointer to the Isolate."
+        },
+        {
+          "name": "graph",
+          "parameters": [],
+          "return_type": "TFGraph*",
+          "logic": "Returns a pointer to the TFGraph."
+        },
+        {
+          "name": "jsgraph",
+          "parameters": [],
+          "return_type": "JSGraph*",
+          "logic": "Returns a pointer to the JSGraph."
+        },
+        {
+          "name": "zone",
+          "parameters": [],
+          "return_type": "Zone*",
+          "logic": "Returns a pointer to the Zone."
+        },
+        {
+          "name": "empty_state",
+          "parameters": [],
+          "return_type": "AbstractState const*",
+          "logic": "Returns a pointer to the empty AbstractState."
+        }
+      ]
+    },
+    {
+      "name": "CsaLoadElimination::FieldInfo",
+      "properties": [
+        "value",
+        "representation"
+      ],
+      "methods": [
+        {
+          "name": "FieldInfo",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Default constructor for FieldInfo."
+        },
+        {
+          "name": "FieldInfo",
+          "parameters": [
+            "Node* value",
+            "MachineRepresentation representation"
+          ],
+          "return_type": "void",
+          "logic": "Constructor for FieldInfo that initializes the value and representation members."
+        },
+        {
+          "name": "operator==",
+          "parameters": [
+            "const FieldInfo& other"
+          ],
+          "return_type": "bool",
+          "logic": "Compares two FieldInfo objects for equality."
+        },
+        {
+          "name": "operator!=",
+          "parameters": [
+            "const FieldInfo& other"
+          ],
+          "return_type": "bool",
+          "logic": "Compares two FieldInfo objects for inequality."
+        },
+        {
+          "name": "IsEmpty",
+          "parameters": [],
+          "return_type": "bool",
+          "logic": "Checks if the FieldInfo is empty (value is null)."
+        }
+      ]
+    },
+    {
+      "name": "CsaLoadElimination::HalfState",
+      "properties": [
+        "zone_",
+        "fresh_entries_",
+        "constant_entries_",
+        "arbitrary_entries_",
+        "fresh_unknown_entries_",
+        "constant_unknown_entries_",
+        "arbitrary_unknown_entries_"
+      ],
+      "methods": [
+        {
+          "name": "HalfState",
+          "parameters": [
+            "Zone* zone"
+          ],
+          "return_type": "void",
+          "logic": "Constructor for the HalfState class. Initializes the zone_ and entries_ members."
+        },
+        {
+          "name": "Equals",
+          "parameters": [
+            "HalfState const* that"
+          ],
+          "return_type": "bool",
+          "logic": "Checks if two HalfState objects are equal."
+        },
+        {
+          "name": "IntersectWith",
+          "parameters": [
+            "HalfState const* that"
+          ],
+          "return_type": "void",
+          "logic": "Intersects the current HalfState with another HalfState."
+        },
+        {
+          "name": "KillField",
+          "parameters": [
+            "Node* object",
+            "Node* offset",
+            "MachineRepresentation repr"
+          ],
+          "return_type": "HalfState const*",
+          "logic": "Removes a field from the HalfState."
+        },
+        {
+          "name": "AddField",
+          "parameters": [
+            "Node* object",
+            "Node* offset",
+            "Node* value",
+            "MachineRepresentation repr"
+          ],
+          "return_type": "HalfState const*",
+          "logic": "Adds a field to the HalfState."
+        },
+        {
+          "name": "Lookup",
+          "parameters": [
+            "Node* object",
+            "Node* offset"
+          ],
+          "return_type": "FieldInfo",
+          "logic": "Looks up a field in the HalfState."
+        },
+        {
+          "name": "Print",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Prints the contents of the HalfState for debugging."
+        },
+        {
+          "name": "Update",
+          "parameters": [
+            "OuterMap<OuterKey>& map",
+            "OuterKey outer_key",
+            "Node* inner_key",
+            "FieldInfo info"
+          ],
+          "return_type": "void",
+          "logic": "Updates a nested PersistentMap with the given outer_key, inner_key, and FieldInfo."
+        },
+        {
+          "name": "KillOffset",
+          "parameters": [
+            "ConstantOffsetInfos& infos",
+            "uint32_t offset",
+            "MachineRepresentation repr",
+            "Zone* zone"
+          ],
+          "return_type": "void",
+          "logic": "Kills all elements in infos which may alias with offset."
+        },
+        {
+          "name": "KillOffsetInFresh",
+          "parameters": [
+            "Node* object",
+            "uint32_t offset",
+            "MachineRepresentation repr"
+          ],
+          "return_type": "void",
+          "logic": "Kills offset in the fresh entries map."
+        },
+        {
+          "name": "IntersectWith",
+          "parameters": [
+            "OuterMap<OuterKey>& to",
+            "const OuterMap<OuterKey>& from"
+          ],
+          "return_type": "void",
+          "logic": "Intersects the 'to' map with the 'from' map."
+        },
+        {
+          "name": "Print",
+          "parameters": [
+            "const ConstantOffsetInfos& infos"
+          ],
+          "return_type": "void",
+          "logic": "Prints the constant offset infos map."
+        },
+        {
+          "name": "Print",
+          "parameters": [
+            "const UnknownOffsetInfos& infos"
+          ],
+          "return_type": "void",
+          "logic": "Prints the unknown offset infos map."
+        }
+      ]
+    },
+    {
+      "name": "CsaLoadElimination::AbstractState",
+      "properties": [
+        "mutable_state",
+        "immutable_state"
+      ],
+      "methods": [
+        {
+          "name": "AbstractState",
+          "parameters": [
+            "Zone* zone"
+          ],
+          "return_type": "void",
+          "logic": "Constructor for the AbstractState class. Initializes the mutable_state and immutable_state members with empty HalfState objects."
+        },
+        {
+          "name": "AbstractState",
+          "parameters": [
+            "HalfState mutable_state",
+            "HalfState immutable_state"
+          ],
+          "return_type": "void",
+          "logic": "Constructor for the AbstractState class. Initializes the mutable_state and immutable_state members with the given HalfState objects."
+        },
+        {
+          "name": "Equals",
+          "parameters": [
+            "AbstractState const* that"
+          ],
+          "return_type": "bool",
+          "logic": "Checks if two AbstractState objects are equal."
+        },
+        {
+          "name": "IntersectWith",
+          "parameters": [
+            "AbstractState const* that"
+          ],
+          "return_type": "void",
+          "logic": "Intersects the current AbstractState with another AbstractState."
+        }
+      ]
+    }
+  ],
+  "functions": [
+    {
+      "name": "ReduceLoadFromObject",
+      "parameters": [
+        "Node* node",
+        "ObjectAccess const& access"
+      ],
+      "return_type": "Reduction",
+      "logic": "Reduces a LoadFromObject node."
+    },
+    {
+      "name": "ReduceStoreToObject",
+      "parameters": [
+        "Node* node",
+        "ObjectAccess const& access"
+      ],
+      "return_type": "Reduction",
+      "logic": "Reduces a StoreToObject node."
+    },
+    {
+      "name": "ReduceEffectPhi",
+      "parameters": [
+        "Node* node"
+      ],
+      "return_type": "Reduction",
+      "logic": "Reduces an EffectPhi node."
+    },
+    {
+      "name": "ReduceStart",
+      "parameters": [
+        "Node* node"
+      ],
+      "return_type": "Reduction",
+      "logic": "Reduces a Start node."
+    },
+    {
+      "name": "ReduceCall",
+      "parameters": [
+        "Node* node"
+      ],
+      "return_type": "Reduction",
+      "logic": "Reduces a Call node."
+    },
+    {
+      "name": "ReduceOtherNode",
+      "parameters": [
+        "Node* node"
+      ],
+      "return_type": "Reduction",
+      "logic": "Reduces a node of a different type."
+    },
+    {
+      "name": "UpdateState",
+      "parameters": [
+        "Node* node",
+        "AbstractState const* state"
+      ],
+      "return_type": "Reduction",
+      "logic": "Updates the state of a node."
+    },
+    {
+      "name": "PropagateInputState",
+      "parameters": [
+        "Node* node"
+      ],
+      "return_type": "Reduction",
+      "logic": "Propagates the input state to a node."
+    },
+    {
+      "name": "ComputeLoopState",
+      "parameters": [
+        "Node* node",
+        "AbstractState const* state"
+      ],
+      "return_type": "AbstractState const*",
+      "logic": "Computes the state of a node in a loop."
+    },
+    {
+      "name": "TruncateAndExtend",
+      "parameters": [
+        "Node* node",
+        "MachineRepresentation from",
+        "MachineType to"
+      ],
+      "return_type": "Node*",
+      "logic": "Truncates and extends a node from one machine representation to another."
+    },
+    {
+      "name": "AssertUnreachable",
+      "parameters": [
+        "Node* node"
+      ],
+      "return_type": "Reduction",
+      "logic": "Asserts that a node is unreachable."
+    }
+  ]
+}

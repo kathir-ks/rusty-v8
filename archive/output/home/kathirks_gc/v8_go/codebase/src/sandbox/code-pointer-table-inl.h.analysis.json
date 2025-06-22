@@ -1,0 +1,187 @@
+{
+  "file_path": "/home/kathirks_gc/v8_go/codebase/src/sandbox/code-pointer-table-inl.h",
+  "imports": [
+    "src/common/code-memory-access-inl.h",
+    "src/sandbox/code-pointer-table.h",
+    "src/sandbox/external-entity-table-inl.h"
+  ],
+  "classes": [
+    {
+      "name": "CodePointerTableEntry",
+      "properties": [
+        "entrypoint_",
+        "code_"
+      ],
+      "methods": [
+        {
+          "name": "MakeCodePointerEntry",
+          "parameters": [
+            "Address code",
+            "Address entrypoint",
+            "CodeEntrypointTag tag",
+            "bool mark_as_alive"
+          ],
+          "return_type": "void",
+          "logic": "Initializes a CodePointerTableEntry with the provided code address, entrypoint, tag, and marking status. It also performs checks to ensure the input values are valid and stores them into the member variables. The entrypoint is XORed with the tag before storing."
+        },
+        {
+          "name": "GetEntrypoint",
+          "parameters": [
+            "CodeEntrypointTag tag"
+          ],
+          "return_type": "Address",
+          "logic": "Retrieves the entrypoint address from the CodePointerTableEntry by XORing the stored entrypoint with the provided tag."
+        },
+        {
+          "name": "SetEntrypoint",
+          "parameters": [
+            "Address value",
+            "CodeEntrypointTag tag"
+          ],
+          "return_type": "void",
+          "logic": "Sets the entrypoint address of the CodePointerTableEntry. The provided value is XORed with the tag before being stored."
+        },
+        {
+          "name": "GetCodeObject",
+          "parameters": [],
+          "return_type": "Address",
+          "logic": "Retrieves the code object address from the CodePointerTableEntry and sets the marking bit. It reuses the heap object tag bit as a marking bit."
+        },
+        {
+          "name": "SetCodeObject",
+          "parameters": [
+            "Address new_value"
+          ],
+          "return_type": "void",
+          "logic": "Sets the code object address of the CodePointerTableEntry. It also checks to ensure the marking state doesn't change."
+        },
+        {
+          "name": "MakeFreelistEntry",
+          "parameters": [
+            "uint32_t next_entry_index"
+          ],
+          "return_type": "void",
+          "logic": "Marks the CodePointerTableEntry as a freelist entry, storing the index of the next free entry."
+        },
+        {
+          "name": "IsFreelistEntry",
+          "parameters": [],
+          "return_type": "bool",
+          "logic": "Checks if the CodePointerTableEntry is a freelist entry by checking if the entrypoint_ contains the kFreeEntryTag."
+        },
+        {
+          "name": "GetNextFreelistEntryIndex",
+          "parameters": [],
+          "return_type": "uint32_t",
+          "logic": "Retrieves the index of the next freelist entry."
+        },
+        {
+          "name": "Mark",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Marks the code object in the CodePointerTableEntry by setting the kMarkingBit using a compare-and-swap operation. Sets the marking bit."
+        },
+        {
+          "name": "Unmark",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Unmarks the code object in the CodePointerTableEntry by clearing the kMarkingBit. Clears the marking bit."
+        },
+        {
+          "name": "IsMarked",
+          "parameters": [],
+          "return_type": "bool",
+          "logic": "Checks if the code object in the CodePointerTableEntry is marked (i.e., if the kMarkingBit is set)."
+        }
+      ]
+    },
+    {
+      "name": "CodePointerTable",
+      "properties": [],
+      "methods": [
+        {
+          "name": "GetEntrypoint",
+          "parameters": [
+            "CodePointerHandle handle",
+            "CodeEntrypointTag tag"
+          ],
+          "return_type": "Address",
+          "logic": "Retrieves the entrypoint address from the CodePointerTable at the index corresponding to the given handle."
+        },
+        {
+          "name": "GetCodeObject",
+          "parameters": [
+            "CodePointerHandle handle"
+          ],
+          "return_type": "Address",
+          "logic": "Retrieves the code object address from the CodePointerTable at the index corresponding to the given handle."
+        },
+        {
+          "name": "SetEntrypoint",
+          "parameters": [
+            "CodePointerHandle handle",
+            "Address value",
+            "CodeEntrypointTag tag"
+          ],
+          "return_type": "void",
+          "logic": "Sets the entrypoint address in the CodePointerTable at the index corresponding to the given handle."
+        },
+        {
+          "name": "SetCodeObject",
+          "parameters": [
+            "CodePointerHandle handle",
+            "Address value"
+          ],
+          "return_type": "void",
+          "logic": "Sets the code object address in the CodePointerTable at the index corresponding to the given handle."
+        },
+        {
+          "name": "AllocateAndInitializeEntry",
+          "parameters": [
+            "Space* space",
+            "Address code",
+            "Address entrypoint",
+            "CodeEntrypointTag tag"
+          ],
+          "return_type": "CodePointerHandle",
+          "logic": "Allocates a new entry in the CodePointerTable and initializes it with the given code, entrypoint, and tag."
+        },
+        {
+          "name": "Mark",
+          "parameters": [
+            "Space* space",
+            "CodePointerHandle handle"
+          ],
+          "return_type": "void",
+          "logic": "Marks an entry in the CodePointerTable."
+        },
+        {
+          "name": "IterateActiveEntriesIn",
+          "parameters": [
+            "Space* space",
+            "Callback callback"
+          ],
+          "return_type": "void",
+          "logic": "Iterates over all active entries in the CodePointerTable and calls the provided callback function for each entry."
+        },
+        {
+          "name": "HandleToIndex",
+          "parameters": [
+            "CodePointerHandle handle"
+          ],
+          "return_type": "uint32_t",
+          "logic": "Converts a CodePointerHandle to an index within the CodePointerTable."
+        },
+        {
+          "name": "IndexToHandle",
+          "parameters": [
+            "uint32_t index"
+          ],
+          "return_type": "CodePointerHandle",
+          "logic": "Converts an index within the CodePointerTable to a CodePointerHandle."
+        }
+      ]
+    }
+  ],
+  "functions": []
+}

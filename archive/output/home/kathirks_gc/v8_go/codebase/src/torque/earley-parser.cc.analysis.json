@@ -1,0 +1,186 @@
+{
+  "file_path": "/home/kathirks_gc/v8_go/codebase/src/torque/earley-parser.cc",
+  "imports": [
+    "src/torque/earley-parser.h",
+    "<algorithm>",
+    "<optional>",
+    "<set>",
+    "<unordered_map>",
+    "<unordered_set>",
+    "src/torque/ast.h",
+    "src/torque/utils.h"
+  ],
+  "classes": [
+    {
+      "name": "LineAndColumnTracker",
+      "properties": [
+        "LineAndColumn previous",
+        "LineAndColumn current"
+      ],
+      "methods": [
+        {
+          "name": "Advance",
+          "parameters": [
+            "InputPosition from",
+            "InputPosition to"
+          ],
+          "return_type": "void",
+          "logic": "Updates the line and column information based on the input position range. Tracks line breaks and calculates the current line and column number."
+        },
+        {
+          "name": "ToSourcePosition",
+          "parameters": [],
+          "return_type": "SourcePosition",
+          "logic": "Creates a SourcePosition object based on the tracked line and column information."
+        }
+      ]
+    },
+    {
+      "name": "Rule",
+      "properties": [],
+      "methods": [
+        {
+          "name": "RunAction",
+          "parameters": [
+            "const Item* completed_item",
+            "const LexerResult& tokens"
+          ],
+          "return_type": "std::optional<ParseResult>",
+          "logic": "Executes the parse action associated with this rule. It retrieves the results of child items, constructs a ParseResultIterator, executes the action, and returns the result, ensuring all child results have been consumed."
+        }
+      ]
+    },
+    {
+      "name": "Symbol",
+      "properties": [
+        "std::vector<Rule> rules_"
+      ],
+      "methods": [
+        {
+          "name": "operator=",
+          "parameters": [
+            "std::initializer_list<Rule> rules"
+          ],
+          "return_type": "Symbol&",
+          "logic": "Assigns a set of rules to the Symbol, clearing existing rules first."
+        }
+      ]
+    },
+    {
+      "name": "Item",
+      "properties": [
+        "const Rule* rule_",
+        "size_t dot_",
+        "size_t pos_",
+        "size_t start_",
+        "const Item* prev_",
+        "const Item* child_"
+      ],
+      "methods": [
+        {
+          "name": "Children",
+          "parameters": [],
+          "return_type": "std::vector<const Item*>",
+          "logic": "Retrieves the child items of this Item. It reconstructs the child list by traversing back using the prev_ pointers."
+        },
+        {
+          "name": "SplitByChildren",
+          "parameters": [
+            "const LexerResult& tokens"
+          ],
+          "return_type": "std::string",
+          "logic": "Creates a string representation of the Item, splitting it based on its children's matched inputs."
+        },
+        {
+          "name": "CheckAmbiguity",
+          "parameters": [
+            "const Item& other",
+            "const LexerResult& tokens"
+          ],
+          "return_type": "void",
+          "logic": "Checks for ambiguity between this Item and another. It reports an error if there are differences in child items or previous items, indicating ambiguous grammar rules."
+        }
+      ]
+    },
+    {
+      "name": "Lexer",
+      "properties": [
+        "PatternFunction match_whitespace_",
+        "std::vector<std::pair<const PatternFunction, Symbol>> patterns_",
+        "std::map<const std::string, Symbol> keywords_"
+      ],
+      "methods": [
+        {
+          "name": "RunLexer",
+          "parameters": [
+            "const std::string& input"
+          ],
+          "return_type": "LexerResult",
+          "logic": "Runs the lexer on the input string. It iterates through the input, matches tokens using patterns and keywords, and stores the tokens and their corresponding symbols and positions in the LexerResult."
+        },
+        {
+          "name": "MatchToken",
+          "parameters": [
+            "InputPosition* pos",
+            "InputPosition end"
+          ],
+          "return_type": "Symbol*",
+          "logic": "Attempts to match a token at the current position. It tries to match patterns first and then keywords, preferring keywords if they are longer or equal in length to the matched pattern. Returns the matched symbol or nullptr if no match is found."
+        }
+      ]
+    },
+    {
+      "name": "Grammar",
+      "properties": [],
+      "methods": [
+        {
+          "name": "MatchChar",
+          "parameters": [
+            "int (*char_class)(int)",
+            "InputPosition* pos"
+          ],
+          "return_type": "bool",
+          "logic": "Static method to match a character based on a given character class function (taking an int). Advances the InputPosition if a match is found."
+        },
+        {
+          "name": "MatchChar",
+          "parameters": [
+            "bool (*char_class)(char)",
+            "InputPosition* pos"
+          ],
+          "return_type": "bool",
+          "logic": "Static method to match a character based on a given character class function (taking a char). Advances the InputPosition if a match is found."
+        },
+        {
+          "name": "MatchString",
+          "parameters": [
+            "const char* s",
+            "InputPosition* pos"
+          ],
+          "return_type": "bool",
+          "logic": "Static method to match a string at the current position. Advances the InputPosition if the string matches."
+        },
+        {
+          "name": "MatchAnyChar",
+          "parameters": [
+            "InputPosition* pos"
+          ],
+          "return_type": "bool",
+          "logic": "Static method to match any single character. Always returns true if there is a character to match. Advances the InputPosition if a character is matched."
+        }
+      ]
+    }
+  ],
+  "functions": [
+    {
+      "name": "RunEarleyAlgorithm",
+      "parameters": [
+        "Symbol* start",
+        "const LexerResult& tokens",
+        "std::unordered_set<Item, base::hash<Item>>* processed"
+      ],
+      "return_type": "const Item*",
+      "logic": "Implements the Earley parsing algorithm. It iterates through the tokens, maintains worklists of items, performs prediction, scanning, and completion phases, and ultimately returns the root of the parse tree or reports a parsing error."
+    }
+  ]
+}

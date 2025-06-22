@@ -1,0 +1,281 @@
+{
+  "metadata": {
+    "path": "/home/kathirks_gc/v8_go/archive/codebase/src/deoptimizer/loong64/deoptimizer-loong64.cc",
+    "file_name": "deoptimizer-loong64.cc",
+    "language": "cpp",
+    "purpose": "Provides LoongArch64-specific implementations for the deoptimizer functionality in V8."
+  },
+  "imports": {
+    "metadata": {
+      "language": "cpp",
+      "purpose": "Includes the general deoptimizer header file."
+    },
+    "code": "#include \"src/deoptimizer/deoptimizer.h\""
+  },
+  "classes": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "Deoptimizer",
+        "about": "Provides functionality for deoptimizing code in V8.  This section defines architecture (LoongArch64) specific constants.",
+        "attributes": [
+          {
+            "name": "kEagerDeoptExitSize",
+            "type": "const int",
+            "access": "public",
+            "purpose": "Size of the eager deoptimization exit code in bytes."
+          },
+          {
+            "name": "kLazyDeoptExitSize",
+            "type": "const int",
+            "access": "public",
+            "purpose": "Size of the lazy deoptimization exit code in bytes."
+          },
+          {
+            "name": "kAdaptShadowStackOffsetToSubtract",
+            "type": "const int",
+            "access": "public",
+            "purpose": "Offset to subtract when adapting the shadow stack."
+          }
+        ],
+        "dependencies": []
+      },
+      "code": "const int Deoptimizer::kEagerDeoptExitSize = 2 * kInstrSize;\nconst int Deoptimizer::kLazyDeoptExitSize = 2 * kInstrSize;\n\nconst int Deoptimizer::kAdaptShadowStackOffsetToSubtract = 0;"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "RegisterValues",
+        "about": "Represents the register values during deoptimization. Provides access to floating-point registers (Float32 and Float64).",
+        "attributes": [],
+        "dependencies": []
+      },
+      "code": "Float32 RegisterValues::GetFloatRegister(unsigned n) const {\n  V8_ASSUME(n < arraysize(simd128_registers_));\n  return base::ReadUnalignedValue<Float32>(\n      reinterpret_cast<Address>(simd128_registers_ + n));\n}\n\nFloat64 RegisterValues::GetDoubleRegister(unsigned n) const {\n  V8_ASSUME(n < arraysize(simd128_registers_));\n  return base::ReadUnalignedValue<Float64>(\n      reinterpret_cast<Address>(simd128_registers_ + n));\n}\n\nvoid RegisterValues::SetDoubleRegister(unsigned n, Float64 value) {\n  V8_ASSUME(n < arraysize(simd128_registers_));\n  base::WriteUnalignedValue(reinterpret_cast<Address>(simd128_registers_ + n),\n                            value);\n}"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "FrameDescription",
+        "about": "Provides information about the stack frame during deoptimization.",
+        "attributes": [],
+        "dependencies": []
+      },
+      "code": "void FrameDescription::SetCallerPc(unsigned offset, intptr_t value) {\n  SetFrameSlot(offset, value);\n}\n\nvoid FrameDescription::SetCallerFp(unsigned offset, intptr_t value) {\n  SetFrameSlot(offset, value);\n}\n\nvoid FrameDescription::SetCallerConstantPool(unsigned offset, intptr_t value) {\n  // No embedded constant pool support.\n  UNREACHABLE();\n}\n\nvoid FrameDescription::SetPc(intptr_t pc) { pc_ = pc; }"
+    }
+  ],
+  "functions": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "method",
+        "name": "PatchToJump",
+        "parent": "Deoptimizer",
+        "about": "Patches the code at the given address to jump to a new address. LoongArch64 implementation.",
+        "logic": "The current implementation is UNREACHABLE, meaning it's not yet implemented for this architecture.",
+        "parameters": [
+          {
+            "name": "pc",
+            "type": "Address",
+            "purpose": "The address of the code to patch."
+          },
+          {
+            "name": "new_pc",
+            "type": "Address",
+            "purpose": "The address to jump to."
+          }
+        ],
+        "return": {
+          "type": "void",
+          "description": "This function does not return."
+        },
+        "dependencies": []
+      },
+      "code": "// static\nvoid Deoptimizer::PatchToJump(Address pc, Address new_pc) { UNREACHABLE(); }"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "method",
+        "name": "GetFloatRegister",
+        "parent": "RegisterValues",
+        "about": "Retrieves the value of a Float32 register.",
+        "logic": "Reads a Float32 value from the `simd128_registers_` array at the given index using `base::ReadUnalignedValue`. It assumes the index is within the array bounds via V8_ASSUME.",
+        "parameters": [
+          {
+            "name": "n",
+            "type": "unsigned",
+            "purpose": "The index of the register to retrieve."
+          }
+        ],
+        "return": {
+          "type": "Float32",
+          "description": "The value of the floating-point register."
+        },
+        "dependencies": []
+      },
+      "code": "Float32 RegisterValues::GetFloatRegister(unsigned n) const {\n  V8_ASSUME(n < arraysize(simd128_registers_));\n  return base::ReadUnalignedValue<Float32>(\n      reinterpret_cast<Address>(simd128_registers_ + n));\n}"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "method",
+        "name": "GetDoubleRegister",
+        "parent": "RegisterValues",
+        "about": "Retrieves the value of a Float64 register.",
+        "logic": "Reads a Float64 value from the `simd128_registers_` array at the given index using `base::ReadUnalignedValue`.  It assumes the index is within the array bounds via V8_ASSUME.",
+        "parameters": [
+          {
+            "name": "n",
+            "type": "unsigned",
+            "purpose": "The index of the register to retrieve."
+          }
+        ],
+        "return": {
+          "type": "Float64",
+          "description": "The value of the floating-point register."
+        },
+        "dependencies": []
+      },
+      "code": "Float64 RegisterValues::GetDoubleRegister(unsigned n) const {\n  V8_ASSUME(n < arraysize(simd128_registers_));\n  return base::ReadUnalignedValue<Float64>(\n      reinterpret_cast<Address>(simd128_registers_ + n));\n}"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "method",
+        "name": "SetDoubleRegister",
+        "parent": "RegisterValues",
+        "about": "Sets the value of a Float64 register.",
+        "logic": "Writes a Float64 value to the `simd128_registers_` array at the given index using `base::WriteUnalignedValue`. It assumes the index is within the array bounds via V8_ASSUME.",
+        "parameters": [
+          {
+            "name": "n",
+            "type": "unsigned",
+            "purpose": "The index of the register to set."
+          },
+          {
+            "name": "value",
+            "type": "Float64",
+            "purpose": "The value to set the register to."
+          }
+        ],
+        "return": {
+          "type": "void",
+          "description": "This function does not return."
+        },
+        "dependencies": []
+      },
+      "code": "void RegisterValues::SetDoubleRegister(unsigned n, Float64 value) {\n  V8_ASSUME(n < arraysize(simd128_registers_));\n  base::WriteUnalignedValue(reinterpret_cast<Address>(simd128_registers_ + n),\n                            value);\n}"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "method",
+        "name": "SetCallerPc",
+        "parent": "FrameDescription",
+        "about": "Sets the caller's program counter in the frame description.",
+        "logic": "Calls `SetFrameSlot` to set the value at the specified offset.",
+        "parameters": [
+          {
+            "name": "offset",
+            "type": "unsigned",
+            "purpose": "The offset in the frame where the caller's PC is stored."
+          },
+          {
+            "name": "value",
+            "type": "intptr_t",
+            "purpose": "The caller's program counter value."
+          }
+        ],
+        "return": {
+          "type": "void",
+          "description": "This function does not return."
+        },
+        "dependencies": []
+      },
+      "code": "void FrameDescription::SetCallerPc(unsigned offset, intptr_t value) {\n  SetFrameSlot(offset, value);\n}"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "method",
+        "name": "SetCallerFp",
+        "parent": "FrameDescription",
+        "about": "Sets the caller's frame pointer in the frame description.",
+        "logic": "Calls `SetFrameSlot` to set the value at the specified offset.",
+        "parameters": [
+          {
+            "name": "offset",
+            "type": "unsigned",
+            "purpose": "The offset in the frame where the caller's FP is stored."
+          },
+          {
+            "name": "value",
+            "type": "intptr_t",
+            "purpose": "The caller's frame pointer value."
+          }
+        ],
+        "return": {
+          "type": "void",
+          "description": "This function does not return."
+        },
+        "dependencies": []
+      },
+      "code": "void FrameDescription::SetCallerFp(unsigned offset, intptr_t value) {\n  SetFrameSlot(offset, value);\n}"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "method",
+        "name": "SetCallerConstantPool",
+        "parent": "FrameDescription",
+        "about": "Sets the caller's constant pool pointer in the frame description.",
+        "logic": "This function is not implemented for LoongArch64. It calls `UNREACHABLE()`.",
+        "parameters": [
+          {
+            "name": "offset",
+            "type": "unsigned",
+            "purpose": "The offset in the frame where the caller's constant pool is stored."
+          },
+          {
+            "name": "value",
+            "type": "intptr_t",
+            "purpose": "The caller's constant pool pointer value."
+          }
+        ],
+        "return": {
+          "type": "void",
+          "description": "This function does not return."
+        },
+        "dependencies": []
+      },
+      "code": "void FrameDescription::SetCallerConstantPool(unsigned offset, intptr_t value) {\n  // No embedded constant pool support.\n  UNREACHABLE();\n}"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "method",
+        "name": "SetPc",
+        "parent": "FrameDescription",
+        "about": "Sets the program counter in the frame description.",
+        "logic": "Sets the `pc_` member variable to the given value.",
+        "parameters": [
+          {
+            "name": "pc",
+            "type": "intptr_t",
+            "purpose": "The program counter value."
+          }
+        ],
+        "return": {
+          "type": "void",
+          "description": "This function does not return."
+        },
+        "dependencies": []
+      },
+      "code": "void FrameDescription::SetPc(intptr_t pc) { pc_ = pc; }"
+    }
+  ],
+  "file_path": "/home/kathirks_gc/v8_go/archive/codebase/src/deoptimizer/loong64/deoptimizer-loong64.cc"
+}

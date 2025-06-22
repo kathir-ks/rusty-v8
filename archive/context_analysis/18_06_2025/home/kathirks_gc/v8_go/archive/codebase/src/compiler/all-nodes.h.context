@@ -1,0 +1,106 @@
+{
+  "metadata": {
+    "path": "/home/kathirks_gc/v8_go/archive/codebase/src/compiler/all-nodes.h",
+    "file_name": "all-nodes.h",
+    "language": "cpp",
+    "purpose": "Defines a utility class AllNodes that traverses a graph and gathers all reachable nodes from a given end node, typically used in compiler optimizations."
+  },
+  "imports": {
+    "metadata": {
+      "language": "cpp",
+      "purpose": "Includes necessary headers for node representation and bit vector operations."
+    },
+    "code": "#include \"src/compiler/node.h\"\n#include \"src/utils/bit-vector.h\""
+  },
+  "classes": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "AllNodes",
+        "about": "A helper utility that traverses the graph and gathers all nodes reachable from end.",
+        "attributes": [
+          {
+            "name": "reachable",
+            "type": "NodeVector",
+            "access": "public",
+            "purpose": "Stores the nodes reachable from the end node."
+          },
+          {
+            "name": "is_reachable_",
+            "type": "BitVector",
+            "access": "private",
+            "purpose": "Bit vector to track which nodes are reachable."
+          },
+          {
+            "name": "only_inputs_",
+            "type": "const bool",
+            "access": "private",
+            "purpose": "Indicates whether to traverse only through input edges."
+          }
+        ],
+        "dependencies": [
+          "Node",
+          "Zone",
+          "TFGraph",
+          "BitVector",
+          "NodeVector"
+        ]
+      },
+      "code": "class AllNodes {\n public:\n  // Constructor. Traverses the graph and builds the {reachable} set of nodes\n  // reachable from {end}. When {only_inputs} is true, find the nodes\n  // reachable through input edges; these are all live nodes.\n  AllNodes(Zone* local_zone, Node* end, const TFGraph* graph,\n           bool only_inputs = true);\n  // Constructor. Traverses the graph and builds the {reachable} set of nodes\n  // reachable from the End node.\n  AllNodes(Zone* local_zone, const TFGraph* graph, bool only_inputs = true);\n\n  bool IsLive(const Node* node) const {\n    CHECK(only_inputs_);\n    return IsReachable(node);\n  }\n\n  bool IsReachable(const Node* node) const {\n    if (!node) return false;\n    int id = node->id();\n    return id < is_reachable_.length() && is_reachable_.Contains(id);\n  }\n\n  NodeVector reachable;  // Nodes reachable from end.\n\n private:\n  void Mark(Zone* local_zone, Node* end, const TFGraph* graph);\n\n  BitVector is_reachable_;\n  const bool only_inputs_;\n};"
+    }
+  ],
+  "dependencies": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "Node",
+        "about": "Represents a node in the graph."
+      },
+      "code": "class Node {\n                 public:\n                  int id() const;\n                };",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "Zone",
+        "about": "Memory allocation zone."
+      },
+      "code": "class Zone {};",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "TFGraph",
+        "about": "Represents the graph data structure."
+      },
+      "code": "class TFGraph {};",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "BitVector",
+        "about": "Represents a bit vector."
+      },
+      "code": "class BitVector {\n                 public:\n                  bool Contains(int id) const;\n                  int length() const;\n                };",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "NodeVector",
+        "about": "Represents a vector of Node pointers."
+      },
+      "code": "class NodeVector {};",
+      "type": "class"
+    }
+  ],
+  "file_path": "/home/kathirks_gc/v8_go/archive/codebase/src/compiler/all-nodes.h"
+}

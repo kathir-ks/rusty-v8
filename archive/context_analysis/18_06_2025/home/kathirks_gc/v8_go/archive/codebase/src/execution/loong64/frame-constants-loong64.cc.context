@@ -1,0 +1,138 @@
+{
+  "metadata": {
+    "path": "/home/kathirks_gc/v8_go/archive/codebase/src/execution/loong64/frame-constants-loong64.cc",
+    "file_name": "frame-constants-loong64.cc",
+    "language": "cpp",
+    "purpose": "Provides architecture-specific frame constants for LoongArch64 architecture in V8 JavaScript engine."
+  },
+  "imports": {
+    "metadata": {
+      "language": "cpp",
+      "purpose": "Includes necessary header files for frame constants and assembler functionalities."
+    },
+    "code": "#include \"src/execution/loong64/frame-constants-loong64.h\"\n#include \"src/codegen/loong64/assembler-loong64-inl.h\"\n#include \"src/execution/frame-constants.h\"\n#include \"src/execution/frames.h\""
+  },
+  "functions": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "function",
+        "name": "fp_register",
+        "parent": "JavaScriptFrame",
+        "about": "Returns the frame pointer register for JavaScript frames.",
+        "logic": "Returns the register 'fp' which represents the frame pointer.",
+        "parameters": [],
+        "return": {
+          "type": "Register",
+          "description": "The frame pointer register."
+        },
+        "dependencies": []
+      },
+      "code": "Register JavaScriptFrame::fp_register() { return v8::internal::fp; }"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "function",
+        "name": "context_register",
+        "parent": "JavaScriptFrame",
+        "about": "Returns the context register for JavaScript frames.",
+        "logic": "Returns the register 'cp' which represents the context pointer.",
+        "parameters": [],
+        "return": {
+          "type": "Register",
+          "description": "The context register."
+        },
+        "dependencies": []
+      },
+      "code": "Register JavaScriptFrame::context_register() { return cp; }"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "function",
+        "name": "constant_pool_pointer_register",
+        "parent": "JavaScriptFrame",
+        "about": "Returns the register for the constant pool pointer (not implemented).",
+        "logic": "Marks the function as unreachable, indicating that constant pool pointers are not used on LoongArch64 in this context.",
+        "parameters": [],
+        "return": {
+          "type": "Register",
+          "description": "This function does not return."
+        },
+        "dependencies": []
+      },
+      "code": "Register JavaScriptFrame::constant_pool_pointer_register() { UNREACHABLE(); }"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "function",
+        "name": "RegisterStackSlotCount",
+        "parent": "UnoptimizedFrameConstants",
+        "about": "Returns the number of stack slots required for registers in an unoptimized frame.",
+        "logic": "Simply returns the register count, indicating that each register requires one stack slot.",
+        "parameters": [
+          {
+            "name": "register_count",
+            "type": "int",
+            "purpose": "The number of registers to be stored on the stack."
+          }
+        ],
+        "return": {
+          "type": "int",
+          "description": "The number of stack slots required."
+        },
+        "dependencies": []
+      },
+      "code": "int UnoptimizedFrameConstants::RegisterStackSlotCount(int register_count) {\n  return register_count;\n}"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "function",
+        "name": "PaddingSlotCount",
+        "parent": "BuiltinContinuationFrameConstants",
+        "about": "Returns the number of padding slots required in a builtin continuation frame.",
+        "logic": "Always returns 0, indicating no padding slots are needed.",
+        "parameters": [
+          {
+            "name": "register_count",
+            "type": "int",
+            "purpose": "The number of registers (unused)."
+          }
+        ],
+        "return": {
+          "type": "int",
+          "description": "The number of padding slots (always 0)."
+        },
+        "dependencies": []
+      },
+      "code": "int BuiltinContinuationFrameConstants::PaddingSlotCount(int register_count) {\n  USE(register_count);\n  return 0;\n}"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "function",
+        "name": "StackGuardFrameSize",
+        "parent": "MaglevFrame",
+        "about": "Returns the stack guard frame size for Maglev frames (not implemented).",
+        "logic": "Marks the function as unreachable, indicating that Maglev frames are not used on LoongArch64 in this context, or this functionality is not implemented.",
+        "parameters": [
+          {
+            "name": "register_input_count",
+            "type": "int",
+            "purpose": "The number of register inputs (unused)."
+          }
+        ],
+        "return": {
+          "type": "intptr_t",
+          "description": "This function does not return."
+        },
+        "dependencies": []
+      },
+      "code": "intptr_t MaglevFrame::StackGuardFrameSize(int register_input_count) {\n  USE(register_input_count);\n  UNREACHABLE();\n}"
+    }
+  ],
+  "file_path": "/home/kathirks_gc/v8_go/archive/codebase/src/execution/loong64/frame-constants-loong64.cc"
+}

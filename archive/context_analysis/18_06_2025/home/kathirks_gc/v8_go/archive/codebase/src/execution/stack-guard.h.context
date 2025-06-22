@@ -1,0 +1,168 @@
+{
+  "metadata": {
+    "path": "/home/kathirks_gc/v8_go/archive/codebase/src/execution/stack-guard.h",
+    "file_name": "stack-guard.h",
+    "language": "cpp",
+    "purpose": "Defines the StackGuard class for managing stack limits and handling interrupts."
+  },
+  "imports": {
+    "metadata": {
+      "language": "cpp",
+      "purpose": "Includes necessary V8 internal headers and standard library headers."
+    },
+    "code": "#include \"include/v8-internal.h\"\n#include \"src/base/atomicops.h\"\n#include \"src/common/globals.h\""
+  },
+  "classes": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "StackGuard",
+        "about": "Manages stack limits and handles interrupts to prevent stack overflows and handle other events.",
+        "attributes": [],
+        "dependencies": [
+          "ExecutionAccess",
+          "InterruptsScope",
+          "Isolate",
+          "Object",
+          "RootVisitor"
+        ]
+      },
+      "code": "class V8_EXPORT_PRIVATE V8_NODISCARD StackGuard final {\n public:\n  StackGuard(const StackGuard&) = delete;\n  StackGuard& operator=(const StackGuard&) = delete;\n\n  explicit StackGuard(Isolate* isolate) : isolate_(isolate) {}\n\n  // Pass the address beyond which the stack should not grow. The stack\n  // is assumed to grow downwards.\n  // When executing on the simulator, we set the stack limits to the limits of\n  // the simulator's stack instead of using {limit}.\n  void SetStackLimit(uintptr_t limit);\n\n  // Try to compare and swap the given jslimit without the ExecutionAccess lock.\n  // Expects potential concurrent writes of the interrupt limit, and of the\n  // interrupt limit only.\n  void SetStackLimitForStackSwitching(uintptr_t limit);\n\n#ifdef USE_SIMULATOR\n  // The simulator uses a separate JS stack. Limits on the JS stack might have\n  // to be adjusted in order to reflect overflows of the C stack, because we\n  // cannot rely on the interleaving of frames on the simulator.\n  void AdjustStackLimitForSimulator();\n  // Reset the limit to the real limit after the stack overflow, if any.\n  void ResetStackLimitForSimulator();\n#endif\n\n  // Threading support.\n  char* ArchiveStackGuard(char* to);\n  char* RestoreStackGuard(char* from);\n  static int ArchiveSpacePerThread() { return sizeof(ThreadLocal); }\n  void FreeThreadResources();\n  // Sets up the default stack guard for this thread.\n  void InitThread(const ExecutionAccess& lock);\n\n  // Code locations that check for interrupts might only handle a subset of the\n  // available interrupts, expressed as an `InterruptLevel`. These levels are\n  // also associated with side effects that are allowed for the respective\n  // level. The levels are inclusive, which is specified using the order in the\n  // enum. For example, a site that handles `kAnyEffect` will also handle the\n  // preceding levels.\n  enum class InterruptLevel { kNoGC, kNoHeapWrites, kAnyEffect };\n  static constexpr int kNumberOfInterruptLevels = 3;\n\n#define INTERRUPT_LIST(V)                                                      \\\n  V(TERMINATE_EXECUTION, TerminateExecution, 0, InterruptLevel::kNoGC)         \\\n  V(GC_REQUEST, GC, 1, InterruptLevel::kNoHeapWrites)                          \\\n  V(INSTALL_CODE, InstallCode, 2, InterruptLevel::kAnyEffect)                  \\\n  V(INSTALL_BASELINE_CODE, InstallBaselineCode, 3, InterruptLevel::kAnyEffect) \\\n  V(API_INTERRUPT, ApiInterrupt, 4, InterruptLevel::kNoHeapWrites)             \\\n  V(DEOPT_MARKED_ALLOCATION_SITES, DeoptMarkedAllocationSites, 5,              \\\n    InterruptLevel::kNoHeapWrites)                                             \\\n  V(GROW_SHARED_MEMORY, GrowSharedMemory, 6, InterruptLevel::kAnyEffect)       \\\n  V(LOG_WASM_CODE, LogWasmCode, 7, InterruptLevel::kAnyEffect)                 \\\n  V(WASM_CODE_GC, WasmCodeGC, 8, InterruptLevel::kNoHeapWrites)                \\\n  V(INSTALL_MAGLEV_CODE, InstallMaglevCode, 9, InterruptLevel::kAnyEffect)     \\\n  V(GLOBAL_SAFEPOINT, GlobalSafepoint, 10, InterruptLevel::kNoHeapWrites)      \\\n  V(START_INCREMENTAL_MARKING, StartIncrementalMarking, 11,                    \\\n    InterruptLevel::kNoHeapWrites)\n\n#define V(NAME, Name, id, interrupt_level)                   \\\n  inline bool Check##Name() { return CheckInterrupt(NAME); } \\\n  inline void Request##Name() { RequestInterrupt(NAME); }    \\\n  inline void Clear##Name() { ClearInterrupt(NAME); }\n  INTERRUPT_LIST(V)\n#undef V\n\n  // Flag used to set the interrupt causes.\n  enum InterruptFlag : uint32_t {\n#define V(NAME, Name, id, interrupt_level) NAME = (1 << id),\n    INTERRUPT_LIST(V)\n#undef V\n#define V(NAME, Name, id, interrupt_level) NAME |\n        ALL_INTERRUPTS = INTERRUPT_LIST(V) 0\n#undef V\n  };\n  static_assert(InterruptFlag::ALL_INTERRUPTS <\n                std::numeric_limits<uint32_t>::max());\n\n  static constexpr InterruptFlag InterruptLevelMask(InterruptLevel level) {\n#define V(NAME, Name, id, interrupt_level) \\\n  | (interrupt_level <= level ? NAME : 0)\n    return static_cast<InterruptFlag>(0 INTERRUPT_LIST(V));\n#undef V\n  }\n\n  uintptr_t climit() {\n#ifdef USE_SIMULATOR\n    return thread_local_.climit();\n#else\n    return thread_local_.jslimit();\n#endif\n  }\n  uintptr_t jslimit() { return thread_local_.jslimit(); }\n  // This provides an asynchronous read of the stack limits for the current\n  // thread.  There are no locks protecting this, but it is assumed that you\n  // have the global V8 lock if you are using multiple V8 threads.\n  uintptr_t real_climit() {\n#ifdef USE_SIMULATOR\n    return thread_local_.real_climit_;\n#else\n    return thread_local_.real_jslimit_;\n#endif\n  }\n  uintptr_t real_jslimit() { return thread_local_.real_jslimit_; }\n  Address address_of_jslimit() {\n    return reinterpret_cast<Address>(&thread_local_.jslimit_);\n  }\n  Address address_of_real_jslimit() {\n    return reinterpret_cast<Address>(&thread_local_.real_jslimit_);\n  }\n  Address address_of_interrupt_request(InterruptLevel level) {\n    return reinterpret_cast<Address>(\n        &thread_local_.interrupt_requested_[static_cast<int>(level)]);\n  }\n\n  static constexpr int jslimit_offset() {\n    return offsetof(StackGuard, thread_local_) +\n           offsetof(ThreadLocal, jslimit_);\n  }\n\n  static constexpr int real_jslimit_offset() {\n    return offsetof(StackGuard, thread_local_) +\n           offsetof(ThreadLocal, real_jslimit_);\n  }\n\n  // If the stack guard is triggered, but it is not an actual\n  // stack overflow, then handle the interruption accordingly.\n  // Only interrupts that match the given `InterruptLevel` will be handled,\n  // leaving other interrupts pending as if this method had not been called.\n  Tagged<Object> HandleInterrupts(\n      InterruptLevel level = InterruptLevel::kAnyEffect);\n\n  // Special case of {HandleInterrupts}: checks for termination requests only.\n  // This is guaranteed to never cause GC, so can be used to interrupt\n  // long-running computations that are not GC-safe.\n  bool HasTerminationRequest();\n\n  static constexpr int kSizeInBytes = 8 * kSystemPointerSize;\n\n  static char* Iterate(RootVisitor* v, char* thread_storage) {\n    return thread_storage + ArchiveSpacePerThread();\n  }\n\n private:\n  bool CheckInterrupt(InterruptFlag flag);\n  void RequestInterrupt(InterruptFlag flag);\n  void ClearInterrupt(InterruptFlag flag);\n  int FetchAndClearInterrupts(InterruptLevel level);\n\n  void SetStackLimitInternal(const ExecutionAccess& lock, uintptr_t limit,\n                             uintptr_t jslimit);\n\n  // You should hold the ExecutionAccess lock when calling this method.\n  bool has_pending_interrupts(const ExecutionAccess& lock) {\n    return thread_local_.interrupt_flags_ != 0;\n  }\n\n  // You should hold the ExecutionAccess lock when calling this method.\n  inline void update_interrupt_requests_and_stack_limits(\n      const ExecutionAccess& lock);\n\n#if V8_TARGET_ARCH_64_BIT\n  static const uintptr_t kInterruptLimit = uintptr_t{0xfffffffffffffffe};\n  static const uintptr_t kIllegalLimit = uintptr_t{0xfffffffffffffff8};\n#else\n  static const uintptr_t kInterruptLimit = 0xfffffffe;\n  static const uintptr_t kIllegalLimit = 0xfffffff8;\n#endif\n\n  void PushInterruptsScope(InterruptsScope* scope);\n  void PopInterruptsScope();\n\n  class ThreadLocal final {\n   public:\n    ThreadLocal() {}\n\n    void Initialize(Isolate* isolate, const ExecutionAccess& lock);\n\n    // The stack limit has two values: the one with the real_ prefix is the\n    // actual stack limit set for the VM.  The one without the real_ prefix has\n    // the same value as the actual stack limit except when there is an\n    // interruption (e.g. debug break or preemption) in which case it is lowered\n    // to make stack checks fail. Both the generated code and the runtime system\n    // check against the one without the real_ prefix.\n    // For simulator builds, we also use a separate C++ stack limit.\n\n    // Actual JavaScript stack limit set for the VM.\n    uintptr_t real_jslimit_ = kIllegalLimit;\n#ifdef USE_SIMULATOR\n    // Actual C++ stack limit set for the VM.\n    uintptr_t real_climit_ = kIllegalLimit;\n#else\n    // Padding to match the missing {real_climit_} field, renamed to make it\n    // explicit that this field is unused in this configuration. But the padding\n    // field is needed:\n    // - To keep the isolate's LinearAllocationArea fields from crossing cache\n    // lines (see Isolate::CheckIsolateLayout).\n    // - To ensure that jslimit_offset() is the same in mksnapshot and in V8:\n    // When cross-compiling V8, mksnapshot's host and target may be different\n    // even if they are the same for V8, which results in a different value for\n    // USE_SIMULATOR. Without this padding, this causes the builtins to use the\n    // wrong jslimit_offset() for stack checks.\n    uintptr_t padding1_;\n#endif\n\n    // jslimit_ and climit_ can be read without any lock.\n    // Writing requires the ExecutionAccess lock, or may be updated with a\n    // strong compare-and-swap (e.g. for stack-switching).\n    base::AtomicWord jslimit_ = kIllegalLimit;\n#ifdef USE_SIMULATOR\n    base::AtomicWord climit_ = kIllegalLimit;\n#else\n    // See {padding1_}.\n    uintptr_t padding2_;\n#endif\n\n    uintptr_t jslimit() {\n      return base::bit_cast<uintptr_t>(base::Relaxed_Load(&jslimit_));\n    }\n    void set_jslimit(uintptr_t limit) {\n      return base::Relaxed_Store(&jslimit_,\n                                 static_cast<base::AtomicWord>(limit));\n    }\n#ifdef USE_SIMULATOR\n    uintptr_t climit() {\n      return base::bit_cast<uintptr_t>(base::Relaxed_Load(&climit_));\n    }\n    void set_climit(uintptr_t limit) {\n      return base::Relaxed_Store(&climit_,\n                                 static_cast<base::AtomicWord>(limit));\n    }\n#endif\n\n    // Interrupt request bytes can be read without any lock.\n    // Writing requires the ExecutionAccess lock.\n    base::Atomic8 interrupt_requested_[kNumberOfInterruptLevels] = {\n        false, false, false};\n\n    void set_interrupt_requested(InterruptLevel level, bool requested) {\n      base::Relaxed_Store(&interrupt_requested_[static_cast<int>(level)],\n                          requested);\n    }\n\n    bool has_interrupt_requested(InterruptLevel level) {\n      return base::Relaxed_Load(&interrupt_requested_[static_cast<int>(level)]);\n    }\n\n    InterruptsScope* interrupt_scopes_ = nullptr;\n    uint32_t interrupt_flags_ = 0;\n  };\n\n  // TODO(isolates): Technically this could be calculated directly from a\n  //                 pointer to StackGuard.\n  Isolate* isolate_;\n  ThreadLocal thread_local_;\n\n  friend class Isolate;\n  friend class StackLimitCheck;\n  friend class InterruptsScope;\n\n  static_assert(std::is_standard_layout<ThreadLocal>::value);\n};"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "ThreadLocal",
+        "parent": "None",
+        "about": "Represents thread-local data for stack guard, including stack limits and interrupt requests.",
+        "attributes": [
+          {
+            "name": "real_jslimit_",
+            "type": "uintptr_t",
+            "access": "public",
+            "purpose": "Actual JavaScript stack limit for the VM."
+          },
+          {
+            "name": "real_climit_",
+            "type": "uintptr_t",
+            "access": "public",
+            "purpose": "Actual C++ stack limit for the VM (simulator builds only)."
+          },
+          {
+            "name": "padding1_",
+            "type": "uintptr_t",
+            "access": "public",
+            "purpose": "Padding to maintain layout consistency across builds with and without the simulator."
+          },
+          {
+            "name": "jslimit_",
+            "type": "base::AtomicWord",
+            "access": "public",
+            "purpose": "JavaScript stack limit that can be adjusted for interrupts."
+          },
+          {
+            "name": "climit_",
+            "type": "base::AtomicWord",
+            "access": "public",
+            "purpose": "C++ stack limit that can be adjusted for interrupts (simulator builds only)."
+          },
+          {
+            "name": "padding2_",
+            "type": "uintptr_t",
+            "access": "public",
+            "purpose": "Padding to maintain layout consistency across builds with and without the simulator."
+          },
+          {
+            "name": "interrupt_requested_",
+            "type": "base::Atomic8[kNumberOfInterruptLevels]",
+            "access": "public",
+            "purpose": "Flags indicating pending interrupt requests for different levels."
+          },
+          {
+            "name": "interrupt_scopes_",
+            "type": "InterruptsScope*",
+            "access": "public",
+            "purpose": "Pointer to the current interrupt scope."
+          },
+          {
+            "name": "interrupt_flags_",
+            "type": "uint32_t",
+            "access": "public",
+            "purpose": "Bitmask representing pending interrupts."
+          }
+        ],
+        "dependencies": [
+          "Isolate",
+          "ExecutionAccess",
+          "InterruptsScope"
+        ]
+      },
+      "code": "class ThreadLocal final {\n   public:\n    ThreadLocal() {}\n\n    void Initialize(Isolate* isolate, const ExecutionAccess& lock);\n\n    // The stack limit has two values: the one with the real_ prefix is the\n    // actual stack limit set for the VM.  The one without the real_ prefix has\n    // the same value as the actual stack limit except when there is an\n    // interruption (e.g. debug break or preemption) in which case it is lowered\n    // to make stack checks fail. Both the generated code and the runtime system\n    // check against the one without the real_ prefix.\n    // For simulator builds, we also use a separate C++ stack limit.\n\n    // Actual JavaScript stack limit set for the VM.\n    uintptr_t real_jslimit_ = kIllegalLimit;\n#ifdef USE_SIMULATOR\n    // Actual C++ stack limit set for the VM.\n    uintptr_t real_climit_ = kIllegalLimit;\n#else\n    // Padding to match the missing {real_climit_} field, renamed to make it\n    // explicit that this field is unused in this configuration. But the padding\n    // field is needed:\n    // - To keep the isolate's LinearAllocationArea fields from crossing cache\n    // lines (see Isolate::CheckIsolateLayout).\n    // - To ensure that jslimit_offset() is the same in mksnapshot and in V8:\n    // When cross-compiling V8, mksnapshot's host and target may be different\n    // even if they are the same for V8, which results in a different value for\n    // USE_SIMULATOR. Without this padding, this causes the builtins to use the\n    // wrong jslimit_offset() for stack checks.\n    uintptr_t padding1_;\n#endif\n\n    // jslimit_ and climit_ can be read without any lock.\n    // Writing requires the ExecutionAccess lock, or may be updated with a\n    // strong compare-and-swap (e.g. for stack-switching).\n    base::AtomicWord jslimit_ = kIllegalLimit;\n#ifdef USE_SIMULATOR\n    base::AtomicWord climit_ = kIllegalLimit;\n#else\n    // See {padding1_}.\n    uintptr_t padding2_;\n#endif\n\n    uintptr_t jslimit() {\n      return base::bit_cast<uintptr_t>(base::Relaxed_Load(&jslimit_));\n    }\n    void set_jslimit(uintptr_t limit) {\n      return base::Relaxed_Store(&jslimit_,\n                                 static_cast<base::AtomicWord>(limit));\n    }\n#ifdef USE_SIMULATOR\n    uintptr_t climit() {\n      return base::bit_cast<uintptr_t>(base::Relaxed_Load(&climit_));\n    }\n    void set_climit(uintptr_t limit) {\n      return base::Relaxed_Store(&climit_,\n                                 static_cast<base::AtomicWord>(limit));\n    }\n#endif\n\n    // Interrupt request bytes can be read without any lock.\n    // Writing requires the ExecutionAccess lock.\n    base::Atomic8 interrupt_requested_[kNumberOfInterruptLevels] = {\n        false, false, false};\n\n    void set_interrupt_requested(InterruptLevel level, bool requested) {\n      base::Relaxed_Store(&interrupt_requested_[static_cast<int>(level)],\n                          requested);\n    }\n\n    bool has_interrupt_requested(InterruptLevel level) {\n      return base::Relaxed_Load(&interrupt_requested_[static_cast<int>(level)]);\n    }\n\n    InterruptsScope* interrupt_scopes_ = nullptr;\n    uint32_t interrupt_flags_ = 0;\n  };"
+    }
+  ],
+  "dependencies": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "ExecutionAccess",
+        "about": "Provides exclusive access for critical operations."
+      },
+      "code": "class ExecutionAccess;",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "InterruptsScope",
+        "about": "Manages interrupt scopes."
+      },
+      "code": "class InterruptsScope;",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "Isolate",
+        "about": "Represents an isolated instance of the V8 JavaScript engine."
+      },
+      "code": "class Isolate;",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "Object",
+        "about": "Base class for all JavaScript objects."
+      },
+      "code": "class Object;",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "RootVisitor",
+        "about": "Visitor for iterating over the roots of the isolate."
+      },
+      "code": "class RootVisitor;",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "StackLimitCheck",
+        "about": "Checks if the stack limit has been reached."
+      },
+      "code": "class StackLimitCheck;",
+      "type": "class"
+    }
+  ],
+  "file_path": "/home/kathirks_gc/v8_go/archive/codebase/src/execution/stack-guard.h"
+}

@@ -1,0 +1,525 @@
+{
+  "file_path": "/home/kathirks_gc/v8_go/codebase/src/regexp/regexp.cc",
+  "imports": [
+    "src/regexp/regexp.h",
+    "src/base/strings.h",
+    "src/codegen/compilation-cache.h",
+    "src/diagnostics/code-tracer.h",
+    "src/execution/interrupts-scope.h",
+    "src/heap/heap-inl.h",
+    "src/objects/js-regexp-inl.h",
+    "src/regexp/experimental/experimental.h",
+    "src/regexp/regexp-bytecode-generator.h",
+    "src/regexp/regexp-bytecodes.h",
+    "src/regexp/regexp-compiler.h",
+    "src/regexp/regexp-dotprinter.h",
+    "src/regexp/regexp-interpreter.h",
+    "src/regexp/regexp-macro-assembler-arch.h",
+    "src/regexp/regexp-macro-assembler-tracer.h",
+    "src/regexp/regexp-parser.h",
+    "src/regexp/regexp-stack.h",
+    "src/regexp/regexp-utils.h",
+    "src/strings/string-search.h",
+    "src/utils/ostreams.h"
+  ],
+  "classes": [
+    {
+      "name": "RegExpImpl",
+      "properties": [],
+      "methods": [
+        {
+          "name": "ToString",
+          "parameters": [
+            "DirectHandle<Object> value"
+          ],
+          "return_type": "DirectHandle<String>",
+          "logic": "Returns a string representation of a regular expression. Implements RegExp.prototype.toString."
+        },
+        {
+          "name": "IrregexpInitialize",
+          "parameters": [
+            "Isolate* isolate",
+            "DirectHandle<JSRegExp> re",
+            "DirectHandle<String> pattern",
+            "RegExpFlags flags",
+            "int capture_count",
+            "uint32_t backtrack_limit"
+          ],
+          "return_type": "void",
+          "logic": "Prepares a JSRegExp object with Irregexp-specific data."
+        },
+        {
+          "name": "IrregexpPrepare",
+          "parameters": [
+            "Isolate* isolate",
+            "DirectHandle<IrRegExpData> regexp_data",
+            "DirectHandle<String> subject"
+          ],
+          "return_type": "int",
+          "logic": "Prepares a RegExp for being executed one or more times (using IrregexpExecOnce) on the subject.  Ensures compilation and flattens subject."
+        },
+        {
+          "name": "AtomCompile",
+          "parameters": [
+            "Isolate* isolate",
+            "DirectHandle<JSRegExp> re",
+            "DirectHandle<String> pattern",
+            "RegExpFlags flags",
+            "DirectHandle<String> match_pattern"
+          ],
+          "return_type": "void",
+          "logic": "Compiles a regular expression when it's a simple atom (literal string)."
+        },
+        {
+          "name": "AtomExecRaw",
+          "parameters": [
+            "Isolate* isolate",
+            "DirectHandle<AtomRegExpData> regexp_data",
+            "DirectHandle<String> subject",
+            "int index",
+            "int32_t* result_offsets_vector",
+            "int result_offsets_vector_length"
+          ],
+          "return_type": "int",
+          "logic": "Executes a precompiled atom regular expression."
+        },
+        {
+          "name": "AtomExecRaw",
+          "parameters": [
+            "Isolate* isolate",
+            "const String::FlatContent& pattern",
+            "const String::FlatContent& subject",
+            "int index",
+            "int32_t* result_offsets_vector",
+            "int result_offsets_vector_length",
+            "const DisallowGarbageCollection& no_gc"
+          ],
+          "return_type": "int",
+          "logic": "Executes a precompiled atom regular expression, accepting flat string contents."
+        },
+        {
+          "name": "AtomExec",
+          "parameters": [
+            "Isolate* isolate",
+            "DirectHandle<AtomRegExpData> regexp_data",
+            "DirectHandle<String> subject",
+            "int index",
+            "int32_t* result_offsets_vector",
+            "int result_offsets_vector_length"
+          ],
+          "return_type": "int",
+          "logic": "Executes a precompiled atom regular expression with GC constraints."
+        },
+        {
+          "name": "IrregexpExecRaw",
+          "parameters": [
+            "Isolate* isolate",
+            "DirectHandle<IrRegExpData> regexp_data",
+            "DirectHandle<String> subject",
+            "int index",
+            "int32_t* output",
+            "int output_size"
+          ],
+          "return_type": "int",
+          "logic": "Executes a regular expression using the Irregexp engine. Returns the number of matches or RE_FAILURE/RE_EXCEPTION."
+        },
+        {
+          "name": "IrregexpExec",
+          "parameters": [
+            "Isolate* isolate",
+            "DirectHandle<IrRegExpData> regexp_data",
+            "DirectHandle<String> subject",
+            "int index",
+            "int32_t* result_offsets_vector",
+            "uint32_t result_offsets_vector_length"
+          ],
+          "return_type": "std::optional<int>",
+          "logic": "Executes an Irregexp bytecode pattern."
+        },
+        {
+          "name": "CompileIrregexp",
+          "parameters": [
+            "Isolate* isolate",
+            "DirectHandle<IrRegExpData> re_data",
+            "DirectHandle<String> sample_subject",
+            "bool is_one_byte"
+          ],
+          "return_type": "bool",
+          "logic": "Compiles an Irregexp regular expression."
+        },
+        {
+          "name": "EnsureCompiledIrregexp",
+          "parameters": [
+            "Isolate* isolate",
+            "DirectHandle<IrRegExpData> re_data",
+            "DirectHandle<String> sample_subject",
+            "bool is_one_byte"
+          ],
+          "return_type": "bool",
+          "logic": "Ensures that the regexp object contains compiled version for specified encoding."
+        },
+        {
+          "name": "Compile",
+          "parameters": [
+            "Isolate* isolate",
+            "Zone* zone",
+            "RegExpCompileData* input",
+            "RegExpFlags flags",
+            "DirectHandle<String> pattern",
+            "DirectHandle<String> sample_subject",
+            "bool is_one_byte",
+            "uint32_t& backtrack_limit"
+          ],
+          "return_type": "bool",
+          "logic": "Compiles a regular expression."
+        }
+      ]
+    },
+    {
+      "name": "RegExp",
+      "properties": [],
+      "methods": [
+        {
+          "name": "CanGenerateBytecode",
+          "parameters": [],
+          "return_type": "bool",
+          "logic": "Determines if the regexp engine can generate bytecode."
+        },
+        {
+          "name": "VerifyFlags",
+          "parameters": [
+            "RegExpFlags flags"
+          ],
+          "return_type": "bool",
+          "logic": "Verifies the validity of the provided RegExp flags."
+        },
+        {
+          "name": "VerifySyntax",
+          "parameters": [
+            "Zone* zone",
+            "uintptr_t stack_limit",
+            "const CharT* input",
+            "int input_length",
+            "RegExpFlags flags",
+            "RegExpError* regexp_error_out",
+            "const DisallowGarbageCollection& no_gc"
+          ],
+          "return_type": "bool",
+          "logic": "Verifies the syntax of a regular expression."
+        },
+        {
+          "name": "ThrowRegExpException",
+          "parameters": [
+            "Isolate* isolate",
+            "RegExpFlags flags",
+            "DirectHandle<String> pattern",
+            "RegExpError error"
+          ],
+          "return_type": "MaybeDirectHandle<Object>",
+          "logic": "Throws a RegExp exception."
+        },
+        {
+          "name": "ThrowRegExpException",
+          "parameters": [
+            "Isolate* isolate",
+            "DirectHandle<RegExpData> re_data",
+            "RegExpError error_text"
+          ],
+          "return_type": "void",
+          "logic": "Throws a RegExp exception based on RegExpData."
+        },
+        {
+          "name": "IsUnmodifiedRegExp",
+          "parameters": [
+            "Isolate* isolate",
+            "DirectHandle<JSRegExp> regexp"
+          ],
+          "return_type": "bool",
+          "logic": "Checks if a RegExp object is unmodified."
+        },
+        {
+          "name": "Compile",
+          "parameters": [
+            "Isolate* isolate",
+            "DirectHandle<JSRegExp> re",
+            "DirectHandle<String> pattern",
+            "RegExpFlags flags",
+            "uint32_t backtrack_limit"
+          ],
+          "return_type": "MaybeDirectHandle<Object>",
+          "logic": "Compiles a regular expression, potentially using a compilation cache."
+        },
+        {
+          "name": "EnsureFullyCompiled",
+          "parameters": [
+            "Isolate* isolate",
+            "DirectHandle<RegExpData> re_data",
+            "DirectHandle<String> subject"
+          ],
+          "return_type": "bool",
+          "logic": "Ensures that a regular expression is fully compiled."
+        },
+        {
+          "name": "ExperimentalOneshotExec",
+          "parameters": [
+            "Isolate* isolate",
+            "DirectHandle<JSRegExp> regexp",
+            "DirectHandle<String> subject",
+            "int index",
+            "int32_t* result_offsets_vector",
+            "uint32_t result_offsets_vector_length"
+          ],
+          "return_type": "std::optional<int>",
+          "logic": "Executes regexp with the experimental regexp engine, returns number of matches."
+        },
+        {
+          "name": "Exec",
+          "parameters": [
+            "Isolate* isolate",
+            "DirectHandle<JSRegExp> regexp",
+            "DirectHandle<String> subject",
+            "int index",
+            "int32_t* result_offsets_vector",
+            "uint32_t result_offsets_vector_length"
+          ],
+          "return_type": "std::optional<int>",
+          "logic": "Executes a regular expression. Selects the appropriate engine (ATOM, IRREGEXP, EXPERIMENTAL)."
+        },
+        {
+          "name": "Exec_Single",
+          "parameters": [
+            "Isolate* isolate",
+            "DirectHandle<JSRegExp> regexp",
+            "DirectHandle<String> subject",
+            "int index",
+            "DirectHandle<RegExpMatchInfo> last_match_info"
+          ],
+          "return_type": "MaybeDirectHandle<Object>",
+          "logic": "Executes a regular expression once and returns the result or null. Uses RegExpMatchInfo."
+        },
+        {
+          "name": "AtomExecRaw",
+          "parameters": [
+            "Isolate* isolate",
+            "Address /* AtomRegExpData */ data_address",
+            "Address /* String */ subject_address",
+            "int32_t index",
+            "int32_t* result_offsets_vector",
+            "int32_t result_offsets_vector_length"
+          ],
+          "return_type": "intptr_t",
+          "logic": "Executes a precompiled atom regular expression from raw addresses"
+        },
+        {
+          "name": "CreateCaptureNameMap",
+          "parameters": [
+            "Isolate* isolate",
+            "ZoneVector<RegExpCapture*>* named_captures"
+          ],
+          "return_type": "DirectHandle<FixedArray>",
+          "logic": "Creates a FixedArray containing named capture groups and their index, ordered by index"
+        },
+        {
+          "name": "SetLastMatchInfo",
+          "parameters": [
+            "Isolate* isolate",
+            "DirectHandle<RegExpMatchInfo> last_match_info",
+            "DirectHandle<String> subject",
+            "int capture_count",
+            "int32_t* match"
+          ],
+          "return_type": "DirectHandle<RegExpMatchInfo>",
+          "logic": "Sets the last match information for the regular expression."
+        },
+        {
+          "name": "DotPrintForTesting",
+          "parameters": [
+            "const char* label",
+            "RegExpNode* node"
+          ],
+          "return_type": "void",
+          "logic": "Prints a graph representation of the RegExpNode."
+        },
+        {
+          "name": "CompileForTesting",
+          "parameters": [
+            "Isolate* isolate",
+            "Zone* zone",
+            "RegExpCompileData* data",
+            "RegExpFlags flags",
+            "DirectHandle<String> pattern",
+            "DirectHandle<String> sample_subject",
+            "bool is_one_byte"
+          ],
+          "return_type": "bool",
+          "logic": "Compiles the regular expression for testing purposes."
+        }
+      ]
+    },
+    {
+      "name": "RegExpGlobalExecRunner",
+      "properties": [],
+      "methods": [
+        {
+          "name": "RegExpGlobalExecRunner",
+          "parameters": [
+            "DirectHandle<RegExpData> regexp_data",
+            "DirectHandle<String> subject",
+            "Isolate* isolate"
+          ],
+          "return_type": "",
+          "logic": "Constructor for RegExpGlobalExecRunner."
+        },
+        {
+          "name": "AdvanceZeroLength",
+          "parameters": [
+            "int last_index"
+          ],
+          "return_type": "int",
+          "logic": "Advance the index of a zero-length match"
+        },
+        {
+          "name": "FetchNext",
+          "parameters": [],
+          "return_type": "int32_t*",
+          "logic": "Fetches the next match result."
+        },
+        {
+          "name": "LastSuccessfulMatch",
+          "parameters": [],
+          "return_type": "int32_t*",
+          "logic": "Returns pointer to registers of the last successful match."
+        }
+      ]
+    },
+    {
+      "name": "RegExpResultsCache",
+      "properties": [],
+      "methods": [
+        {
+          "name": "Lookup",
+          "parameters": [
+            "Heap* heap",
+            "Tagged<String> key_string",
+            "Tagged<Object> key_pattern",
+            "Tagged<FixedArray>* last_match_cache",
+            "ResultsCacheType type"
+          ],
+          "return_type": "Tagged<Object>",
+          "logic": "Looks up cached result for RegExp execution."
+        },
+        {
+          "name": "Enter",
+          "parameters": [
+            "Isolate* isolate",
+            "DirectHandle<String> key_string",
+            "DirectHandle<Object> key_pattern",
+            "DirectHandle<FixedArray> value_array",
+            "DirectHandle<FixedArray> last_match_cache",
+            "ResultsCacheType type"
+          ],
+          "return_type": "void",
+          "logic": "Stores a new result in cache for RegExp execution."
+        },
+        {
+          "name": "Clear",
+          "parameters": [
+            "Tagged<FixedArray> cache"
+          ],
+          "return_type": "void",
+          "logic": "Clears the regexp result cache."
+        }
+      ]
+    },
+    {
+      "name": "RegExpResultsCache_MatchGlobalAtom",
+      "properties": [],
+      "methods": [
+        {
+          "name": "TryInsert",
+          "parameters": [
+            "Isolate* isolate",
+            "Tagged<String> subject",
+            "Tagged<String> pattern",
+            "int number_of_matches",
+            "int last_match_index"
+          ],
+          "return_type": "void",
+          "logic": "Tries to insert result into atom cache for match global"
+        },
+        {
+          "name": "TryGet",
+          "parameters": [
+            "Isolate* isolate",
+            "Tagged<String> subject",
+            "Tagged<String> pattern",
+            "int* number_of_matches_out",
+            "int* last_match_index_out"
+          ],
+          "return_type": "bool",
+          "logic": "Tries to retrieve result from atom cache for match global"
+        },
+        {
+          "name": "Clear",
+          "parameters": [
+            "Heap* heap"
+          ],
+          "return_type": "void",
+          "logic": "Clears cache"
+        }
+      ]
+    }
+  ],
+  "functions": [
+    {
+      "name": "HasFewDifferentCharacters",
+      "parameters": [
+        "DirectHandle<String> pattern"
+      ],
+      "return_type": "bool",
+      "logic": "Identifies regexps where engine is faster than atom matching."
+    },
+    {
+      "name": "AtomExecRawImpl",
+      "parameters": [
+        "Isolate* isolate",
+        "base::Vector<const SChar> subject",
+        "base::Vector<const PChar> pattern",
+        "int index",
+        "int32_t* output",
+        "int output_size",
+        "const DisallowGarbageCollection& no_gc"
+      ],
+      "return_type": "int",
+      "logic": "String search using indexOf."
+    },
+    {
+      "name": "RegExpCodeIsValidForPreCompilation",
+      "parameters": [
+        "IsolateForSandbox isolate",
+        "DirectHandle<IrRegExpData> re_data",
+        "bool is_one_byte"
+      ],
+      "return_type": "bool",
+      "logic": "Checks that RegExp bytecode and code are set correctly before compilation."
+    },
+    {
+      "name": "TooMuchRegExpCode",
+      "parameters": [
+        "Isolate* isolate",
+        "DirectHandle<String> pattern"
+      ],
+      "return_type": "bool",
+      "logic": "Check if too much regexp code has been generated"
+    },
+    {
+      "name": "operator<<",
+      "parameters": [
+        "std::ostream& os",
+        "RegExpFlags flags"
+      ],
+      "return_type": "std::ostream&",
+      "logic": "Overloads the << operator to print RegExpFlags to an output stream."
+    }
+  ]
+}

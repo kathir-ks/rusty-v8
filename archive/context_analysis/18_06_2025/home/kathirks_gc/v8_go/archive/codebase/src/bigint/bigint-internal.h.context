@@ -1,0 +1,144 @@
+{
+  "metadata": {
+    "path": "/home/kathirks_gc/v8_go/archive/codebase/src/bigint/bigint-internal.h",
+    "file_name": "bigint-internal.h",
+    "language": "cpp",
+    "purpose": "Internal header file for the bigint implementation in V8, defining constants, the ProcessorImpl class for bigint operations, and helper classes like Storage and ScratchDigits."
+  },
+  "imports": {
+    "metadata": {
+      "language": "cpp",
+      "purpose": "Includes necessary headers for memory management and the main bigint header."
+    },
+    "code": "#include <memory>\n\n            #include \"src/bigint/bigint.h\""
+  },
+  "classes": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "ProcessorImpl",
+        "extends": "Processor",
+        "about": "Implements bigint arithmetic operations.  This class handles multiplication, division, and other operations, potentially using different algorithms based on the size of the numbers.",
+        "attributes": [
+          {
+            "name": "work_estimate_",
+            "type": "uintptr_t",
+            "access": "private",
+            "purpose": "Tracks the amount of work done to allow for interruption."
+          },
+          {
+            "name": "status_",
+            "type": "Status",
+            "access": "private",
+            "purpose": "Indicates the current status of the bigint operations (e.g., interrupted)."
+          },
+          {
+            "name": "platform_",
+            "type": "Platform*",
+            "access": "private",
+            "purpose": "Pointer to the platform-specific interface, used for requesting interrupts."
+          }
+        ],
+        "dependencies": [
+          "Processor",
+          "RWDigits",
+          "Digits",
+          "Platform",
+          "Status",
+          "FromStringAccumulator"
+        ]
+      },
+      "code": "class ProcessorImpl : public Processor {\n            public:\n            explicit ProcessorImpl(Platform* platform);\n            ~ProcessorImpl();\n\n            Status get_and_clear_status();\n\n            void Multiply(RWDigits Z, Digits X, Digits Y);\n            void MultiplySingle(RWDigits Z, Digits X, digit_t y);\n            void MultiplySchoolbook(RWDigits Z, Digits X, Digits Y);\n\n            void MultiplyKaratsuba(RWDigits Z, Digits X, Digits Y);\n            void KaratsubaStart(RWDigits Z, Digits X, Digits Y, RWDigits scratch, int k);\n            void KaratsubaChunk(RWDigits Z, Digits X, Digits Y, RWDigits scratch);\n            void KaratsubaMain(RWDigits Z, Digits X, Digits Y, RWDigits scratch, int n);\n\n            void Divide(RWDigits Q, Digits A, Digits B);\n            void DivideSingle(RWDigits Q, digit_t* remainder, Digits A, digit_t b);\n            void DivideSchoolbook(RWDigits Q, RWDigits R, Digits A, Digits B);\n            void DivideBurnikelZiegler(RWDigits Q, RWDigits R, Digits A, Digits B);\n\n            void Modulo(RWDigits R, Digits A, Digits B);\n\n            #if V8_ADVANCED_BIGINT_ALGORITHMS\n            void MultiplyToomCook(RWDigits Z, Digits X, Digits Y);\n            void Toom3Main(RWDigits Z, Digits X, Digits Y);\n\n            void MultiplyFFT(RWDigits Z, Digits X, Digits Y);\n\n            void DivideBarrett(RWDigits Q, RWDigits R, Digits A, Digits B);\n            void DivideBarrett(RWDigits Q, RWDigits R, Digits A, Digits B, Digits I,\n                                RWDigits scratch);\n\n            void Invert(RWDigits Z, Digits V, RWDigits scratch);\n            void InvertBasecase(RWDigits Z, Digits V, RWDigits scratch);\n            void InvertNewton(RWDigits Z, Digits V, RWDigits scratch);\n            #endif  // V8_ADVANCED_BIGINT_ALGORITHMS\n\n            // {out_length} initially contains the allocated capacity of {out}, and\n            // upon return will be set to the actual length of the result string.\n            void ToString(char* out, uint32_t* out_length, Digits X, int radix,\n                        bool sign);\n            void ToStringImpl(char* out, uint32_t* out_length, Digits X, int radix,\n                            bool sign, bool use_fast_algorithm);\n\n            void FromString(RWDigits Z, FromStringAccumulator* accumulator);\n            void FromStringClassic(RWDigits Z, FromStringAccumulator* accumulator);\n            void FromStringLarge(RWDigits Z, FromStringAccumulator* accumulator);\n            void FromStringBasePowerOfTwo(RWDigits Z, FromStringAccumulator* accumulator);\n\n            bool should_terminate() { return status_ == Status::kInterrupted; }\n\n            // Each unit is supposed to represent approximately one CPU {mul} instruction.\n            // Doesn't need to be accurate; we just want to make sure to check for\n            // interrupt requests every now and then (roughly every 10-100 ms; often\n            // enough not to appear stuck, rarely enough not to cause noticeable\n            // overhead).\n            static const uintptr_t kWorkEstimateThreshold = 5000000;\n\n            void AddWorkEstimate(uintptr_t estimate) {\n            work_estimate_ += estimate;\n            if (work_estimate_ >= kWorkEstimateThreshold) {\n                work_estimate_ = 0;\n                if (platform_->InterruptRequested()) {\n                status_ = Status::kInterrupted;\n                }\n            }\n            }\n\n            private:\n            uintptr_t work_estimate_{0};\n            Status status_{Status::kOk};\n            Platform* platform_;\n            };"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "Storage",
+        "about": "RAII class for managing memory for Digits arrays.  Uses std::unique_ptr to ensure memory is automatically freed.",
+        "attributes": [],
+        "dependencies": []
+      },
+      "code": "// RAII memory for a Digits array.\n            class Storage {\n            public:\n            explicit Storage(int count) : ptr_(new digit_t[count]) {}\n\n            digit_t* get() { return ptr_.get(); }\n\n            private:\n            std::unique_ptr<digit_t[]> ptr_;\n            };"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "ScratchDigits",
+        "extends": "RWDigits",
+        "about": "A writable Digits array with attached storage, combining RWDigits with the Storage class for automatic memory management.",
+        "attributes": [],
+        "dependencies": [
+          "RWDigits",
+          "Storage"
+        ]
+      },
+      "code": "// A writable Digits array with attached storage.\n            class ScratchDigits : public RWDigits {\n            public:\n            explicit ScratchDigits(int len) : RWDigits(nullptr, len), storage_(len) {\n                digits_ = storage_.get();\n            }\n\n            private:\n            Storage storage_;\n            };"
+    }
+  ],
+  "dependencies": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "Processor",
+        "about": "Abstract class for BigInt processor."
+      },
+      "code": "class Processor {\n                public:\n                    virtual ~Processor() = default;\n                };",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "RWDigits",
+        "about": "Represents a writable array of digits."
+      },
+      "code": "class RWDigits {\n                public:\n                    RWDigits(digit_t* digits, int len) : digits_(digits), len_(len) {}\n                private:\n                    digit_t* digits_;\n                    int len_;\n                };",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "Digits",
+        "about": "Represents a read-only array of digits."
+      },
+      "code": "class Digits {\n                public:\n                    digit_t operator[](size_t index) const { return digits_[index]; }\n                private:\n                    const digit_t* digits_;\n                };",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "Platform",
+        "about": "Abstracts platform-specific functionality (e.g., interrupt requests)."
+      },
+      "code": "class Platform {\n                public:\n                    virtual bool InterruptRequested() = 0;\n                };",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "enum",
+        "name": "Status",
+        "about": "Represents the status of a BigInt operation (e.g., kOk, kInterrupted)."
+      },
+      "code": "enum class Status {\n                    kOk,\n                    kInterrupted\n                };",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "FromStringAccumulator",
+        "about": "Accumulates digits from a string during BigInt parsing."
+      },
+      "code": "class FromStringAccumulator {};",
+      "type": "class"
+    }
+  ],
+  "file_path": "/home/kathirks_gc/v8_go/archive/codebase/src/bigint/bigint-internal.h"
+}

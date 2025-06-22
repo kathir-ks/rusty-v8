@@ -1,0 +1,158 @@
+{
+  "metadata": {
+    "path": "/home/kathirks_gc/v8_go/archive/codebase/src/execution/simulator-base.h",
+    "file_name": "simulator-base.h",
+    "language": "cpp",
+    "purpose": "Defines the base class for simulators used in V8 for different architectures, providing functionality for redirecting external references and handling variadic calls to C functions."
+  },
+  "imports": {
+    "metadata": {
+      "language": "cpp",
+      "purpose": "Includes standard C++ headers and V8 specific headers for type traits, fast API calls (architecture-specific), hash map, global definitions, and isolate management."
+    },
+    "code": "#include <type_traits>\n\n#if V8_TARGET_ARCH_ARM64 || V8_TARGET_ARCH_MIPS64 || V8_TARGET_ARCH_LOONG64 || \\\n    V8_TARGET_ARCH_RISCV64\n#include \"include/v8-fast-api-calls.h\"\n#endif  // V8_TARGET_ARCH_ARM64 || V8_TARGET_ARCH_MIPS64 || \\\n        // V8_TARGET_ARCH_LOONG64 || V8_TARGET_ARCH_RISCV64\n#include \"src/base/hashmap.h\"\n#include \"src/common/globals.h\"\n#include \"src/execution/isolate.h\""
+  },
+  "classes": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "SimulatorBase",
+        "about": "Provides base functionality for simulators, including redirection of external references to C functions and handling variadic calls.",
+        "attributes": [],
+        "dependencies": [
+          "Redirection",
+          "ExternalReference",
+          "base::Mutex",
+          "base::CustomMatcherHashMap"
+        ]
+      },
+      "code": "class SimulatorBase {\n public:\n  // Call on process start and exit.\n  static void InitializeOncePerProcess();\n  static void GlobalTearDown();\n\n  static base::Mutex* redirection_mutex() { return redirection_mutex_; }\n  static Redirection* redirection() { return redirection_; }\n  static void set_redirection(Redirection* r) { redirection_ = r; }\n\n  static base::Mutex* i_cache_mutex() { return i_cache_mutex_; }\n  static base::CustomMatcherHashMap* i_cache() { return i_cache_; }\n\n  // Runtime/C function call support.\n  // Creates a trampoline to a given C function callable from generated code.\n  static Address RedirectExternalReference(Address external_function,\n                                           ExternalReference::Type type);\n\n  // Extracts the target C function address from a given redirection trampoline.\n  static Address UnwrapRedirection(Address redirection_trampoline);\n\n protected:\n  template <typename Return, typename SimT, typename CallImpl, typename... Args>\n  static Return VariadicCall(SimT* sim, CallImpl call, Address entry,\n                             Args... args) {\n    // Convert all arguments to intptr_t. Fails if any argument is not integral\n    // or pointer.\n    std::array<intptr_t, sizeof...(args)> args_arr{{ConvertArg(args)...}};\n    intptr_t ret = (sim->*call)(entry, args_arr.size(), args_arr.data());\n    return ConvertReturn<Return>(ret);\n  }\n\n  // Convert back integral return types. This is always a narrowing conversion.\n  template <typename T>\n  static T ConvertReturn(intptr_t ret)\n    requires std::is_integral<T>::value\n  {\n    static_assert(sizeof(T) <= sizeof(intptr_t), \"type bigger than ptrsize\");\n    return static_cast<T>(ret);\n  }\n\n  // Convert back pointer-typed return types.\n  template <typename T>\n  static T ConvertReturn(intptr_t ret)\n    requires std::is_pointer<T>::value\n  {\n    return reinterpret_cast<T>(ret);\n  }\n\n  template <typename T>\n  static T ConvertReturn(intptr_t ret)\n    requires std::is_base_of<Object, T>::value\n  {\n    return Tagged<Object>(ret);\n  }\n\n#if V8_TARGET_ARCH_ARM64 || V8_TARGET_ARCH_MIPS64 || V8_TARGET_ARCH_LOONG64 || \\\n    V8_TARGET_ARCH_RISCV64\n  template <typename T>\n  static T ConvertReturn(intptr_t ret)\n    requires std::is_same<T, v8::AnyCType>::value\n  {\n    v8::AnyCType result;\n    result.int64_value = static_cast<int64_t>(ret);\n    return result;\n  }\n#endif  // V8_TARGET_ARCH_ARM64 || V8_TARGET_ARCH_MIPS64 || \\\n        // V8_TARGET_ARCH_LOONG64 || V8_TARGET_ARCH_RISCV64\n\n  // Convert back void return type (i.e. no return).\n  template <typename T>\n  static T ConvertReturn(intptr_t ret)\n    requires std::is_void<T>::value\n  {}\n\n  // Helper methods to convert arbitrary integer or pointer arguments to the\n  // needed generic argument type intptr_t.\n\n  // Convert integral argument to intptr_t.\n  template <typename T>\n  static intptr_t ConvertArg(T arg)\n    requires std::is_integral<T>::value\n  {\n    static_assert(sizeof(T) <= sizeof(intptr_t), \"type bigger than ptrsize\");\n#if V8_TARGET_ARCH_MIPS64 || V8_TARGET_ARCH_LOONG64 || \\\n    V8_TARGET_ARCH_RISCV32 || V8_TARGET_ARCH_RISCV64\n    // The MIPS64, LOONG64 and RISCV64 calling convention is to sign extend all\n    // values, even unsigned ones.\n    using signed_t = typename std::make_signed<T>::type;\n    return static_cast<intptr_t>(static_cast<signed_t>(arg));\n#else\n    // Standard C++ conversion: Sign-extend signed values, zero-extend unsigned\n    // values.\n    return static_cast<intptr_t>(arg);\n#endif\n  }\n\n  // Convert pointer-typed argument to intptr_t.\n  template <typename T>\n  static intptr_t ConvertArg(T arg)\n    requires std::is_pointer<T>::value\n  {\n    return reinterpret_cast<intptr_t>(arg);\n  }\n\n  template <typename T>\n  static intptr_t ConvertArg(T arg)\n    requires std::is_floating_point<T>::value\n  {\n    UNREACHABLE();\n  }\n\n private:\n  static base::Mutex* redirection_mutex_;\n  static Redirection* redirection_;\n\n  static base::Mutex* i_cache_mutex_;\n  static base::CustomMatcherHashMap* i_cache_;\n};"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "Redirection",
+        "about": "Represents a redirection from generated code to an external C function, used by the simulator.",
+        "attributes": [
+          {
+            "name": "external_function_",
+            "type": "Address",
+            "access": "private",
+            "purpose": "Stores the address of the external C function."
+          },
+          {
+            "name": "instruction_",
+            "type": "uint32_t",
+            "access": "private",
+            "purpose": "Stores the trapping instruction."
+          },
+          {
+            "name": "type_",
+            "type": "ExternalReference::Type",
+            "access": "private",
+            "purpose": "Stores the type of the external reference."
+          },
+          {
+            "name": "next_",
+            "type": "Redirection*",
+            "access": "private",
+            "purpose": "Pointer to the next redirection in a chain."
+          },
+          {
+            "name": "function_descriptor_",
+            "type": "intptr_t[3]",
+            "access": "private",
+            "purpose": "Stores the function descriptor on architectures using them (ABI_USES_FUNCTION_DESCRIPTORS)."
+          }
+        ],
+        "dependencies": [
+          "ExternalReference",
+          "Instruction"
+        ]
+      },
+      "code": "class Redirection {\n public:\n  Redirection(Address external_function, ExternalReference::Type type);\n\n  Address address_of_instruction() {\n#if ABI_USES_FUNCTION_DESCRIPTORS\n    return reinterpret_cast<Address>(function_descriptor_);\n#else\n    return reinterpret_cast<Address>(&instruction_);\n#endif\n  }\n\n  void* external_function() {\n    return reinterpret_cast<void*>(external_function_);\n  }\n  ExternalReference::Type type() { return type_; }\n\n  static Redirection* Get(Address external_function,\n                          ExternalReference::Type type);\n\n  static Redirection* FromInstruction(Instruction* instruction) {\n    Address addr_of_instruction = reinterpret_cast<Address>(instruction);\n    Address addr_of_redirection =\n        addr_of_instruction - offsetof(Redirection, instruction_);\n    return reinterpret_cast<Redirection*>(addr_of_redirection);\n  }\n\n  static void* UnwrapRedirection(intptr_t reg) {\n    Redirection* redirection = FromInstruction(\n        reinterpret_cast<Instruction*>(reinterpret_cast<void*>(reg)));\n    return redirection->external_function();\n  }\n\n  static void DeleteChain(Redirection* redirection) {\n    while (redirection != nullptr) {\n      Redirection* next = redirection->next_;\n      delete redirection;\n      redirection = next;\n    }\n  }\n\n private:\n  Address external_function_;\n  uint32_t instruction_;\n  ExternalReference::Type type_;\n  Redirection* next_;\n#if ABI_USES_FUNCTION_DESCRIPTORS\n  intptr_t function_descriptor_[3];\n#endif\n};"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "SimulatorData",
+        "about": "Stores additional data required by the simulator, specifically signatures for fast API calls.",
+        "attributes": [
+          {
+            "name": "signature_map_mutex_",
+            "type": "v8::base::Mutex",
+            "access": "private",
+            "purpose": "Mutex to protect access to the signature map."
+          },
+          {
+            "name": "target_to_signature_table_",
+            "type": "TargetToSignatureTable",
+            "access": "private",
+            "purpose": "Map from target address to encoded signature."
+          }
+        ],
+        "dependencies": [
+          "v8::base::Mutex",
+          "EncodedCSignature"
+        ]
+      },
+      "code": "class SimulatorData {\n public:\n  // Calls AddSignatureForTarget for each function and signature, registering\n  // an encoded version of the signature within a mapping maintained by the\n  // simulator (from function address -> encoded signature). The function\n  // is supposed to be called whenever one compiles a fast API function with\n  // possibly multiple overloads.\n  // Note that this function is called from one or more compiler threads,\n  // while the main thread might be reading at the same time from the map, so\n  // both Register* and Get* are guarded with a single mutex.\n  void RegisterFunctionsAndSignatures(Address* c_functions,\n                                      const CFunctionInfo* const* c_signatures,\n                                      unsigned num_functions);\n  // The following method is used by the simulator itself to query\n  // whether a signature is registered for the call target and use this\n  // information to address arguments correctly (load them from either GP or\n  // FP registers, or from the stack).\n  const EncodedCSignature& GetSignatureForTarget(Address target);\n  // This method is exposed only for tests, which don't need synchronisation.\n  void AddSignatureForTargetForTesting(Address target,\n                                       const EncodedCSignature& signature) {\n    AddSignatureForTarget(target, signature);\n  }\n\n private:\n  void AddSignatureForTarget(Address target,\n                             const EncodedCSignature& signature) {\n    target_to_signature_table_[target] = signature;\n  }\n\n  v8::base::Mutex signature_map_mutex_;\n  typedef std::unordered_map<Address, EncodedCSignature> TargetToSignatureTable;\n  TargetToSignatureTable target_to_signature_table_;\n};"
+    }
+  ],
+  "dependencies": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "ExternalReference",
+        "about": "Represents a reference to an external function or data."
+      },
+      "code": "class ExternalReference {\n                public:\n                    enum Type {\n                        BUILTIN_CALL,\n                        RUNTIME_CALL,\n                        // ... other types\n                    };\n                };",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "Instruction",
+        "about": "Represents a machine instruction."
+      },
+      "code": "class Instruction {};",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "Object",
+        "about": "Base class for all JavaScript objects."
+      },
+      "code": "class Object {};",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "CFunctionInfo",
+        "about": "Information about C functions used for fast API calls."
+      },
+      "code": "class CFunctionInfo {};",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "EncodedCSignature",
+        "about": "Encoded signature for C functions used for fast API calls."
+      },
+      "code": "class EncodedCSignature {};",
+      "type": "class"
+    }
+  ],
+  "file_path": "/home/kathirks_gc/v8_go/archive/codebase/src/execution/simulator-base.h"
+}

@@ -1,0 +1,298 @@
+{
+  "file_path": "/home/kathirks_gc/v8_go/codebase/src/snapshot/code-serializer.cc",
+  "imports": [
+    "src/snapshot/code-serializer.h",
+    "memory",
+    "src/base/logging.h",
+    "src/base/platform/elapsed-timer.h",
+    "src/base/platform/platform.h",
+    "src/baseline/baseline-batch-compiler.h",
+    "src/codegen/background-merge-task.h",
+    "src/common/globals.h",
+    "src/handles/maybe-handles.h",
+    "src/handles/persistent-handles.h",
+    "src/heap/heap-inl.h",
+    "src/heap/parked-scope.h",
+    "src/logging/counters-scopes.h",
+    "src/logging/log.h",
+    "src/logging/runtime-call-stats-scope.h",
+    "src/objects/objects-inl.h",
+    "src/objects/shared-function-info.h",
+    "src/objects/slots.h",
+    "src/objects/visitors.h",
+    "src/snapshot/object-deserializer.h",
+    "src/snapshot/snapshot-utils.h",
+    "src/snapshot/snapshot.h",
+    "src/utils/version.h"
+  ],
+  "classes": [
+    {
+      "name": "AlignedCachedData",
+      "properties": [
+        "owns_data_",
+        "rejected_",
+        "data_",
+        "length_"
+      ],
+      "methods": [
+        {
+          "name": "AlignedCachedData",
+          "parameters": [
+            "const uint8_t* data",
+            "int length"
+          ],
+          "return_type": "void",
+          "logic": "Constructor. Creates an AlignedCachedData object, optionally copying the input data to an aligned memory location if necessary.  Sets `owns_data_` to true if a copy is made, indicating that the object is responsible for freeing the memory. Sets `rejected_` to false by default."
+        }
+      ]
+    },
+    {
+      "name": "CodeSerializer",
+      "properties": [
+        "source_hash_"
+      ],
+      "methods": [
+        {
+          "name": "CodeSerializer",
+          "parameters": [
+            "Isolate* isolate",
+            "uint32_t source_hash"
+          ],
+          "return_type": "void",
+          "logic": "Constructor. Initializes the serializer with an isolate and a source hash."
+        },
+        {
+          "name": "Serialize",
+          "parameters": [
+            "Isolate* isolate",
+            "Handle<SharedFunctionInfo> info"
+          ],
+          "return_type": "ScriptCompiler::CachedData*",
+          "logic": "Serializes a SharedFunctionInfo object to cached data.  Handles profiling, timing, and source printing. Returns the serialized data."
+        },
+        {
+          "name": "SerializeSharedFunctionInfo",
+          "parameters": [
+            "Handle<SharedFunctionInfo> info"
+          ],
+          "return_type": "AlignedCachedData*",
+          "logic": "Serializes the shared function info and return a struct that owns the serialized data."
+        },
+        {
+          "name": "SerializeObjectImpl",
+          "parameters": [
+            "Handle<HeapObject> obj",
+            "SlotType slot_type"
+          ],
+          "return_type": "void",
+          "logic": "Serializes a HeapObject based on its type. Handles special cases for Scripts, SharedFunctionInfo, UncompiledData, and ScopeInfo, modifying their state to avoid serializing unwanted references.  Fallbacks to SerializeGeneric for other types."
+        },
+        {
+          "name": "SerializeGeneric",
+          "parameters": [
+            "Handle<HeapObject> heap_object",
+            "SlotType slot_type"
+          ],
+          "return_type": "void",
+          "logic": "Serializes an object by creating an ObjectSerializer and using it serialize the object."
+        },
+        {
+          "name": "Deserialize",
+          "parameters": [
+            "Isolate* isolate",
+            "AlignedCachedData* cached_data",
+            "DirectHandle<String> source",
+            "const ScriptDetails& script_details",
+            "MaybeDirectHandle<Script> maybe_cached_script"
+          ],
+          "return_type": "MaybeDirectHandle<SharedFunctionInfo>",
+          "logic": "Deserializes cached code data. Checks for cache validity, deserializes the SharedFunctionInfo, and merges the result into an existing script if available. Handles profiling and logging."
+        },
+        {
+          "name": "StartDeserializeOffThread",
+          "parameters": [
+            "LocalIsolate* local_isolate",
+            "AlignedCachedData* cached_data"
+          ],
+          "return_type": "CodeSerializer::OffThreadDeserializeData",
+          "logic": "Starts deserialization of cached data on a background thread. Performs initial sanity checks and deserializes the SharedFunctionInfo. Returns the deserialized data and handles."
+        },
+        {
+          "name": "FinishOffThreadDeserialize",
+          "parameters": [
+            "Isolate* isolate",
+            "OffThreadDeserializeData&& data",
+            "AlignedCachedData* cached_data",
+            "DirectHandle<String> source",
+            "const ScriptDetails& script_details",
+            "BackgroundMergeTask* background_merge_task"
+          ],
+          "return_type": "MaybeDirectHandle<SharedFunctionInfo>",
+          "logic": "Finishes deserialization of cached data on the main thread after background deserialization. Performs final sanity checks, merges the result with an existing script, and finalizes the process."
+        }
+      ]
+    },
+    {
+      "name": "CodeSerializer::OffThreadDeserializeData",
+      "properties": [
+        "sanity_check_result",
+        "maybe_result",
+        "persistent_handles",
+        "scripts"
+      ],
+      "methods": [
+        {
+          "name": "GetOnlyScript",
+          "parameters": [
+            "LocalHeap* heap"
+          ],
+          "return_type": "DirectHandle<Script>",
+          "logic": "Gets the only script from the data, detaching and reattaching persistent handles around it to return it to the caller."
+        }
+      ]
+    },
+    {
+      "name": "SerializedCodeData",
+      "properties": [
+        "size_"
+      ],
+      "methods": [
+        {
+          "name": "SerializedCodeData",
+          "parameters": [
+            "const std::vector<uint8_t>* payload",
+            "const CodeSerializer* cs"
+          ],
+          "return_type": "void",
+          "logic": "Constructor. Creates a SerializedCodeData object from a byte vector, including a header with metadata."
+        },
+        {
+          "name": "SanityCheck",
+          "parameters": [
+            "uint32_t expected_ro_snapshot_checksum",
+            "uint32_t expected_source_hash"
+          ],
+          "return_type": "SerializedCodeSanityCheckResult",
+          "logic": "Performs a comprehensive sanity check of the serialized data, including magic number, version, flags, read-only snapshot checksum, source hash and data integrity."
+        },
+        {
+          "name": "SanityCheckJustSource",
+          "parameters": [
+            "uint32_t expected_source_hash"
+          ],
+          "return_type": "SerializedCodeSanityCheckResult",
+          "logic": "Checks just the source hash for validity."
+        },
+        {
+          "name": "SanityCheckWithoutSource",
+          "parameters": [
+            "uint32_t expected_ro_snapshot_checksum"
+          ],
+          "return_type": "SerializedCodeSanityCheckResult",
+          "logic": "Checks everything except the source hash for validity."
+        },
+        {
+          "name": "SourceHash",
+          "parameters": [
+            "DirectHandle<String> source",
+            "DirectHandle<FixedArray> wrapped_arguments",
+            "ScriptOriginOptions origin_options"
+          ],
+          "return_type": "uint32_t",
+          "logic": "Calculates a hash based on the source code length, existence of wrapped arguments, and origin options."
+        },
+        {
+          "name": "GetScriptData",
+          "parameters": [],
+          "return_type": "AlignedCachedData*",
+          "logic": "Returns the AlignedCachedData object and relinquishes ownership."
+        },
+        {
+          "name": "Payload",
+          "parameters": [],
+          "return_type": "base::Vector<const uint8_t>",
+          "logic": "Returns a vector of the data after the header."
+        },
+        {
+          "name": "SerializedCodeData",
+          "parameters": [
+            "AlignedCachedData* data"
+          ],
+          "return_type": "void",
+          "logic": "Constructor. Creates a SerializedCodeData from AlignedCachedData."
+        },
+        {
+          "name": "FromCachedData",
+          "parameters": [
+            "Isolate* isolate",
+            "AlignedCachedData* cached_data",
+            "uint32_t expected_source_hash",
+            "SerializedCodeSanityCheckResult* rejection_result"
+          ],
+          "return_type": "SerializedCodeData",
+          "logic": "Creates a SerializedCodeData object from CachedData, verifying that its sanity check is successful."
+        },
+        {
+          "name": "FromCachedDataWithoutSource",
+          "parameters": [
+            "LocalIsolate* local_isolate",
+            "AlignedCachedData* cached_data",
+            "SerializedCodeSanityCheckResult* rejection_result"
+          ],
+          "return_type": "SerializedCodeData",
+          "logic": "Creates a SerializedCodeData object from CachedData, verifying that its sanity check is successful (without checking the source hash)."
+        },
+        {
+          "name": "FromPartiallySanityCheckedCachedData",
+          "parameters": [
+            "AlignedCachedData* cached_data",
+            "uint32_t expected_source_hash",
+            "SerializedCodeSanityCheckResult* rejection_result"
+          ],
+          "return_type": "SerializedCodeData",
+          "logic": "Creates a SerializedCodeData from a partially sanity checked cached data, then performs final checks before returning it."
+        }
+      ]
+    }
+  ],
+  "functions": [
+    {
+      "name": "CreateInterpreterDataForDeserializedCode",
+      "parameters": [
+        "Isolate* isolate",
+        "DirectHandle<SharedFunctionInfo> result_sfi",
+        "bool log_code_creation"
+      ],
+      "return_type": "void",
+      "logic": "Creates InterpreterData objects for deserialized code to enable native stack tracing when `interpreted_frames_native_stack` flag is on. It iterates through the script's shared function infos and create an InterpreterData object if it hasn't already been created."
+    },
+    {
+      "name": "FinalizeDeserialization",
+      "parameters": [
+        "Isolate* isolate",
+        "DirectHandle<SharedFunctionInfo> result",
+        "const base::ElapsedTimer& timer",
+        "const ScriptDetails& script_details"
+      ],
+      "return_type": "void",
+      "logic": "Finalizes deserialization of the script by setting the script details including host-defined options, resetting the script details, setting line ends, and generating function events for logging."
+    },
+    {
+      "name": "BaselineBatchCompileIfSparkplugCompiled",
+      "parameters": [
+        "Isolate* isolate",
+        "Tagged<Script> script"
+      ],
+      "return_type": "void",
+      "logic": "Triggers early baseline compilation for functions compiled with Sparkplug if concurrent compilation mode is enabled."
+    },
+    {
+      "name": "ToString",
+      "parameters": [
+        "SerializedCodeSanityCheckResult result"
+      ],
+      "return_type": "const char*",
+      "logic": "Converts a SerializedCodeSanityCheckResult enum to a human-readable string."
+    }
+  ]
+}

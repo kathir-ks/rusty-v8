@@ -1,0 +1,124 @@
+{
+  "metadata": {
+    "path": "/home/kathirks_gc/v8_go/archive/codebase/src/torque/global-context.cc",
+    "file_name": "global-context.cc",
+    "language": "cpp",
+    "purpose": "Defines the GlobalContext class and TargetArchitecture struct for the Torque language."
+  },
+  "imports": {
+    "metadata": {
+      "language": "cpp",
+      "purpose": "Provides the definition of the GlobalContext class."
+    },
+    "code": "#include \"src/torque/global-context.h\""
+  },
+  "classes": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "GlobalContext",
+        "about": "Represents the global context for the Torque language, holding global state and AST.",
+        "attributes": [
+          {
+            "name": "collect_language_server_data_",
+            "type": "bool",
+            "access": "private",
+            "purpose": "Flag to enable collection of data for language server."
+          },
+          {
+            "name": "collect_kythe_data_",
+            "type": "bool",
+            "access": "private",
+            "purpose": "Flag to enable collection of data for Kythe."
+          },
+          {
+            "name": "force_assert_statements_",
+            "type": "bool",
+            "access": "private",
+            "purpose": "Flag to force assertion statements to be enabled."
+          },
+          {
+            "name": "annotate_ir_",
+            "type": "bool",
+            "access": "private",
+            "purpose": "Flag to enable annotation of intermediate representation (IR)."
+          },
+          {
+            "name": "ast_",
+            "type": "Ast",
+            "access": "private",
+            "purpose": "The abstract syntax tree (AST) for the Torque program."
+          },
+          {
+            "name": "default_namespace_",
+            "type": "Namespace*",
+            "access": "private",
+            "purpose": "The default namespace for Torque declarations."
+          }
+        ],
+        "dependencies": [
+          "Ast",
+          "Namespace",
+          "CurrentScope",
+          "CurrentSourcePosition",
+          "SourcePosition",
+          "CurrentSourceFile",
+          "LineAndColumn"
+        ]
+      },
+      "code": "GlobalContext::GlobalContext(Ast ast)\n    : collect_language_server_data_(false),\n      collect_kythe_data_(false),\n      force_assert_statements_(false),\n      annotate_ir_(false),\n      ast_(std::move(ast)) {\n  CurrentScope::Scope current_scope(nullptr);\n  CurrentSourcePosition::Scope current_source_position(\n      SourcePosition{CurrentSourceFile::Get(), LineAndColumn::Invalid(),\n                     LineAndColumn::Invalid()});\n  default_namespace_ =\n      RegisterDeclarable(std::make_unique<Namespace>(kBaseNamespaceName));\n}"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "struct",
+        "name": "TargetArchitecture",
+        "about": "Represents the target architecture-specific sizes for Torque.",
+        "attributes": [
+          {
+            "name": "tagged_size_",
+            "type": "size_t",
+            "access": "private",
+            "purpose": "The size of a tagged value on the target architecture."
+          },
+          {
+            "name": "raw_ptr_size_",
+            "type": "size_t",
+            "access": "private",
+            "purpose": "The size of a raw pointer on the target architecture."
+          },
+          {
+            "name": "smi_tag_and_shift_size_",
+            "type": "size_t",
+            "access": "private",
+            "purpose": "The size of the Smi tag and shift on the target architecture."
+          },
+          {
+            "name": "external_ptr_size_",
+            "type": "size_t",
+            "access": "private",
+            "purpose": "The size of an external pointer slot."
+          },
+          {
+            "name": "cppheap_ptr_size_",
+            "type": "size_t",
+            "access": "private",
+            "purpose": "The size of a C++ heap pointer slot."
+          },
+          {
+            "name": "trusted_ptr_size_",
+            "type": "size_t",
+            "access": "private",
+            "purpose": "The size of a trusted pointer."
+          }
+        ],
+        "dependencies": [
+          "SmiTagging"
+        ]
+      },
+      "code": "TargetArchitecture::TargetArchitecture(bool force_32bit)\n    : tagged_size_(force_32bit ? sizeof(int32_t) : kTaggedSize),\n      raw_ptr_size_(force_32bit ? sizeof(int32_t) : kSystemPointerSize),\n      smi_tag_and_shift_size_(\n          kSmiTagSize + (force_32bit ? SmiTagging<kApiInt32Size>::kSmiShiftSize\n                                     : kSmiShiftSize)),\n      external_ptr_size_(force_32bit ? sizeof(int32_t)\n                                     : kExternalPointerSlotSize),\n      cppheap_ptr_size_(force_32bit ? sizeof(int32_t)\n                                    : kCppHeapPointerSlotSize),\n      trusted_ptr_size_(force_32bit ? sizeof(int32_t) : kTrustedPointerSize) {}"
+    }
+  ],
+  "file_path": "/home/kathirks_gc/v8_go/archive/codebase/src/torque/global-context.cc"
+}

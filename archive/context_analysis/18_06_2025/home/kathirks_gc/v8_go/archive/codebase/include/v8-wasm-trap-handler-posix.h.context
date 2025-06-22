@@ -1,0 +1,51 @@
+{
+  "metadata": {
+    "path": "/home/kathirks_gc/v8_go/archive/codebase/include/v8-wasm-trap-handler-posix.h",
+    "file_name": "v8-wasm-trap-handler-posix.h",
+    "language": "cpp",
+    "purpose": "Declares a function to handle WebAssembly trap signals on POSIX systems (Linux and Mac)."
+  },
+  "imports": {
+    "metadata": {
+      "language": "cpp",
+      "purpose": "Provides V8 configuration settings."
+    },
+    "code": "#include \"v8config.h\"  // NOLINT(build/include_directory)"
+  },
+  "functions": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "function",
+        "name": "TryHandleWebAssemblyTrapPosix",
+        "parent": "v8",
+        "about": "Determines if a memory access violation is a WebAssembly out-of-bounds access and handles the trap.",
+        "logic": "The function analyzes the signal information and context to determine if the memory access violation was caused by an out-of-bounds access in WebAssembly. If so, it modifies the context to allow execution to continue after signal handling.",
+        "parameters": [
+          {
+            "name": "sig_code",
+            "type": "int",
+            "purpose": "The signal code (e.g., SIGSEGV)."
+          },
+          {
+            "name": "info",
+            "type": "siginfo_t*",
+            "purpose": "A pointer to the siginfo_t struct provided to the signal handler."
+          },
+          {
+            "name": "context",
+            "type": "void*",
+            "purpose": "A pointer to a ucontext_t struct provided to the signal handler."
+          }
+        ],
+        "return": {
+          "type": "bool",
+          "description": "True if the trap was handled, false otherwise."
+        },
+        "dependencies": []
+      },
+      "code": "V8_EXPORT bool TryHandleWebAssemblyTrapPosix(int sig_code, siginfo_t* info,\n                                                        void* context);"
+    }
+  ],
+  "file_path": "/home/kathirks_gc/v8_go/archive/codebase/include/v8-wasm-trap-handler-posix.h"
+}

@@ -1,0 +1,130 @@
+{
+  "metadata": {
+    "path": "/home/kathirks_gc/v8_go/archive/codebase/src/date/dateparser.cc",
+    "file_name": "dateparser.cc",
+    "language": "cpp",
+    "purpose": "Provides date and time parsing functionality for the V8 JavaScript engine."
+  },
+  "imports": {
+    "metadata": {
+      "language": "cpp",
+      "purpose": "Includes necessary header files for date parsing, object handling, and character predicates."
+    },
+    "code": "#include \"src/date/dateparser.h\"\n\n#include \"src/objects/objects-inl.h\"\n#include \"src/strings/char-predicates-inl.h\""
+  },
+  "classes": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "DateParser::DayComposer",
+        "about": "Composes the day, month, and year components of a date.",
+        "attributes": [],
+        "dependencies": [
+          "DateParser",
+          "Smi"
+        ]
+      },
+      "code": "bool DateParser::DayComposer::Write(double* output) {\n  if (index_ < 1) return false;\n  // Day and month defaults to 1.\n  while (index_ < kSize) {\n    comp_[index_++] = 1;\n  }\n\n  int year = 0;  // Default year is 0 (=> 2000) for KJS compatibility.\n  int month = kNone;\n  int day = kNone;\n\n  if (named_month_ == kNone) {\n    if (is_iso_date_ || (index_ == 3 && !IsDay(comp_[0]))) {\n      // YMD\n      year = comp_[0];\n      month = comp_[1];\n      day = comp_[2];\n    } else {\n      // MD(Y)\n      month = comp_[0];\n      day = comp_[1];\n      if (index_ == 3) year = comp_[2];\n    }\n  } else {\n    month = named_month_;\n    if (index_ == 1) {\n      // MD or DM\n      day = comp_[0];\n    } else if (!IsDay(comp_[0])) {\n      // YMD, MYD, or YDM\n      year = comp_[0];\n      day = comp_[1];\n    } else {\n      // DMY, MDY, or DYM\n      day = comp_[0];\n      year = comp_[1];\n    }\n  }\n\n  if (!is_iso_date_) {\n    if (Between(year, 0, 49))\n      year += 2000;\n    else if (Between(year, 50, 99))\n      year += 1900;\n  }\n\n  if (!Smi::IsValid(year) || !IsMonth(month) || !IsDay(day)) return false;\n\n  output[YEAR] = year;\n  output[MONTH] = month - 1;  // 0-based\n  output[DAY] = day;\n  return true;\n}"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "DateParser::TimeComposer",
+        "about": "Composes the hour, minute, second, and millisecond components of a time.",
+        "attributes": [],
+        "dependencies": [
+          "DateParser"
+        ]
+      },
+      "code": "bool DateParser::TimeComposer::Write(double* output) {\n  // All time slots default to 0\n  while (index_ < kSize) {\n    comp_[index_++] = 0;\n  }\n\n  int& hour = comp_[0];\n  int& minute = comp_[1];\n  int& second = comp_[2];\n  int& millisecond = comp_[3];\n\n  if (hour_offset_ != kNone) {\n    if (!IsHour12(hour)) return false;\n    hour %= 12;\n    hour += hour_offset_;\n  }\n\n  if (!IsHour(hour) || !IsMinute(minute) || !IsSecond(second) ||\n      !IsMillisecond(millisecond)) {\n    // A 24th hour is allowed if minutes, seconds, and milliseconds are 0\n    if (hour != 24 || minute != 0 || second != 0 || millisecond != 0) {\n      return false;\n    }\n  }\n\n  output[HOUR] = hour;\n  output[MINUTE] = minute;\n  output[SECOND] = second;\n  output[MILLISECOND] = millisecond;\n  return true;\n}"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "DateParser::TimeZoneComposer",
+        "about": "Composes the time zone offset component.",
+        "attributes": [],
+        "dependencies": [
+          "DateParser",
+          "Smi"
+        ]
+      },
+      "code": "bool DateParser::TimeZoneComposer::Write(double* output) {\n  if (sign_ != kNone) {\n    if (hour_ == kNone) hour_ = 0;\n    if (minute_ == kNone) minute_ = 0;\n    // Avoid signed integer overflow (undefined behavior) by doing unsigned\n    // arithmetic.\n    unsigned total_seconds_unsigned = hour_ * 3600U + minute_ * 60U;\n    if (total_seconds_unsigned > Smi::kMaxValue) return false;\n    int total_seconds = static_cast<int>(total_seconds_unsigned);\n    if (sign_ < 0) {\n      total_seconds = -total_seconds;\n    }\n    DCHECK(Smi::IsValid(total_seconds));\n    output[UTC_OFFSET] = total_seconds;\n  } else {\n    output[UTC_OFFSET] = std::numeric_limits<double>::quiet_NaN();\n  }\n  return true;\n}"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "DateParser::KeywordTable",
+        "about": "Provides a lookup table for date-related keywords (e.g., month names, time zone abbreviations).",
+        "attributes": [],
+        "dependencies": [
+          "DateParser"
+        ]
+      },
+      "code": "const int8_t\n    DateParser::KeywordTable::array[][DateParser::KeywordTable::kEntrySize] = {\n        {'j', 'a', 'n', DateParser::MONTH_NAME, 1},\n        {'f', 'e', 'b', DateParser::MONTH_NAME, 2},\n        {'m', 'a', 'r', DateParser::MONTH_NAME, 3},\n        {'a', 'p', 'r', DateParser::MONTH_NAME, 4},\n        {'m', 'a', 'y', DateParser::MONTH_NAME, 5},\n        {'j', 'u', 'n', DateParser::MONTH_NAME, 6},\n        {'j', 'u', 'l', DateParser::MONTH_NAME, 7},\n        {'a', 'u', 'g', DateParser::MONTH_NAME, 8},\n        {'s', 'e', 'p', DateParser::MONTH_NAME, 9},\n        {'o', 'c', 't', DateParser::MONTH_NAME, 10},\n        {'n', 'o', 'v', DateParser::MONTH_NAME, 11},\n        {'d', 'e', 'c', DateParser::MONTH_NAME, 12},\n        {'a', 'm', '\\0', DateParser::AM_PM, 0},\n        {'p', 'm', '\\0', DateParser::AM_PM, 12},\n        {'u', 't', '\\0', DateParser::TIME_ZONE_NAME, 0},\n        {'u', 't', 'c', DateParser::TIME_ZONE_NAME, 0},\n        {'z', '\\0', '\\0', DateParser::TIME_ZONE_NAME, 0},\n        {'g', 'm', 't', DateParser::TIME_ZONE_NAME, 0},\n        {'c', 'd', 't', DateParser::TIME_ZONE_NAME, -5},\n        {'c', 's', 't', DateParser::TIME_ZONE_NAME, -6},\n        {'e', 'd', 't', DateParser::TIME_ZONE_NAME, -4},\n        {'e', 's', 't', DateParser::TIME_ZONE_NAME, -5},\n        {'m', 'd', 't', DateParser::TIME_ZONE_NAME, -6},\n        {'m', 's', 't', DateParser::TIME_ZONE_NAME, -7},\n        {'p', 'd', 't', DateParser::TIME_ZONE_NAME, -7},\n        {'p', 's', 't', DateParser::TIME_ZONE_NAME, -8},\n        {'t', '\\0', '\\0', DateParser::TIME_SEPARATOR, 0},\n        {'\\0', '\\0', '\\0', DateParser::INVALID, 0},\n};"
+    }
+  ],
+  "functions": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "method",
+        "name": "Lookup",
+        "parent": "DateParser::KeywordTable",
+        "about": "Looks up a keyword in the keyword table.",
+        "logic": "Iterates through the keyword table and compares the input prefix with the stored prefixes.  Returns the index of the matching entry, or the index of the last entry if no match is found.",
+        "parameters": [
+          {
+            "name": "pre",
+            "type": "const uint32_t*",
+            "purpose": "The keyword prefix to look up."
+          },
+          {
+            "name": "len",
+            "type": "int",
+            "purpose": "The length of the keyword."
+          }
+        ],
+        "return": {
+          "type": "int",
+          "description": "The index of the keyword in the table, or the index of the last element if not found."
+        },
+        "dependencies": [
+          "DateParser::KeywordTable"
+        ]
+      },
+      "code": "int DateParser::KeywordTable::Lookup(const uint32_t* pre, int len) {\n  int i;\n  for (i = 0; array[i][kTypeOffset] != INVALID; i++) {\n    int j = 0;\n    while (j < kPrefixLength && pre[j] == static_cast<uint32_t>(array[i][j])) {\n      j++;\n    }\n    // Check if we have a match and the length is legal.\n    // Word longer than keyword is only allowed for month names.\n    if (j == kPrefixLength &&\n        (len <= kPrefixLength || array[i][kTypeOffset] == MONTH_NAME)) {\n      return i;\n    }\n  }\n  return i;\n}"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "method",
+        "name": "ReadMilliseconds",
+        "parent": "DateParser",
+        "about": "Reads milliseconds from a DateToken, handling different lengths and extracting the most significant digits.",
+        "logic": "Adjusts the number of digits by multiplying or dividing the input number based on its length. Handles lengths greater than three by extracting the most significant three digits.",
+        "parameters": [
+          {
+            "name": "token",
+            "type": "DateToken",
+            "purpose": "The token containing the millisecond value and its length."
+          }
+        ],
+        "return": {
+          "type": "int",
+          "description": "The millisecond value."
+        },
+        "dependencies": [
+          "DateToken",
+          "DateParser"
+        ]
+      },
+      "code": "int DateParser::ReadMilliseconds(DateToken token) {\n  // Read first three significant digits of the original numeral,\n  // as inferred from the value and the number of digits.\n  // I.e., use the number of digits to see if there were\n  // leading zeros.\n  int number = token.number();\n  int length = token.length();\n  if (length < 3) {\n    // Less than three digits. Multiply to put most significant digit\n    // in hundreds position.\n    if (length == 1) {\n      number *= 100;\n    } else if (length == 2) {\n      number *= 10;\n    }\n  } else if (length > 3) {\n    if (length > kMaxSignificantDigits) length = kMaxSignificantDigits;\n    // More than three digits. Divide by 10^(length - 3) to get three\n    // most significant digits.\n    int factor = 1;\n    do {\n      DCHECK_LE(factor, 100000000);  // factor won't overflow.\n      factor *= 10;\n      length--;\n    } while (length > 3);\n    number /= factor;\n  }\n  return number;\n}"
+    }
+  ],
+  "file_path": "/home/kathirks_gc/v8_go/archive/codebase/src/date/dateparser.cc"
+}

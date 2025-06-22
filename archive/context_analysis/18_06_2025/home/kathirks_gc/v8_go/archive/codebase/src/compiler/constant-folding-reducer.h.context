@@ -1,0 +1,61 @@
+{
+  "metadata": {
+    "path": "/home/kathirks_gc/v8_go/archive/codebase/src/compiler/constant-folding-reducer.h",
+    "file_name": "constant-folding-reducer.h",
+    "language": "cpp",
+    "purpose": "Defines the ConstantFoldingReducer class, which performs constant folding optimizations in the compiler."
+  },
+  "imports": {
+    "metadata": {
+      "language": "cpp",
+      "purpose": "Includes the GraphReducer base class definition."
+    },
+    "code": "#include \"src/compiler/graph-reducer.h\""
+  },
+  "classes": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "ConstantFoldingReducer",
+        "extends": "AdvancedReducer",
+        "about": "A reducer that performs constant folding optimizations on the graph.",
+        "attributes": [
+          {
+            "name": "jsgraph_",
+            "type": "JSGraph*",
+            "access": "private",
+            "purpose": "A pointer to the JSGraph object."
+          },
+          {
+            "name": "broker_",
+            "type": "JSHeapBroker*",
+            "access": "private",
+            "purpose": "A pointer to the JSHeapBroker object."
+          }
+        ],
+        "dependencies": [
+          "AdvancedReducer",
+          "JSGraph",
+          "JSHeapBroker",
+          "Editor",
+          "Node"
+        ]
+      },
+      "code": "class V8_EXPORT_PRIVATE ConstantFoldingReducer final\n    : public NON_EXPORTED_BASE(AdvancedReducer) {\n public:\n  ConstantFoldingReducer(Editor* editor, JSGraph* jsgraph,\n                         JSHeapBroker* broker);\n  ~ConstantFoldingReducer() final;\n  ConstantFoldingReducer(const ConstantFoldingReducer&) = delete;\n  ConstantFoldingReducer& operator=(const ConstantFoldingReducer&) = delete;\n\n  const char* reducer_name() const override { return \"ConstantFoldingReducer\"; }\n\n  Reduction Reduce(Node* node) final;\n\n private:\n  JSGraph* jsgraph() const { return jsgraph_; }\n  JSHeapBroker* broker() const { return broker_; }\n\n  JSGraph* const jsgraph_;\n  JSHeapBroker* const broker_;\n};"
+    }
+  ],
+  "dependencies": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "Reduction",
+        "about": "Represents the result of a reduction."
+      },
+      "code": "class Reduction;",
+      "type": "class"
+    }
+  ],
+  "file_path": "/home/kathirks_gc/v8_go/archive/codebase/src/compiler/constant-folding-reducer.h"
+}

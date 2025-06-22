@@ -1,0 +1,191 @@
+{
+  "metadata": {
+    "path": "/home/kathirks_gc/v8_go/archive/codebase/src/snapshot/snapshot-external.cc",
+    "file_name": "snapshot-external.cc",
+    "language": "cpp",
+    "purpose": "Provides functionality for using external snapshots in V8, particularly for builds where the snapshot data is stored separately from the main executable."
+  },
+  "imports": {
+    "metadata": {
+      "language": "cpp",
+      "purpose": "Includes necessary headers for mutexes, flags, V8 initialization, and snapshot handling."
+    },
+    "code": "#include \"src/base/platform/mutex.h\"\n            #include \"src/flags/flags.h\"\n            #include \"src/init/v8.h\"  // for V8::Initialize\n            #include \"src/snapshot/snapshot-source-sink.h\"\n            #include \"src/snapshot/snapshot.h\""
+  },
+  "classes": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "StartupData",
+        "about": "Data structure representing the snapshot data. Note: This is v8::StartupData, not internal::StartupData",
+        "attributes": [
+          {
+            "name": "data",
+            "type": "const char*",
+            "access": "public",
+            "purpose": "Pointer to the snapshot data."
+          },
+          {
+            "name": "raw_size",
+            "type": "int",
+            "access": "public",
+            "purpose": "Size of the snapshot data in bytes."
+          }
+        ],
+        "dependencies": []
+      },
+      "code": "namespace v8 {\n            struct StartupData {\n              const char* data;\n              int raw_size;\n            };\n            }"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "Mutex",
+        "about": "Mutex class for thread synchronization.",
+        "attributes": [],
+        "dependencies": []
+      },
+      "code": "namespace base {\n            class Mutex {\n            public:\n                void Lock();\n                void Unlock();\n            };\n            class MutexGuard {\n             public:\n              MutexGuard(Mutex* mutex);\n             ~MutexGuard();\n            };\n            }"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "Snapshot",
+        "about": "Snapshot class for handling snapshot operations.",
+        "attributes": [],
+        "dependencies": []
+      },
+      "code": "namespace v8 {\n            namespace internal {\n            class Snapshot {\n            public:\n              static bool ShouldVerifyChecksum(const v8::StartupData* data);\n              static const v8::StartupData* DefaultSnapshotBlob();\n              static bool SnapshotIsValid(const v8::StartupData* snapshot_blob);\n            };\n            }\n            }"
+    }
+  ],
+  "functions": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "function",
+        "name": "SetSnapshotFromFile",
+        "parent": null,
+        "about": "Sets the external startup data (snapshot blob) from a given StartupData structure.",
+        "logic": "Copies the provided snapshot data into a static variable, ensuring thread safety using a mutex.  It also includes a check to ensure the snapshot is valid, and sets a flag on Android to indicate checksum verification status.",
+        "parameters": [
+          {
+            "name": "snapshot_blob",
+            "type": "StartupData*",
+            "purpose": "Pointer to the StartupData structure containing the snapshot."
+          }
+        ],
+        "return": {
+          "type": "void",
+          "description": "No return value."
+        },
+        "dependencies": [
+          "external_startup_data_mutex",
+          "external_startup_blob",
+          "Snapshot::SnapshotIsValid"
+        ]
+      },
+      "code": "void SetSnapshotFromFile(StartupData* snapshot_blob) {\n              base::MutexGuard lock_guard(external_startup_data_mutex.Pointer());\n              DCHECK(snapshot_blob);\n              DCHECK(snapshot_blob->data);\n              DCHECK_GT(snapshot_blob->raw_size, 0);\n              DCHECK(!external_startup_blob.data);\n              DCHECK(Snapshot::SnapshotIsValid(snapshot_blob));\n              external_startup_blob = *snapshot_blob;\n            #ifdef V8_TARGET_OS_ANDROID\n              external_startup_checksum_verified = false;\n            #endif\n            }"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "method",
+        "name": "ShouldVerifyChecksum",
+        "parent": "Snapshot",
+        "about": "Determines whether the snapshot checksum should be verified.",
+        "logic": "Conditionally verifies the checksum based on platform (Android) and flags. On Android, it ensures the external snapshot checksum is verified only once per process.",
+        "parameters": [
+          {
+            "name": "data",
+            "type": "const v8::StartupData*",
+            "purpose": "Pointer to the StartupData structure."
+          }
+        ],
+        "return": {
+          "type": "bool",
+          "description": "True if the checksum should be verified, false otherwise."
+        },
+        "dependencies": [
+          "external_startup_data_mutex",
+          "external_startup_blob",
+          "v8_flags.verify_snapshot_checksum",
+          "external_startup_checksum_verified"
+        ]
+      },
+      "code": "bool Snapshot::ShouldVerifyChecksum(const v8::StartupData* data) {\n            #ifdef V8_TARGET_OS_ANDROID\n              base::MutexGuard lock_guard(external_startup_data_mutex.Pointer());\n              if (data != &external_startup_blob) {\n                return v8_flags.verify_snapshot_checksum;\n              }\n              // Verify the external snapshot maximally once per process due to the\n              // additional overhead.\n              if (external_startup_checksum_verified) return false;\n              external_startup_checksum_verified = true;\n              return true;\n            #else\n              return v8_flags.verify_snapshot_checksum;\n            #endif\n            }"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "method",
+        "name": "DefaultSnapshotBlob",
+        "parent": "Snapshot",
+        "about": "Returns a pointer to the default snapshot blob.",
+        "logic": "Returns a pointer to the static external_startup_blob variable, ensuring thread safety with a mutex.",
+        "parameters": [],
+        "return": {
+          "type": "const v8::StartupData*",
+          "description": "Pointer to the default snapshot blob."
+        },
+        "dependencies": [
+          "external_startup_data_mutex",
+          "external_startup_blob"
+        ]
+      },
+      "code": "const v8::StartupData* Snapshot::DefaultSnapshotBlob() {\n              base::MutexGuard lock_guard(external_startup_data_mutex.Pointer());\n              return &external_startup_blob;\n            }"
+    }
+  ],
+  "dependencies": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "v8::V8",
+        "about": "V8 namespace containing core functionalities.  Here it's used implicitly through the include for initialization.",
+        "attributes": [],
+        "dependencies": []
+      },
+      "code": "namespace v8 {\n                class V8 {\n                  public:\n                    static void Initialize();\n                };\n                }",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "v8_flags",
+        "about": "External flags used for V8 configuration.",
+        "attributes": [],
+        "dependencies": []
+      },
+      "code": "extern struct Flags {\n                  bool verify_snapshot_checksum;\n                } v8_flags;",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "base::LazyMutex",
+        "about": "Lazily initialized mutex.",
+        "attributes": [],
+        "dependencies": []
+      },
+      "code": "namespace base {\n                template <typename T>\n                class LazyInstance {\n                 public:\n                  T* Get();\n                };\n                using LazyMutex = LazyInstance<Mutex>;\n               }\n               extern base::LazyMutex external_startup_data_mutex;",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "DCHECK",
+        "about": "Assertion macro.",
+        "attributes": [],
+        "dependencies": []
+      },
+      "code": "#define DCHECK(condition)\n                #define DCHECK_GT(a, b)",
+      "type": "class"
+    }
+  ],
+  "file_path": "/home/kathirks_gc/v8_go/archive/codebase/src/snapshot/snapshot-external.cc"
+}

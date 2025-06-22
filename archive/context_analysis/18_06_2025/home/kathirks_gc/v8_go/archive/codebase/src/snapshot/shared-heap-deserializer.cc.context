@@ -1,0 +1,77 @@
+{
+  "metadata": {
+    "path": "/home/kathirks_gc/v8_go/archive/codebase/src/snapshot/shared-heap-deserializer.cc",
+    "file_name": "shared-heap-deserializer.cc",
+    "language": "cpp",
+    "purpose": "Deserializes a shared heap snapshot into an isolate, populating the string table and object cache."
+  },
+  "imports": {
+    "metadata": {
+      "language": "cpp",
+      "purpose": "Includes necessary headers for shared heap deserialization, heap management, and other utilities."
+    },
+    "code": "#include \"src/snapshot/shared-heap-deserializer.h\"\n\n#include \"src/heap/heap-inl.h\""
+  },
+  "functions": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "method",
+        "name": "DeserializeIntoIsolate",
+        "parent": "SharedHeapDeserializer",
+        "about": "Deserializes the shared heap snapshot into the current isolate.",
+        "logic": "Checks if the isolate owns its string tables before deserializing. If it does, it iterates through the shared heap object cache, deserializes the string table, and deserializes deferred objects.  It also rehashes the isolate if necessary.",
+        "parameters": [],
+        "return": {
+          "type": "void",
+          "description": "No return value."
+        },
+        "dependencies": [
+          "isolate",
+          "OwnsStringTables",
+          "shared_heap_object_cache",
+          "empty",
+          "HandleScope",
+          "IterateSharedHeapObjectCache",
+          "DeserializeStringTable",
+          "DeserializeDeferredObjects",
+          "should_rehash",
+          "Rehash"
+        ]
+      },
+      "code": "void SharedHeapDeserializer::DeserializeIntoIsolate() {\n  // Don't deserialize into isolates that don't own their string table. If there\n  // are client Isolates, the shared heap object cache should already be\n  // populated.\n  // TODO(372493838): The shared heap object cache can only contain strings.\n  // Update name to reflect this.\n  if (!isolate()->OwnsStringTables()) {\n    DCHECK(!isolate()->shared_heap_object_cache()->empty());\n    return;\n  }\n\n  DCHECK(isolate()->shared_heap_object_cache()->empty());\n  HandleScope scope(isolate());\n\n  IterateSharedHeapObjectCache(isolate(), this);\n  DeserializeStringTable();\n  DeserializeDeferredObjects();\n\n  if (should_rehash()) {\n    // The hash seed has already been initialized in ReadOnlyDeserializer, thus\n    // there is no need to call `isolate()->heap()->InitializeHashSeed();`.\n    Rehash();\n  }\n}"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "method",
+        "name": "DeserializeStringTable",
+        "parent": "SharedHeapDeserializer",
+        "about": "Deserializes the string table from the snapshot into the isolate's string table.",
+        "logic": "Reads the size of the string table from the source, then reads each string object and inserts it into the isolate's string table.  Finally, it verifies that the number of elements in the string table matches the expected size.",
+        "parameters": [],
+        "return": {
+          "type": "void",
+          "description": "No return value."
+        },
+        "dependencies": [
+          "isolate",
+          "OwnsStringTables",
+          "source",
+          "GetUint30",
+          "DirectHandleVector",
+          "String",
+          "reserve",
+          "Cast",
+          "ReadObject",
+          "StringTable",
+          "NumberOfElements",
+          "InsertForIsolateDeserialization",
+          "base::VectorOf"
+        ]
+      },
+      "code": "void SharedHeapDeserializer::DeserializeStringTable() {\n  // See SharedHeapSerializer::SerializeStringTable.\n\n  DCHECK(isolate()->OwnsStringTables());\n\n  // Get the string table size.\n  const int length = source()->GetUint30();\n\n  // .. and the contents.\n  DirectHandleVector<String> strings(isolate());\n  strings.reserve(length);\n  for (int i = 0; i < length; ++i) {\n    strings.emplace_back(Cast<String>(ReadObject()));\n  }\n\n  StringTable* t = isolate()->string_table();\n  DCHECK_EQ(t->NumberOfElements(), 0);\n  t->InsertForIsolateDeserialization(\n      isolate(), base::VectorOf(strings.data(), strings.size()));\n  DCHECK_EQ(t->NumberOfElements(), length);\n}"
+    }
+  ],
+  "file_path": "/home/kathirks_gc/v8_go/archive/codebase/src/snapshot/shared-heap-deserializer.cc"
+}

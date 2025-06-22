@@ -1,0 +1,723 @@
+{
+  "file_path": "/home/kathirks_gc/v8_go/codebase/src/execution/ppc/simulator-ppc.cc",
+  "imports": [
+    "stdarg.h",
+    "stdlib.h",
+    "cmath",
+    "src/base/bits.h",
+    "src/base/lazy-instance.h",
+    "src/base/overflowing-math.h",
+    "src/base/platform/memory.h",
+    "src/base/platform/platform.h",
+    "src/codegen/assembler.h",
+    "src/codegen/macro-assembler.h",
+    "src/codegen/ppc/constants-ppc.h",
+    "src/codegen/register-configuration.h",
+    "src/diagnostics/disasm.h",
+    "src/execution/ppc/frame-constants-ppc.h",
+    "src/heap/base/stack.h",
+    "src/heap/combined-heap.h",
+    "src/heap/heap-inl.h",
+    "src/objects/objects-inl.h",
+    "src/runtime/runtime-utils.h",
+    "src/utils/ostreams.h",
+    "src/execution/ppc/simulator-ppc.h"
+  ],
+  "classes": [
+    {
+      "name": "PPCDebugger",
+      "properties": [
+        "sim_"
+      ],
+      "methods": [
+        {
+          "name": "PPCDebugger",
+          "parameters": [
+            "sim"
+          ],
+          "return_type": "constructor",
+          "logic": "Constructor for the PPCDebugger class. Initializes the sim_ property."
+        },
+        {
+          "name": "Debug",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Main debugging loop. Reads commands from the user and executes them."
+        },
+        {
+          "name": "GetRegisterValue",
+          "parameters": [
+            "regnum"
+          ],
+          "return_type": "intptr_t",
+          "logic": "Retrieves the value of a general-purpose register from the simulator."
+        },
+        {
+          "name": "GetRegisterPairDoubleValue",
+          "parameters": [
+            "regnum"
+          ],
+          "return_type": "double",
+          "logic": "Retrieves a double value from a register pair (used for floating-point emulation)."
+        },
+        {
+          "name": "GetFPDoubleRegisterValue",
+          "parameters": [
+            "regnum"
+          ],
+          "return_type": "double",
+          "logic": "Retrieves a double value from a floating-point register."
+        },
+        {
+          "name": "GetValue",
+          "parameters": [
+            "desc",
+            "value"
+          ],
+          "return_type": "bool",
+          "logic": "Parses a register name or a hexadecimal/decimal value from a string description. Stores the parsed value in the provided pointer."
+        },
+        {
+          "name": "GetFPDoubleValue",
+          "parameters": [
+            "desc",
+            "value"
+          ],
+          "return_type": "bool",
+          "logic": "Parses a floating-point register name from a string description and stores the value in the provided pointer."
+        },
+        {
+          "name": "SetBreakpoint",
+          "parameters": [
+            "break_pc"
+          ],
+          "return_type": "bool",
+          "logic": "Sets a breakpoint at the specified program counter (Instruction*). Stores the original instruction for later restoration."
+        },
+        {
+          "name": "DeleteBreakpoint",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Deletes the current breakpoint by restoring the original instruction at the breakpoint address."
+        },
+        {
+          "name": "UndoBreakpoint",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Removes the breakpoint instruction from memory, replacing it with the original instruction.  This hides the breakpoint from other debugger commands."
+        },
+        {
+          "name": "RedoBreakpoint",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Installs the breakpoint instruction in memory."
+        }
+      ]
+    },
+    {
+      "name": "Simulator::GlobalMonitor",
+      "properties": [],
+      "methods": [
+        {
+          "name": "Get",
+          "parameters": [],
+          "return_type": "Simulator::GlobalMonitor*",
+          "logic": "Provides a static method that gets the static global monitor."
+        }
+      ]
+    },
+    {
+      "name": "Simulator",
+      "properties": [
+        "isolate_",
+        "stack_",
+        "pc_modified_",
+        "icount_",
+        "break_pc_",
+        "break_instr_",
+        "registers_",
+        "condition_reg_",
+        "fp_condition_reg_",
+        "special_reg_pc_",
+        "special_reg_lr_",
+        "special_reg_ctr_",
+        "fp_registers_",
+        "last_debugger_input_",
+        "instruction_tracing_",
+        "watched_stops_"
+      ],
+      "methods": [
+        {
+          "name": "Simulator",
+          "parameters": [
+            "isolate"
+          ],
+          "return_type": "constructor",
+          "logic": "Constructor for the Simulator class. Initializes the architecture state, including registers, stack, and flags."
+        },
+        {
+          "name": "~Simulator",
+          "parameters": [],
+          "return_type": "destructor",
+          "logic": "Destructor for the Simulator class. Frees the allocated stack memory."
+        },
+        {
+          "name": "current",
+          "parameters": [
+            "isolate"
+          ],
+          "return_type": "Simulator*",
+          "logic": "Returns the active Simulator for the current thread. Creates one if it doesn't exist."
+        },
+        {
+          "name": "set_register",
+          "parameters": [
+            "reg",
+            "value"
+          ],
+          "return_type": "void",
+          "logic": "Sets the value of a general-purpose register in the simulated architecture state."
+        },
+        {
+          "name": "get_register",
+          "parameters": [
+            "reg"
+          ],
+          "return_type": "intptr_t",
+          "logic": "Retrieves the value of a general-purpose register from the simulated architecture state."
+        },
+        {
+          "name": "get_double_from_register_pair",
+          "parameters": [
+            "reg"
+          ],
+          "return_type": "double",
+          "logic": "Retrieves a double value from a register pair (used for floating-point emulation). Currently just returns 0."
+        },
+        {
+          "name": "set_pc",
+          "parameters": [
+            "value"
+          ],
+          "return_type": "void",
+          "logic": "Sets the program counter (PC) in the simulated architecture state."
+        },
+        {
+          "name": "has_bad_pc",
+          "parameters": [],
+          "return_type": "bool",
+          "logic": "Checks if the PC points to an invalid address (used for detecting errors)."
+        },
+        {
+          "name": "get_pc",
+          "parameters": [],
+          "return_type": "intptr_t",
+          "logic": "Retrieves the program counter (PC) from the simulated architecture state."
+        },
+        {
+          "name": "get_lr",
+          "parameters": [],
+          "return_type": "intptr_t",
+          "logic": "Accessor to the internal Link Register."
+        },
+        {
+          "name": "GetFpArgs",
+          "parameters": [
+            "x",
+            "y",
+            "z"
+          ],
+          "return_type": "void",
+          "logic": "Retrieves the floating-point and integer arguments passed to a runtime function call."
+        },
+        {
+          "name": "SetFpResult",
+          "parameters": [
+            "result"
+          ],
+          "return_type": "void",
+          "logic": "Sets the floating-point return value in the appropriate register."
+        },
+        {
+          "name": "TrashCallerSaveRegisters",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Intended to trash volatile registers, but is currently empty."
+        },
+        {
+          "name": "ReadB",
+          "parameters": [
+            "addr"
+          ],
+          "return_type": "uint8_t",
+          "logic": "Reads a byte from the specified memory address."
+        },
+        {
+          "name": "ReadH",
+          "parameters": [
+            "addr"
+          ],
+          "return_type": "int16_t",
+          "logic": "Reads a short (2 bytes) from the specified memory address."
+        },
+        {
+          "name": "ReadHU",
+          "parameters": [
+            "addr"
+          ],
+          "return_type": "uint16_t",
+          "logic": "Reads an unsigned short (2 bytes) from the specified memory address."
+        },
+        {
+          "name": "ReadW",
+          "parameters": [
+            "addr"
+          ],
+          "return_type": "int32_t",
+          "logic": "Reads a word (4 bytes) from the specified memory address."
+        },
+        {
+          "name": "ReadWU",
+          "parameters": [
+            "addr"
+          ],
+          "return_type": "uint32_t",
+          "logic": "Reads an unsigned word (4 bytes) from the specified memory address."
+        },
+        {
+          "name": "ReadDW",
+          "parameters": [
+            "addr"
+          ],
+          "return_type": "int64_t",
+          "logic": "Reads a double word (8 bytes) from the specified memory address."
+        },
+        {
+          "name": "ReadF",
+          "parameters": [
+            "addr"
+          ],
+          "return_type": "float",
+          "logic": "Reads a float (4 bytes) from the specified memory address."
+        },
+        {
+          "name": "ReadD",
+          "parameters": [
+            "addr"
+          ],
+          "return_type": "double",
+          "logic": "Reads a double (8 bytes) from the specified memory address."
+        },
+        {
+          "name": "WriteB",
+          "parameters": [
+            "addr",
+            "value"
+          ],
+          "return_type": "void",
+          "logic": "Writes a byte to the specified memory address."
+        },
+        {
+          "name": "WriteH",
+          "parameters": [
+            "addr",
+            "value"
+          ],
+          "return_type": "void",
+          "logic": "Writes a short (2 bytes) to the specified memory address."
+        },
+        {
+          "name": "WriteW",
+          "parameters": [
+            "addr",
+            "value"
+          ],
+          "return_type": "void",
+          "logic": "Writes a word (4 bytes) to the specified memory address."
+        },
+        {
+          "name": "WriteDW",
+          "parameters": [
+            "addr",
+            "value"
+          ],
+          "return_type": "void",
+          "logic": "Writes a double word (8 bytes) to the specified memory address."
+        },
+        {
+          "name": "WriteF",
+          "parameters": [
+            "addr",
+            "value"
+          ],
+          "return_type": "void",
+          "logic": "Writes a float (4 bytes) to the specified memory address."
+        },
+        {
+          "name": "WriteD",
+          "parameters": [
+            "addr",
+            "value"
+          ],
+          "return_type": "void",
+          "logic": "Writes a double (8 bytes) to the specified memory address."
+        },
+        {
+          "name": "ReadExB",
+          "parameters": [
+            "addr",
+            "value"
+          ],
+          "return_type": "void",
+          "logic": "Reads a byte from the specified memory address using experimental feature."
+        },
+        {
+          "name": "ReadExH",
+          "parameters": [
+            "addr",
+            "value"
+          ],
+          "return_type": "void",
+          "logic": "Reads a short (2 bytes) from the specified memory address using experimental feature."
+        },
+        {
+          "name": "ReadExW",
+          "parameters": [
+            "addr",
+            "value"
+          ],
+          "return_type": "void",
+          "logic": "Reads a word (4 bytes) from the specified memory address using experimental feature."
+        },
+        {
+          "name": "ReadExDW",
+          "parameters": [
+            "addr",
+            "value"
+          ],
+          "return_type": "void",
+          "logic": "Reads a double word (8 bytes) from the specified memory address using experimental feature."
+        },
+        {
+          "name": "WriteExB",
+          "parameters": [
+            "addr",
+            "value"
+          ],
+          "return_type": "int32_t",
+          "logic": "Writes a byte to the specified memory address using experimental feature."
+        },
+        {
+          "name": "WriteExH",
+          "parameters": [
+            "addr",
+            "value"
+          ],
+          "return_type": "int32_t",
+          "logic": "Writes a short (2 bytes) to the specified memory address using experimental feature."
+        },
+        {
+          "name": "WriteExW",
+          "parameters": [
+            "addr",
+            "value"
+          ],
+          "return_type": "int32_t",
+          "logic": "Writes a word (4 bytes) to the specified memory address using experimental feature."
+        },
+        {
+          "name": "WriteExDW",
+          "parameters": [
+            "addr",
+            "value"
+          ],
+          "return_type": "int32_t",
+          "logic": "Writes a double word (8 bytes) to the specified memory address using experimental feature."
+        },
+        {
+          "name": "StackLimit",
+          "parameters": [
+            "c_limit"
+          ],
+          "return_type": "uintptr_t",
+          "logic": "Returns the limit of the stack area to enable checking for stack overflows."
+        },
+        {
+          "name": "StackBase",
+          "parameters": [],
+          "return_type": "uintptr_t",
+          "logic": "Returns the base address of the stack area."
+        },
+        {
+          "name": "GetCentralStackView",
+          "parameters": [],
+          "return_type": "base::Vector<uint8_t>",
+          "logic": "Returns a view of the central stack portion of the stack_."
+        },
+        {
+          "name": "IterateRegistersAndStack",
+          "parameters": [
+            "visitor"
+          ],
+          "return_type": "void",
+          "logic": "Iterates through the registers and stack, calling the visitor's VisitPointer method for each valid pointer encountered."
+        },
+        {
+          "name": "Format",
+          "parameters": [
+            "instr",
+            "format"
+          ],
+          "return_type": "void",
+          "logic": "Prints an error message for unsupported instructions and halts execution."
+        },
+        {
+          "name": "CarryFrom",
+          "parameters": [
+            "left",
+            "right",
+            "carry"
+          ],
+          "return_type": "bool",
+          "logic": "Calculates C flag value for additions."
+        },
+        {
+          "name": "BorrowFrom",
+          "parameters": [
+            "left",
+            "right"
+          ],
+          "return_type": "bool",
+          "logic": "Calculates C flag value for subtractions."
+        },
+        {
+          "name": "OverflowFrom",
+          "parameters": [
+            "alu_out",
+            "left",
+            "right",
+            "addition"
+          ],
+          "return_type": "bool",
+          "logic": "Calculates V flag value for additions and subtractions."
+        },
+        {
+          "name": "SoftwareInterrupt",
+          "parameters": [
+            "instr"
+          ],
+          "return_type": "void",
+          "logic": "Handles software interrupt instructions, used for calling into the C-based V8 runtime."
+        },
+        {
+          "name": "isStopInstruction",
+          "parameters": [
+            "instr"
+          ],
+          "return_type": "bool",
+          "logic": "Helper function to check if an instruction is a stop instruction."
+        },
+        {
+          "name": "isWatchedStop",
+          "parameters": [
+            "code"
+          ],
+          "return_type": "bool",
+          "logic": "Helper function to check if a stop code is watched."
+        },
+        {
+          "name": "isEnabledStop",
+          "parameters": [
+            "code"
+          ],
+          "return_type": "bool",
+          "logic": "Helper function to check if a stop code is enabled."
+        },
+        {
+          "name": "EnableStop",
+          "parameters": [
+            "code"
+          ],
+          "return_type": "void",
+          "logic": "Helper function to enable a stop code."
+        },
+        {
+          "name": "DisableStop",
+          "parameters": [
+            "code"
+          ],
+          "return_type": "void",
+          "logic": "Helper function to disable a stop code."
+        },
+        {
+          "name": "IncreaseStopCounter",
+          "parameters": [
+            "code"
+          ],
+          "return_type": "void",
+          "logic": "Helper function to increase the counter for a stop code."
+        },
+        {
+          "name": "PrintStopInfo",
+          "parameters": [
+            "code"
+          ],
+          "return_type": "void",
+          "logic": "Helper function to print information about a stop code."
+        },
+        {
+          "name": "SetCR0",
+          "parameters": [
+            "result",
+            "setSO"
+          ],
+          "return_type": "void",
+          "logic": "Set condition register based on a result and summary overflow bit. Set field zero"
+        },
+        {
+          "name": "SetCR6",
+          "parameters": [
+            "true_for_all"
+          ],
+          "return_type": "void",
+          "logic": "Set condition register field 6"
+        },
+        {
+          "name": "ExecuteBranchConditional",
+          "parameters": [
+            "instr",
+            "type"
+          ],
+          "return_type": "void",
+          "logic": "Executes a branch conditional instruction."
+        },
+        {
+          "name": "ExecuteGeneric",
+          "parameters": [
+            "instr"
+          ],
+          "return_type": "void",
+          "logic": "Executes generic instructions. Implements the behavior for a wide variety of PowerPC instructions."
+        },
+        {
+          "name": "DebugAtNextPC",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Starts debugger at the next instruction."
+        },
+        {
+          "name": "InstructionTracingEnabled",
+          "parameters": [],
+          "return_type": "bool",
+          "logic": "Checks if the tracing of all executed instruction is enabled."
+        },
+        {
+          "name": "ToggleInstructionTracing",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Toggles the tracing of all executed instruction."
+        },
+        {
+          "name": "ICacheMatch",
+          "parameters": [
+            "one",
+            "two"
+          ],
+          "return_type": "bool",
+          "logic": "Checks if two cache pages are the same."
+        },
+        {
+          "name": "FlushICache",
+          "parameters": [
+            "i_cache",
+            "start_addr",
+            "size"
+          ],
+          "return_type": "void",
+          "logic": "Flushes the instruction cache for the given address range."
+        },
+        {
+          "name": "GetCachePage",
+          "parameters": [
+            "i_cache",
+            "page"
+          ],
+          "return_type": "CachePage*",
+          "logic": "Retrieves the cache page for a given address. Creates a new one if it doesn't exist."
+        },
+        {
+          "name": "FlushOnePage",
+          "parameters": [
+            "i_cache",
+            "start",
+            "size"
+          ],
+          "return_type": "void",
+          "logic": "Flushes a single page in the instruction cache."
+        },
+        {
+          "name": "CheckICache",
+          "parameters": [
+            "i_cache",
+            "instr"
+          ],
+          "return_type": "void",
+          "logic": "Checks the validity and correctness of the instruction cache for the specified instruction."
+        },
+        {
+          "name": "set_last_debugger_input",
+          "parameters": [
+            "input"
+          ],
+          "return_type": "void",
+          "logic": "Sets the last debugger input."
+        },
+        {
+          "name": "SetRedirectInstruction",
+          "parameters": [
+            "instruction"
+          ],
+          "return_type": "void",
+          "logic": "Set Redirect Instruction."
+        }
+      ]
+    }
+  ],
+  "functions": [
+    {
+      "name": "AllOnOnePage",
+      "parameters": [
+        "start",
+        "size"
+      ],
+      "return_type": "static bool",
+      "logic": "Checks if a memory region of the given size fits entirely within a single cache page."
+    },
+    {
+      "name": "ICacheHash",
+      "parameters": [
+        "key"
+      ],
+      "return_type": "static uint32_t",
+      "logic": "Calculates a hash value for a cache key."
+    },
+    {
+      "name": "SetInstructionBitsInCodeSpace",
+      "parameters": [
+        "instr",
+        "value",
+        "heap"
+      ],
+      "return_type": "static void",
+      "logic": "Sets instruction bits in code space."
+    },
+    {
+      "name": "is_snan",
+      "parameters": [
+        "input"
+      ],
+      "return_type": "static bool",
+      "logic": "Helper function to check if the number is a signaling NaN"
+    }
+  ]
+}

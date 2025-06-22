@@ -1,0 +1,56 @@
+{
+  "metadata": {
+    "path": "/home/kathirks_gc/v8_go/archive/codebase/include/cppgc/internal/finalizer-trait.h",
+    "file_name": "finalizer-trait.h",
+    "language": "cpp",
+    "purpose": "Defines traits and utilities for handling finalization of garbage collected objects in cppgc."
+  },
+  "imports": {
+    "metadata": {
+      "language": "cpp",
+      "purpose": "Provides type traits specific to cppgc"
+    },
+    "code": "#include \"cppgc/type-traits.h\""
+  },
+  "classes": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "struct",
+        "name": "HasFinalizeGarbageCollectedObject",
+        "about": "Detects whether a class T has a member function FinalizeGarbageCollectedObject.",
+        "attributes": [],
+        "dependencies": []
+      },
+      "code": "template <typename T, typename = void>\n            struct HasFinalizeGarbageCollectedObject : std::false_type {};\n\n            template <typename T>\n            struct HasFinalizeGarbageCollectedObject<\n                T,\n                std::void_t<decltype(std::declval<T>().FinalizeGarbageCollectedObject())>>\n                : std::true_type {};"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "struct",
+        "name": "FinalizerTraitImpl",
+        "about": "Implementation details for finalization. Selects between custom finalizer and destructor.",
+        "attributes": [],
+        "dependencies": [
+          "HasFinalizeGarbageCollectedObject"
+        ]
+      },
+      "code": "template <typename T, bool isFinalized>\n            struct FinalizerTraitImpl;\n\n            template <typename T>\n            struct FinalizerTraitImpl<T, true> {\n            private:\n            // Dispatch to custom FinalizeGarbageCollectedObject().\n            struct Custom {\n                static void Call(void* obj) {\n                static_cast<T*>(obj)->FinalizeGarbageCollectedObject();\n                }\n            };\n\n            // Dispatch to regular destructor.\n            struct Destructor {\n                static void Call(void* obj) { static_cast<T*>(obj)->~T(); }\n            };\n\n            using FinalizeImpl =\n                std::conditional_t<HasFinalizeGarbageCollectedObject<T>::value, Custom,\n                                   Destructor>;\n\n            public:\n            static void Finalize(void* obj) {\n                static_assert(sizeof(T), \"T must be fully defined\");\n                FinalizeImpl::Call(obj);\n            }\n            };\n\n            template <typename T>\n            struct FinalizerTraitImpl<T, false> {\n            static void Finalize(void* obj) {\n                static_assert(sizeof(T), \"T must be fully defined\");\n            }\n            };"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "struct",
+        "name": "FinalizerTrait",
+        "about": "Determines if a type requires finalization and provides the finalization callback.",
+        "attributes": [],
+        "dependencies": [
+          "HasFinalizeGarbageCollectedObject",
+          "FinalizerTraitImpl"
+        ]
+      },
+      "code": "template <typename T>\n            struct FinalizerTrait {\n            private:\n            // Object has a finalizer if it has\n            // - a custom FinalizeGarbageCollectedObject method, or\n            // - a destructor.\n            static constexpr bool kNonTrivialFinalizer =\n                internal::HasFinalizeGarbageCollectedObject<T>::value ||\n                !std::is_trivially_destructible<typename std::remove_cv<T>::type>::value;\n\n            static void Finalize(void* obj) {\n                internal::FinalizerTraitImpl<T, kNonTrivialFinalizer>::Finalize(obj);\n            }\n\n            public:\n            static constexpr bool HasFinalizer() { return kNonTrivialFinalizer; }\n\n            // The callback used to finalize an object of type T.\n            static constexpr FinalizationCallback kCallback =\n                kNonTrivialFinalizer ? Finalize : nullptr;\n            };\n\n            template <typename T>\n            constexpr FinalizationCallback FinalizerTrait<T>::kCallback;"
+    }
+  ],
+  "file_path": "/home/kathirks_gc/v8_go/archive/codebase/include/cppgc/internal/finalizer-trait.h"
+}

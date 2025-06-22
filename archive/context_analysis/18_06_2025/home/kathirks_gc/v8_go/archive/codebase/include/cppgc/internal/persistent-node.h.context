@@ -1,0 +1,142 @@
+{
+  "metadata": {
+    "path": "/home/kathirks_gc/v8_go/archive/codebase/include/cppgc/internal/persistent-node.h",
+    "file_name": "persistent-node.h",
+    "language": "cpp",
+    "purpose": "Defines the PersistentNode and associated PersistentRegion classes for managing persistent handles in cppgc."
+  },
+  "imports": {
+    "metadata": {
+      "language": "cpp",
+      "purpose": "Includes standard library headers and cppgc specific headers"
+    },
+    "code": "#include <array>\n#include <memory>\n#include <vector>\n\n#include \"cppgc/internal/logging.h\"\n#include \"cppgc/trace-trait.h\"\n#include \"v8config.h\"  // NOLINT(build/include_directory)"
+  },
+  "classes": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "PersistentNode",
+        "about": "Represents either a traceable node with a back pointer to a Persistent object, or a freelist entry.",
+        "attributes": [],
+        "dependencies": [
+          "TraceRootCallback"
+        ]
+      },
+      "code": "class PersistentNode final {\n public:\n  PersistentNode() = default;\n\n  PersistentNode(const PersistentNode&) = delete;\n  PersistentNode& operator=(const PersistentNode&) = delete;\n\n  void InitializeAsUsedNode(void* owner, TraceRootCallback trace) {\n    CPPGC_DCHECK(trace);\n    owner_ = owner;\n    trace_ = trace;\n  }\n\n  void InitializeAsFreeNode(PersistentNode* next) {\n    next_ = next;\n    trace_ = nullptr;\n  }\n\n  void UpdateOwner(void* owner) {\n    CPPGC_DCHECK(IsUsed());\n    owner_ = owner;\n  }\n\n  PersistentNode* FreeListNext() const {\n    CPPGC_DCHECK(!IsUsed());\n    return next_;\n  }\n\n  void Trace(RootVisitor& root_visitor) const {\n    CPPGC_DCHECK(IsUsed());\n    trace_(root_visitor, owner_);\n  }\n\n  bool IsUsed() const { return trace_; }\n\n  void* owner() const {\n    CPPGC_DCHECK(IsUsed());\n    return owner_;\n  }\n\n private:\n  // PersistentNode acts as a designated union:\n  // If trace_ != nullptr, owner_ points to the corresponding Persistent handle.\n  // Otherwise, next_ points to the next freed PersistentNode.\n  union {\n    void* owner_ = nullptr;\n    PersistentNode* next_;\n  };\n  TraceRootCallback trace_ = nullptr;\n};"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "PersistentRegionBase",
+        "about": "Base class for managing a region of PersistentNodes.",
+        "attributes": [],
+        "dependencies": [
+          "FatalOutOfMemoryHandler",
+          "PersistentNode",
+          "RootVisitor"
+        ]
+      },
+      "code": "class V8_EXPORT PersistentRegionBase {\n  using PersistentNodeSlots = std::array<PersistentNode, 256u>;\n\n public:\n  // Clears Persistent fields to avoid stale pointers after heap teardown.\n  ~PersistentRegionBase();\n\n  PersistentRegionBase(const PersistentRegionBase&) = delete;\n  PersistentRegionBase& operator=(const PersistentRegionBase&) = delete;\n\n  void Iterate(RootVisitor&);\n\n  size_t NodesInUse() const;\n\n  void ClearAllUsedNodes();\n\n protected:\n  explicit PersistentRegionBase(const FatalOutOfMemoryHandler& oom_handler);\n\n  PersistentNode* TryAllocateNodeFromFreeList(void* owner,\n                                              TraceRootCallback trace) {\n    PersistentNode* node = nullptr;\n    if (V8_LIKELY(free_list_head_)) {\n      node = free_list_head_;\n      free_list_head_ = free_list_head_->FreeListNext();\n      CPPGC_DCHECK(!node->IsUsed());\n      node->InitializeAsUsedNode(owner, trace);\n      nodes_in_use_++;\n    }\n    return node;\n  }\n\n  void FreeNode(PersistentNode* node) {\n    CPPGC_DCHECK(node);\n    CPPGC_DCHECK(node->IsUsed());\n    node->InitializeAsFreeNode(free_list_head_);\n    free_list_head_ = node;\n    CPPGC_DCHECK(nodes_in_use_ > 0);\n    nodes_in_use_--;\n  }\n\n  PersistentNode* RefillFreeListAndAllocateNode(void* owner,\n                                                TraceRootCallback trace);\n\n private:\n  template <typename PersistentBaseClass>\n  void ClearAllUsedNodes();\n\n  void RefillFreeList();\n\n  std::vector<std::unique_ptr<PersistentNodeSlots>> nodes_;\n  PersistentNode* free_list_head_ = nullptr;\n  size_t nodes_in_use_ = 0;\n  const FatalOutOfMemoryHandler& oom_handler_;\n\n  friend class CrossThreadPersistentRegion;\n};"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "PersistentRegion",
+        "extends": "PersistentRegionBase",
+        "about": "Variant of PersistentRegionBase that checks whether the allocation and freeing happens only on the thread that created the heap.",
+        "attributes": [],
+        "dependencies": [
+          "HeapBase",
+          "FatalOutOfMemoryHandler",
+          "PersistentNode"
+        ]
+      },
+      "code": "class V8_EXPORT PersistentRegion final : public PersistentRegionBase {\n public:\n  V8_INLINE PersistentRegion(const HeapBase& heap,\n                             const FatalOutOfMemoryHandler& oom_handler)\n      : PersistentRegionBase(oom_handler), heap_(heap) {\n    CPPGC_DCHECK(IsCreationThread());\n  }\n  // Clears Persistent fields to avoid stale pointers after heap teardown.\n  ~PersistentRegion() = default;\n\n  PersistentRegion(const PersistentRegion&) = delete;\n  PersistentRegion& operator=(const PersistentRegion&) = delete;\n\n  V8_INLINE PersistentNode* AllocateNode(void* owner, TraceRootCallback trace) {\n    CPPGC_DCHECK(IsCreationThread());\n    auto* node = TryAllocateNodeFromFreeList(owner, trace);\n    if (V8_LIKELY(node)) return node;\n\n    // Slow path allocation allows for checking thread correspondence.\n    CPPGC_CHECK(IsCreationThread());\n    return RefillFreeListAndAllocateNode(owner, trace);\n  }\n\n  V8_INLINE void FreeNode(PersistentNode* node) {\n    CPPGC_DCHECK(IsCreationThread());\n    PersistentRegionBase::FreeNode(node);\n  }\n\n private:\n  bool IsCreationThread();\n\n  const HeapBase& heap_;\n};"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "PersistentRegionLock",
+        "about": "Provides a lock for cross-thread persistent regions.",
+        "attributes": [],
+        "dependencies": []
+      },
+      "code": "class V8_EXPORT PersistentRegionLock final {\n public:\n  PersistentRegionLock();\n  ~PersistentRegionLock();\n\n  static void AssertLocked();\n};"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "CrossThreadPersistentRegion",
+        "extends": "PersistentRegionBase",
+        "about": "Variant of PersistentRegionBase that checks whether the PersistentRegionLock is locked.",
+        "attributes": [],
+        "dependencies": [
+          "FatalOutOfMemoryHandler",
+          "PersistentNode",
+          "PersistentRegionLock",
+          "RootVisitor"
+        ]
+      },
+      "code": "class V8_EXPORT CrossThreadPersistentRegion final\n    : protected PersistentRegionBase {\n public:\n  explicit CrossThreadPersistentRegion(const FatalOutOfMemoryHandler&);\n  // Clears Persistent fields to avoid stale pointers after heap teardown.\n  ~CrossThreadPersistentRegion();\n\n  CrossThreadPersistentRegion(const CrossThreadPersistentRegion&) = delete;\n  CrossThreadPersistentRegion& operator=(const CrossThreadPersistentRegion&) =\n      delete;\n\n  V8_INLINE PersistentNode* AllocateNode(void* owner, TraceRootCallback trace) {\n    PersistentRegionLock::AssertLocked();\n    auto* node = TryAllocateNodeFromFreeList(owner, trace);\n    if (V8_LIKELY(node)) return node;\n\n    return RefillFreeListAndAllocateNode(owner, trace);\n  }\n\n  V8_INLINE void FreeNode(PersistentNode* node) {\n    PersistentRegionLock::AssertLocked();\n    PersistentRegionBase::FreeNode(node);\n  }\n\n  void Iterate(RootVisitor&);\n\n  size_t NodesInUse() const;\n\n  void ClearAllUsedNodes();\n};"
+    }
+  ],
+  "dependencies": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "interface",
+        "name": "RootVisitor",
+        "about": "Interface to visit roots in the garbage collection.",
+        "methods": [],
+        "dependencies": []
+      },
+      "code": "class RootVisitor {\n                    public:\n                        virtual ~RootVisitor() {}\n                };",
+      "type": "interface"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "interface",
+        "name": "TraceRootCallback",
+        "about": "Callback function to trace roots",
+        "methods": [],
+        "dependencies": [
+          "RootVisitor"
+        ]
+      },
+      "code": "using TraceRootCallback = void (*)(RootVisitor&, void*);",
+      "type": "interface"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "FatalOutOfMemoryHandler",
+        "about": "Handles out of memory situations",
+        "methods": [],
+        "dependencies": []
+      },
+      "code": "class FatalOutOfMemoryHandler {};",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "HeapBase",
+        "about": "Base class for heaps.",
+        "methods": [],
+        "dependencies": []
+      },
+      "code": "class HeapBase {};",
+      "type": "class"
+    }
+  ],
+  "file_path": "/home/kathirks_gc/v8_go/archive/codebase/include/cppgc/internal/persistent-node.h"
+}

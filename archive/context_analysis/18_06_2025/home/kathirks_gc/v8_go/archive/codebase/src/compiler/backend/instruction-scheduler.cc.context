@@ -1,0 +1,387 @@
+{
+  "metadata": {
+    "path": "/home/kathirks_gc/v8_go/archive/codebase/src/compiler/backend/instruction-scheduler.cc",
+    "file_name": "instruction-scheduler.cc",
+    "language": "cpp",
+    "purpose": "Implements the InstructionScheduler class for scheduling instructions within a basic block."
+  },
+  "imports": {
+    "metadata": {
+      "language": "cpp",
+      "purpose": "Includes necessary headers for instruction scheduling, data structures, and utility functions."
+    },
+    "code": "#include \"src/compiler/backend/instruction-scheduler.h\"\n\n#include <optional>\n\n#include \"src/base/iterator.h\"\n#include \"src/base/utils/random-number-generator.h\"\n#include \"src/compiler/backend/instruction-codes.h\""
+  },
+  "classes": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "InstructionScheduler",
+        "about": "Schedules instructions within a basic block to improve performance.",
+        "attributes": [],
+        "dependencies": [
+          "Zone",
+          "InstructionSequence",
+          "ScheduleGraphNode",
+          "SchedulingQueueBase",
+          "CriticalPathFirstQueue",
+          "StressSchedulerQueue",
+          "Instruction"
+        ]
+      },
+      "code": "namespace v8 {\nnamespace internal {\nnamespace compiler {\n\nclass InstructionScheduler {\n public:\n  class SchedulingQueueBase {\n   public:\n    virtual ~SchedulingQueueBase() = default;\n    virtual ScheduleGraphNode* PopBestCandidate(int cycle) = 0;\n    bool IsEmpty() const { return nodes_.empty(); }\n    void AddNode(ScheduleGraphNode* node);\n\n   protected:\n    std::vector<ScheduleGraphNode*> nodes_;\n  };\n\n  class CriticalPathFirstQueue : public SchedulingQueueBase {\n   public:\n    ScheduleGraphNode* PopBestCandidate(int cycle) override;\n  };\n\n  class StressSchedulerQueue : public SchedulingQueueBase {\n   public:\n    explicit StressSchedulerQueue(InstructionScheduler* scheduler)\n        : scheduler_(scheduler) {}\n    ScheduleGraphNode* PopBestCandidate(int cycle) override;\n\n   private:\n    base::RandomNumberGenerator* random_number_generator() {\n      return scheduler_->random_number_generator().value().generator();\n    }\n\n    InstructionScheduler* scheduler_;\n  };\n\n  class ScheduleGraphNode {\n   public:\n    ScheduleGraphNode(Zone* zone, Instruction* instr);\n\n    void AddSuccessor(ScheduleGraphNode* node);\n    void DropUnscheduledPredecessor() { unscheduled_predecessors_count_--; }\n    bool HasUnscheduledPredecessor() const {\n      return unscheduled_predecessors_count_ != 0;\n    }\n\n    Instruction* instruction() const { return instr_; }\n    int latency() const { return latency_; }\n    int total_latency() const { return total_latency_; }\n    void set_total_latency(int total_latency) { total_latency_ = total_latency; }\n    int start_cycle() const { return start_cycle_; }\n    void set_start_cycle(int start_cycle) { start_cycle_ = start_cycle; }\n\n    const std::vector<ScheduleGraphNode*>& successors() const {\n      return successors_;\n    }\n\n   private:\n    Instruction* instr_;\n    std::vector<ScheduleGraphNode*> successors_;\n    int unscheduled_predecessors_count_;\n    int latency_;\n    int total_latency_;\n    int start_cycle_;\n  };\n\n  InstructionScheduler(Zone* zone, InstructionSequence* sequence);\n\n  void StartBlock(RpoNumber rpo);\n  void EndBlock(RpoNumber rpo);\n  void AddTerminator(Instruction* instr);\n  void AddInstruction(Instruction* instr);\n\n private:\n  template <typename QueueType>\n  void Schedule();\n  int GetInstructionFlags(const Instruction* instr) const;\n  void ComputeTotalLatencies();\n\n  Zone* zone_;\n  InstructionSequence* sequence_;\n  std::vector<ScheduleGraphNode*> graph_;\n  Instruction* last_side_effect_instr_;\n  std::vector<ScheduleGraphNode*> pending_loads_;\n  ScheduleGraphNode* last_live_in_reg_marker_;\n  ScheduleGraphNode* last_deopt_or_trap_;\n  ZoneHashMap<int32_t, ScheduleGraphNode*> operands_map_;\n  std::optional<base::RandomNumberGenerator> random_number_generator_;\n};"
+    }
+  ],
+  "functions": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "method",
+        "name": "AddNode",
+        "parent": "InstructionScheduler::SchedulingQueueBase",
+        "about": "Adds a node to the scheduling queue, maintaining sorted order by total latency.",
+        "logic": "Iterates through the existing nodes in the queue to find the correct position to insert the new node, ensuring that the queue remains sorted in descending order of total latency.",
+        "parameters": [
+          {
+            "name": "node",
+            "type": "ScheduleGraphNode*",
+            "purpose": "The node to add to the queue."
+          }
+        ],
+        "return": {
+          "type": "void",
+          "description": "No return value."
+        },
+        "dependencies": [
+          "ScheduleGraphNode"
+        ]
+      },
+      "code": "void InstructionScheduler::SchedulingQueueBase::AddNode(\n    ScheduleGraphNode* node) {\n  // We keep the ready list sorted by total latency so that we can quickly find\n  // the next best candidate to schedule.\n  auto it = nodes_.begin();\n  while ((it != nodes_.end()) &&\n         ((*it)->total_latency() >= node->total_latency())) {\n    ++it;\n  }\n  nodes_.insert(it, node);\n}"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "method",
+        "name": "PopBestCandidate",
+        "parent": "InstructionScheduler::CriticalPathFirstQueue",
+        "about": "Pops the best candidate for scheduling from the queue based on critical path first.",
+        "logic": "Iterates through the queue to find the first instruction that is ready to be scheduled (cycle >= start_cycle).",
+        "parameters": [
+          {
+            "name": "cycle",
+            "type": "int",
+            "purpose": "The current cycle number."
+          }
+        ],
+        "return": {
+          "type": "ScheduleGraphNode*",
+          "description": "The best candidate node, or nullptr if no candidate is ready."
+        },
+        "dependencies": [
+          "ScheduleGraphNode"
+        ]
+      },
+      "code": "InstructionScheduler::ScheduleGraphNode*\nInstructionScheduler::CriticalPathFirstQueue::PopBestCandidate(int cycle) {\n  DCHECK(!IsEmpty());\n  auto candidate = nodes_.end();\n  for (auto iterator = nodes_.begin(); iterator != nodes_.end(); ++iterator) {\n    // We only consider instructions that have all their operands ready.\n    if (cycle >= (*iterator)->start_cycle()) {\n      candidate = iterator;\n      break;\n    }\n  }\n\n  if (candidate != nodes_.end()) {\n    ScheduleGraphNode* result = *candidate;\n    nodes_.erase(candidate);\n    return result;\n  }\n\n  return nullptr;\n}"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "method",
+        "name": "PopBestCandidate",
+        "parent": "InstructionScheduler::StressSchedulerQueue",
+        "about": "Pops a random candidate for scheduling from the queue (stress testing).",
+        "logic": "Chooses a random element from the queue and returns it.",
+        "parameters": [
+          {
+            "name": "cycle",
+            "type": "int",
+            "purpose": "The current cycle number (unused in this implementation)."
+          }
+        ],
+        "return": {
+          "type": "ScheduleGraphNode*",
+          "description": "A randomly selected node from the queue."
+        },
+        "dependencies": [
+          "ScheduleGraphNode",
+          "random_number_generator"
+        ]
+      },
+      "code": "InstructionScheduler::ScheduleGraphNode*\nInstructionScheduler::StressSchedulerQueue::PopBestCandidate(int cycle) {\n  DCHECK(!IsEmpty());\n  // Choose a random element from the ready list.\n  auto candidate = nodes_.begin();\n  std::advance(candidate, random_number_generator()->NextInt(\n                              static_cast<int>(nodes_.size())));\n  ScheduleGraphNode* result = *candidate;\n  nodes_.erase(candidate);\n  return result;\n}"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "method",
+        "name": "ScheduleGraphNode",
+        "parent": "InstructionScheduler::ScheduleGraphNode",
+        "about": "Constructor for the ScheduleGraphNode class.",
+        "logic": "Initializes the node with the given instruction, sets the latency, and initializes other members.",
+        "parameters": [
+          {
+            "name": "zone",
+            "type": "Zone*",
+            "purpose": "The zone to allocate memory from."
+          },
+          {
+            "name": "instr",
+            "type": "Instruction*",
+            "purpose": "The instruction associated with this node."
+          }
+        ],
+        "return": {
+          "type": "void",
+          "description": "No return value."
+        },
+        "dependencies": [
+          "Instruction",
+          "GetInstructionLatency"
+        ]
+      },
+      "code": "InstructionScheduler::ScheduleGraphNode::ScheduleGraphNode(Zone* zone,\n                                                           Instruction* instr)\n    : instr_(instr),\n      successors_(zone),\n      unscheduled_predecessors_count_(0),\n      latency_(GetInstructionLatency(instr)),\n      total_latency_(-1),\n      start_cycle_(-1) {}"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "method",
+        "name": "AddSuccessor",
+        "parent": "InstructionScheduler::ScheduleGraphNode",
+        "about": "Adds a successor node to this node in the scheduling graph.",
+        "logic": "Adds the given node to the list of successors and increments the unscheduled_predecessors_count_ of the successor.",
+        "parameters": [
+          {
+            "name": "node",
+            "type": "ScheduleGraphNode*",
+            "purpose": "The successor node to add."
+          }
+        ],
+        "return": {
+          "type": "void",
+          "description": "No return value."
+        },
+        "dependencies": [
+          "ScheduleGraphNode"
+        ]
+      },
+      "code": "void InstructionScheduler::ScheduleGraphNode::AddSuccessor(\n    ScheduleGraphNode* node) {\n  successors_.push_back(node);\n  node->unscheduled_predecessors_count_++;\n}"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "method",
+        "name": "InstructionScheduler",
+        "parent": "InstructionScheduler",
+        "about": "Constructor for the InstructionScheduler class.",
+        "logic": "Initializes the scheduler with the given zone and instruction sequence.",
+        "parameters": [
+          {
+            "name": "zone",
+            "type": "Zone*",
+            "purpose": "The zone to allocate memory from."
+          },
+          {
+            "name": "sequence",
+            "type": "InstructionSequence*",
+            "purpose": "The instruction sequence to schedule."
+          }
+        ],
+        "return": {
+          "type": "void",
+          "description": "No return value."
+        },
+        "dependencies": [
+          "Zone",
+          "InstructionSequence"
+        ]
+      },
+      "code": "InstructionScheduler::InstructionScheduler(Zone* zone,\n                                           InstructionSequence* sequence)\n    : zone_(zone),\n      sequence_(sequence),\n      graph_(zone),\n      last_side_effect_instr_(nullptr),\n      pending_loads_(zone),\n      last_live_in_reg_marker_(nullptr),\n      last_deopt_or_trap_(nullptr),\n      operands_map_(zone) {\n  if (v8_flags.turbo_stress_instruction_scheduling) {\n    random_number_generator_ =\n        std::optional<base::RandomNumberGenerator>(v8_flags.random_seed);\n  }\n}"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "method",
+        "name": "StartBlock",
+        "parent": "InstructionScheduler",
+        "about": "Starts scheduling a new basic block.",
+        "logic": "Resets the internal state of the scheduler to prepare for scheduling a new block.",
+        "parameters": [
+          {
+            "name": "rpo",
+            "type": "RpoNumber",
+            "purpose": "The reverse postorder number of the basic block."
+          }
+        ],
+        "return": {
+          "type": "void",
+          "description": "No return value."
+        },
+        "dependencies": [
+          "RpoNumber"
+        ]
+      },
+      "code": "void InstructionScheduler::StartBlock(RpoNumber rpo) {\n  DCHECK(graph_.empty());\n  DCHECK_NULL(last_side_effect_instr_);\n  DCHECK(pending_loads_.empty());\n  DCHECK_NULL(last_live_in_reg_marker_);\n  DCHECK_NULL(last_deopt_or_trap_);\n  DCHECK(operands_map_.empty());\n  sequence()->StartBlock(rpo);\n}"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "method",
+        "name": "EndBlock",
+        "parent": "InstructionScheduler",
+        "about": "Ends scheduling a basic block and schedules the instructions.",
+        "logic": "Schedules the instructions in the block using either the critical path first queue or the stress scheduler queue based on a flag.",
+        "parameters": [
+          {
+            "name": "rpo",
+            "type": "RpoNumber",
+            "purpose": "The reverse postorder number of the basic block."
+          }
+        ],
+        "return": {
+          "type": "void",
+          "description": "No return value."
+        },
+        "dependencies": [
+          "RpoNumber",
+          "Schedule",
+          "CriticalPathFirstQueue",
+          "StressSchedulerQueue"
+        ]
+      },
+      "code": "void InstructionScheduler::EndBlock(RpoNumber rpo) {\n  if (v8_flags.turbo_stress_instruction_scheduling) {\n    Schedule<StressSchedulerQueue>();\n  } else {\n    Schedule<CriticalPathFirstQueue>();\n  }\n  sequence()->EndBlock(rpo);\n}"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "method",
+        "name": "AddTerminator",
+        "parent": "InstructionScheduler",
+        "about": "Adds a terminator instruction to the scheduling graph.",
+        "logic": "Creates a new ScheduleGraphNode for the terminator instruction and adds it as a successor to every existing node in the graph to prevent it from being moved.",
+        "parameters": [
+          {
+            "name": "instr",
+            "type": "Instruction*",
+            "purpose": "The terminator instruction to add."
+          }
+        ],
+        "return": {
+          "type": "void",
+          "description": "No return value."
+        },
+        "dependencies": [
+          "Instruction",
+          "ScheduleGraphNode"
+        ]
+      },
+      "code": "void InstructionScheduler::AddTerminator(Instruction* instr) {\n  ScheduleGraphNode* new_node = zone()->New<ScheduleGraphNode>(zone(), instr);\n  // Make sure that basic block terminators are not moved by adding them\n  // as successor of every instruction.\n  for (ScheduleGraphNode* node : graph_) {\n    node->AddSuccessor(new_node);\n  }\n  graph_.push_back(new_node);\n}"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "method",
+        "name": "AddInstruction",
+        "parent": "InstructionScheduler",
+        "about": "Adds an instruction to the scheduling graph, considering dependencies and side effects.",
+        "logic": "Creates a new ScheduleGraphNode for the instruction and adds it to the graph, taking into account dependencies on other instructions, side effects, and deoptimization points. It also handles barriers and fixed register parameters.",
+        "parameters": [
+          {
+            "name": "instr",
+            "type": "Instruction*",
+            "purpose": "The instruction to add."
+          }
+        ],
+        "return": {
+          "type": "void",
+          "description": "No return value."
+        },
+        "dependencies": [
+          "Instruction",
+          "ScheduleGraphNode",
+          "IsBarrier",
+          "Schedule",
+          "CriticalPathFirstQueue",
+          "StressSchedulerQueue",
+          "IsFixedRegisterParameter",
+          "DependsOnDeoptOrTrap",
+          "HasSideEffect",
+          "IsLoadOperation",
+          "CanTrap",
+          "UnallocatedOperand",
+          "ConstantOperand"
+        ]
+      },
+      "code": "void InstructionScheduler::AddInstruction(Instruction* instr) {\n  if (IsBarrier(instr)) {\n    if (v8_flags.turbo_stress_instruction_scheduling) {\n      Schedule<StressSchedulerQueue>();\n    } else {\n      Schedule<CriticalPathFirstQueue>();\n    }\n    sequence()->AddInstruction(instr);\n    return;\n  }\n\n  ScheduleGraphNode* new_node = zone()->New<ScheduleGraphNode>(zone(), instr);\n\n  // We should not have branches in the middle of a block.\n  DCHECK_NE(instr->flags_mode(), kFlags_branch);\n\n  if (IsFixedRegisterParameter(instr)) {\n    if (last_live_in_reg_marker_ != nullptr) {\n      last_live_in_reg_marker_->AddSuccessor(new_node);\n    }\n    last_live_in_reg_marker_ = new_node;\n  } else {\n    if (last_live_in_reg_marker_ != nullptr) {\n      last_live_in_reg_marker_->AddSuccessor(new_node);\n    }\n\n    // Make sure that instructions are not scheduled before the last\n    // deoptimization or trap point when they depend on it.\n    if ((last_deopt_or_trap_ != nullptr) && DependsOnDeoptOrTrap(instr)) {\n      last_deopt_or_trap_->AddSuccessor(new_node);\n    }\n\n    // Instructions with side effects and memory operations can't be\n    // reordered with respect to each other.\n    if (HasSideEffect(instr)) {\n      if (last_side_effect_instr_ != nullptr) {\n        last_side_effect_instr_->AddSuccessor(new_node);\n      }\n      for (ScheduleGraphNode* load : pending_loads_) {\n        load->AddSuccessor(new_node);\n      }\n      pending_loads_.clear();\n      last_side_effect_instr_ = new_node;\n    } else if (IsLoadOperation(instr)) {\n      // Load operations can't be reordered with side effects instructions but\n      // independent loads can be reordered with respect to each other.\n      if (last_side_effect_instr_ != nullptr) {\n        last_side_effect_instr_->AddSuccessor(new_node);\n      }\n      pending_loads_.push_back(new_node);\n    } else if (instr->IsDeoptimizeCall() || CanTrap(instr)) {\n      // Ensure that deopts or traps are not reordered with respect to\n      // side-effect instructions.\n      if (last_side_effect_instr_ != nullptr) {\n        last_side_effect_instr_->AddSuccessor(new_node);\n      }\n    }\n\n    // Update last deoptimization or trap point.\n    if (instr->IsDeoptimizeCall() || CanTrap(instr)) {\n      last_deopt_or_trap_ = new_node;\n    }\n\n    // Look for operand dependencies.\n    for (size_t i = 0; i < instr->InputCount(); ++i) {\n      const InstructionOperand* input = instr->InputAt(i);\n      if (input->IsUnallocated()) {\n        int32_t vreg = UnallocatedOperand::cast(input)->virtual_register();\n        auto it = operands_map_.find(vreg);\n        if (it != operands_map_.end()) {\n          it->second->AddSuccessor(new_node);\n        }\n      }\n    }\n\n    // Record the virtual registers defined by this instruction.\n    for (size_t i = 0; i < instr->OutputCount(); ++i) {\n      const InstructionOperand* output = instr->OutputAt(i);\n      if (output->IsUnallocated()) {\n        operands_map_[UnallocatedOperand::cast(output)->virtual_register()] =\n            new_node;\n      } else if (output->IsConstant()) {\n        operands_map_[ConstantOperand::cast(output)->virtual_register()] =\n            new_node;\n      }\n    }\n  }\n\n  graph_.push_back(new_node);\n}"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "method",
+        "name": "Schedule",
+        "parent": "InstructionScheduler",
+        "about": "Schedules the instructions in the graph using the given scheduling queue type.",
+        "logic": "Computes total latencies, adds nodes without dependencies to the ready list, and then iteratively pops the best candidate from the ready list, adds its instruction to the sequence, and updates the ready list with its successors.",
+        "parameters": [],
+        "return": {
+          "type": "void",
+          "description": "No return value."
+        },
+        "dependencies": [
+          "QueueType",
+          "ComputeTotalLatencies",
+          "ScheduleGraphNode",
+          "AddNode",
+          "PopBestCandidate",
+          "DropUnscheduledPredecessor"
+        ]
+      },
+      "code": "template <typename QueueType>\nvoid InstructionScheduler::Schedule() {\n  QueueType ready_list(this);\n\n  // Compute total latencies so that we can schedule the critical path first.\n  ComputeTotalLatencies();\n\n  // Add nodes which don't have dependencies to the ready list.\n  for (ScheduleGraphNode* node : graph_) {\n    if (!node->HasUnscheduledPredecessor()) {\n      ready_list.AddNode(node);\n    }\n  }\n\n  // Go through the ready list and schedule the instructions.\n  int cycle = 0;\n  while (!ready_list.IsEmpty()) {\n    ScheduleGraphNode* candidate = ready_list.PopBestCandidate(cycle);\n\n    if (candidate != nullptr) {\n      sequence()->AddInstruction(candidate->instruction());\n\n      for (ScheduleGraphNode* successor : candidate->successors()) {\n        successor->DropUnscheduledPredecessor();\n        successor->set_start_cycle(\n            std::max(successor->start_cycle(), cycle + candidate->latency()));\n\n        if (!successor->HasUnscheduledPredecessor()) {\n          ready_list.AddNode(successor);\n        }\n      }\n    }\n\n    cycle++;\n  }\n\n  // Reset own state.\n  graph_.clear();\n  operands_map_.clear();\n  pending_loads_.clear();\n  last_deopt_or_trap_ = nullptr;\n  last_live_in_reg_marker_ = nullptr;\n  last_side_effect_instr_ = nullptr;\n}"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "method",
+        "name": "GetInstructionFlags",
+        "parent": "InstructionScheduler",
+        "about": "Gets the flags for an instruction based on its opcode.",
+        "logic": "Returns flags indicating whether the instruction has side effects, is a load operation, or is a barrier, based on a switch statement over the architecture-specific opcode. Delegates to GetTargetInstructionFlags for target-specific opcodes.",
+        "parameters": [
+          {
+            "name": "instr",
+            "type": "const Instruction*",
+            "purpose": "The instruction to get flags for."
+          }
+        ],
+        "return": {
+          "type": "int",
+          "description": "The instruction flags."
+        },
+        "dependencies": [
+          "Instruction",
+          "GetTargetInstructionFlags"
+        ]
+      },
+      "code": "int InstructionScheduler::GetInstructionFlags(const Instruction* instr) const {\n  switch (instr->arch_opcode()) {\n    case kArchNop:\n    case kArchStackCheckOffset:\n    case kArchFramePointer:\n    case kArchParentFramePointer:\n    case kArchStackSlot:  // Despite its name this opcode will produce a\n                          // reference to a frame slot, so it is not affected\n                          // by the arm64 dual stack issues mentioned below.\n    case kArchComment:\n    case kArchDeoptimize:\n    case kArchJmp:\n    case kArchBinarySearchSwitch:\n    case kArchRet:\n    case kArchTableSwitch:\n    case kArchThrowTerminator:\n      return kNoOpcodeFlags;\n\n    case kArchTruncateDoubleToI:\n    case kIeee754Float64Acos:\n    case kIeee754Float64Acosh:\n    case kIeee754Float64Asin:\n    case kIeee754Float64Asinh:\n    case kIeee754Float64Atan:\n    case kIeee754Float64Atanh:\n    case kIeee754Float64Atan2:\n    case kIeee754Float64Cbrt:\n    case kIeee754Float64Cos:\n    case kIeee754Float64Cosh:\n    case kIeee754Float64Exp:\n    case kIeee754Float64Expm1:\n    case kIeee754Float64Log:\n    case kIeee754Float64Log1p:\n    case kIeee754Float64Log10:\n    case kIeee754Float64Log2:\n    case kIeee754Float64Pow:\n    case kIeee754Float64Sin:\n    case kIeee754Float64Sinh:\n    case kIeee754Float64Tan:\n    case kIeee754Float64Tanh:\n      return kNoOpcodeFlags;\n\n    case kArchStackPointerGreaterThan:\n      // The ArchStackPointerGreaterThan instruction loads the current stack\n      // pointer value and must not be reordered with instructions with side\n      // effects.\n      return kIsLoadOperation;\n\n#if V8_ENABLE_WEBASSEMBLY\n    case kArchStackPointer:\n    case kArchSetStackPointer:\n      // Instructions that load or set the stack pointer must not be reordered\n      // with instructions with side effects or with each other.\n      return kHasSideEffect;\n#endif  // V8_ENABLE_WEBASSEMBLY\n\n    case kArchPrepareCallCFunction:\n    case kArchPrepareTailCall:\n    case kArchTailCallCodeObject:\n    case kArchTailCallAddress:\n#if V8_ENABLE_WEBASSEMBLY\n    case kArchTailCallWasm:\n    case kArchTailCallWasmIndirect:\n#endif  // V8_ENABLE_WEBASSEMBLY\n    case kArchAbortCSADcheck:\n      return kHasSideEffect;\n\n    case kArchDebugBreak:\n      return kIsBarrier;\n\n    case kArchSaveCallerRegisters:\n    case kArchRestoreCallerRegisters:\n      return kIsBarrier;\n\n    case kArchCallCFunction:\n    case kArchCallCFunctionWithFrameState:\n    case kArchCallCodeObject:\n    case kArchCallJSFunction:\n#if V8_ENABLE_WEBASSEMBLY\n    case kArchCallWasmFunction:\n    case kArchCallWasmFunctionIndirect:\n#endif  // V8_ENABLE_WEBASSEMBLY\n    case kArchCallBuiltinPointer:\n      // Calls can cause GC and GC may relocate objects. If a pure instruction\n      // operates on a tagged pointer that was cast to a word then it may be\n      // incorrect to move the instruction across the call. Hence we mark all\n      // (non-tail-)calls as barriers.\n      return kIsBarrier;\n\n    case kArchStoreWithWriteBarrier:\n    case kArchAtomicStoreWithWriteBarrier:\n    case kArchStoreIndirectWithWriteBarrier:\n      return kHasSideEffect;\n\n    case kAtomicLoadInt8:\n    case kAtomicLoadUint8:\n    case kAtomicLoadInt16:\n    case kAtomicLoadUint16:\n    case kAtomicLoadWord32:\n      return kIsLoadOperation;\n\n    case kAtomicStoreWord8:\n    case kAtomicStoreWord16:\n    case kAtomicStoreWord32:\n      return kHasSideEffect;\n\n    case kAtomicExchangeInt8:\n    case kAtomicExchangeUint8:\n    case kAtomicExchangeInt16:\n    case kAtomicExchangeUint16:\n    case kAtomicExchangeWord32:\n    case kAtomicCompareExchangeInt8:\n    case kAtomicCompareExchangeUint8:\n    case kAtomicCompareExchangeInt16:\n    case kAtomicCompareExchangeUint16:\n    case kAtomicCompareExchangeWord32:\n    case kAtomicAddInt8:\n    case kAtomicAddUint8:\n    case kAtomicAddInt16:\n    case kAtomicAddUint16:\n    case kAtomicAddWord32:\n    case kAtomicSubInt8:\n    case kAtomicSubUint8:\n    case kAtomicSubInt16:\n    case kAtomicSubUint16:\n    case kAtomicSubWord32:\n    case kAtomicAndInt8:\n    case kAtomicAndUint8:\n    case kAtomicAndInt16:\n    case kAtomicAndUint16:\n    case kAtomicAndWord32:\n    case kAtomicOrInt8:\n    case kAtomicOrUint8:\n    case kAtomicOrInt16:\n    case kAtomicOrUint16:\n    case kAtomicOrWord32:\n    case kAtomicXorInt8:\n    case kAtomicXorUint8:\n    case kAtomicXorInt16:\n    case kAtomicXorUint16:\n    case kAtomicXorWord32:\n      return kHasSideEffect;\n\n#define CASE(Name) case k##Name:\n      TARGET_ARCH_OPCODE_LIST(CASE)\n#undef CASE\n      return GetTargetInstructionFlags(instr);\n  }\n\n  UNREACHABLE();\n}"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "method",
+        "name": "ComputeTotalLatencies",
+        "parent": "InstructionScheduler",
+        "about": "Computes the total latency for each node in the scheduling graph, starting from the end.",
+        "logic": "Iterates through the graph in reverse order, calculating the total latency of each node as the sum of its own latency and the maximum total latency of its successors.",
+        "parameters": [],
+        "return": {
+          "type": "void",
+          "description": "No return value."
+        },
+        "dependencies": [
+          "ScheduleGraphNode"
+        ]
+      },
+      "code": "void InstructionScheduler::ComputeTotalLatencies() {\n  for (ScheduleGraphNode* node : base::Reversed(graph_)) {\n    int max_latency = 0;\n\n    for (ScheduleGraphNode* successor : node->successors()) {\n      DCHECK_NE(-1, successor->total_latency());\n      if (successor->total_latency() > max_latency) {\n        max_latency = successor->total_latency();\n      }\n    }\n\n    node->set_total_latency(max_latency + node->latency());\n  }\n}"
+    }
+  ],
+  "file_path": "/home/kathirks_gc/v8_go/archive/codebase/src/compiler/backend/instruction-scheduler.cc"
+}

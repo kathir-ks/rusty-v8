@@ -1,0 +1,196 @@
+{
+  "metadata": {
+    "path": "/home/kathirks_gc/v8_go/archive/codebase/src/compiler/turboshaft/csa-optimize-phase.cc",
+    "file_name": "csa-optimize-phase.cc",
+    "language": "cpp",
+    "purpose": "Defines the CSA optimization phases for the Turboshaft compiler pipeline."
+  },
+  "imports": {
+    "metadata": {
+      "language": "cpp",
+      "purpose": "Includes necessary headers for compiler phases, reducers, and other utilities."
+    },
+    "code": "#include \"src/compiler/turboshaft/csa-optimize-phase.h\"\n\n#include \"src/compiler/js-heap-broker.h\"\n#include \"src/compiler/turboshaft/branch-elimination-reducer.h\"\n#include \"src/compiler/turboshaft/dead-code-elimination-reducer.h\"\n#include \"src/compiler/turboshaft/late-escape-analysis-reducer.h\"\n#include \"src/compiler/turboshaft/late-load-elimination-reducer.h\"\n#include \"src/compiler/turboshaft/loop-unrolling-reducer.h\"\n#include \"src/compiler/turboshaft/machine-lowering-reducer-inl.h\"\n#include \"src/compiler/turboshaft/machine-optimization-reducer.h\"\n#include \"src/compiler/turboshaft/memory-optimization-reducer.h\"\n#include \"src/compiler/turboshaft/pretenuring-propagation-reducer.h\"\n#include \"src/compiler/turboshaft/required-optimization-reducer.h\"\n#include \"src/compiler/turboshaft/value-numbering-reducer.h\"\n#include \"src/compiler/turboshaft/variable-reducer.h\"\n#include \"src/numbers/conversions-inl.h\"\n#include \"src/roots/roots-inl.h\""
+  },
+  "functions": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "method",
+        "name": "Run",
+        "parent": "CsaEarlyMachineOptimizationPhase",
+        "about": "Runs the early machine optimization phase.",
+        "logic": "Executes a copying phase that applies MachineOptimizationReducer and ValueNumberingReducer.",
+        "parameters": [
+          {
+            "name": "data",
+            "type": "PipelineData*",
+            "purpose": "Pointer to the pipeline data."
+          },
+          {
+            "name": "temp_zone",
+            "type": "Zone*",
+            "purpose": "Pointer to a temporary zone for memory allocation."
+          }
+        ],
+        "return": {
+          "type": "void",
+          "description": "No return value."
+        },
+        "dependencies": [
+          "MachineOptimizationReducer",
+          "ValueNumberingReducer",
+          "CopyingPhase",
+          "PipelineData",
+          "Zone"
+        ]
+      },
+      "code": "void CsaEarlyMachineOptimizationPhase::Run(PipelineData* data,\n                                           Zone* temp_zone) {\n  CopyingPhase<MachineOptimizationReducer, ValueNumberingReducer>::Run(\n      data, temp_zone);\n}"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "method",
+        "name": "Run",
+        "parent": "CsaLoadEliminationPhase",
+        "about": "Runs the late load elimination phase.",
+        "logic": "Executes a copying phase that applies LateLoadEliminationReducer, MachineOptimizationReducer, and ValueNumberingReducer.",
+        "parameters": [
+          {
+            "name": "data",
+            "type": "PipelineData*",
+            "purpose": "Pointer to the pipeline data."
+          },
+          {
+            "name": "temp_zone",
+            "type": "Zone*",
+            "purpose": "Pointer to a temporary zone for memory allocation."
+          }
+        ],
+        "return": {
+          "type": "void",
+          "description": "No return value."
+        },
+        "dependencies": [
+          "LateLoadEliminationReducer",
+          "MachineOptimizationReducer",
+          "ValueNumberingReducer",
+          "CopyingPhase",
+          "PipelineData",
+          "Zone"
+        ]
+      },
+      "code": "void CsaLoadEliminationPhase::Run(PipelineData* data, Zone* temp_zone) {\n  CopyingPhase<LateLoadEliminationReducer, MachineOptimizationReducer,\n               ValueNumberingReducer>::Run(data, temp_zone);\n}"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "method",
+        "name": "Run",
+        "parent": "CsaLateEscapeAnalysisPhase",
+        "about": "Runs the late escape analysis phase.",
+        "logic": "Executes a copying phase that applies LateEscapeAnalysisReducer, MachineOptimizationReducer, and ValueNumberingReducer.",
+        "parameters": [
+          {
+            "name": "data",
+            "type": "PipelineData*",
+            "purpose": "Pointer to the pipeline data."
+          },
+          {
+            "name": "temp_zone",
+            "type": "Zone*",
+            "purpose": "Pointer to a temporary zone for memory allocation."
+          }
+        ],
+        "return": {
+          "type": "void",
+          "description": "No return value."
+        },
+        "dependencies": [
+          "LateEscapeAnalysisReducer",
+          "MachineOptimizationReducer",
+          "ValueNumberingReducer",
+          "CopyingPhase",
+          "PipelineData",
+          "Zone"
+        ]
+      },
+      "code": "void CsaLateEscapeAnalysisPhase::Run(PipelineData* data, Zone* temp_zone) {\n  CopyingPhase<LateEscapeAnalysisReducer, MachineOptimizationReducer,\n               ValueNumberingReducer>::Run(data, temp_zone);\n}"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "method",
+        "name": "Run",
+        "parent": "CsaBranchEliminationPhase",
+        "about": "Runs the branch elimination phase.",
+        "logic": "Executes a copying phase that applies MachineOptimizationReducer, BranchEliminationReducer, and ValueNumberingReducer.",
+        "parameters": [
+          {
+            "name": "data",
+            "type": "PipelineData*",
+            "purpose": "Pointer to the pipeline data."
+          },
+          {
+            "name": "temp_zone",
+            "type": "Zone*",
+            "purpose": "Pointer to a temporary zone for memory allocation."
+          }
+        ],
+        "return": {
+          "type": "void",
+          "description": "No return value."
+        },
+        "dependencies": [
+          "MachineOptimizationReducer",
+          "BranchEliminationReducer",
+          "ValueNumberingReducer",
+          "CopyingPhase",
+          "PipelineData",
+          "Zone"
+        ]
+      },
+      "code": "void CsaBranchEliminationPhase::Run(PipelineData* data, Zone* temp_zone) {\n  CopyingPhase<MachineOptimizationReducer, BranchEliminationReducer,\n               ValueNumberingReducer>::Run(data, temp_zone);\n}"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "method",
+        "name": "Run",
+        "parent": "CsaOptimizePhase",
+        "about": "Runs the main optimization phase.",
+        "logic": "Executes a copying phase that applies PretenuringPropagationReducer, MachineOptimizationReducer, MemoryOptimizationReducer, and ValueNumberingReducer. Uses UnparkedScopeIfNeeded for managing the JSHeapBroker scope.",
+        "parameters": [
+          {
+            "name": "data",
+            "type": "PipelineData*",
+            "purpose": "Pointer to the pipeline data."
+          },
+          {
+            "name": "temp_zone",
+            "type": "Zone*",
+            "purpose": "Pointer to a temporary zone for memory allocation."
+          }
+        ],
+        "return": {
+          "type": "void",
+          "description": "No return value."
+        },
+        "dependencies": [
+          "PretenuringPropagationReducer",
+          "MachineOptimizationReducer",
+          "MemoryOptimizationReducer",
+          "ValueNumberingReducer",
+          "CopyingPhase",
+          "PipelineData",
+          "Zone",
+          "UnparkedScopeIfNeeded",
+          "JSHeapBroker",
+          "v8_flags"
+        ]
+      },
+      "code": "void CsaOptimizePhase::Run(PipelineData* data, Zone* temp_zone) {\n  UnparkedScopeIfNeeded scope(data->broker(),\n                              v8_flags.turboshaft_trace_reduction);\n\n  CopyingPhase<PretenuringPropagationReducer, MachineOptimizationReducer,\n               MemoryOptimizationReducer,\n               ValueNumberingReducer>::Run(data, temp_zone);\n}"
+    }
+  ],
+  "file_path": "/home/kathirks_gc/v8_go/archive/codebase/src/compiler/turboshaft/csa-optimize-phase.cc"
+}

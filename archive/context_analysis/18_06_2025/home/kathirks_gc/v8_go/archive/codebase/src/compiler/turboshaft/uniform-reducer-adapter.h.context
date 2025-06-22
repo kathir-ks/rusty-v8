@@ -1,0 +1,78 @@
+{
+  "metadata": {
+    "path": "/home/kathirks_gc/v8_go/archive/codebase/src/compiler/turboshaft/uniform-reducer-adapter.h",
+    "file_name": "uniform-reducer-adapter.h",
+    "language": "cpp",
+    "purpose": "Defines the UniformReducerAdapter class template, which allows uniform handling of Turboshaft operations during reduction."
+  },
+  "imports": {
+    "metadata": {
+      "language": "cpp",
+      "purpose": "Includes the definitions of Turboshaft operations."
+    },
+    "code": "#include \"src/compiler/turboshaft/operations.h\""
+  },
+  "classes": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "UniformReducerAdapter",
+        "about": "Allows uniform handling of all operations during reduction by wiring ReduceInputGraphXyz and ReduceXyz calls through a single ReduceInputGraphOperation and ReduceOperation, respectively.",
+        "attributes": [],
+        "dependencies": [
+          "Next",
+          "Opcode",
+          "OpIndex",
+          "TURBOSHAFT_OPERATION_LIST"
+        ]
+      },
+      "code": "template <template <typename> typename Reducer, typename Next>\nclass UniformReducerAdapter : public Next {\n public:\n  template <Opcode opcode, typename Continuation, typename... Args>\n  auto ReduceOperation(Args... args) {\n    return Continuation{this}.Reduce(args...);\n  }\n\n  template <typename Op, typename Continuation>\n  auto ReduceInputGraphOperation(OpIndex ig_index, const Op& operation) {\n    return Continuation{this}.ReduceInputGraph(ig_index, operation);\n  }\n\n#define REDUCE(op)                                                           \\\n  struct Reduce##op##Continuation final {                                    \\\n    explicit Reduce##op##Continuation(Next* _this) : this_(_this) {}         \\\n    using Op = op##Op;                                                       \\\n    auto ReduceInputGraph(OpIndex ig_index, const op##Op& operation) {       \\\n      return this_->ReduceInputGraph##op(ig_index, operation);               \\\n    }                                                                        \\\n    template <typename... Args>                                              \\\n    auto Reduce(Args... args) const {                                        \\\n      return this_->Reduce##op(args...);                                     \\\n    }                                                                        \\\n    Next* this_;                                                             \\\n  };                                                                         \\\n  auto ReduceInputGraph##op(OpIndex ig_index, const op##Op& operation) {     \\\n    return static_cast<Reducer<Next>*>(this)                                 \\\n        ->template ReduceInputGraphOperation<op##Op,                         \\\n                                             Reduce##op##Continuation>(      \\\n            ig_index, operation);                                            \\\n  }                                                                          \\\n  template <typename... Args>                                                \\\n  auto Reduce##op(Args... args) {                                            \\\n    return static_cast<Reducer<Next>*>(this)                                 \\\n        ->template ReduceOperation<Opcode::k##op, Reduce##op##Continuation>( \\\n            args...);                                                        \\\n  }\n  TURBOSHAFT_OPERATION_LIST(REDUCE)\n#undef REDUCE\n};"
+    }
+  ],
+  "dependencies": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "Next",
+        "about": "Represents the next reducer in the stack."
+      },
+      "code": "class Next {};",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "ConstantOp",
+        "about": "Represents a constant operation"
+      },
+      "code": "class ConstantOp {\n            public:\n                enum Kind {};\n                enum Storage {};\n            };",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "interface",
+        "name": "OpIndex",
+        "about": "Index to identify an operation",
+        "methods": []
+      },
+      "code": "class OpIndex {};",
+      "type": "interface"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "interface",
+        "name": "Opcode",
+        "about": "Enum of opcodes",
+        "methods": []
+      },
+      "code": "enum class Opcode {};",
+      "type": "interface"
+    }
+  ],
+  "file_path": "/home/kathirks_gc/v8_go/archive/codebase/src/compiler/turboshaft/uniform-reducer-adapter.h"
+}

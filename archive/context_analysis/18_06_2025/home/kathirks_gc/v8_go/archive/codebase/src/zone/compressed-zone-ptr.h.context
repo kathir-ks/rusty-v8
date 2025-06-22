@@ -1,0 +1,116 @@
+{
+  "metadata": {
+    "path": "/home/kathirks_gc/v8_go/archive/codebase/src/zone/compressed-zone-ptr.h",
+    "file_name": "compressed-zone-ptr.h",
+    "language": "cpp",
+    "purpose": "Defines a compressed pointer class for zone memory management, using aligned-base-relative addressing compression."
+  },
+  "imports": {
+    "metadata": {
+      "language": "cpp",
+      "purpose": "Includes standard library features and V8-specific headers for type traits, logging, global definitions, and zone compression."
+    },
+    "code": "#include <type_traits>\n\n            #include \"src/base/logging.h\"\n            #include \"src/common/globals.h\"\n            #include \"src/zone/zone-compression.h\""
+  },
+  "classes": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "CompressedZonePtr",
+        "about": "Represents a compressed pointer to an object of type T within a Zone, using aligned-base-relative addressing.",
+        "attributes": [
+          {
+            "name": "compressed_value_",
+            "type": "uint32_t",
+            "access": "private",
+            "purpose": "Stores the compressed representation of the pointer."
+          }
+        ],
+        "dependencies": [
+          "ZoneCompression",
+          "V8_NOEXCEPT"
+        ]
+      },
+      "code": "template <typename T>\n            class CompressedZonePtr {\n            public:\n              CompressedZonePtr() = default;\n              explicit CompressedZonePtr(std::nullptr_t) : CompressedZonePtr() {}\n              explicit CompressedZonePtr(T* value) { *this = value; }\n              // Move- and copy-constructors are explicitly deleted in order to avoid\n              // creation of temporary objects which we can't uncompress because they will\n              // live outside of the zone memory.\n              CompressedZonePtr(const CompressedZonePtr& other) V8_NOEXCEPT = delete;\n              CompressedZonePtr(CompressedZonePtr&&) V8_NOEXCEPT = delete;\n\n              CompressedZonePtr& operator=(const CompressedZonePtr& other) V8_NOEXCEPT {\n                DCHECK(ZoneCompression::CheckSameBase(this, &other));\n                compressed_value_ = other.compressed_value_;\n                return *this;\n              }\n              CompressedZonePtr& operator=(CompressedZonePtr&& other) V8_NOEXCEPT = delete;\n\n              CompressedZonePtr& operator=(T* value) {\n                compressed_value_ = ZoneCompression::Compress(value);\n                DCHECK_EQ(value, Decompress());\n                return *this;\n              }\n\n              bool operator==(std::nullptr_t) const { return compressed_value_ == 0; }\n              bool operator!=(std::nullptr_t) const { return compressed_value_ != 0; }\n\n              // The equality comparisons assume that both operands point to objects\n              // allocated by the same allocator supporting pointer compression, therefore\n              // it's enough to compare compressed values.\n              bool operator==(const CompressedZonePtr& other) const {\n                return compressed_value_ == other.compressed_value_;\n              }\n              bool operator!=(const CompressedZonePtr& other) const {\n                return !(*this == other);\n              }\n              bool operator==(T* other) const {\n                return compressed_value_ == ZoneCompression::Compress(other);\n              }\n              bool operator!=(T* other) const { return !(*this == other); }\n\n              T& operator*() const { return *Decompress(); }\n              T* operator->() const { return Decompress(); }\n\n              operator T*() const { return Decompress(); }\n              operator bool() const { return compressed_value_ != 0; }\n\n             private:\n              T* Decompress() const {\n                return reinterpret_cast<T*>(\n                    ZoneCompression::Decompress(this, compressed_value_));\n              }\n\n              uint32_t compressed_value_ = 0;\n            };"
+    }
+  ],
+  "dependencies": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "function",
+        "name": "ZoneCompression::Compress",
+        "about": "Compresses a pointer value for storage within a Zone.",
+        "parameters": [],
+        "return": {
+          "type": "uint32_t",
+          "description": "The compressed pointer value"
+        }
+      },
+      "code": "uint32_t ZoneCompression::Compress(void* ptr);",
+      "type": "func"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "function",
+        "name": "ZoneCompression::Decompress",
+        "about": "Decompresses a previously compressed pointer value, given a base address.",
+        "parameters": [],
+        "return": {
+          "type": "void*",
+          "description": "The decompressed pointer value"
+        }
+      },
+      "code": "void* ZoneCompression::Decompress(const void* base, uint32_t compressed_value);",
+      "type": "func"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "function",
+        "name": "ZoneCompression::CheckSameBase",
+        "about": "Checks that two CompressedZonePtr objects belong to the same Zone.",
+        "parameters": [],
+        "return": {
+          "type": "bool",
+          "description": "True if both pointers have the same zone base, false otherwise."
+        }
+      },
+      "code": "bool ZoneCompression::CheckSameBase(const void* ptr1, const void* ptr2);",
+      "type": "func"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "macro",
+        "name": "V8_NOEXCEPT",
+        "about": "Specifies that a function does not throw exceptions."
+      },
+      "code": "#define V8_NOEXCEPT noexcept",
+      "type": "macro"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "macro",
+        "name": "DCHECK",
+        "about": "A debug check macro that asserts a condition; enabled in debug builds."
+      },
+      "code": "#define DCHECK(condition) ...",
+      "type": "macro"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "macro",
+        "name": "DCHECK_EQ",
+        "about": "A debug check macro that asserts that two values are equal; enabled in debug builds."
+      },
+      "code": "#define DCHECK_EQ(val1, val2) ...",
+      "type": "macro"
+    }
+  ],
+  "file_path": "/home/kathirks_gc/v8_go/archive/codebase/src/zone/compressed-zone-ptr.h"
+}

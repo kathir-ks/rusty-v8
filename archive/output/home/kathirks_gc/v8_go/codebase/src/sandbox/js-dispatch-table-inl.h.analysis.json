@@ -1,0 +1,287 @@
+{
+  "file_path": "/home/kathirks_gc/v8_go/codebase/src/sandbox/js-dispatch-table-inl.h",
+  "imports": [
+    "src/builtins/builtins-inl.h",
+    "src/common/code-memory-access-inl.h",
+    "src/objects/objects-inl.h",
+    "src/sandbox/external-entity-table-inl.h",
+    "src/sandbox/js-dispatch-table.h",
+    "src/snapshot/embedded/embedded-data.h"
+  ],
+  "classes": [
+    {
+      "name": "JSDispatchEntry",
+      "properties": [],
+      "methods": [
+        {
+          "name": "MakeJSDispatchEntry",
+          "parameters": [
+            "Address object",
+            "Address entrypoint",
+            "uint16_t parameter_count",
+            "bool mark_as_alive"
+          ],
+          "return_type": "void",
+          "logic": "Initializes a JSDispatchEntry. It encodes the object pointer and parameter count into a single word, and stores the entrypoint. It also sets a marking bit if `mark_as_alive` is true. On 32bit architecture, it also stores parameter_count and initializes next_free_entry_."
+        },
+        {
+          "name": "GetEntrypoint",
+          "parameters": [],
+          "return_type": "Address",
+          "logic": "Returns the entrypoint address stored in the JSDispatchEntry."
+        },
+        {
+          "name": "GetCodePointer",
+          "parameters": [],
+          "return_type": "Address",
+          "logic": "Returns the code pointer, which is derived from the encoded word. It applies the HeapObjectTag to the result before returning."
+        },
+        {
+          "name": "GetCode",
+          "parameters": [],
+          "return_type": "Tagged<Code>",
+          "logic": "Returns the `Code` object corresponding to the entry. This involves casting the code pointer (obtained from `GetCodePointer`) to a `Code` object."
+        },
+        {
+          "name": "GetParameterCount",
+          "parameters": [],
+          "return_type": "uint16_t",
+          "logic": "Returns the parameter count associated with the JSDispatchEntry. On 32 bit architecture, it directly reads from parameter_count_. On 64bit, the parameter count is part of the encoded word."
+        },
+        {
+          "name": "SetCodeAndEntrypointPointer",
+          "parameters": [
+            "Address new_object",
+            "Address new_entrypoint"
+          ],
+          "return_type": "void",
+          "logic": "Updates the code pointer and entrypoint of the entry, preserving the marking bit. It merges the new object's address with the existing marking bit and parameter count, and then updates both encoded_word_ and entrypoint_."
+        },
+        {
+          "name": "SetEntrypointPointer",
+          "parameters": [
+            "Address new_entrypoint"
+          ],
+          "return_type": "void",
+          "logic": "Updates only the entrypoint of the entry."
+        },
+        {
+          "name": "MakeFreelistEntry",
+          "parameters": [
+            "uint32_t next_entry_index"
+          ],
+          "return_type": "void",
+          "logic": "Marks the entry as a free list entry, storing the index of the next free entry."
+        },
+        {
+          "name": "IsFreelistEntry",
+          "parameters": [],
+          "return_type": "bool",
+          "logic": "Checks if the entry is a free list entry."
+        },
+        {
+          "name": "GetNextFreelistEntryIndex",
+          "parameters": [],
+          "return_type": "uint32_t",
+          "logic": "Returns the index of the next free list entry if this entry is a free list entry. "
+        },
+        {
+          "name": "Mark",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Sets the marking bit in the encoded word, indicating that the entry is live during garbage collection."
+        },
+        {
+          "name": "Unmark",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Clears the marking bit in the encoded word."
+        },
+        {
+          "name": "IsMarked",
+          "parameters": [],
+          "return_type": "bool",
+          "logic": "Checks if the marking bit is set in the encoded word."
+        }
+      ]
+    },
+    {
+      "name": "JSDispatchTable",
+      "properties": [],
+      "methods": [
+        {
+          "name": "GetCode",
+          "parameters": [
+            "JSDispatchHandle handle"
+          ],
+          "return_type": "Tagged<Code>",
+          "logic": "Retrieves the Code object associated with the given handle from the dispatch table."
+        },
+        {
+          "name": "SetCodeNoWriteBarrier",
+          "parameters": [
+            "JSDispatchHandle handle",
+            "Tagged<Code> new_code"
+          ],
+          "return_type": "void",
+          "logic": "Sets the code for a given handle, without a write barrier, using the code's instruction start as the entrypoint."
+        },
+        {
+          "name": "SetCodeKeepTieringRequestNoWriteBarrier",
+          "parameters": [
+            "JSDispatchHandle handle",
+            "Tagged<Code> new_code"
+          ],
+          "return_type": "void",
+          "logic": "Sets the code for a given handle without a write barrier. If tiering is requested for the handle, it keeps the existing entrypoint. Otherwise, it uses the code's instruction start as the entrypoint."
+        },
+        {
+          "name": "SetCodeAndEntrypointNoWriteBarrier",
+          "parameters": [
+            "JSDispatchHandle handle",
+            "Tagged<Code> new_code",
+            "Address new_entrypoint"
+          ],
+          "return_type": "void",
+          "logic": "Sets the code and entrypoint for a given handle, without a write barrier. Checks compatibility before setting."
+        },
+        {
+          "name": "SetTieringRequest",
+          "parameters": [
+            "JSDispatchHandle handle",
+            "TieringBuiltin builtin",
+            "Isolate* isolate"
+          ],
+          "return_type": "void",
+          "logic": "Sets the tiering request for a given handle by setting the entrypoint to the builtin's entrypoint."
+        },
+        {
+          "name": "IsTieringRequested",
+          "parameters": [
+            "JSDispatchHandle handle"
+          ],
+          "return_type": "bool",
+          "logic": "Checks if tiering is requested for a handle by comparing the current entrypoint with the code's instruction start."
+        },
+        {
+          "name": "IsTieringRequested",
+          "parameters": [
+            "JSDispatchHandle handle",
+            "TieringBuiltin builtin",
+            "Isolate* isolate"
+          ],
+          "return_type": "bool",
+          "logic": "Checks if tiering is requested for a handle and a specific builtin. It checks if the current entrypoint matches the entrypoint for that builtin."
+        },
+        {
+          "name": "ResetTieringRequest",
+          "parameters": [
+            "JSDispatchHandle handle"
+          ],
+          "return_type": "void",
+          "logic": "Resets the tiering request for a given handle by setting the entrypoint to the code's instruction start."
+        },
+        {
+          "name": "AllocateAndInitializeEntry",
+          "parameters": [
+            "Space* space",
+            "uint16_t parameter_count",
+            "Tagged<Code> new_code"
+          ],
+          "return_type": "JSDispatchHandle",
+          "logic": "Allocates and initializes a new entry in the dispatch table. If allocation fails, it calls V8::FatalProcessOutOfMemory."
+        },
+        {
+          "name": "TryAllocateAndInitializeEntry",
+          "parameters": [
+            "Space* space",
+            "uint16_t parameter_count",
+            "Tagged<Code> new_code"
+          ],
+          "return_type": "std::optional<JSDispatchHandle>",
+          "logic": "Attempts to allocate and initialize a new entry in the dispatch table. Returns an optional handle."
+        },
+        {
+          "name": "GetEntrypoint",
+          "parameters": [
+            "JSDispatchHandle handle"
+          ],
+          "return_type": "Address",
+          "logic": "Retrieves the entrypoint address associated with the given handle from the dispatch table."
+        },
+        {
+          "name": "GetCodeAddress",
+          "parameters": [
+            "JSDispatchHandle handle"
+          ],
+          "return_type": "Address",
+          "logic": "Retrieves the code address associated with the given handle from the dispatch table."
+        },
+        {
+          "name": "GetParameterCount",
+          "parameters": [
+            "JSDispatchHandle handle"
+          ],
+          "return_type": "uint16_t",
+          "logic": "Retrieves the parameter count associated with the given handle from the dispatch table."
+        },
+        {
+          "name": "Mark",
+          "parameters": [
+            "JSDispatchHandle handle"
+          ],
+          "return_type": "void",
+          "logic": "Marks an entry in the JSDispatchTable. It skips the marking of read-only entries."
+        },
+        {
+          "name": "VerifyEntry",
+          "parameters": [
+            "JSDispatchHandle handle",
+            "Space* space",
+            "Space* ro_space"
+          ],
+          "return_type": "void",
+          "logic": "Verifies that an entry in the dispatch table is marked correctly based on its space during DEBUG or VERIFY_HEAP builds."
+        },
+        {
+          "name": "IterateActiveEntriesIn",
+          "parameters": [
+            "Space* space",
+            "Callback callback"
+          ],
+          "return_type": "void",
+          "logic": "Iterates over active entries in the given space, calling the callback for each active entry."
+        },
+        {
+          "name": "IterateMarkedEntriesIn",
+          "parameters": [
+            "Space* space",
+            "Callback callback"
+          ],
+          "return_type": "void",
+          "logic": "Iterates over marked entries in the given space, calling the callback for each marked entry."
+        },
+        {
+          "name": "Sweep",
+          "parameters": [
+            "Space* space",
+            "Counters* counters",
+            "Callback callback"
+          ],
+          "return_type": "uint32_t",
+          "logic": "Sweeps the dispatch table in the given space, removing unmarked entries and calling a callback, and then updates the counters."
+        },
+        {
+          "name": "IsCompatibleCode",
+          "parameters": [
+            "Tagged<Code> code",
+            "uint16_t parameter_count"
+          ],
+          "return_type": "bool",
+          "logic": "Checks if the provided code is compatible with the given parameter count based on several conditions related to entrypoint tags, parameter counts, and builtin IDs. It returns true if compatible, false otherwise."
+        }
+      ]
+    }
+  ],
+  "functions": []
+}

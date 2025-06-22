@@ -1,0 +1,48 @@
+{
+  "metadata": {
+    "path": "/home/kathirks_gc/v8_go/archive/codebase/src/d8/d8-js.cc",
+    "file_name": "d8-js.cc",
+    "language": "cpp",
+    "purpose": "Defines a C++ string containing a JavaScript function used by the d8 shell for stringifying JavaScript values, including handling proxies and cyclic objects."
+  },
+  "imports": {
+    "metadata": {
+      "language": "cpp",
+      "purpose": "Includes the d8 header file for d8 shell functionality."
+    },
+    "code": "#include \"src/d8/d8.h\""
+  },
+  "classes": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "Shell",
+        "about": "Provides an interface to various shell functionality.",
+        "attributes": [],
+        "dependencies": []
+      },
+      "code": "namespace v8 {\nclass Shell {\n public:\n  static const char* stringify_source_;\n };\n}  // namespace v8"
+    }
+  ],
+  "functions": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "member",
+        "name": "stringify_source_",
+        "parent": "Shell",
+        "about": "A static member variable of Shell containing a JavaScript function as a raw string literal.  This JS function is used for improved object serialization.",
+        "logic": "The raw string literal `R\"D8(...)\"D8` holds the JavaScript code.  The JavaScript code defines a `Stringify` function to convert JavaScript values to strings, handling various data types (including proxies) and limiting recursion depth. It also defines a `StringifyProxy` helper function.",
+        "parameters": [],
+        "return": {
+          "type": "const char*",
+          "description": "A pointer to a null-terminated string containing the JavaScript code."
+        },
+        "dependencies": []
+      },
+      "code": "const char* v8::Shell::stringify_source_ = R\"D8(\n(function() {\n\"use strict\";\n\n// A more universal stringify that supports more types than JSON.\n// Used by the d8 shell to output results.\nvar stringifyDepthLimit = 4;  // To avoid crashing on cyclic objects\n\n// Hacky solution to circumvent forcing --allow-natives-syntax for d8\nfunction isProxy(o) { return false };\nfunction JSProxyGetTarget(proxy) { };\nfunction JSProxyGetHandler(proxy) { };\n\ntry {\n  isProxy = Function(['object'], 'return %IsJSProxy(object)');\n  JSProxyGetTarget = Function(['proxy'],\n    'return %JSProxyGetTarget(proxy)');\n  JSProxyGetHandler = Function(['proxy'],\n    'return %JSProxyGetHandler(proxy)');\n} catch(e) {};\n\n\nfunction Stringify(x, depth) {\n  if (depth === undefined)\n    depth = stringifyDepthLimit;\n  else if (depth === 0)\n    return \"...\";\n  if (isProxy(x)) {\n    return StringifyProxy(x, depth);\n  }\n  switch (typeof x) {\n    case \"undefined\":\n      return \"undefined\";\n    case \"boolean\":\n    case \"number\":\n    case \"function\":\n    case \"symbol\":\n      return x.toString();\n    case \"string\":\n      return \"\\\"\" + x.toString() + \"\\\"\";\n    case \"bigint\":\n      return x.toString() + \"n\";\n    case \"object\":\n      if (x === null) return \"null\";\n      if (x.constructor && x.constructor.name === \"Array\") {\n        var elems = [];\n        for (var i = 0; i < x.length; ++i) {\n          elems.push(\n            {}.hasOwnProperty.call(x, i) ? Stringify(x[i], depth - 1) : \"\");\n        }\n        return \"[\" + elems.join(\", \") + \"]\";\n      }\n      try {\n        var string = String(x);\n        if (string && string !== \"[object Object]\") return string;\n      } catch(e) {}\n      var props = [];\n      var names = Object.getOwnPropertyNames(x);\n      names = names.concat(Object.getOwnPropertySymbols(x));\n      for (var i in names) {\n        var name = names[i];\n        var desc = Object.getOwnPropertyDescriptor(x, name);\n        if (desc === (void 0)) continue;\n        if (typeof name === 'symbol') name = \"[\" + Stringify(name) + \"]\";\n        if (\"value\" in desc) {\n          props.push(name + \": \" + Stringify(desc.value, depth - 1));\n        }\n        if (desc.get) {\n          var getter = Stringify(desc.get);\n          props.push(\"get \" + name + getter.slice(getter.indexOf('(')));\n        }\n        if (desc.set) {\n          var setter = Stringify(desc.set);\n          props.push(\"set \" + name + setter.slice(setter.indexOf('(')));\n        }\n      }\n      return \"{\" + props.join(\", \") + \"}\";\n    default:\n      return \"[crazy non-standard value]\";\n  }\n}\n\nfunction StringifyProxy(proxy, depth) {\n  var proxy_type = typeof proxy;\n  var info_object = {\n    target: JSProxyGetTarget(proxy),\n    handler: JSProxyGetHandler(proxy)\n  }\n  return '[' + proxy_type + ' Proxy ' + Stringify(info_object, depth-1) + ']';\n}\n\nreturn Stringify;\n})();\n\n)D8\";"
+    }
+  ],
+  "file_path": "/home/kathirks_gc/v8_go/archive/codebase/src/d8/d8-js.cc"
+}

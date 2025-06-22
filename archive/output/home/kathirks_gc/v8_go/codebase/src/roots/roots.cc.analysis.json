@@ -1,0 +1,82 @@
+{
+  "file_path": "/home/kathirks_gc/v8_go/codebase/src/roots/roots.cc",
+  "imports": [
+    "src/roots/roots.h",
+    "type_traits",
+    "src/common/globals.h",
+    "src/objects/elements-kind.h",
+    "src/objects/heap-object-inl.h",
+    "src/objects/objects-inl.h",
+    "src/objects/visitors.h",
+    "src/roots/static-roots.h"
+  ],
+  "classes": [
+    {
+      "name": "RootsTable",
+      "properties": [
+        "root_names_"
+      ],
+      "methods": [
+        {
+          "name": "FindHeapNumber",
+          "parameters": [
+            "double value"
+          ],
+          "return_type": "IndirectHandle<HeapNumber>",
+          "logic": "Searches the roots table for a HeapNumber with the given double value. Returns an IndirectHandle to the HeapNumber if found, otherwise returns an empty IndirectHandle."
+        }
+      ]
+    },
+    {
+      "name": "ReadOnlyRoots",
+      "properties": [
+        "read_only_roots_"
+      ],
+      "methods": [
+        {
+          "name": "one_pointer_filler_map_word",
+          "parameters": [],
+          "return_type": "MapWord",
+          "logic": "Returns the MapWord representing the map of the one-pointer filler object."
+        },
+        {
+          "name": "Iterate",
+          "parameters": [
+            "RootVisitor* visitor"
+          ],
+          "return_type": "void",
+          "logic": "Iterates through the read-only roots and visits them using the provided RootVisitor. Also synchronizes the visitor for read-only root list."
+        },
+        {
+          "name": "VerifyNameForProtectors",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Verifies that the Names for protectors are adjacent in memory and have the correct properties in debug mode."
+        },
+        {
+          "name": "VerifyTypes",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Verifies the types of objects stored in the read-only roots in debug mode."
+        },
+        {
+          "name": "InitFromStaticRootsTable",
+          "parameters": [
+            "Address cage_base"
+          ],
+          "return_type": "void",
+          "logic": "Initializes the read-only roots from a static roots table, decompressing pointers relative to the given cage base."
+        }
+      ]
+    }
+  ],
+  "functions": [],
+  "static_asserts": [
+    "static_cast<int>(RootIndex::kUndefinedValue) == Internals::kUndefinedValueRootIndex",
+    "static_cast<int>(RootIndex::kTheHoleValue) == Internals::kTheHoleValueRootIndex",
+    "static_cast<int>(RootIndex::kNullValue) == Internals::kNullValueRootIndex",
+    "static_cast<int>(RootIndex::kTrueValue) == Internals::kTrueValueRootIndex",
+    "static_cast<int>(RootIndex::kFalseValue) == Internals::kFalseValueRootIndex",
+    "static_cast<int>(RootIndex::kempty_string) == Internals::kEmptyStringRootIndex"
+  ]
+}

@@ -1,0 +1,233 @@
+{
+  "file_path": "/home/kathirks_gc/v8_go/codebase/src/compiler-dispatcher/lazy-compile-dispatcher.h",
+  "imports": [
+    "<cstdint>",
+    "<memory>",
+    "<unordered_set>",
+    "<utility>",
+    "<vector>",
+    "src/base/atomic-utils.h",
+    "src/base/macros.h",
+    "src/base/platform/condition-variable.h",
+    "src/base/platform/mutex.h",
+    "src/base/platform/semaphore.h",
+    "src/common/globals.h",
+    "src/utils/identity-map.h",
+    "testing/gtest/include/gtest/gtest_prod.h"
+  ],
+  "classes": [
+    {
+      "name": "LazyCompileDispatcher",
+      "properties": [
+        "isolate_",
+        "worker_thread_runtime_call_stats_",
+        "background_compile_timer_",
+        "taskrunner_",
+        "platform_",
+        "max_stack_size_",
+        "job_handle_",
+        "trace_compiler_dispatcher_",
+        "idle_task_manager_",
+        "mutex_",
+        "idle_task_scheduled_",
+        "pending_background_jobs_",
+        "finalizable_jobs_",
+        "num_jobs_for_background_",
+        "all_jobs_",
+        "jobs_to_dispose_",
+        "main_thread_blocking_on_job_",
+        "main_thread_blocking_signal_",
+        "block_for_testing_",
+        "semaphore_for_testing_"
+      ],
+      "methods": [
+        {
+          "name": "LazyCompileDispatcher",
+          "parameters": [
+            "Isolate* isolate",
+            "Platform* platform",
+            "size_t max_stack_size"
+          ],
+          "return_type": "void",
+          "logic": "Constructor for the LazyCompileDispatcher, initializes the dispatcher with an isolate, platform, and maximum stack size."
+        },
+        {
+          "name": "~LazyCompileDispatcher",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Destructor for the LazyCompileDispatcher."
+        },
+        {
+          "name": "Enqueue",
+          "parameters": [
+            "LocalIsolate* isolate",
+            "Handle<SharedFunctionInfo> shared_info",
+            "std::unique_ptr<Utf16CharacterStream> character_stream"
+          ],
+          "return_type": "void",
+          "logic": "Enqueues a shared function info for lazy compilation."
+        },
+        {
+          "name": "IsEnqueued",
+          "parameters": [
+            "DirectHandle<SharedFunctionInfo> function"
+          ],
+          "return_type": "bool",
+          "logic": "Checks if a given function is already enqueued for compilation."
+        },
+        {
+          "name": "FinishNow",
+          "parameters": [
+            "DirectHandle<SharedFunctionInfo> function"
+          ],
+          "return_type": "bool",
+          "logic": "Blocks until a given function is compiled. Returns true on successful compilation."
+        },
+        {
+          "name": "AbortJob",
+          "parameters": [
+            "DirectHandle<SharedFunctionInfo> function"
+          ],
+          "return_type": "void",
+          "logic": "Aborts compilation job for the given function."
+        },
+        {
+          "name": "AbortAll",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Aborts all pending compilation jobs, blocking until all are aborted."
+        },
+        {
+          "name": "WaitForJobIfRunningOnBackground",
+          "parameters": [
+            "Job* job",
+            "const base::MutexGuard&"
+          ],
+          "return_type": "void",
+          "logic": "Waits for a job to finish if it's currently running on a background thread."
+        },
+        {
+          "name": "GetJobFor",
+          "parameters": [
+            "DirectHandle<SharedFunctionInfo> shared",
+            "const base::MutexGuard&"
+          ],
+          "return_type": "Job*",
+          "logic": "Retrieves the Job associated with a given SharedFunctionInfo handle."
+        },
+        {
+          "name": "PopSingleFinalizeJob",
+          "parameters": [],
+          "return_type": "Job*",
+          "logic": "Pops a single job from the finalizable_jobs_ queue."
+        },
+        {
+          "name": "ScheduleIdleTaskFromAnyThread",
+          "parameters": [
+            "const base::MutexGuard&"
+          ],
+          "return_type": "void",
+          "logic": "Schedules an idle task to run on the main thread."
+        },
+        {
+          "name": "FinalizeSingleJob",
+          "parameters": [],
+          "return_type": "bool",
+          "logic": "Finalizes a single job on the main thread. Returns true if a job was finalized."
+        },
+        {
+          "name": "DoBackgroundWork",
+          "parameters": [
+            "JobDelegate* delegate"
+          ],
+          "return_type": "void",
+          "logic": "Advances one of the pending jobs on a background thread."
+        },
+        {
+          "name": "DoIdleWork",
+          "parameters": [
+            "double deadline_in_seconds"
+          ],
+          "return_type": "void",
+          "logic": "Advances jobs from the main queue during idle time, potentially spawning background threads."
+        },
+        {
+          "name": "DeleteJob",
+          "parameters": [
+            "Job* job"
+          ],
+          "return_type": "void",
+          "logic": "Deletes the given job without the mutex held."
+        },
+        {
+          "name": "DeleteJob",
+          "parameters": [
+            "Job* job",
+            "const base::MutexGuard&"
+          ],
+          "return_type": "void",
+          "logic": "Deletes the given job with the mutex already held."
+        },
+        {
+          "name": "NotifyAddedBackgroundJob",
+          "parameters": [
+            "const base::MutexGuard& lock"
+          ],
+          "return_type": "void",
+          "logic": "Increments the number of jobs running in the background."
+        },
+        {
+          "name": "NotifyRemovedBackgroundJob",
+          "parameters": [
+            "const base::MutexGuard& lock"
+          ],
+          "return_type": "void",
+          "logic": "Decrements the number of jobs running in the background."
+        },
+        {
+          "name": "VerifyBackgroundTaskCount",
+          "parameters": [
+            "const base::MutexGuard&"
+          ],
+          "return_type": "void",
+          "logic": "Verifies that the tracked background job count is accurate."
+        }
+      ]
+    },
+    {
+      "name": "JobTask",
+      "properties": [],
+      "methods": []
+    },
+    {
+      "name": "Job",
+      "properties": [
+        "task",
+        "state"
+      ],
+      "methods": [
+        {
+          "name": "Job",
+          "parameters": [
+            "std::unique_ptr<BackgroundCompileTask> task"
+          ],
+          "return_type": "",
+          "logic": "Constructor for the Job struct"
+        },
+        {
+          "name": "~Job",
+          "parameters": [],
+          "return_type": "",
+          "logic": "Destructor for the Job struct"
+        },
+        {
+          "name": "is_running_on_background",
+          "parameters": [],
+          "return_type": "bool",
+          "logic": "Check if the Job is running on a background thread"
+        }
+      ]
+    }
+  ],
+  "functions": []
+}

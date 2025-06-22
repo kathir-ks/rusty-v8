@@ -1,0 +1,388 @@
+{
+  "file_path": "/home/kathirks_gc/v8_go/codebase/src/compiler/turboshaft/machine-lowering-reducer-inl.h",
+  "imports": [
+    "<optional>",
+    "src/base/logging.h",
+    "src/codegen/external-reference.h",
+    "src/codegen/machine-type.h",
+    "src/common/globals.h",
+    "src/compiler/access-builder.h",
+    "src/compiler/compilation-dependencies.h",
+    "src/compiler/feedback-source.h",
+    "src/compiler/globals.h",
+    "src/compiler/linkage.h",
+    "src/compiler/operator.h",
+    "src/compiler/simplified-operator.h",
+    "src/compiler/turboshaft/assembler.h",
+    "src/compiler/turboshaft/copying-phase.h",
+    "src/compiler/turboshaft/index.h",
+    "src/compiler/turboshaft/operations.h",
+    "src/compiler/turboshaft/opmasks.h",
+    "src/compiler/turboshaft/phase.h",
+    "src/compiler/turboshaft/reducer-traits.h",
+    "src/compiler/turboshaft/representations.h",
+    "src/compiler/write-barrier-kind.h",
+    "src/deoptimizer/deoptimize-reason.h",
+    "src/execution/frame-constants.h",
+    "src/objects/bigint.h",
+    "src/objects/heap-number.h",
+    "src/objects/instance-type-checker.h",
+    "src/objects/instance-type-inl.h",
+    "src/objects/instance-type.h",
+    "src/objects/oddball.h",
+    "src/objects/string-inl.h",
+    "src/runtime/runtime.h",
+    "src/utils/utils.h"
+  ],
+  "classes": [
+    {
+      "name": "MachineLoweringReducer",
+      "properties": [],
+      "methods": [
+        {
+          "name": "NeedsHeapObjectCheck",
+          "parameters": [
+            "ObjectIsOp::InputAssumptions input_assumptions"
+          ],
+          "return_type": "bool",
+          "logic": "Determines if a heap object check is required based on input assumptions. Returns true if a check is needed, false otherwise."
+        },
+        {
+          "name": "REDUCE(Word32SignHint)",
+          "parameters": [
+            "V<Word32> input",
+            "Word32SignHintOp::Sign"
+          ],
+          "return_type": "V<Word32>",
+          "logic": "Reduces a Word32SignHint operation, essentially passing the input through since Int32 and Uint32 are both considered Word32 at the machine level."
+        },
+        {
+          "name": "REDUCE(ChangeOrDeopt)",
+          "parameters": [
+            "V<Untagged> input",
+            "V<FrameState> frame_state",
+            "ChangeOrDeoptOp::Kind kind",
+            "CheckForMinusZeroMode minus_zero_mode",
+            "const FeedbackSource& feedback"
+          ],
+          "return_type": "V<Untagged>",
+          "logic": "Reduces a ChangeOrDeopt operation by performing type conversions and deoptimizing if precision is lost or specific conditions (e.g., minus zero) are met. Handles conversions between various number types (int32, int64, float64)."
+        },
+        {
+          "name": "REDUCE(DeoptimizeIf)",
+          "parameters": [
+            "V<Word32> condition",
+            "V<FrameState> frame_state",
+            "bool negated",
+            "const DeoptimizeParameters* parameters"
+          ],
+          "return_type": "V<None>",
+          "logic": "Reduces a DeoptimizeIf operation by conditionally deoptimizing based on the input condition. If the condition is met (or not met, if negated), a deoptimization is triggered using the provided frame state and parameters.  It attempts to use control flow (branches) for DeoptimizeIf, which makes block cloning helpful if the condition involves a PhiOp. Otherwise calls the reducer from the next level."
+        },
+        {
+          "name": "REDUCE(ObjectIs)",
+          "parameters": [
+            "V<Object> input",
+            "ObjectIsOp::Kind kind",
+            "ObjectIsOp::InputAssumptions input_assumptions"
+          ],
+          "return_type": "V<Word32>",
+          "logic": "Reduces an ObjectIs operation by checking the type of an object and returning a Word32 value indicating whether it matches the specified type (e.g., BigInt, Callable, Smi). Uses various type checks, including Smi checks, map checks, and instance type checks."
+        },
+        {
+          "name": "REDUCE(Float64Is)",
+          "parameters": [
+            "V<Float64> value",
+            "NumericKind kind"
+          ],
+          "return_type": "V<Word32>",
+          "logic": "Reduces a Float64Is operation by checking whether a float64 value matches a specific numeric kind (e.g., Float64Hole, Finite, Integer). Uses various float64 comparisons and bitwise operations to determine the result."
+        },
+        {
+          "name": "REDUCE(ObjectIsNumericValue)",
+          "parameters": [
+            "V<Object> input",
+            "NumericKind kind",
+            "FloatRepresentation input_rep"
+          ],
+          "return_type": "V<Word32>",
+          "logic": "Reduces an ObjectIsNumericValue operation by first checking if the input is a Smi, and if not, checks if it is a HeapNumber with a value matching the required NumericKind, leveraging Float64Is."
+        },
+        {
+          "name": "REDUCE(Convert)",
+          "parameters": [
+            "V<Object> input",
+            "ConvertOp::Kind from",
+            "ConvertOp::Kind to"
+          ],
+          "return_type": "V<Object>",
+          "logic": "Reduces a Convert operation by converting between different types (e.g., PlainPrimitive to Number, String to Number, Number to Boolean). Uses built-in functions for conversions."
+        },
+        {
+          "name": "REDUCE(ConvertUntaggedToJSPrimitive)",
+          "parameters": [
+            "V<Untagged> input",
+            "ConvertUntaggedToJSPrimitiveOp::JSPrimitiveKind kind",
+            "RegisterRepresentation input_rep",
+            "ConvertUntaggedToJSPrimitiveOp::InputInterpretation input_interpretation",
+            "CheckForMinusZeroMode minus_zero_mode"
+          ],
+          "return_type": "V<JSPrimitive>",
+          "logic": "Reduces a ConvertUntaggedToJSPrimitive operation by converting an untagged value (e.g., Word32, Word64, Float64) to a JSPrimitive (e.g., BigInt, Number, Boolean). Uses tagging and allocation logic to create the JSPrimitive."
+        },
+        {
+          "name": "REDUCE(ConvertUntaggedToJSPrimitiveOrDeopt)",
+          "parameters": [
+            "V<Untagged> input",
+            "V<FrameState> frame_state",
+            "ConvertUntaggedToJSPrimitiveOrDeoptOp::JSPrimitiveKind kind",
+            "RegisterRepresentation input_rep",
+            "ConvertUntaggedToJSPrimitiveOrDeoptOp::InputInterpretation input_interpretation",
+            "const FeedbackSource& feedback"
+          ],
+          "return_type": "V<JSPrimitive>",
+          "logic": "Reduces an untagged to JSPrimitive conversion while adding deoptimization based on precision loss. Handles smi values correctly, falling back to deopt otherwise."
+        },
+        {
+          "name": "REDUCE(ConvertJSPrimitiveToUntagged)",
+          "parameters": [
+            "V<JSPrimitive> object",
+            "ConvertJSPrimitiveToUntaggedOp::UntaggedKind kind",
+            "ConvertJSPrimitiveToUntaggedOp::InputAssumptions input_assumptions"
+          ],
+          "return_type": "V<Untagged>",
+          "logic": "Reduces a ConvertJSPrimitiveToUntagged operation by converting a JSPrimitive (e.g., Smi, NumberOrOddball) to an untagged value (e.g., Int32, Int64, Float64). Uses untagging and float64 conversion logic."
+        },
+        {
+          "name": "REDUCE(ConvertJSPrimitiveToUntaggedOrDeopt)",
+          "parameters": [
+            "V<Object> object",
+            "V<FrameState> frame_state",
+            "ConvertJSPrimitiveToUntaggedOrDeoptOp::JSPrimitiveKind from_kind",
+            "ConvertJSPrimitiveToUntaggedOrDeoptOp::UntaggedKind to_kind",
+            "CheckForMinusZeroMode minus_zero_mode",
+            "const FeedbackSource& feedback"
+          ],
+          "return_type": "V<Untagged>",
+          "logic": "Reduces a ConvertJSPrimitiveToUntagged conversion while adding deoptimization if conversion to certain format fails."
+        },
+        {
+          "name": "REDUCE(TruncateJSPrimitiveToUntagged)",
+          "parameters": [
+            "V<JSPrimitive> object",
+            "TruncateJSPrimitiveToUntaggedOp::UntaggedKind kind",
+            "TruncateJSPrimitiveToUntaggedOp::InputAssumptions input_assumptions"
+          ],
+          "return_type": "V<Word>",
+          "logic": "Truncates JSPrimitives to an untagged value. Handles specific primitive types and input assumptions using helper functions."
+        },
+        {
+          "name": "REDUCE(TruncateJSPrimitiveToUntaggedOrDeopt)",
+          "parameters": [
+            "V<JSPrimitive> input",
+            "V<FrameState> frame_state",
+            "TruncateJSPrimitiveToUntaggedOrDeoptOp::UntaggedKind kind",
+            "TruncateJSPrimitiveToUntaggedOrDeoptOp::InputRequirement input_requirement",
+            "const FeedbackSource& feedback"
+          ],
+          "return_type": "V<Word>",
+          "logic": "Truncates JSPrimitives to an untagged value with deoptimization based on failure of a specified requirements."
+        },
+        {
+          "name": "JSAnyIsNotPrimitiveHeapObject",
+          "parameters": [
+            "V<Object> value",
+            "V<Map> value_map"
+          ],
+          "return_type": "V<Word32>",
+          "logic": "Determines if the JS Any is not a primitive heap object.  Loads the object's map if not provided and compares Instance type to first_js_receiver_type."
+        },
+        {
+          "name": "REDUCE(ConvertJSPrimitiveToObject)",
+          "parameters": [
+            "V<JSPrimitive> value",
+            "V<Context> native_context",
+            "V<JSGlobalProxy> global_proxy",
+            "ConvertReceiverMode mode"
+          ],
+          "return_type": "V<Object>",
+          "logic": "Converts a JSPrimitive to a JSObject. If the primitive is not already an object, it wraps the primitive in a JSPrimitiveWrapper, otherwise returns JSGlobalProxy if null."
+        },
+        {
+          "name": "GetStringEncoding",
+          "parameters": [
+            "V<String> string"
+          ],
+          "return_type": "StringEncoding",
+          "logic": "Helper function determining the string encoding type - one byte, two byte or unknown. If it's unknown it's a variable string."
+        },
+        {
+          "name": "REDUCE(NewConsString)",
+          "parameters": [
+            "V<Word32> length",
+            "V<String> first",
+            "V<String> second"
+          ],
+          "return_type": "V<ConsString>",
+          "logic": "Reduces a NewConsString operation by creating a new ConsString. Determines the map based on the string encoding for first and second."
+        },
+        {
+          "name": "REDUCE(NewArray)",
+          "parameters": [
+            "V<WordPtr> length",
+            "NewArrayOp::Kind kind",
+            "AllocationType allocation_type"
+          ],
+          "return_type": "V<AnyFixedArray>",
+          "logic": "Reduces a NewArray operation by allocating a new array. Supports double and object kinds."
+        },
+        {
+          "name": "REDUCE(DoubleArrayMinMax)",
+          "parameters": [
+            "V<JSArray> array",
+            "DoubleArrayMinMaxOp::Kind kind"
+          ],
+          "return_type": "V<Number>",
+          "logic": "Finds the minimum or maximum value in a DoubleArray depending on the kind parameter."
+        },
+        {
+          "name": "REDUCE(LoadFieldByIndex)",
+          "parameters": [
+            "V<Object> object",
+            "V<Word32> field_index"
+          ],
+          "return_type": "V<Object>",
+          "logic": "Loads a field by index, either in-object or in the properties backing store. It takes field_index and checks if the field is mutable double or just a tagged field and performs loading accordingly."
+        },
+        {
+          "name": "REDUCE(WordBinopDeoptOnOverflow)",
+          "parameters": [
+            "V<Word> left",
+            "V<Word> right",
+            "V<FrameState> frame_state",
+            "WordBinopDeoptOnOverflowOp::Kind kind",
+            "WordRepresentation rep",
+            "FeedbackSource feedback",
+            "CheckForMinusZeroMode mode"
+          ],
+          "return_type": "V<Word>",
+          "logic": "Performs word binary operations with deoptimization if overflow occurs. Includes checks and deoptimization for division by zero and other edge cases. Supports signed and unsigned operations."
+        },
+        {
+          "name": "REDUCE(BigIntBinop)",
+          "parameters": [
+            "V<BigInt> left",
+            "V<BigInt> right",
+            "V<FrameState> frame_state",
+            "BigIntBinopOp::Kind kind"
+          ],
+          "return_type": "V<BigInt>",
+          "logic": "Reduces BigInt binary operations by calling built-in BigInt functions and deoptimizing on errors (BigIntTooBig, TerminationRequested, DivisionByZero)."
+        },
+        {
+          "name": "REDUCE(BigIntComparison)",
+          "parameters": [
+            "V<BigInt> left",
+            "V<BigInt> right",
+            "BigIntComparisonOp::Kind kind"
+          ],
+          "return_type": "V<Boolean>",
+          "logic": "Reduces BigInt comparison operations by calling built-in BigInt comparison functions."
+        },
+        {
+          "name": "REDUCE(BigIntUnary)",
+          "parameters": [
+            "V<BigInt> input",
+            "BigIntUnaryOp::Kind kind"
+          ],
+          "return_type": "V<BigInt>",
+          "logic": "Reduces a BigInt unary operation, such as negation, using built-in functions."
+        },
+        {
+          "name": "REDUCE(StringAt)",
+          "parameters": [
+            "V<String> string",
+            "V<WordPtr> pos",
+            "StringAtOp::Kind kind"
+          ],
+          "return_type": "V<Word32>",
+          "logic": "Reduces a StringAt operation by loading the character code at a specified position in a string. Handles different string types (SeqString, ExternalString, ConsString, SlicedString, ThinString) and calls runtime for complex cases."
+        },
+        {
+          "name": "REDUCE(StringLength)",
+          "parameters": [
+            "V<String> string"
+          ],
+          "return_type": "V<Word32>",
+          "logic": "Reduces StringLength operation by loading the length of the string."
+        },
+        {
+          "name": "REDUCE(TypedArrayLength)",
+          "parameters": [
+            "V<JSTypedArray> typed_array",
+            "ElementAccess access"
+          ],
+          "return_type": "V<WordPtr>",
+          "logic": "Reduces a TypedArrayLength operation by calculating the length of a typed array."
+        },
+        {
+          "name": "REDUCE(LoadElement)",
+          "parameters": [
+            "V<AnyFixedArray> elements",
+            "ElementAccess access",
+            "V<WordPtr> index",
+            "ElementsKind elements_kind"
+          ],
+          "return_type": "V<Untagged>",
+          "logic": "Loads a tagged element from the backing store using ElementAccess information."
+        },
+        {
+          "name": "REDUCE(Float64Round)",
+          "parameters": [
+            "V<Float64> value",
+            "Float64RoundOp::Mode mode"
+          ],
+          "return_type": "V<Float64>",
+          "logic": "Rounds a Float64 value based on the specified mode (e.g., ToZero, ToNearest). Uses corresponding assembler operations."
+        },
+        {
+          "name": "REDUCE(Float64Cmp)",
+          "parameters": [
+            "V<Float64> left",
+            "V<Float64> right",
+            "Float64CmpOp::Condition cond"
+          ],
+          "return_type": "V<Word32>",
+          "logic": "Compares two Float64 values based on the specified condition (e.g., Equal, LessThan) using assembler operations."
+        },
+        {
+          "name": "REDUCE(LoadWeakValue)",
+          "parameters": [
+            "V<WeakRef> weak_ref"
+          ],
+          "return_type": "V<Object>",
+          "logic": "Loads a weak reference value."
+        },
+        {
+          "name": "REDUCE(StringFromCodePoint)",
+          "parameters": [
+            "V<Word32> code_point"
+          ],
+          "return_type": "V<JSPrimitive>",
+          "logic": "Reduces StringFromCodePoint to either one- or two-byte sequences."
+        }
+      ]
+    }
+  ],
+  "functions": [],
+  "enums": [
+    {
+      "name": "StringEncoding",
+      "values": [
+        "kOneByte",
+        "kTwoByte",
+        "kUnknown"
+      ]
+    }
+  ]
+}

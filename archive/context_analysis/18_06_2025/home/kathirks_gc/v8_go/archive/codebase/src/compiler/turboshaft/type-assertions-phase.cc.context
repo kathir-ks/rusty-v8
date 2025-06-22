@@ -1,0 +1,53 @@
+{
+  "metadata": {
+    "path": "/home/kathirks_gc/v8_go/archive/codebase/src/compiler/turboshaft/type-assertions-phase.cc",
+    "file_name": "type-assertions-phase.cc",
+    "language": "cpp",
+    "purpose": "Implements the type assertions phase in the Turboshaft compiler pipeline. This phase likely optimizes the graph by inserting type assertions based on type inference results."
+  },
+  "imports": {
+    "metadata": {
+      "language": "cpp",
+      "purpose": "Includes necessary headers for the type assertions phase, including its own header, js-heap-broker, reducers, and core turboshaft components."
+    },
+    "code": "#include \"src/compiler/turboshaft/type-assertions-phase.h\"\n\n#include \"src/compiler/js-heap-broker.h\"\n#include \"src/compiler/turboshaft/assert-types-reducer.h\"\n#include \"src/compiler/turboshaft/copying-phase.h\"\n#include \"src/compiler/turboshaft/phase.h\"\n#include \"src/compiler/turboshaft/type-inference-reducer.h\"\n#include \"src/compiler/turboshaft/value-numbering-reducer.h\""
+  },
+  "functions": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "method",
+        "name": "Run",
+        "parent": "TypeAssertionsPhase",
+        "about": "Executes the type assertions phase of the Turboshaft compiler pipeline.",
+        "logic": "The Run method performs the following steps: 1. Creates an UnparkedScopeIfNeeded object for the JSHeapBroker (likely to manage threading/concurrent access). 2. Configures TypeInferenceReducerArgs for precise input graph typing and preservation of types from the input graph. 3. Executes a CopyingPhase which combines the AssertTypesReducer, ValueNumberingReducer, and TypeInferenceReducer. This suggests that the phase copies the graph, applies type assertions, performs value numbering, and does type inference, likely iteratively.",
+        "parameters": [
+          {
+            "name": "data",
+            "type": "PipelineData*",
+            "purpose": "Pointer to the PipelineData object, which contains information about the compilation pipeline, including the graph, JSHeapBroker, and other relevant data."
+          },
+          {
+            "name": "temp_zone",
+            "type": "Zone*",
+            "purpose": "Pointer to a Zone object, which is a memory allocation arena used for temporary allocations during the compilation process."
+          }
+        ],
+        "return": {
+          "type": "void",
+          "description": "No return value."
+        },
+        "dependencies": [
+          "UnparkedScopeIfNeeded",
+          "turboshaft::TypeInferenceReducerArgs",
+          "turboshaft::CopyingPhase",
+          "turboshaft::AssertTypesReducer",
+          "turboshaft::ValueNumberingReducer",
+          "turboshaft::TypeInferenceReducer"
+        ]
+      },
+      "code": "void TypeAssertionsPhase::Run(PipelineData* data, Zone* temp_zone) {\n  UnparkedScopeIfNeeded scope(data->broker());\n\n  turboshaft::TypeInferenceReducerArgs::Scope typing_args{\n      turboshaft::TypeInferenceReducerArgs::InputGraphTyping::kPrecise,\n      turboshaft::TypeInferenceReducerArgs::OutputGraphTyping::\n          kPreserveFromInputGraph};\n\n  turboshaft::CopyingPhase<turboshaft::AssertTypesReducer,\n                           turboshaft::ValueNumberingReducer,\n                           turboshaft::TypeInferenceReducer>::Run(data,\n                                                                  temp_zone);\n}"
+    }
+  ],
+  "file_path": "/home/kathirks_gc/v8_go/archive/codebase/src/compiler/turboshaft/type-assertions-phase.cc"
+}

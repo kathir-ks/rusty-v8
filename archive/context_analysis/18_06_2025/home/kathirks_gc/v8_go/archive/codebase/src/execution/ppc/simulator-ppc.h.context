@@ -1,0 +1,216 @@
+{
+  "metadata": {
+    "path": "/home/kathirks_gc/v8_go/archive/codebase/src/execution/ppc/simulator-ppc.h",
+    "file_name": "simulator-ppc.h",
+    "language": "cpp",
+    "purpose": "Declares the Simulator class for PPC instructions, used when not generating native PPC binaries.  Allows running and debugging PPC code generation on non-PPC machines."
+  },
+  "imports": {
+    "metadata": {
+      "language": "cpp",
+      "purpose": "Includes necessary headers when USE_SIMULATOR is defined."
+    },
+    "code": "#if defined(USE_SIMULATOR)\n            #include \"src/base/hashmap.h\"\n            #include \"src/base/lazy-instance.h\"\n            #include \"src/base/platform/mutex.h\"\n            #include \"src/codegen/assembler.h\"\n            #include \"src/codegen/ppc/constants-ppc.h\"\n            #include \"src/execution/simulator-base.h\"\n            #include \"src/utils/allocation.h\"\n            #endif"
+  },
+  "classes": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "CachePage",
+        "about": "Represents a page in the simulator's instruction cache.",
+        "attributes": [
+          {
+            "name": "data_",
+            "type": "char[kPageSize]",
+            "access": "private",
+            "purpose": "The cached data."
+          },
+          {
+            "name": "validity_map_",
+            "type": "char[kValidityMapSize]",
+            "access": "private",
+            "purpose": "Indicates the validity of each cache line in the page."
+          }
+        ],
+        "dependencies": []
+      },
+      "code": "class CachePage {\n            public:\n            static const int LINE_VALID = 0;\n            static const int LINE_INVALID = 1;\n\n            static const int kPageShift = 12;\n            static const int kPageSize = 1 << kPageShift;\n            static const int kPageMask = kPageSize - 1;\n            static const int kLineShift = 2;  // The cache line is only 4 bytes right now.\n            static const int kLineLength = 1 << kLineShift;\n            static const int kLineMask = kLineLength - 1;\n\n            CachePage() { memset(&validity_map_, LINE_INVALID, sizeof(validity_map_)); }\n\n            char* ValidityByte(int offset) {\n                return &validity_map_[offset >> kLineShift];\n            }\n\n            char* CachedData(int offset) { return &data_[offset]; }\n\n            private:\n            char data_[kPageSize];  // The cached data.\n            static const int kValidityMapSize = kPageSize >> kLineShift;\n            char validity_map_[kValidityMapSize];  // One byte per line.\n            };"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "Simulator",
+        "extends": "SimulatorBase",
+        "about": "The PPC instruction simulator.",
+        "attributes": [
+          {
+            "name": "registers_",
+            "type": "intptr_t[kNumGPRs]",
+            "access": "private",
+            "purpose": "General-purpose registers."
+          },
+          {
+            "name": "condition_reg_",
+            "type": "int32_t",
+            "access": "private",
+            "purpose": "Condition register."
+          },
+          {
+            "name": "fp_condition_reg_",
+            "type": "int32_t",
+            "access": "private",
+            "purpose": "Floating-point condition register."
+          },
+          {
+            "name": "special_reg_lr_",
+            "type": "intptr_t",
+            "access": "private",
+            "purpose": "Link register."
+          },
+          {
+            "name": "special_reg_pc_",
+            "type": "intptr_t",
+            "access": "private",
+            "purpose": "Program counter."
+          },
+          {
+            "name": "special_reg_ctr_",
+            "type": "intptr_t",
+            "access": "private",
+            "purpose": "Count register."
+          },
+          {
+            "name": "special_reg_xer_",
+            "type": "int32_t",
+            "access": "private",
+            "purpose": "XER (Fixed-Point Exception Register)."
+          },
+          {
+            "name": "fp_registers_",
+            "type": "int64_t[kNumFPRs]",
+            "access": "private",
+            "purpose": "Floating-point registers."
+          },
+          {
+            "name": "simd_registers_",
+            "type": "simdr_t[kNumSIMDRs]",
+            "access": "private",
+            "purpose": "SIMD registers."
+          },
+          {
+            "name": "stack_",
+            "type": "uint8_t*",
+            "access": "private",
+            "purpose": "Simulated stack."
+          },
+          {
+            "name": "pc_modified_",
+            "type": "bool",
+            "access": "private",
+            "purpose": "Flag indicating if the program counter was modified."
+          },
+          {
+            "name": "icount_",
+            "type": "int",
+            "access": "private",
+            "purpose": "Instruction count."
+          },
+          {
+            "name": "last_debugger_input_",
+            "type": "char*",
+            "access": "private",
+            "purpose": "Last debugger input string."
+          },
+          {
+            "name": "break_pc_",
+            "type": "Instruction*",
+            "access": "private",
+            "purpose": "Breakpoint address."
+          },
+          {
+            "name": "break_instr_",
+            "type": "Instr",
+            "access": "private",
+            "purpose": "Breakpoint instruction."
+          },
+          {
+            "name": "isolate_",
+            "type": "v8::internal::Isolate*",
+            "access": "private",
+            "purpose": "The isolate associated with the simulator."
+          },
+          {
+            "name": "watched_stops_",
+            "type": "StopCountAndDesc[kNumOfWatchedStops]",
+            "access": "private",
+            "purpose": "Array of watched stops with their count and description."
+          },
+          {
+            "name": "instruction_tracing_",
+            "type": "bool",
+            "access": "public",
+            "purpose": "Flag indicating whether instruction tracing is enabled.  Takes a copy of v8 simulator tracing flag because flags are frozen after start."
+          }
+        ],
+        "dependencies": [
+          "SimulatorBase",
+          "Isolate",
+          "CachePage",
+          "base::CustomMatcherHashMap",
+          "Instruction",
+          "GlobalMonitor",
+          "base::Mutex",
+          "heap::base::StackVisitor"
+        ]
+      },
+      "code": "class Simulator : public SimulatorBase {\n            public:\n            friend class PPCDebugger;\n            enum Register {\n                no_reg = -1,\n                r0 = 0,\n                sp,\n                r2,\n                r3,\n                r4,\n                r5,\n                r6,\n                r7,\n                r8,\n                r9,\n                r10,\n                r11,\n                r12,\n                r13,\n                r14,\n                r15,\n                r16,\n                r17,\n                r18,\n                r19,\n                r20,\n                r21,\n                r22,\n                r23,\n                r24,\n                r25,\n                r26,\n                r27,\n                r28,\n                r29,\n                r30,\n                fp,\n                kNumGPRs = 32,\n                d0 = 0,\n                d1,\n                d2,\n                d3,\n                d4,\n                d5,\n                d6,\n                d7,\n                d8,\n                d9,\n                d10,\n                d11,\n                d12,\n                d13,\n                d14,\n                d15,\n                d16,\n                d17,\n                d18,\n                d19,\n                d20,\n                d21,\n                d22,\n                d23,\n                d24,\n                d25,\n                d26,\n                d27,\n                d28,\n                d29,\n                d30,\n                d31,\n                kNumFPRs = 32,\n                // PPC Simd registers are a serapre set from Floating Point registers. Refer\n                // to register-ppc.h for more details.\n                v0 = 0,\n                v1,\n                v2,\n                v3,\n                v4,\n                v5,\n                v6,\n                v7,\n                v8,\n                v9,\n                v10,\n                v11,\n                v12,\n                v13,\n                v14,\n                v15,\n                v16,\n                v17,\n                v18,\n                v19,\n                v20,\n                v21,\n                v22,\n                v23,\n                v24,\n                v25,\n                v26,\n                v27,\n                v28,\n                v29,\n                v30,\n                v31,\n                kNumSIMDRs = 32\n            };\n\n            explicit Simulator(Isolate* isolate);\n            ~Simulator();\n\n            // The currently executing Simulator instance. Potentially there can be one\n            // for each native thread.\n            static Simulator* current(v8::internal::Isolate* isolate);\n\n            // Accessors for register state.\n            void set_register(int reg, intptr_t value);\n            intptr_t get_register(int reg) const;\n            double get_double_from_register_pair(int reg);\n            void set_d_register_from_double(int dreg, const double dbl) {\n                DCHECK(dreg >= 0 && dreg < kNumFPRs);\n                fp_registers_[dreg] = base::bit_cast<int64_t>(dbl);\n            }\n            double get_double_from_d_register(int dreg) {\n                DCHECK(dreg >= 0 && dreg < kNumFPRs);\n                return base::bit_cast<double>(fp_registers_[dreg]);\n            }\n            void set_d_register(int dreg, int64_t value) {\n                DCHECK(dreg >= 0 && dreg < kNumFPRs);\n                fp_registers_[dreg] = value;\n            }\n            int64_t get_d_register(int dreg) {\n                DCHECK(dreg >= 0 && dreg < kNumFPRs);\n                return fp_registers_[dreg];\n            }\n\n            // Special case of set_register and get_register to access the raw PC value.\n            void set_pc(intptr_t value);\n            intptr_t get_pc() const;\n\n            Address get_sp() const { return static_cast<Address>(get_register(sp)); }\n\n            // Accessor to the internal Link Register\n            intptr_t get_lr() const;\n\n            // Accessor to the internal simulator stack area. Adds a safety\n            // margin to prevent overflows.\n            uintptr_t StackLimit(uintptr_t c_limit) const;\n\n            uintptr_t StackBase() const;\n\n            // Return central stack view, without additional safety margins.\n            // Users, for example wasm::StackMemory, can add their own.\n            base::Vector<uint8_t> GetCentralStackView() const;\n\n            void IterateRegistersAndStack(::heap::base::StackVisitor* visitor);\n\n            // Executes PPC instructions until the PC reaches end_sim_pc.\n            void Execute();\n\n            template <typename Return, typename... Args>\n            Return Call(Address entry, Args... args) {\n                return VariadicCall<Return>(this, &Simulator::CallImpl, entry, args...);\n            }\n\n            // Alternative: call a 2-argument double function.\n            void CallFP(Address entry, double d0, double d1);\n            int32_t CallFPReturnsInt(Address entry, double d0, double d1);\n            double CallFPReturnsDouble(Address entry, double d0, double d1);\n\n            // Push an address onto the JS stack.\n            V8_EXPORT_PRIVATE uintptr_t PushAddress(uintptr_t address);\n\n            // Pop an address from the JS stack.\n            V8_EXPORT_PRIVATE uintptr_t PopAddress();\n\n            // Debugger input.\n            void set_last_debugger_input(char* input);\n            char* last_debugger_input() { return last_debugger_input_; }\n\n            // Redirection support.\n            static void SetRedirectInstruction(Instruction* instruction);\n\n            // ICache checking.\n            static bool ICacheMatch(void* one, void* two);\n            static void FlushICache(base::CustomMatcherHashMap* i_cache, void* start,\n                                    size_t size);\n\n            // Returns true if pc register contains one of the 'special_values' defined\n            // below (bad_lr, end_sim_pc).\n            bool has_bad_pc() const;\n\n            // Manage instruction tracing.\n            bool InstructionTracingEnabled();\n\n            void ToggleInstructionTracing();\n\n            enum special_values {\n                // Known bad pc value to ensure that the simulator does not execute\n                // without being properly setup.\n                bad_lr = -1,\n                // A pc value used to signal the simulator to stop execution.  Generally\n                // the lr is set to this value on transition from native C code to\n                // simulated execution, so that the simulator can \"return\" to the native\n                // C code.\n                end_sim_pc = -2\n            };\n\n            intptr_t CallImpl(Address entry, int argument_count,\n                                const intptr_t* arguments);\n\n            enum BCType { BC_OFFSET, BC_LINK_REG, BC_CTR_REG };\n\n            // Unsupported instructions use Format to print an error and stop execution.\n            void Format(Instruction* instr, const char* format);\n\n            // Helper functions to set the conditional flags in the architecture state.\n            bool CarryFrom(int32_t left, int32_t right, int32_t carry = 0);\n            bool BorrowFrom(int32_t left, int32_t right);\n            bool OverflowFrom(int32_t alu_out, int32_t left, int32_t right,\n                            bool addition);\n\n            // Helper functions to decode common \"addressing\" modes\n            int32_t GetShiftRm(Instruction* instr, bool* carry_out);\n            int32_t GetImm(Instruction* instr, bool* carry_out);\n            void ProcessPUW(Instruction* instr, int num_regs, int operand_size,\n                            intptr_t* start_address, intptr_t* end_address);\n            void HandleRList(Instruction* instr, bool load);\n            void HandleVList(Instruction* inst);\n            void SoftwareInterrupt(Instruction* instr);\n            void DebugAtNextPC();\n\n            // Take a copy of v8 simulator tracing flag because flags are frozen after\n            // start.\n            bool instruction_tracing_ = v8_flags.trace_sim;\n\n            // Stop helper functions.\n            inline bool isStopInstruction(Instruction* instr);\n            inline bool isWatchedStop(uint32_t bkpt_code);\n            inline bool isEnabledStop(uint32_t bkpt_code);\n            inline void EnableStop(uint32_t bkpt_code);\n            inline void DisableStop(uint32_t bkpt_code);\n            inline void IncreaseStopCounter(uint32_t bkpt_code);\n            void PrintStopInfo(uint32_t code);\n\n            // Read and write memory.\n            template <typename T>\n            inline void Read(uintptr_t address, T* value) {\n                base::MutexGuard lock_guard(&GlobalMonitor::Get()->mutex);\n                memcpy(value, reinterpret_cast<const char*>(address), sizeof(T));\n            }\n\n            template <typename T>\n            inline void ReadEx(uintptr_t address, T* value) {\n                base::MutexGuard lock_guard(&GlobalMonitor::Get()->mutex);\n                GlobalMonitor::Get()->NotifyLoadExcl(\n                    address, static_cast<TransactionSize>(sizeof(T)),\n                    isolate_->thread_id());\n                memcpy(value, reinterpret_cast<const char*>(address), sizeof(T));\n            }\n\n            template <typename T>\n            inline void Write(uintptr_t address, T value) {\n                base::MutexGuard lock_guard(&GlobalMonitor::Get()->mutex);\n                GlobalMonitor::Get()->NotifyStore(address,\n                                                static_cast<TransactionSize>(sizeof(T)),\n                                                isolate_->thread_id());\n                memcpy(reinterpret_cast<char*>(address), &value, sizeof(T));\n            }\n\n            template <typename T>\n            inline int32_t WriteEx(uintptr_t address, T value) {\n                base::MutexGuard lock_guard(&GlobalMonitor::Get()->mutex);\n                if (GlobalMonitor::Get()->NotifyStoreExcl(\n                        address, static_cast<TransactionSize>(sizeof(T)),\n                        isolate_->thread_id())) {\n                memcpy(reinterpret_cast<char*>(address), &value, sizeof(T));\n                return 0;\n                } else {\n                return 1;\n                }\n            }\n\n            // Byte Reverse.\n            static inline __uint128_t __builtin_bswap128(__uint128_t v) {\n                union {\n                uint64_t u64[2];\n                __uint128_t u128;\n                } res, val;\n                val.u128 = v;\n                res.u64[0] = ByteReverse<int64_t>(val.u64[1]);\n                res.u64[1] = ByteReverse<int64_t>(val.u64[0]);\n                return res.u128;\n            }\n\n        #define RW_VAR_LIST(V)      \\\n            V(QWU, unsigned __int128) \\\n            V(QW, __int128)           \\\n            V(DWU, uint64_t)          \\\n            V(DW, int64_t)            \\\n            V(WU, uint32_t)           \\\n            V(W, int32_t) V(HU, uint16_t) V(H, int16_t) V(BU, uint8_t) V(B, int8_t)\n\n        #define GENERATE_RW_FUNC(size, type)                   \\\n            inline type Read##size(uintptr_t addr);              \\\n            inline type ReadEx##size(uintptr_t addr);            \\\n            inline void Write##size(uintptr_t addr, type value); \\\n            inline int32_t WriteEx##size(uintptr_t addr, type value);\n\n            RW_VAR_LIST(GENERATE_RW_FUNC)\n        #undef GENERATE_RW_FUNC\n\n            void Trace(Instruction* instr);\n            void SetCR0(intptr_t result, bool setSO = false);\n            void SetCR6(bool true_for_all);\n            void ExecuteBranchConditional(Instruction* instr, BCType type);\n            void ExecuteGeneric(Instruction* instr);\n\n            void SetFPSCR(int bit) { fp_condition_reg_ |= (1 << (31 - bit)); }\n            void ClearFPSCR(int bit) { fp_condition_reg_ &= ~(1 << (31 - bit)); }\n\n            // Executes one instruction.\n            void ExecuteInstruction(Instruction* instr);\n\n            // ICache.\n            static void CheckICache(base::CustomMatcherHashMap* i_cache,\n                                    Instruction* instr);\n            static void FlushOnePage(base::CustomMatcherHashMap* i_cache, intptr_t start,\n                                    int size);\n            static CachePage* GetCachePage(base::CustomMatcherHashMap* i_cache,\n                                            void* page);\n\n            // Handle arguments and return value for runtime FP functions.\n            void GetFpArgs(double* x, double* y, intptr_t* z);\n            void SetFpResult(const double& result);\n            void TrashCallerSaveRegisters();\n\n            void CallInternal(Address entry);\n\n            // Architecture state.\n            // Saturating instructions require a Q flag to indicate saturation.\n            // There is currently no way to read the CPSR directly, and thus read the Q\n            // flag, so this is left unimplemented.\n            intptr_t registers_[kNumGPRs];\n            int32_t condition_reg_;\n            int32_t fp_condition_reg_;\n            intptr_t special_reg_lr_;\n            intptr_t special_reg_pc_;\n            intptr_t special_reg_ctr_;\n            int32_t special_reg_xer_;\n\n            int64_t fp_registers_[kNumFPRs];\n\n            // Simd registers.\n            union simdr_t {\n                int8_t int8[16];\n                uint8_t uint8[16];\n                int16_t int16[8];\n                uint16_t uint16[8];\n                int32_t int32[4];\n                uint32_t uint32[4];\n                int64_t int64[2];\n                uint64_t uint64[2];\n                float f32[4];\n                double f64[2];\n            };\n            simdr_t simd_registers_[kNumSIMDRs];\n\n            // Vector register lane numbers on IBM machines are reversed compared to\n            // x64. For example, doing an I32x4 extract_lane with lane number 0 on x64\n            // will be equal to lane number 3 on IBM machines. Vector registers are only\n            // used for compiling Wasm code at the moment. To keep the Wasm\n            // simulation accurate, we need to make sure accessing a lane is correctly\n            // simulated and as such we reverse the lane number on the getters and setters\n            // below. We need to be careful when getting/setting values on the Low or High\n            // side of a simulated register. In the simulation, \"Low\" is equal to the MSB\n            // and \"High\" is equal to the LSB in memory. \"force_ibm_lane_numbering\" could\n            // be used to disabled automatic lane number reversal and help with accessing\n            // the Low or High side of a simulated register.\n            template <class T>\n            T get_simd_register_by_lane(int reg, int lane,\n                                        bool force_ibm_lane_numbering = true) {\n                if (force_ibm_lane_numbering) {\n                lane = (kSimd128Size / sizeof(T)) - 1 - lane;\n                }\n                CHECK_LE(lane, kSimd128Size / sizeof(T));\n                CHECK_LT(reg, kNumSIMDRs);\n                CHECK_GE(lane, 0);\n                CHECK_GE(reg, 0);\n                return (reinterpret_cast<T*>(&simd_registers_[reg]))[lane];\n            }\n\n            template <class T>\n            T get_simd_register_bytes(int reg, int byte_from) {\n                // Byte location is reversed in memory.\n                int from = kSimd128Size - 1 - (byte_from + sizeof(T) - 1);\n                void* src = reinterpret_cast<uint8_t*>(&simd_registers_[reg]) + from;\n                T dst;\n                memcpy(&dst, src, sizeof(T));\n                return dst;\n            }\n\n            template <class T>\n            void set_simd_register_by_lane(int reg, int lane, const T& value,\n                                            bool force_ibm_lane_numbering = true) {\n                if (force_ibm_lane_numbering) {\n                lane = (kSimd128Size / sizeof(T)) - 1 - lane;\n                }\n                CHECK_LE(lane, kSimd128Size / sizeof(T));\n                CHECK_LT(reg, kNumSIMDRs);\n                CHECK_GE(lane, 0);\n                CHECK_GE(reg, 0);\n                (reinterpret_cast<T*>(&simd_registers_[reg]))[lane] = value;\n            }\n\n            template <class T>\n            void set_simd_register_bytes(int reg, int byte_from, T value) {\n                // Byte location is reversed in memory.\n                int from = kSimd128Size - 1 - (byte_from + sizeof(T) - 1);\n                void* dst = reinterpret_cast<uint8_t*>(&simd_registers_[reg]) + from;\n                memcpy(dst, &value, sizeof(T));\n            }\n\n            simdr_t& get_simd_register(int reg) { return simd_registers_[reg]; }\n\n            void set_simd_register(int reg, const simdr_t& value) {\n                simd_registers_[reg] = value;\n            }\n\n            // Simulator support for the stack.\n            uint8_t* stack_;\n            static const size_t kStackProtectionSize = 256 * kSystemPointerSize;\n            // This includes a protection margin at each end of the stack area.\n            static size_t AllocatedStackSize() {\n                size_t stack_size = v8_flags.sim_stack_size * KB;\n                return stack_size + (2 * kStackProtectionSize);\n            }\n            static size_t UsableStackSize() {\n                return AllocatedStackSize() - kStackProtectionSize;\n            }\n            bool pc_modified_;\n            int icount_;\n\n            // Debugger input.\n            char* last_debugger_input_;\n\n            // Registered breakpoints.\n            Instruction* break_pc_;\n            Instr break_instr_;\n\n            v8::internal::Isolate* isolate_;\n\n            // A stop is watched if its code is less than kNumOfWatchedStops.\n            // Only watched stops support enabling/disabling and the counter feature.\n            static const uint32_t kNumOfWatchedStops = 256;\n\n            // Breakpoint is disabled if bit 31 is set.\n            static const uint32_t kStopDisabledBit = 1 << 31;\n\n            // A stop is enabled, meaning the simulator will stop when meeting the\n            // instruction, if bit 31 of watched_stops_[code].count is unset.\n            // The value watched_stops_[code].count & ~(1 << 31) indicates how many times\n            // the breakpoint was hit or gone through.\n            struct StopCountAndDesc {\n                uint32_t count;\n                char* desc;\n            };\n            StopCountAndDesc watched_stops_[kNumOfWatchedStops];\n\n            // Synchronization primitives. See ARM DDI 0406C.b, A2.9.\n            enum class MonitorAccess {\n                Open,\n                Exclusive,\n            };\n\n            enum class TransactionSize {\n                None = 0,\n                Byte = 1,\n                HalfWord = 2,\n                Word = 4,\n                DWord = 8,\n            };\n\n            class GlobalMonitor {\n            public:\n                // Exposed so it can be accessed by Simulator::{Read,Write}Ex*.\n                base::Mutex mutex;\n\n                void NotifyLoadExcl(uintptr_t addr, TransactionSize size,\n                                    ThreadId thread_id);\n                void NotifyStore(uintptr_t addr, TransactionSize size, ThreadId thread_id);\n                bool NotifyStoreExcl(uintptr_t addr, TransactionSize size,\n                                    ThreadId thread_id);\n\n                static GlobalMonitor* Get();\n\n            private:\n                // Private constructor. Call {GlobalMonitor::Get()} to get the singleton.\n                GlobalMonitor() = default;\n                friend class base::LeakyObject<GlobalMonitor>;\n\n                void Clear();\n\n                MonitorAccess access_state_ = MonitorAccess::Open;\n                uintptr_t tagged_addr_ = 0;\n                TransactionSize size_ = TransactionSize::None;\n                ThreadId thread_id_ = ThreadId::Invalid();\n            };\n            };"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "GlobalMonitor",
+        "about": "Provides synchronization primitives for simulating exclusive memory access.",
+        "attributes": [
+          {
+            "name": "mutex",
+            "type": "base::Mutex",
+            "access": "public",
+            "purpose": "Mutex to protect the monitor's state."
+          },
+          {
+            "name": "access_state_",
+            "type": "MonitorAccess",
+            "access": "private",
+            "purpose": "Current access state of the monitor (Open or Exclusive)."
+          },
+          {
+            "name": "tagged_addr_",
+            "type": "uintptr_t",
+            "access": "private",
+            "purpose": "Tagged address for exclusive access."
+          },
+          {
+            "name": "size_",
+            "type": "TransactionSize",
+            "access": "private",
+            "purpose": "Size of the transaction."
+          },
+          {
+            "name": "thread_id_",
+            "type": "ThreadId",
+            "access": "private",
+            "purpose": "Thread ID holding the exclusive access."
+          }
+        ],
+        "dependencies": [
+          "base::Mutex"
+        ]
+      },
+      "code": "class GlobalMonitor {\n            public:\n                // Exposed so it can be accessed by Simulator::{Read,Write}Ex*.\n                base::Mutex mutex;\n\n                void NotifyLoadExcl(uintptr_t addr, TransactionSize size,\n                                    ThreadId thread_id);\n                void NotifyStore(uintptr_t addr, TransactionSize size, ThreadId thread_id);\n                bool NotifyStoreExcl(uintptr_t addr, TransactionSize size,\n                                    ThreadId thread_id);\n\n                static GlobalMonitor* Get();\n\n            private:\n                // Private constructor. Call {GlobalMonitor::Get()} to get the singleton.\n                GlobalMonitor() = default;\n                friend class base::LeakyObject<GlobalMonitor>;\n\n                void Clear();\n\n                MonitorAccess access_state_ = MonitorAccess::Open;\n                uintptr_t tagged_addr_ = 0;\n                TransactionSize size_ = TransactionSize::None;\n                ThreadId thread_id_ = ThreadId::Invalid();\n            };"
+    }
+  ],
+  "file_path": "/home/kathirks_gc/v8_go/archive/codebase/src/execution/ppc/simulator-ppc.h"
+}

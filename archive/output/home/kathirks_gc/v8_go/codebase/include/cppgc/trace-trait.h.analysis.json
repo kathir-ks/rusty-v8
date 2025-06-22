@@ -1,0 +1,126 @@
+{
+  "file_path": "/home/kathirks_gc/v8_go/codebase/include/cppgc/trace-trait.h",
+  "imports": [
+    "<type_traits>",
+    "cppgc/type-traits.h",
+    "v8config.h"
+  ],
+  "classes": [
+    {
+      "name": "cppgc::Visitor",
+      "properties": [],
+      "methods": []
+    },
+    {
+      "name": "cppgc::internal::RootVisitor",
+      "properties": [],
+      "methods": []
+    },
+    {
+      "name": "cppgc::TraceDescriptor",
+      "properties": [
+        "base_object_payload",
+        "callback"
+      ],
+      "methods": []
+    },
+    {
+      "name": "cppgc::internal::TraceTraitFromInnerAddressImpl",
+      "properties": [],
+      "methods": [
+        {
+          "name": "GetTraceDescriptor",
+          "parameters": [
+            "const void* address"
+          ],
+          "return_type": "TraceDescriptor",
+          "logic": "Static method to get a TraceDescriptor for a given address, likely used for objects that embed other traceable objects."
+        }
+      ]
+    },
+    {
+      "name": "cppgc::internal::TraceTraitBase",
+      "properties": [],
+      "methods": [
+        {
+          "name": "GetTraceDescriptor",
+          "parameters": [
+            "const void* self"
+          ],
+          "return_type": "TraceDescriptor",
+          "logic": "Static method to retrieve a TraceDescriptor for processing an object of type T. It calls internal::TraceTraitImpl<T>::GetTraceDescriptor to delegate the actual descriptor retrieval."
+        },
+        {
+          "name": "Trace",
+          "parameters": [
+            "Visitor* visitor",
+            "const void* self"
+          ],
+          "return_type": "void",
+          "logic": "Static method to invoke the tracing for an object of type T. It casts the void* self to a const T* and then calls the Trace() method on the object."
+        }
+      ]
+    },
+    {
+      "name": "cppgc::TraceTrait",
+      "properties": [],
+      "methods": []
+    },
+    {
+      "name": "cppgc::internal::TraceTraitImpl<T, false>",
+      "properties": [],
+      "methods": [
+        {
+          "name": "GetTraceDescriptor",
+          "parameters": [
+            "const void* self"
+          ],
+          "return_type": "TraceDescriptor",
+          "logic": "Static method to get a TraceDescriptor for objects of type T when T is not a GarbageCollectedMixin. It creates a TraceDescriptor with the object itself as the base_object_payload and TraceTrait<T>::Trace as the callback."
+        }
+      ]
+    },
+    {
+      "name": "cppgc::internal::TraceTraitImpl<T, true>",
+      "properties": [],
+      "methods": [
+        {
+          "name": "GetTraceDescriptor",
+          "parameters": [
+            "const void* self"
+          ],
+          "return_type": "TraceDescriptor",
+          "logic": "Static method to get a TraceDescriptor when T is a GarbageCollectedMixin.  It delegates to TraceTraitFromInnerAddressImpl::GetTraceDescriptor to handle potentially nested objects within T."
+        }
+      ]
+    }
+  ],
+  "functions": [
+    {
+      "name": "cppgc::internal::TraceRootCallback",
+      "parameters": [
+        "RootVisitor&",
+        "const void* object"
+      ],
+      "return_type": "void",
+      "logic": "Type alias for a function pointer type used as a callback for tracing root objects."
+    },
+    {
+      "name": "cppgc::TraceCallback",
+      "parameters": [
+        "Visitor* visitor",
+        "const void* object"
+      ],
+      "return_type": "void",
+      "logic": "Type alias for a function pointer type used as a callback for tracing an object."
+    },
+    {
+      "name": "cppgc::TraceDescriptorCallback",
+      "parameters": [
+        "const void* address"
+      ],
+      "return_type": "TraceDescriptor",
+      "logic": "Type alias for a function pointer type that takes an address and returns a TraceDescriptor."
+    }
+  ]
+}

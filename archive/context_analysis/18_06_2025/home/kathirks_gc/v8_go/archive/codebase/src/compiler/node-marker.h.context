@@ -1,0 +1,86 @@
+{
+  "metadata": {
+    "path": "/home/kathirks_gc/v8_go/archive/codebase/src/compiler/node-marker.h",
+    "file_name": "node-marker.h",
+    "language": "cpp",
+    "purpose": "Defines NodeMarker classes for assigning local states to nodes in a graph during compilation."
+  },
+  "imports": {
+    "metadata": {
+      "language": "cpp",
+      "purpose": "Includes the Node class definition, which is essential for the NodeMarker to operate on graph nodes."
+    },
+    "code": "#include \"src/compiler/node.h\""
+  },
+  "classes": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "NodeMarkerBase",
+        "extends": null,
+        "implements": [],
+        "about": "Base class for templatized NodeMarkers, providing core functionality for marking nodes.",
+        "attributes": [
+          {
+            "name": "mark_min_",
+            "type": "Mark",
+            "access": "private",
+            "purpose": "Minimum mark value assigned by this marker."
+          },
+          {
+            "name": "mark_max_",
+            "type": "Mark",
+            "access": "private",
+            "purpose": "Maximum mark value assigned by this marker."
+          }
+        ],
+        "dependencies": [
+          "TFGraph",
+          "Node"
+        ]
+      },
+      "code": "class NodeMarkerBase {\n            public:\n              NodeMarkerBase(TFGraph* graph, uint32_t num_states);\n              NodeMarkerBase(const NodeMarkerBase&) = delete;\n              NodeMarkerBase& operator=(const NodeMarkerBase&) = delete;\n\n              V8_INLINE Mark Get(const Node* node) {\n                Mark mark = node->mark();\n                if (mark < mark_min_) {\n                  return 0;\n                }\n                DCHECK_LT(mark, mark_max_);\n                return mark - mark_min_;\n              }\n              V8_INLINE void Set(Node* node, Mark mark) {\n                DCHECK_LT(mark, mark_max_ - mark_min_);\n                DCHECK_LT(node->mark(), mark_max_);\n                node->set_mark(mark + mark_min_);\n              }\n\n             private:\n              Mark const mark_min_;\n              Mark const mark_max_;\n            };"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "NodeMarker",
+        "extends": "NodeMarkerBase",
+        "implements": [],
+        "about": "A templatized NodeMarker that assigns a local state to every node of a graph in constant memory.",
+        "attributes": [],
+        "dependencies": [
+          "NodeMarkerBase",
+          "TFGraph",
+          "Node"
+        ]
+      },
+      "code": "template <typename State>\n            class NodeMarker : public NodeMarkerBase {\n            public:\n              V8_INLINE NodeMarker(TFGraph* graph, uint32_t num_states)\n                  : NodeMarkerBase(graph, num_states) {}\n\n              V8_INLINE State Get(const Node* node) {\n                return static_cast<State>(NodeMarkerBase::Get(node));\n              }\n\n              V8_INLINE void Set(Node* node, State state) {\n                NodeMarkerBase::Set(node, static_cast<Mark>(state));\n              }\n            };"
+    }
+  ],
+  "dependencies": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "TFGraph",
+        "about": "Represents the graph structure being compiled. Forward declared."
+      },
+      "code": "class TFGraph;",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "Node",
+        "about": "Represents a node in the graph being compiled.  Part of the v8::internal::compiler namespace and defined in node.h"
+      },
+      "code": "class Node {\n                    public:\n                        uint32_t mark() const;\n                        void set_mark(uint32_t mark);\n                };",
+      "type": "class"
+    }
+  ],
+  "file_path": "/home/kathirks_gc/v8_go/archive/codebase/src/compiler/node-marker.h"
+}

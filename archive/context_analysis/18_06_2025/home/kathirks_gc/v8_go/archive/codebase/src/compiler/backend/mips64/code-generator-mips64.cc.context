@@ -1,0 +1,228 @@
+{
+  "metadata": {
+    "path": "/home/kathirks_gc/v8_go/archive/codebase/src/compiler/backend/mips64/code-generator-mips64.cc",
+    "file_name": "code-generator-mips64.cc",
+    "language": "cpp",
+    "purpose": "This file implements the CodeGenerator backend for the MIPS64 architecture, responsible for translating the optimized IR into MIPS64 assembly code."
+  },
+  "imports": {
+    "metadata": {
+      "language": "cpp",
+      "purpose": "Include necessary headers for code generation, assembler, and compiler functionalities."
+    },
+    "code": "#include \"src/codegen/assembler-inl.h\"\n#include \"src/codegen/callable.h\"\n#include \"src/codegen/machine-type.h\"\n#include \"src/codegen/macro-assembler.h\"\n#include \"src/codegen/mips64/constants-mips64.h\"\n#include \"src/codegen/optimized-compilation-info.h\"\n#include \"src/compiler/backend/code-generator-impl.h\"\n#include \"src/compiler/backend/code-generator.h\"\n#include \"src/compiler/backend/gap-resolver.h\"\n#include \"src/compiler/node-matchers.h\"\n#include \"src/compiler/osr.h\"\n#include \"src/heap/mutable-page-metadata.h\""
+  },
+  "functions": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "function",
+        "name": "FlagsConditionToConditionCmp",
+        "about": "Converts a FlagsCondition enum value to a MIPS64 condition code suitable for comparison instructions.",
+        "logic": "Maps the kEqual, kNotEqual, kSignedLessThan, kSignedGreaterThanOrEqual, kSignedLessThanOrEqual, kSignedGreaterThan, kUnsignedLessThan, kUnsignedGreaterThanOrEqual, kUnsignedLessThanOrEqual, and kUnsignedGreaterThan FlagsCondition values to their corresponding MIPS64 condition codes (eq, ne, lt, ge, le, gt, lo, hs, ls, hi).",
+        "parameters": [
+          {
+            "name": "condition",
+            "type": "FlagsCondition",
+            "purpose": "The FlagsCondition to convert."
+          }
+        ],
+        "return": {
+          "type": "Condition",
+          "description": "The corresponding MIPS64 condition code."
+        },
+        "dependencies": []
+      },
+      "code": "Condition FlagsConditionToConditionCmp(FlagsCondition condition) {\n  switch (condition) {\n    case kEqual:\n      return eq;\n    case kNotEqual:\n      return ne;\n    case kSignedLessThan:\n      return lt;\n    case kSignedGreaterThanOrEqual:\n      return ge;\n    case kSignedLessThanOrEqual:\n      return le;\n    case kSignedGreaterThan:\n      return gt;\n    case kUnsignedLessThan:\n      return lo;\n    case kUnsignedGreaterThanOrEqual:\n      return hs;\n    case kUnsignedLessThanOrEqual:\n      return ls;\n    case kUnsignedGreaterThan:\n      return hi;\n    case kUnorderedEqual:\n    case kUnorderedNotEqual:\n      break;\n    default:\n      break;\n  }\n  UNREACHABLE();\n}"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "function",
+        "name": "FlagsConditionToConditionTst",
+        "about": "Converts a FlagsCondition enum value to a MIPS64 condition code suitable for test instructions.",
+        "logic": "Maps the kNotEqual and kEqual FlagsCondition values to their corresponding MIPS64 condition codes (ne, eq).",
+        "parameters": [
+          {
+            "name": "condition",
+            "type": "FlagsCondition",
+            "purpose": "The FlagsCondition to convert."
+          }
+        ],
+        "return": {
+          "type": "Condition",
+          "description": "The corresponding MIPS64 condition code."
+        },
+        "dependencies": []
+      },
+      "code": "Condition FlagsConditionToConditionTst(FlagsCondition condition) {\n  switch (condition) {\n    case kNotEqual:\n      return ne;\n    case kEqual:\n      return eq;\n    default:\n      break;\n  }\n  UNREACHABLE();\n}"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "function",
+        "name": "FlagsConditionToConditionOvf",
+        "about": "Converts a FlagsCondition enum value to a MIPS64 condition code suitable for overflow instructions.",
+        "logic": "Maps the kOverflow and kNotOverflow FlagsCondition values to their corresponding MIPS64 condition codes (ne, eq).",
+        "parameters": [
+          {
+            "name": "condition",
+            "type": "FlagsCondition",
+            "purpose": "The FlagsCondition to convert."
+          }
+        ],
+        "return": {
+          "type": "Condition",
+          "description": "The corresponding MIPS64 condition code."
+        },
+        "dependencies": []
+      },
+      "code": "Condition FlagsConditionToConditionOvf(FlagsCondition condition) {\n  switch (condition) {\n    case kOverflow:\n      return ne;\n    case kNotOverflow:\n      return eq;\n    default:\n      break;\n  }\n  UNREACHABLE();\n}"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "function",
+        "name": "FlagsConditionToConditionCmpFPU",
+        "about": "Converts a FlagsCondition enum value to a MIPS64 FPU condition code for floating-point comparisons.",
+        "logic": "Maps FlagsCondition to FPUCondition for compares, setting predicate flag based on the specific conditions. Handles ordered and unordered comparisons.",
+        "parameters": [
+          {
+            "name": "predicate",
+            "type": "bool*",
+            "purpose": "Pointer to store the predicate value."
+          },
+          {
+            "name": "condition",
+            "type": "FlagsCondition",
+            "purpose": "The FlagsCondition to convert."
+          }
+        ],
+        "return": {
+          "type": "FPUCondition",
+          "description": "The corresponding MIPS64 FPU condition code."
+        },
+        "dependencies": []
+      },
+      "code": "FPUCondition FlagsConditionToConditionCmpFPU(bool* predicate,\n                                             FlagsCondition condition) {\n  switch (condition) {\n    case kEqual:\n      *predicate = true;\n      return EQ;\n    case kNotEqual:\n      *predicate = false;\n      return EQ;\n    case kUnsignedLessThan:\n    case kFloatLessThan:\n      *predicate = true;\n      return OLT;\n    case kUnsignedGreaterThanOrEqual:\n      *predicate = false;\n      return OLT;\n    case kUnsignedLessThanOrEqual:\n    case kFloatLessThanOrEqual:\n      *predicate = true;\n      return OLE;\n    case kUnsignedGreaterThan:\n      *predicate = false;\n      return OLE;\n    case kFloatGreaterThan:\n      *predicate = false;\n      return ULE;\n    case kFloatGreaterThanOrEqual:\n      *predicate = false;\n      return ULT;\n    case kFloatLessThanOrUnordered:\n      *predicate = true;\n      return ULT;\n    case kFloatGreaterThanOrUnordered:\n      *predicate = false;\n      return OLE;\n    case kFloatGreaterThanOrEqualOrUnordered:\n      *predicate = false;\n      return OLT;\n    case kFloatLessThanOrEqualOrUnordered:\n      *predicate = true;\n      return ULE;\n    case kUnorderedEqual:\n    case kUnorderedNotEqual:\n      *predicate = true;\n      break;\n    default:\n      *predicate = true;\n      break;\n  }\n  UNREACHABLE();\n}"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "function",
+        "name": "AdjustStackPointerForTailCall",
+        "about": "Adjusts the stack pointer for tail calls by calculating and applying the necessary delta.",
+        "logic": "Calculates the difference between the desired stack slot above the stack pointer and the current offset. If the delta is positive, subtracts from the stack pointer; if negative, adds to it, effectively growing or shrinking the stack.",
+        "parameters": [
+          {
+            "name": "masm",
+            "type": "MacroAssembler*",
+            "purpose": "The macro assembler."
+          },
+          {
+            "name": "state",
+            "type": "FrameAccessState*",
+            "purpose": "The current frame access state."
+          },
+          {
+            "name": "new_slot_above_sp",
+            "type": "int",
+            "purpose": "The new slot offset above the stack pointer."
+          },
+          {
+            "name": "allow_shrinkage",
+            "type": "bool",
+            "purpose": "Whether stack shrinkage is allowed."
+          }
+        ],
+        "return": {
+          "type": "void",
+          "description": "No return value."
+        },
+        "dependencies": []
+      },
+      "code": "void AdjustStackPointerForTailCall(MacroAssembler* masm,\n                                   FrameAccessState* state,\n                                   int new_slot_above_sp,\n                                   bool allow_shrinkage = true) {\n  int current_sp_offset = state->GetSPToFPSlotCount() +\n                          StandardFrameConstants::kFixedSlotCountAboveFp;\n  int stack_slot_delta = new_slot_above_sp - current_sp_offset;\n  if (stack_slot_delta > 0) {\n    masm->Dsubu(sp, sp, stack_slot_delta * kSystemPointerSize);\n    state->IncreaseSPDelta(stack_slot_delta);\n  } else if (allow_shrinkage && stack_slot_delta < 0) {\n    masm->Daddu(sp, sp, -stack_slot_delta * kSystemPointerSize);\n    state->IncreaseSPDelta(stack_slot_delta);\n  }\n}"
+    }
+  ],
+  "classes": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "MipsOperandConverter",
+        "about": "Adds Mips-specific methods to convert InstructionOperands.",
+        "attributes": [],
+        "dependencies": [
+          "InstructionOperandConverter"
+        ]
+      },
+      "code": "// Adds Mips-specific methods to convert InstructionOperands.\nclass MipsOperandConverter final : public InstructionOperandConverter {\n public:\n  MipsOperandConverter(CodeGenerator* gen, Instruction* instr)\n      : InstructionOperandConverter(gen, instr) {}\n\n  FloatRegister OutputSingleRegister(size_t index = 0) {\n    return ToSingleRegister(instr_->OutputAt(index));\n  }\n\n  FloatRegister InputSingleRegister(size_t index) {\n    return ToSingleRegister(instr_->InputAt(index));\n  }\n\n  FloatRegister ToSingleRegister(InstructionOperand* op) {\n    // Single (Float) and Double register namespace is same on MIPS,\n    // both are typedefs of FPURegister.\n    return ToDoubleRegister(op);\n  }\n\n  Register InputOrZeroRegister(size_t index) {\n    if (instr_->InputAt(index)->IsImmediate()) {\n      DCHECK_EQ(0, InputInt32(index));\n      return zero_reg;\n    }\n    return InputRegister(index);\n  }\n\n  DoubleRegister InputOrZeroDoubleRegister(size_t index) {\n    if (instr_->InputAt(index)->IsImmediate()) return kDoubleRegZero;\n\n    return InputDoubleRegister(index);\n  }\n\n  DoubleRegister InputOrZeroSingleRegister(size_t index) {\n    if (instr_->InputAt(index)->IsImmediate()) return kDoubleRegZero;\n\n    return InputSingleRegister(index);\n  }\n\n  Operand InputImmediate(size_t index) {\n    Constant constant = ToConstant(instr_->InputAt(index));\n    switch (constant.type()) {\n      case Constant::kInt32:\n        return Operand(constant.ToInt32());\n      case Constant::kInt64:\n        return Operand(constant.ToInt64());\n      case Constant::kFloat32:\n        return Operand::EmbeddedNumber(constant.ToFloat32());\n      case Constant::kFloat64:\n        return Operand::EmbeddedNumber(constant.ToFloat64().value());\n      case Constant::kExternalReference:\n      case Constant::kCompressedHeapObject:\n      case Constant::kHeapObject:\n        // TODO(plind): Maybe we should handle ExtRef & HeapObj here?\n        //    maybe not done on arm due to const pool ??\n        break;\n      case Constant::kRpoNumber:\n        UNREACHABLE();  // TODO(titzer): RPO immediates on mips?\n    }\n    UNREACHABLE();\n  }\n\n  Operand InputOperand(size_t index) {\n    InstructionOperand* op = instr_->InputAt(index);\n    if (op->IsRegister()) {\n      return Operand(ToRegister(op));\n    }\n    return InputImmediate(index);\n  }\n\n  MemOperand MemoryOperand(size_t* first_index) {\n    const size_t index = *first_index;\n    switch (AddressingModeField::decode(instr_->opcode())) {\n      case kMode_None:\n        break;\n      case kMode_Root:\n        *first_index += 1;\n        return MemOperand(kRootRegister, InputInt32(index));\n      case kMode_MRI:\n        *first_index += 2;\n        return MemOperand(InputRegister(index + 0), InputInt32(index + 1));\n      case kMode_MRR:\n        // TODO(plind): r6 address mode, to be implemented ...\n        UNREACHABLE();\n    }\n    UNREACHABLE();\n  }\n\n  MemOperand MemoryOperand(size_t index = 0) { return MemoryOperand(&index); }\n\n  MemOperand ToMemOperand(InstructionOperand* op) const {\n    DCHECK_NOT_NULL(op);\n    DCHECK(op->IsStackSlot() || op->IsFPStackSlot());\n    return SlotToMemOperand(AllocatedOperand::cast(op)->index());\n  }\n\n  MemOperand SlotToMemOperand(int slot) const {\n    FrameOffset offset = frame_access_state()->GetFrameOffset(slot);\n    return MemOperand(offset.from_stack_pointer() ? sp : fp, offset.offset());\n  }\n};"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "OutOfLineRecordWrite",
+        "about": "Generates out-of-line code for record write operations, including write barriers.",
+        "attributes": [],
+        "dependencies": [
+          "OutOfLineCode"
+        ]
+      },
+      "code": "class OutOfLineRecordWrite final : public OutOfLineCode {\n public:\n  OutOfLineRecordWrite(CodeGenerator* gen, Register object, Register index,\n                       Register value, Register scratch0, Register scratch1,\n                       RecordWriteMode mode, StubCallMode stub_mode)\n      : OutOfLineCode(gen),\n        object_(object),\n        index_(index),\n        value_(value),\n        scratch0_(scratch0),\n        scratch1_(scratch1),\n        mode_(mode),\n#if V8_ENABLE_WEBASSEMBLY\n        stub_mode_(stub_mode),\n#endif  // V8_ENABLE_WEBASSEMBLY\n        must_save_lr_(!gen->frame_access_state()->has_frame()),\n        zone_(gen->zone()) {\n    DCHECK(!AreAliased(object, index, scratch0, scratch1));\n    DCHECK(!AreAliased(value, index, scratch0, scratch1));\n  }\n\n  void Generate() final {\n    __ CheckPageFlag(value_, scratch0_,\n                     MemoryChunk::kPointersToHereAreInterestingMask, eq,\n                     exit());\n    __ Daddu(scratch1_, object_, index_);\n    SaveFPRegsMode const save_fp_mode = frame()->DidAllocateDoubleRegisters()\n                                            ? SaveFPRegsMode::kSave\n                                            : SaveFPRegsMode::kIgnore;\n    if (must_save_lr_) {\n      // We need to save and restore ra if the frame was elided.\n      __ Push(ra);\n    }\n    if (mode_ == RecordWriteMode::kValueIsEphemeronKey) {\n      __ CallEphemeronKeyBarrier(object_, scratch1_, save_fp_mode);\n#if V8_ENABLE_WEBASSEMBLY\n    } else if (stub_mode_ == StubCallMode::kCallWasmRuntimeStub) {\n      // A direct call to a wasm runtime stub defined in this module.\n      // Just encode the stub index. This will be patched when the code\n      // is added to the native module and copied into wasm code space.\n      __ CallRecordWriteStubSaveRegisters(object_, scratch1_, save_fp_mode,\n                                          StubCallMode::kCallWasmRuntimeStub);\n#endif  // V8_ENABLE_WEBASSEMBLY\n    } else {\n      __ CallRecordWriteStubSaveRegisters(object_, scratch1_, save_fp_mode);\n    }\n    if (must_save_lr_) {\n      __ Pop(ra);\n    }\n  }\n\n private:\n  Register const object_;\n  Register const index_;\n  Register const value_;\n  Register const scratch0_;\n  Register const scratch1_;\n  RecordWriteMode const mode_;\n#if V8_ENABLE_WEBASSEMBLY\n  StubCallMode const stub_mode_;\n#endif  // V8_ENABLE_WEBASSEMBLY\n  bool must_save_lr_;\n  Zone* zone_;\n};"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "OutOfLineFloat32Max",
+        "about": "Generates out-of-line code for Float32Max operation.",
+        "attributes": [],
+        "dependencies": [
+          "OutOfLineCode"
+        ]
+      },
+      "code": "CREATE_OOL_CLASS(OutOfLineFloat32Max, Float32MaxOutOfLine, FPURegister);"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "OutOfLineFloat32Min",
+        "about": "Generates out-of-line code for Float32Min operation.",
+        "attributes": [],
+        "dependencies": [
+          "OutOfLineCode"
+        ]
+      },
+      "code": "CREATE_OOL_CLASS(OutOfLineFloat32Min, Float32MinOutOfLine, FPURegister);"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "OutOfLineFloat64Max",
+        "about": "Generates out-of-line code for Float64Max operation.",
+        "attributes": [],
+        "dependencies": [
+          "OutOfLineCode"
+        ]
+      },
+      "code": "CREATE_OOL_CLASS(OutOfLineFloat64Max, Float64MaxOutOfLine, FPURegister);"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "OutOfLineFloat64Min",
+        "about": "Generates out-of-line code for Float64Min operation.",
+        "attributes": [],
+        "dependencies": [
+          "OutOfLineCode"
+        ]
+      },
+      "code": "CREATE_OOL_CLASS(OutOfLineFloat64Min, Float64MinOutOfLine, FPURegister);"
+    }
+  ],
+  "file_path": "/home/kathirks_gc/v8_go/archive/codebase/src/compiler/backend/mips64/code-generator-mips64.cc"
+}

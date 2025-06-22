@@ -1,0 +1,200 @@
+{
+  "metadata": {
+    "path": "/home/kathirks_gc/v8_go/archive/codebase/include/cppgc/trace-trait.h",
+    "file_name": "trace-trait.h",
+    "language": "cpp",
+    "purpose": "Defines traits and structures for tracing objects within the cppgc garbage collector.  It enables the garbage collector to identify and traverse object graphs."
+  },
+  "imports": {
+    "metadata": {
+      "language": "cpp",
+      "purpose": "Includes V8 configuration settings. Note the NOLINT comment suppresses a style check."
+    },
+    "code": "#include \"v8config.h\"  // NOLINT(build/include_directory)"
+  },
+  "classes": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "Visitor",
+        "about": "Forward declaration of the Visitor class, used for traversing the object graph.",
+        "dependencies": []
+      },
+      "code": "class Visitor;"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "internal::RootVisitor",
+        "about": "Forward declaration of the RootVisitor class, used for traversing root objects.",
+        "dependencies": []
+      },
+      "code": "namespace internal {\n\n            class RootVisitor;"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "internal::TraceTraitImpl",
+        "about": "Implementation detail for the default TraceTrait.  It handles GarbageCollected and GarbageCollectedMixin types differently using SFINAE.",
+        "dependencies": [],
+        "template_parameters": [
+          {
+            "name": "T",
+            "purpose": "The type being traced."
+          },
+          {
+            "name": "bool",
+            "purpose": "A boolean flag indicating whether T is a GarbageCollectedMixin type, determined by IsGarbageCollectedMixinTypeV."
+          }
+        ]
+      },
+      "code": "template <typename T,\n                    bool =\n                        IsGarbageCollectedMixinTypeV<typename std::remove_const<T>::type>>\n            struct TraceTraitImpl;\n\n            }  // namespace internal"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "struct",
+        "name": "TraceDescriptor",
+        "about": "Describes how to trace an object, holding the base object pointer and the tracing callback.",
+        "attributes": [
+          {
+            "name": "base_object_payload",
+            "type": "const void*",
+            "access": "public",
+            "purpose": "Adjusted base pointer to the class inheriting from GarbageCollected."
+          },
+          {
+            "name": "callback",
+            "type": "TraceCallback",
+            "access": "public",
+            "purpose": "Callback function for tracing the object."
+          }
+        ],
+        "dependencies": [
+          "TraceCallback"
+        ]
+      },
+      "code": "struct TraceDescriptor {\n            /**\n            * Adjusted base pointer, i.e., the pointer to the class inheriting directly\n            * from GarbageCollected, of the object that is being traced.\n            */\n            const void* base_object_payload;\n            /**\n            * Callback for tracing the object.\n            */\n            TraceCallback callback;\n            };"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "struct",
+        "name": "internal::TraceTraitFromInnerAddressImpl",
+        "about": "Provides a static method to get a TraceDescriptor from an inner address.  Used for GarbageCollectedMixin.",
+        "dependencies": [
+          "TraceDescriptor"
+        ]
+      },
+      "code": "struct V8_EXPORT TraceTraitFromInnerAddressImpl {\n            static TraceDescriptor GetTraceDescriptor(const void* address);\n            };"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "struct",
+        "name": "internal::TraceTraitBase",
+        "about": "Base trait for specifying how to garbage collect an object of type T. It requires T to have a Trace() method.",
+        "dependencies": [
+          "TraceDescriptor",
+          "TraceTrait",
+          "Visitor",
+          "internal::TraceTraitImpl"
+        ],
+        "template_parameters": [
+          {
+            "name": "T",
+            "purpose": "The type being traced."
+          }
+        ]
+      },
+      "code": "template <typename T>\n            struct TraceTraitBase {\n            static_assert(internal::IsTraceableV<T>, \"T must have a Trace() method\");\n\n            /**\n            * Accessor for retrieving a TraceDescriptor to process an object of type T.\n            *\n            * \\param self The object to be processed.\n            * \\returns a TraceDescriptor to process the object.\n            */\n            static TraceDescriptor GetTraceDescriptor(const void* self) {\n                return internal::TraceTraitImpl<T>::GetTraceDescriptor(\n                    static_cast<const T*>(self));\n            }\n\n            /**\n            * Function invoking the tracing for an object of type T.\n            *\n            * \\param visitor The visitor to dispatch to.\n            * \\param self The object to invoke tracing on.\n            */\n            static void Trace(Visitor* visitor, const void* self) {\n                static_cast<const T*>(self)->Trace(visitor);\n            }\n            };"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "struct",
+        "name": "TraceTrait",
+        "about": "Public interface for the TraceTrait, inheriting from the internal base trait.",
+        "dependencies": [
+          "internal::TraceTraitBase"
+        ],
+        "template_parameters": [
+          {
+            "name": "T",
+            "purpose": "The type being traced."
+          }
+        ]
+      },
+      "code": "template <typename T>\n            struct TraceTrait : public internal::TraceTraitBase<T> {};"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "struct",
+        "name": "internal::TraceTraitImpl",
+        "about": "Specialization of TraceTraitImpl for different types.  One specialization handles GarbageCollected types, another handles GarbageCollectedMixin types.",
+        "dependencies": [
+          "TraceDescriptor",
+          "TraceTrait",
+          "internal::TraceTraitFromInnerAddressImpl"
+        ],
+        "template_parameters": [
+          {
+            "name": "T",
+            "purpose": "The type being traced."
+          },
+          {
+            "name": "bool",
+            "purpose": "A boolean flag indicating whether T is a GarbageCollectedMixin type."
+          }
+        ]
+      },
+      "code": "template <typename T>\n            struct TraceTraitImpl<T, false> {\n            static_assert(IsGarbageCollectedTypeV<T>,\n                            \"T must be of type GarbageCollected or GarbageCollectedMixin\");\n            static TraceDescriptor GetTraceDescriptor(const void* self) {\n                return {self, TraceTrait<T>::Trace};\n            }\n            };\n\n            template <typename T>\n            struct TraceTraitImpl<T, true> {\n            static TraceDescriptor GetTraceDescriptor(const void* self) {\n                return internal::TraceTraitFromInnerAddressImpl::GetTraceDescriptor(self);\n            }\n            };\n\n            }  // namespace internal\n            }  // namespace cppgc"
+    }
+  ],
+  "interfaces": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "interface",
+        "name": "internal::TraceRootCallback",
+        "about": "Defines a function pointer type for tracing root objects.",
+        "methods": [],
+        "dependencies": [
+          "internal::RootVisitor"
+        ]
+      },
+      "code": "using TraceRootCallback = void (*)(RootVisitor&, const void* object);"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "interface",
+        "name": "TraceCallback",
+        "about": "Defines a function pointer type for tracing objects.",
+        "methods": [],
+        "dependencies": [
+          "Visitor"
+        ]
+      },
+      "code": "using TraceCallback = void (*)(Visitor* visitor, const void* object);"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "interface",
+        "name": "TraceDescriptorCallback",
+        "about": "Defines a function pointer type for getting a TraceDescriptor from an address.",
+        "methods": [],
+        "dependencies": [
+          "TraceDescriptor"
+        ]
+      },
+      "code": "using TraceDescriptorCallback = TraceDescriptor (*)(const void* address);"
+    }
+  ],
+  "file_path": "/home/kathirks_gc/v8_go/archive/codebase/include/cppgc/trace-trait.h"
+}

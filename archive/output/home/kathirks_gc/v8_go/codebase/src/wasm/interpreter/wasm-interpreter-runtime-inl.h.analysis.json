@@ -1,0 +1,213 @@
+{
+  "file_path": "/home/kathirks_gc/v8_go/codebase/src/wasm/interpreter/wasm-interpreter-runtime-inl.h",
+  "imports": [
+    "src/execution/arguments-inl.h",
+    "src/objects/objects-inl.h",
+    "src/wasm/interpreter/wasm-interpreter-inl.h",
+    "src/wasm/interpreter/wasm-interpreter-runtime.h",
+    "src/wasm/wasm-objects.h"
+  ],
+  "classes": [
+    {
+      "name": "WasmInterpreterRuntime",
+      "properties": [
+        "memory_start_",
+        "global_addresses_",
+        "module_",
+        "instance_object_",
+        "isolate_",
+        "codemap_",
+        "current_frame_",
+        "current_thread_",
+        "fuzzer_start_time_"
+      ],
+      "methods": [
+        {
+          "name": "EffectiveAddress",
+          "parameters": [
+            "uint64_t index"
+          ],
+          "return_type": "Address",
+          "logic": "Computes the effective address of a memory access, given an index. It retrieves the memory start address and ensures the index is within bounds before calculating the final address."
+        },
+        {
+          "name": "BoundsCheckMemRange",
+          "parameters": [
+            "uint64_t index",
+            "uint64_t* size",
+            "Address* out_address"
+          ],
+          "return_type": "bool",
+          "logic": "Performs bounds checking for a memory access range. It clamps the size of the access to ensure it doesn't exceed the available memory. If the access is valid, it computes the effective address and returns true; otherwise, it returns false."
+        },
+        {
+          "name": "GetGlobalAddress",
+          "parameters": [
+            "uint32_t index"
+          ],
+          "return_type": "uint8_t*",
+          "logic": "Retrieves the address of a global variable given its index."
+        },
+        {
+          "name": "GetGlobalRef",
+          "parameters": [
+            "uint32_t index"
+          ],
+          "return_type": "DirectHandle<Object>",
+          "logic": "Retrieves a DirectHandle to a global reference variable given its index."
+        },
+        {
+          "name": "SetGlobalRef",
+          "parameters": [
+            "uint32_t index",
+            "DirectHandle<Object> ref"
+          ],
+          "return_type": "void",
+          "logic": "Sets a global reference variable given its index and a DirectHandle to the new value."
+        },
+        {
+          "name": "InitMemoryAddresses",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Initializes the memory_start_ property with the address of the start of the WebAssembly memory."
+        },
+        {
+          "name": "MemorySize",
+          "parameters": [],
+          "return_type": "uint64_t",
+          "logic": "Returns the size of the WebAssembly memory in pages."
+        },
+        {
+          "name": "IsMemory64",
+          "parameters": [],
+          "return_type": "bool",
+          "logic": "Checks if the memory is memory64."
+        },
+        {
+          "name": "GetMemorySize",
+          "parameters": [],
+          "return_type": "size_t",
+          "logic": "Returns the size of the WebAssembly memory in bytes."
+        },
+        {
+          "name": "DataDrop",
+          "parameters": [
+            "uint32_t index"
+          ],
+          "return_type": "void",
+          "logic": "Marks a data segment as dropped by setting its size to 0."
+        },
+        {
+          "name": "ElemDrop",
+          "parameters": [
+            "uint32_t index"
+          ],
+          "return_type": "void",
+          "logic": "Marks an element segment as dropped by setting its contents to an empty fixed array."
+        },
+        {
+          "name": "GetFunctionBytecode",
+          "parameters": [
+            "uint32_t func_index"
+          ],
+          "return_type": "WasmBytecode*",
+          "logic": "Retrieves the bytecode for a given WebAssembly function index."
+        },
+        {
+          "name": "IsNullTypecheck",
+          "parameters": [
+            "const WasmRef obj",
+            "const ValueType obj_type"
+          ],
+          "return_type": "bool",
+          "logic": "Checks if a WebAssembly reference is null, considering its type."
+        },
+        {
+          "name": "GetNullValue",
+          "parameters": [
+            "const ValueType obj_type"
+          ],
+          "return_type": "Tagged<Object>",
+          "logic": "Returns the null value appropriate for a given WebAssembly value type."
+        },
+        {
+          "name": "IsNull",
+          "parameters": [
+            "Isolate* isolate",
+            "const WasmRef obj",
+            "const ValueType obj_type"
+          ],
+          "return_type": "bool",
+          "logic": "Checks if a WebAssembly reference is null based on object and type."
+        },
+        {
+          "name": "IsRefNull",
+          "parameters": [
+            "DirectHandle<Object> object"
+          ],
+          "return_type": "bool",
+          "logic": "Checks if a given DirectHandle<Object> is a null reference or a WasmNull object."
+        },
+        {
+          "name": "GetFunctionRef",
+          "parameters": [
+            "uint32_t index"
+          ],
+          "return_type": "DirectHandle<Object>",
+          "logic": "Retrieves a DirectHandle to a function reference object, creating it if it doesn't already exist."
+        },
+        {
+          "name": "GetArrayType",
+          "parameters": [
+            "uint32_t array_index"
+          ],
+          "return_type": "const ArrayType*",
+          "logic": "Retrieves a ArrayType from module's array types vector."
+        },
+        {
+          "name": "GetWasmArrayRefElement",
+          "parameters": [
+            "Tagged<WasmArray> array",
+            "uint32_t index"
+          ],
+          "return_type": "DirectHandle<Object>",
+          "logic": "Retrieves an element from the WasmArray at the given index."
+        },
+        {
+          "name": "WasmStackCheck",
+          "parameters": [
+            "const uint8_t* current_bytecode",
+            "const uint8_t*& code"
+          ],
+          "return_type": "bool",
+          "logic": "Performs stack checks and handles interrupts during WebAssembly execution. It checks for stack overflows, termination requests, and drumbrake fuzzer timeout."
+        },
+        {
+          "name": "wasm_trusted_instance_data",
+          "parameters": [],
+          "return_type": "DirectHandle<WasmTrustedInstanceData>",
+          "logic": "Returns a DirectHandle to the WasmTrustedInstanceData associated with the current WebAssembly instance."
+        }
+      ]
+    },
+    {
+      "name": "InterpreterHandle",
+      "properties": [
+        "interpreter_"
+      ],
+      "methods": [
+        {
+          "name": "ContinueExecution",
+          "parameters": [
+            "WasmInterpreterThread* thread",
+            "bool called_from_js"
+          ],
+          "return_type": "WasmInterpreterThread::State",
+          "logic": "Delegates the execution continuation to the WasmInterpreter object."
+        }
+      ]
+    }
+  ],
+  "functions": [],
+  "enums": []
+}

@@ -1,0 +1,251 @@
+{
+  "file_path": "/home/kathirks_gc/v8_go/codebase/src/compiler/int64-lowering.cc",
+  "imports": [
+    "src/compiler/int64-lowering.h",
+    "src/compiler/common-operator.h",
+    "src/compiler/diamond.h",
+    "src/compiler/linkage.h",
+    "src/compiler/machine-operator.h",
+    "src/compiler/node-matchers.h",
+    "src/compiler/node-properties.h",
+    "src/compiler/node.h",
+    "src/compiler/turbofan-graph.h",
+    "src/compiler/wasm-call-descriptors.h",
+    "src/compiler/wasm-compiler.h",
+    "src/wasm/wasm-engine.h",
+    "src/wasm/wasm-linkage.h",
+    "src/wasm/wasm-subtyping.h",
+    "src/zone/zone.h"
+  ],
+  "classes": [
+    {
+      "name": "Int64Lowering",
+      "properties": [
+        "graph_",
+        "machine_",
+        "common_",
+        "simplified_",
+        "zone_",
+        "signature_",
+        "state_",
+        "stack_",
+        "replacements_",
+        "placeholder_"
+      ],
+      "methods": [
+        {
+          "name": "Int64Lowering",
+          "parameters": [
+            "TFGraph* graph",
+            "MachineOperatorBuilder* machine",
+            "CommonOperatorBuilder* common",
+            "SimplifiedOperatorBuilder* simplified",
+            "Zone* zone",
+            "Signature<MachineRepresentation>* signature"
+          ],
+          "return_type": "void",
+          "logic": "Constructor for the Int64Lowering class. Initializes the member variables."
+        },
+        {
+          "name": "LowerGraph",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Lower the graph by traversing nodes and applying lowering transformations based on opcode and representation. Uses a stack to process nodes in topological order."
+        },
+        {
+          "name": "LowerWord64AtomicBinop",
+          "parameters": [
+            "Node* node",
+            "const Operator* op"
+          ],
+          "return_type": "void",
+          "logic": "Lowers a 64-bit atomic binary operation by splitting the 64-bit value into two 32-bit parts and replacing the original node with an appropriate 32-bit atomic pair operation."
+        },
+        {
+          "name": "LowerWord64AtomicNarrowOp",
+          "parameters": [
+            "Node* node",
+            "const Operator* op"
+          ],
+          "return_type": "void",
+          "logic": "Lowers a 64-bit atomic narrow operation."
+        },
+        {
+          "name": "GetParameterCountAfterLowering",
+          "parameters": [
+            "Signature<MachineRepresentation>* signature"
+          ],
+          "return_type": "int",
+          "logic": "Calculates the number of parameters after lowering based on the provided signature."
+        },
+        {
+          "name": "GetIndexNodes",
+          "parameters": [
+            "Node* index",
+            "Node** index_low",
+            "Node** index_high"
+          ],
+          "return_type": "void",
+          "logic": "Creates the low and high index nodes. Handles both little and big endian architectures."
+        },
+        {
+          "name": "LowerLoadOperator",
+          "parameters": [
+            "Node* node",
+            "MachineRepresentation rep",
+            "const Operator* load_op"
+          ],
+          "return_type": "void",
+          "logic": "Lowers a load operator, splitting a 64-bit load into two 32-bit loads."
+        },
+        {
+          "name": "LowerStoreOperator",
+          "parameters": [
+            "Node* node",
+            "MachineRepresentation rep",
+            "const Operator* store_op"
+          ],
+          "return_type": "void",
+          "logic": "Lowers a store operator, splitting a 64-bit store into two 32-bit stores."
+        },
+        {
+          "name": "LowerNode",
+          "parameters": [
+            "Node* node"
+          ],
+          "return_type": "void",
+          "logic": "Lowers a specific node based on its opcode. Performs opcode-specific transformations to handle 64-bit values on a 32-bit architecture."
+        },
+        {
+          "name": "LowerComparison",
+          "parameters": [
+            "Node* node",
+            "const Operator* high_word_op",
+            "const Operator* low_word_op"
+          ],
+          "return_type": "void",
+          "logic": "Lowers a 64-bit comparison operator into a combination of 32-bit comparisons."
+        },
+        {
+          "name": "DefaultLowering",
+          "parameters": [
+            "Node* node",
+            "bool low_word_only"
+          ],
+          "return_type": "bool",
+          "logic": "Replaces 64-bit inputs of a node with their 32-bit low and (optionally) high parts."
+        },
+        {
+          "name": "LowerCallDescriptor",
+          "parameters": [
+            "const CallDescriptor* call_descriptor"
+          ],
+          "return_type": "const CallDescriptor*",
+          "logic": "Lowers a CallDescriptor to use i32 calling convention in WASM."
+        },
+        {
+          "name": "ReplaceNode",
+          "parameters": [
+            "Node* old",
+            "Node* new_low",
+            "Node* new_high"
+          ],
+          "return_type": "void",
+          "logic": "Replaces a node with two new nodes, representing the low and high 32-bit parts of a 64-bit value."
+        },
+        {
+          "name": "HasReplacementLow",
+          "parameters": [
+            "Node* node"
+          ],
+          "return_type": "bool",
+          "logic": "Checks if a low replacement node exists for a given node."
+        },
+        {
+          "name": "GetReplacementLow",
+          "parameters": [
+            "Node* node"
+          ],
+          "return_type": "Node*",
+          "logic": "Returns the low replacement node for a given node."
+        },
+        {
+          "name": "HasReplacementHigh",
+          "parameters": [
+            "Node* node"
+          ],
+          "return_type": "bool",
+          "logic": "Checks if a high replacement node exists for a given node."
+        },
+        {
+          "name": "GetReplacementHigh",
+          "parameters": [
+            "Node* node"
+          ],
+          "return_type": "Node*",
+          "logic": "Returns the high replacement node for a given node."
+        },
+        {
+          "name": "PreparePhiReplacement",
+          "parameters": [
+            "Node* phi"
+          ],
+          "return_type": "void",
+          "logic": "Prepares the replacements for a Phi node. This is required before lowering to break cycles in the graph. Sets the initial replacement nodes with placeholders."
+        },
+        {
+          "name": "ReplaceNodeWithProjections",
+          "parameters": [
+            "Node* node"
+          ],
+          "return_type": "void",
+          "logic": "Replaces a node with two projections, representing the low and high 32-bit parts of the result."
+        },
+        {
+          "name": "LowerMemoryBaseAndIndex",
+          "parameters": [
+            "Node* node"
+          ],
+          "return_type": "void",
+          "logic": "Replaces base and index of a memory node."
+        }
+      ]
+    }
+  ],
+  "functions": [
+    {
+      "name": "GetReturnIndexAfterLowering",
+      "parameters": [
+        "const CallDescriptor* call_descriptor",
+        "int old_index"
+      ],
+      "return_type": "int",
+      "logic": "Calculates the index of a return value after 64-bit lowering based on its original index and the call descriptor."
+    },
+    {
+      "name": "GetReturnCountAfterLowering",
+      "parameters": [
+        "const CallDescriptor* call_descriptor"
+      ],
+      "return_type": "int",
+      "logic": "Calculates the number of return values after lowering based on the call descriptor."
+    },
+    {
+      "name": "GetParameterIndexAfterLowering",
+      "parameters": [
+        "Signature<MachineRepresentation>* signature",
+        "int old_index"
+      ],
+      "return_type": "int",
+      "logic": "Calculates the index of a parameter after 64-bit lowering, based on its original index and the signature."
+    },
+    {
+      "name": "GetReturnCountAfterLowering",
+      "parameters": [
+        "Signature<MachineRepresentation>* signature"
+      ],
+      "return_type": "int",
+      "logic": "Calculates the return count after lowering."
+    }
+  ]
+}

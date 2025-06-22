@@ -1,0 +1,290 @@
+{
+  "metadata": {
+    "path": "/home/kathirks_gc/v8_go/archive/codebase/src/deoptimizer/arm64/deoptimizer-arm64.cc",
+    "file_name": "deoptimizer-arm64.cc",
+    "language": "cpp",
+    "purpose": "Provides ARM64-specific implementation details for the deoptimizer in V8 JavaScript engine."
+  },
+  "imports": {
+    "metadata": {
+      "language": "cpp",
+      "purpose": "Includes necessary headers for API, deoptimization, and pointer authentication functionalities within the V8 engine."
+    },
+    "code": "#include \"src/api/api.h\"\n#include \"src/deoptimizer/deoptimizer.h\"\n#include \"src/execution/pointer-authentication.h\""
+  },
+  "classes": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "Deoptimizer",
+        "about": "Defines constants related to the deoptimizer, such as exit sizes.",
+        "attributes": [
+          {
+            "name": "kEagerDeoptExitSize",
+            "type": "const int",
+            "access": "public",
+            "purpose": "Size of the eager deoptimization exit code."
+          },
+          {
+            "name": "kLazyDeoptExitSize",
+            "type": "const int",
+            "access": "public",
+            "purpose": "Size of the lazy deoptimization exit code."
+          },
+          {
+            "name": "kAdaptShadowStackOffsetToSubtract",
+            "type": "const int",
+            "access": "public",
+            "purpose": "Offset to subtract when adapting the shadow stack."
+          }
+        ],
+        "dependencies": []
+      },
+      "code": "const int Deoptimizer::kEagerDeoptExitSize = kInstrSize;\n#ifdef V8_ENABLE_CONTROL_FLOW_INTEGRITY\nconst int Deoptimizer::kLazyDeoptExitSize = 2 * kInstrSize;\n#else\nconst int Deoptimizer::kLazyDeoptExitSize = 1 * kInstrSize;\n#endif\n\nconst int Deoptimizer::kAdaptShadowStackOffsetToSubtract = 0;"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "RegisterValues",
+        "about": "Provides access to register values, specifically floating-point registers.",
+        "attributes": [],
+        "dependencies": []
+      },
+      "code": "Float32 RegisterValues::GetFloatRegister(unsigned n) const {\n  V8_ASSUME(n < arraysize(simd128_registers_));\n  return base::ReadUnalignedValue<Float32>(\n      reinterpret_cast<Address>(simd128_registers_ + n));\n}\n\nFloat64 RegisterValues::GetDoubleRegister(unsigned n) const {\n  V8_ASSUME(n < arraysize(simd128_registers_));\n  return base::ReadUnalignedValue<Float64>(\n      reinterpret_cast<Address>(simd128_registers_ + n));\n}\n\nvoid RegisterValues::SetDoubleRegister(unsigned n, Float64 value) {\n  V8_ASSUME(n < arraysize(simd128_registers_));\n  base::WriteUnalignedValue(reinterpret_cast<Address>(simd128_registers_ + n),\n                            value);\n}"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "FrameDescription",
+        "about": "Provides methods to set values within a frame description.",
+        "attributes": [],
+        "dependencies": []
+      },
+      "code": "void FrameDescription::SetCallerPc(unsigned offset, intptr_t value) {\n  Address new_context =\n      static_cast<Address>(GetTop()) + offset + kPCOnStackSize;\n  value = PointerAuthentication::SignAndCheckPC(isolate_, value, new_context);\n  SetFrameSlot(offset, value);\n}\n\nvoid FrameDescription::SetCallerFp(unsigned offset, intptr_t value) {\n  SetFrameSlot(offset, value);\n}\n\nvoid FrameDescription::SetCallerConstantPool(unsigned offset, intptr_t value) {\n  // No embedded constant pool support.\n  UNREACHABLE();\n}\n\nvoid FrameDescription::SetPc(intptr_t pc) {\n  // TODO(v8:10026): We need to sign pointers to the embedded blob, which are\n  // stored in the isolate and code range objects.\n  if (ENABLE_CONTROL_FLOW_INTEGRITY_BOOL) {\n    Deoptimizer::EnsureValidReturnAddress(isolate_,\n                                          PointerAuthentication::StripPAC(pc));\n  }\n  pc_ = pc;\n}"
+    }
+  ],
+  "functions": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "function",
+        "name": "PatchToJump",
+        "parent": "Deoptimizer",
+        "about": "Placeholder function for patching code to jump to a new address.  Currently unimplemented.",
+        "logic": "This function is expected to patch the code at the given address to jump to the new address, but it currently throws an UNREACHABLE error, meaning it's not yet implemented for ARM64.",
+        "parameters": [
+          {
+            "name": "pc",
+            "type": "Address",
+            "purpose": "The address of the code to patch."
+          },
+          {
+            "name": "new_pc",
+            "type": "Address",
+            "purpose": "The address to jump to."
+          }
+        ],
+        "return": {
+          "type": "void",
+          "description": "No return value. This function throws an error."
+        },
+        "dependencies": []
+      },
+      "code": "// static\nvoid Deoptimizer::PatchToJump(Address pc, Address new_pc) { UNREACHABLE(); }"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "method",
+        "name": "GetFloatRegister",
+        "parent": "RegisterValues",
+        "about": "Retrieves a Float32 value from the simd128_registers_ array at index n.",
+        "logic": "Reads an unaligned Float32 value from the simd128_registers_ array.",
+        "parameters": [
+          {
+            "name": "n",
+            "type": "unsigned",
+            "purpose": "The index of the register to retrieve."
+          }
+        ],
+        "return": {
+          "type": "Float32",
+          "description": "The floating-point value stored in the register."
+        },
+        "dependencies": []
+      },
+      "code": "Float32 RegisterValues::GetFloatRegister(unsigned n) const {\n  V8_ASSUME(n < arraysize(simd128_registers_));\n  return base::ReadUnalignedValue<Float32>(\n      reinterpret_cast<Address>(simd128_registers_ + n));\n}"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "method",
+        "name": "GetDoubleRegister",
+        "parent": "RegisterValues",
+        "about": "Retrieves a Float64 value from the simd128_registers_ array at index n.",
+        "logic": "Reads an unaligned Float64 value from the simd128_registers_ array.",
+        "parameters": [
+          {
+            "name": "n",
+            "type": "unsigned",
+            "purpose": "The index of the register to retrieve."
+          }
+        ],
+        "return": {
+          "type": "Float64",
+          "description": "The double-precision floating-point value stored in the register."
+        },
+        "dependencies": []
+      },
+      "code": "Float64 RegisterValues::GetDoubleRegister(unsigned n) const {\n  V8_ASSUME(n < arraysize(simd128_registers_));\n  return base::ReadUnalignedValue<Float64>(\n      reinterpret_cast<Address>(simd128_registers_ + n));\n}"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "method",
+        "name": "SetDoubleRegister",
+        "parent": "RegisterValues",
+        "about": "Sets a Float64 value in the simd128_registers_ array at index n.",
+        "logic": "Writes an unaligned Float64 value to the simd128_registers_ array.",
+        "parameters": [
+          {
+            "name": "n",
+            "type": "unsigned",
+            "purpose": "The index of the register to set."
+          },
+          {
+            "name": "value",
+            "type": "Float64",
+            "purpose": "The double-precision floating-point value to set."
+          }
+        ],
+        "return": {
+          "type": "void",
+          "description": "No return value."
+        },
+        "dependencies": []
+      },
+      "code": "void RegisterValues::SetDoubleRegister(unsigned n, Float64 value) {\n  V8_ASSUME(n < arraysize(simd128_registers_));\n  base::WriteUnalignedValue(reinterpret_cast<Address>(simd128_registers_ + n),\n                            value);\n}"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "method",
+        "name": "SetCallerPc",
+        "parent": "FrameDescription",
+        "about": "Sets the caller's program counter (PC) within the frame description, applying pointer authentication.",
+        "logic": "Calculates the address of the caller's PC on the stack, signs the PC using PointerAuthentication, and then sets the frame slot at the specified offset.",
+        "parameters": [
+          {
+            "name": "offset",
+            "type": "unsigned",
+            "purpose": "The offset within the frame to store the caller's PC."
+          },
+          {
+            "name": "value",
+            "type": "intptr_t",
+            "purpose": "The value of the caller's PC."
+          }
+        ],
+        "return": {
+          "type": "void",
+          "description": "No return value."
+        },
+        "dependencies": [
+          "PointerAuthentication",
+          "GetTop",
+          "SetFrameSlot"
+        ]
+      },
+      "code": "void FrameDescription::SetCallerPc(unsigned offset, intptr_t value) {\n  Address new_context =\n      static_cast<Address>(GetTop()) + offset + kPCOnStackSize;\n  value = PointerAuthentication::SignAndCheckPC(isolate_, value, new_context);\n  SetFrameSlot(offset, value);\n}"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "method",
+        "name": "SetCallerFp",
+        "parent": "FrameDescription",
+        "about": "Sets the caller's frame pointer (FP) within the frame description.",
+        "logic": "Sets the frame slot at the specified offset to the given value.",
+        "parameters": [
+          {
+            "name": "offset",
+            "type": "unsigned",
+            "purpose": "The offset within the frame to store the caller's FP."
+          },
+          {
+            "name": "value",
+            "type": "intptr_t",
+            "purpose": "The value of the caller's FP."
+          }
+        ],
+        "return": {
+          "type": "void",
+          "description": "No return value."
+        },
+        "dependencies": [
+          "SetFrameSlot"
+        ]
+      },
+      "code": "void FrameDescription::SetCallerFp(unsigned offset, intptr_t value) {\n  SetFrameSlot(offset, value);\n}"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "method",
+        "name": "SetCallerConstantPool",
+        "parent": "FrameDescription",
+        "about": "Attempts to set the caller's constant pool pointer within the frame description, but is unimplemented for ARM64.",
+        "logic": "Throws an UNREACHABLE error because embedded constant pools are not supported.",
+        "parameters": [
+          {
+            "name": "offset",
+            "type": "unsigned",
+            "purpose": "The offset within the frame where the constant pool pointer would be stored."
+          },
+          {
+            "name": "value",
+            "type": "intptr_t",
+            "purpose": "The value of the caller's constant pool pointer."
+          }
+        ],
+        "return": {
+          "type": "void",
+          "description": "No return value. This function throws an error."
+        },
+        "dependencies": []
+      },
+      "code": "void FrameDescription::SetCallerConstantPool(unsigned offset, intptr_t value) {\n  // No embedded constant pool support.\n  UNREACHABLE();\n}"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "method",
+        "name": "SetPc",
+        "parent": "FrameDescription",
+        "about": "Sets the program counter (PC) within the frame description, potentially applying pointer authentication.",
+        "logic": "Optionally strips pointer authentication codes (PAC) from the PC if control flow integrity is enabled and checks that the return address is valid, before assigning the PC value to the pc_ member.",
+        "parameters": [
+          {
+            "name": "pc",
+            "type": "intptr_t",
+            "purpose": "The value of the PC."
+          }
+        ],
+        "return": {
+          "type": "void",
+          "description": "No return value."
+        },
+        "dependencies": [
+          "Deoptimizer::EnsureValidReturnAddress",
+          "PointerAuthentication::StripPAC"
+        ]
+      },
+      "code": "void FrameDescription::SetPc(intptr_t pc) {\n  // TODO(v8:10026): We need to sign pointers to the embedded blob, which are\n  // stored in the isolate and code range objects.\n  if (ENABLE_CONTROL_FLOW_INTEGRITY_BOOL) {\n    Deoptimizer::EnsureValidReturnAddress(isolate_,\n                                          PointerAuthentication::StripPAC(pc));\n  }\n  pc_ = pc;\n}"
+    }
+  ],
+  "file_path": "/home/kathirks_gc/v8_go/archive/codebase/src/deoptimizer/arm64/deoptimizer-arm64.cc"
+}

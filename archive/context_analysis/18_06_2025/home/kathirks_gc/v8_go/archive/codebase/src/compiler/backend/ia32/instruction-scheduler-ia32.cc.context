@@ -1,0 +1,89 @@
+{
+  "metadata": {
+    "path": "/home/kathirks_gc/v8_go/archive/codebase/src/compiler/backend/ia32/instruction-scheduler-ia32.cc",
+    "file_name": "instruction-scheduler-ia32.cc",
+    "language": "cpp",
+    "purpose": "Provides IA32-specific instruction scheduling logic for the V8 compiler backend."
+  },
+  "imports": {
+    "metadata": {
+      "language": "cpp",
+      "purpose": "Includes necessary headers for logging, instruction codes, instruction scheduling, and instruction representation."
+    },
+    "code": "#include \"src/base/logging.h\"\n#include \"src/compiler/backend/instruction-codes.h\"\n#include \"src/compiler/backend/instruction-scheduler.h\"\n#include \"src/compiler/backend/instruction.h\""
+  },
+  "functions": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "method",
+        "name": "SchedulerSupported",
+        "parent": "InstructionScheduler",
+        "about": "Indicates whether instruction scheduling is supported for the IA32 architecture.",
+        "logic": "Always returns true, indicating that scheduling is supported.",
+        "parameters": [],
+        "return": {
+          "type": "bool",
+          "description": "True, as scheduling is supported."
+        },
+        "dependencies": []
+      },
+      "code": "bool InstructionScheduler::SchedulerSupported() { return true; }"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "method",
+        "name": "GetTargetInstructionFlags",
+        "parent": "InstructionScheduler",
+        "about": "Determines target-specific flags for a given instruction based on its opcode.",
+        "logic": "Uses a switch statement to identify the IA32 opcode and returns appropriate flags. Flags indicate load operations, side effects, and the need for deoptimization or trap checks. Handles a large variety of IA32 and SSE/AVX instructions, assigning flags based on their behavior.",
+        "parameters": [
+          {
+            "name": "instr",
+            "type": "const Instruction*",
+            "purpose": "The instruction to analyze."
+          }
+        ],
+        "return": {
+          "type": "int",
+          "description": "An integer representing the instruction flags."
+        },
+        "dependencies": [
+          "Instruction",
+          "kNoOpcodeFlags",
+          "kIsLoadOperation",
+          "kHasSideEffect",
+          "kMayNeedDeoptOrTrapCheck"
+        ]
+      },
+      "code": "int InstructionScheduler::GetTargetInstructionFlags(\n    const Instruction* instr) const {\n  switch (instr->arch_opcode()) {\n    case kIA32Add:\n    case kIA32And:\n    case kIA32Cmp:\n    case kIA32Cmp16:\n    case kIA32Cmp8:\n    case kIA32Test:\n    case kIA32Test16:\n    case kIA32Test8:\n    case kIA32Or:\n    case kIA32Xor:\n    case kIA32Sub:\n    case kIA32Imul:\n    case kIA32ImulHigh:\n    case kIA32UmulHigh:\n    case kIA32Not:\n    case kIA32Neg:\n    case kIA32Shl:\n    case kIA32Shr:\n    case kIA32Sar:\n    case kIA32AddPair:\n    case kIA32SubPair:\n    case kIA32MulPair:\n    case kIA32ShlPair:\n    case kIA32ShrPair:\n    case kIA32SarPair:\n    case kIA32Rol:\n    case kIA32Ror:\n    case kIA32Lzcnt:\n    case kIA32Tzcnt:\n    case kIA32Popcnt:\n    case kIA32Bswap:\n    case kIA32Lea:\n    case kIA32Float32Cmp:\n    case kIA32Float32Sqrt:\n    case kIA32Float32Round:\n    case kIA32Float64Cmp:\n    case kIA32Float64Mod:\n    case kIA32Float32Max:\n    case kIA32Float64Max:\n    case kIA32Float32Min:\n    case kIA32Float64Min:\n    case kIA32Float64Sqrt:\n    case kIA32Float64Round:\n    case kIA32Float32ToFloat64:\n    case kIA32Float64ToFloat32:\n    case kIA32Float32ToInt32:\n    case kIA32Float32ToUint32:\n    case kIA32Float64ToInt32:\n    case kIA32Float64ToUint32:\n    case kSSEInt32ToFloat32:\n    case kIA32Uint32ToFloat32:\n    case kSSEInt32ToFloat64:\n    case kIA32Uint32ToFloat64:\n    case kIA32Float64ExtractLowWord32:\n    case kIA32Float64ExtractHighWord32:\n    case kIA32Float64InsertLowWord32:\n    case kIA32Float64InsertHighWord32:\n    case kIA32Float64FromWord32Pair:\n    case kIA32Float64LoadLowWord32:\n    case kIA32Float64SilenceNaN:\n    case kFloat32Add:\n    case kFloat32Sub:\n    case kFloat64Add:\n    case kFloat64Sub:\n    case kFloat32Mul:\n    case kFloat32Div:\n    case kFloat64Mul:\n    case kFloat64Div:\n    case kFloat64Abs:\n    case kFloat64Neg:\n    case kFloat32Abs:\n    case kFloat32Neg:\n    case kIA32BitcastFI:\n    case kIA32BitcastIF:\n    case kIA32Blendvpd:\n    case kIA32Blendvps:\n    case kIA32Pblendvb:\n    case kIA32Cvttps2dq:\n    case kIA32Cvttpd2dq:\n    case kIA32I32x4TruncF32x4U:\n    case kIA32I32x4TruncF64x2UZero:\n    case kIA32F64x2Splat:\n    case kIA32F64x2ExtractLane:\n    case kIA32F64x2ReplaceLane:\n    case kIA32F64x2Sqrt:\n    case kIA32F64x2Add:\n    case kIA32F64x2Sub:\n    case kIA32F64x2Mul:\n    case kIA32F64x2Div:\n    case kIA32F64x2Min:\n    case kIA32F64x2Max:\n    case kIA32F64x2Eq:\n    case kIA32F64x2Ne:\n    case kIA32F64x2Lt:\n    case kIA32F64x2Le:\n    case kIA32F64x2Qfma:\n    case kIA32F64x2Qfms:\n    case kIA32Minpd:\n    case kIA32Maxpd:\n    case kIA32F64x2Round:\n    case kIA32F64x2ConvertLowI32x4S:\n    case kIA32F64x2ConvertLowI32x4U:\n    case kIA32F64x2PromoteLowF32x4:\n    case kIA32I64x2SplatI32Pair:\n    case kIA32I64x2ReplaceLaneI32Pair:\n    case kIA32I64x2Abs:\n    case kIA32I64x2Neg:\n    case kIA32I64x2Shl:\n    case kIA32I64x2ShrS:\n    case kIA32I64x2Add:\n    case kIA32I64x2Sub:\n    case kIA32I64x2Mul:\n    case kIA32I64x2ShrU:\n    case kIA32I64x2BitMask:\n    case kIA32I64x2Eq:\n    case kIA32I64x2Ne:\n    case kIA32I64x2GtS:\n    case kIA32I64x2GeS:\n    case kIA32I64x2ExtMulLowI32x4S:\n    case kIA32I64x2ExtMulHighI32x4S:\n    case kIA32I64x2ExtMulLowI32x4U:\n    case kIA32I64x2ExtMulHighI32x4U:\n    case kIA32I64x2SConvertI32x4Low:\n    case kIA32I64x2SConvertI32x4High:\n    case kIA32I64x2UConvertI32x4Low:\n    case kIA32I64x2UConvertI32x4High:\n    case kIA32F32x4Splat:\n    case kIA32F32x4ExtractLane:\n    case kIA32Insertps:\n    case kIA32F32x4SConvertI32x4:\n    case kIA32F32x4UConvertI32x4:\n    case kIA32F32x4Sqrt:\n    case kIA32F32x4Add:\n    case kIA32F32x4Sub:\n    case kIA32F32x4Mul:\n    case kIA32F32x4Div:\n    case kIA32F32x4Min:\n    case kIA32F32x4Max:\n    case kIA32F32x4Eq:\n    case kIA32F32x4Ne:\n    case kIA32F32x4Lt:\n    case kIA32F32x4Le:\n    case kIA32F32x4Qfma:\n    case kIA32F32x4Qfms:\n    case kIA32Minps:\n    case kIA32Maxps:\n    case kIA32F32x4Round:\n    case kIA32F32x4DemoteF64x2Zero:\n    case kIA32I32x4Splat:\n    case kIA32I32x4ExtractLane:\n    case kIA32I32x4SConvertF32x4:\n    case kIA32I32x4SConvertI16x8Low:\n    case kIA32I32x4SConvertI16x8High:\n    case kIA32I32x4Neg:\n    case kIA32I32x4Shl:\n    case kIA32I32x4ShrS:\n    case kIA32I32x4Add:\n    case kIA32I32x4Sub:\n    case kIA32I32x4Mul:\n    case kIA32I32x4MinS:\n    case kIA32I32x4MaxS:\n    case kIA32I32x4Eq:\n    case kIA32I32x4Ne:\n    case kIA32I32x4GtS:\n    case kIA32I32x4GeS:\n    case kSSEI32x4UConvertF32x4:\n    case kAVXI32x4UConvertF32x4:\n    case kIA32I32x4UConvertI16x8Low:\n    case kIA32I32x4UConvertI16x8High:\n    case kIA32I32x4ShrU:\n    case kIA32I32x4MinU:\n    case kIA32I32x4MaxU:\n    case kSSEI32x4GtU:\n    case kAVXI32x4GtU:\n    case kSSEI32x4GeU:\n    case kAVXI32x4GeU:\n    case kIA32I32x4Abs:\n    case kIA32I32x4BitMask:\n    case kIA32I32x4DotI16x8S:\n    case kIA32I32x4DotI8x16I7x16AddS:\n    case kIA32I32x4ExtMulLowI16x8S:\n    case kIA32I32x4ExtMulHighI16x8S:\n    case kIA32I32x4ExtMulLowI16x8U:\n    case kIA32I32x4ExtMulHighI16x8U:\n    case kIA32I32x4ExtAddPairwiseI16x8S:\n    case kIA32I32x4ExtAddPairwiseI16x8U:\n    case kIA32I32x4TruncSatF64x2SZero:\n    case kIA32I32x4TruncSatF64x2UZero:\n    case kIA32I16x8Splat:\n    case kIA32I16x8ExtractLaneS:\n    case kIA32I16x8SConvertI8x16Low:\n    case kIA32I16x8SConvertI8x16High:\n    case kIA32I16x8Neg:\n    case kIA32I16x8Shl:\n    case kIA32I16x8ShrS:\n    case kIA32I16x8SConvertI32x4:\n    case kIA32I16x8Add:\n    case kIA32I16x8AddSatS:\n    case kIA32I16x8Sub:\n    case kIA32I16x8SubSatS:\n    case kIA32I16x8Mul:\n    case kIA32I16x8MinS:\n    case kIA32I16x8MaxS:\n    case kIA32I16x8Eq:\n    case kSSEI16x8Ne:\n    case kAVXI16x8Ne:\n    case kIA32I16x8GtS:\n    case kSSEI16x8GeS:\n    case kAVXI16x8GeS:\n    case kIA32I16x8UConvertI8x16Low:\n    case kIA32I16x8UConvertI8x16High:\n    case kIA32I16x8ShrU:\n    case kIA32I16x8UConvertI32x4:\n    case kIA32I16x8AddSatU:\n    case kIA32I16x8SubSatU:\n    case kIA32I16x8MinU:\n    case kIA32I16x8MaxU:\n    case kSSEI16x8GtU:\n    case kAVXI16x8GtU:\n    case kSSEI16x8GeU:\n    case kAVXI16x8GeU:\n    case kIA32I16x8RoundingAverageU:\n    case kIA32I16x8Abs:\n    case kIA32I16x8BitMask:\n    case kIA32I16x8ExtMulLowI8x16S:\n    case kIA32I16x8ExtMulHighI8x16S:\n    case kIA32I16x8ExtMulLowI8x16U:\n    case kIA32I16x8ExtMulHighI8x16U:\n    case kIA32I16x8ExtAddPairwiseI8x16S:\n    case kIA32I16x8ExtAddPairwiseI8x16U:\n    case kIA32I16x8Q15MulRSatS:\n    case kIA32I16x8RelaxedQ15MulRS:\n    case kIA32I16x8DotI8x16I7x16S:\n    case kIA32I8x16Splat:\n    case kIA32I8x16ExtractLaneS:\n    case kIA32Pinsrb:\n    case kIA32Pinsrw:\n    case kIA32Pinsrd:\n    case kIA32Pextrb:\n    case kIA32Pextrw:\n    case kIA32S128Store32Lane:\n    case kIA32I8x16SConvertI16x8:\n    case kIA32I8x16Neg:\n    case kIA32I8x16Shl:\n    case kIA32I8x16ShrS:\n    case kIA32I8x16Add:\n    case kIA32I8x16AddSatS:\n    case kIA32I8x16Sub:\n    case kIA32I8x16SubSatS:\n    case kIA32I8x16MinS:\n    case kIA32I8x16MaxS:\n    case kIA32I8x16Eq:\n    case kSSEI8x16Ne:\n    case kAVXI8x16Ne:\n    case kIA32I8x16GtS:\n    case kSSEI8x16GeS:\n    case kAVXI8x16GeS:\n    case kIA32I8x16UConvertI16x8:\n    case kIA32I8x16AddSatU:\n    case kIA32I8x16SubSatU:\n    case kIA32I8x16ShrU:\n    case kIA32I8x16MinU:\n    case kIA32I8x16MaxU:\n    case kSSEI8x16GtU:\n    case kAVXI8x16GtU:\n    case kSSEI8x16GeU:\n    case kAVXI8x16GeU:\n    case kIA32I8x16RoundingAverageU:\n    case kIA32I8x16Abs:\n    case kIA32I8x16BitMask:\n    case kIA32I8x16Popcnt:\n    case kIA32S128Const:\n    case kIA32S128Zero:\n    case kIA32S128AllOnes:\n    case kIA32S128Not:\n    case kIA32S128And:\n    case kIA32S128Or:\n    case kIA32S128Xor:\n    case kIA32S128Select:\n    case kIA32S128AndNot:\n    case kIA32I8x16Swizzle:\n    case kIA32I8x16Shuffle:\n    case kIA32S32x4Rotate:\n    case kIA32S32x4Swizzle:\n    case kIA32S32x4Shuffle:\n    case kIA32S16x8Blend:\n    case kIA32S16x8HalfShuffle1:\n    case kIA32S16x8HalfShuffle2:\n    case kIA32S8x16Alignr:\n    case kIA32S16x8Dup:\n    case kIA32S8x16Dup:\n    case kSSES16x8UnzipHigh:\n    case kAVXS16x8UnzipHigh:\n    case kSSES16x8UnzipLow:\n    case kAVXS16x8UnzipLow:\n    case kSSES8x16UnzipHigh:\n    case kAVXS8x16UnzipHigh:\n    case kSSES8x16UnzipLow:\n    case kAVXS8x16UnzipLow:\n    case kIA32S64x2UnpackHigh:\n    case kIA32S32x4UnpackHigh:\n    case kIA32S16x8UnpackHigh:\n    case kIA32S8x16UnpackHigh:\n    case kIA32S64x2UnpackLow:\n    case kIA32S32x4UnpackLow:\n    case kIA32S16x8UnpackLow:\n    case kIA32S8x16UnpackLow:\n    case kSSES8x16TransposeLow:\n    case kAVXS8x16TransposeLow:\n    case kSSES8x16TransposeHigh:\n    case kAVXS8x16TransposeHigh:\n    case kSSES8x8Reverse:\n    case kAVXS8x8Reverse:\n    case kSSES8x4Reverse:\n    case kAVXS8x4Reverse:\n    case kSSES8x2Reverse:\n    case kAVXS8x2Reverse:\n    case kIA32S128AnyTrue:\n    case kIA32I64x2AllTrue:\n    case kIA32I32x4AllTrue:\n    case kIA32I16x8AllTrue:\n    case kIA32I8x16AllTrue:\n      return (instr->addressing_mode() == kMode_None)\n                 ? kNoOpcodeFlags\n                 : kIsLoadOperation | kHasSideEffect;\n\n    case kIA32Idiv:\n    case kIA32Udiv:\n      return (instr->addressing_mode() == kMode_None)\n                 ? kMayNeedDeoptOrTrapCheck\n                 : kMayNeedDeoptOrTrapCheck | kIsLoadOperation | kHasSideEffect;\n\n    case kIA32Movsxbl:\n    case kIA32Movzxbl:\n    case kIA32Movb:\n    case kIA32Movsxwl:\n    case kIA32Movzxwl:\n    case kIA32Movw:\n    case kIA32Movl:\n    case kIA32Movss:\n    case kIA32Movsd:\n    case kIA32Movdqu:\n    case kIA32Movlps:\n    case kIA32Movhps:\n    // Moves are used for memory load/store operations.\n    case kIA32S128Load8Splat:\n    case kIA32S128Load16Splat:\n    case kIA32S128Load32Splat:\n    case kIA32S128Load64Splat:\n    case kIA32S128Load8x8S:\n    case kIA32S128Load8x8U:\n    case kIA32S128Load16x4S:\n    case kIA32S128Load16x4U:\n    case kIA32S128Load32x2S:\n    case kIA32S128Load32x2U:\n      return instr->HasOutput() ? kIsLoadOperation : kHasSideEffect;\n\n    case kIA32Peek:\n      return kIsLoadOperation;\n\n    case kIA32Push:\n    case kIA32Poke:\n    case kIA32MFence:\n    case kIA32LFence:\n      return kHasSideEffect;\n\n    case kIA32Word32AtomicPairLoad:\n      return kIsLoadOperation;\n\n    case kIA32Word32ReleasePairStore:\n    case kIA32Word32SeqCstPairStore:\n    case kIA32Word32AtomicPairAdd:\n    case kIA32Word32AtomicPairSub:\n    case kIA32Word32AtomicPairAnd:\n    case kIA32Word32AtomicPairOr:\n    case kIA32Word32AtomicPairXor:\n    case kIA32Word32AtomicPairExchange:\n    case kIA32Word32AtomicPairCompareExchange:\n      return kHasSideEffect;\n\n#define CASE(Name) case k##Name:\n      COMMON_ARCH_OPCODE_LIST(CASE)\n#undef CASE\n      // Already covered in architecture independent code.\n      UNREACHABLE();\n  }\n\n  UNREACHABLE();\n}"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "method",
+        "name": "GetInstructionLatency",
+        "parent": "InstructionScheduler",
+        "about": "Provides latency information for IA32 instructions, used for scheduling.",
+        "logic": "Uses a switch statement to determine the latency of specific IA32 instructions. Latency values are empirically determined. A default latency of 1 is returned for instructions not explicitly listed.",
+        "parameters": [
+          {
+            "name": "instr",
+            "type": "const Instruction*",
+            "purpose": "The instruction to get latency for."
+          }
+        ],
+        "return": {
+          "type": "int",
+          "description": "The latency of the instruction."
+        },
+        "dependencies": [
+          "Instruction"
+        ]
+      },
+      "code": "int InstructionScheduler::GetInstructionLatency(const Instruction* instr) {\n  // Basic latency modeling for ia32 instructions. They have been determined\n  // in an empirical way.\n  switch (instr->arch_opcode()) {\n    case kFloat64Mul:\n      return 5;\n    case kIA32Imul:\n    case kIA32ImulHigh:\n      return 5;\n    case kIA32Float32Cmp:\n    case kIA32Float64Cmp:\n      return 9;\n    case kFloat32Add:\n    case kFloat32Sub:\n    case kFloat64Add:\n    case kFloat64Sub:\n    case kFloat32Abs:\n    case kFloat32Neg:\n    case kIA32Float64Max:\n    case kIA32Float64Min:\n    case kFloat64Abs:\n    case kFloat64Neg:\n      return 5;\n    case kFloat32Mul:\n      return 4;\n    case kIA32Float32ToFloat64:\n    case kIA32Float64ToFloat32:\n      return 6;\n    case kIA32Float32Round:\n    case kIA32Float64Round:\n    case kIA32Float32ToInt32:\n    case kIA32Float64ToInt32:\n      return 8;\n    case kIA32Float32ToUint32:\n      return 21;\n    case kIA32Float64ToUint32:\n      return 15;\n    case kIA32Idiv:\n      return 33;\n    case kIA32Udiv:\n      return 26;\n    case kFloat32Div:\n      return 35;\n    case kFloat64Div:\n      return 63;\n    case kIA32Float32Sqrt:\n    case kIA32Float64Sqrt:\n      return 25;\n    case kIA32Float64Mod:\n      return 50;\n    case kArchTruncateDoubleToI:\n      return 9;\n    default:\n      return 1;\n  }\n}"
+    }
+  ],
+  "file_path": "/home/kathirks_gc/v8_go/archive/codebase/src/compiler/backend/ia32/instruction-scheduler-ia32.cc"
+}

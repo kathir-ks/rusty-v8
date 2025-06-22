@@ -1,0 +1,129 @@
+{
+  "file_path": "/home/kathirks_gc/v8_go/codebase/src/wasm/wasm-import-wrapper-cache.cc",
+  "imports": [
+    "src/wasm/wasm-import-wrapper-cache.h",
+    "vector",
+    "src/codegen/assembler-inl.h",
+    "src/codegen/flush-instruction-cache.h",
+    "src/common/code-memory-access-inl.h",
+    "src/compiler/wasm-compiler.h",
+    "src/wasm/compilation-environment-inl.h",
+    "src/wasm/function-compiler.h",
+    "src/wasm/std-object-sizes.h",
+    "src/wasm/wasm-code-manager.h",
+    "src/wasm/wasm-code-pointer-table-inl.h",
+    "src/wasm/wasm-engine.h"
+  ],
+  "classes": [
+    {
+      "name": "WasmImportWrapperCache::ModificationScope",
+      "properties": [
+        "cache_"
+      ],
+      "methods": [
+        {
+          "name": "operator[]",
+          "parameters": [
+            "const CacheKey& key"
+          ],
+          "return_type": "WasmCode*",
+          "logic": "Accesses the WasmCode associated with the given CacheKey from the cache's entry map."
+        },
+        {
+          "name": "AddWrapper",
+          "parameters": [
+            "const CacheKey& key",
+            "WasmCompilationResult result",
+            "WasmCode::Kind kind",
+            "uint64_t signature_hash"
+          ],
+          "return_type": "WasmCode*",
+          "logic": "Allocates memory for the import wrapper code, copies the generated code into the allocated space, performs relocations, flushes the instruction cache, creates a WasmCode object, and adds it to the cache."
+        }
+      ]
+    },
+    {
+      "name": "WasmImportWrapperCache",
+      "properties": [
+        "mutex_",
+        "code_allocator_",
+        "entry_map_",
+        "codes_"
+      ],
+      "methods": [
+        {
+          "name": "LazyInitialize",
+          "parameters": [
+            "Isolate* triggering_isolate"
+          ],
+          "return_type": "void",
+          "logic": "Initializes the code allocator for the import wrapper cache, allocating a virtual memory region for storing the generated wrapper code. It's a lazy initialization, only performed when the cache is first used."
+        },
+        {
+          "name": "FindWrapper",
+          "parameters": [
+            "WasmCodePointer call_target"
+          ],
+          "return_type": "WasmCode*",
+          "logic": "Finds a WasmCode wrapper in the cache based on its call target address. It uses `GetProcessWideWasmCodePointerTable()` to look up the correct `WasmCode` and increments the ref count. Returns nullptr if no wrapper exists for the given address."
+        },
+        {
+          "name": "CompileWasmImportCallWrapper",
+          "parameters": [
+            "Isolate* isolate",
+            "ImportCallKind kind",
+            "const CanonicalSig* sig",
+            "CanonicalTypeIndex sig_index",
+            "bool source_positions",
+            "int expected_arity",
+            "Suspend suspend"
+          ],
+          "return_type": "WasmCode*",
+          "logic": "Compiles a Wasm import call wrapper using the provided parameters (kind, signature, etc.). It first checks if the wrapper already exists in the cache. If not, it compiles the wrapper, adds it to the cache, and returns the WasmCode object representing the compiled wrapper."
+        },
+        {
+          "name": "LogForIsolate",
+          "parameters": [
+            "Isolate* isolate"
+          ],
+          "return_type": "void",
+          "logic": "Logs all the WasmCode objects in the cache for the given isolate, useful for debugging and performance analysis."
+        },
+        {
+          "name": "Free",
+          "parameters": [
+            "std::vector<WasmCode*>& wrappers"
+          ],
+          "return_type": "void",
+          "logic": "Frees the provided `WasmCode` objects, removes them from the cache's data structures (entry map and code address map), and returns memory to the code allocator.  The wrappers must be sorted by instruction start address prior to calling `code_allocator_->FreeCode`."
+        },
+        {
+          "name": "MaybeGet",
+          "parameters": [
+            "ImportCallKind kind",
+            "CanonicalTypeIndex type_index",
+            "int expected_arity",
+            "Suspend suspend"
+          ],
+          "return_type": "WasmCode*",
+          "logic": "Attempts to retrieve a WasmCode object from the cache using the provided key. If found, it increments the reference count of the WasmCode object."
+        },
+        {
+          "name": "Lookup",
+          "parameters": [
+            "Address pc"
+          ],
+          "return_type": "WasmCode*",
+          "logic": "Looks up a `WasmCode` object based on a program counter (PC) value. This is used for stack walking and debugging.  It iterates through the stored codes based on the start addresses and checks if the provided address lies within the code region."
+        },
+        {
+          "name": "EstimateCurrentMemoryConsumption",
+          "parameters": [],
+          "return_type": "size_t",
+          "logic": "Estimates the current memory consumption of the WasmImportWrapperCache by summing the sizes of its internal data structures."
+        }
+      ]
+    }
+  ],
+  "functions": []
+}

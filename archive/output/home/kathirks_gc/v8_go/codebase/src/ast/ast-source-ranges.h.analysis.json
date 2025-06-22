@@ -1,0 +1,673 @@
+{
+  "file_path": "/home/kathirks_gc/v8_go/codebase/src/ast/ast-source-ranges.h",
+  "imports": [
+    "src/ast/ast.h",
+    "src/zone/zone-containers.h"
+  ],
+  "classes": [
+    {
+      "name": "SourceRange",
+      "properties": [
+        "start",
+        "end"
+      ],
+      "methods": [
+        {
+          "name": "SourceRange",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Default constructor, initializes start and end to kNoSourcePosition."
+        },
+        {
+          "name": "SourceRange",
+          "parameters": [
+            "int start",
+            "int end"
+          ],
+          "return_type": "void",
+          "logic": "Constructor, initializes start and end with provided values."
+        },
+        {
+          "name": "IsEmpty",
+          "parameters": [],
+          "return_type": "bool",
+          "logic": "Checks if the source range is empty (start is kNoSourcePosition)."
+        },
+        {
+          "name": "Empty",
+          "parameters": [],
+          "return_type": "SourceRange",
+          "logic": "Static method, returns an empty SourceRange."
+        },
+        {
+          "name": "OpenEnded",
+          "parameters": [
+            "int32_t start"
+          ],
+          "return_type": "SourceRange",
+          "logic": "Static method, creates a SourceRange with a start position and an open end (end is kNoSourcePosition)."
+        },
+        {
+          "name": "ContinuationOf",
+          "parameters": [
+            "const SourceRange& that",
+            "int end = kNoSourcePosition"
+          ],
+          "return_type": "SourceRange",
+          "logic": "Static method, creates a SourceRange that is a continuation of another SourceRange, starting at the end of 'that' and ending at provided 'end' position or kNoSourcePosition if not provided."
+        },
+        {
+          "name": "FunctionLiteralMarkerRange",
+          "parameters": [],
+          "return_type": "SourceRange",
+          "logic": "Static method, returns a SourceRange with special marker values for function literals."
+        }
+      ]
+    },
+    {
+      "name": "AstNodeSourceRanges",
+      "properties": [],
+      "methods": [
+        {
+          "name": "~AstNodeSourceRanges",
+          "parameters": [],
+          "return_type": "virtual",
+          "logic": "Virtual destructor."
+        },
+        {
+          "name": "GetRange",
+          "parameters": [
+            "SourceRangeKind kind"
+          ],
+          "return_type": "SourceRange",
+          "logic": "Virtual method, returns the SourceRange associated with a given kind. Pure virtual, must be implemented by derived classes."
+        },
+        {
+          "name": "HasRange",
+          "parameters": [
+            "SourceRangeKind kind"
+          ],
+          "return_type": "bool",
+          "logic": "Virtual method, checks if a SourceRange of a given kind exists. Pure virtual, must be implemented by derived classes."
+        },
+        {
+          "name": "RemoveContinuationRange",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Virtual method, removes a continuation range if present.  Default implementation is UNREACHABLE() indicating this functionality is not generally supported, but can be overriden by derived classes."
+        }
+      ]
+    },
+    {
+      "name": "BinaryOperationSourceRanges",
+      "properties": [
+        "right_range_"
+      ],
+      "methods": [
+        {
+          "name": "BinaryOperationSourceRanges",
+          "parameters": [
+            "const SourceRange& right_range"
+          ],
+          "return_type": "explicit",
+          "logic": "Constructor, initializes with the SourceRange for the right-hand side of the binary operation."
+        },
+        {
+          "name": "GetRange",
+          "parameters": [
+            "SourceRangeKind kind"
+          ],
+          "return_type": "SourceRange",
+          "logic": "Returns the right_range_ if the kind is kRight."
+        },
+        {
+          "name": "HasRange",
+          "parameters": [
+            "SourceRangeKind kind"
+          ],
+          "return_type": "bool",
+          "logic": "Returns true if the kind is kRight, false otherwise."
+        }
+      ]
+    },
+    {
+      "name": "ContinuationSourceRanges",
+      "properties": [
+        "continuation_position_"
+      ],
+      "methods": [
+        {
+          "name": "ContinuationSourceRanges",
+          "parameters": [
+            "int32_t continuation_position"
+          ],
+          "return_type": "explicit",
+          "logic": "Constructor, initializes with a continuation position."
+        },
+        {
+          "name": "GetRange",
+          "parameters": [
+            "SourceRangeKind kind"
+          ],
+          "return_type": "SourceRange",
+          "logic": "Returns an open-ended SourceRange starting at the continuation position if the kind is kContinuation."
+        },
+        {
+          "name": "HasRange",
+          "parameters": [
+            "SourceRangeKind kind"
+          ],
+          "return_type": "bool",
+          "logic": "Returns true if the kind is kContinuation, false otherwise."
+        },
+        {
+          "name": "RemoveContinuationRange",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Sets the continuation position to kNoSourcePosition."
+        }
+      ]
+    },
+    {
+      "name": "BlockSourceRanges",
+      "properties": [],
+      "methods": [
+        {
+          "name": "BlockSourceRanges",
+          "parameters": [
+            "int32_t continuation_position"
+          ],
+          "return_type": "explicit",
+          "logic": "Constructor, initializes the BlockSourceRanges with the continuation position by delegating to the ContinuationSourceRanges constructor."
+        }
+      ]
+    },
+    {
+      "name": "CaseClauseSourceRanges",
+      "properties": [
+        "body_range_"
+      ],
+      "methods": [
+        {
+          "name": "CaseClauseSourceRanges",
+          "parameters": [
+            "const SourceRange& body_range"
+          ],
+          "return_type": "explicit",
+          "logic": "Constructor, initializes with the SourceRange for the body of the case clause."
+        },
+        {
+          "name": "GetRange",
+          "parameters": [
+            "SourceRangeKind kind"
+          ],
+          "return_type": "SourceRange",
+          "logic": "Returns the body_range_ if the kind is kBody."
+        },
+        {
+          "name": "HasRange",
+          "parameters": [
+            "SourceRangeKind kind"
+          ],
+          "return_type": "bool",
+          "logic": "Returns true if the kind is kBody, false otherwise."
+        }
+      ]
+    },
+    {
+      "name": "ConditionalChainSourceRanges",
+      "properties": [
+        "then_ranges_",
+        "else_ranges_"
+      ],
+      "methods": [
+        {
+          "name": "ConditionalChainSourceRanges",
+          "parameters": [
+            "Zone* zone"
+          ],
+          "return_type": "explicit",
+          "logic": "Constructor, initializes the vectors to store then and else ranges in the given zone."
+        },
+        {
+          "name": "GetRangeAtIndex",
+          "parameters": [
+            "SourceRangeKind kind",
+            "size_t index"
+          ],
+          "return_type": "SourceRange",
+          "logic": "Returns the SourceRange at the given index for the specified kind (kThen or kElse)."
+        },
+        {
+          "name": "AddThenRanges",
+          "parameters": [
+            "const SourceRange& range"
+          ],
+          "return_type": "void",
+          "logic": "Adds a SourceRange to the then_ranges_ vector."
+        },
+        {
+          "name": "AddElseRange",
+          "parameters": [
+            "const SourceRange& else_range"
+          ],
+          "return_type": "void",
+          "logic": "Adds a SourceRange to the else_ranges_ vector."
+        },
+        {
+          "name": "RangeCount",
+          "parameters": [],
+          "return_type": "size_t",
+          "logic": "Returns the number of then ranges."
+        },
+        {
+          "name": "GetRange",
+          "parameters": [
+            "SourceRangeKind kind"
+          ],
+          "return_type": "SourceRange",
+          "logic": "UNREACHABLE(). Not intended to be called directly."
+        },
+        {
+          "name": "HasRange",
+          "parameters": [
+            "SourceRangeKind kind"
+          ],
+          "return_type": "bool",
+          "logic": "Returns false, as this class manages ranges at indices."
+        }
+      ]
+    },
+    {
+      "name": "ConditionalSourceRanges",
+      "properties": [
+        "then_range_",
+        "else_range_"
+      ],
+      "methods": [
+        {
+          "name": "ConditionalSourceRanges",
+          "parameters": [
+            "const SourceRange& then_range",
+            "const SourceRange& else_range"
+          ],
+          "return_type": "explicit",
+          "logic": "Constructor, initializes with the SourceRange for the then and else branches."
+        },
+        {
+          "name": "GetRange",
+          "parameters": [
+            "SourceRangeKind kind"
+          ],
+          "return_type": "SourceRange",
+          "logic": "Returns the then_range_ or else_range_ based on the kind."
+        },
+        {
+          "name": "HasRange",
+          "parameters": [
+            "SourceRangeKind kind"
+          ],
+          "return_type": "bool",
+          "logic": "Returns true if the kind is kThen or kElse, false otherwise."
+        }
+      ]
+    },
+    {
+      "name": "FunctionLiteralSourceRanges",
+      "properties": [],
+      "methods": [
+        {
+          "name": "GetRange",
+          "parameters": [
+            "SourceRangeKind kind"
+          ],
+          "return_type": "SourceRange",
+          "logic": "Returns FunctionLiteralMarkerRange() if the kind is kBody."
+        },
+        {
+          "name": "HasRange",
+          "parameters": [
+            "SourceRangeKind kind"
+          ],
+          "return_type": "bool",
+          "logic": "Returns true if the kind is kBody, false otherwise."
+        }
+      ]
+    },
+    {
+      "name": "IfStatementSourceRanges",
+      "properties": [
+        "then_range_",
+        "else_range_",
+        "has_continuation_"
+      ],
+      "methods": [
+        {
+          "name": "IfStatementSourceRanges",
+          "parameters": [
+            "const SourceRange& then_range",
+            "const SourceRange& else_range"
+          ],
+          "return_type": "explicit",
+          "logic": "Constructor, initializes with the SourceRange for the then and else branches."
+        },
+        {
+          "name": "GetRange",
+          "parameters": [
+            "SourceRangeKind kind"
+          ],
+          "return_type": "SourceRange",
+          "logic": "Returns the then_range_, else_range_, or a continuation range based on the kind."
+        },
+        {
+          "name": "HasRange",
+          "parameters": [
+            "SourceRangeKind kind"
+          ],
+          "return_type": "bool",
+          "logic": "Returns true if the kind is kThen, kElse, or kContinuation, false otherwise."
+        },
+        {
+          "name": "RemoveContinuationRange",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Sets has_continuation_ to false."
+        }
+      ]
+    },
+    {
+      "name": "IterationStatementSourceRanges",
+      "properties": [
+        "body_range_",
+        "has_continuation_"
+      ],
+      "methods": [
+        {
+          "name": "IterationStatementSourceRanges",
+          "parameters": [
+            "const SourceRange& body_range"
+          ],
+          "return_type": "explicit",
+          "logic": "Constructor, initializes with the SourceRange for the body of the iteration statement."
+        },
+        {
+          "name": "GetRange",
+          "parameters": [
+            "SourceRangeKind kind"
+          ],
+          "return_type": "SourceRange",
+          "logic": "Returns the body_range_ or a continuation range based on the kind."
+        },
+        {
+          "name": "HasRange",
+          "parameters": [
+            "SourceRangeKind kind"
+          ],
+          "return_type": "bool",
+          "logic": "Returns true if the kind is kBody or kContinuation, false otherwise."
+        },
+        {
+          "name": "RemoveContinuationRange",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Sets has_continuation_ to false."
+        }
+      ]
+    },
+    {
+      "name": "JumpStatementSourceRanges",
+      "properties": [],
+      "methods": [
+        {
+          "name": "JumpStatementSourceRanges",
+          "parameters": [
+            "int32_t continuation_position"
+          ],
+          "return_type": "explicit",
+          "logic": "Constructor, initializes with a continuation position by delegating to the ContinuationSourceRanges constructor."
+        }
+      ]
+    },
+    {
+      "name": "NaryOperationSourceRanges",
+      "properties": [
+        "ranges_"
+      ],
+      "methods": [
+        {
+          "name": "NaryOperationSourceRanges",
+          "parameters": [
+            "Zone* zone",
+            "const SourceRange& range"
+          ],
+          "return_type": "NaryOperationSourceRanges",
+          "logic": "Constructor, initializes the ranges_ vector with the given Zone and adds an initial range to it."
+        },
+        {
+          "name": "GetRangeAtIndex",
+          "parameters": [
+            "size_t index"
+          ],
+          "return_type": "SourceRange",
+          "logic": "Returns the SourceRange at the specified index from the ranges_ vector."
+        },
+        {
+          "name": "AddRange",
+          "parameters": [
+            "const SourceRange& range"
+          ],
+          "return_type": "void",
+          "logic": "Adds a SourceRange to the ranges_ vector."
+        },
+        {
+          "name": "RangeCount",
+          "parameters": [],
+          "return_type": "size_t",
+          "logic": "Returns the number of SourceRanges in the ranges_ vector."
+        },
+        {
+          "name": "GetRange",
+          "parameters": [
+            "SourceRangeKind kind"
+          ],
+          "return_type": "SourceRange",
+          "logic": "UNREACHABLE()."
+        },
+        {
+          "name": "HasRange",
+          "parameters": [
+            "SourceRangeKind kind"
+          ],
+          "return_type": "bool",
+          "logic": "Returns false."
+        }
+      ]
+    },
+    {
+      "name": "ExpressionSourceRanges",
+      "properties": [
+        "right_range_"
+      ],
+      "methods": [
+        {
+          "name": "ExpressionSourceRanges",
+          "parameters": [
+            "const SourceRange& right_range"
+          ],
+          "return_type": "explicit",
+          "logic": "Constructor, initializes with the SourceRange for the right-hand side of the expression."
+        },
+        {
+          "name": "GetRange",
+          "parameters": [
+            "SourceRangeKind kind"
+          ],
+          "return_type": "SourceRange",
+          "logic": "Returns the right_range_ if the kind is kRight."
+        },
+        {
+          "name": "HasRange",
+          "parameters": [
+            "SourceRangeKind kind"
+          ],
+          "return_type": "bool",
+          "logic": "Returns true if the kind is kRight, false otherwise."
+        }
+      ]
+    },
+    {
+      "name": "SuspendSourceRanges",
+      "properties": [],
+      "methods": [
+        {
+          "name": "SuspendSourceRanges",
+          "parameters": [
+            "int32_t continuation_position"
+          ],
+          "return_type": "explicit",
+          "logic": "Constructor, initializes with a continuation position by delegating to the ContinuationSourceRanges constructor."
+        }
+      ]
+    },
+    {
+      "name": "SwitchStatementSourceRanges",
+      "properties": [],
+      "methods": [
+        {
+          "name": "SwitchStatementSourceRanges",
+          "parameters": [
+            "int32_t continuation_position"
+          ],
+          "return_type": "explicit",
+          "logic": "Constructor, initializes with a continuation position by delegating to the ContinuationSourceRanges constructor."
+        }
+      ]
+    },
+    {
+      "name": "ThrowSourceRanges",
+      "properties": [],
+      "methods": [
+        {
+          "name": "ThrowSourceRanges",
+          "parameters": [
+            "int32_t continuation_position"
+          ],
+          "return_type": "explicit",
+          "logic": "Constructor, initializes with a continuation position by delegating to the ContinuationSourceRanges constructor."
+        }
+      ]
+    },
+    {
+      "name": "TryCatchStatementSourceRanges",
+      "properties": [
+        "catch_range_",
+        "has_continuation_"
+      ],
+      "methods": [
+        {
+          "name": "TryCatchStatementSourceRanges",
+          "parameters": [
+            "const SourceRange& catch_range"
+          ],
+          "return_type": "explicit",
+          "logic": "Constructor, initializes with the SourceRange for the catch block."
+        },
+        {
+          "name": "GetRange",
+          "parameters": [
+            "SourceRangeKind kind"
+          ],
+          "return_type": "SourceRange",
+          "logic": "Returns the catch_range_ or a continuation range based on the kind."
+        },
+        {
+          "name": "HasRange",
+          "parameters": [
+            "SourceRangeKind kind"
+          ],
+          "return_type": "bool",
+          "logic": "Returns true if the kind is kCatch or kContinuation, false otherwise."
+        },
+        {
+          "name": "RemoveContinuationRange",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Sets has_continuation_ to false."
+        }
+      ]
+    },
+    {
+      "name": "TryFinallyStatementSourceRanges",
+      "properties": [
+        "finally_range_",
+        "has_continuation_"
+      ],
+      "methods": [
+        {
+          "name": "TryFinallyStatementSourceRanges",
+          "parameters": [
+            "const SourceRange& finally_range"
+          ],
+          "return_type": "explicit",
+          "logic": "Constructor, initializes with the SourceRange for the finally block."
+        },
+        {
+          "name": "GetRange",
+          "parameters": [
+            "SourceRangeKind kind"
+          ],
+          "return_type": "SourceRange",
+          "logic": "Returns the finally_range_ or a continuation range based on the kind."
+        },
+        {
+          "name": "HasRange",
+          "parameters": [
+            "SourceRangeKind kind"
+          ],
+          "return_type": "bool",
+          "logic": "Returns true if the kind is kFinally or kContinuation, false otherwise."
+        },
+        {
+          "name": "RemoveContinuationRange",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Sets has_continuation_ to false."
+        }
+      ]
+    },
+    {
+      "name": "SourceRangeMap",
+      "properties": [
+        "map_"
+      ],
+      "methods": [
+        {
+          "name": "SourceRangeMap",
+          "parameters": [
+            "Zone* zone"
+          ],
+          "return_type": "explicit",
+          "logic": "Constructor, initializes the ZoneMap with the given zone."
+        },
+        {
+          "name": "Find",
+          "parameters": [
+            "ZoneObject* node"
+          ],
+          "return_type": "AstNodeSourceRanges*",
+          "logic": "Finds the AstNodeSourceRanges associated with the given node in the map. Returns nullptr if not found."
+        },
+        {
+          "name": "Insert",
+          "parameters": [
+            "type* node",
+            "type##SourceRanges* ranges"
+          ],
+          "return_type": "void",
+          "logic": "Inserts a mapping between a node and its associated source ranges into the map.  The specific 'type' is determined by a macro expansion which is repeated for each node type that can have associated ranges."
+        }
+      ]
+    }
+  ],
+  "functions": []
+}

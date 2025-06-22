@@ -1,0 +1,30 @@
+// Module declarations for converted maglev code
+
+pub mod maglev-graph-verifier;
+pub mod maglev-pipeline-statistics;
+pub mod maglev-post-hoc-optimizations-processors;
+pub mod maglev-code-generator;
+pub mod maglev-compiler;
+pub mod maglev-basic-block;
+pub mod maglev-assembler-inl;
+pub mod maglev-interpreter-frame-state;
+pub mod maglev-pre-regalloc-codegen-processors;
+pub mod maglev-register-frame-array;
+pub mod maglev-phi-representation-selector;
+pub mod maglev-graph-labeller;
+pub mod maglev-assembler;
+pub mod maglev-graph;
+pub mod maglev-regalloc-data;
+pub mod maglev-graph-builder;
+pub mod maglev-inlining;
+pub mod maglev-regalloc;
+pub mod maglev-compilation-unit;
+pub mod maglev-concurrent-dispatcher;
+pub mod maglev-ir;
+pub mod maglev;
+pub mod maglev-deopt-frame-visitor;
+pub mod maglev-code-gen-state;
+pub mod maglev-graph-processor;
+pub mod maglev-graph-printer;
+pub mod maglev-compilation-info;
+pub mod maglev-ir-inl;

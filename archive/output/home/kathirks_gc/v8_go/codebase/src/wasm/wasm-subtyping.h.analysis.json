@@ -1,0 +1,235 @@
+{
+  "file_path": "/home/kathirks_gc/v8_go/codebase/src/wasm/wasm-subtyping.h",
+  "imports": [
+    "src/wasm/value-type.h"
+  ],
+  "classes": [
+    {
+      "name": "TypeInModule",
+      "properties": [
+        "type",
+        "module"
+      ],
+      "methods": [
+        {
+          "name": "TypeInModule",
+          "parameters": [
+            "ValueType type",
+            "const WasmModule* module"
+          ],
+          "return_type": "void",
+          "logic": "Constructor that initializes the 'type' and 'module' members."
+        },
+        {
+          "name": "TypeInModule",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Default constructor that initializes with kWasmBottom and nullptr."
+        },
+        {
+          "name": "operator==",
+          "parameters": [
+            "const TypeInModule& other"
+          ],
+          "return_type": "bool",
+          "logic": "Checks if two TypeInModule instances are equal (same type and module)."
+        }
+      ]
+    }
+  ],
+  "functions": [
+    {
+      "name": "IsSubtypeOfImpl",
+      "parameters": [
+        "ValueType subtype",
+        "ValueType supertype",
+        "const WasmModule* sub_module",
+        "const WasmModule* super_module"
+      ],
+      "return_type": "bool",
+      "logic": "Implementation of subtype check for ValueTypes.  This is the core logic called by the inline IsSubtypeOf functions.  Marked NOINLINE to avoid code bloat from inlining the potentially complex logic."
+    },
+    {
+      "name": "IsSubtypeOfImpl",
+      "parameters": [
+        "HeapType sub_heap",
+        "HeapType super_heap",
+        "const WasmModule* sub_module",
+        "const WasmModule* super_module"
+      ],
+      "return_type": "bool",
+      "logic": "Implementation of subtype check for HeapTypes. Marked NOINLINE to avoid code bloat from inlining the potentially complex logic."
+    },
+    {
+      "name": "IsSubtypeOfImpl",
+      "parameters": [
+        "CanonicalValueType subtype",
+        "CanonicalValueType supertype"
+      ],
+      "return_type": "bool",
+      "logic": "Implementation of subtype check for CanonicalValueTypes. Marked NOINLINE to avoid code bloat from inlining the potentially complex logic."
+    },
+    {
+      "name": "EquivalentTypes",
+      "parameters": [
+        "ValueType type1",
+        "ValueType type2",
+        "const WasmModule* module1",
+        "const WasmModule* module2"
+      ],
+      "return_type": "bool",
+      "logic": "Checks if two value types are equivalent, considering their modules. Marked NOINLINE to avoid code bloat."
+    },
+    {
+      "name": "IsSubtypeOf",
+      "parameters": [
+        "ValueType subtype",
+        "ValueType supertype",
+        "const WasmModule* sub_module",
+        "const WasmModule* super_module"
+      ],
+      "return_type": "bool",
+      "logic": "Checks if a value type is a subtype of another, considering their respective modules. Performs a trivial equality check before delegating to the IsSubtypeOfImpl."
+    },
+    {
+      "name": "IsSubtypeOf",
+      "parameters": [
+        "ValueType subtype",
+        "ValueType supertype",
+        "const WasmModule* module"
+      ],
+      "return_type": "bool",
+      "logic": "Checks if a value type is a subtype of another within the same module.  Performs trivial equality check before delegating to IsSubtypeOfImpl."
+    },
+    {
+      "name": "IsSubtypeOf",
+      "parameters": [
+        "CanonicalValueType subtype",
+        "CanonicalValueType supertype"
+      ],
+      "return_type": "bool",
+      "logic": "Checks if a canonical value type is a subtype of another. Performs trivial equality check before delegating to IsSubtypeOfImpl."
+    },
+    {
+      "name": "TypesUnrelated",
+      "parameters": [
+        "ValueType type1",
+        "ValueType type2",
+        "const WasmModule* module1",
+        "const WasmModule* module2"
+      ],
+      "return_type": "bool",
+      "logic": "Checks if two value types are unrelated (neither is a subtype of the other), considering their modules."
+    },
+    {
+      "name": "IsHeapSubtypeOf",
+      "parameters": [
+        "HeapType subtype",
+        "HeapType supertype",
+        "const WasmModule* sub_module",
+        "const WasmModule* super_module"
+      ],
+      "return_type": "bool",
+      "logic": "Checks if a heap type is a subtype of another, considering their modules.  Performs trivial equality check before delegating to IsSubtypeOfImpl."
+    },
+    {
+      "name": "IsHeapSubtypeOf",
+      "parameters": [
+        "HeapType subtype",
+        "HeapType supertype",
+        "const WasmModule* module"
+      ],
+      "return_type": "bool",
+      "logic": "Checks if a heap type is a subtype of another within the same module. Performs trivial equality check before delegating to IsSubtypeOfImpl."
+    },
+    {
+      "name": "HeapTypesUnrelated",
+      "parameters": [
+        "HeapType heap1",
+        "HeapType heap2",
+        "const WasmModule* module1",
+        "const WasmModule* module2"
+      ],
+      "return_type": "bool",
+      "logic": "Checks if two heap types are unrelated (neither is a subtype of the other), considering their modules."
+    },
+    {
+      "name": "ValidSubtypeDefinition",
+      "parameters": [
+        "ModuleTypeIndex subtype_index",
+        "ModuleTypeIndex supertype_index",
+        "const WasmModule* sub_module",
+        "const WasmModule* super_module"
+      ],
+      "return_type": "bool",
+      "logic": "Checks if a given type definition is a valid subtype definition of another type.  Handles function, struct, and array specific rules."
+    },
+    {
+      "name": "IsShared",
+      "parameters": [
+        "ValueType type",
+        "const WasmModule* module"
+      ],
+      "return_type": "bool",
+      "logic": "Checks if a ValueType is shared."
+    },
+    {
+      "name": "Union",
+      "parameters": [
+        "ValueType type1",
+        "ValueType type2",
+        "const WasmModule* module1",
+        "const WasmModule* module2"
+      ],
+      "return_type": "TypeInModule",
+      "logic": "Returns the common ancestor of two value types (the union). Returns kTop if they don't have a common ancestor."
+    },
+    {
+      "name": "Union",
+      "parameters": [
+        "TypeInModule type1",
+        "TypeInModule type2"
+      ],
+      "return_type": "TypeInModule",
+      "logic": "Returns the common ancestor of two TypeInModule instances. Calls the other Union overload."
+    },
+    {
+      "name": "Intersection",
+      "parameters": [
+        "ValueType type1",
+        "ValueType type2",
+        "const WasmModule* module1",
+        "const WasmModule* module2"
+      ],
+      "return_type": "TypeInModule",
+      "logic": "Returns the intersection of two value types."
+    },
+    {
+      "name": "Intersection",
+      "parameters": [
+        "TypeInModule type1",
+        "TypeInModule type2"
+      ],
+      "return_type": "TypeInModule",
+      "logic": "Returns the intersection of two TypeInModule instances. Calls the other Intersection overload."
+    },
+    {
+      "name": "ToNullSentinel",
+      "parameters": [
+        "TypeInModule type"
+      ],
+      "return_type": "ValueType",
+      "logic": "Returns the matching abstract null type (none, nofunc, noextern) for a given TypeInModule."
+    },
+    {
+      "name": "IsSameTypeHierarchy",
+      "parameters": [
+        "HeapType type1",
+        "HeapType type2",
+        "const WasmModule* module"
+      ],
+      "return_type": "bool",
+      "logic": "Returns if two types share the same type hierarchy (any, extern, funcref)."
+    }
+  ]
+}

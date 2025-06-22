@@ -1,0 +1,52 @@
+{
+  "metadata": {
+    "path": "/home/kathirks_gc/v8_go/archive/codebase/src/zone/zone-list.h",
+    "file_name": "zone-list.h",
+    "language": "cpp",
+    "purpose": "Defines the ZoneList template class, a growable list allocated in a Zone."
+  },
+  "imports": {
+    "metadata": {
+      "language": "cpp",
+      "purpose": "Includes the Vector template class definition from the base namespace."
+    },
+    "code": "namespace v8 {\n\nnamespace base {\ntemplate <typename T>\nclass Vector;\n}  // namespace base"
+  },
+  "classes": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "ZoneList",
+        "about": "A growable list with constant-time access, allocated in a Zone.  Elements cannot be individually deleted, and the destructor doesn't free the backing store.",
+        "attributes": [
+          {
+            "name": "data_",
+            "type": "T*",
+            "access": "private",
+            "purpose": "Pointer to the array of elements."
+          },
+          {
+            "name": "capacity_",
+            "type": "int",
+            "access": "private",
+            "purpose": "The current capacity of the list."
+          },
+          {
+            "name": "length_",
+            "type": "int",
+            "access": "private",
+            "purpose": "The current number of elements in the list."
+          }
+        ],
+        "extends": "ZoneObject",
+        "dependencies": [
+          "Zone",
+          "base::Vector"
+        ]
+      },
+      "code": "namespace internal {\n\ntemplate <typename T>\nclass ZoneList final : public ZoneObject {\n public:\n  ZoneList(int capacity, Zone* zone) : capacity_(capacity) {\n    DCHECK_GE(capacity, 0);\n    if (capacity > 0) {\n      DCHECK_NOT_NULL(zone);\n      data_ = zone->AllocateArray<T>(capacity);\n    } else {\n      data_ = nullptr;\n    }\n  }\n\n  ZoneList(const ZoneList<T>& other, Zone* zone)\n      : ZoneList(other.length(), zone) {\n    AddAll(other, zone);\n  }\n\n  ZoneList(base::Vector<const T> other, Zone* zone)\n      : ZoneList(other.length(), zone) {\n    AddAll(other, zone);\n  }\n\n  ZoneList(ZoneList<T>&& other) V8_NOEXCEPT { *this = std::move(other); }\n\n  ZoneList(const ZoneList&) = delete;\n  ZoneList& operator=(const ZoneList&) = delete;\n\n  ~ZoneList() = default;\n\n  ZoneList& operator=(ZoneList&& other) V8_NOEXCEPT {\n    DCHECK_NULL(data_);\n    data_ = other.data_;\n    capacity_ = other.capacity_;\n    length_ = other.length_;\n    other.DropAndClear();\n    return *this;\n  }\n\n  inline T& operator[](int i) const {\n    DCHECK_LE(0, i);\n    DCHECK_GT(static_cast<unsigned>(length_), static_cast<unsigned>(i));\n    return data_[i];\n  }\n  inline T& at(int i) const { return operator[](i); }\n  inline T& last() const { return at(length_ - 1); }\n  inline T& first() const { return at(0); }\n\n  using iterator = T*;\n  inline iterator begin() { return &data_[0]; }\n  inline iterator end() { return &data_[length_]; }\n\n  using const_iterator = const T*;\n  inline const_iterator begin() const { return &data_[0]; }\n  inline const_iterator end() const { return &data_[length_]; }\n\n  V8_INLINE bool is_empty() const { return length_ == 0; }\n  V8_INLINE int length() const { return length_; }\n  V8_INLINE int capacity() const { return capacity_; }\n\n  base::Vector<T> ToVector() const { return base::Vector<T>(data_, length_); }\n  base::Vector<T> ToVector(int start, int length) const {\n    DCHECK_LE(start, length_);\n    return base::Vector<T>(&data_[start], std::min(length_ - start, length));\n  }\n\n  base::Vector<const T> ToConstVector() const {\n    return base::Vector<const T>(data_, length_);\n  }\n\n  void Add(const T& element, Zone* zone);\n  void AddAll(const ZoneList<T>& other, Zone* zone);\n  void AddAll(base::Vector<const T> other, Zone* zone);\n  void InsertAt(int index, const T& element, Zone* zone);\n\n  base::Vector<T> AddBlock(T value, int count, Zone* zone);\n\n  void Set(int index, const T& element);\n\n  T Remove(int i);\n\n  V8_INLINE T RemoveLast() { return Remove(length_ - 1); }\n\n  V8_INLINE void Clear(Zone* zone);\n\n  V8_INLINE void DropAndClear() {\n    data_ = nullptr;\n    capacity_ = 0;\n    length_ = 0;\n  }\n\n  V8_INLINE void Rewind(int pos);\n\n  inline bool Contains(const T& elm) const {\n    for (int i = 0; i < length_; i++) {\n      if (data_[i] == elm) return true;\n    }\n    return false;\n  }\n\n  template <class Visitor>\n  void Iterate(Visitor* visitor);\n\n  template <typename CompareFunction>\n  void Sort(CompareFunction cmp);\n  template <typename CompareFunction>\n  void StableSort(CompareFunction cmp, size_t start, size_t length);\n\n private:\n  T* data_ = nullptr;\n  int capacity_ = 0;\n  int length_ = 0;\n\n  void ResizeAdd(const T& element, Zone* zone);\n\n  void ResizeAddInternal(const T& element, Zone* zone);\n\n  void Resize(int new_capacity, Zone* zone);\n};\n\n}  // namespace internal"
+    }
+  ],
+  "file_path": "/home/kathirks_gc/v8_go/archive/codebase/src/zone/zone-list.h"
+}

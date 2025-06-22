@@ -1,0 +1,29 @@
+{
+  "metadata": {
+    "path": "/home/kathirks_gc/v8_go/archive/codebase/include/cppgc/name-provider.h",
+    "file_name": "name-provider.h",
+    "language": "cpp",
+    "purpose": "Defines the NameProvider class for providing human-readable names to garbage-collected objects in cppgc."
+  },
+  "imports": {
+    "metadata": {
+      "language": "cpp",
+      "purpose": "Includes the v8config.h file for V8-specific configurations."
+    },
+    "code": "#include \"v8config.h\"  // NOLINT(build/include_directory)"
+  },
+  "classes": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "NameProvider",
+        "about": "Provides a human-readable name for garbage-collected objects.",
+        "attributes": [],
+        "dependencies": []
+      },
+      "code": "class V8_EXPORT NameProvider {\n            public:\n                /**\n                 * Name that is used when hiding internals.\n                 */\n                static constexpr const char kHiddenName[] = \"InternalNode\";\n\n                /**\n                 * Name that is used in case compiler support is missing for composing a name\n                 * from C++ types.\n                 */\n                static constexpr const char kNoNameDeducible[] = \"<No name>\";\n\n                /**\n                 * Indicating whether the build supports extracting C++ names as object names.\n                 *\n                 * @returns true if C++ names should be hidden and represented by kHiddenName.\n                 */\n                static constexpr bool SupportsCppClassNamesAsObjectNames() {\n        #if CPPGC_SUPPORTS_OBJECT_NAMES\n                  return true;\n        #else   // !CPPGC_SUPPORTS_OBJECT_NAMES\n                  return false;\n        #endif  // !CPPGC_SUPPORTS_OBJECT_NAMES\n                }\n\n                virtual ~NameProvider() = default;\n\n                /**\n                 * Specifies a name for the garbage-collected object. Such names will never\n                 * be hidden, as they are explicitly specified by the user of this API.\n                 *\n                 * Implementations of this function must not allocate garbage-collected\n                 * objects or otherwise modify the cppgc heap.\n                 *\n                 * V8 may call this function while generating a heap snapshot or at other\n                 * times. If V8 is currently generating a heap snapshot (according to\n                 * HeapProfiler::IsTakingSnapshot), then the returned string must stay alive\n                 * until the snapshot generation has completed. Otherwise, the returned string\n                 * must stay alive forever. If you need a place to store a temporary string\n                 * during snapshot generation, use HeapProfiler::CopyNameForHeapSnapshot.\n                 *\n                 * @returns a human readable name for the object.\n                 */\n                virtual const char* GetHumanReadableName() const = 0;\n            };"
+    }
+  ],
+  "file_path": "/home/kathirks_gc/v8_go/archive/codebase/include/cppgc/name-provider.h"
+}

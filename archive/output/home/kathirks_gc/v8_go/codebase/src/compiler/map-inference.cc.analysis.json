@@ -1,0 +1,174 @@
+{
+  "file_path": "/home/kathirks_gc/v8_go/codebase/src/compiler/map-inference.cc",
+  "imports": [
+    "src/compiler/map-inference.h",
+    "src/compiler/compilation-dependencies.h",
+    "src/compiler/feedback-source.h",
+    "src/compiler/js-graph.h",
+    "src/compiler/simplified-operator.h",
+    "src/objects/map-inl.h"
+  ],
+  "classes": [
+    {
+      "name": "MapInference",
+      "properties": [
+        "broker_",
+        "object_",
+        "maps_",
+        "maps_state_"
+      ],
+      "methods": [
+        {
+          "name": "MapInference",
+          "parameters": [
+            "JSHeapBroker* broker",
+            "Node* object",
+            "Effect effect"
+          ],
+          "return_type": "void",
+          "logic": "Constructor for MapInference. It infers maps from the given object and effect using NodeProperties::InferMapsUnsafe, initializes maps_, and sets the state based on the result of the inference."
+        },
+        {
+          "name": "~MapInference",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Destructor for MapInference. Checks if the object is safe."
+        },
+        {
+          "name": "Safe",
+          "parameters": [],
+          "return_type": "bool",
+          "logic": "Checks if the current state is safe (i.e., does not require a guard)."
+        },
+        {
+          "name": "SetNeedGuardIfUnreliable",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Sets the state to kUnreliableNeedGuard if the current state is kUnreliableDontNeedGuard."
+        },
+        {
+          "name": "SetGuarded",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Sets the state to kReliableOrGuarded."
+        },
+        {
+          "name": "HaveMaps",
+          "parameters": [],
+          "return_type": "bool",
+          "logic": "Checks if any maps have been inferred."
+        },
+        {
+          "name": "AllOfInstanceTypesAreJSReceiver",
+          "parameters": [],
+          "return_type": "bool",
+          "logic": "Checks if all the inferred maps have instance types that are JSReceiver."
+        },
+        {
+          "name": "AllOfInstanceTypesAre",
+          "parameters": [
+            "InstanceType type"
+          ],
+          "return_type": "bool",
+          "logic": "Checks if all the inferred maps have a specific instance type (provided as argument)."
+        },
+        {
+          "name": "AnyOfInstanceTypesAre",
+          "parameters": [
+            "InstanceType type"
+          ],
+          "return_type": "bool",
+          "logic": "Checks if any of the inferred maps have a specific instance type (provided as argument)."
+        },
+        {
+          "name": "AllOfInstanceTypes",
+          "parameters": [
+            "std::function<bool(InstanceType)> f"
+          ],
+          "return_type": "bool",
+          "logic": "Sets need guard if unreliable, then checks if all inferred maps satisfy the provided function `f`."
+        },
+        {
+          "name": "AllOfInstanceTypesUnsafe",
+          "parameters": [
+            "std::function<bool(InstanceType)> f"
+          ],
+          "return_type": "bool",
+          "logic": "Checks if all the inferred maps satisfy a given predicate function `f`."
+        },
+        {
+          "name": "AnyOfInstanceTypesUnsafe",
+          "parameters": [
+            "std::function<bool(InstanceType)> f"
+          ],
+          "return_type": "bool",
+          "logic": "Checks if any of the inferred maps satisfy a given predicate function `f`."
+        },
+        {
+          "name": "GetMaps",
+          "parameters": [],
+          "return_type": "ZoneRefSet<Map> const&",
+          "logic": "Sets need guard if unreliable and returns the inferred maps."
+        },
+        {
+          "name": "Is",
+          "parameters": [
+            "MapRef expected_map"
+          ],
+          "return_type": "bool",
+          "logic": "Checks if the inferred maps contains only one map and if that map is equal to the expected_map."
+        },
+        {
+          "name": "InsertMapChecks",
+          "parameters": [
+            "JSGraph* jsgraph",
+            "Effect* effect",
+            "Control control",
+            "const FeedbackSource& feedback"
+          ],
+          "return_type": "void",
+          "logic": "Inserts map checks into the graph to ensure that the object has the expected maps. It then sets the guarded flag."
+        },
+        {
+          "name": "RelyOnMapsViaStability",
+          "parameters": [
+            "CompilationDependencies* dependencies"
+          ],
+          "return_type": "bool",
+          "logic": "Attempts to rely on the stability of the maps. If the maps are stable, it registers dependencies on them and marks the MapInference as guarded."
+        },
+        {
+          "name": "RelyOnMapsPreferStability",
+          "parameters": [
+            "CompilationDependencies* dependencies",
+            "JSGraph* jsgraph",
+            "Effect* effect",
+            "Control control",
+            "const FeedbackSource& feedback"
+          ],
+          "return_type": "bool",
+          "logic": "Tries to rely on map stability first, otherwise inserts map checks based on feedback.  Returns `true` if stability was used, `false` otherwise."
+        },
+        {
+          "name": "RelyOnMapsHelper",
+          "parameters": [
+            "CompilationDependencies* dependencies",
+            "JSGraph* jsgraph",
+            "Effect* effect",
+            "Control control",
+            "const FeedbackSource& feedback"
+          ],
+          "return_type": "bool",
+          "logic": "Helper function for relying on maps, either through stability dependencies or by inserting map checks."
+        },
+        {
+          "name": "NoChange",
+          "parameters": [],
+          "return_type": "Reduction",
+          "logic": "Marks the maps as guarded and clears them. Returns Reducer::NoChange()."
+        }
+      ]
+    }
+  ],
+  "functions": []
+}

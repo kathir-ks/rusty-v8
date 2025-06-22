@@ -1,0 +1,153 @@
+{
+  "metadata": {
+    "path": "/home/kathirks_gc/v8_go/archive/codebase/src/compiler/osr.cc",
+    "file_name": "osr.cc",
+    "language": "cpp",
+    "purpose": "Implements On-Stack Replacement (OSR) helper functions for the V8 compiler."
+  },
+  "imports": {
+    "metadata": {
+      "language": "cpp",
+      "purpose": "Includes necessary header files for OSR implementation, code generation, frame management, and JS array objects."
+    },
+    "code": "#include \"src/compiler/osr.h\"\n\n#include \"src/codegen/optimized-compilation-info.h\"\n#include \"src/compiler/frame.h\"\n#include \"src/objects/js-array-inl.h\""
+  },
+  "classes": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "OsrHelper",
+        "about": "Helper class for On-Stack Replacement (OSR) compilation.",
+        "attributes": [
+          {
+            "name": "parameter_count_",
+            "type": "int",
+            "access": "private",
+            "purpose": "Stores the number of parameters of the function being optimized."
+          },
+          {
+            "name": "stack_slot_count_",
+            "type": "int",
+            "access": "private",
+            "purpose": "Stores the number of stack slots required by the unoptimized frame."
+          }
+        ],
+        "dependencies": [
+          "OptimizedCompilationInfo",
+          "BytecodeArray",
+          "UnoptimizedFrameConstants"
+        ]
+      },
+      "code": "class OsrHelper {\n public:\n  OsrHelper(OptimizedCompilationInfo* info);\n\n  void SetupFrame(Frame* frame);\n\n private:\n  int parameter_count_;\n  int stack_slot_count_;\n};"
+    }
+  ],
+  "functions": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "method",
+        "name": "OsrHelper",
+        "parent": "OsrHelper",
+        "about": "Constructor for the OsrHelper class.",
+        "logic": "Initializes parameter_count_ from the OptimizedCompilationInfo's bytecode array, and stack_slot_count_ by calculating the register stack slot count plus extra slots using UnoptimizedFrameConstants.",
+        "parameters": [
+          {
+            "name": "info",
+            "type": "OptimizedCompilationInfo*",
+            "purpose": "Pointer to the OptimizedCompilationInfo object containing information about the function being optimized."
+          }
+        ],
+        "return": {
+          "type": "void",
+          "description": "No return value"
+        },
+        "dependencies": [
+          "OptimizedCompilationInfo",
+          "BytecodeArray",
+          "UnoptimizedFrameConstants"
+        ]
+      },
+      "code": "OsrHelper::OsrHelper(OptimizedCompilationInfo* info)\n    : parameter_count_(info->bytecode_array()->parameter_count()),\n      stack_slot_count_(UnoptimizedFrameConstants::RegisterStackSlotCount(\n                            info->bytecode_array()->register_count()) +\n                        UnoptimizedFrameConstants::kExtraSlotCount) {}"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "method",
+        "name": "SetupFrame",
+        "parent": "OsrHelper",
+        "about": "Sets up the frame for OSR by reserving the first spill slots to subsume the unoptimized frame.",
+        "logic": "Reserves spill slots in the optimized frame to accommodate the unoptimized frame's data, effectively replacing the unoptimized frame on the stack.",
+        "parameters": [
+          {
+            "name": "frame",
+            "type": "Frame*",
+            "purpose": "Pointer to the Frame object representing the optimized frame."
+          }
+        ],
+        "return": {
+          "type": "void",
+          "description": "No return value"
+        },
+        "dependencies": [
+          "Frame",
+          "UnoptimizedFrameSlots"
+        ]
+      },
+      "code": "void OsrHelper::SetupFrame(Frame* frame) {\n  // The optimized frame will subsume the unoptimized frame. Do so by reserving\n  // the first spill slots.\n  frame->ReserveSpillSlots(UnoptimizedFrameSlots());\n}"
+    }
+  ],
+  "dependencies": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "OptimizedCompilationInfo",
+        "about": "Provides information about the compilation process, including the bytecode array and other optimization-related data."
+      },
+      "code": "class OptimizedCompilationInfo {\n                 public:\n                  BytecodeArray* bytecode_array() { return nullptr; }\n                };",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "BytecodeArray",
+        "about": "Represents the bytecode array of the function being compiled."
+      },
+      "code": "class BytecodeArray {\n                 public:\n                  int parameter_count() { return 0; }\n                  int register_count() { return 0; }\n                };",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "UnoptimizedFrameConstants",
+        "about": "Provides constants related to the unoptimized frame layout."
+      },
+      "code": "class UnoptimizedFrameConstants {\n                 public:\n                  static int RegisterStackSlotCount(int register_count) { return 0; }\n                  static const int kExtraSlotCount = 0;\n                };",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "Frame",
+        "about": "Represents the stack frame."
+      },
+      "code": "class Frame {\n                 public:\n                  void ReserveSpillSlots(int slots) {}\n                };",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "UnoptimizedFrameSlots",
+        "about": "Represents spill slots in an unoptimized frame."
+      },
+      "code": "class UnoptimizedFrameSlots {};",
+      "type": "class"
+    }
+  ],
+  "file_path": "/home/kathirks_gc/v8_go/archive/codebase/src/compiler/osr.cc"
+}

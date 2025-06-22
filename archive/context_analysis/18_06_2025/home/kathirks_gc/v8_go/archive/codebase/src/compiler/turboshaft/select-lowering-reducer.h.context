@@ -1,0 +1,121 @@
+{
+  "metadata": {
+    "path": "/home/kathirks_gc/v8_go/archive/codebase/src/compiler/turboshaft/select-lowering-reducer.h",
+    "file_name": "select-lowering-reducer.h",
+    "language": "cpp",
+    "purpose": "Defines a reducer that lowers Select operations to conditional branches (diamonds) in the Turboshaft compiler."
+  },
+  "imports": {
+    "metadata": {
+      "language": "cpp",
+      "purpose": "Includes necessary headers for vector, common operators, assembler and operations in the Turboshaft compiler."
+    },
+    "code": "#include \"src/base/vector.h\"\n#include \"src/compiler/common-operator.h\"\n#include \"src/compiler/turboshaft/assembler.h\"\n#include \"src/compiler/turboshaft/operations.h\""
+  },
+  "classes": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "SelectLoweringReducer",
+        "extends": "Next",
+        "about": "A template class that inherits from 'Next' and provides a REDUCE method to lower Select operations to conditional branches.",
+        "attributes": [],
+        "dependencies": [
+          "Next",
+          "V",
+          "Any",
+          "Word32",
+          "RegisterRepresentation",
+          "BranchHint",
+          "SelectOp",
+          "Variable"
+        ]
+      },
+      "code": "template <class Next>\nclass SelectLoweringReducer : public Next {\n public:\n  TURBOSHAFT_REDUCER_BOILERPLATE(SelectLowering)\n\n  V<Any> REDUCE(Select)(V<Word32> cond, V<Any> vtrue, V<Any> vfalse,\n                        RegisterRepresentation rep, BranchHint hint,\n                        SelectOp::Implementation implem) {\n    if (implem == SelectOp::Implementation::kCMove) {\n      // We do not lower Select operations that should be implemented with\n      // CMove.\n      return Next::ReduceSelect(cond, vtrue, vfalse, rep, hint, implem);\n    }\n\n    Variable result = __ NewLoopInvariantVariable(rep);\n    IF (cond) {\n      __ SetVariable(result, vtrue);\n    } ELSE {\n      __ SetVariable(result, vfalse);\n    }\n\n    return __ GetVariable(result);\n  }\n};"
+    }
+  ],
+  "dependencies": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "Next",
+        "about": "Base class for the SelectLoweringReducer, representing the next stage in the reduction pipeline."
+      },
+      "code": "class Next {};",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "V",
+        "about": "Represents a value in the Turboshaft graph. Templated by the type of the value."
+      },
+      "code": "template <typename T> class V {};",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "Any",
+        "about": "Represents a value of any type."
+      },
+      "code": "class Any {};",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "Word32",
+        "about": "Represents a 32-bit word."
+      },
+      "code": "class Word32 {};",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "RegisterRepresentation",
+        "about": "Represents the register allocation for a value."
+      },
+      "code": "class RegisterRepresentation {};",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "BranchHint",
+        "about": "Hint for the branch instruction."
+      },
+      "code": "class BranchHint {};",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "SelectOp",
+        "about": "Represents a Select operation."
+      },
+      "code": "class SelectOp {\n                public:\n                    enum class Implementation { kCMove };\n                };",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "Variable",
+        "about": "Represents a variable in the Turboshaft graph."
+      },
+      "code": "class Variable {};",
+      "type": "class"
+    }
+  ],
+  "file_path": "/home/kathirks_gc/v8_go/archive/codebase/src/compiler/turboshaft/select-lowering-reducer.h"
+}

@@ -1,0 +1,555 @@
+{
+  "file_path": "/home/kathirks_gc/v8_go/codebase/src/strings/unicode.h",
+  "imports": [
+    "<sys/types.h>",
+    "src/base/bit-field.h",
+    "src/base/vector.h",
+    "src/common/globals.h",
+    "third_party/utf8-decoder/utf8-decoder.h"
+  ],
+  "classes": [
+    {
+      "name": "Predicate",
+      "properties": [
+        "kSize",
+        "kMask",
+        "entries_"
+      ],
+      "methods": [
+        {
+          "name": "Predicate",
+          "parameters": [],
+          "return_type": "inline",
+          "logic": "Default constructor for Predicate class. Only defined when V8_INTL_SUPPORT is not defined."
+        },
+        {
+          "name": "get",
+          "parameters": [
+            "uchar c"
+          ],
+          "return_type": "inline bool",
+          "logic": "Retrieves the boolean value associated with the given unicode character from the cache. Only defined when V8_INTL_SUPPORT is not defined."
+        },
+        {
+          "name": "CalculateValue",
+          "parameters": [
+            "uchar c"
+          ],
+          "return_type": "bool",
+          "logic": "Calculates the boolean value for a given unicode character. This method is intended to be overridden by subclasses to provide the actual logic. Only defined when V8_INTL_SUPPORT is not defined."
+        },
+        {
+          "name": "CacheEntry",
+          "parameters": [],
+          "return_type": "inline",
+          "logic": "Default constructor for CacheEntry, initializes the bitfield to 0. Only defined when V8_INTL_SUPPORT is not defined."
+        },
+        {
+          "name": "CacheEntry",
+          "parameters": [
+            "uchar code_point",
+            "bool value"
+          ],
+          "return_type": "inline",
+          "logic": "Constructor for CacheEntry, initializes the bitfield using code_point and value. Only defined when V8_INTL_SUPPORT is not defined."
+        },
+        {
+          "name": "code_point",
+          "parameters": [],
+          "return_type": "uchar",
+          "logic": "Returns the code point stored in the CacheEntry. Only defined when V8_INTL_SUPPORT is not defined."
+        },
+        {
+          "name": "value",
+          "parameters": [],
+          "return_type": "bool",
+          "logic": "Returns the value stored in the CacheEntry. Only defined when V8_INTL_SUPPORT is not defined."
+        }
+      ]
+    },
+    {
+      "name": "Mapping",
+      "properties": [
+        "kSize",
+        "kMask",
+        "entries_"
+      ],
+      "methods": [
+        {
+          "name": "Mapping",
+          "parameters": [],
+          "return_type": "inline",
+          "logic": "Default constructor for Mapping class. Only defined when V8_INTL_SUPPORT is not defined."
+        },
+        {
+          "name": "get",
+          "parameters": [
+            "uchar c",
+            "uchar n",
+            "uchar* result"
+          ],
+          "return_type": "inline int",
+          "logic": "Retrieves the mapping for a given unicode character and its context. Only defined when V8_INTL_SUPPORT is not defined."
+        },
+        {
+          "name": "CalculateValue",
+          "parameters": [
+            "uchar c",
+            "uchar n",
+            "uchar* result"
+          ],
+          "return_type": "int",
+          "logic": "Calculates the mapping value for a given unicode character and its context. This method is intended to be overridden by subclasses to provide the actual logic. Only defined when V8_INTL_SUPPORT is not defined."
+        },
+        {
+          "name": "CacheEntry",
+          "parameters": [],
+          "return_type": "inline",
+          "logic": "Default constructor for CacheEntry, initializes code_point_ to kNoChar and offset_ to 0. Only defined when V8_INTL_SUPPORT is not defined."
+        },
+        {
+          "name": "CacheEntry",
+          "parameters": [
+            "uchar code_point",
+            "signed offset"
+          ],
+          "return_type": "inline",
+          "logic": "Constructor for CacheEntry, initializes code_point_ and offset_. Only defined when V8_INTL_SUPPORT is not defined."
+        }
+      ]
+    },
+    {
+      "name": "UnicodeData",
+      "properties": [
+        "kMaxCodePoint"
+      ],
+      "methods": [
+        {
+          "name": "GetByteCount",
+          "parameters": [],
+          "return_type": "static int",
+          "logic": "Returns the byte count. Only defined when V8_INTL_SUPPORT is not defined."
+        }
+      ]
+    },
+    {
+      "name": "Utf16",
+      "properties": [
+        "kNoPreviousCharacter",
+        "kMaxNonSurrogateCharCode",
+        "kMaxExtraUtf8BytesForOneUtf16CodeUnit",
+        "kUtf8BytesToCodeASurrogate"
+      ],
+      "methods": [
+        {
+          "name": "IsSurrogatePair",
+          "parameters": [
+            "int lead",
+            "int trail"
+          ],
+          "return_type": "static inline bool",
+          "logic": "Checks if the given code units form a surrogate pair."
+        },
+        {
+          "name": "IsLeadSurrogate",
+          "parameters": [
+            "int code"
+          ],
+          "return_type": "static inline bool",
+          "logic": "Checks if the given code unit is a lead surrogate."
+        },
+        {
+          "name": "IsTrailSurrogate",
+          "parameters": [
+            "int code"
+          ],
+          "return_type": "static inline bool",
+          "logic": "Checks if the given code unit is a trail surrogate."
+        },
+        {
+          "name": "CombineSurrogatePair",
+          "parameters": [
+            "uchar lead",
+            "uchar trail"
+          ],
+          "return_type": "static inline int",
+          "logic": "Combines a lead and trail surrogate into a single code point."
+        },
+        {
+          "name": "LeadSurrogate",
+          "parameters": [
+            "uint32_t char_code"
+          ],
+          "return_type": "static inline uint16_t",
+          "logic": "Calculates the lead surrogate code unit for a given code point."
+        },
+        {
+          "name": "TrailSurrogate",
+          "parameters": [
+            "uint32_t char_code"
+          ],
+          "return_type": "static inline uint16_t",
+          "logic": "Calculates the trail surrogate code unit for a given code point."
+        },
+        {
+          "name": "HasUnpairedSurrogate",
+          "parameters": [
+            "const uint16_t* code_units",
+            "size_t length"
+          ],
+          "return_type": "static inline bool",
+          "logic": "Checks if the provided code units has any unpaired surrogates."
+        },
+        {
+          "name": "ReplaceUnpairedSurrogates",
+          "parameters": [
+            "const uint16_t* source_code_units",
+            "uint16_t* dest_code_units",
+            "size_t length"
+          ],
+          "return_type": "static void",
+          "logic": "Replaces any unpaired surrogates with the Unicode replacement character (U+FFFD)."
+        }
+      ]
+    },
+    {
+      "name": "Latin1",
+      "properties": [
+        "kMaxChar"
+      ],
+      "methods": []
+    },
+    {
+      "name": "Utf8",
+      "properties": [
+        "kBadChar",
+        "kBufferEmpty",
+        "kIncomplete",
+        "kMaxEncodedSize",
+        "kMaxOneByteChar",
+        "kMaxTwoByteChar",
+        "kMaxThreeByteChar",
+        "kMaxFourByteChar",
+        "kBytesSavedByCombiningSurrogates",
+        "kSizeOfUnmatchedSurrogate",
+        "kMax16BitCodeUnitSize",
+        "kMax8BitCodeUnitSize"
+      ],
+      "methods": [
+        {
+          "name": "LengthOneByte",
+          "parameters": [
+            "uint8_t chr"
+          ],
+          "return_type": "static inline unsigned",
+          "logic": "Calculates the length of the UTF-8 encoding of a single-byte character (always 1)."
+        },
+        {
+          "name": "Length",
+          "parameters": [
+            "uchar chr",
+            "int previous"
+          ],
+          "return_type": "static inline unsigned",
+          "logic": "Calculates the length of the UTF-8 encoding of a unicode character, taking into account the previous character for surrogate pair handling."
+        },
+        {
+          "name": "EncodeOneByte",
+          "parameters": [
+            "char* out",
+            "uint8_t c"
+          ],
+          "return_type": "static inline unsigned",
+          "logic": "Encodes a single-byte character into UTF-8."
+        },
+        {
+          "name": "Encode",
+          "parameters": [
+            "char* out",
+            "uchar c",
+            "int previous",
+            "bool replace_invalid"
+          ],
+          "return_type": "static inline unsigned",
+          "logic": "Encodes a unicode character into UTF-8, taking into account the previous character for surrogate pair handling. Optionally replaces invalid characters with the replacement character."
+        },
+        {
+          "name": "CalculateValue",
+          "parameters": [
+            "const uint8_t* str",
+            "size_t length",
+            "size_t* cursor"
+          ],
+          "return_type": "static uchar",
+          "logic": "Calculates the unicode value from a UTF-8 encoded string."
+        },
+        {
+          "name": "ValueOf",
+          "parameters": [
+            "const uint8_t* str",
+            "size_t length",
+            "size_t* cursor"
+          ],
+          "return_type": "static inline uchar",
+          "logic": "Retrieves the unicode value from a UTF-8 encoded string."
+        },
+        {
+          "name": "ValueOfIncremental",
+          "parameters": [
+            "const uint8_t** cursor",
+            "State* state",
+            "Utf8IncrementalBuffer* buffer"
+          ],
+          "return_type": "static inline uchar",
+          "logic": "Incrementally decodes UTF-8 encoded bytes into a unicode value, maintaining the state of the decoder."
+        },
+        {
+          "name": "ValueOfIncrementalFinish",
+          "parameters": [
+            "State* state"
+          ],
+          "return_type": "static uchar",
+          "logic": "Finishes incremental UTF-8 decoding process when the input ends. Returns any pending result, and resets the decoder state."
+        },
+        {
+          "name": "IsValidCharacter",
+          "parameters": [
+            "uchar c"
+          ],
+          "return_type": "static inline bool",
+          "logic": "Checks if a given unicode character is a valid character (excluding non-characters)."
+        },
+        {
+          "name": "ValidateEncoding",
+          "parameters": [
+            "const uint8_t* str",
+            "size_t length"
+          ],
+          "return_type": "static bool",
+          "logic": "Validates if the input string has a valid UTF-8 encoding."
+        },
+        {
+          "name": "Encode",
+          "parameters": [
+            "v8::base::Vector<const Char> string",
+            "char* buffer",
+            "size_t capacity",
+            "bool write_null",
+            "bool replace_invalid_utf8"
+          ],
+          "return_type": "static EncodingResult",
+          "logic": "Encodes the input characters as UTF-8 into the provided buffer."
+        }
+      ]
+    },
+    {
+      "name": "Wtf8",
+      "properties": [],
+      "methods": [
+        {
+          "name": "ValidateEncoding",
+          "parameters": [
+            "const uint8_t* str",
+            "size_t length"
+          ],
+          "return_type": "static bool",
+          "logic": "Validates if the input string has a valid WTF-8 encoding."
+        },
+        {
+          "name": "ScanForSurrogates",
+          "parameters": [
+            "v8::base::Vector<const uint8_t> wtf8",
+            "std::vector<size_t>* surrogate_offsets"
+          ],
+          "return_type": "static void",
+          "logic": "Scans a WTF-8 encoded string for isolated surrogate code points and stores their offsets."
+        }
+      ]
+    },
+    {
+      "name": "Uppercase",
+      "properties": [],
+      "methods": [
+        {
+          "name": "Is",
+          "parameters": [
+            "uchar c"
+          ],
+          "return_type": "static bool",
+          "logic": "Checks if a given unicode character is an uppercase letter."
+        }
+      ]
+    },
+    {
+      "name": "Letter",
+      "properties": [],
+      "methods": [
+        {
+          "name": "Is",
+          "parameters": [
+            "uchar c"
+          ],
+          "return_type": "static bool",
+          "logic": "Checks if a given unicode character is a letter."
+        }
+      ]
+    },
+    {
+      "name": "ID_Start",
+      "properties": [],
+      "methods": [
+        {
+          "name": "Is",
+          "parameters": [
+            "uchar c"
+          ],
+          "return_type": "static bool",
+          "logic": "Checks if a given unicode character is a valid identifier start character. Only defined when V8_INTL_SUPPORT is not defined."
+        }
+      ]
+    },
+    {
+      "name": "ID_Continue",
+      "properties": [],
+      "methods": [
+        {
+          "name": "Is",
+          "parameters": [
+            "uchar c"
+          ],
+          "return_type": "static bool",
+          "logic": "Checks if a given unicode character is a valid identifier continue character. Only defined when V8_INTL_SUPPORT is not defined."
+        }
+      ]
+    },
+    {
+      "name": "WhiteSpace",
+      "properties": [],
+      "methods": [
+        {
+          "name": "Is",
+          "parameters": [
+            "uchar c"
+          ],
+          "return_type": "static bool",
+          "logic": "Checks if a given unicode character is a whitespace character. Only defined when V8_INTL_SUPPORT is not defined."
+        }
+      ]
+    },
+    {
+      "name": "ToLowercase",
+      "properties": [
+        "kMaxWidth",
+        "kIsToLower"
+      ],
+      "methods": [
+        {
+          "name": "Convert",
+          "parameters": [
+            "uchar c",
+            "uchar n",
+            "uchar* result",
+            "bool* allow_caching_ptr"
+          ],
+          "return_type": "static int",
+          "logic": "Converts a given unicode character to lowercase. Only defined when V8_INTL_SUPPORT is not defined."
+        }
+      ]
+    },
+    {
+      "name": "ToUppercase",
+      "properties": [
+        "kMaxWidth",
+        "kIsToLower"
+      ],
+      "methods": [
+        {
+          "name": "Convert",
+          "parameters": [
+            "uchar c",
+            "uchar n",
+            "uchar* result",
+            "bool* allow_caching_ptr"
+          ],
+          "return_type": "static int",
+          "logic": "Converts a given unicode character to uppercase. Only defined when V8_INTL_SUPPORT is not defined."
+        }
+      ]
+    },
+    {
+      "name": "Ecma262Canonicalize",
+      "properties": [
+        "kMaxWidth"
+      ],
+      "methods": [
+        {
+          "name": "Convert",
+          "parameters": [
+            "uchar c",
+            "uchar n",
+            "uchar* result",
+            "bool* allow_caching_ptr"
+          ],
+          "return_type": "static int",
+          "logic": "Canonicalizes a unicode character according to Ecma262 specification. Only defined when V8_INTL_SUPPORT is not defined."
+        }
+      ]
+    },
+    {
+      "name": "Ecma262UnCanonicalize",
+      "properties": [
+        "kMaxWidth"
+      ],
+      "methods": [
+        {
+          "name": "Convert",
+          "parameters": [
+            "uchar c",
+            "uchar n",
+            "uchar* result",
+            "bool* allow_caching_ptr"
+          ],
+          "return_type": "static int",
+          "logic": "Uncanonicalizes a unicode character according to Ecma262 specification. Only defined when V8_INTL_SUPPORT is not defined."
+        }
+      ]
+    },
+    {
+      "name": "CanonicalizationRange",
+      "properties": [
+        "kMaxWidth"
+      ],
+      "methods": [
+        {
+          "name": "Convert",
+          "parameters": [
+            "uchar c",
+            "uchar n",
+            "uchar* result",
+            "bool* allow_caching_ptr"
+          ],
+          "return_type": "static int",
+          "logic": "Converts unicode characters to their canonicalization range. Only defined when V8_INTL_SUPPORT is not defined."
+        }
+      ]
+    }
+  ],
+  "functions": [
+    {
+      "name": "IsLineTerminator",
+      "parameters": [
+        "uchar c"
+      ],
+      "return_type": "V8_INLINE bool",
+      "logic": "Checks if a given unicode character is a line terminator."
+    },
+    {
+      "name": "IsStringLiteralLineTerminator",
+      "parameters": [
+        "uchar c"
+      ],
+      "return_type": "V8_INLINE bool",
+      "logic": "Checks if a given unicode character is a line terminator within a string literal."
+    }
+  ]
+}

@@ -1,0 +1,166 @@
+{
+  "metadata": {
+    "path": "/home/kathirks_gc/v8_go/archive/codebase/src/logging/tracing-flags.h",
+    "file_name": "tracing-flags.h",
+    "language": "cpp",
+    "purpose": "Defines a struct containing atomic flags for enabling/disabling tracing features at runtime."
+  },
+  "imports": {
+    "metadata": {
+      "language": "cpp",
+      "purpose": "Includes necessary headers for atomic operations and macros."
+    },
+    "code": "#include <atomic>\n\n            #include \"src/base/macros.h\""
+  },
+  "classes": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "struct",
+        "name": "TracingFlags",
+        "about": "Contains atomic flags that control runtime tracing features.  These flags can be modified from multiple threads.",
+        "attributes": [
+          {
+            "name": "runtime_stats",
+            "type": "std::atomic_uint",
+            "access": "public",
+            "purpose": "Enables/disables runtime statistics tracing."
+          },
+          {
+            "name": "gc",
+            "type": "std::atomic_uint",
+            "access": "public",
+            "purpose": "Enables/disables garbage collection tracing."
+          },
+          {
+            "name": "gc_stats",
+            "type": "std::atomic_uint",
+            "access": "public",
+            "purpose": "Enables/disables garbage collection statistics tracing."
+          },
+          {
+            "name": "ic_stats",
+            "type": "std::atomic_uint",
+            "access": "public",
+            "purpose": "Enables/disables inline cache statistics tracing."
+          },
+          {
+            "name": "zone_stats",
+            "type": "std::atomic_uint",
+            "access": "public",
+            "purpose": "Enables/disables zone statistics tracing."
+          }
+        ],
+        "dependencies": [
+          "std::atomic_uint",
+          "V8_EXPORT_PRIVATE",
+          "V8_RUNTIME_CALL_STATS"
+        ]
+      },
+      "code": "struct TracingFlags {\n            static V8_EXPORT_PRIVATE std::atomic_uint runtime_stats;\n            static V8_EXPORT_PRIVATE std::atomic_uint gc;\n            static V8_EXPORT_PRIVATE std::atomic_uint gc_stats;\n            static V8_EXPORT_PRIVATE std::atomic_uint ic_stats;\n            static V8_EXPORT_PRIVATE std::atomic_uint zone_stats;\n\n        #ifdef V8_RUNTIME_CALL_STATS\n            static bool is_runtime_stats_enabled() {\n                return runtime_stats.load(std::memory_order_relaxed) != 0;\n            }\n        #endif\n\n            static bool is_gc_enabled() {\n                return gc.load(std::memory_order_relaxed) != 0;\n            }\n\n            static bool is_gc_stats_enabled() {\n                return gc_stats.load(std::memory_order_relaxed) != 0;\n            }\n\n            static bool is_ic_stats_enabled() {\n                return ic_stats.load(std::memory_order_relaxed) != 0;\n            }\n\n            static bool is_zone_stats_enabled() {\n                return zone_stats.load(std::memory_order_relaxed) != 0;\n            }\n            };"
+    }
+  ],
+  "functions": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "function",
+        "name": "is_runtime_stats_enabled",
+        "parent": "TracingFlags",
+        "about": "Checks if runtime statistics tracing is enabled.",
+        "logic": "Loads the value of the `runtime_stats` atomic variable with `std::memory_order_relaxed` and returns true if it's non-zero.",
+        "parameters": [],
+        "return": {
+          "type": "bool",
+          "description": "True if runtime statistics tracing is enabled, false otherwise."
+        },
+        "dependencies": [
+          "runtime_stats",
+          "std::memory_order_relaxed"
+        ]
+      },
+      "code": "static bool is_runtime_stats_enabled() {\n                return runtime_stats.load(std::memory_order_relaxed) != 0;\n            }"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "function",
+        "name": "is_gc_enabled",
+        "parent": "TracingFlags",
+        "about": "Checks if garbage collection tracing is enabled.",
+        "logic": "Loads the value of the `gc` atomic variable with `std::memory_order_relaxed` and returns true if it's non-zero.",
+        "parameters": [],
+        "return": {
+          "type": "bool",
+          "description": "True if garbage collection tracing is enabled, false otherwise."
+        },
+        "dependencies": [
+          "gc",
+          "std::memory_order_relaxed"
+        ]
+      },
+      "code": "static bool is_gc_enabled() {\n                return gc.load(std::memory_order_relaxed) != 0;\n            }"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "function",
+        "name": "is_gc_stats_enabled",
+        "parent": "TracingFlags",
+        "about": "Checks if garbage collection statistics tracing is enabled.",
+        "logic": "Loads the value of the `gc_stats` atomic variable with `std::memory_order_relaxed` and returns true if it's non-zero.",
+        "parameters": [],
+        "return": {
+          "type": "bool",
+          "description": "True if garbage collection statistics tracing is enabled, false otherwise."
+        },
+        "dependencies": [
+          "gc_stats",
+          "std::memory_order_relaxed"
+        ]
+      },
+      "code": "static bool is_gc_stats_enabled() {\n                return gc_stats.load(std::memory_order_relaxed) != 0;\n            }"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "function",
+        "name": "is_ic_stats_enabled",
+        "parent": "TracingFlags",
+        "about": "Checks if inline cache statistics tracing is enabled.",
+        "logic": "Loads the value of the `ic_stats` atomic variable with `std::memory_order_relaxed` and returns true if it's non-zero.",
+        "parameters": [],
+        "return": {
+          "type": "bool",
+          "description": "True if inline cache statistics tracing is enabled, false otherwise."
+        },
+        "dependencies": [
+          "ic_stats",
+          "std::memory_order_relaxed"
+        ]
+      },
+      "code": "static bool is_ic_stats_enabled() {\n                return ic_stats.load(std::memory_order_relaxed) != 0;\n            }"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "function",
+        "name": "is_zone_stats_enabled",
+        "parent": "TracingFlags",
+        "about": "Checks if zone statistics tracing is enabled.",
+        "logic": "Loads the value of the `zone_stats` atomic variable with `std::memory_order_relaxed` and returns true if it's non-zero.",
+        "parameters": [],
+        "return": {
+          "type": "bool",
+          "description": "True if zone statistics tracing is enabled, false otherwise."
+        },
+        "dependencies": [
+          "zone_stats",
+          "std::memory_order_relaxed"
+        ]
+      },
+      "code": "static bool is_zone_stats_enabled() {\n                return zone_stats.load(std::memory_order_relaxed) != 0;\n            }"
+    }
+  ],
+  "file_path": "/home/kathirks_gc/v8_go/archive/codebase/src/logging/tracing-flags.h"
+}

@@ -1,0 +1,57 @@
+{
+  "metadata": {
+    "path": "/home/kathirks_gc/v8_go/archive/codebase/include/cppgc/process-heap-statistics.h",
+    "file_name": "process-heap-statistics.h",
+    "language": "cpp",
+    "purpose": "Defines a class for tracking process-wide heap statistics for cppgc. It provides access to the total allocated object size and the total allocated space."
+  },
+  "imports": {
+    "metadata": {
+      "language": "cpp",
+      "purpose": "Includes necessary headers for atomic operations, standard definitions, and V8 configuration."
+    },
+    "code": "#include <atomic>\n#include <cstddef>\n\n#include \"v8config.h\"  // NOLINT(build/include_directory)"
+  },
+  "classes": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "ProcessHeapStatistics",
+        "about": "Provides static methods to access process-wide heap statistics maintained by cppgc.",
+        "attributes": [
+          {
+            "name": "total_allocated_space_",
+            "type": "std::atomic_size_t",
+            "access": "private",
+            "purpose": "Stores the total allocated space."
+          },
+          {
+            "name": "total_allocated_object_size_",
+            "type": "std::atomic_size_t",
+            "access": "private",
+            "purpose": "Stores the total allocated object size."
+          }
+        ],
+        "dependencies": [
+          "std::atomic_size_t",
+          "internal::ProcessHeapStatisticsUpdater"
+        ]
+      },
+      "code": "class V8_EXPORT ProcessHeapStatistics final {\n public:\n  static size_t TotalAllocatedObjectSize() {\n    return total_allocated_object_size_.load(std::memory_order_relaxed);\n  }\n  static size_t TotalAllocatedSpace() {\n    return total_allocated_space_.load(std::memory_order_relaxed);\n  }\n\n private:\n  static std::atomic_size_t total_allocated_space_;\n  static std::atomic_size_t total_allocated_object_size_;\n\n  friend class internal::ProcessHeapStatisticsUpdater;\n};"
+    }
+  ],
+  "dependencies": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "ProcessHeapStatisticsUpdater",
+        "about": "A friend class used for updating the heap statistics."
+      },
+      "code": "class ProcessHeapStatisticsUpdater;",
+      "type": "class"
+    }
+  ],
+  "file_path": "/home/kathirks_gc/v8_go/archive/codebase/include/cppgc/process-heap-statistics.h"
+}

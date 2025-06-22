@@ -1,0 +1,536 @@
+{
+  "file_path": "/home/kathirks_gc/v8_go/codebase/src/compiler/turboshaft/operation-matcher.h",
+  "imports": [
+    "<limits>",
+    "<optional>",
+    "<type_traits>",
+    "src/compiler/turboshaft/graph.h",
+    "src/compiler/turboshaft/index.h",
+    "src/compiler/turboshaft/operations.h",
+    "src/compiler/turboshaft/representations.h"
+  ],
+  "classes": [
+    {
+      "name": "OperationMatcher",
+      "properties": [
+        "graph_"
+      ],
+      "methods": [
+        {
+          "name": "OperationMatcher",
+          "parameters": [
+            "const Graph& graph"
+          ],
+          "return_type": "constructor",
+          "logic": "Constructor for OperationMatcher, initializes the graph_ member with the provided Graph object."
+        },
+        {
+          "name": "Is",
+          "parameters": [
+            "V<AnyOrNone> op_idx"
+          ],
+          "return_type": "bool",
+          "logic": "Checks if the operation at the given index is of the specified type Op."
+        },
+        {
+          "name": "TryCast",
+          "parameters": [
+            "V<AnyOrNone> op_idx"
+          ],
+          "return_type": "const underlying_operation_t<Op>*",
+          "logic": "Attempts to cast the operation at the given index to the specified type Op. Returns a pointer to the cast operation if successful, otherwise returns nullptr."
+        },
+        {
+          "name": "Cast",
+          "parameters": [
+            "V<AnyOrNone> op_idx"
+          ],
+          "return_type": "const underlying_operation_t<Op>&",
+          "logic": "Casts the operation at the given index to the specified type Op. Throws an exception if the cast is not possible."
+        },
+        {
+          "name": "Get",
+          "parameters": [
+            "V<AnyOrNone> op_idx"
+          ],
+          "return_type": "const Operation&",
+          "logic": "Retrieves the Operation object at the given index from the graph."
+        },
+        {
+          "name": "Index",
+          "parameters": [
+            "const Operation& op"
+          ],
+          "return_type": "V<AnyOrNone>",
+          "logic": "Retrieves the index of the given Operation object in the graph."
+        },
+        {
+          "name": "MatchZero",
+          "parameters": [
+            "V<Any> matched"
+          ],
+          "return_type": "bool",
+          "logic": "Checks if the given operation is a constant operation representing zero.  Handles different constant kinds (Word32, Word64, Float32, Float64, Smi)."
+        },
+        {
+          "name": "MatchIntegralZero",
+          "parameters": [
+            "V<Any> matched"
+          ],
+          "return_type": "bool",
+          "logic": "Checks if the given operation is an integral constant operation representing zero."
+        },
+        {
+          "name": "MatchSmiZero",
+          "parameters": [
+            "V<Any> matched"
+          ],
+          "return_type": "bool",
+          "logic": "Checks if the given operation is a Smi constant operation representing zero."
+        },
+        {
+          "name": "MatchFloat32Constant",
+          "parameters": [
+            "V<Any> matched",
+            "float* constant"
+          ],
+          "return_type": "bool",
+          "logic": "Checks if the given operation is a Float32 constant and stores the value in the provided pointer."
+        },
+        {
+          "name": "MatchFloat32Constant",
+          "parameters": [
+            "V<Any> matched",
+            "i::Float32* constant"
+          ],
+          "return_type": "bool",
+          "logic": "Checks if the given operation is a Float32 constant and stores the value in the provided pointer (i::Float32)."
+        },
+        {
+          "name": "MatchFloat64Constant",
+          "parameters": [
+            "V<Any> matched",
+            "double* constant"
+          ],
+          "return_type": "bool",
+          "logic": "Checks if the given operation is a Float64 constant and stores the value in the provided pointer."
+        },
+        {
+          "name": "MatchFloat64Constant",
+          "parameters": [
+            "V<Any> matched",
+            "i::Float64* constant"
+          ],
+          "return_type": "bool",
+          "logic": "Checks if the given operation is a Float64 constant and stores the value in the provided pointer (i::Float64)."
+        },
+        {
+          "name": "MatchFloat",
+          "parameters": [
+            "V<Any> matched",
+            "double* value"
+          ],
+          "return_type": "bool",
+          "logic": "Checks if the given operation is a Float32 or Float64 constant and stores the value in the provided pointer as a double."
+        },
+        {
+          "name": "MatchFloat",
+          "parameters": [
+            "V<Any> matched",
+            "double value"
+          ],
+          "return_type": "bool",
+          "logic": "Checks if the given operation is a Float32 or Float64 constant and compares its value to the provided double."
+        },
+        {
+          "name": "MatchNaN",
+          "parameters": [
+            "V<Float> matched"
+          ],
+          "return_type": "bool",
+          "logic": "Checks if the given operation is a Float constant representing NaN."
+        },
+        {
+          "name": "MatchHeapConstant",
+          "parameters": [
+            "V<Any> matched",
+            "Handle<HeapObject>* tagged"
+          ],
+          "return_type": "bool",
+          "logic": "Checks if the given operation is a HeapObject or CompressedHeapObject constant and optionally stores the handle in the provided pointer."
+        },
+        {
+          "name": "MatchIntegralWordConstant",
+          "parameters": [
+            "V<Any> matched",
+            "WordRepresentation rep",
+            "uint64_t* unsigned_constant",
+            "int64_t* signed_constant"
+          ],
+          "return_type": "bool",
+          "logic": "Checks if the given operation is an integral (Word32/Word64) constant of the specified WordRepresentation and stores the unsigned and signed values in the provided pointers."
+        },
+        {
+          "name": "MatchIntegralWordConstant",
+          "parameters": [
+            "V<Any> matched",
+            "WordRepresentation rep",
+            "int64_t* signed_constant"
+          ],
+          "return_type": "bool",
+          "logic": "Checks if the given operation is an integral (Word32/Word64) constant of the specified WordRepresentation and stores the signed value in the provided pointer."
+        },
+        {
+          "name": "MatchIntegralWord32Constant",
+          "parameters": [
+            "V<Any> matched",
+            "uint32_t* constant"
+          ],
+          "return_type": "bool",
+          "logic": "Checks if the given operation is a Word32 constant and stores the value in the provided pointer."
+        },
+        {
+          "name": "MatchIntegralWord64Constant",
+          "parameters": [
+            "V<Any> matched",
+            "uint64_t* constant"
+          ],
+          "return_type": "bool",
+          "logic": "Checks if the given operation is a Word64 constant and stores the value in the provided pointer."
+        },
+        {
+          "name": "MatchIntegralWord32Constant",
+          "parameters": [
+            "V<Any> matched",
+            "uint32_t constant"
+          ],
+          "return_type": "bool",
+          "logic": "Checks if the given operation is a Word32 constant and compares its value to the provided constant."
+        },
+        {
+          "name": "MatchIntegralWord64Constant",
+          "parameters": [
+            "V<Any> matched",
+            "int64_t* constant"
+          ],
+          "return_type": "bool",
+          "logic": "Checks if the given operation is a Word64 constant and stores the value in the provided pointer as an int64_t."
+        },
+        {
+          "name": "MatchIntegralWord32Constant",
+          "parameters": [
+            "V<Any> matched",
+            "int32_t* constant"
+          ],
+          "return_type": "bool",
+          "logic": "Checks if the given operation is a Word32 constant and stores the value in the provided pointer as an int32_t."
+        },
+        {
+          "name": "MatchIntegralWordPtrConstant",
+          "parameters": [
+            "V<Any> matched",
+            "T* constant"
+          ],
+          "return_type": "bool",
+          "logic": "Checks if the given operation is a WordPtr (Word32 or Word64 depending on the architecture) constant and stores the value in the provided pointer."
+        },
+        {
+          "name": "MatchSignedIntegralConstant",
+          "parameters": [
+            "V<Any> matched",
+            "int64_t* constant"
+          ],
+          "return_type": "bool",
+          "logic": "Checks if the given operation is a Word32 or Word64 constant and stores its signed integral value in the provided pointer."
+        },
+        {
+          "name": "MatchUnsignedIntegralConstant",
+          "parameters": [
+            "V<Any> matched",
+            "uint64_t* constant"
+          ],
+          "return_type": "bool",
+          "logic": "Checks if the given operation is a Word32 or Word64 constant and stores its unsigned integral value in the provided pointer."
+        },
+        {
+          "name": "MatchExternalConstant",
+          "parameters": [
+            "V<Any> matched",
+            "ExternalReference* reference"
+          ],
+          "return_type": "bool",
+          "logic": "Checks if the given operation is an External constant and stores the ExternalReference in the provided pointer."
+        },
+        {
+          "name": "MatchWasmStubCallConstant",
+          "parameters": [
+            "V<Any> matched",
+            "uint64_t* stub_id"
+          ],
+          "return_type": "bool",
+          "logic": "Checks if the given operation is a RelocatableWasmStubCall constant and stores the stub_id in the provided pointer."
+        },
+        {
+          "name": "MatchChange",
+          "parameters": [
+            "V<Any> matched",
+            "IMatch<T> input",
+            "VMatch<ChangeOp::Kind> kind",
+            "VMatch<ChangeOp::Assumption> assumption",
+            "VMatch<RegisterRepresentation> from",
+            "VMatch<RegisterRepresentation> to"
+          ],
+          "return_type": "bool",
+          "logic": "Checks if the given operation is a ChangeOp and matches the provided input, kind, assumption, from representation, and to representation."
+        },
+        {
+          "name": "MatchTruncateWord64ToWord32",
+          "parameters": [
+            "V<Any> matched",
+            "IMatch<Word64> input"
+          ],
+          "return_type": "bool",
+          "logic": "Checks if the given operation is a ChangeOp that truncates a Word64 value to a Word32 value."
+        },
+        {
+          "name": "MatchWordBinop",
+          "parameters": [
+            "V<Any> matched",
+            "IMatch<T> left",
+            "IMatch<T> right",
+            "VMatch<WordBinopOp::Kind> kind",
+            "VMatch<WordRepresentation> rep"
+          ],
+          "return_type": "bool",
+          "logic": "Checks if the given operation is a WordBinopOp and matches the provided left input, right input, kind, and representation."
+        },
+        {
+          "name": "MatchWordAdd",
+          "parameters": [
+            "V<Any> matched",
+            "V<T>* left",
+            "V<T>* right",
+            "WordRepresentation rep"
+          ],
+          "return_type": "bool",
+          "logic": "Checks if the given operation is a WordBinopOp of kind Add and matches the provided inputs and representation."
+        },
+        {
+          "name": "MatchWordSub",
+          "parameters": [
+            "V<Any> matched",
+            "V<T>* left",
+            "V<T>* right",
+            "WordRepresentation rep"
+          ],
+          "return_type": "bool",
+          "logic": "Checks if the given operation is a WordBinopOp of kind Sub and matches the provided inputs and representation."
+        },
+        {
+          "name": "MatchWordMul",
+          "parameters": [
+            "V<Any> matched",
+            "V<T>* left",
+            "V<T>* right",
+            "WordRepresentation rep"
+          ],
+          "return_type": "bool",
+          "logic": "Checks if the given operation is a WordBinopOp of kind Mul and matches the provided inputs and representation."
+        },
+        {
+          "name": "MatchBitwiseAnd",
+          "parameters": [
+            "V<Any> matched",
+            "V<T>* left",
+            "V<T>* right",
+            "WordRepresentation rep"
+          ],
+          "return_type": "bool",
+          "logic": "Checks if the given operation is a WordBinopOp of kind BitwiseAnd and matches the provided inputs and representation."
+        },
+        {
+          "name": "MatchBitwiseAndWithConstant",
+          "parameters": [
+            "V<Any> matched",
+            "V<T>* value",
+            "uint64_t* constant",
+            "WordRepresentation rep"
+          ],
+          "return_type": "bool",
+          "logic": "Checks if the given operation is a WordBinopOp of kind BitwiseAnd with one of the operands being a constant, and matches the provided representation. Returns the non-constant input and the constant value."
+        },
+        {
+          "name": "MatchEqual",
+          "parameters": [
+            "V<Any> matched",
+            "V<T>* left",
+            "V<T>* right"
+          ],
+          "return_type": "bool",
+          "logic": "Checks if the given operation is a ComparisonOp of kind Equal and stores the left and right inputs in the provided pointers."
+        },
+        {
+          "name": "MatchFloatUnary",
+          "parameters": [
+            "V<Any> matched",
+            "V<Float>* input",
+            "FloatUnaryOp::Kind kind",
+            "FloatRepresentation rep"
+          ],
+          "return_type": "bool",
+          "logic": "Checks if the given operation is a FloatUnaryOp of the specified kind and representation, and stores the input in the provided pointer."
+        },
+        {
+          "name": "MatchFloatRoundDown",
+          "parameters": [
+            "V<Any> matched",
+            "V<Float>* input",
+            "FloatRepresentation rep"
+          ],
+          "return_type": "bool",
+          "logic": "Checks if the given operation is a FloatUnaryOp of kind RoundDown and matches the provided representation, and stores the input in the provided pointer."
+        },
+        {
+          "name": "MatchFloatBinary",
+          "parameters": [
+            "V<Any> matched",
+            "V<Float>* left",
+            "V<Float>* right",
+            "FloatBinopOp::Kind kind",
+            "FloatRepresentation rep"
+          ],
+          "return_type": "bool",
+          "logic": "Checks if the given operation is a FloatBinopOp of the specified kind and representation, and stores the left and right inputs in the provided pointers."
+        },
+        {
+          "name": "MatchFloatSub",
+          "parameters": [
+            "V<Any> matched",
+            "V<Float>* left",
+            "V<Float>* right",
+            "FloatRepresentation rep"
+          ],
+          "return_type": "bool",
+          "logic": "Checks if the given operation is a FloatBinopOp of kind Sub and matches the provided representation, and stores the left and right inputs in the provided pointers."
+        },
+        {
+          "name": "MatchConstantShift",
+          "parameters": [
+            "V<Any> matched",
+            "V<T>* input",
+            "ShiftOp::Kind* kind",
+            "WordRepresentation* rep",
+            "int* amount"
+          ],
+          "return_type": "bool",
+          "logic": "Checks if the given operation is a ShiftOp with a constant right-hand side and stores the input, kind, representation and amount in the provided pointers."
+        },
+        {
+          "name": "MatchConstantShift",
+          "parameters": [
+            "V<Any> matched",
+            "V<T>* input",
+            "ShiftOp::Kind kind",
+            "WordRepresentation rep",
+            "int* amount"
+          ],
+          "return_type": "bool",
+          "logic": "Checks if the given operation is a ShiftOp of the specified kind with a constant right-hand side and the matching representation, and stores the input and amount in the provided pointers."
+        },
+        {
+          "name": "MatchConstantRightShift",
+          "parameters": [
+            "V<Any> matched",
+            "V<T>* input",
+            "WordRepresentation rep",
+            "int* amount"
+          ],
+          "return_type": "bool",
+          "logic": "Checks if the given operation is a RightShiftOp with a constant right-hand side and the matching representation, and stores the input and amount in the provided pointers."
+        },
+        {
+          "name": "MatchConstantLeftShift",
+          "parameters": [
+            "V<Any> matched",
+            "V<T>* input",
+            "WordRepresentation rep",
+            "int* amount"
+          ],
+          "return_type": "bool",
+          "logic": "Checks if the given operation is a LeftShiftOp with a constant right-hand side and the matching representation, and stores the input and amount in the provided pointers."
+        },
+        {
+          "name": "MatchConstantShiftRightArithmeticShiftOutZeros",
+          "parameters": [
+            "V<Any> matched",
+            "V<T>* input",
+            "WordRepresentation rep",
+            "uint16_t* amount"
+          ],
+          "return_type": "bool",
+          "logic": "Checks if the given operation is a kShiftRightArithmeticShiftOutZeros ShiftOp with a constant right-hand side and the matching representation, and stores the input and amount in the provided pointers."
+        },
+        {
+          "name": "MatchPhi",
+          "parameters": [
+            "V<Any> matched",
+            "std::optional<int> input_count"
+          ],
+          "return_type": "bool",
+          "logic": "Checks if the given operation is a PhiOp and optionally checks if the number of inputs matches the provided input_count."
+        },
+        {
+          "name": "MatchPowerOfTwoWordConstant",
+          "parameters": [
+            "V<Any> matched",
+            "int64_t* ret_cst",
+            "WordRepresentation rep"
+          ],
+          "return_type": "bool",
+          "logic": "Checks if the given operation is a Word constant that is a power of two, and matches the given representation. Stores the value in ret_cst."
+        },
+        {
+          "name": "MatchPowerOfTwoWord32Constant",
+          "parameters": [
+            "V<Any> matched",
+            "int32_t* divisor"
+          ],
+          "return_type": "bool",
+          "logic": "Checks if the given operation is a Word32 constant that is a power of two.  Stores the value in divisor as an int32_t."
+        }
+      ]
+    },
+    {
+      "name": "detail::IndexMatch<T, HasConstexpr>",
+      "properties": [
+        "v_"
+      ],
+      "methods": []
+    },
+    {
+      "name": "detail::IndexMatch<T, false>",
+      "properties": [
+        "v_"
+      ],
+      "methods": []
+    },
+    {
+      "name": "detail::ValueMatch<T>",
+      "properties": [
+        "v_"
+      ],
+      "methods": []
+    }
+  ],
+  "functions": [
+    {
+      "name": "detail::IndexMatch<T, HasConstexpr>::matches",
+      "parameters": [
+        "OpIndex matched",
+        "const OperationMatcher* matcher"
+      ],
+      "return_type": "bool",
+      "logic": "Checks if the provided OpIndex matches the internal variant. Supports wildcard, exact index match, storing the matched index in a pointer, and constexpr comparison."
+    }
+  ]
+}

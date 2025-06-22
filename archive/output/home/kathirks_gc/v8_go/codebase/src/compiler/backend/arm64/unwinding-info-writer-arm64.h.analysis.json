@@ -1,0 +1,135 @@
+{
+  "file_path": "/home/kathirks_gc/v8_go/codebase/src/compiler/backend/arm64/unwinding-info-writer-arm64.h",
+  "imports": [
+    "src/diagnostics/eh-frame.h",
+    "src/flags/flags.h"
+  ],
+  "classes": [
+    {
+      "name": "InstructionBlock",
+      "properties": [],
+      "methods": []
+    },
+    {
+      "name": "UnwindingInfoWriter",
+      "properties": [
+        "zone_",
+        "eh_frame_writer_",
+        "saved_lr_",
+        "block_will_exit_",
+        "block_initial_states_"
+      ],
+      "methods": [
+        {
+          "name": "UnwindingInfoWriter",
+          "parameters": [
+            "Zone* zone"
+          ],
+          "return_type": "void",
+          "logic": "Constructor for UnwindingInfoWriter. Initializes member variables, including the EhFrameWriter, and initializes eh_frame_writer if unwinding info is enabled."
+        },
+        {
+          "name": "SetNumberOfInstructionBlocks",
+          "parameters": [
+            "int number"
+          ],
+          "return_type": "void",
+          "logic": "Resizes the block_initial_states_ vector if unwinding info is enabled.  This is used to pre-allocate space for each instruction block."
+        },
+        {
+          "name": "BeginInstructionBlock",
+          "parameters": [
+            "int pc_offset",
+            "const InstructionBlock* block"
+          ],
+          "return_type": "void",
+          "logic": "This function is a placeholder; its implementation is not available in the header file. Likely responsible for starting the processing of an instruction block, potentially saving state."
+        },
+        {
+          "name": "EndInstructionBlock",
+          "parameters": [
+            "const InstructionBlock* block"
+          ],
+          "return_type": "void",
+          "logic": "This function is a placeholder; its implementation is not available in the header file. Likely responsible for finishing the processing of an instruction block, potentially generating EH frame data."
+        },
+        {
+          "name": "MarkLinkRegisterOnTopOfStack",
+          "parameters": [
+            "int pc_offset",
+            "const Register& sp"
+          ],
+          "return_type": "void",
+          "logic": "Marks that the link register is on top of the stack at the given program counter offset.  This is important for unwinding."
+        },
+        {
+          "name": "MarkPopLinkRegisterFromTopOfStack",
+          "parameters": [
+            "int pc_offset"
+          ],
+          "return_type": "void",
+          "logic": "Marks that the link register is popped from the top of the stack at the given program counter offset.  This is important for unwinding."
+        },
+        {
+          "name": "MarkFrameConstructed",
+          "parameters": [
+            "int at_pc"
+          ],
+          "return_type": "void",
+          "logic": "Marks the point where a frame is constructed in the generated code at the given program counter value."
+        },
+        {
+          "name": "MarkFrameDeconstructed",
+          "parameters": [
+            "int at_pc"
+          ],
+          "return_type": "void",
+          "logic": "Marks the point where a frame is deconstructed in the generated code at the given program counter value."
+        },
+        {
+          "name": "MarkBlockWillExit",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Sets the block_will_exit_ flag to true, indicating that the current block will exit."
+        },
+        {
+          "name": "Finish",
+          "parameters": [
+            "int code_size"
+          ],
+          "return_type": "void",
+          "logic": "Finishes the EH frame writing process by passing the total code size to the EhFrameWriter if unwinding info is enabled."
+        },
+        {
+          "name": "eh_frame_writer",
+          "parameters": [],
+          "return_type": "EhFrameWriter*",
+          "logic": "Returns a pointer to the EhFrameWriter if unwinding info is enabled, otherwise returns nullptr."
+        },
+        {
+          "name": "enabled",
+          "parameters": [],
+          "return_type": "bool",
+          "logic": "Checks if unwinding info is enabled based on the v8_flags.perf_prof_unwinding_info flag."
+        }
+      ]
+    },
+    {
+      "name": "BlockInitialState",
+      "properties": [
+        "saved_lr_"
+      ],
+      "methods": [
+        {
+          "name": "BlockInitialState",
+          "parameters": [
+            "bool saved_lr"
+          ],
+          "return_type": "void",
+          "logic": "Constructor for BlockInitialState.  Initializes the saved_lr_ member."
+        }
+      ]
+    }
+  ],
+  "functions": []
+}

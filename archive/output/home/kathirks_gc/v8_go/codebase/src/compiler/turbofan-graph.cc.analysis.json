@@ -1,0 +1,116 @@
+{
+  "file_path": "/home/kathirks_gc/v8_go/codebase/src/compiler/turbofan-graph.cc",
+  "imports": [
+    "src/compiler/turbofan-graph.h",
+    "algorithm",
+    "src/compiler/node.h",
+    "src/compiler/turbofan-graph-visualizer.h",
+    "src/compiler/verifier.h"
+  ],
+  "classes": [
+    {
+      "name": "TFGraph",
+      "properties": [
+        "zone_",
+        "start_",
+        "end_",
+        "mark_max_",
+        "next_node_id_",
+        "decorators_",
+        "has_simd_",
+        "simd_stores_"
+      ],
+      "methods": [
+        {
+          "name": "TFGraph",
+          "parameters": [
+            "Zone* zone"
+          ],
+          "return_type": "TFGraph",
+          "logic": "Constructor. Initializes the graph with the given zone and default values for its members. Performs a check if the zone supports compression when kCompressGraphZone is enabled."
+        },
+        {
+          "name": "Decorate",
+          "parameters": [
+            "Node* node"
+          ],
+          "return_type": "void",
+          "logic": "Applies all registered graph decorators to the given node."
+        },
+        {
+          "name": "AddDecorator",
+          "parameters": [
+            "GraphDecorator* decorator"
+          ],
+          "return_type": "void",
+          "logic": "Adds a graph decorator to the list of decorators."
+        },
+        {
+          "name": "RemoveDecorator",
+          "parameters": [
+            "GraphDecorator* decorator"
+          ],
+          "return_type": "void",
+          "logic": "Removes a graph decorator from the list of decorators."
+        },
+        {
+          "name": "NewNode",
+          "parameters": [
+            "const Operator* op",
+            "int input_count",
+            "Node* const* inputs",
+            "bool incomplete"
+          ],
+          "return_type": "Node*",
+          "logic": "Creates a new node, verifies it, and returns it. Uses NewNodeUnchecked internally."
+        },
+        {
+          "name": "NewNodeUnchecked",
+          "parameters": [
+            "const Operator* op",
+            "int input_count",
+            "Node* const* inputs",
+            "bool incomplete"
+          ],
+          "return_type": "Node*",
+          "logic": "Creates a new node without verification. Decorates the node before returning."
+        },
+        {
+          "name": "CloneNode",
+          "parameters": [
+            "const Node* node"
+          ],
+          "return_type": "Node*",
+          "logic": "Clones an existing node. Decorates the clone before returning."
+        },
+        {
+          "name": "NextNodeId",
+          "parameters": [],
+          "return_type": "NodeId",
+          "logic": "Returns the next available node ID and increments the internal counter."
+        },
+        {
+          "name": "Print",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Prints the graph to stdout in reverse post order (RPO)."
+        },
+        {
+          "name": "RecordSimdStore",
+          "parameters": [
+            "Node* store"
+          ],
+          "return_type": "void",
+          "logic": "Records a SIMD store node for later access."
+        },
+        {
+          "name": "GetSimdStoreNodes",
+          "parameters": [],
+          "return_type": "ZoneVector<Node*> const&",
+          "logic": "Returns the vector of SIMD store nodes."
+        }
+      ]
+    }
+  ],
+  "functions": []
+}

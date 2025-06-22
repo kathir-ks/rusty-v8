@@ -1,0 +1,648 @@
+{
+  "file_path": "/home/kathirks_gc/v8_go/codebase/src/json/json-parser.cc",
+  "imports": [
+    "src/json/json-parser.h",
+    "<optional>",
+    "src/base/small-vector.h",
+    "src/base/strings.h",
+    "src/builtins/builtins.h",
+    "src/common/assert-scope.h",
+    "src/common/globals.h",
+    "src/common/message-template.h",
+    "src/debug/debug.h",
+    "src/execution/frames-inl.h",
+    "src/heap/factory.h",
+    "src/numbers/conversions.h",
+    "src/numbers/hash-seed-inl.h",
+    "src/objects/elements-kind.h",
+    "src/objects/field-type.h",
+    "src/objects/hash-table-inl.h",
+    "src/objects/map-updater.h",
+    "src/objects/objects-inl.h",
+    "src/objects/property-descriptor.h",
+    "src/objects/property-details.h",
+    "src/roots/roots.h",
+    "src/strings/char-predicates-inl.h",
+    "src/strings/string-hasher.h",
+    "src/utils/boxed-float.h"
+  ],
+  "classes": [
+    {
+      "name": "JsonParseInternalizer",
+      "properties": [],
+      "methods": [
+        {
+          "name": "Internalize",
+          "parameters": [
+            "Isolate* isolate",
+            "DirectHandle<Object> result",
+            "Handle<Object> reviver",
+            "Handle<String> source",
+            "MaybeHandle<Object> val_node"
+          ],
+          "return_type": "MaybeHandle<Object>",
+          "logic": "Internalizes a JSON parse result using a reviver function, adding a property to a holder object and calling InternalizeJsonProperty."
+        },
+        {
+          "name": "InternalizeJsonProperty",
+          "parameters": [
+            "DirectHandle<JSReceiver> holder",
+            "DirectHandle<String> name",
+            "Handle<Object> val_node",
+            "DirectHandle<Object> snapshot"
+          ],
+          "return_type": "MaybeHandle<Object>",
+          "logic": "Recursively internalizes a JSON property by applying the reviver function. Handles arrays and objects differently, iterating through their elements/properties and calling the reviver on each."
+        },
+        {
+          "name": "RecurseAndApply",
+          "parameters": [
+            "Handle<JSReceiver> holder",
+            "Handle<String> name",
+            "Handle<Object> val_node",
+            "Handle<Object> snapshot"
+          ],
+          "return_type": "bool",
+          "logic": "Recursively calls InternalizeJsonProperty and then either deletes the property from the holder if the result is undefined, or defines a new property with the result."
+        }
+      ]
+    },
+    {
+      "name": "JsonParser",
+      "properties": [
+        "Isolate* isolate_",
+        "uint32_t hash_seed_",
+        "Handle<JSFunction> object_constructor_",
+        "Handle<String> original_source_",
+        "Handle<String> source_",
+        "const Char* chars_",
+        "const Char* cursor_",
+        "const Char* end_",
+        "JsonToken next_",
+        "bool chars_may_relocate_",
+        "std::vector<JsonProperty> property_stack_",
+        "std::vector<Handle<Object>> element_stack_",
+        "std::vector<double> double_elements_",
+        "std::vector<int> smi_elements_",
+        "Handle<Object> parsed_val_node_"
+      ],
+      "methods": [
+        {
+          "name": "JsonParser",
+          "parameters": [
+            "Isolate* isolate",
+            "Handle<String> source"
+          ],
+          "return_type": "void",
+          "logic": "Constructor for the JsonParser class. Initializes the parser with the given isolate and source string. Handles sliced strings, external strings, and relocation of characters."
+        },
+        {
+          "name": "IsSpecialString",
+          "parameters": [],
+          "return_type": "bool",
+          "logic": "Checks if the input string is one of the special strings 'undefined', 'NaN', 'Infinity', or '[object Object]'."
+        },
+        {
+          "name": "GetErrorMessageWithEllipses",
+          "parameters": [
+            "DirectHandle<Object>& arg",
+            "DirectHandle<Object>& arg2",
+            "int pos"
+          ],
+          "return_type": "MessageTemplate",
+          "logic": "Constructs a detailed error message with ellipses indicating the surrounding context of an error within a longer JSON string."
+        },
+        {
+          "name": "LookUpErrorMessageForJsonToken",
+          "parameters": [
+            "JsonToken token",
+            "DirectHandle<Object>& arg",
+            "DirectHandle<Object>& arg2",
+            "int pos"
+          ],
+          "return_type": "MessageTemplate",
+          "logic": "Selects an appropriate error message based on the encountered JsonToken and the context of the error."
+        },
+        {
+          "name": "CalculateFileLocation",
+          "parameters": [
+            "DirectHandle<Object>& line",
+            "DirectHandle<Object>& column"
+          ],
+          "return_type": "void",
+          "logic": "Calculates the line and column number of the current position in the input string to provide accurate error reporting."
+        },
+        {
+          "name": "ReportUnexpectedToken",
+          "parameters": [
+            "JsonToken token",
+            "std::optional<MessageTemplate> errorMessage"
+          ],
+          "return_type": "void",
+          "logic": "Reports an unexpected token error, including the position in the source string and a descriptive error message."
+        },
+        {
+          "name": "ReportUnexpectedCharacter",
+          "parameters": [
+            "base::uc32 c"
+          ],
+          "return_type": "void",
+          "logic": "Reports an unexpected character during JSON parsing."
+        },
+        {
+          "name": "~JsonParser",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Destructor for the JsonParser class. Removes GC epilogue callback"
+        },
+        {
+          "name": "ParseJson",
+          "parameters": [
+            "DirectHandle<Object> reviver"
+          ],
+          "return_type": "MaybeHandle<Object>",
+          "logic": "Parses the JSON input, optionally applying a reviver function to transform the parsed result."
+        },
+        {
+          "name": "SkipWhitespace",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Skips over whitespace characters in the input string."
+        },
+        {
+          "name": "ScanUnicodeCharacter",
+          "parameters": [],
+          "return_type": "base::uc32",
+          "logic": "Scans a Unicode character escape sequence (e.g., '\\u1234') and returns the corresponding Unicode code point."
+        },
+        {
+          "name": "ScanJsonPropertyKey",
+          "parameters": [
+            "JsonContinuation* cont"
+          ],
+          "return_type": "JsonString",
+          "logic": "Scans a JSON property key, handling both string literals and array indices."
+        },
+        {
+          "name": "BuildJsonObject",
+          "parameters": [
+            "const JsonContinuation& cont",
+            "DirectHandle<Map> feedback"
+          ],
+          "return_type": "Handle<JSObject>",
+          "logic": "Builds a JSObject from the properties collected during parsing using JSDataObjectBuilder."
+        },
+        {
+          "name": "BuildJsonArray",
+          "parameters": [
+            "size_t start"
+          ],
+          "return_type": "Handle<Object>",
+          "logic": "Builds a JSArray from the elements collected during parsing."
+        },
+        {
+          "name": "ParseRawJson",
+          "parameters": [],
+          "return_type": "bool",
+          "logic": "Parses a raw JSON string, throwing an exception if it's invalid."
+        },
+        {
+          "name": "ParseJsonValueRecursive",
+          "parameters": [
+            "Handle<Map> feedback"
+          ],
+          "return_type": "MaybeHandle<Object>",
+          "logic": "Recursively parses any JSON value, calling other parsing functions based on the token."
+        },
+        {
+          "name": "ParseJsonObject",
+          "parameters": [
+            "Handle<Map> feedback"
+          ],
+          "return_type": "MaybeHandle<Object>",
+          "logic": "Parses a JSON object, collecting properties and building the object using BuildJsonObject."
+        },
+        {
+          "name": "ParseJsonArray",
+          "parameters": [],
+          "return_type": "MaybeHandle<Object>",
+          "logic": "Parses a JSON array, collecting elements and building the array using BuildJsonArray."
+        },
+        {
+          "name": "ParseJsonValue",
+          "parameters": [],
+          "return_type": "MaybeHandle<Object>",
+          "logic": "Generic function to parse different JSON values and track Json Source for reviver function"
+        },
+        {
+          "name": "AdvanceToNonDecimal",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Advances the cursor until a non-decimal digit character is encountered."
+        },
+        {
+          "name": "ParseJsonNumber",
+          "parameters": [],
+          "return_type": "Handle<Object>",
+          "logic": "Parses a JSON number, determining if it's an integer or a double, and creates a corresponding Number object."
+        },
+        {
+          "name": "ParseJsonNumberAsDoubleOrSmi",
+          "parameters": [
+            "double* result_double",
+            "int* result_smi"
+          ],
+          "return_type": "bool",
+          "logic": "Parses a JSON number and attempts to represent it as either a double or a Smi, returning whether it was successfully parsed as a double."
+        },
+        {
+          "name": "MakeString",
+          "parameters": [
+            "const JsonString& string",
+            "Handle<String> hint"
+          ],
+          "return_type": "Handle<String>",
+          "logic": "Creates a String object from a JsonString, handling different encoding types and string internalizing."
+        },
+        {
+          "name": "DecodeString",
+          "parameters": [
+            "SinkChar* sink",
+            "uint32_t start",
+            "uint32_t length"
+          ],
+          "return_type": "void",
+          "logic": "Decodes the escaped string"
+        },
+        {
+          "name": "ScanJsonString",
+          "parameters": [
+            "bool needs_internalization"
+          ],
+          "return_type": "JsonString",
+          "logic": "Scans a JSON string literal, handling escape sequences and determining if string conversion is needed"
+        }
+      ]
+    },
+    {
+      "name": "FoldedMutableHeapNumberAllocation",
+      "properties": [
+        "Handle<ByteArray> raw_bytes_ = {}"
+      ],
+      "methods": [
+        {
+          "name": "FoldedMutableHeapNumberAllocation",
+          "parameters": [
+            "Isolate* isolate",
+            "int count"
+          ],
+          "return_type": "void",
+          "logic": "Constructor for the FoldedMutableHeapNumberAllocation class. Allocates a byte array to store HeapNumbers."
+        },
+        {
+          "name": "raw_bytes",
+          "parameters": [],
+          "return_type": "Handle<ByteArray> const",
+          "logic": "Getter for the raw_bytes_ property."
+        }
+      ]
+    },
+    {
+      "name": "FoldedMutableHeapNumberAllocator",
+      "properties": [
+        "Isolate* isolate_",
+        "ReadOnlyRoots roots_",
+        "Handle<ByteArray> raw_bytes_ = {}",
+        "Address mutable_double_address_ = 0"
+      ],
+      "methods": [
+        {
+          "name": "FoldedMutableHeapNumberAllocator",
+          "parameters": [
+            "Isolate* isolate",
+            "FoldedMutableHeapNumberAllocation* allocation",
+            "DisallowGarbageCollection& no_gc"
+          ],
+          "return_type": "void",
+          "logic": "Constructor for the FoldedMutableHeapNumberAllocator class. Initializes the allocator with the given isolate and byte array."
+        },
+        {
+          "name": "~FoldedMutableHeapNumberAllocator",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Destructor for the FoldedMutableHeapNumberAllocator class. Resets the length of the mutable byte array."
+        },
+        {
+          "name": "AllocateNext",
+          "parameters": [
+            "ReadOnlyRoots roots",
+            "Float64 value"
+          ],
+          "return_type": "Tagged<HeapNumber>",
+          "logic": "Allocates the next HeapNumber from the byte array."
+        }
+      ]
+    },
+    {
+      "name": "JSDataObjectBuilder",
+      "properties": [
+        "Isolate* isolate_",
+        "ElementsKind elements_kind_",
+        "int expected_property_count_",
+        "HeapNumberMode heap_number_mode_",
+        "DirectHandle<Map> map_",
+        "int current_property_index_ = 0",
+        "int extra_heap_numbers_needed_ = 0",
+        "Handle<JSObject> object_",
+        "DirectHandle<Map> expected_final_map_ = {}",
+        "int property_count_in_expected_final_map_ = 0"
+      ],
+      "methods": [
+        {
+          "name": "JSDataObjectBuilder",
+          "parameters": [
+            "Isolate* isolate",
+            "ElementsKind elements_kind",
+            "int expected_named_properties",
+            "DirectHandle<Map> expected_final_map",
+            "HeapNumberMode heap_number_mode"
+          ],
+          "return_type": "void",
+          "logic": "Constructor for the JSDataObjectBuilder class."
+        },
+        {
+          "name": "BuildFromIterator",
+          "parameters": [
+            "PropertyIterator&& it",
+            "MaybeHandle<FixedArrayBase> maybe_elements = {}"
+          ],
+          "return_type": "Handle<JSObject>",
+          "logic": "Builds and returns a JS object from an iterator"
+        },
+        {
+          "name": "TryAddFastPropertyForValue",
+          "parameters": [
+            "base::Vector<const Char> key_chars",
+            "GetKeyFunction&& get_key",
+            "GetValueFunction&& get_value"
+          ],
+          "return_type": "bool",
+          "logic": "Adds a fast property to the object"
+        },
+        {
+          "name": "CreateAndInitialiseObject",
+          "parameters": [
+            "ValueIterator value_it",
+            "DirectHandle<FixedArrayBase> elements"
+          ],
+          "return_type": "void",
+          "logic": "Creates and initialises the object."
+        },
+        {
+          "name": "AddSlowProperty",
+          "parameters": [
+            "DirectHandle<String> key",
+            "Handle<Object> value"
+          ],
+          "return_type": "void",
+          "logic": "Adds a slow property to the object"
+        },
+        {
+          "name": "object",
+          "parameters": [],
+          "return_type": "Handle<JSObject>",
+          "logic": "getter for the object property"
+        },
+        {
+          "name": "TryFastTransitionToPropertyKey",
+          "parameters": [
+            "base::Vector<const Char> key_chars",
+            "GetKeyFunction&& get_key",
+            "Handle<String>* key_out"
+          ],
+          "return_type": "bool",
+          "logic": "Tries to do a fast transition to a given property"
+        },
+        {
+          "name": "TryGeneralizeFieldToValue",
+          "parameters": [
+            "DirectHandle<Object> value"
+          ],
+          "return_type": "bool",
+          "logic": "Generalizes a field to a value"
+        },
+        {
+          "name": "TryInitializeMapFromExpectedFinalMap",
+          "parameters": [],
+          "return_type": "bool",
+          "logic": "Tries to initalise a map from an expected map"
+        },
+        {
+          "name": "InitializeMapFromZero",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Initialises map from scratch."
+        },
+        {
+          "name": "IsOnExpectedFinalMapFastPath",
+          "parameters": [],
+          "return_type": "bool",
+          "logic": "Returns whether the fast path is used"
+        },
+        {
+          "name": "RewindExpectedFinalMapFastPathToBeforeCurrent",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Rewinds to the before current stage"
+        },
+        {
+          "name": "RewindExpectedFinalMapFastPathToIncludeCurrent",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "rewinds to include current"
+        },
+        {
+          "name": "RegisterFieldNeedsFreshHeapNumber",
+          "parameters": [
+            "DirectHandle<Object> value"
+          ],
+          "return_type": "void",
+          "logic": "Registers that this field needs a new HeapNumber object"
+        },
+        {
+          "name": "AdvanceToNextProperty",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Increments the index for the next property"
+        }
+      ]
+    },
+    {
+      "name": "NamedPropertyValueIterator",
+      "properties": [
+        "const JsonProperty* it_",
+        "const JsonProperty* end_"
+      ],
+      "methods": [
+        {
+          "name": "NamedPropertyValueIterator",
+          "parameters": [
+            "const JsonProperty* it",
+            "const JsonProperty* end"
+          ],
+          "return_type": "void",
+          "logic": "constructor for the NamedPropertyValueIterator class"
+        },
+        {
+          "name": "operator++",
+          "parameters": [],
+          "return_type": "NamedPropertyValueIterator&",
+          "logic": "increments the iterator and gets the next property"
+        },
+        {
+          "name": "operator*",
+          "parameters": [],
+          "return_type": "DirectHandle<Object>",
+          "logic": "Dereference operator"
+        },
+        {
+          "name": "operator!=",
+          "parameters": [
+            "const NamedPropertyValueIterator& other"
+          ],
+          "return_type": "bool",
+          "logic": "Inequality operator"
+        }
+      ]
+    },
+    {
+      "name": "JsonParser::NamedPropertyIterator",
+      "properties": [
+        "JsonParser<Char>& parser_",
+        "const JsonProperty* start_",
+        "const JsonProperty* it_",
+        "const JsonProperty* end_"
+      ],
+      "methods": [
+        {
+          "name": "NamedPropertyIterator",
+          "parameters": [
+            "JsonParser<Char>& parser",
+            "const JsonProperty* it",
+            "const JsonProperty* end"
+          ],
+          "return_type": "void",
+          "logic": "constructor for the NamedPropertyIterator class"
+        },
+        {
+          "name": "Advance",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "increments to the next property"
+        },
+        {
+          "name": "Done",
+          "parameters": [],
+          "return_type": "bool",
+          "logic": "Returns true if all the elements have been processed"
+        },
+        {
+          "name": "GetKeyChars",
+          "parameters": [],
+          "return_type": "base::Vector<const Char>",
+          "logic": "Gets the character vector"
+        },
+        {
+          "name": "GetKey",
+          "parameters": [
+            "Handle<String> expected_key_hint"
+          ],
+          "return_type": "Handle<String>",
+          "logic": "Gets the key"
+        },
+        {
+          "name": "GetValue",
+          "parameters": [
+            "bool will_revisit_value"
+          ],
+          "return_type": "Handle<Object>",
+          "logic": "Gets the value."
+        },
+        {
+          "name": "RevisitValues",
+          "parameters": [],
+          "return_type": "NamedPropertyValueIterator",
+          "logic": "Revisit the values."
+        }
+      ]
+    }
+  ],
+  "functions": [
+    {
+      "name": "GetOneCharJsonToken",
+      "parameters": [
+        "uint8_t c"
+      ],
+      "return_type": "JsonToken",
+      "logic": "Determines the JsonToken type based on the input character."
+    },
+    {
+      "name": "MayTerminateJsonString",
+      "parameters": [
+        "uint8_t flags"
+      ],
+      "return_type": "constexpr bool",
+      "logic": "Decodes MayTerminateStringField from input flag."
+    },
+    {
+      "name": "GetEscapeKind",
+      "parameters": [
+        "uint8_t flags"
+      ],
+      "return_type": "constexpr EscapeKind",
+      "logic": "Decodes EscapeKind from input flag."
+    },
+    {
+      "name": "IsNumberPart",
+      "parameters": [
+        "uint8_t flags"
+      ],
+      "return_type": "constexpr bool",
+      "logic": "Decodes NumberPartField from input flag."
+    },
+    {
+      "name": "GetJsonScanFlags",
+      "parameters": [
+        "uint8_t c"
+      ],
+      "return_type": "uint8_t",
+      "logic": "Returns a set of flags indicating the type of a given character for JSON scanning. Indicates if a character terminates a string, its escape kind and whether the character can be part of a number."
+    },
+    {
+      "name": "InternalizeJsonProperty",
+      "parameters": [
+        "Handle<JSObject> holder",
+        "Handle<String> key"
+      ],
+      "return_type": "MaybeDirectHandle<Object>",
+      "logic": "This function is not defined within the provided code snippet."
+    },
+    {
+      "name": "GetTokenForCharacter",
+      "parameters": [
+        "Char c"
+      ],
+      "return_type": "JsonToken",
+      "logic": "Returns the appropriate JSON token for the given character. If character code is outside of ascii then it returns JsonToken::ILLEGAL"
+    },
+    {
+      "name": "Matches",
+      "parameters": [
+        "base::Vector<const Char> chars",
+        "DirectHandle<String> string"
+      ],
+      "return_type": "bool",
+      "logic": "Compare given characters with String"
+    }
+  ]
+}

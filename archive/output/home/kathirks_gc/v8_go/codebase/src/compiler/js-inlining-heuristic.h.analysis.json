@@ -1,0 +1,198 @@
+{
+  "file_path": "/home/kathirks_gc/v8_go/codebase/src/compiler/js-inlining-heuristic.h",
+  "imports": [
+    "src/compiler/js-inlining.h"
+  ],
+  "classes": [
+    {
+      "name": "JSInliningHeuristic",
+      "properties": [
+        "inliner_",
+        "candidates_",
+        "seen_",
+        "source_positions_",
+        "jsgraph_",
+        "broker_",
+        "info_",
+        "total_inlined_bytecode_size_",
+        "mode_",
+        "max_inlined_bytecode_size_cumulative_",
+        "max_inlined_bytecode_size_absolute_",
+        "kMaxCallPolymorphism",
+        "Candidate",
+        "CandidateCompare",
+        "Candidates",
+        "StateCloneMode"
+      ],
+      "methods": [
+        {
+          "name": "JSInliningHeuristic",
+          "parameters": [
+            "Editor* editor",
+            "Zone* local_zone",
+            "OptimizedCompilationInfo* info",
+            "JSGraph* jsgraph",
+            "JSHeapBroker* broker",
+            "SourcePositionTable* source_positions",
+            "NodeOriginTable* node_origins",
+            "Mode mode",
+            "const wasm::WasmModule* wasm_module",
+            "JsWasmCallsSidetable* js_wasm_calls_sidetable"
+          ],
+          "return_type": "void",
+          "logic": "Constructor for the JSInliningHeuristic class. Initializes the inliner, candidates set, and other member variables. Performs a check to ensure wasm related parameters are valid depending on the mode."
+        },
+        {
+          "name": "reducer_name",
+          "parameters": [],
+          "return_type": "const char*",
+          "logic": "Returns the name of the reducer, which is \"JSInliningHeuristic\"."
+        },
+        {
+          "name": "Reduce",
+          "parameters": [
+            "Node* node"
+          ],
+          "return_type": "Reduction",
+          "logic": "The main method of the reducer. It examines a node and decides whether or not to perform inlining at that node."
+        },
+        {
+          "name": "Finalize",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Processes the collected candidates for inlining and performs the inlining based on the heuristic."
+        },
+        {
+          "name": "total_inlined_bytecode_size",
+          "parameters": [],
+          "return_type": "int",
+          "logic": "Returns the total inlined bytecode size."
+        },
+        {
+          "name": "PrintCandidates",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Dumps the list of inlining candidates to the console for debugging purposes."
+        },
+        {
+          "name": "InlineCandidate",
+          "parameters": [
+            "Candidate const& candidate",
+            "bool small_function"
+          ],
+          "return_type": "Reduction",
+          "logic": "Performs the actual inlining of a chosen candidate call site."
+        },
+        {
+          "name": "CreateOrReuseDispatch",
+          "parameters": [
+            "Node* node",
+            "Node* callee",
+            "Candidate const& candidate",
+            "Node** if_successes",
+            "Node** calls",
+            "Node** inputs",
+            "int input_count",
+            "int* num_calls"
+          ],
+          "return_type": "void",
+          "logic": "Creates a dispatch node to handle multiple possible callees. If the dispatch already exists, it will try to reuse it."
+        },
+        {
+          "name": "TryReuseDispatch",
+          "parameters": [
+            "Node* node",
+            "Node* callee",
+            "Node** if_successes",
+            "Node** calls",
+            "Node** inputs",
+            "int input_count",
+            "int* num_calls"
+          ],
+          "return_type": "bool",
+          "logic": "Tries to reuse an existing dispatch node if possible."
+        },
+        {
+          "name": "DuplicateFrameStateAndRename",
+          "parameters": [
+            "FrameState frame_state",
+            "Node* from",
+            "Node* to",
+            "StateCloneMode mode"
+          ],
+          "return_type": "FrameState",
+          "logic": "Duplicates a frame state and renames nodes within the state. Used during inlining."
+        },
+        {
+          "name": "DuplicateStateValuesAndRename",
+          "parameters": [
+            "Node* state_values",
+            "Node* from",
+            "Node* to",
+            "StateCloneMode mode"
+          ],
+          "return_type": "Node*",
+          "logic": "Duplicates state values and renames nodes within the state values. Used during inlining."
+        },
+        {
+          "name": "CollectFunctions",
+          "parameters": [
+            "Node* node",
+            "int functions_size"
+          ],
+          "return_type": "Candidate",
+          "logic": "Collects the functions that could be called at a given call site. Handles polymorphic calls."
+        },
+        {
+          "name": "common",
+          "parameters": [],
+          "return_type": "CommonOperatorBuilder*",
+          "logic": "Returns the CommonOperatorBuilder."
+        },
+        {
+          "name": "graph",
+          "parameters": [],
+          "return_type": "TFGraph*",
+          "logic": "Returns the TurboFan graph."
+        },
+        {
+          "name": "jsgraph",
+          "parameters": [],
+          "return_type": "JSGraph*",
+          "logic": "Returns the JSGraph."
+        },
+        {
+          "name": "broker",
+          "parameters": [],
+          "return_type": "JSHeapBroker*",
+          "logic": "Returns the JSHeapBroker."
+        },
+        {
+          "name": "dependencies",
+          "parameters": [],
+          "return_type": "CompilationDependencies*",
+          "logic": "Returns the CompilationDependencies."
+        },
+        {
+          "name": "isolate",
+          "parameters": [],
+          "return_type": "Isolate*",
+          "logic": "Returns the Isolate."
+        },
+        {
+          "name": "simplified",
+          "parameters": [],
+          "return_type": "SimplifiedOperatorBuilder*",
+          "logic": "Returns the SimplifiedOperatorBuilder."
+        },
+        {
+          "name": "mode",
+          "parameters": [],
+          "return_type": "Mode",
+          "logic": "Returns the inlining mode."
+        }
+      ]
+    }
+  ],
+  "functions": []
+}

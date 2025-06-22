@@ -1,0 +1,29 @@
+{
+  "metadata": {
+    "path": "/home/kathirks_gc/v8_go/archive/codebase/include/libplatform/libplatform-export.h",
+    "file_name": "libplatform-export.h",
+    "language": "cpp",
+    "purpose": "Defines a macro V8_PLATFORM_EXPORT for exporting symbols from the libplatform library, handling different platforms (Windows and Linux) and build configurations (shared library or static library)."
+  },
+  "imports": {
+    "metadata": {
+      "language": "cpp",
+      "purpose": "No explicit imports, but relies on preprocessor definitions and compiler-specific attributes for symbol visibility."
+    },
+    "code": "// No explicit import statements."
+  },
+  "classes": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "macro",
+        "name": "V8_PLATFORM_EXPORT",
+        "about": "Macro to control symbol visibility for the libplatform library.",
+        "attributes": [],
+        "dependencies": []
+      },
+      "code": "#if defined(_WIN32)\n\n#ifdef BUILDING_V8_PLATFORM_SHARED\n#define V8_PLATFORM_EXPORT __declspec(dllexport)\n#elif USING_V8_PLATFORM_SHARED\n#define V8_PLATFORM_EXPORT __declspec(dllimport)\n#else\n#define V8_PLATFORM_EXPORT\n#endif  // BUILDING_V8_PLATFORM_SHARED\n\n#else  // defined(_WIN32)\n\n// Setup for Linux shared library export.\n#ifdef BUILDING_V8_PLATFORM_SHARED\n#define V8_PLATFORM_EXPORT __attribute__((visibility(\"default\")))\n#else\n#define V8_PLATFORM_EXPORT\n#endif\n\n#endif  // defined(_WIN32)"
+    }
+  ],
+  "file_path": "/home/kathirks_gc/v8_go/archive/codebase/include/libplatform/libplatform-export.h"
+}

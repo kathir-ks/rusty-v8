@@ -1,0 +1,180 @@
+{
+  "file_path": "/home/kathirks_gc/v8_go/codebase/include/cppgc/allocation.h",
+  "imports": [
+    "<atomic>",
+    "<cstddef>",
+    "<cstdint>",
+    "<new>",
+    "<type_traits>",
+    "<utility>",
+    "cppgc/custom-space.h",
+    "cppgc/internal/api-constants.h",
+    "cppgc/internal/gc-info.h",
+    "cppgc/type-traits.h",
+    "v8config.h"
+  ],
+  "classes": [
+    {
+      "name": "AllocationHandle",
+      "properties": [],
+      "methods": []
+    },
+    {
+      "name": "MakeGarbageCollectedTraitInternal",
+      "properties": [],
+      "methods": [
+        {
+          "name": "MarkObjectAsFullyConstructed",
+          "parameters": [
+            "const void* payload"
+          ],
+          "return_type": "void",
+          "logic": "Marks an object as fully constructed by setting a bit in a bitfield associated with the object. This is used for precise garbage collection."
+        },
+        {
+          "name": "AllocationDispatcher::Invoke (GCInfoType, CustomSpace, alignment = api_constants::kDefaultAlignment)",
+          "parameters": [
+            "AllocationHandle& handle",
+            "size_t size"
+          ],
+          "return_type": "void*",
+          "logic": "Template struct that dispatches allocation requests based on GCInfoType, CustomSpace, and alignment. Uses the Allocate function based on the specified parameters."
+        },
+        {
+          "name": "Allocate (cppgc::AllocationHandle&, size_t, GCInfoIndex)",
+          "parameters": [
+            "cppgc::AllocationHandle&",
+            "size_t",
+            "GCInfoIndex"
+          ],
+          "return_type": "void*",
+          "logic": "Abstract method to allocate memory based on the GCInfoIndex. Implementation is not provided here."
+        },
+        {
+          "name": "Allocate (cppgc::AllocationHandle&, size_t, AlignVal, GCInfoIndex)",
+          "parameters": [
+            "cppgc::AllocationHandle&",
+            "size_t",
+            "AlignVal",
+            "GCInfoIndex"
+          ],
+          "return_type": "void*",
+          "logic": "Abstract method to allocate memory based on the alignment and GCInfoIndex. Implementation is not provided here."
+        },
+        {
+          "name": "Allocate (cppgc::AllocationHandle&, size_t, GCInfoIndex, CustomSpaceIndex)",
+          "parameters": [
+            "cppgc::AllocationHandle&",
+            "size_t",
+            "GCInfoIndex",
+            "CustomSpaceIndex"
+          ],
+          "return_type": "void*",
+          "logic": "Abstract method to allocate memory based on the GCInfoIndex and CustomSpaceIndex. Implementation is not provided here."
+        },
+        {
+          "name": "Allocate (cppgc::AllocationHandle&, size_t, AlignVal, GCInfoIndex, CustomSpaceIndex)",
+          "parameters": [
+            "cppgc::AllocationHandle&",
+            "size_t",
+            "AlignVal",
+            "GCInfoIndex",
+            "CustomSpaceIndex"
+          ],
+          "return_type": "void*",
+          "logic": "Abstract method to allocate memory based on the alignment, GCInfoIndex, and CustomSpaceIndex. Implementation is not provided here."
+        }
+      ]
+    },
+    {
+      "name": "MakeGarbageCollectedTraitBase",
+      "properties": [],
+      "methods": [
+        {
+          "name": "Allocate",
+          "parameters": [
+            "AllocationHandle& handle",
+            "size_t size"
+          ],
+          "return_type": "void*",
+          "logic": "Allocates memory for an object of type T. It determines the alignment and then uses AllocationDispatcher to invoke the correct allocation function."
+        },
+        {
+          "name": "MarkObjectAsFullyConstructed",
+          "parameters": [
+            "const void* payload"
+          ],
+          "return_type": "void",
+          "logic": "Calls the static method `MarkObjectAsFullyConstructed` in `internal::MakeGarbageCollectedTraitInternal` to mark the object as fully constructed."
+        }
+      ]
+    },
+    {
+      "name": "AdditionalBytes",
+      "properties": [
+        "const size_t value"
+      ],
+      "methods": []
+    },
+    {
+      "name": "MakeGarbageCollectedTrait",
+      "properties": [],
+      "methods": [
+        {
+          "name": "Call",
+          "parameters": [
+            "AllocationHandle& handle",
+            "Args&&... args"
+          ],
+          "return_type": "T*",
+          "logic": "Allocates memory for an object of type T, constructs the object in the allocated memory using placement new, and marks the object as fully constructed."
+        },
+        {
+          "name": "Call",
+          "parameters": [
+            "AllocationHandle& handle",
+            "AdditionalBytes additional_bytes",
+            "Args&&... args"
+          ],
+          "return_type": "T*",
+          "logic": "Allocates memory for an object of type T plus additional bytes, constructs the object in the allocated memory using placement new, and marks the object as fully constructed."
+        }
+      ]
+    },
+    {
+      "name": "PostConstructionCallbackTrait",
+      "properties": [],
+      "methods": [
+        {
+          "name": "Call",
+          "parameters": [
+            "T*"
+          ],
+          "return_type": "void",
+          "logic": "A no-op post-construction callback for managed objects.  It does nothing by default, but can be specialized to perform actions right after the object has been constructed, allowing virtual function calls safely."
+        }
+      ]
+    }
+  ],
+  "functions": [
+    {
+      "name": "MakeGarbageCollected",
+      "parameters": [
+        "AllocationHandle& handle",
+        "Args&&... args"
+      ],
+      "return_type": "T*",
+      "logic": "Constructs a managed object of type T using MakeGarbageCollectedTrait::Call and then invokes the PostConstructionCallbackTrait."
+    },
+    {
+      "name": "MakeGarbageCollected",
+      "parameters": [
+        "AllocationHandle& handle",
+        "AdditionalBytes additional_bytes",
+        "Args&&... args"
+      ],
+      "return_type": "T*",
+      "logic": "Constructs a managed object of type T with additional bytes using MakeGarbageCollectedTrait::Call and then invokes the PostConstructionCallbackTrait."
+    }
+  ]
+}

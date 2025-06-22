@@ -1,0 +1,242 @@
+{
+  "metadata": {
+    "path": "/home/kathirks_gc/v8_go/archive/codebase/src/execution/ia32/frame-constants-ia32.h",
+    "file_name": "frame-constants-ia32.h",
+    "language": "cpp",
+    "purpose": "Defines constants related to frame layout on IA32 architecture for the V8 JavaScript engine."
+  },
+  "imports": {
+    "metadata": {
+      "language": "cpp",
+      "purpose": "Includes necessary headers for bit manipulation, macros, register definitions, and generic frame constants."
+    },
+    "code": "#include \"src/base/bits.h\"\n#include \"src/base/macros.h\"\n#include \"src/codegen/register.h\"\n#include \"src/execution/frame-constants.h\""
+  },
+  "classes": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "EntryFrameConstants",
+        "extends": "AllStatic",
+        "about": "Defines constants for the entry frame layout used by JSEntry, JSConstructEntry and JSRunMicrotasksEntry on IA32.",
+        "attributes": [
+          {
+            "name": "kNextExitFrameFPOffset",
+            "type": "int",
+            "access": "public",
+            "purpose": "Offset to where JSEntry pushes the current value of Isolate::c_entry_fp onto the stack."
+          },
+          {
+            "name": "kNextFastCallFrameFPOffset",
+            "type": "int",
+            "access": "public",
+            "purpose": "Offset for storing the FP of fast API calls."
+          },
+          {
+            "name": "kNextFastCallFramePCOffset",
+            "type": "int",
+            "access": "public",
+            "purpose": "Offset for storing the PC of fast API calls."
+          },
+          {
+            "name": "kRootRegisterValueOffset",
+            "type": "int",
+            "access": "public",
+            "purpose": "Offset for the root register value."
+          },
+          {
+            "name": "kNewTargetArgOffset",
+            "type": "int",
+            "access": "public",
+            "purpose": "Offset for the new target argument."
+          },
+          {
+            "name": "kFunctionArgOffset",
+            "type": "int",
+            "access": "public",
+            "purpose": "Offset for the function argument."
+          },
+          {
+            "name": "kReceiverArgOffset",
+            "type": "int",
+            "access": "public",
+            "purpose": "Offset for the receiver argument."
+          },
+          {
+            "name": "kArgcOffset",
+            "type": "int",
+            "access": "public",
+            "purpose": "Offset for the argument count."
+          },
+          {
+            "name": "kArgvOffset",
+            "type": "int",
+            "access": "public",
+            "purpose": "Offset for the argument vector."
+          },
+          {
+            "name": "kMicrotaskQueueArgOffset",
+            "type": "int",
+            "access": "public",
+            "purpose": "Offset for the microtask queue argument."
+          }
+        ],
+        "dependencies": []
+      },
+      "code": "class EntryFrameConstants : public AllStatic {\n public:\n  // This is the offset to where JSEntry pushes the current value of\n  // Isolate::c_entry_fp onto the stack.\n  static constexpr int kNextExitFrameFPOffset = -6 * kSystemPointerSize;\n\n  // The offsets for storing the FP and PC of fast API calls.\n  static constexpr int kNextFastCallFrameFPOffset =\n      kNextExitFrameFPOffset - kSystemPointerSize;\n  static constexpr int kNextFastCallFramePCOffset =\n      kNextFastCallFrameFPOffset - kSystemPointerSize;\n\n  // EntryFrame is used by JSEntry, JSConstructEntry and JSRunMicrotasksEntry.\n  // All of them take |root_register_value| as the first parameter.\n  static constexpr int kRootRegisterValueOffset = +2 * kSystemPointerSize;\n\n  // Rest of parameters passed to JSEntry and JSConstructEntry.\n  static constexpr int kNewTargetArgOffset = +3 * kSystemPointerSize;\n  static constexpr int kFunctionArgOffset = +4 * kSystemPointerSize;\n  static constexpr int kReceiverArgOffset = +5 * kSystemPointerSize;\n  static constexpr int kArgcOffset = +6 * kSystemPointerSize;\n  static constexpr int kArgvOffset = +7 * kSystemPointerSize;\n\n  // Rest of parameters passed to JSRunMicrotasksEntry.\n  static constexpr int kMicrotaskQueueArgOffset = +3 * kSystemPointerSize;\n};"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "WasmLiftoffSetupFrameConstants",
+        "extends": "TypedFrameConstants",
+        "about": "Defines constants for the Wasm Liftoff setup frame layout on IA32.",
+        "attributes": [
+          {
+            "name": "kNumberOfSavedGpParamRegs",
+            "type": "int",
+            "access": "public",
+            "purpose": "Number of general-purpose parameters saved, without the instance."
+          },
+          {
+            "name": "kNumberOfSavedFpParamRegs",
+            "type": "int",
+            "access": "public",
+            "purpose": "Number of floating-point parameters saved."
+          },
+          {
+            "name": "kInstanceSpillOffset",
+            "type": "int",
+            "access": "public",
+            "purpose": "Offset to the spilled instance value."
+          },
+          {
+            "name": "kParameterSpillsOffset",
+            "type": "int[]",
+            "access": "public",
+            "purpose": "Offsets to spilled parameter values."
+          },
+          {
+            "name": "kWasmInstanceDataOffset",
+            "type": "int",
+            "access": "public",
+            "purpose": "Offset to the Wasm instance data."
+          },
+          {
+            "name": "kDeclaredFunctionIndexOffset",
+            "type": "int",
+            "access": "public",
+            "purpose": "Offset to the declared function index."
+          },
+          {
+            "name": "kNativeModuleOffset",
+            "type": "int",
+            "access": "public",
+            "purpose": "Offset to the native module."
+          }
+        ],
+        "dependencies": []
+      },
+      "code": "class WasmLiftoffSetupFrameConstants : public TypedFrameConstants {\n public:\n  // Number of gp parameters, without the instance.\n  static constexpr int kNumberOfSavedGpParamRegs = 3;\n  static constexpr int kNumberOfSavedFpParamRegs = 6;\n\n  // There's one spilled value (which doesn't need visiting) below the instance.\n  static constexpr int kInstanceSpillOffset =\n      TYPED_FRAME_PUSHED_VALUE_OFFSET(1);\n\n  static constexpr int kParameterSpillsOffset[] = {\n      TYPED_FRAME_PUSHED_VALUE_OFFSET(2), TYPED_FRAME_PUSHED_VALUE_OFFSET(3),\n      TYPED_FRAME_PUSHED_VALUE_OFFSET(4)};\n\n  // SP-relative.\n  static constexpr int kWasmInstanceDataOffset = 2 * kSystemPointerSize;\n  static constexpr int kDeclaredFunctionIndexOffset = 1 * kSystemPointerSize;\n  static constexpr int kNativeModuleOffset = 0;\n};"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "WasmLiftoffFrameConstants",
+        "extends": "TypedFrameConstants",
+        "about": "Defines constants for the Wasm Liftoff frame layout on IA32.",
+        "attributes": [
+          {
+            "name": "kFeedbackVectorOffset",
+            "type": "int",
+            "access": "public",
+            "purpose": "Offset to the feedback vector."
+          },
+          {
+            "name": "kInstanceDataOffset",
+            "type": "int",
+            "access": "public",
+            "purpose": "Offset to the instance data."
+          }
+        ],
+        "dependencies": []
+      },
+      "code": "class WasmLiftoffFrameConstants : public TypedFrameConstants {\n public:\n  static constexpr int kFeedbackVectorOffset = 3 * kSystemPointerSize;\n  static constexpr int kInstanceDataOffset = 2 * kSystemPointerSize;\n};"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "WasmDebugBreakFrameConstants",
+        "extends": "TypedFrameConstants",
+        "about": "Defines constants for the Wasm debug break frame layout on IA32.",
+        "attributes": [
+          {
+            "name": "kPushedGpRegs",
+            "type": "RegList",
+            "access": "public",
+            "purpose": "List of general-purpose registers pushed onto the stack."
+          },
+          {
+            "name": "kPushedFpRegs",
+            "type": "DoubleRegList",
+            "access": "public",
+            "purpose": "List of floating-point registers pushed onto the stack."
+          },
+          {
+            "name": "kNumPushedGpRegisters",
+            "type": "int",
+            "access": "public",
+            "purpose": "Number of general-purpose registers pushed."
+          },
+          {
+            "name": "kNumPushedFpRegisters",
+            "type": "int",
+            "access": "public",
+            "purpose": "Number of floating-point registers pushed."
+          },
+          {
+            "name": "kLastPushedGpRegisterOffset",
+            "type": "int",
+            "access": "public",
+            "purpose": "Offset of the last pushed general-purpose register."
+          },
+          {
+            "name": "kLastPushedFpRegisterOffset",
+            "type": "int",
+            "access": "public",
+            "purpose": "Offset of the last pushed floating-point register."
+          }
+        ],
+        "dependencies": []
+      },
+      "code": "// Frame constructed by the {WasmDebugBreak} builtin.\n// After pushing the frame type marker, the builtin pushes all Liftoff cache\n// registers (see liftoff-assembler-defs.h).\nclass WasmDebugBreakFrameConstants : public TypedFrameConstants {\n public:\n  // Omit ebx, which is the root register.\n  static constexpr RegList kPushedGpRegs = {eax, ecx, edx, esi, edi};\n\n  // Omit xmm0, which is not an allocatable fp register.\n  // Omit xmm7, which is the kScratchDoubleReg.\n  static constexpr DoubleRegList kPushedFpRegs = {xmm1, xmm2, xmm3,\n                                                  xmm4, xmm5, xmm6};\n\n  static constexpr int kNumPushedGpRegisters = kPushedGpRegs.Count();\n  static constexpr int kNumPushedFpRegisters = kPushedFpRegs.Count();\n\n  static constexpr int kLastPushedGpRegisterOffset =\n      -kFixedFrameSizeFromFp - kNumPushedGpRegisters * kSystemPointerSize;\n  static constexpr int kLastPushedFpRegisterOffset =\n      kLastPushedGpRegisterOffset - kNumPushedFpRegisters * kSimd128Size;\n\n  // Offsets are fp-relative.\n  static int GetPushedGpRegisterOffset(int reg_code) {\n    DCHECK_NE(0, kPushedGpRegs.bits() & (1 << reg_code));\n    uint32_t lower_regs =\n        kPushedGpRegs.bits() & ((uint32_t{1} << reg_code) - 1);\n    return kLastPushedGpRegisterOffset +\n           base::bits::CountPopulation(lower_regs) * kSystemPointerSize;\n  }\n\n  static int GetPushedFpRegisterOffset(int reg_code) {\n    DCHECK_NE(0, kPushedFpRegs.bits() & (1 << reg_code));\n    uint32_t lower_regs =\n        kPushedFpRegs.bits() & ((uint32_t{1} << reg_code) - 1);\n    return kLastPushedFpRegisterOffset +\n           base::bits::CountPopulation(lower_regs) * kSimd128Size;\n  }\n};"
+    }
+  ],
+  "dependencies": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "AllStatic",
+        "about": "Base class for classes with only static members."
+      },
+      "code": "class AllStatic {};",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "TypedFrameConstants",
+        "about": "Base class for typed frame constants."
+      },
+      "code": "class TypedFrameConstants {};",
+      "type": "class"
+    }
+  ],
+  "file_path": "/home/kathirks_gc/v8_go/archive/codebase/src/execution/ia32/frame-constants-ia32.h"
+}

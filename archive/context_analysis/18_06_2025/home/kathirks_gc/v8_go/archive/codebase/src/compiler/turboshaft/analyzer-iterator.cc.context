@@ -1,0 +1,198 @@
+{
+  "metadata": {
+    "path": "/home/kathirks_gc/v8_go/archive/codebase/src/compiler/turboshaft/analyzer-iterator.cc",
+    "file_name": "analyzer-iterator.cc",
+    "language": "cpp",
+    "purpose": "Implements the AnalyzerIterator class for traversing a control flow graph during analysis in the Turboshaft compiler."
+  },
+  "imports": {
+    "metadata": {
+      "language": "cpp",
+      "purpose": "Includes the header file for the AnalyzerIterator class, defining its interface."
+    },
+    "code": "#include \"src/compiler/turboshaft/analyzer-iterator.h\""
+  },
+  "functions": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "method",
+        "name": "PopOutdated",
+        "parent": "AnalyzerIterator",
+        "about": "Removes outdated blocks from the stack. A block is outdated if it has been visited in a more recent generation.",
+        "logic": "Iterates through the stack from the top, removing blocks that are outdated based on their generation and the `IsOutdated` method. Stops when a non-outdated block is encountered or the stack is empty.",
+        "parameters": [],
+        "return": {
+          "type": "void",
+          "description": "No return value"
+        },
+        "dependencies": [
+          "IsOutdated"
+        ]
+      },
+      "code": "void AnalyzerIterator::PopOutdated() {\n              while (!stack_.empty()) {\n                if (IsOutdated(stack_.back())) {\n                  stack_.pop_back();\n                } else {\n                  return;\n                }\n              }\n            }"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "method",
+        "name": "Next",
+        "parent": "AnalyzerIterator",
+        "about": "Returns the next block to be analyzed in the graph traversal.",
+        "logic": "Pops the next block from the stack, marks it as visited, and pushes its children onto the stack. Children are pushed in reverse order of their adjacency, and are divided into two groups: children in the same loop as the current block, and children not in the same loop. This distinction affects traversal order.",
+        "parameters": [],
+        "return": {
+          "type": "const Block*",
+          "description": "The next block to be analyzed, or nullptr if there are no more blocks."
+        },
+        "dependencies": [
+          "HasNext",
+          "IsOutdated",
+          "loop_finder_",
+          "visited_",
+          "curr_",
+          "stack_",
+          "current_generation_"
+        ]
+      },
+      "code": "const Block* AnalyzerIterator::Next() {\n              DCHECK(HasNext());\n              DCHECK(!IsOutdated(stack_.back()));\n              curr_ = stack_.back();\n              stack_.pop_back();\n\n              const Block* curr_header = curr_.block->IsLoop()\n                                                 ? curr_.block\n                                                 : loop_finder_.GetLoopHeader(curr_.block);\n\n              // Pushing on the stack the children that are not in the same loop as Next\n              // (remember that since we're doing a DFS with a Last-In-First-Out stack,\n              // pushing them first on the stack means that they will be visited last).\n              for (const Block* child = curr_.block->LastChild(); child != nullptr;\n                   child = child->NeighboringChild()) {\n                if (loop_finder_.GetLoopHeader(child) != curr_header) {\n                  stack_.push_back({child, current_generation_});\n                }\n              }\n\n              // Pushing on the stack the children that are in the same loop as Next (they\n              // are pushed last, so that they will be visited first).\n              for (const Block* child = curr_.block->LastChild(); child != nullptr;\n                   child = child->NeighboringChild()) {\n                if (loop_finder_.GetLoopHeader(child) == curr_header) {\n                  stack_.push_back({child, current_generation_});\n                }\n              }\n\n              visited_[curr_.block->index()] = current_generation_;\n\n              // Note that PopOutdated must be called after updating {visited_}, because\n              // this way, if the stack contained initially [{Bx, 1}, {Bx, 2}] (where `Bx`\n              // is the same block both time and it hasn't been visited before), then we\n              // popped the second entry at the begining of this function, but if we call\n              // PopOutdate before updating {visited_}, then it won't pop the first entry.\n              PopOutdated();\n\n              return curr_.block;\n            }"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "method",
+        "name": "MarkLoopForRevisit",
+        "parent": "AnalyzerIterator",
+        "about": "Marks a loop for revisiting by pushing the loop header onto the stack with an incremented generation number.",
+        "logic": "Retrieves the loop header from the current block's last operation (which must be a GotoOp). Pushes the header onto the stack with an incremented `current_generation_` value.",
+        "parameters": [],
+        "return": {
+          "type": "void",
+          "description": "No return value"
+        },
+        "dependencies": [
+          "GotoOp",
+          "header",
+          "stack_",
+          "current_generation_"
+        ]
+      },
+      "code": "void AnalyzerIterator::MarkLoopForRevisit() {\n              DCHECK_NOT_NULL(curr_.block);\n              DCHECK_NE(curr_.generation, kNotVisitedGeneration);\n              DCHECK(curr_.block->HasBackedge(graph_));\n              const Block* header =\n                  curr_.block->LastOperation(graph_).Cast<GotoOp>().destination;\n              stack_.push_back({header, ++current_generation_});\n            }"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "method",
+        "name": "MarkLoopForRevisitSkipHeader",
+        "parent": "AnalyzerIterator",
+        "about": "Marks a loop for revisiting, skipping the loop header itself by pushing the loop header's children onto the stack with an incremented generation number.",
+        "logic": "Retrieves the loop header block from the current block's `GotoOp`, and then pushes the *children* of the header block onto the stack, rather than the header itself.  This allows revisiting the loop's body without re-analyzing the header.  Generation is incremented for each child.",
+        "parameters": [],
+        "return": {
+          "type": "void",
+          "description": "No return value"
+        },
+        "dependencies": [
+          "GotoOp",
+          "header",
+          "stack_",
+          "current_generation_"
+        ]
+      },
+      "code": "void AnalyzerIterator::MarkLoopForRevisitSkipHeader() {\n              DCHECK_NOT_NULL(curr_.block);\n              DCHECK_NE(curr_.generation, kNotVisitedGeneration);\n              DCHECK(curr_.block->HasBackedge(graph_));\n              const Block* header =\n                  curr_.block->LastOperation(graph_).Cast<GotoOp>().destination;\n              for (const Block* child = header->LastChild(); child != nullptr;\n                   child = child->NeighboringChild()) {\n                stack_.push_back({child, ++current_generation_});\n              }\n            }"
+    }
+  ],
+  "dependencies": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "Block",
+        "about": "Represents a basic block in the control flow graph."
+      },
+      "code": "class Block {\n                public:\n                    bool IsLoop() const;\n                    const Block* LastChild() const;\n                    const Block* NeighboringChild() const;\n                    int index() const;\n                    bool HasBackedge(Graph* graph) const;\n                };",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "LoopFinder",
+        "about": "Finds the loop header for a given block."
+      },
+      "code": "class LoopFinder {\n                public:\n                    const Block* GetLoopHeader(const Block* block) const;\n                };",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "GotoOp",
+        "about": "Represents a goto operation in the control flow graph."
+      },
+      "code": "class GotoOp {\n                public:\n                    const Block* destination;\n                };",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "Graph",
+        "about": "Represents the control flow graph."
+      },
+      "code": "class Graph {};",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "function",
+        "name": "DCHECK",
+        "about": "A macro that asserts a condition in debug builds."
+      },
+      "code": "#define DCHECK(condition)",
+      "type": "func"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "function",
+        "name": "DCHECK_NOT_NULL",
+        "about": "A macro that asserts a pointer is not null in debug builds."
+      },
+      "code": "#define DCHECK_NOT_NULL(ptr)",
+      "type": "func"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "function",
+        "name": "DCHECK_NE",
+        "about": "A macro that asserts two values are not equal in debug builds."
+      },
+      "code": "#define DCHECK_NE(val1, val2)",
+      "type": "func"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "function",
+        "name": "IsOutdated",
+        "about": "Checks if a block is outdated based on its generation."
+      },
+      "code": "bool IsOutdated(const Block* block);",
+      "type": "func"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "function",
+        "name": "HasNext",
+        "about": "Checks if there is a next block to process."
+      },
+      "code": "bool HasNext();",
+      "type": "func"
+    }
+  ],
+  "file_path": "/home/kathirks_gc/v8_go/archive/codebase/src/compiler/turboshaft/analyzer-iterator.cc"
+}

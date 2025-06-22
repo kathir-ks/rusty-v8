@@ -1,0 +1,141 @@
+{
+  "metadata": {
+    "path": "/home/kathirks_gc/v8_go/archive/codebase/src/compiler/compilation-dependencies.h",
+    "file_name": "compilation-dependencies.h",
+    "language": "cpp",
+    "purpose": "Declares the CompilationDependencies class, which collects and installs dependencies for generated code in the V8 compiler.  It also declares related helper classes and structs."
+  },
+  "imports": {
+    "metadata": {
+      "language": "cpp",
+      "purpose": "Includes necessary headers for JS heap access, object manipulation, and memory management."
+    },
+    "code": "#include \"src/compiler/js-heap-broker.h\"\n#include \"src/objects/property-cell.h\"\n#include \"src/zone/zone-containers.h\""
+  },
+  "classes": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "SlackTrackingPrediction",
+        "extends": null,
+        "implements": [],
+        "about": "Represents a prediction about the slack tracking state (instance size and in-object property count) of a JavaScript object's initial map.",
+        "attributes": [
+          {
+            "name": "instance_size_",
+            "type": "int",
+            "access": "private",
+            "purpose": "Stores the predicted instance size of the object."
+          },
+          {
+            "name": "inobject_property_count_",
+            "type": "int",
+            "access": "private",
+            "purpose": "Stores the predicted number of in-object properties."
+          }
+        ],
+        "dependencies": [
+          "MapRef"
+        ]
+      },
+      "code": "class SlackTrackingPrediction {\n public:\n  SlackTrackingPrediction(MapRef initial_map, int instance_size);\n\n  int inobject_property_count() const { return inobject_property_count_; }\n  int instance_size() const { return instance_size_; }\n\n private:\n  int instance_size_;\n  int inobject_property_count_;\n};"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "CompilationDependency",
+        "extends": null,
+        "implements": [],
+        "about": "Represents a dependency of the generated code on some property of the JavaScript heap.  The actual definition and implementation of the dependency invalidation is likely elsewhere.",
+        "attributes": [],
+        "dependencies": []
+      },
+      "code": "class CompilationDependency;"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "CompilationDependencies",
+        "extends": "ZoneObject",
+        "implements": [],
+        "about": "Collects and installs dependencies of the code that is being generated.  This class manages a set of CompilationDependency objects and provides methods for adding various kinds of dependencies.",
+        "attributes": [
+          {
+            "name": "zone_",
+            "type": "Zone*",
+            "access": "private",
+            "purpose": "A pointer to the zone used for memory allocation."
+          },
+          {
+            "name": "broker_",
+            "type": "JSHeapBroker*",
+            "access": "private",
+            "purpose": "A pointer to the JSHeapBroker, used for accessing the JS heap."
+          },
+          {
+            "name": "dependencies_",
+            "type": "CompilationDependencySet",
+            "access": "private",
+            "purpose": "A set of CompilationDependency objects."
+          }
+        ],
+        "dependencies": [
+          "ZoneObject",
+          "JSHeapBroker",
+          "CompilationDependency",
+          "JSFunctionRef",
+          "MapRef",
+          "HeapObjectRef",
+          "NameRef",
+          "ObjectRef",
+          "AllocationSiteRef",
+          "InternalIndex",
+          "PropertyCellRef",
+          "ContextRef",
+          "ScopeInfoRef",
+          "AllocationType",
+          "PropertyConstness",
+          "PropertyKind",
+          "ContextSidePropertyCell",
+          "OptionalJSObjectRef",
+          "ZoneVector"
+        ]
+      },
+      "code": "class V8_EXPORT CompilationDependencies : public ZoneObject {\n public:\n  CompilationDependencies(JSHeapBroker* broker, Zone* zone);\n\n  V8_WARN_UNUSED_RESULT bool Commit(Handle<Code> code);\n\n  // Return the initial map of {function} and record the assumption that it\n  // stays the initial map.\n  MapRef DependOnInitialMap(JSFunctionRef function);\n\n  // Return the \"prototype\" property of the given function and record the\n  // assumption that it doesn't change.\n  HeapObjectRef DependOnPrototypeProperty(JSFunctionRef function);\n\n  // Record the assumption that {map} stays stable.\n  void DependOnStableMap(MapRef map);\n\n  // Record the assumption that slack tracking for {map} doesn't change during\n  // compilation. This gives no guarantees about slack tracking changes after\n  // the compilation is finished (ie, it Validates the dependency, but doesn't\n  // Install anything).\n  void DependOnNoSlackTrackingChange(MapRef map);\n\n  // Depend on the fact that accessing property |property_name| from\n  // |receiver_map| yields the constant value |constant|, which is held by\n  // |holder|. Therefore, must be invalidated if |property_name| is added to any\n  // of the objects between receiver and |holder| on the prototype chain, b) any\n  // of the objects on the prototype chain up to |holder| change prototypes, or\n  // c) the value of |property_name| in |holder| changes.\n  // If PropertyKind is kData, |constant| is the value of the property in\n  // question. In case of PropertyKind::kAccessor, |constant| is the accessor\n  // function (i.e., getter or setter) itself, not the overall AccessorPair.\n  void DependOnConstantInDictionaryPrototypeChain(MapRef receiver_map,\n                                                  NameRef property_name,\n                                                  ObjectRef constant,\n                                                  PropertyKind kind);\n\n  // Return the pretenure mode of {site} and record the assumption that it does\n  // not change.\n  AllocationType DependOnPretenureMode(AllocationSiteRef site);\n\n  // Return a field's constness and, if kConst, record the assumption that it\n  // remains kConst. The field is identified by the arguments.\n  //\n  // For arrays, arguments objects and value wrappers, only consider the field\n  // kConst if the map is stable (and register stability dependency in that\n  // case).  This is to ensure that fast elements kind transitions cannot be\n  // used to mutate fields without deoptimization of the dependent code.\n  PropertyConstness DependOnFieldConstness(MapRef map, MapRef owner,\n                                           InternalIndex descriptor);\n  CompilationDependency const* FieldConstnessDependencyOffTheRecord(\n      MapRef map, MapRef owner, InternalIndex descriptor);\n\n  // Record the assumption that neither {cell}'s {CellType} changes, nor the\n  // {IsReadOnly()} flag of {cell}'s {PropertyDetails}.\n  void DependOnGlobalProperty(PropertyCellRef cell);\n\n  // Record a property assumption in the script context slot.\n  bool DependOnScriptContextSlotProperty(\n      ContextRef script_context, size_t index,\n      ContextSidePropertyCell::Property property, JSHeapBroker* broker);\n\n  // Record the assumption that respective contexts do not have context\n  // extension, if true.\n  bool DependOnEmptyContextExtension(ScopeInfoRef scope_info);\n\n  // Return the validity of the given protector and, if true, record the\n  // assumption that the protector remains valid.\n  bool DependOnProtector(PropertyCellRef cell);\n\n  // Convenience wrappers around {DependOnProtector}.\n  bool DependOnArrayBufferDetachingProtector();\n  bool DependOnArrayIteratorProtector();\n  bool DependOnArraySpeciesProtector();\n  bool DependOnNoElementsProtector();\n  bool DependOnPromiseHookProtector();\n  bool DependOnPromiseSpeciesProtector();\n  bool DependOnPromiseThenProtector();\n  bool DependOnMegaDOMProtector();\n  bool DependOnNoProfilingProtector();\n  bool DependOnNoUndetectableObjectsProtector();\n  bool DependOnStringWrapperToPrimitiveProtector();\n  bool DependOnTypedArrayLengthProtector();\n\n  // Record the assumption that {site}'s {ElementsKind} doesn't change.\n  void DependOnElementsKind(AllocationSiteRef site);\n\n  // Check that an object slot will not change during compilation.\n  void DependOnObjectSlotValue(HeapObjectRef object, int offset,\n                               ObjectRef value);\n\n  void DependOnOwnConstantElement(JSObjectRef holder, uint32_t index,\n                                  ObjectRef element);\n\n  // Record the assumption that the {value} read from {holder} at {index} on the\n  // background thread is the correct value for a given property.\n  void DependOnOwnConstantDataProperty(JSObjectRef holder, MapRef map,\n                                       FieldIndex index, ObjectRef value);\n  void DependOnOwnConstantDoubleProperty(JSObjectRef holder, MapRef map,\n                                         FieldIndex index, Float64 value);\n\n  // Record the assumption that the {value} read from {holder} at {index} on the\n  // background thread is the correct value for a given dictionary property.\n  void DependOnOwnConstantDictionaryProperty(JSObjectRef holder,\n                                             InternalIndex index,\n                                             ObjectRef value);\n\n  // For each given map, depend on the stability of (the maps of) all prototypes\n  // up to (and including) the {last_prototype}.\n  void DependOnStablePrototypeChains(\n      ZoneVector<MapRef> const& receiver_maps, WhereToStart start,\n      OptionalJSObjectRef last_prototype = OptionalJSObjectRef());\n\n  // For the given map, depend on the stability of (the maps of) all prototypes\n  // up to (and including) the {last_prototype}.\n  void DependOnStablePrototypeChain(\n      MapRef receiver_maps, WhereToStart start,\n      OptionalJSObjectRef last_prototype = OptionalJSObjectRef());\n\n  // Like DependOnElementsKind but also applies to all nested allocation sites.\n  void DependOnElementsKinds(AllocationSiteRef site);\n\n  void DependOnConsistentJSFunctionView(JSFunctionRef function);\n\n  // Predict the final instance size for {function}'s initial map and record\n  // the assumption that this prediction is correct. In addition, register\n  // the initial map dependency. This method returns the {function}'s the\n  // predicted minimum slack instance size count (wrapped together with\n  // the corresponding in-object property count for convenience).\n  SlackTrackingPrediction DependOnInitialMapInstanceSizePrediction(\n      JSFunctionRef function);\n\n  // Records {dependency} if not null.\n  void RecordDependency(CompilationDependency const* dependency);\n\n  // The methods below allow for gathering dependencies without actually\n  // recording them. They can be recorded at a later time via RecordDependency\n  // (or they can be ignored).\n\n  // Gather the assumption that {target_map} can be transitioned to, i.e., that\n  // it does not become deprecated.\n  CompilationDependency const* TransitionDependencyOffTheRecord(\n      MapRef target_map) const;\n\n  // Gather the assumption that the field representation of a field does not\n  // change. The field is identified by the arguments.\n  CompilationDependency const* FieldRepresentationDependencyOffTheRecord(\n      MapRef map, MapRef owner, InternalIndex descriptor,\n      Representation representation) const;\n\n  // Gather the assumption that the field type of a field does not change. The\n  // field is identified by the arguments.\n  CompilationDependency const* FieldTypeDependencyOffTheRecord(\n      MapRef map, MapRef owner, InternalIndex descriptor,\n      ObjectRef /* Contains a FieldType underneath. */ type) const;\n\n#ifdef DEBUG\n  static bool IsFieldRepresentationDependencyOnMap(\n      const CompilationDependency* dep, const Handle<Map>& receiver_map);\n#endif  // DEBUG\n\n  struct CompilationDependencyHash {\n    size_t operator()(const CompilationDependency* dep) const;\n  };\n  struct CompilationDependencyEqual {\n    bool operator()(const CompilationDependency* lhs,\n                    const CompilationDependency* rhs) const;\n  };\n\n private:\n  bool PrepareInstall();\n  bool PrepareInstallPredictable();\n\n  using CompilationDependencySet =\n      ZoneUnorderedSet<const CompilationDependency*, CompilationDependencyHash,\n                       CompilationDependencyEqual>;\n\n  Zone* const zone_;\n  JSHeapBroker* const broker_;\n  CompilationDependencySet dependencies_;\n};"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "struct",
+        "name": "CompilationDependencies::CompilationDependencyHash",
+        "extends": null,
+        "implements": [],
+        "about": "A hash functor for CompilationDependency pointers, used by the ZoneUnorderedSet.",
+        "attributes": [],
+        "dependencies": [
+          "CompilationDependency"
+        ]
+      },
+      "code": "struct CompilationDependencyHash {\n    size_t operator()(const CompilationDependency* dep) const;\n  };"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "struct",
+        "name": "CompilationDependencies::CompilationDependencyEqual",
+        "extends": null,
+        "implements": [],
+        "about": "An equality functor for CompilationDependency pointers, used by the ZoneUnorderedSet.",
+        "attributes": [],
+        "dependencies": [
+          "CompilationDependency"
+        ]
+      },
+      "code": "struct CompilationDependencyEqual {\n    bool operator()(const CompilationDependency* lhs,\n                    const CompilationDependency* rhs) const;\n  };"
+    }
+  ],
+  "file_path": "/home/kathirks_gc/v8_go/archive/codebase/src/compiler/compilation-dependencies.h"
+}

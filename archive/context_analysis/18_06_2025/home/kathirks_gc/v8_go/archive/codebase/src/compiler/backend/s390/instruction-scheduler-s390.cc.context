@@ -1,0 +1,81 @@
+{
+  "metadata": {
+    "path": "/home/kathirks_gc/v8_go/archive/codebase/src/compiler/backend/s390/instruction-scheduler-s390.cc",
+    "file_name": "instruction-scheduler-s390.cc",
+    "language": "cpp",
+    "purpose": "Implements the instruction scheduler for the S390 architecture in the V8 compiler backend."
+  },
+  "imports": {
+    "metadata": {
+      "language": "cpp",
+      "purpose": "Includes the instruction scheduler interface."
+    },
+    "code": "#include \"src/compiler/backend/instruction-scheduler.h\""
+  },
+  "functions": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "method",
+        "name": "SchedulerSupported",
+        "parent": "InstructionScheduler",
+        "about": "Determines if instruction scheduling is supported for the S390 architecture.",
+        "logic": "Always returns true, indicating that instruction scheduling is supported.",
+        "parameters": [],
+        "return": {
+          "type": "bool",
+          "description": "True if scheduling is supported, false otherwise."
+        },
+        "dependencies": []
+      },
+      "code": "bool InstructionScheduler::SchedulerSupported() { return true; }"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "method",
+        "name": "GetTargetInstructionFlags",
+        "parent": "InstructionScheduler",
+        "about": "Retrieves target-specific flags for a given instruction on the S390 architecture.",
+        "logic": "Uses a switch statement to determine instruction flags based on the instruction's opcode. Flags indicate properties such as whether it's a load operation or has side effects.",
+        "parameters": [
+          {
+            "name": "instr",
+            "type": "const Instruction*",
+            "purpose": "The instruction to get flags for."
+          }
+        ],
+        "return": {
+          "type": "int",
+          "description": "Target-specific flags for the instruction."
+        },
+        "dependencies": []
+      },
+      "code": "int InstructionScheduler::GetTargetInstructionFlags(\n    const Instruction* instr) const {\n  switch (instr->arch_opcode()) {\n    case kS390_Abs32:\n    case kS390_Abs64:\n    case kS390_And32:\n    case kS390_And64:\n    case kS390_Or32:\n    case kS390_Or64:\n    case kS390_Xor32:\n    case kS390_Xor64:\n    case kS390_ShiftLeft32:\n    case kS390_ShiftLeft64:\n    case kS390_ShiftRight32:\n    case kS390_ShiftRight64:\n    case kS390_ShiftRightArith32:\n    case kS390_ShiftRightArith64:\n    case kS390_RotRight32:\n    case kS390_RotRight64:\n    case kS390_Not32:\n    case kS390_Not64:\n    case kS390_RotLeftAndClear64:\n    case kS390_RotLeftAndClearLeft64:\n    case kS390_RotLeftAndClearRight64:\n    case kS390_Lay:\n    case kS390_Add32:\n    case kS390_Add64:\n    case kS390_AddFloat:\n    case kS390_AddDouble:\n    case kS390_Sub32:\n    case kS390_Sub64:\n    case kS390_SubFloat:\n    case kS390_SubDouble:\n    case kS390_Mul32:\n    case kS390_Mul32WithOverflow:\n    case kS390_Mul64:\n    case kS390_Mul64WithOverflow:\n    case kS390_MulHighS64:\n    case kS390_MulHighU64:\n    case kS390_MulHigh32:\n    case kS390_MulHighU32:\n    case kS390_MulFloat:\n    case kS390_MulDouble:\n    case kS390_Div32:\n    case kS390_Div64:\n    case kS390_DivU32:\n    case kS390_DivU64:\n    case kS390_DivFloat:\n    case kS390_DivDouble:\n    case kS390_Mod32:\n    case kS390_Mod64:\n    case kS390_ModU32:\n    case kS390_ModU64:\n    case kS390_ModDouble:\n    case kS390_Neg32:\n    case kS390_Neg64:\n    case kS390_NegDouble:\n    case kS390_NegFloat:\n    case kS390_SqrtFloat:\n    case kS390_FloorFloat:\n    case kS390_CeilFloat:\n    case kS390_TruncateFloat:\n    case kS390_FloatNearestInt:\n    case kS390_AbsFloat:\n    case kS390_SqrtDouble:\n    case kS390_FloorDouble:\n    case kS390_CeilDouble:\n    case kS390_TruncateDouble:\n    case kS390_RoundDouble:\n    case kS390_DoubleNearestInt:\n    case kS390_MaxFloat:\n    case kS390_MaxDouble:\n    case kS390_MinFloat:\n    case kS390_MinDouble:\n    case kS390_AbsDouble:\n    case kS390_Cntlz32:\n    case kS390_Cntlz64:\n    case kS390_Popcnt32:\n    case kS390_Popcnt64:\n    case kS390_Cmp32:\n    case kS390_Cmp64:\n    case kS390_CmpFloat:\n    case kS390_CmpDouble:\n    case kS390_Tst32:\n    case kS390_Tst64:\n    case kS390_SignExtendWord8ToInt32:\n    case kS390_SignExtendWord16ToInt32:\n    case kS390_SignExtendWord8ToInt64:\n    case kS390_SignExtendWord16ToInt64:\n    case kS390_SignExtendWord32ToInt64:\n    case kS390_Uint32ToUint64:\n    case kS390_Int64ToInt32:\n    case kS390_Int64ToFloat32:\n    case kS390_Int64ToDouble:\n    case kS390_Uint64ToFloat32:\n    case kS390_Uint64ToDouble:\n    case kS390_Int32ToFloat32:\n    case kS390_Int32ToDouble:\n    case kS390_Uint32ToFloat32:\n    case kS390_Uint32ToDouble:\n    case kS390_Float32ToInt32:\n    case kS390_Float32ToUint32:\n    case kS390_Float32ToUint64:\n    case kS390_Float32ToDouble:\n    case kS390_Float64SilenceNaN:\n    case kS390_DoubleToInt32:\n    case kS390_DoubleToUint32:\n    case kS390_Float32ToInt64:\n    case kS390_DoubleToInt64:\n    case kS390_DoubleToUint64:\n    case kS390_DoubleToFloat32:\n    case kS390_DoubleExtractLowWord32:\n    case kS390_DoubleExtractHighWord32:\n    case kS390_DoubleFromWord32Pair:\n    case kS390_DoubleInsertLowWord32:\n    case kS390_DoubleInsertHighWord32:\n    case kS390_DoubleConstruct:\n    case kS390_BitcastInt32ToFloat32:\n    case kS390_BitcastFloat32ToInt32:\n    case kS390_BitcastInt64ToDouble:\n    case kS390_BitcastDoubleToInt64:\n    case kS390_LoadReverse16RR:\n    case kS390_LoadReverse32RR:\n    case kS390_LoadReverse64RR:\n    case kS390_LoadReverseSimd128RR:\n    case kS390_LoadAndTestWord32:\n    case kS390_LoadAndTestWord64:\n    case kS390_LoadAndTestFloat32:\n    case kS390_LoadAndTestFloat64:\n    case kS390_F64x2Splat:\n    case kS390_F64x2ReplaceLane:\n    case kS390_F64x2Abs:\n    case kS390_F64x2Neg:\n    case kS390_F64x2Sqrt:\n    case kS390_F64x2Add:\n    case kS390_F64x2Sub:\n    case kS390_F64x2Mul:\n    case kS390_F64x2Div:\n    case kS390_F64x2Eq:\n    case kS390_F64x2Ne:\n    case kS390_F64x2Lt:\n    case kS390_F64x2Le:\n    case kS390_F64x2Min:\n    case kS390_F64x2Max:\n    case kS390_F64x2ExtractLane:\n    case kS390_F64x2Qfma:\n    case kS390_F64x2Qfms:\n    case kS390_F64x2Pmin:\n    case kS390_F64x2Pmax:\n    case kS390_F64x2Ceil:\n    case kS390_F64x2Floor:\n    case kS390_F64x2Trunc:\n    case kS390_F64x2NearestInt:\n    case kS390_F64x2ConvertLowI32x4S:\n    case kS390_F64x2ConvertLowI32x4U:\n    case kS390_F64x2PromoteLowF32x4:\n    case kS390_F32x4Splat:\n    case kS390_F32x4ExtractLane:\n    case kS390_F32x4ReplaceLane:\n    case kS390_F32x4Add:\n    case kS390_F32x4Sub:\n    case kS390_F32x4Mul:\n    case kS390_F32x4Eq:\n    case kS390_F32x4Ne:\n    case kS390_F32x4Lt:\n    case kS390_F32x4Le:\n    case kS390_F32x4Abs:\n    case kS390_F32x4Neg:\n    case kS390_F32x4SConvertI32x4:\n    case kS390_F32x4UConvertI32x4:\n    case kS390_F32x4Sqrt:\n    case kS390_F32x4Div:\n    case kS390_F32x4Min:\n    case kS390_F32x4Max:\n    case kS390_F32x4Qfma:\n    case kS390_F32x4Qfms:\n    case kS390_F32x4Pmin:\n    case kS390_F32x4Pmax:\n    case kS390_F32x4Ceil:\n    case kS390_F32x4Floor:\n    case kS390_F32x4Trunc:\n    case kS390_F32x4NearestInt:\n    case kS390_F32x4DemoteF64x2Zero:\n    case kS390_I64x2Neg:\n    case kS390_I64x2Add:\n    case kS390_I64x2Sub:\n    case kS390_I64x2Shl:\n    case kS390_I64x2ShrS:\n    case kS390_I64x2ShrU:\n    case kS390_I64x2Mul:\n    case kS390_I64x2Splat:\n    case kS390_I64x2ReplaceLane:\n    case kS390_I64x2ExtractLane:\n    case kS390_I64x2Eq:\n    case kS390_I64x2BitMask:\n    case kS390_I64x2ExtMulLowI32x4S:\n    case kS390_I64x2ExtMulHighI32x4S:\n    case kS390_I64x2ExtMulLowI32x4U:\n    case kS390_I64x2ExtMulHighI32x4U:\n    case kS390_I64x2SConvertI32x4Low:\n    case kS390_I64x2SConvertI32x4High:\n    case kS390_I64x2UConvertI32x4Low:\n    case kS390_I64x2UConvertI32x4High:\n    case kS390_I64x2Ne:\n    case kS390_I64x2GtS:\n    case kS390_I64x2GeS:\n    case kS390_I64x2Abs:\n    case kS390_I32x4Splat:\n    case kS390_I32x4ExtractLane:\n    case kS390_I32x4ReplaceLane:\n    case kS390_I32x4Add:\n    case kS390_I32x4Sub:\n    case kS390_I32x4Mul:\n    case kS390_I32x4MinS:\n    case kS390_I32x4MinU:\n    case kS390_I32x4MaxS:\n    case kS390_I32x4MaxU:\n    case kS390_I32x4Eq:\n    case kS390_I32x4Ne:\n    case kS390_I32x4GtS:\n    case kS390_I32x4GeS:\n    case kS390_I32x4GtU:\n    case kS390_I32x4GeU:\n    case kS390_I32x4Shl:\n    case kS390_I32x4ShrS:\n    case kS390_I32x4ShrU:\n    case kS390_I32x4Neg:\n    case kS390_I32x4SConvertF32x4:\n    case kS390_I32x4UConvertF32x4:\n    case kS390_I32x4SConvertI16x8Low:\n    case kS390_I32x4SConvertI16x8High:\n    case kS390_I32x4UConvertI16x8Low:\n    case kS390_I32x4UConvertI16x8High:\n    case kS390_I32x4Abs:\n    case kS390_I32x4BitMask:\n    case kS390_I32x4DotI16x8S:\n    case kS390_I32x4ExtMulLowI16x8S:\n    case kS390_I32x4ExtMulHighI16x8S:\n    case kS390_I32x4ExtMulLowI16x8U:\n    case kS390_I32x4ExtMulHighI16x8U:\n    case kS390_I32x4ExtAddPairwiseI16x8S:\n    case kS390_I32x4ExtAddPairwiseI16x8U:\n    case kS390_I32x4TruncSatF64x2SZero:\n    case kS390_I32x4TruncSatF64x2UZero:\n    case kS390_I32x4DotI8x16AddS:\n    case kS390_I16x8Splat:\n    case kS390_I16x8ExtractLaneU:\n    case kS390_I16x8ExtractLaneS:\n    case kS390_I16x8ReplaceLane:\n    case kS390_I16x8Add:\n    case kS390_I16x8Sub:\n    case kS390_I16x8Mul:\n    case kS390_I16x8MinS:\n    case kS390_I16x8MinU:\n    case kS390_I16x8MaxS:\n    case kS390_I16x8MaxU:\n    case kS390_I16x8Eq:\n    case kS390_I16x8Ne:\n    case kS390_I16x8GtS:\n    case kS390_I16x8GeS:\n    case kS390_I16x8GtU:\n    case kS390_I16x8GeU:\n    case kS390_I16x8Shl:\n    case kS390_I16x8ShrS:\n    case kS390_I16x8ShrU:\n    case kS390_I16x8Neg:\n    case kS390_I16x8SConvertI32x4:\n    case kS390_I16x8UConvertI32x4:\n    case kS390_I16x8SConvertI8x16Low:\n    case kS390_I16x8SConvertI8x16High:\n    case kS390_I16x8UConvertI8x16Low:\n    case kS390_I16x8UConvertI8x16High:\n    case kS390_I16x8AddSatS:\n    case kS390_I16x8SubSatS:\n    case kS390_I16x8AddSatU:\n    case kS390_I16x8SubSatU:\n    case kS390_I16x8RoundingAverageU:\n    case kS390_I16x8Abs:\n    case kS390_I16x8BitMask:\n    case kS390_I16x8ExtMulLowI8x16S:\n    case kS390_I16x8ExtMulHighI8x16S:\n    case kS390_I16x8ExtMulLowI8x16U:\n    case kS390_I16x8ExtMulHighI8x16U:\n    case kS390_I16x8ExtAddPairwiseI8x16S:\n    case kS390_I16x8ExtAddPairwiseI8x16U:\n    case kS390_I16x8Q15MulRSatS:\n    case kS390_I16x8DotI8x16S:\n    case kS390_I8x16Splat:\n    case kS390_I8x16ExtractLaneU:\n    case kS390_I8x16ExtractLaneS:\n    case kS390_I8x16ReplaceLane:\n    case kS390_I8x16Add:\n    case kS390_I8x16Sub:\n    case kS390_I8x16MinS:\n    case kS390_I8x16MinU:\n    case kS390_I8x16MaxS:\n    case kS390_I8x16MaxU:\n    case kS390_I8x16Eq:\n    case kS390_I8x16Ne:\n    case kS390_I8x16GtS:\n    case kS390_I8x16GeS:\n    case kS390_I8x16GtU:\n    case kS390_I8x16GeU:\n    case kS390_I8x16Shl:\n    case kS390_I8x16ShrS:\n    case kS390_I8x16ShrU:\n    case kS390_I8x16Neg:\n    case kS390_I8x16SConvertI16x8:\n    case kS390_I8x16UConvertI16x8:\n    case kS390_I8x16AddSatS:\n    case kS390_I8x16SubSatS:\n    case kS390_I8x16AddSatU:\n    case kS390_I8x16SubSatU:\n    case kS390_I8x16RoundingAverageU:\n    case kS390_I8x16Abs:\n    case kS390_I8x16BitMask:\n    case kS390_I8x16Shuffle:\n    case kS390_I8x16Swizzle:\n    case kS390_I8x16Popcnt:\n    case kS390_I64x2AllTrue:\n    case kS390_I32x4AllTrue:\n    case kS390_I16x8AllTrue:\n    case kS390_I8x16AllTrue:\n    case kS390_V128AnyTrue:\n    case kS390_S128And:\n    case kS390_S128Or:\n    case kS390_S128Xor:\n    case kS390_S128Const:\n    case kS390_S128Zero:\n    case kS390_S128AllOnes:\n    case kS390_S128Not:\n    case kS390_S128Select:\n    case kS390_S128AndNot:\n      return kNoOpcodeFlags;\n\n    case kS390_LoadWordS8:\n    case kS390_LoadWordU8:\n    case kS390_LoadWordS16:\n    case kS390_LoadWordU16:\n    case kS390_LoadWordS32:\n    case kS390_LoadWordU32:\n    case kS390_LoadWord64:\n    case kS390_LoadFloat32:\n    case kS390_LoadDouble:\n    case kS390_LoadSimd128:\n    case kS390_LoadReverse16:\n    case kS390_LoadReverse32:\n    case kS390_LoadReverse64:\n    case kS390_LoadReverseSimd128:\n    case kS390_Peek:\n    case kS390_LoadDecompressTaggedSigned:\n    case kS390_LoadDecompressTagged:\n    case kS390_S128Load8Splat:\n    case kS390_S128Load16Splat:\n    case kS390_S128Load32Splat:\n    case kS390_S128Load64Splat:\n    case kS390_S128Load8x8S:\n    case kS390_S128Load8x8U:\n    case kS390_S128Load16x4S:\n    case kS390_S128Load16x4U:\n    case kS390_S128Load32x2S:\n    case kS390_S128Load32x2U:\n    case kS390_S128Load32Zero:\n    case kS390_S128Load64Zero:\n    case kS390_S128Load8Lane:\n    case kS390_S128Load16Lane:\n    case kS390_S128Load32Lane:\n    case kS390_S128Load64Lane:\n      return kIsLoadOperation;\n\n    case kS390_StoreWord8:\n    case kS390_StoreWord16:\n    case kS390_StoreWord32:\n    case kS390_StoreWord64:\n    case kS390_StoreReverseSimd128:\n    case kS390_StoreReverse16:\n    case kS390_StoreReverse32:\n    case kS390_StoreReverse64:\n    case kS390_StoreFloat32:\n    case kS390_StoreDouble:\n    case kS390_StoreSimd128:\n    case kS390_StoreCompressTagged:\n    case kS390_Push:\n    case kS390_PushFrame:\n    case kS390_StoreToStackSlot:\n    case kS390_S128Store8Lane:\n    case kS390_S128Store16Lane:\n    case kS390_S128Store32Lane:\n    case kS390_S128Store64Lane:\n      return kHasSideEffect;\n\n    case kS390_Word64AtomicExchangeUint64:\n    case kS390_Word64AtomicCompareExchangeUint64:\n    case kS390_Word64AtomicAddUint64:\n    case kS390_Word64AtomicSubUint64:\n    case kS390_Word64AtomicAndUint64:\n    case kS390_Word64AtomicOrUint64:\n    case kS390_Word64AtomicXorUint64:\n      return kHasSideEffect;\n\n#define CASE(Name) case k##Name:\n      COMMON_ARCH_OPCODE_LIST(CASE)\n#undef CASE\n      // Already covered in architecture independent code.\n      UNREACHABLE();\n  }\n\n  UNREACHABLE();\n}"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "method",
+        "name": "GetInstructionLatency",
+        "parent": "InstructionScheduler",
+        "about": "Retrieves the instruction latency for a given instruction.",
+        "logic": "Currently returns a fixed latency of 1 for all instructions. TODO: Add instruction cost modeling.",
+        "parameters": [
+          {
+            "name": "instr",
+            "type": "const Instruction*",
+            "purpose": "The instruction to get the latency for."
+          }
+        ],
+        "return": {
+          "type": "int",
+          "description": "The instruction latency."
+        },
+        "dependencies": []
+      },
+      "code": "int InstructionScheduler::GetInstructionLatency(const Instruction* instr) {\n  // TODO(all): Add instruction cost modeling.\n  return 1;\n}"
+    }
+  ],
+  "file_path": "/home/kathirks_gc/v8_go/archive/codebase/src/compiler/backend/s390/instruction-scheduler-s390.cc"
+}

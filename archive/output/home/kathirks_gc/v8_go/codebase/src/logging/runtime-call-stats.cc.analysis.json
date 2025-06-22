@@ -1,0 +1,314 @@
+{
+  "file_path": "/home/kathirks_gc/v8_go/codebase/src/logging/runtime-call-stats.cc",
+  "imports": [
+    "src/logging/runtime-call-stats.h",
+    "iomanip",
+    "src/flags/flags.h",
+    "src/tracing/tracing-category-observer.h",
+    "src/utils/ostreams.h"
+  ],
+  "classes": [
+    {
+      "name": "RuntimeCallTimer",
+      "properties": [
+        "Now"
+      ],
+      "methods": [
+        {
+          "name": "NowCPUTime",
+          "parameters": [],
+          "return_type": "base::TimeTicks",
+          "logic": "Gets the current CPU time using base::ThreadTicks and converts it to base::TimeTicks."
+        }
+      ]
+    },
+    {
+      "name": "RuntimeCallStatEntries",
+      "properties": [
+        "total_call_count_",
+        "total_time_",
+        "entries_"
+      ],
+      "methods": [
+        {
+          "name": "Print",
+          "parameters": [
+            "std::ostream& os"
+          ],
+          "return_type": "void",
+          "logic": "Prints the runtime call statistics to the given output stream, sorted by time. Formats the output with headings and percentages."
+        },
+        {
+          "name": "Add",
+          "parameters": [
+            "RuntimeCallCounter* counter"
+          ],
+          "return_type": "void",
+          "logic": "Adds the data from the given RuntimeCallCounter to the internal data structures.  Prevents inlining to avoid large binary size increase."
+        }
+      ]
+    },
+    {
+      "name": "RuntimeCallStatEntries::Entry",
+      "properties": [
+        "name_",
+        "time_",
+        "count_",
+        "time_percent_",
+        "count_percent_"
+      ],
+      "methods": [
+        {
+          "name": "Entry",
+          "parameters": [
+            "const char* name",
+            "base::TimeDelta time",
+            "uint64_t count"
+          ],
+          "return_type": "N/A (Constructor)",
+          "logic": "Constructor for the Entry class. Initializes member variables."
+        },
+        {
+          "name": "operator<",
+          "parameters": [
+            "const Entry& other"
+          ],
+          "return_type": "bool",
+          "logic": "Comparison operator to compare two Entry objects, first by time, then by count."
+        },
+        {
+          "name": "Print",
+          "parameters": [
+            "std::ostream& os"
+          ],
+          "return_type": "void",
+          "logic": "Prints the data of this entry to the given output stream. Prevents inlining to avoid large binary size increase."
+        },
+        {
+          "name": "SetTotal",
+          "parameters": [
+            "base::TimeDelta total_time",
+            "uint64_t total_count"
+          ],
+          "return_type": "void",
+          "logic": "Calculates and sets the time and count percentages for this entry, relative to the total time and count. Prevents inlining to avoid large binary size increase."
+        }
+      ]
+    },
+    {
+      "name": "RuntimeCallCounter",
+      "properties": [
+        "name_",
+        "count_",
+        "time_"
+      ],
+      "methods": [
+        {
+          "name": "Reset",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Resets the count and time to zero."
+        },
+        {
+          "name": "Dump",
+          "parameters": [
+            "v8::tracing::TracedValue* value"
+          ],
+          "return_type": "void",
+          "logic": "Dumps the count and time to a TracedValue object."
+        },
+        {
+          "name": "Add",
+          "parameters": [
+            "RuntimeCallCounter* other"
+          ],
+          "return_type": "void",
+          "logic": "Adds the count and time from another RuntimeCallCounter to this one."
+        }
+      ]
+    },
+    {
+      "name": "RuntimeCallTimer",
+      "properties": [],
+      "methods": [
+        {
+          "name": "Snapshot",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Pauses the top timer, commits elapsed time to the counters in the timer stack, and resumes the timer."
+        }
+      ]
+    },
+    {
+      "name": "RuntimeCallStats",
+      "properties": [
+        "in_use_",
+        "thread_type_",
+        "counters_",
+        "thread_id_",
+        "current_timer_",
+        "current_counter_"
+      ],
+      "methods": [
+        {
+          "name": "RuntimeCallStats",
+          "parameters": [
+            "ThreadType thread_type"
+          ],
+          "return_type": "N/A (Constructor)",
+          "logic": "Constructor for the RuntimeCallStats class. Initializes the counters with their names. Sets the Now function pointer to NowCPUTime if the rcs_cpu_time flag is set."
+        },
+        {
+          "name": "HasThreadSpecificCounterVariants",
+          "parameters": [
+            "RuntimeCallCounterId id"
+          ],
+          "return_type": "bool",
+          "logic": "Checks if the given counter ID is a thread-specific variant."
+        },
+        {
+          "name": "IsBackgroundThreadSpecificVariant",
+          "parameters": [
+            "RuntimeCallCounterId id"
+          ],
+          "return_type": "bool",
+          "logic": "Checks if the given counter ID is a background thread-specific variant."
+        },
+        {
+          "name": "Enter",
+          "parameters": [
+            "RuntimeCallTimer* timer",
+            "RuntimeCallCounterId counter_id"
+          ],
+          "return_type": "void",
+          "logic": "Starts a RuntimeCallTimer and associates it with a counter. Adds the timer to the stack."
+        },
+        {
+          "name": "Leave",
+          "parameters": [
+            "RuntimeCallTimer* timer"
+          ],
+          "return_type": "void",
+          "logic": "Stops a RuntimeCallTimer and removes it from the stack."
+        },
+        {
+          "name": "Add",
+          "parameters": [
+            "RuntimeCallStats* other"
+          ],
+          "return_type": "void",
+          "logic": "Adds the counters from another RuntimeCallStats object to this one."
+        },
+        {
+          "name": "CorrectCurrentCounterId",
+          "parameters": [
+            "RuntimeCallCounterId counter_id",
+            "CounterMode mode"
+          ],
+          "return_type": "void",
+          "logic": "Corrects the current counter ID based on the counter mode and current thread."
+        },
+        {
+          "name": "IsCalledOnTheSameThread",
+          "parameters": [],
+          "return_type": "bool",
+          "logic": "Checks if the current function is called on the same thread as this object was created on."
+        },
+        {
+          "name": "Print",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Prints the runtime call statistics to stdout."
+        },
+        {
+          "name": "Print",
+          "parameters": [
+            "std::ostream& os"
+          ],
+          "return_type": "void",
+          "logic": "Prints the runtime call statistics to the given output stream."
+        },
+        {
+          "name": "Reset",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Resets all counters to zero. If tracing is enabled, clears the timer stack first."
+        },
+        {
+          "name": "Dump",
+          "parameters": [
+            "v8::tracing::TracedValue* value"
+          ],
+          "return_type": "void",
+          "logic": "Dumps the counter data to a TracedValue object."
+        }
+      ]
+    },
+    {
+      "name": "WorkerThreadRuntimeCallStats",
+      "properties": [
+        "isolate_thread_id_",
+        "tls_key_",
+        "mutex_",
+        "tables_"
+      ],
+      "methods": [
+        {
+          "name": "WorkerThreadRuntimeCallStats",
+          "parameters": [],
+          "return_type": "N/A (Constructor)",
+          "logic": "Constructor for WorkerThreadRuntimeCallStats. Stores the isolate's thread ID."
+        },
+        {
+          "name": "~WorkerThreadRuntimeCallStats",
+          "parameters": [],
+          "return_type": "N/A (Destructor)",
+          "logic": "Destructor for WorkerThreadRuntimeCallStats. Deletes the thread local storage key."
+        },
+        {
+          "name": "GetKey",
+          "parameters": [],
+          "return_type": "base::Thread::LocalStorageKey",
+          "logic": "Gets the thread local storage key, creating it if it doesn't exist."
+        },
+        {
+          "name": "NewTable",
+          "parameters": [],
+          "return_type": "RuntimeCallStats*",
+          "logic": "Creates a new RuntimeCallStats table for a worker thread."
+        },
+        {
+          "name": "AddToMainTable",
+          "parameters": [
+            "RuntimeCallStats* main_call_stats"
+          ],
+          "return_type": "void",
+          "logic": "Adds the counters from all worker thread RuntimeCallStats tables to the main table."
+        }
+      ]
+    },
+    {
+      "name": "WorkerThreadRuntimeCallStatsScope",
+      "properties": [
+        "table_"
+      ],
+      "methods": [
+        {
+          "name": "WorkerThreadRuntimeCallStatsScope",
+          "parameters": [
+            "WorkerThreadRuntimeCallStats* worker_stats"
+          ],
+          "return_type": "N/A (Constructor)",
+          "logic": "Constructor for WorkerThreadRuntimeCallStatsScope. Gets the RuntimeCallStats table from thread local storage. If not present, creates a new table and stores it in thread local storage."
+        },
+        {
+          "name": "~WorkerThreadRuntimeCallStatsScope",
+          "parameters": [],
+          "return_type": "N/A (Destructor)",
+          "logic": "Destructor for WorkerThreadRuntimeCallStatsScope. Dumps counter data to tracing if enabled."
+        }
+      ]
+    }
+  ],
+  "functions": []
+}

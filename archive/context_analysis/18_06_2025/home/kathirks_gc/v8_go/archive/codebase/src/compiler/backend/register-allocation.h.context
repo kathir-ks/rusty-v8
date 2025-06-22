@@ -1,0 +1,210 @@
+{
+  "metadata": {
+    "path": "/home/kathirks_gc/v8_go/archive/codebase/src/compiler/backend/register-allocation.h",
+    "file_name": "register-allocation.h",
+    "language": "cpp",
+    "purpose": "Provides utility functions and definitions related to register allocation in the V8 compiler backend."
+  },
+  "imports": {
+    "metadata": {
+      "language": "cpp",
+      "purpose": "Includes necessary headers for register configuration and memory management."
+    },
+    "code": "#include \"src/codegen/register-configuration.h\"\n#include \"src/zone/zone.h\""
+  },
+  "functions": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "function",
+        "name": "GetRegisterCount",
+        "about": "Returns the total number of registers of a given kind, based on the register configuration.",
+        "logic": "Uses a switch statement to select the appropriate register count from the RegisterConfiguration object based on the RegisterKind.",
+        "parameters": [
+          {
+            "name": "config",
+            "type": "const RegisterConfiguration*",
+            "purpose": "Pointer to the register configuration object."
+          },
+          {
+            "name": "kind",
+            "type": "RegisterKind",
+            "purpose": "The type of register to get the count for."
+          }
+        ],
+        "return": {
+          "type": "int",
+          "description": "The total number of registers of the specified kind."
+        },
+        "dependencies": [
+          "RegisterConfiguration",
+          "RegisterKind"
+        ]
+      },
+      "code": "inline int GetRegisterCount(const RegisterConfiguration* config,\n                            RegisterKind kind) {\n  switch (kind) {\n    case RegisterKind::kGeneral:\n      return config->num_general_registers();\n    case RegisterKind::kDouble:\n      return config->num_double_registers();\n    case RegisterKind::kSimd128:\n      return config->num_simd128_registers();\n  }\n}"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "function",
+        "name": "GetAllocatableRegisterCount",
+        "about": "Returns the number of allocatable registers of a given kind.",
+        "logic": "Uses a switch statement to determine the allocatable register count based on the RegisterKind.",
+        "parameters": [
+          {
+            "name": "config",
+            "type": "const RegisterConfiguration*",
+            "purpose": "Pointer to the register configuration object."
+          },
+          {
+            "name": "kind",
+            "type": "RegisterKind",
+            "purpose": "The type of register to get the allocatable count for."
+          }
+        ],
+        "return": {
+          "type": "int",
+          "description": "The number of allocatable registers of the specified kind."
+        },
+        "dependencies": [
+          "RegisterConfiguration",
+          "RegisterKind"
+        ]
+      },
+      "code": "inline int GetAllocatableRegisterCount(const RegisterConfiguration* config,\n                                       RegisterKind kind) {\n  switch (kind) {\n    case RegisterKind::kGeneral:\n      return config->num_allocatable_general_registers();\n    case RegisterKind::kDouble:\n      return config->num_allocatable_double_registers();\n    case RegisterKind::kSimd128:\n      return config->num_allocatable_simd128_registers();\n  }\n}"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "function",
+        "name": "GetAllocatableRegisterCodes",
+        "about": "Returns a pointer to an array of register codes for allocatable registers of a given kind.",
+        "logic": "Uses a switch statement to return the appropriate register code array based on the RegisterKind.",
+        "parameters": [
+          {
+            "name": "config",
+            "type": "const RegisterConfiguration*",
+            "purpose": "Pointer to the register configuration object."
+          },
+          {
+            "name": "kind",
+            "type": "RegisterKind",
+            "purpose": "The type of register to get the codes for."
+          }
+        ],
+        "return": {
+          "type": "const int*",
+          "description": "A pointer to the array of register codes."
+        },
+        "dependencies": [
+          "RegisterConfiguration",
+          "RegisterKind"
+        ]
+      },
+      "code": "inline const int* GetAllocatableRegisterCodes(\n    const RegisterConfiguration* config, RegisterKind kind) {\n  switch (kind) {\n    case RegisterKind::kGeneral:\n      return config->allocatable_general_codes();\n    case RegisterKind::kDouble:\n      return config->allocatable_double_codes();\n    case RegisterKind::kSimd128:\n      return config->allocatable_simd128_codes();\n  }\n}"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "function",
+        "name": "ByteWidthForStackSlot",
+        "about": "Returns the byte width required for a stack slot based on the machine representation.",
+        "logic": "A switch statement determines the appropriate byte width based on the provided MachineRepresentation.  Uses constants kSystemPointerSize, kDoubleSize, kSimd128Size, and kSimd256Size.",
+        "parameters": [
+          {
+            "name": "rep",
+            "type": "MachineRepresentation",
+            "purpose": "The machine representation of the data in the stack slot."
+          }
+        ],
+        "return": {
+          "type": "int",
+          "description": "The byte width required for the stack slot."
+        },
+        "dependencies": [
+          "MachineRepresentation",
+          "kSystemPointerSize",
+          "kDoubleSize",
+          "kSimd128Size",
+          "kSimd256Size",
+          "UNREACHABLE()"
+        ]
+      },
+      "code": "inline int ByteWidthForStackSlot(MachineRepresentation rep) {\n  switch (rep) {\n    case MachineRepresentation::kBit:\n    case MachineRepresentation::kWord8:\n    case MachineRepresentation::kWord16:\n    case MachineRepresentation::kWord32:\n    case MachineRepresentation::kFloat16:\n    case MachineRepresentation::kFloat32:\n    case MachineRepresentation::kSandboxedPointer:\n      return kSystemPointerSize;\n    case MachineRepresentation::kTaggedSigned:\n    case MachineRepresentation::kTaggedPointer:\n    case MachineRepresentation::kTagged:\n    case MachineRepresentation::kCompressedPointer:\n    case MachineRepresentation::kCompressed:\n    case MachineRepresentation::kProtectedPointer:\n      // TODO(ishell): kTaggedSize once half size locations are supported.\n      return kSystemPointerSize;\n    case MachineRepresentation::kWord64:\n    case MachineRepresentation::kFloat64:\n      return kDoubleSize;\n    case MachineRepresentation::kSimd128:\n      return kSimd128Size;\n    case MachineRepresentation::kSimd256:\n      return kSimd256Size;\n    case MachineRepresentation::kNone:\n    case MachineRepresentation::kMapWord:\n    case MachineRepresentation::kIndirectPointer:\n    case MachineRepresentation::kFloat16RawBits:\n      UNREACHABLE();\n  }\n}"
+    }
+  ],
+  "dependencies": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "enum",
+        "name": "MachineRepresentation",
+        "about": "Enumerates the possible machine representations of data.",
+        "dependencies": []
+      },
+      "code": "enum class MachineRepresentation {\n  kNone,\n  kBit,\n  kWord8,\n  kWord16,\n  kWord32,\n  kWord64,\n  kFloat16,\n  kFloat32,\n  kFloat64,\n  kSimd128,\n  kSimd256,\n  kTaggedSigned,\n  kTaggedPointer,\n  kTagged,\n  kMapWord,\n  kIndirectPointer,\n  kCompressedPointer,\n  kCompressed,\n  kProtectedPointer,\n  kSandboxedPointer,\n  kFloat16RawBits\n};",
+      "type": "enum"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "constant",
+        "name": "kSystemPointerSize",
+        "about": "Represents the system pointer size in bytes."
+      },
+      "code": "extern const int kSystemPointerSize;",
+      "type": "constant"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "constant",
+        "name": "kDoubleSize",
+        "about": "Represents the size of a double in bytes."
+      },
+      "code": "extern const int kDoubleSize;",
+      "type": "constant"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "constant",
+        "name": "kSimd128Size",
+        "about": "Represents the size of a SIMD128 register in bytes."
+      },
+      "code": "extern const int kSimd128Size;",
+      "type": "constant"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "constant",
+        "name": "kSimd256Size",
+        "about": "Represents the size of a SIMD256 register in bytes."
+      },
+      "code": "extern const int kSimd256Size;",
+      "type": "constant"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "macro",
+        "name": "UNREACHABLE()",
+        "about": "Indicates that a particular code path should not be reached."
+      },
+      "code": "#define UNREACHABLE() abort()",
+      "type": "macro"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "RegisterConfiguration",
+        "about": "Configuration class that holds the register information of the target architecture"
+      },
+      "code": "class RegisterConfiguration {\n                public:\n                    int num_general_registers() const;\n                    int num_double_registers() const;\n                    int num_simd128_registers() const;\n\n                    int num_allocatable_general_registers() const;\n                    int num_allocatable_double_registers() const;\n                    int num_allocatable_simd128_registers() const;\n\n                    const int* allocatable_general_codes() const;\n                    const int* allocatable_double_codes() const;\n                    const int* allocatable_simd128_codes() const;\n                };",
+      "type": "class"
+    }
+  ],
+  "file_path": "/home/kathirks_gc/v8_go/archive/codebase/src/compiler/backend/register-allocation.h"
+}

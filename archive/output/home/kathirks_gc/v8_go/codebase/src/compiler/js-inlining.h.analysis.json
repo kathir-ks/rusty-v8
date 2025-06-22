@@ -1,0 +1,213 @@
+{
+  "file_path": "/home/kathirks_gc/v8_go/codebase/src/compiler/js-inlining.h",
+  "imports": [
+    "src/compiler/graph-reducer.h",
+    "src/compiler/js-graph.h",
+    "src/compiler/node-origin-table.h",
+    "src/wasm/names-provider.h",
+    "src/wasm/string-builder.h",
+    "src/wasm/wasm-code-manager.h"
+  ],
+  "classes": [
+    {
+      "name": "JSInliner",
+      "properties": [
+        "local_zone_",
+        "info_",
+        "jsgraph_",
+        "broker_",
+        "source_positions_",
+        "node_origins_",
+        "wasm_module_",
+        "js_wasm_calls_sidetable_",
+        "inline_wasm_fct_if_supported_"
+      ],
+      "methods": [
+        {
+          "name": "JSInliner",
+          "parameters": [
+            "Editor* editor",
+            "Zone* local_zone",
+            "OptimizedCompilationInfo* info",
+            "JSGraph* jsgraph",
+            "JSHeapBroker* broker",
+            "SourcePositionTable* source_positions",
+            "NodeOriginTable* node_origins",
+            "const wasm::WasmModule* wasm_module",
+            "JsWasmCallsSidetable* js_wasm_calls_sidetable",
+            "bool inline_wasm_fct_if_supported"
+          ],
+          "return_type": "void",
+          "logic": "Constructor for the JSInliner class, initializes all member variables."
+        },
+        {
+          "name": "reducer_name",
+          "parameters": [],
+          "return_type": "const char*",
+          "logic": "Returns the name of the reducer (JSInliner)."
+        },
+        {
+          "name": "Reduce",
+          "parameters": [
+            "Node* node"
+          ],
+          "return_type": "Reduction",
+          "logic": "The main reduction function, but it's marked as UNREACHABLE() for this class, indicating that it's not directly used through the generic reducer interface.  Other methods are used directly instead."
+        },
+        {
+          "name": "ReduceJSCall",
+          "parameters": [
+            "Node* node"
+          ],
+          "return_type": "Reduction",
+          "logic": "Reduces a JS call node, likely handles the inlining logic for JavaScript function calls. Implementation details are in the corresponding .cc file."
+        },
+        {
+          "name": "ReduceJSWasmCall",
+          "parameters": [
+            "Node* node"
+          ],
+          "return_type": "Reduction",
+          "logic": "Reduces a JS WebAssembly call node, handling the inlining of WebAssembly function calls. Implementation details are in the corresponding .cc file. Only available when V8_ENABLE_WEBASSEMBLY is defined."
+        },
+        {
+          "name": "InlineWasmFunction",
+          "parameters": [
+            "Node* call",
+            "Node* inlinee_start",
+            "Node* inlinee_end",
+            "Node* frame_state",
+            "SharedFunctionInfoRef shared_fct_info",
+            "int argument_count",
+            "Node* context"
+          ],
+          "return_type": "void",
+          "logic": "Inlines a WebAssembly function into the JavaScript graph. Implementation details are in the corresponding .cc file. Only available when V8_ENABLE_WEBASSEMBLY is defined."
+        },
+        {
+          "name": "WasmFunctionNameForTrace",
+          "parameters": [
+            "wasm::NativeModule* native_module",
+            "int fct_index"
+          ],
+          "return_type": "std::string",
+          "logic": "Helper function for debugging and tracing WebAssembly function names.  Retrieves the name of a WASM function from its index within a NativeModule. Only available when V8_ENABLE_WEBASSEMBLY is defined."
+        },
+        {
+          "name": "common",
+          "parameters": [],
+          "return_type": "CommonOperatorBuilder*",
+          "logic": "Returns a pointer to the CommonOperatorBuilder, used for building common operators in the graph."
+        },
+        {
+          "name": "javascript",
+          "parameters": [],
+          "return_type": "JSOperatorBuilder*",
+          "logic": "Returns a pointer to the JSOperatorBuilder, used for building JavaScript-specific operators in the graph."
+        },
+        {
+          "name": "simplified",
+          "parameters": [],
+          "return_type": "SimplifiedOperatorBuilder*",
+          "logic": "Returns a pointer to the SimplifiedOperatorBuilder, used for building simplified operators in the graph."
+        },
+        {
+          "name": "graph",
+          "parameters": [],
+          "return_type": "TFGraph*",
+          "logic": "Returns a pointer to the TFGraph (TurboFan Graph), representing the graph being manipulated."
+        },
+        {
+          "name": "jsgraph",
+          "parameters": [],
+          "return_type": "JSGraph*",
+          "logic": "Returns a pointer to the JSGraph, which provides access to JavaScript-specific graph elements."
+        },
+        {
+          "name": "broker",
+          "parameters": [],
+          "return_type": "JSHeapBroker*",
+          "logic": "Returns a pointer to the JSHeapBroker, used for accessing heap objects and properties."
+        },
+        {
+          "name": "isolate",
+          "parameters": [],
+          "return_type": "Isolate*",
+          "logic": "Returns a pointer to the Isolate, representing the V8 isolate."
+        },
+        {
+          "name": "DetermineCallTarget",
+          "parameters": [
+            "Node* node"
+          ],
+          "return_type": "OptionalSharedFunctionInfoRef",
+          "logic": "Determines the target SharedFunctionInfo for a given call node."
+        },
+        {
+          "name": "DetermineCallContext",
+          "parameters": [
+            "Node* node",
+            "Node** context_out"
+          ],
+          "return_type": "FeedbackCellRef",
+          "logic": "Determines the call context FeedbackCell for a given call node."
+        },
+        {
+          "name": "CreateArtificialFrameState",
+          "parameters": [
+            "Node* node",
+            "FrameState outer_frame_state",
+            "int parameter_count",
+            "FrameStateType frame_state_type",
+            "SharedFunctionInfoRef shared",
+            "OptionalBytecodeArrayRef maybe_bytecode_array",
+            "Node* context",
+            "Node* callee"
+          ],
+          "return_type": "FrameState",
+          "logic": "Creates an artificial frame state for inlining purposes."
+        },
+        {
+          "name": "InlineCall",
+          "parameters": [
+            "Node* call",
+            "Node* new_target",
+            "Node* context",
+            "Node* frame_state",
+            "StartNode start",
+            "Node* end",
+            "Node* exception_target",
+            "const NodeVector& uncaught_subcalls",
+            "int argument_count"
+          ],
+          "return_type": "Reduction",
+          "logic": "Inlines a call node into the graph."
+        },
+        {
+          "name": "TryWasmInlining",
+          "parameters": [
+            "const JSWasmCallNode& call_node"
+          ],
+          "return_type": "WasmInlineResult",
+          "logic": "Tries to inline a WebAssembly function body. Only available when V8_ENABLE_WEBASSEMBLY is defined."
+        },
+        {
+          "name": "InlineJSWasmCall",
+          "parameters": [
+            "Node* call",
+            "Node* new_target",
+            "Node* context",
+            "Node* frame_state",
+            "StartNode start",
+            "Node* end",
+            "Node* exception_target",
+            "const NodeVector& uncaught_subcalls"
+          ],
+          "return_type": "Reduction",
+          "logic": "Inlines a JS to WebAssembly call node. Only available when V8_ENABLE_WEBASSEMBLY is defined."
+        }
+      ]
+    }
+  ],
+  "functions": []
+}

@@ -1,0 +1,55 @@
+{
+  "file_path": "/home/kathirks_gc/v8_go/codebase/src/strings/string-hasher.cc",
+  "imports": [
+    "src/strings/string-hasher.h",
+    "src/strings/string-hasher-inl.h"
+  ],
+  "classes": [
+    {
+      "name": "ConvertTo8BitHashReader",
+      "properties": [
+        "kCompressionFactor = 2",
+        "kExpansionFactor = 1"
+      ],
+      "methods": [
+        {
+          "name": "Read64",
+          "parameters": [
+            "const uint8_t* ptr"
+          ],
+          "return_type": "uint64_t",
+          "logic": "Reads 8 bytes from the given pointer, interpreting them as 8 separate 8-bit values represented as 16-bit values.  It then packs them into a 64-bit integer. Optimized using SSE2 or ARM NEON if available, otherwise using bitwise operations."
+        },
+        {
+          "name": "Read32",
+          "parameters": [
+            "const uint8_t* ptr"
+          ],
+          "return_type": "uint64_t",
+          "logic": "Reads 4 bytes from the given pointer, interpreting them as 4 separate 8-bit values represented as 16-bit values.  It then packs them into a 32-bit integer. Optimized using SSE2 or ARM NEON if available, otherwise using bitwise operations."
+        },
+        {
+          "name": "ReadSmall",
+          "parameters": [
+            "const uint8_t* ptr",
+            "size_t k"
+          ],
+          "return_type": "uint64_t",
+          "logic": "Reads three bytes from the provided pointer, interpreting them as three separate 8-bit values represented as 16-bit values and combines them into a 64-bit integer. It extracts bytes at positions 0, k/2, and k-1, and combines them using bit shifts."
+        }
+      ]
+    }
+  ],
+  "functions": [
+    {
+      "name": "HashConvertingTo8Bit",
+      "parameters": [
+        "const uint16_t* chars",
+        "uint32_t length",
+        "uint64_t seed"
+      ],
+      "return_type": "uint64_t",
+      "logic": "Hashes the given 16-bit characters as if they were 8-bit using the `rapidhash` function with the `ConvertTo8BitHashReader`. It casts the 16-bit character array to an 8-bit array for hashing. `rapidhash` is likely defined in `string-hasher-inl.h`"
+    }
+  ]
+}

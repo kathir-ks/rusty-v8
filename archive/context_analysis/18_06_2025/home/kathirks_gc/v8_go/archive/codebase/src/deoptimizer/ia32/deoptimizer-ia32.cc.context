@@ -1,0 +1,332 @@
+{
+  "metadata": {
+    "path": "/home/kathirks_gc/v8_go/archive/codebase/src/deoptimizer/ia32/deoptimizer-ia32.cc",
+    "file_name": "deoptimizer-ia32.cc",
+    "language": "cpp",
+    "purpose": "Provides IA32-specific deoptimization functionality for the V8 JavaScript engine."
+  },
+  "imports": {
+    "metadata": {
+      "language": "cpp",
+      "purpose": "Includes the deoptimizer base class definition."
+    },
+    "code": "#include \"src/deoptimizer/deoptimizer.h\""
+  },
+  "classes": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "Deoptimizer",
+        "about": "Provides common deoptimization functionality, architecture-specific parts implemented in subclasses.",
+        "attributes": [],
+        "dependencies": []
+      },
+      "code": "namespace v8 {\nnamespace internal {"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "RegisterValues",
+        "about": "Stores register values during deoptimization.",
+        "attributes": [],
+        "dependencies": []
+      },
+      "code": "Float32 RegisterValues::GetFloatRegister(unsigned n) const {\n  return base::ReadUnalignedValue<Float32>(\n      reinterpret_cast<Address>(simd128_registers_ + n));\n}"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "RegisterValues",
+        "about": "Stores register values during deoptimization.",
+        "attributes": [],
+        "dependencies": []
+      },
+      "code": "Float64 RegisterValues::GetDoubleRegister(unsigned n) const {\n  V8_ASSUME(n < arraysize(simd128_registers_));\n  return base::ReadUnalignedValue<Float64>(\n      reinterpret_cast<Address>(simd128_registers_ + n));\n}"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "RegisterValues",
+        "about": "Stores register values during deoptimization.",
+        "attributes": [],
+        "dependencies": []
+      },
+      "code": "void RegisterValues::SetDoubleRegister(unsigned n, Float64 value) {\n  V8_ASSUME(n < arraysize(simd128_registers_));\n  base::WriteUnalignedValue(reinterpret_cast<Address>(simd128_registers_ + n),\n                            value);\n}"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "FrameDescription",
+        "about": "Describes a stack frame during deoptimization.",
+        "attributes": [],
+        "dependencies": []
+      },
+      "code": "void FrameDescription::SetCallerPc(unsigned offset, intptr_t value) {\n  SetFrameSlot(offset, value);\n}"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "FrameDescription",
+        "about": "Describes a stack frame during deoptimization.",
+        "attributes": [],
+        "dependencies": []
+      },
+      "code": "void FrameDescription::SetCallerFp(unsigned offset, intptr_t value) {\n  SetFrameSlot(offset, value);\n}"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "FrameDescription",
+        "about": "Describes a stack frame during deoptimization.",
+        "attributes": [],
+        "dependencies": []
+      },
+      "code": "void FrameDescription::SetCallerConstantPool(unsigned offset, intptr_t value) {\n  // No embedded constant pool support.\n  UNREACHABLE();\n}"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "FrameDescription",
+        "about": "Describes a stack frame during deoptimization.",
+        "attributes": [],
+        "dependencies": []
+      },
+      "code": "void FrameDescription::SetPc(intptr_t pc) { pc_ = pc; }"
+    }
+  ],
+  "functions": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "member",
+        "name": "PatchToJump",
+        "parent": "Deoptimizer",
+        "about": "Patches the code at pc to jump to new_pc. IA32 version.",
+        "logic": "This function is not implemented for IA32, indicating that a different mechanism is used or patching jumps directly is not required in this architecture's deoptimization process.",
+        "parameters": [
+          {
+            "name": "pc",
+            "type": "Address",
+            "purpose": "The address of the instruction to patch."
+          },
+          {
+            "name": "new_pc",
+            "type": "Address",
+            "purpose": "The address to jump to."
+          }
+        ],
+        "return": {
+          "type": "void",
+          "description": "No return value."
+        },
+        "dependencies": []
+      },
+      "code": "void Deoptimizer::PatchToJump(Address pc, Address new_pc) { UNREACHABLE(); }"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "member",
+        "name": "GetFloatRegister",
+        "parent": "RegisterValues",
+        "about": "Returns the value of a floating-point register.",
+        "logic": "Reads a Float32 value from the simd128_registers_ array at the given index, handling potential unaligned memory access.",
+        "parameters": [
+          {
+            "name": "n",
+            "type": "unsigned",
+            "purpose": "The index of the floating-point register."
+          }
+        ],
+        "return": {
+          "type": "Float32",
+          "description": "The value of the floating-point register."
+        },
+        "dependencies": [
+          "base::ReadUnalignedValue"
+        ]
+      },
+      "code": "Float32 RegisterValues::GetFloatRegister(unsigned n) const {\n  return base::ReadUnalignedValue<Float32>(\n      reinterpret_cast<Address>(simd128_registers_ + n));\n}"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "member",
+        "name": "GetDoubleRegister",
+        "parent": "RegisterValues",
+        "about": "Returns the value of a double-precision floating-point register.",
+        "logic": "Reads a Float64 value from the simd128_registers_ array at the given index, handling potential unaligned memory access. Includes an assertion to ensure the index is within the bounds of the array.",
+        "parameters": [
+          {
+            "name": "n",
+            "type": "unsigned",
+            "purpose": "The index of the double-precision floating-point register."
+          }
+        ],
+        "return": {
+          "type": "Float64",
+          "description": "The value of the double-precision floating-point register."
+        },
+        "dependencies": [
+          "base::ReadUnalignedValue",
+          "arraysize",
+          "V8_ASSUME"
+        ]
+      },
+      "code": "Float64 RegisterValues::GetDoubleRegister(unsigned n) const {\n  V8_ASSUME(n < arraysize(simd128_registers_));\n  return base::ReadUnalignedValue<Float64>(\n      reinterpret_cast<Address>(simd128_registers_ + n));\n}"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "member",
+        "name": "SetDoubleRegister",
+        "parent": "RegisterValues",
+        "about": "Sets the value of a double-precision floating-point register.",
+        "logic": "Writes a Float64 value to the simd128_registers_ array at the given index, handling potential unaligned memory access. Includes an assertion to ensure the index is within the bounds of the array.",
+        "parameters": [
+          {
+            "name": "n",
+            "type": "unsigned",
+            "purpose": "The index of the double-precision floating-point register."
+          },
+          {
+            "name": "value",
+            "type": "Float64",
+            "purpose": "The value to set."
+          }
+        ],
+        "return": {
+          "type": "void",
+          "description": "No return value."
+        },
+        "dependencies": [
+          "base::WriteUnalignedValue",
+          "arraysize",
+          "V8_ASSUME"
+        ]
+      },
+      "code": "void RegisterValues::SetDoubleRegister(unsigned n, Float64 value) {\n  V8_ASSUME(n < arraysize(simd128_registers_));\n  base::WriteUnalignedValue(reinterpret_cast<Address>(simd128_registers_ + n),\n                            value);\n}"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "member",
+        "name": "SetCallerPc",
+        "parent": "FrameDescription",
+        "about": "Sets the value of the caller's program counter in the frame description.",
+        "logic": "Sets a frame slot at the given offset to the specified value.",
+        "parameters": [
+          {
+            "name": "offset",
+            "type": "unsigned",
+            "purpose": "The offset of the caller's PC in the frame."
+          },
+          {
+            "name": "value",
+            "type": "intptr_t",
+            "purpose": "The value of the caller's PC."
+          }
+        ],
+        "return": {
+          "type": "void",
+          "description": "No return value."
+        },
+        "dependencies": [
+          "SetFrameSlot"
+        ]
+      },
+      "code": "void FrameDescription::SetCallerPc(unsigned offset, intptr_t value) {\n  SetFrameSlot(offset, value);\n}"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "member",
+        "name": "SetCallerFp",
+        "parent": "FrameDescription",
+        "about": "Sets the value of the caller's frame pointer in the frame description.",
+        "logic": "Sets a frame slot at the given offset to the specified value.",
+        "parameters": [
+          {
+            "name": "offset",
+            "type": "unsigned",
+            "purpose": "The offset of the caller's FP in the frame."
+          },
+          {
+            "name": "value",
+            "type": "intptr_t",
+            "purpose": "The value of the caller's FP."
+          }
+        ],
+        "return": {
+          "type": "void",
+          "description": "No return value."
+        },
+        "dependencies": [
+          "SetFrameSlot"
+        ]
+      },
+      "code": "void FrameDescription::SetCallerFp(unsigned offset, intptr_t value) {\n  SetFrameSlot(offset, value);\n}"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "member",
+        "name": "SetCallerConstantPool",
+        "parent": "FrameDescription",
+        "about": "Sets the value of the caller's constant pool pointer in the frame description.",
+        "logic": "This function is not implemented, indicating that constant pools are not directly supported in frame descriptions on IA32.",
+        "parameters": [
+          {
+            "name": "offset",
+            "type": "unsigned",
+            "purpose": "The offset of the caller's constant pool pointer in the frame."
+          },
+          {
+            "name": "value",
+            "type": "intptr_t",
+            "purpose": "The value of the caller's constant pool pointer."
+          }
+        ],
+        "return": {
+          "type": "void",
+          "description": "No return value."
+        },
+        "dependencies": []
+      },
+      "code": "void FrameDescription::SetCallerConstantPool(unsigned offset, intptr_t value) {\n  // No embedded constant pool support.\n  UNREACHABLE();\n}"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "member",
+        "name": "SetPc",
+        "parent": "FrameDescription",
+        "about": "Sets the program counter (PC) in the frame description.",
+        "logic": "Assigns the provided program counter value to the pc_ member variable.",
+        "parameters": [
+          {
+            "name": "pc",
+            "type": "intptr_t",
+            "purpose": "The value of the program counter."
+          }
+        ],
+        "return": {
+          "type": "void",
+          "description": "No return value."
+        },
+        "dependencies": []
+      },
+      "code": "void FrameDescription::SetPc(intptr_t pc) { pc_ = pc; }"
+    }
+  ],
+  "file_level_code_content": "}  // namespace internal\n}  // namespace v8\n\n#endif  // V8_TARGET_ARCH_IA32",
+  "file_path": "/home/kathirks_gc/v8_go/archive/codebase/src/deoptimizer/ia32/deoptimizer-ia32.cc"
+}

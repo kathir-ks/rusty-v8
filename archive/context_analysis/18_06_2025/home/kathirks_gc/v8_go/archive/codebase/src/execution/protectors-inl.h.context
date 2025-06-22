@@ -1,0 +1,167 @@
+{
+  "metadata": {
+    "path": "/home/kathirks_gc/v8_go/archive/codebase/src/execution/protectors-inl.h",
+    "file_name": "protectors-inl.h",
+    "language": "cpp",
+    "purpose": "Defines inline functions for checking the integrity of protectors, which are used for optimization and security in the V8 JavaScript engine."
+  },
+  "imports": {
+    "metadata": {
+      "language": "cpp",
+      "purpose": "Includes necessary headers for protectors, property cells, and Smis."
+    },
+    "code": "#include \"src/execution/protectors.h\"\n#include \"src/objects/property-cell-inl.h\"\n#include \"src/objects/smi.h\""
+  },
+  "functions": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "macro",
+        "name": "DEFINE_PROTECTOR_ON_ISOLATE_CHECK",
+        "about": "Defines an inline function to check if a protector on an isolate is intact.",
+        "logic": "This macro defines a function that retrieves a PropertyCell from the isolate's root based on the provided root_index. It then checks if the cell's value is a Smi and if that Smi's value is equal to kProtectorValid.  The function returns true if both conditions are met, indicating the protector is intact.",
+        "parameters": [
+          {
+            "name": "name",
+            "type": "string",
+            "purpose": "The name of the protector."
+          },
+          {
+            "name": "root_index",
+            "type": "RootIndex",
+            "purpose": "The root index of the PropertyCell associated with the protector."
+          },
+          {
+            "name": "unused_cell",
+            "type": "N/A",
+            "purpose": "This parameter appears to be unused in the macro definition."
+          }
+        ],
+        "return": {
+          "type": "bool",
+          "description": "True if the protector is intact, false otherwise."
+        },
+        "dependencies": [
+          "PropertyCell",
+          "Isolate",
+          "RootIndex",
+          "IsSmi",
+          "Smi",
+          "kProtectorValid"
+        ]
+      },
+      "code": "#define DEFINE_PROTECTOR_ON_ISOLATE_CHECK(name, root_index, unused_cell) \\\n  bool Protectors::Is##name##Intact(Isolate* isolate) {                  \\\n    Tagged<PropertyCell> cell =                                          \\\n        Cast<PropertyCell>(isolate->root(RootIndex::k##root_index));     \\\n    return IsSmi(cell->value()) &&                                       \\\n           Smi::ToInt(cell->value()) == kProtectorValid;                 \\\n  }"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "macro",
+        "name": "DECLARED_PROTECTORS_ON_ISOLATE",
+        "about": "Expands to a list of calls to DEFINE_PROTECTOR_ON_ISOLATE_CHECK, effectively defining the Is...Intact methods for all declared protectors.",
+        "logic": "This is a macro that is expected to be defined elsewhere. It's purpose is to expand into a series of calls to the `DEFINE_PROTECTOR_ON_ISOLATE_CHECK` macro, instantiating the Is...Intact methods for each protector defined in the system.  The specific protectors are not defined in this file, but are part of the overall V8 architecture.",
+        "parameters": [
+          {
+            "name": "macro",
+            "type": "macro",
+            "purpose": "The macro to be applied to each protector (in this case DEFINE_PROTECTOR_ON_ISOLATE_CHECK)."
+          }
+        ],
+        "return": {
+          "type": "N/A",
+          "description": "This is a macro, and thus does not return a value directly."
+        },
+        "dependencies": [
+          "DEFINE_PROTECTOR_ON_ISOLATE_CHECK"
+        ]
+      },
+      "code": "DECLARED_PROTECTORS_ON_ISOLATE(DEFINE_PROTECTOR_ON_ISOLATE_CHECK)"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "macro",
+        "name": "undef",
+        "about": "Undefines the macro",
+        "logic": "The macro DEFINE_PROTECTOR_ON_ISOLATE_CHECK is undefined here",
+        "parameters": [],
+        "return": {
+          "type": "void",
+          "description": "No return value"
+        },
+        "dependencies": [
+          "DEFINE_PROTECTOR_ON_ISOLATE_CHECK"
+        ]
+      },
+      "code": "#undef DEFINE_PROTECTORS_ON_ISOLATE_CHECK"
+    }
+  ],
+  "dependencies": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "PropertyCell",
+        "about": "Represents a property cell, which stores a property value and attributes.",
+        "dependencies": []
+      },
+      "code": "class PropertyCell;",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "Isolate",
+        "about": "Represents an isolated instance of the V8 JavaScript engine.",
+        "dependencies": []
+      },
+      "code": "class Isolate;",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "enum",
+        "name": "RootIndex",
+        "about": "Enumerates the root indices used to access objects in the Isolate's root array.",
+        "dependencies": []
+      },
+      "code": "enum class RootIndex;",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "Smi",
+        "about": "Represents a small integer.",
+        "dependencies": []
+      },
+      "code": "class Smi;",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "constant",
+        "name": "kProtectorValid",
+        "about": "Represents a valid value for a protector. likely defined elsewhere.",
+        "dependencies": []
+      },
+      "code": "kProtectorValid",
+      "type": "constant"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "Protectors",
+        "about": "Class containing static methods for checking protector status",
+        "dependencies": []
+      },
+      "code": "class Protectors {\n                  public:\n                    static bool Is##name##Intact(Isolate* isolate);\n                };",
+      "type": "class"
+    }
+  ],
+  "file_path": "/home/kathirks_gc/v8_go/archive/codebase/src/execution/protectors-inl.h"
+}

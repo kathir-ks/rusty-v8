@@ -1,0 +1,165 @@
+{
+  "metadata": {
+    "path": "/home/kathirks_gc/v8_go/archive/codebase/src/baseline/loong64/baseline-compiler-loong64-inl.h",
+    "file_name": "baseline-compiler-loong64-inl.h",
+    "language": "cpp",
+    "purpose": "Inline implementation details for the BaselineCompiler on the LoongArch64 architecture."
+  },
+  "imports": {
+    "metadata": {
+      "language": "cpp",
+      "purpose": "Declares the BaselineCompiler class."
+    },
+    "code": "#include \"src/baseline/baseline-compiler.h\""
+  },
+  "functions": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "method",
+        "name": "Prologue",
+        "parent": "BaselineCompiler",
+        "about": "Emits the prologue for a baseline-compiled function.",
+        "logic": "Sets up the stack frame, calls an out-of-line prologue builtin, and then fills the register frame with undefined values.",
+        "parameters": [],
+        "return": {
+          "type": "void",
+          "description": "No return value"
+        },
+        "dependencies": [
+          "Builtin",
+          "StackFrame",
+          "BuiltinCallJumpMode"
+        ]
+      },
+      "code": "void BaselineCompiler::Prologue() {\n              ASM_CODE_COMMENT(&masm_);\n              __ masm()->EnterFrame(StackFrame::BASELINE);\n              DCHECK_EQ(kJSFunctionRegister, kJavaScriptCallTargetRegister);\n              int max_frame_size = bytecode_->max_frame_size();\n              CallBuiltin<Builtin::kBaselineOutOfLinePrologue>(\n                  kContextRegister, kJSFunctionRegister, kJavaScriptCallArgCountRegister,\n                  max_frame_size, kJavaScriptCallNewTargetRegister, bytecode_);\n\n              PrologueFillFrame();\n            }"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "method",
+        "name": "PrologueFillFrame",
+        "parent": "BaselineCompiler",
+        "about": "Fills the register part of the stack frame with the undefined value.",
+        "logic": "Iterates through the registers and stores the undefined value in each one.  Optimizes for smaller frames.",
+        "parameters": [],
+        "return": {
+          "type": "void",
+          "description": "No return value"
+        },
+        "dependencies": [
+          "interpreter::Register",
+          "RootIndex"
+        ]
+      },
+      "code": "void BaselineCompiler::PrologueFillFrame() {\n              ASM_CODE_COMMENT(&masm_);\n              // Inlined register frame fill\n              interpreter::Register new_target_or_generator_register =\n                  bytecode_->incoming_new_target_or_generator_register();\n              __ LoadRoot(kInterpreterAccumulatorRegister, RootIndex::kUndefinedValue);\n              int register_count = bytecode_->register_count();\n              // Magic value\n              const int kLoopUnrollSize = 8;\n              const int new_target_index = new_target_or_generator_register.index();\n              const bool has_new_target = new_target_index != kMaxInt;\n              if (has_new_target) {\n                DCHECK_LE(new_target_index, register_count);\n                __ masm()->Add_d(sp, sp, Operand(-(kSystemPointerSize * new_target_index)));\n                for (int i = 0; i < new_target_index; i++) {\n                  __ masm()->St_d(kInterpreterAccumulatorRegister, MemOperand(sp, i * 8));\n                }\n                // Push new_target_or_generator.\n                __ Push(kJavaScriptCallNewTargetRegister);\n                register_count -= new_target_index + 1;\n              }\n              if (register_count < 2 * kLoopUnrollSize) {\n                // If the frame is small enough, just unroll the frame fill completely.\n                __ masm()->Add_d(sp, sp, Operand(-(kSystemPointerSize * register_count)));\n                for (int i = 0; i < register_count; ++i) {\n                  __ masm()->St_d(kInterpreterAccumulatorRegister, MemOperand(sp, i * 8));\n                }\n              } else {\n                __ masm()->Add_d(sp, sp, Operand(-(kSystemPointerSize * register_count)));\n                for (int i = 0; i < register_count; ++i) {\n                  __ masm()->St_d(kInterpreterAccumulatorRegister, MemOperand(sp, i * 8));\n                }\n              }\n            }"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "method",
+        "name": "VerifyFrameSize",
+        "parent": "BaselineCompiler",
+        "about": "Verifies that the stack pointer is in the expected position.",
+        "logic": "Calculates the expected stack pointer position based on the frame size and asserts that the actual stack pointer matches the expected value.",
+        "parameters": [],
+        "return": {
+          "type": "void",
+          "description": "No return value"
+        },
+        "dependencies": [
+          "InterpreterFrameConstants",
+          "AbortReason"
+        ]
+      },
+      "code": "void BaselineCompiler::VerifyFrameSize() {\n              ASM_CODE_COMMENT(&masm_);\n              __ masm()->Add_d(t0, sp,\n                               Operand(InterpreterFrameConstants::kFixedFrameSizeFromFp +\n                                       bytecode_->frame_size()));\n              __ masm()->Assert(eq, AbortReason::kUnexpectedStackPointer, t0, Operand(fp));\n            }"
+    }
+  ],
+  "dependencies": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "interface",
+        "name": "Builtin",
+        "about": "Interface to access built-in functions.",
+        "methods": [],
+        "dependencies": []
+      },
+      "code": "class Builtin {\n                public:\n                  enum Name {\n                    kBaselineOutOfLinePrologue\n                  };\n                };",
+      "type": "interface"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "StackFrame",
+        "about": "Represents a stack frame.",
+        "attributes": [],
+        "dependencies": []
+      },
+      "code": "class StackFrame {\n                 public:\n                  enum Type {\n                    BASELINE\n                  };\n                };",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "BuiltinCallJumpMode",
+        "about": "Determines calling convention for builtins.",
+        "attributes": [],
+        "dependencies": []
+      },
+      "code": "enum class BuiltinCallJumpMode {\n                    kIndirect\n                };",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "interpreter::Register",
+        "about": "Represents an interpreter register.",
+        "attributes": [],
+        "dependencies": []
+      },
+      "code": "namespace interpreter {\n                    class Register {\n                    public:\n                        int index() const;\n                    };\n                }",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "RootIndex",
+        "about": "Index to roots in the V8 heap.",
+        "attributes": [],
+        "dependencies": []
+      },
+      "code": "class RootIndex {\n                public:\n                 enum Index {\n                  kUndefinedValue\n                 };\n                };",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "InterpreterFrameConstants",
+        "about": "Constants related to interpreter frame layout.",
+        "attributes": [],
+        "dependencies": []
+      },
+      "code": "class InterpreterFrameConstants {\n                public:\n                    static constexpr int kFixedFrameSizeFromFp = 0;\n                };",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "AbortReason",
+        "about": "Reasons for aborting execution.",
+        "attributes": [],
+        "dependencies": []
+      },
+      "code": "enum class AbortReason {\n                    kUnexpectedStackPointer\n                };",
+      "type": "class"
+    }
+  ],
+  "file_path": "/home/kathirks_gc/v8_go/archive/codebase/src/baseline/loong64/baseline-compiler-loong64-inl.h"
+}

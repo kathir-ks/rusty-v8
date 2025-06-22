@@ -1,0 +1,108 @@
+{
+  "metadata": {
+    "path": "/home/kathirks_gc/v8_go/archive/codebase/src/snapshot/embedded/embedded-empty.cc",
+    "file_name": "embedded-empty.cc",
+    "language": "cpp",
+    "purpose": "Provides empty embedded data when building V8 without embedded snapshots.  This allows the build to succeed even if the snapshot generation fails or is disabled."
+  },
+  "imports": {
+    "metadata": {
+      "language": "cpp",
+      "purpose": "Includes instruction handlers if drumbrake is enabled.",
+      "condition": "V8_ENABLE_DRUMBRAKE"
+    },
+    "code": "#if V8_ENABLE_DRUMBRAKE\n            #include \"src/wasm/interpreter/instruction-handlers.h\"\n            typedef void (*fun_ptr)();\n            #define V(name)                       \\\n              extern \"C\" fun_ptr Builtins_##name; \\\n              fun_ptr Builtins_##name = nullptr;\n            FOREACH_LOAD_STORE_INSTR_HANDLER(V)\n            #undef V\n            #endif  // V8_ENABLE_DRUMBRAKE"
+  },
+  "dependencies": [],
+  "functions": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "variable",
+        "name": "v8_Default_embedded_blob_code_",
+        "about": "Extern declaration of the code blob. Defined below.",
+        "logic": "Extern C declaration",
+        "dependencies": []
+      },
+      "code": "extern \"C\" const uint8_t v8_Default_embedded_blob_code_[];"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "variable",
+        "name": "v8_Default_embedded_blob_code_size_",
+        "about": "Extern declaration of the code blob size. Defined below.",
+        "logic": "Extern C declaration",
+        "dependencies": []
+      },
+      "code": "extern \"C\" uint32_t v8_Default_embedded_blob_code_size_;"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "variable",
+        "name": "v8_Default_embedded_blob_data_",
+        "about": "Extern declaration of the data blob. Defined below.",
+        "logic": "Extern C declaration",
+        "dependencies": []
+      },
+      "code": "extern \"C\" const uint8_t v8_Default_embedded_blob_data_[];"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "variable",
+        "name": "v8_Default_embedded_blob_data_size_",
+        "about": "Extern declaration of the data blob size. Defined below.",
+        "logic": "Extern C declaration",
+        "dependencies": []
+      },
+      "code": "extern \"C\" uint32_t v8_Default_embedded_blob_data_size_;"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "variable",
+        "name": "v8_Default_embedded_blob_code_",
+        "about": "Definition of the code blob as an empty array.",
+        "logic": "Defines a single-element array initialized to 0, acting as an empty blob.",
+        "dependencies": []
+      },
+      "code": "const uint8_t v8_Default_embedded_blob_code_[1] = {0};"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "variable",
+        "name": "v8_Default_embedded_blob_code_size_",
+        "about": "Definition of the code blob size as 0.",
+        "logic": "The size is set to 0 to reflect the empty blob.",
+        "dependencies": []
+      },
+      "code": "uint32_t v8_Default_embedded_blob_code_size_ = 0;"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "variable",
+        "name": "v8_Default_embedded_blob_data_",
+        "about": "Definition of the data blob as an empty array.",
+        "logic": "Defines a single-element array initialized to 0, acting as an empty blob.",
+        "dependencies": []
+      },
+      "code": "const uint8_t v8_Default_embedded_blob_data_[1] = {0};"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "variable",
+        "name": "v8_Default_embedded_blob_data_size_",
+        "about": "Definition of the data blob size as 0.",
+        "logic": "The size is set to 0 to reflect the empty blob.",
+        "dependencies": []
+      },
+      "code": "uint32_t v8_Default_embedded_blob_data_size_ = 0;"
+    }
+  ],
+  "file_path": "/home/kathirks_gc/v8_go/archive/codebase/src/snapshot/embedded/embedded-empty.cc"
+}

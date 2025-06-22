@@ -1,0 +1,354 @@
+{
+  "file_path": "/home/kathirks_gc/v8_go/codebase/src/sandbox/testing.cc",
+  "imports": [
+    "src/sandbox/testing.h",
+    "src/api/api-inl.h",
+    "src/api/api-natives.h",
+    "src/common/globals.h",
+    "src/execution/isolate-inl.h",
+    "src/heap/factory.h",
+    "src/objects/backing-store.h",
+    "src/objects/js-objects.h",
+    "src/objects/templates.h",
+    "src/sandbox/sandbox.h",
+    "signal.h",
+    "sys/mman.h",
+    "unistd.h",
+    "sanitizer/asan_interface.h"
+  ],
+  "classes": [
+    {
+      "name": "SandboxTesting",
+      "properties": [
+        "mode_"
+      ],
+      "methods": [
+        {
+          "name": "Enable",
+          "parameters": [
+            "Mode mode"
+          ],
+          "return_type": "void",
+          "logic": "Enables the sandbox testing mode by setting the mode_ field, printing a message to stderr, and installing the crash filter on Linux."
+        },
+        {
+          "name": "GetInstanceTypeMap",
+          "parameters": [],
+          "return_type": "SandboxTesting::InstanceTypeMap&",
+          "logic": "Returns a static map containing known InstanceType values, used for mapping InstanceType names to their enum values."
+        },
+        {
+          "name": "GetFieldOffsetMap",
+          "parameters": [],
+          "return_type": "SandboxTesting::FieldOffsetMap&",
+          "logic": "Returns a static map containing field offsets for various object types, used for mapping field names to their offsets within the object."
+        }
+      ]
+    }
+  ],
+  "functions": [
+    {
+      "name": "SandboxGetBase",
+      "parameters": [
+        "const v8::FunctionCallbackInfo<v8::Value>& info"
+      ],
+      "return_type": "void",
+      "logic": "Gets the base address of the sandbox and returns it as a Number in the v8 context."
+    },
+    {
+      "name": "SandboxGetByteLength",
+      "parameters": [
+        "const v8::FunctionCallbackInfo<v8::Value>& info"
+      ],
+      "return_type": "void",
+      "logic": "Gets the size of the sandbox and returns it as a Number in the v8 context."
+    },
+    {
+      "name": "SandboxMemoryView",
+      "parameters": [
+        "const v8::FunctionCallbackInfo<v8::Value>& info"
+      ],
+      "return_type": "void",
+      "logic": "Creates a MemoryView (JSArrayBuffer) of a portion of the sandbox's memory, specified by an offset and size.  Throws an error if the arguments are invalid or if the offset/size exceed the bounds of the sandbox."
+    },
+    {
+      "name": "GetArgumentObjectPassedAsReference",
+      "parameters": [
+        "const v8::FunctionCallbackInfo<v8::Value>& info",
+        "Tagged<HeapObject>* out"
+      ],
+      "return_type": "static bool",
+      "logic": "Extracts a HeapObject argument passed as a reference from the FunctionCallbackInfo.  Throws an error if the argument is missing or not a HeapObject."
+    },
+    {
+      "name": "GetArgumentObjectPassedAsAddress",
+      "parameters": [
+        "const v8::FunctionCallbackInfo<v8::Value>& info",
+        "Tagged<HeapObject>* out"
+      ],
+      "return_type": "static bool",
+      "logic": "Extracts a HeapObject argument passed as an address from the FunctionCallbackInfo.  Throws an error if the argument is missing or not a Uint32."
+    },
+    {
+      "name": "SandboxGetAddressOf",
+      "parameters": [
+        "const v8::FunctionCallbackInfo<v8::Value>& info"
+      ],
+      "return_type": "void",
+      "logic": "Gets the address of a HeapObject and returns it as an unsigned integer in the v8 context."
+    },
+    {
+      "name": "SandboxGetObjectAt",
+      "parameters": [
+        "const v8::FunctionCallbackInfo<v8::Value>& info"
+      ],
+      "return_type": "void",
+      "logic": "Gets the HeapObject at a given address and returns it as a v8::Value."
+    },
+    {
+      "name": "SandboxIsValidObjectAt",
+      "parameters": [
+        "const v8::FunctionCallbackInfo<v8::Value>& info"
+      ],
+      "return_type": "void",
+      "logic": "Checks if a HeapObject exists at the given address by following the map chain and returns true if a MetaMap is found, otherwise returns false."
+    },
+    {
+      "name": "SandboxIsWritableImpl",
+      "parameters": [
+        "const v8::FunctionCallbackInfo<v8::Value>& info",
+        "ArgumentObjectExtractorFunction getArgumentObject"
+      ],
+      "return_type": "static void",
+      "logic": "Helper function for SandboxIsWritable and SandboxIsWritableObjectAt that checks if the given object is writable."
+    },
+    {
+      "name": "SandboxIsWritable",
+      "parameters": [
+        "const v8::FunctionCallbackInfo<v8::Value>& info"
+      ],
+      "return_type": "void",
+      "logic": "Checks if a given object is writable."
+    },
+    {
+      "name": "SandboxIsWritableObjectAt",
+      "parameters": [
+        "const v8::FunctionCallbackInfo<v8::Value>& info"
+      ],
+      "return_type": "void",
+      "logic": "Checks if the object at the given address is writable."
+    },
+    {
+      "name": "SandboxGetSizeOfImpl",
+      "parameters": [
+        "const v8::FunctionCallbackInfo<v8::Value>& info",
+        "ArgumentObjectExtractorFunction getArgumentObject"
+      ],
+      "return_type": "static void",
+      "logic": "Helper function for SandboxGetSizeOf and SandboxGetSizeOfObjectAt that gets the size of the object."
+    },
+    {
+      "name": "SandboxGetSizeOf",
+      "parameters": [
+        "const v8::FunctionCallbackInfo<v8::Value>& info"
+      ],
+      "return_type": "void",
+      "logic": "Gets the size of a given object."
+    },
+    {
+      "name": "SandboxGetSizeOfObjectAt",
+      "parameters": [
+        "const v8::FunctionCallbackInfo<v8::Value>& info"
+      ],
+      "return_type": "void",
+      "logic": "Gets the size of the object at the given address."
+    },
+    {
+      "name": "SandboxGetInstanceTypeOfImpl",
+      "parameters": [
+        "const v8::FunctionCallbackInfo<v8::Value>& info",
+        "ArgumentObjectExtractorFunction getArgumentObject"
+      ],
+      "return_type": "static void",
+      "logic": "Helper function for SandboxGetInstanceTypeOf and SandboxGetInstanceTypeOfObjectAt which gets the InstanceType of the HeapObject and returns it as a string."
+    },
+    {
+      "name": "SandboxGetInstanceTypeOf",
+      "parameters": [
+        "const v8::FunctionCallbackInfo<v8::Value>& info"
+      ],
+      "return_type": "void",
+      "logic": "Gets the InstanceType of a given object and returns it as a string."
+    },
+    {
+      "name": "SandboxGetInstanceTypeOfObjectAt",
+      "parameters": [
+        "const v8::FunctionCallbackInfo<v8::Value>& info"
+      ],
+      "return_type": "void",
+      "logic": "Gets the InstanceType of the object at the given address and returns it as a string."
+    },
+    {
+      "name": "SandboxGetInstanceTypeIdOfImpl",
+      "parameters": [
+        "const v8::FunctionCallbackInfo<v8::Value>& info",
+        "ArgumentObjectExtractorFunction getArgumentObject"
+      ],
+      "return_type": "static void",
+      "logic": "Helper function that extracts the instance type id and handles invalid types."
+    },
+    {
+      "name": "SandboxGetInstanceTypeIdOf",
+      "parameters": [
+        "const v8::FunctionCallbackInfo<v8::Value>& info"
+      ],
+      "return_type": "void",
+      "logic": "Gets the InstanceType ID of a given object."
+    },
+    {
+      "name": "SandboxGetInstanceTypeIdOfObjectAt",
+      "parameters": [
+        "const v8::FunctionCallbackInfo<v8::Value>& info"
+      ],
+      "return_type": "void",
+      "logic": "Gets the InstanceType ID of the object at the given address."
+    },
+    {
+      "name": "SandboxGetInstanceTypeIdFor",
+      "parameters": [
+        "const v8::FunctionCallbackInfo<v8::Value>& info"
+      ],
+      "return_type": "void",
+      "logic": "Gets the InstanceType ID for a given type name."
+    },
+    {
+      "name": "SandboxGetFieldOffset",
+      "parameters": [
+        "const v8::FunctionCallbackInfo<v8::Value>& info"
+      ],
+      "return_type": "void",
+      "logic": "Gets the offset of a field in an object, specified by object type and field name."
+    },
+    {
+      "name": "NewFunctionTemplate",
+      "parameters": [
+        "Isolate* isolate",
+        "FunctionCallback func",
+        "ConstructorBehavior constructor_behavior"
+      ],
+      "return_type": "Handle<FunctionTemplateInfo>",
+      "logic": "Creates a new FunctionTemplateInfo."
+    },
+    {
+      "name": "CreateFunc",
+      "parameters": [
+        "Isolate* isolate",
+        "FunctionCallback func",
+        "Handle<String> name",
+        "bool is_constructor"
+      ],
+      "return_type": "Handle<JSFunction>",
+      "logic": "Creates a JSFunction from a FunctionTemplateInfo."
+    },
+    {
+      "name": "InstallFunc",
+      "parameters": [
+        "Isolate* isolate",
+        "Handle<JSObject> holder",
+        "FunctionCallback func",
+        "const char* name",
+        "int num_parameters",
+        "bool is_constructor"
+      ],
+      "return_type": "void",
+      "logic": "Installs a JSFunction on a given holder object."
+    },
+    {
+      "name": "InstallGetter",
+      "parameters": [
+        "Isolate* isolate",
+        "Handle<JSObject> object",
+        "FunctionCallback func",
+        "const char* name"
+      ],
+      "return_type": "void",
+      "logic": "Installs a getter function on a given object."
+    },
+    {
+      "name": "InstallFunction",
+      "parameters": [
+        "Isolate* isolate",
+        "Handle<JSObject> holder",
+        "FunctionCallback func",
+        "const char* name",
+        "int num_parameters"
+      ],
+      "return_type": "void",
+      "logic": "Installs a JSFunction on a given holder object as a normal function."
+    },
+    {
+      "name": "InstallConstructor",
+      "parameters": [
+        "Isolate* isolate",
+        "Handle<JSObject> holder",
+        "FunctionCallback func",
+        "const char* name",
+        "int num_parameters"
+      ],
+      "return_type": "void",
+      "logic": "Installs a JSFunction on a given holder object as a constructor function."
+    },
+    {
+      "name": "SandboxTesting::InstallMemoryCorruptionApi",
+      "parameters": [
+        "Isolate* isolate"
+      ],
+      "return_type": "void",
+      "logic": "Installs the memory corruption API on the global object, allowing access to the sandbox's memory space."
+    },
+    {
+      "name": "PrintToStderr",
+      "parameters": [
+        "const char* output"
+      ],
+      "return_type": "static void",
+      "logic": "Prints a message to stderr.  Async-signal safe. (No malloc or stdio allowed)."
+    },
+    {
+      "name": "FilterCrash",
+      "parameters": [
+        "const char* reason"
+      ],
+      "return_type": "static [[noreturn]] void",
+      "logic": "Prints a reason for a crash to stderr, then exits the process either with -1 if in fuzzing mode or 0 otherwise. Async-signal safe. (No malloc or stdio allowed)."
+    },
+    {
+      "name": "UninstallCrashFilter",
+      "parameters": [],
+      "return_type": "static void",
+      "logic": "Restores the original signal handlers for SIGABRT, SIGTRAP, SIGBUS, and SIGSEGV. Async-signal safe. (No malloc or stdio allowed)."
+    },
+    {
+      "name": "CrashFilter",
+      "parameters": [
+        "int signal",
+        "siginfo_t* info",
+        "void* void_context"
+      ],
+      "return_type": "static void",
+      "logic": "Signal handler that checks if a memory access violation occurred inside or outside the sandbox. If inside, the signal is ignored and the process terminates normally. Otherwise, the original signal handler is restored and the signal is delivered again. Async-signal safe. (No malloc or stdio allowed)."
+    },
+    {
+      "name": "AsanFaultHandler",
+      "parameters": [],
+      "return_type": "static void",
+      "logic": "Handles AddressSanitizer (ASan) faults, checking if the fault occurred within the sandbox.  If so, the process is terminated normally; otherwise, the original signal handlers are restored, and the ASan fault is allowed to proceed. Async-signal safe. (No malloc or stdio allowed)."
+    },
+    {
+      "name": "InstallCrashFilter",
+      "parameters": [],
+      "return_type": "static void",
+      "logic": "Registers an alternate stack for signal delivery and installs a crash filter that intercepts SIGABRT, SIGTRAP, SIGBUS, and SIGSEGV signals. Async-signal safe. (No malloc or stdio allowed)."
+    }
+  ]
+}

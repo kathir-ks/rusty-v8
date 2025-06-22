@@ -1,0 +1,464 @@
+{
+  "file_path": "/home/kathirks_gc/v8_go/codebase/src/logging/runtime-call-stats.h",
+  "imports": [
+    "<optional>",
+    "src/base/macros.h",
+    "src/base/atomic-utils.h",
+    "src/base/platform/platform.h",
+    "src/base/platform/time.h",
+    "src/builtins/builtins-definitions.h",
+    "src/execution/thread-id.h",
+    "src/init/heap-symbols.h",
+    "src/logging/tracing-flags.h",
+    "src/runtime/runtime.h",
+    "src/tracing/traced-value.h",
+    "src/tracing/tracing-category-observer.h"
+  ],
+  "classes": [
+    {
+      "name": "RuntimeCallCounter",
+      "properties": [
+        "name_",
+        "count_",
+        "time_"
+      ],
+      "methods": [
+        {
+          "name": "RuntimeCallCounter",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Default constructor, initializes with nullptr name."
+        },
+        {
+          "name": "RuntimeCallCounter",
+          "parameters": [
+            "const char* name"
+          ],
+          "return_type": "void",
+          "logic": "Constructor, initializes name, count (to 0), and time (to 0)."
+        },
+        {
+          "name": "Reset",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Resets the counter and timer to zero."
+        },
+        {
+          "name": "Dump",
+          "parameters": [
+            "v8::tracing::TracedValue* value"
+          ],
+          "return_type": "void",
+          "logic": "Dumps the counter data to a TracedValue object for tracing."
+        },
+        {
+          "name": "Add",
+          "parameters": [
+            "RuntimeCallCounter* other"
+          ],
+          "return_type": "void",
+          "logic": "Adds the values of another RuntimeCallCounter to this one."
+        },
+        {
+          "name": "name",
+          "parameters": [],
+          "return_type": "const char*",
+          "logic": "Returns the name of the counter."
+        },
+        {
+          "name": "count",
+          "parameters": [],
+          "return_type": "int64_t",
+          "logic": "Returns the call count."
+        },
+        {
+          "name": "time",
+          "parameters": [],
+          "return_type": "base::TimeDelta",
+          "logic": "Returns the total time as a TimeDelta."
+        },
+        {
+          "name": "Increment",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Increments the call count."
+        },
+        {
+          "name": "Add",
+          "parameters": [
+            "base::TimeDelta delta"
+          ],
+          "return_type": "void",
+          "logic": "Adds a TimeDelta to the total time."
+        }
+      ]
+    },
+    {
+      "name": "RuntimeCallTimer",
+      "properties": [
+        "counter_",
+        "parent_",
+        "start_ticks_",
+        "elapsed_"
+      ],
+      "methods": [
+        {
+          "name": "counter",
+          "parameters": [],
+          "return_type": "RuntimeCallCounter*",
+          "logic": "Returns the counter being timed."
+        },
+        {
+          "name": "set_counter",
+          "parameters": [
+            "RuntimeCallCounter* counter"
+          ],
+          "return_type": "void",
+          "logic": "Sets the counter to be timed."
+        },
+        {
+          "name": "parent",
+          "parameters": [],
+          "return_type": "RuntimeCallTimer*",
+          "logic": "Returns the parent timer in the stack."
+        },
+        {
+          "name": "set_parent",
+          "parameters": [
+            "RuntimeCallTimer* timer"
+          ],
+          "return_type": "void",
+          "logic": "Sets the parent timer in the stack."
+        },
+        {
+          "name": "name",
+          "parameters": [],
+          "return_type": "const char*",
+          "logic": "Returns the name of the associated counter."
+        },
+        {
+          "name": "IsStarted",
+          "parameters": [],
+          "return_type": "bool",
+          "logic": "Checks if the timer is currently running."
+        },
+        {
+          "name": "Start",
+          "parameters": [
+            "RuntimeCallCounter* counter",
+            "RuntimeCallTimer* parent"
+          ],
+          "return_type": "void",
+          "logic": "Starts the timer, linking it to a counter and parent.  Pauses the parent if it exists.  Resumes this timer"
+        },
+        {
+          "name": "Snapshot",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Takes a snapshot of the current time, used for precise timing in certain circumstances.  Functionality not implemented."
+        },
+        {
+          "name": "Stop",
+          "parameters": [],
+          "return_type": "RuntimeCallTimer*",
+          "logic": "Stops the timer, updates the counter with elapsed time, and resumes the parent timer if it exists. Returns the parent timer."
+        },
+        {
+          "name": "Now",
+          "parameters": [],
+          "return_type": "base::TimeTicks",
+          "logic": "Function pointer to get the current time.  Overridable for testing."
+        },
+        {
+          "name": "NowCPUTime",
+          "parameters": [],
+          "return_type": "base::TimeTicks",
+          "logic": "Helper to switch over to CPU time."
+        }
+      ]
+    },
+    {
+      "name": "RuntimeCallStats",
+      "properties": [
+        "current_timer_",
+        "current_counter_",
+        "in_use_",
+        "thread_type_",
+        "thread_id_",
+        "counters_"
+      ],
+      "methods": [
+        {
+          "name": "RuntimeCallStats",
+          "parameters": [
+            "ThreadType thread_type"
+          ],
+          "return_type": "void",
+          "logic": "Constructor, initializes the stats object for a specific thread type."
+        },
+        {
+          "name": "Enter",
+          "parameters": [
+            "RuntimeCallTimer* timer",
+            "RuntimeCallCounterId counter_id"
+          ],
+          "return_type": "void",
+          "logic": "Starts timing a function, associating it with a counter."
+        },
+        {
+          "name": "Leave",
+          "parameters": [
+            "RuntimeCallTimer* timer"
+          ],
+          "return_type": "void",
+          "logic": "Stops timing a function."
+        },
+        {
+          "name": "CorrectCurrentCounterId",
+          "parameters": [
+            "RuntimeCallCounterId counter_id",
+            "CounterMode mode"
+          ],
+          "return_type": "void",
+          "logic": "Changes the current counter id."
+        },
+        {
+          "name": "Reset",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Resets all counters to zero."
+        },
+        {
+          "name": "Add",
+          "parameters": [
+            "RuntimeCallStats* other"
+          ],
+          "return_type": "void",
+          "logic": "Adds the data from another RuntimeCallStats object to this one."
+        },
+        {
+          "name": "Print",
+          "parameters": [
+            "std::ostream& os"
+          ],
+          "return_type": "void",
+          "logic": "Prints the stats to an output stream."
+        },
+        {
+          "name": "Print",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Prints the stats to standard out."
+        },
+        {
+          "name": "Dump",
+          "parameters": [
+            "v8::tracing::TracedValue* value"
+          ],
+          "return_type": "void",
+          "logic": "Dumps stats to a TracedValue for tracing."
+        },
+        {
+          "name": "thread_id",
+          "parameters": [],
+          "return_type": "ThreadId",
+          "logic": "Returns the thread ID."
+        },
+        {
+          "name": "current_timer",
+          "parameters": [],
+          "return_type": "RuntimeCallTimer*",
+          "logic": "Returns the current timer."
+        },
+        {
+          "name": "current_counter",
+          "parameters": [],
+          "return_type": "RuntimeCallCounter*",
+          "logic": "Returns the current counter."
+        },
+        {
+          "name": "InUse",
+          "parameters": [],
+          "return_type": "bool",
+          "logic": "Checks if this stats object is currently being used."
+        },
+        {
+          "name": "IsCalledOnTheSameThread",
+          "parameters": [],
+          "return_type": "bool",
+          "logic": "Checks if a worker thread is trying to manipulate the main threads table."
+        },
+        {
+          "name": "IsBackgroundThreadSpecificVariant",
+          "parameters": [
+            "RuntimeCallCounterId id"
+          ],
+          "return_type": "bool",
+          "logic": "Checks if counter id is the background variant."
+        },
+        {
+          "name": "HasThreadSpecificCounterVariants",
+          "parameters": [
+            "RuntimeCallCounterId id"
+          ],
+          "return_type": "bool",
+          "logic": "Checks if counter id has dual Background variant."
+        },
+        {
+          "name": "CounterIdForThread",
+          "parameters": [
+            "RuntimeCallCounterId id"
+          ],
+          "return_type": "RuntimeCallCounterId",
+          "logic": "Returns the thread-specific counter ID (main or background based on thread type)."
+        },
+        {
+          "name": "IsCounterAppropriateForThread",
+          "parameters": [
+            "RuntimeCallCounterId id"
+          ],
+          "return_type": "bool",
+          "logic": "Checks if the passed in counter is correct for the type of thread."
+        },
+        {
+          "name": "GetCounter",
+          "parameters": [
+            "RuntimeCallCounterId counter_id"
+          ],
+          "return_type": "RuntimeCallCounter*",
+          "logic": "Returns the counter object for a given ID."
+        },
+        {
+          "name": "GetCounter",
+          "parameters": [
+            "int counter_id"
+          ],
+          "return_type": "RuntimeCallCounter*",
+          "logic": "Returns the counter object for a given ID (int version)."
+        }
+      ]
+    },
+    {
+      "name": "WorkerThreadRuntimeCallStats",
+      "properties": [
+        "mutex_",
+        "tables_",
+        "tls_key_",
+        "isolate_thread_id_"
+      ],
+      "methods": [
+        {
+          "name": "WorkerThreadRuntimeCallStats",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Constructor."
+        },
+        {
+          "name": "~WorkerThreadRuntimeCallStats",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Destructor."
+        },
+        {
+          "name": "GetKey",
+          "parameters": [],
+          "return_type": "base::Thread::LocalStorageKey",
+          "logic": "Returns the TLS key associated with this WorkerThreadRuntimeCallStats."
+        },
+        {
+          "name": "NewTable",
+          "parameters": [],
+          "return_type": "RuntimeCallStats*",
+          "logic": "Returns a new worker thread runtime call stats table."
+        },
+        {
+          "name": "AddToMainTable",
+          "parameters": [
+            "RuntimeCallStats* main_call_stats"
+          ],
+          "return_type": "void",
+          "logic": "Adds the counters from the worker thread tables to |main_call_stats|."
+        }
+      ]
+    },
+    {
+      "name": "WorkerThreadRuntimeCallStatsScope",
+      "properties": [
+        "table_"
+      ],
+      "methods": [
+        {
+          "name": "WorkerThreadRuntimeCallStatsScope",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Default constructor."
+        },
+        {
+          "name": "WorkerThreadRuntimeCallStatsScope",
+          "parameters": [
+            "WorkerThreadRuntimeCallStats* off_thread_stats"
+          ],
+          "return_type": "void",
+          "logic": "Constructor that associates with a WorkerThreadRuntimeCallStats object."
+        },
+        {
+          "name": "~WorkerThreadRuntimeCallStatsScope",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Destructor, responsible for dumping the runtime call stats and cleaning up."
+        },
+        {
+          "name": "Get",
+          "parameters": [],
+          "return_type": "RuntimeCallStats*",
+          "logic": "Returns the RuntimeCallStats object associated with this scope."
+        }
+      ]
+    },
+    {
+      "name": "RuntimeCallTimerScope",
+      "properties": [
+        "stats_",
+        "timer_"
+      ],
+      "methods": [
+        {
+          "name": "RuntimeCallTimerScope",
+          "parameters": [
+            "Isolate* isolate",
+            "RuntimeCallCounterId counter_id"
+          ],
+          "return_type": "void",
+          "logic": "Constructor for use with an Isolate. Starts timing a function, associating it with a counter."
+        },
+        {
+          "name": "RuntimeCallTimerScope",
+          "parameters": [
+            "LocalIsolate* isolate",
+            "RuntimeCallCounterId counter_id",
+            "RuntimeCallStats::CounterMode mode"
+          ],
+          "return_type": "void",
+          "logic": "Constructor for use with a LocalIsolate and a specified CounterMode. Starts timing a function, associating it with a counter. Countermode can be exact or thread specific"
+        },
+        {
+          "name": "RuntimeCallTimerScope",
+          "parameters": [
+            "RuntimeCallStats* stats",
+            "RuntimeCallCounterId counter_id",
+            "RuntimeCallStats::CounterMode mode"
+          ],
+          "return_type": "void",
+          "logic": "Constructor for use with RuntimeCallStats object and a specified CounterMode. Starts timing a function, associating it with a counter. Countermode can be exact or thread specific."
+        },
+        {
+          "name": "~RuntimeCallTimerScope",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Destructor. Stops the timer and updates the stats."
+        }
+      ]
+    }
+  ],
+  "functions": []
+}

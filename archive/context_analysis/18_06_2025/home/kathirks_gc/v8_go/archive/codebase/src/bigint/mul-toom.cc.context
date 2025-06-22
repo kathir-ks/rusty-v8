@@ -1,0 +1,162 @@
+{
+  "metadata": {
+    "path": "/home/kathirks_gc/v8_go/archive/codebase/src/bigint/mul-toom.cc",
+    "file_name": "mul-toom.cc",
+    "language": "cpp",
+    "purpose": "Implements Toom-Cook 3-way multiplication for big integers"
+  },
+  "imports": {
+    "metadata": {
+      "language": "cpp",
+      "purpose": "Includes standard library algorithms, bigint-internal definitions, digit arithmetic functions, and vector arithmetic functions."
+    },
+    "code": "#include <algorithm>\n\n            #include \"src/bigint/bigint-internal.h\"\n            #include \"src/bigint/digit-arithmetic.h\"\n            #include \"src/bigint/vector-arithmetic.h\""
+  },
+  "functions": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "function",
+        "name": "TimesTwo",
+        "about": "Multiplies a multi-digit number by two.",
+        "logic": "Iterates through the digits, left-shifting each and propagating the carry.",
+        "parameters": [
+          {
+            "name": "X",
+            "type": "RWDigits",
+            "purpose": "The number to be multiplied by two (passed by reference for modification)."
+          }
+        ],
+        "return": {
+          "type": "void",
+          "description": "No return value; the input `X` is modified in place."
+        },
+        "dependencies": []
+      },
+      "code": "void TimesTwo(RWDigits X) {\n              digit_t carry = 0;\n              for (int i = 0; i < X.len(); i++) {\n                digit_t d = X[i];\n                X[i] = (d << 1) | carry;\n                carry = d >> (kDigitBits - 1);\n              }\n            }"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "function",
+        "name": "DivideByTwo",
+        "about": "Divides a multi-digit number by two.",
+        "logic": "Iterates through the digits from right to left, right-shifting each and propagating the carry.",
+        "parameters": [
+          {
+            "name": "X",
+            "type": "RWDigits",
+            "purpose": "The number to be divided by two (passed by reference for modification)."
+          }
+        ],
+        "return": {
+          "type": "void",
+          "description": "No return value; the input `X` is modified in place."
+        },
+        "dependencies": []
+      },
+      "code": "void DivideByTwo(RWDigits X) {\n              digit_t carry = 0;\n              for (int i = X.len() - 1; i >= 0; i--) {\n                digit_t d = X[i];\n                X[i] = (d >> 1) | carry;\n                carry = d << (kDigitBits - 1);\n              }\n            }"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "function",
+        "name": "DivideByThree",
+        "about": "Divides a multi-digit number by three.",
+        "logic": "Iterates through the digits from right to left, dividing each digit (represented as two half-digits) by three and propagating the remainder.",
+        "parameters": [
+          {
+            "name": "X",
+            "type": "RWDigits",
+            "purpose": "The number to be divided by three (passed by reference for modification)."
+          }
+        ],
+        "return": {
+          "type": "void",
+          "description": "No return value; the input `X` is modified in place."
+        },
+        "dependencies": []
+      },
+      "code": "void DivideByThree(RWDigits X) {\n              digit_t remainder = 0;\n              for (int i = X.len() - 1; i >= 0; i--) {\n                digit_t d = X[i];\n                digit_t upper = (remainder << kHalfDigitBits) | (d >> kHalfDigitBits);\n                digit_t u_result = upper / 3;\n                remainder = upper - 3 * u_result;\n                digit_t lower = (remainder << kHalfDigitBits) | (d & kHalfDigitMask);\n                digit_t l_result = lower / 3;\n                remainder = lower - 3 * l_result;\n                X[i] = (u_result << kHalfDigitBits) | l_result;\n              }\n            }"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "method",
+        "name": "Toom3Main",
+        "parent": "ProcessorImpl",
+        "about": "Main routine for Toom-Cook 3-way multiplication.",
+        "logic": "Implements the Toom-Cook 3 algorithm, including splitting, evaluation, pointwise multiplication, interpolation, and recomposition.",
+        "parameters": [
+          {
+            "name": "Z",
+            "type": "RWDigits",
+            "purpose": "The result of the multiplication (X * Y)."
+          },
+          {
+            "name": "X",
+            "type": "Digits",
+            "purpose": "The first operand."
+          },
+          {
+            "name": "Y",
+            "type": "Digits",
+            "purpose": "The second operand."
+          }
+        ],
+        "return": {
+          "type": "void",
+          "description": "No return value; the result is stored in `Z`."
+        },
+        "dependencies": [
+          "Add",
+          "SubtractSigned",
+          "Multiply",
+          "TimesTwo",
+          "DivideByTwo",
+          "DivideByThree",
+          "AddSigned",
+          "AddAndReturnOverflow"
+        ]
+      },
+      "code": "void ProcessorImpl::Toom3Main(RWDigits Z, Digits X, Digits Y) {\n              DCHECK(Z.len() >= X.len() + Y.len());\n              // Phase 1: Splitting.\n              int i = DIV_CEIL(std::max(X.len(), Y.len()), 3);\n              Digits X0(X, 0, i);\n              Digits X1(X, i, i);\n              Digits X2(X, 2 * i, i);\n              Digits Y0(Y, 0, i);\n              Digits Y1(Y, i, i);\n              Digits Y2(Y, 2 * i, i);\n\n              // Temporary storage.\n              int p_len = i + 1;      // For all px, qx below.\n              int r_len = 2 * p_len;  // For all r_x, Rx below.\n              Storage temp_storage(4 * r_len);\n              // We will use the same variable names as the Wikipedia article, as much as\n              // C++ lets us: our \"p_m1\" is their \"p(-1)\" etc. For consistency with other\n              // algorithms, we use X and Y where Wikipedia uses m and n.\n              // We will use and reuse the temporary storage as follows:\n              //\n              //   chunk                  | -------- time ----------->\n              //   [0 .. i]               |( po )( p_m1 ) ( r_m2  )\n              //   [i+1 .. rlen-1]        |( qo )( q_m1 ) ( r_m2  )\n              //   [rlen .. rlen+i]       | (p_1 ) ( p_m2 ) (r_inf)\n              //   [rlen+i+1 .. 2*rlen-1] | (q_1 ) ( q_m2 ) (r_inf)\n              //   [2*rlen .. 3*rlen-1]   |      (   r_1          )\n              //   [3*rlen .. 4*rlen-1]   |             (  r_m1   )\n              //\n              // This requires interleaving phases 2 and 3 a bit: after computing\n              // r_1 = p_1 * q_1, we can reuse p_1's storage for p_m2, and so on.\n              digit_t* t = temp_storage.get();\n              RWDigits po(t, p_len);\n              RWDigits qo(t + p_len, p_len);\n              RWDigits p_1(t + r_len, p_len);\n              RWDigits q_1(t + r_len + p_len, p_len);\n              RWDigits r_1(t + 2 * r_len, r_len);\n              RWDigits r_m1(t + 3 * r_len, r_len);\n\n              // We can also share the  backing stores of Z, r_0, R0.\n              DCHECK(Z.len() >= r_len);\n              RWDigits r_0(Z, 0, r_len);\n\n              // Phase 2a: Evaluation, steps 0, 1, m1.\n              // po = X0 + X2\n              Add(po, X0, X2);\n              // p_0 = X0\n              // p_1 = po + X1\n              Add(p_1, po, X1);\n              // p_m1 = po - X1\n              RWDigits p_m1 = po;\n              bool p_m1_sign = SubtractSigned(p_m1, po, false, X1, false);\n              MARK_INVALID(po);\n\n              // qo = Y0 + Y2\n              Add(qo, Y0, Y2);\n              // q_0 = Y0\n              // q_1 = qo + Y1\n              Add(q_1, qo, Y1);\n              // q_m1 = qo - Y1\n              RWDigits q_m1 = qo;\n              bool q_m1_sign = SubtractSigned(q_m1, qo, false, Y1, false);\n              MARK_INVALID(qo);\n\n              // Phase 3a: Pointwise multiplication, steps 0, 1, m1.\n              Multiply(r_0, X0, Y0);\n              Multiply(r_1, p_1, q_1);\n              Multiply(r_m1, p_m1, q_m1);\n              bool r_m1_sign = p_m1_sign != q_m1_sign;\n\n              // Phase 2b: Evaluation, steps m2 and inf.\n              // p_m2 = (p_m1 + X2) * 2 - X0\n              RWDigits p_m2 = p_1;\n              MARK_INVALID(p_1);\n              bool p_m2_sign = AddSigned(p_m2, p_m1, p_m1_sign, X2, false);\n              TimesTwo(p_m2);\n              p_m2_sign = SubtractSigned(p_m2, p_m2, p_m2_sign, X0, false);\n              // p_inf = X2\n\n              // q_m2 = (q_m1 + Y2) * 2 - Y0\n              RWDigits q_m2 = q_1;\n              MARK_INVALID(q_1);\n              bool q_m2_sign = AddSigned(q_m2, q_m1, q_m1_sign, Y2, false);\n              TimesTwo(q_m2);\n              q_m2_sign = SubtractSigned(q_m2, q_m2, q_m2_sign, Y0, false);\n              // q_inf = Y2\n\n              // Phase 3b: Pointwise multiplication, steps m2 and inf.\n              RWDigits r_m2(t, r_len);\n              MARK_INVALID(p_m1);\n              MARK_INVALID(q_m1);\n              Multiply(r_m2, p_m2, q_m2);\n              bool r_m2_sign = p_m2_sign != q_m2_sign;\n\n              RWDigits r_inf(t + r_len, r_len);\n              MARK_INVALID(p_m2);\n              MARK_INVALID(q_m2);\n              Multiply(r_inf, X2, Y2);\n\n              // Phase 4: Interpolation.\n              Digits R0 = r_0;\n              Digits R4 = r_inf;\n              // R3 <- (r_m2 - r_1) / 3\n              RWDigits R3 = r_m2;\n              bool R3_sign = SubtractSigned(R3, r_m2, r_m2_sign, r_1, false);\n              DivideByThree(R3);\n              // R1 <- (r_1 - r_m1) / 2\n              RWDigits R1 = r_1;\n              bool R1_sign = SubtractSigned(R1, r_1, false, r_m1, r_m1_sign);\n              DivideByTwo(R1);\n              // R2 <- r_m1 - r_0\n              RWDigits R2 = r_m1;\n              bool R2_sign = SubtractSigned(R2, r_m1, r_m1_sign, R0, false);\n              // R3 <- (R2 - R3) / 2 + 2 * r_inf\n              R3_sign = SubtractSigned(R3, R2, R2_sign, R3, R3_sign);\n              DivideByTwo(R3);\n              // TODO(jkummerow): Would it be a measurable improvement to write an\n              // \"AddTwice\" helper?\n              R3_sign = AddSigned(R3, R3, R3_sign, r_inf, false);\n              R3_sign = AddSigned(R3, R3, R3_sign, r_inf, false);\n              // R2 <- R2 + R1 - R4\n              R2_sign = AddSigned(R2, R2, R2_sign, R1, R1_sign);\n              R2_sign = SubtractSigned(R2, R2, R2_sign, R4, false);\n              // R1 <- R1 - R3\n              R1_sign = SubtractSigned(R1, R1, R1_sign, R3, R3_sign);\n\n        #if DEBUG\n              R1.Normalize();\n              R2.Normalize();\n              R3.Normalize();\n              DCHECK(R1_sign == false || R1.len() == 0);\n              DCHECK(R2_sign == false || R2.len() == 0);\n              DCHECK(R3_sign == false || R3.len() == 0);\n        #endif\n\n              // Phase 5: Recomposition. R0 is already in place. Overflow can't happen.\n              for (int j = R0.len(); j < Z.len(); j++) Z[j] = 0;\n              AddAndReturnOverflow(Z + i, R1);\n              AddAndReturnOverflow(Z + 2 * i, R2);\n              AddAndReturnOverflow(Z + 3 * i, R3);\n              AddAndReturnOverflow(Z + 4 * i, R4);\n            }"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "method",
+        "name": "MultiplyToomCook",
+        "parent": "ProcessorImpl",
+        "about": "Multiplies two big integers using the Toom-Cook algorithm.",
+        "logic": "Splits the larger operand into chunks and calls Toom3Main for each chunk.  Handles the case where the operands have different lengths.",
+        "parameters": [
+          {
+            "name": "Z",
+            "type": "RWDigits",
+            "purpose": "The result of the multiplication (X * Y)."
+          },
+          {
+            "name": "X",
+            "type": "Digits",
+            "purpose": "The first operand (assumed to be the larger one)."
+          },
+          {
+            "name": "Y",
+            "type": "Digits",
+            "purpose": "The second operand."
+          }
+        ],
+        "return": {
+          "type": "void",
+          "description": "No return value; the result is stored in `Z`."
+        },
+        "dependencies": [
+          "Toom3Main",
+          "AddAndReturnOverflow"
+        ]
+      },
+      "code": "void ProcessorImpl::MultiplyToomCook(RWDigits Z, Digits X, Digits Y) {\n              DCHECK(X.len() >= Y.len());\n              int k = Y.len();\n              // TODO(jkummerow): Would it be a measurable improvement to share the\n              // scratch memory for several invocations?\n              Digits X0(X, 0, k);\n              Toom3Main(Z, X0, Y);\n              if (X.len() > Y.len()) {\n                ScratchDigits T(2 * k);\n                for (int i = k; i < X.len(); i += k) {\n                  Digits Xi(X, i, k);\n                  // TODO(jkummerow): would it be a measurable improvement to craft a\n                  // \"ToomChunk\" method in the style of {KaratsubaChunk}?\n                  Toom3Main(T, Xi, Y);\n                  AddAndReturnOverflow(Z + i, T);  // Can't overflow.\n                }\n              }\n            }"
+    }
+  ],
+  "file_path": "/home/kathirks_gc/v8_go/archive/codebase/src/bigint/mul-toom.cc"
+}

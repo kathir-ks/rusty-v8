@@ -1,0 +1,232 @@
+{
+  "metadata": {
+    "path": "/home/kathirks_gc/v8_go/archive/codebase/src/compiler/backend/x64/unwinding-info-writer-x64.cc",
+    "file_name": "unwinding-info-writer-x64.cc",
+    "language": "cpp",
+    "purpose": "Implements the UnwindingInfoWriter class for x64 architecture, which generates unwind information for exception handling."
+  },
+  "imports": {
+    "metadata": {
+      "language": "cpp",
+      "purpose": "Includes necessary header files for unwinding information writing and instruction processing."
+    },
+    "code": "#include \"src/compiler/backend/x64/unwinding-info-writer-x64.h\"\n#include \"src/compiler/backend/instruction.h\""
+  },
+  "functions": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "method",
+        "name": "BeginInstructionBlock",
+        "parent": "UnwindingInfoWriter",
+        "about": "Called at the beginning of an instruction block to update the eh_frame writer with the current state.",
+        "logic": "Checks if unwinding info writing is enabled. Retrieves the initial state of the block and updates the base address register and offset in the eh_frame_writer_ if necessary. Also updates the tracking_fp_ flag.",
+        "parameters": [
+          {
+            "name": "pc_offset",
+            "type": "int",
+            "purpose": "The program counter offset for the beginning of the block."
+          },
+          {
+            "name": "block",
+            "type": "const InstructionBlock*",
+            "purpose": "The instruction block being processed."
+          }
+        ],
+        "return": {
+          "type": "void",
+          "description": "No return value."
+        },
+        "dependencies": [
+          "enabled",
+          "eh_frame_writer_",
+          "BlockInitialState",
+          "AdvanceLocation",
+          "SetBaseAddressRegisterAndOffset",
+          "SetBaseAddressRegister",
+          "SetBaseAddressOffset",
+          "base_register",
+          "base_offset"
+        ]
+      },
+      "code": "void UnwindingInfoWriter::BeginInstructionBlock(int pc_offset,\n                                                const InstructionBlock* block) {\n  if (!enabled()) return;\n\n  block_will_exit_ = false;\n\n  DCHECK_LT(block->rpo_number().ToInt(),\n            static_cast<int>(block_initial_states_.size()));\n  const BlockInitialState* initial_state =\n      block_initial_states_[block->rpo_number().ToInt()];\n  if (!initial_state) return;\n  if (initial_state->register_ != eh_frame_writer_.base_register() &&\n      initial_state->offset_ != eh_frame_writer_.base_offset()) {\n    eh_frame_writer_.AdvanceLocation(pc_offset);\n    eh_frame_writer_.SetBaseAddressRegisterAndOffset(initial_state->register_,\n                                                     initial_state->offset_);\n  } else if (initial_state->register_ != eh_frame_writer_.base_register()) {\n    eh_frame_writer_.AdvanceLocation(pc_offset);\n    eh_frame_writer_.SetBaseAddressRegister(initial_state->register_);\n  } else if (initial_state->offset_ != eh_frame_writer_.base_offset()) {\n    eh_frame_writer_.AdvanceLocation(pc_offset);\n    eh_frame_writer_.SetBaseAddressOffset(initial_state->offset_);\n  }\n\n    tracking_fp_ = initial_state->tracking_fp_;\n}"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "method",
+        "name": "EndInstructionBlock",
+        "parent": "UnwindingInfoWriter",
+        "about": "Called at the end of an instruction block to propagate the eh_frame state to successors.",
+        "logic": "Checks if unwinding info writing is enabled and if the block exits. Iterates through the successors of the block, and for each successor, either verifies that the existing initial state matches the current state, or creates a new initial state for the successor.",
+        "parameters": [
+          {
+            "name": "block",
+            "type": "const InstructionBlock*",
+            "purpose": "The instruction block being processed."
+          }
+        ],
+        "return": {
+          "type": "void",
+          "description": "No return value."
+        },
+        "dependencies": [
+          "enabled",
+          "block_will_exit_",
+          "eh_frame_writer_",
+          "BlockInitialState",
+          "base_register",
+          "base_offset"
+        ]
+      },
+      "code": "void UnwindingInfoWriter::EndInstructionBlock(const InstructionBlock* block) {\n  if (!enabled() || block_will_exit_) return;\n\n  for (const RpoNumber& successor : block->successors()) {\n    int successor_index = successor.ToInt();\n    DCHECK_LT(successor_index, static_cast<int>(block_initial_states_.size()));\n    const BlockInitialState* existing_state =\n        block_initial_states_[successor_index];\n    // If we already had an entry for this BB, check that the values are the\n    // same we are trying to insert.\n    if (existing_state) {\n      DCHECK(existing_state->register_ == eh_frame_writer_.base_register());\n      DCHECK_EQ(existing_state->offset_, eh_frame_writer_.base_offset());\n      DCHECK_EQ(existing_state->tracking_fp_, tracking_fp_);\n    } else {\n      block_initial_states_[successor_index] = zone_->New<BlockInitialState>(\n          eh_frame_writer_.base_register(), eh_frame_writer_.base_offset(),\n          tracking_fp_);\n    }\n  }\n}"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "method",
+        "name": "MarkFrameConstructed",
+        "parent": "UnwindingInfoWriter",
+        "about": "Marks the point where a stack frame has been constructed, updating the eh_frame writer accordingly.",
+        "logic": "Checks if unwinding info writing is enabled. Advances the location in the eh_frame_writer_ to account for the 'push rbp' instruction. Increases the base address offset to account for the pushed rbp. Records the saved register (rbp) on the stack. Advances the location again for the 'mov rbp, rsp' instruction. Sets the base address register to rbp. Updates the tracking_fp_ flag.",
+        "parameters": [
+          {
+            "name": "pc_base",
+            "type": "int",
+            "purpose": "The program counter base offset for the start of the frame construction."
+          }
+        ],
+        "return": {
+          "type": "void",
+          "description": "No return value."
+        },
+        "dependencies": [
+          "enabled",
+          "eh_frame_writer_",
+          "AdvanceLocation",
+          "IncreaseBaseAddressOffset",
+          "RecordRegisterSavedToStack",
+          "SetBaseAddressRegister",
+          "kInt64Size",
+          "rbp",
+          "base_offset"
+        ]
+      },
+      "code": "void UnwindingInfoWriter::MarkFrameConstructed(int pc_base) {\n  if (!enabled()) return;\n\n  // push rbp\n  eh_frame_writer_.AdvanceLocation(pc_base + 1);\n  eh_frame_writer_.IncreaseBaseAddressOffset(kInt64Size);\n  // <base address> points at the bottom of the current frame on x64 and\n  // <base register> is rsp, which points to the top of the frame by definition.\n  // Thus, the distance between <base address> and the top is -<base offset>.\n  int top_of_stack = -eh_frame_writer_.base_offset();\n  eh_frame_writer_.RecordRegisterSavedToStack(rbp, top_of_stack);\n\n  // mov rbp, rsp\n  eh_frame_writer_.AdvanceLocation(pc_base + 4);\n  eh_frame_writer_.SetBaseAddressRegister(rbp);\n\n  tracking_fp_ = true;\n}"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "method",
+        "name": "MarkFrameDeconstructed",
+        "parent": "UnwindingInfoWriter",
+        "about": "Marks the point where a stack frame has been deconstructed, updating the eh_frame writer accordingly.",
+        "logic": "Checks if unwinding info writing is enabled. Advances the location in the eh_frame_writer_ to account for the 'mov rsp, rbp' instruction. Sets the base address register to rsp. Advances the location again for the 'pop rbp' instruction. Decreases the base address offset to account for the popped rbp. Updates the tracking_fp_ flag.",
+        "parameters": [
+          {
+            "name": "pc_base",
+            "type": "int",
+            "purpose": "The program counter base offset for the start of the frame deconstruction."
+          }
+        ],
+        "return": {
+          "type": "void",
+          "description": "No return value."
+        },
+        "dependencies": [
+          "enabled",
+          "eh_frame_writer_",
+          "AdvanceLocation",
+          "SetBaseAddressRegister",
+          "IncreaseBaseAddressOffset",
+          "kInt64Size",
+          "rsp"
+        ]
+      },
+      "code": "void UnwindingInfoWriter::MarkFrameDeconstructed(int pc_base) {\n  if (!enabled()) return;\n\n  // mov rsp, rbp\n  eh_frame_writer_.AdvanceLocation(pc_base + 3);\n  eh_frame_writer_.SetBaseAddressRegister(rsp);\n\n  // pop rbp\n  eh_frame_writer_.AdvanceLocation(pc_base + 4);\n  eh_frame_writer_.IncreaseBaseAddressOffset(-kInt64Size);\n\n  tracking_fp_ = false;\n}"
+    }
+  ],
+  "dependencies": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "UnwindingInfoWriter",
+        "about": "Writes unwinding information for exception handling."
+      },
+      "code": "class UnwindingInfoWriter {\n public:\n  void BeginInstructionBlock(int pc_offset, const InstructionBlock* block);\n  void EndInstructionBlock(const InstructionBlock* block);\n  void MarkFrameConstructed(int pc_base);\n  void MarkFrameDeconstructed(int pc_base);\n private:\n  bool enabled() const { return enabled_; } // Assume enabled_ is a member variable\n  EHFrameWriter eh_frame_writer_;\n  Zone* zone_;\n  std::vector<BlockInitialState*> block_initial_states_;\n  bool tracking_fp_;\n  bool block_will_exit_;\n};",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "InstructionBlock",
+        "about": "Represents a block of instructions."
+      },
+      "code": "class InstructionBlock {\n public:\n  RpoNumber rpo_number() const;\n  const ZoneVector<RpoNumber>& successors() const;\n};",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "BlockInitialState",
+        "about": "Stores the initial state of a basic block for unwinding."
+      },
+      "code": "class BlockInitialState {\n public:\n  Register register_;\n  int offset_;\n  bool tracking_fp_;\n};",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "EHFrameWriter",
+        "about": "Writes eh_frame information for exception handling."
+      },
+      "code": "class EHFrameWriter {\n public:\n  Register base_register() const;\n  int base_offset() const;\n  void AdvanceLocation(int pc_offset);\n  void SetBaseAddressRegisterAndOffset(Register reg, int offset);\n  void SetBaseAddressRegister(Register reg);\n  void SetBaseAddressOffset(int offset);\n  void RecordRegisterSavedToStack(Register reg, int offset);\n};",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "Zone",
+        "about": "Memory management zone."
+      },
+      "code": "class Zone {\n public:\n  template <typename T>\n  T* New() { return new T(); }\n};",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "RpoNumber",
+        "about": "Represents reverse postorder number."
+      },
+      "code": "class RpoNumber {\n public:\n  int ToInt() const;\n};",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "enum",
+        "name": "Register",
+        "about": "Represents CPU registers."
+      },
+      "code": "enum Register {\n  rbp,\n  rsp\n};",
+      "type": "enum"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "constant",
+        "name": "kInt64Size",
+        "about": "Size of a 64-bit integer."
+      },
+      "code": "const int kInt64Size = 8;",
+      "type": "constant"
+    }
+  ],
+  "file_path": "/home/kathirks_gc/v8_go/archive/codebase/src/compiler/backend/x64/unwinding-info-writer-x64.cc"
+}

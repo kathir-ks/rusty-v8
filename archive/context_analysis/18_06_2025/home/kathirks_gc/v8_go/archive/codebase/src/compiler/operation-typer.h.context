@@ -1,0 +1,177 @@
+{
+  "metadata": {
+    "path": "/home/kathirks_gc/v8_go/archive/codebase/src/compiler/operation-typer.h",
+    "file_name": "operation-typer.h",
+    "language": "cpp",
+    "purpose": "Declares the OperationTyper class, which is responsible for determining the types of operations in the compiler."
+  },
+  "imports": {
+    "metadata": {
+      "language": "cpp",
+      "purpose": "Includes necessary headers for flags, opcodes, and Turbofan types."
+    },
+    "code": "#include \"src/base/flags.h\"\n            #include \"src/compiler/opcodes.h\"\n            #include \"src/compiler/turbofan-types.h\""
+  },
+  "classes": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "OperationTyper",
+        "about": "Responsible for determining the types of operations.",
+        "attributes": [
+          {
+            "name": "zone_",
+            "type": "Zone*",
+            "access": "private",
+            "purpose": "Memory zone for allocations."
+          },
+          {
+            "name": "cache_",
+            "type": "TypeCache const*",
+            "access": "private",
+            "purpose": "Cache for types."
+          },
+          {
+            "name": "infinity_",
+            "type": "Type",
+            "access": "private",
+            "purpose": "Represents the infinity type."
+          },
+          {
+            "name": "minus_infinity_",
+            "type": "Type",
+            "access": "private",
+            "purpose": "Represents the negative infinity type."
+          },
+          {
+            "name": "singleton_NaN_string_",
+            "type": "Type",
+            "access": "private",
+            "purpose": "Represents the NaN string type."
+          },
+          {
+            "name": "singleton_zero_string_",
+            "type": "Type",
+            "access": "private",
+            "purpose": "Represents the zero string type."
+          },
+          {
+            "name": "singleton_false_",
+            "type": "Type",
+            "access": "private",
+            "purpose": "Represents the false type."
+          },
+          {
+            "name": "singleton_true_",
+            "type": "Type",
+            "access": "private",
+            "purpose": "Represents the true type."
+          },
+          {
+            "name": "signed32ish_",
+            "type": "Type",
+            "access": "private",
+            "purpose": "Represents the signed 32-bit type."
+          },
+          {
+            "name": "unsigned32ish_",
+            "type": "Type",
+            "access": "private",
+            "purpose": "Represents the unsigned 32-bit type."
+          },
+          {
+            "name": "singleton_empty_string_",
+            "type": "Type",
+            "access": "private",
+            "purpose": "Represents the empty string type."
+          },
+          {
+            "name": "truish_",
+            "type": "Type",
+            "access": "private",
+            "purpose": "Represents the truish type."
+          },
+          {
+            "name": "falsish_",
+            "type": "Type",
+            "access": "private",
+            "purpose": "Represents the falsish type."
+          }
+        ],
+        "dependencies": [
+          "JSHeapBroker",
+          "Zone",
+          "Operator",
+          "Type",
+          "TypeCache",
+          "RangeType"
+        ]
+      },
+      "code": "class V8_EXPORT_PRIVATE OperationTyper {\n             public:\n              OperationTyper(JSHeapBroker* broker, Zone* zone);\n\n              // Typing Phi.\n              Type Merge(Type left, Type right);\n\n              Type ToPrimitive(Type type);\n              Type ToNumber(Type type);\n              Type ToNumberConvertBigInt(Type type);\n              Type ToBigInt(Type type);\n              Type ToBigIntConvertNumber(Type type);\n              Type ToNumeric(Type type);\n              Type ToBoolean(Type type);\n\n              Type WeakenRange(Type current_range, Type previous_range);\n\n            // Unary operators.\n            #define DECLARE_METHOD(Name) Type Name(Type type);\n              SIMPLIFIED_NUMBER_UNOP_LIST(DECLARE_METHOD)\n              SIMPLIFIED_BIGINT_UNOP_LIST(DECLARE_METHOD)\n              SIMPLIFIED_SPECULATIVE_NUMBER_UNOP_LIST(DECLARE_METHOD)\n              SIMPLIFIED_SPECULATIVE_BIGINT_UNOP_LIST(DECLARE_METHOD)\n              DECLARE_METHOD(ConvertReceiver)\n            #undef DECLARE_METHOD\n\n            // Numeric binary operators.\n            #define DECLARE_METHOD(Name) Type Name(Type lhs, Type rhs);\n              SIMPLIFIED_NUMBER_BINOP_LIST(DECLARE_METHOD)\n              SIMPLIFIED_BIGINT_BINOP_LIST(DECLARE_METHOD)\n              SIMPLIFIED_SPECULATIVE_NUMBER_BINOP_LIST(DECLARE_METHOD)\n              SIMPLIFIED_SPECULATIVE_BIGINT_BINOP_LIST(DECLARE_METHOD)\n              TYPER_SUPPORTED_MACHINE_BINOP_LIST(DECLARE_METHOD)\n            #undef DECLARE_METHOD\n\n              Type ChangeUint32ToUint64(Type input);\n\n              // Comparison operators.\n              Type SameValue(Type lhs, Type rhs);\n              Type SameValueNumbersOnly(Type lhs, Type rhs);\n              Type StrictEqual(Type lhs, Type rhs);\n\n              // Check operators.\n              Type CheckBounds(Type index, Type length);\n              Type CheckFloat64Hole(Type type);\n              Type CheckNumber(Type type);\n              Type CheckNumberFitsInt32(Type type);\n              Type ConvertTaggedHoleToUndefined(Type type);\n\n              Type TypeTypeGuard(const Operator* sigma_op, Type input);\n\n              enum ComparisonOutcomeFlags {\n                kComparisonTrue = 1,\n                kComparisonFalse = 2,\n                kComparisonUndefined = 4\n              };\n\n              Type singleton_false() const { return singleton_false_; }\n              Type singleton_true() const { return singleton_true_; }\n\n             private:\n              using ComparisonOutcome = base::Flags<ComparisonOutcomeFlags>;\n\n              ComparisonOutcome Invert(ComparisonOutcome);\n              Type Invert(Type);\n              Type FalsifyUndefined(ComparisonOutcome);\n\n              Type Rangify(Type);\n              Type AddRanger(double lhs_min, double lhs_max, double rhs_min,\n                             double rhs_max);\n              Type SubtractRanger(double lhs_min, double lhs_max, double rhs_min,\n                                  double rhs_max);\n              Type MultiplyRanger(double lhs_min, double lhs_max, double rhs_min,\n                                  double rhs_max);\n\n              Zone* zone() const { return zone_; }\n\n              Zone* const zone_;\n              TypeCache const* cache_;\n\n              Type infinity_;\n              Type minus_infinity_;\n              Type singleton_NaN_string_;\n              Type singleton_zero_string_;\n              Type singleton_false_;\n              Type singleton_true_;\n              Type signed32ish_;\n              Type unsigned32ish_;\n              Type singleton_empty_string_;\n              Type truish_;\n              Type falsish_;\n            };"
+    }
+  ],
+  "dependencies": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "JSHeapBroker",
+        "about": "Provides access to the JS heap."
+      },
+      "code": "class JSHeapBroker {};",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "Zone",
+        "about": "Memory allocation zone."
+      },
+      "code": "class Zone {};",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "Type",
+        "about": "Represents a type in the type system."
+      },
+      "code": "class Type {};",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "TypeCache",
+        "about": "Caches types to avoid redundant computation."
+      },
+      "code": "class TypeCache {};",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "Operator",
+        "about": "Represents an operator in the compiler."
+      },
+      "code": "class Operator {};",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "RangeType",
+        "about": "Represents a range of values for a type."
+      },
+      "code": "class RangeType {};",
+      "type": "class"
+    }
+  ],
+  "file_path": "/home/kathirks_gc/v8_go/archive/codebase/src/compiler/operation-typer.h"
+}

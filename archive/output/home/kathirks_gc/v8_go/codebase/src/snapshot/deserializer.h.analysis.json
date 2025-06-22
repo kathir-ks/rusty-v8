@@ -1,0 +1,719 @@
+{
+  "file_path": "/home/kathirks_gc/v8_go/codebase/src/snapshot/deserializer.h",
+  "imports": [
+    "<utility>",
+    "<vector>",
+    "src/base/macros.h",
+    "src/common/globals.h",
+    "src/execution/local-isolate.h",
+    "src/handles/global-handles.h",
+    "src/objects/allocation-site.h",
+    "src/objects/api-callbacks.h",
+    "src/objects/backing-store.h",
+    "src/objects/code.h",
+    "src/objects/map.h",
+    "src/objects/objects.h",
+    "src/objects/string-table.h",
+    "src/objects/string.h",
+    "src/snapshot/serializer-deserializer.h",
+    "src/snapshot/snapshot-source-sink.h"
+  ],
+  "classes": [
+    {
+      "name": "Deserializer",
+      "properties": [
+        "isolate_",
+        "attached_objects_",
+        "source_",
+        "magic_number_",
+        "hot_objects_",
+        "new_maps_",
+        "new_allocation_sites_",
+        "new_code_objects_",
+        "accessor_infos_",
+        "function_template_infos_",
+        "new_scripts_",
+        "backing_stores_",
+        "new_descriptor_arrays_",
+        "back_refs_",
+        "js_dispatch_entries_",
+        "unresolved_forward_refs_",
+        "num_unresolved_forward_refs_",
+        "deserializing_user_code_",
+        "next_reference_is_weak_",
+        "next_reference_is_indirect_pointer_",
+        "next_reference_is_protected_pointer",
+        "should_rehash_",
+        "to_rehash_",
+        "no_gc_stats_",
+        "depth_",
+        "num_api_references_",
+        "previous_allocation_obj_",
+        "previous_allocation_size_"
+      ],
+      "methods": [
+        {
+          "name": "~Deserializer",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Destructor for the Deserializer class."
+        },
+        {
+          "name": "Deserializer",
+          "parameters": [
+            "IsolateT* isolate",
+            "base::Vector<const uint8_t> payload",
+            "uint32_t magic_number",
+            "bool deserializing_user_code",
+            "bool can_rehash"
+          ],
+          "return_type": "Deserializer",
+          "logic": "Constructor for the Deserializer class.  Initializes the deserializer with the isolate, payload, magic number, deserialization flags and rehash flag."
+        },
+        {
+          "name": "DeserializeDeferredObjects",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Handles deserialization of objects that were deferred during the initial deserialization pass."
+        },
+        {
+          "name": "LogNewObjectEvents",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Creates log events for newly deserialized objects, useful for debugging and profiling."
+        },
+        {
+          "name": "LogScriptEvents",
+          "parameters": [
+            "Tagged<Script> script"
+          ],
+          "return_type": "void",
+          "logic": "Logs script creation events during deserialization."
+        },
+        {
+          "name": "LogNewMapEvents",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Logs new map creation events during deserialization."
+        },
+        {
+          "name": "WeakenDescriptorArrays",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Changes the descriptor arrays from strong references to weak references after deserialization."
+        },
+        {
+          "name": "GetBackReferencedObject",
+          "parameters": [],
+          "return_type": "Handle<HeapObject>",
+          "logic": "Returns a previously deserialized object based on its object vector index."
+        },
+        {
+          "name": "GetBackReferencedObject",
+          "parameters": [
+            "uint32_t index"
+          ],
+          "return_type": "Handle<HeapObject>",
+          "logic": "Returns a previously deserialized object based on its object vector index."
+        },
+        {
+          "name": "AddAttachedObject",
+          "parameters": [
+            "DirectHandle<HeapObject> attached_object"
+          ],
+          "return_type": "void",
+          "logic": "Adds an object to the list of attached objects. Used for attached references in user code deserialization."
+        },
+        {
+          "name": "isolate",
+          "parameters": [],
+          "return_type": "IsolateT*",
+          "logic": "Returns a pointer to the isolate associated with the deserializer."
+        },
+        {
+          "name": "main_thread_isolate",
+          "parameters": [],
+          "return_type": "Isolate*",
+          "logic": "Returns a pointer to the main thread isolate."
+        },
+        {
+          "name": "source",
+          "parameters": [],
+          "return_type": "SnapshotByteSource*",
+          "logic": "Returns a pointer to the snapshot byte source."
+        },
+        {
+          "name": "new_allocation_sites",
+          "parameters": [],
+          "return_type": "base::Vector<const DirectHandle<AllocationSite>>",
+          "logic": "Returns a vector of newly allocated allocation sites."
+        },
+        {
+          "name": "new_code_objects",
+          "parameters": [],
+          "return_type": "base::Vector<const DirectHandle<InstructionStream>>",
+          "logic": "Returns a vector of newly created code objects (instruction streams)."
+        },
+        {
+          "name": "new_maps",
+          "parameters": [],
+          "return_type": "base::Vector<const DirectHandle<Map>>",
+          "logic": "Returns a vector of newly created map objects."
+        },
+        {
+          "name": "accessor_infos",
+          "parameters": [],
+          "return_type": "base::Vector<const DirectHandle<AccessorInfo>>",
+          "logic": "Returns a vector of accessor infos."
+        },
+        {
+          "name": "function_template_infos",
+          "parameters": [],
+          "return_type": "base::Vector<const DirectHandle<FunctionTemplateInfo>>",
+          "logic": "Returns a vector of function template infos."
+        },
+        {
+          "name": "new_scripts",
+          "parameters": [],
+          "return_type": "base::Vector<const DirectHandle<Script>>",
+          "logic": "Returns a vector of newly created script objects."
+        },
+        {
+          "name": "backing_store",
+          "parameters": [
+            "size_t i"
+          ],
+          "return_type": "std::shared_ptr<BackingStore>",
+          "logic": "Returns a shared pointer to the backing store at index i."
+        },
+        {
+          "name": "deserializing_user_code",
+          "parameters": [],
+          "return_type": "bool",
+          "logic": "Returns true if the deserializer is currently deserializing user code."
+        },
+        {
+          "name": "should_rehash",
+          "parameters": [],
+          "return_type": "bool",
+          "logic": "Returns true if the deserializer should rehash the string table."
+        },
+        {
+          "name": "PushObjectToRehash",
+          "parameters": [
+            "DirectHandle<HeapObject> object"
+          ],
+          "return_type": "void",
+          "logic": "Adds an object to a list of objects to be rehashed."
+        },
+        {
+          "name": "Rehash",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Rehashes the string table, recomputing hash values for strings."
+        },
+        {
+          "name": "ReadObject",
+          "parameters": [],
+          "return_type": "DirectHandle<HeapObject>",
+          "logic": "Reads an object from the snapshot byte source."
+        },
+        {
+          "name": "VisitRootPointers",
+          "parameters": [
+            "Root root",
+            "const char* description",
+            "FullObjectSlot start",
+            "FullObjectSlot end"
+          ],
+          "return_type": "void",
+          "logic": "Visits root pointers in a given memory range, allowing the garbage collector to track them."
+        },
+        {
+          "name": "Synchronize",
+          "parameters": [
+            "VisitorSynchronization::SyncTag tag"
+          ],
+          "return_type": "void",
+          "logic": "Synchronizes the visitor during deserialization, potentially allowing for parallel processing."
+        },
+        {
+          "name": "WriteHeapPointer",
+          "parameters": [
+            "SlotAccessor slot_accessor",
+            "Tagged<HeapObject> heap_object",
+            "ReferenceDescriptor descr",
+            "WriteBarrierMode mode"
+          ],
+          "return_type": "int",
+          "logic": "Writes a heap pointer to a specified slot, updating write barriers as needed."
+        },
+        {
+          "name": "WriteHeapPointer",
+          "parameters": [
+            "SlotAccessor slot_accessor",
+            "DirectHandle<HeapObject> heap_object",
+            "ReferenceDescriptor descr",
+            "WriteBarrierMode mode"
+          ],
+          "return_type": "int",
+          "logic": "Writes a heap pointer to a specified slot, updating write barriers as needed. Accepts DirectHandle."
+        },
+        {
+          "name": "WriteExternalPointer",
+          "parameters": [
+            "Tagged<HeapObject> host",
+            "ExternalPointerSlot dest",
+            "Address value",
+            "ExternalPointerTag tag"
+          ],
+          "return_type": "int",
+          "logic": "Writes an external pointer to a specific slot."
+        },
+        {
+          "name": "WriteIndirectPointer",
+          "parameters": [
+            "IndirectPointerSlot dest",
+            "Tagged<HeapObject> value"
+          ],
+          "return_type": "int",
+          "logic": "Writes an indirect pointer to a given slot."
+        },
+        {
+          "name": "ReadData",
+          "parameters": [
+            "Handle<HeapObject> object",
+            "int start_slot_index",
+            "int end_slot_index"
+          ],
+          "return_type": "void",
+          "logic": "Fills in a heap object's data from a specified start to end slot index.  Reads the raw data from the snapshot and populates the object."
+        },
+        {
+          "name": "ReadData",
+          "parameters": [
+            "FullMaybeObjectSlot start",
+            "FullMaybeObjectSlot end"
+          ],
+          "return_type": "void",
+          "logic": "Fills in a contiguous range of full object slots with data read from the snapshot."
+        },
+        {
+          "name": "ReadSingleBytecodeData",
+          "parameters": [
+            "uint8_t data",
+            "SlotAccessor slot_accessor"
+          ],
+          "return_type": "int",
+          "logic": "Helper for ReadData. Reads a bytecode and fills in data into the slot based on the bytecode. Returns the number of slots filled."
+        },
+        {
+          "name": "ReadNewObject",
+          "parameters": [
+            "uint8_t data",
+            "SlotAccessor slot_accessor"
+          ],
+          "return_type": "int",
+          "logic": "Reads a new object from the snapshot and fills in the slot."
+        },
+        {
+          "name": "ReadBackref",
+          "parameters": [
+            "uint8_t data",
+            "SlotAccessor slot_accessor"
+          ],
+          "return_type": "int",
+          "logic": "Reads a back reference from the snapshot and fills in the slot."
+        },
+        {
+          "name": "ReadReadOnlyHeapRef",
+          "parameters": [
+            "uint8_t data",
+            "SlotAccessor slot_accessor"
+          ],
+          "return_type": "int",
+          "logic": "Reads a read-only heap reference from the snapshot and fills in the slot."
+        },
+        {
+          "name": "ReadRootArray",
+          "parameters": [
+            "uint8_t data",
+            "SlotAccessor slot_accessor"
+          ],
+          "return_type": "int",
+          "logic": "Reads a root array reference from the snapshot and fills in the slot."
+        },
+        {
+          "name": "ReadStartupObjectCache",
+          "parameters": [
+            "uint8_t data",
+            "SlotAccessor slot_accessor"
+          ],
+          "return_type": "int",
+          "logic": "Reads a reference to an object from the startup object cache and fills in the slot."
+        },
+        {
+          "name": "ReadSharedHeapObjectCache",
+          "parameters": [
+            "uint8_t data",
+            "SlotAccessor slot_accessor"
+          ],
+          "return_type": "int",
+          "logic": "Reads a reference from shared heap object cache."
+        },
+        {
+          "name": "ReadNewMetaMap",
+          "parameters": [
+            "uint8_t data",
+            "SlotAccessor slot_accessor"
+          ],
+          "return_type": "int",
+          "logic": "Reads a new meta-map from the snapshot and fills the slot."
+        },
+        {
+          "name": "ReadExternalReference",
+          "parameters": [
+            "uint8_t data",
+            "SlotAccessor slot_accessor"
+          ],
+          "return_type": "int",
+          "logic": "Reads an external reference from the snapshot and fills in the slot."
+        },
+        {
+          "name": "ReadRawExternalReference",
+          "parameters": [
+            "uint8_t data",
+            "SlotAccessor slot_accessor"
+          ],
+          "return_type": "int",
+          "logic": "Reads a raw external reference from the snapshot and fills in the slot."
+        },
+        {
+          "name": "ReadAttachedReference",
+          "parameters": [
+            "uint8_t data",
+            "SlotAccessor slot_accessor"
+          ],
+          "return_type": "int",
+          "logic": "Reads an attached reference from the snapshot and fills in the slot."
+        },
+        {
+          "name": "ReadRegisterPendingForwardRef",
+          "parameters": [
+            "uint8_t data",
+            "SlotAccessor slot_accessor"
+          ],
+          "return_type": "int",
+          "logic": "Registers a pending forward reference during deserialization."
+        },
+        {
+          "name": "ReadResolvePendingForwardRef",
+          "parameters": [
+            "uint8_t data",
+            "SlotAccessor slot_accessor"
+          ],
+          "return_type": "int",
+          "logic": "Resolves a pending forward reference during deserialization."
+        },
+        {
+          "name": "ReadVariableRawData",
+          "parameters": [
+            "uint8_t data",
+            "SlotAccessor slot_accessor"
+          ],
+          "return_type": "int",
+          "logic": "Reads variable raw data from the snapshot and fills in the slot."
+        },
+        {
+          "name": "ReadVariableRepeatRoot",
+          "parameters": [
+            "uint8_t data",
+            "SlotAccessor slot_accessor"
+          ],
+          "return_type": "int",
+          "logic": "Repeatedly reads a root object from the snapshot and fills in the slot."
+        },
+        {
+          "name": "ReadOffHeapBackingStore",
+          "parameters": [
+            "uint8_t data",
+            "SlotAccessor slot_accessor"
+          ],
+          "return_type": "int",
+          "logic": "Reads an off-heap backing store from the snapshot and fills in the slot."
+        },
+        {
+          "name": "ReadApiReference",
+          "parameters": [
+            "uint8_t data",
+            "SlotAccessor slot_accessor"
+          ],
+          "return_type": "int",
+          "logic": "Reads an API reference from the snapshot and fills in the slot."
+        },
+        {
+          "name": "ReadClearedWeakReference",
+          "parameters": [
+            "uint8_t data",
+            "SlotAccessor slot_accessor"
+          ],
+          "return_type": "int",
+          "logic": "Reads a cleared weak reference and fills the slot."
+        },
+        {
+          "name": "ReadWeakPrefix",
+          "parameters": [
+            "uint8_t data",
+            "SlotAccessor slot_accessor"
+          ],
+          "return_type": "int",
+          "logic": "Reads a weak reference prefix from snapshot and sets up the subsequent reference as weak."
+        },
+        {
+          "name": "ReadIndirectPointerPrefix",
+          "parameters": [
+            "uint8_t data",
+            "SlotAccessor slot_accessor"
+          ],
+          "return_type": "int",
+          "logic": "Reads an indirect pointer prefix from snapshot and prepares the deserializer to handle indirect pointers."
+        },
+        {
+          "name": "ReadInitializeSelfIndirectPointer",
+          "parameters": [
+            "uint8_t data",
+            "SlotAccessor slot_accessor"
+          ],
+          "return_type": "int",
+          "logic": "Reads 'initialize self indirect pointer' and sets up the pointer appropriately."
+        },
+        {
+          "name": "ReadAllocateJSDispatchEntry",
+          "parameters": [
+            "uint8_t data",
+            "SlotAccessor slot_accessor"
+          ],
+          "return_type": "int",
+          "logic": "Reads from the snapshot that a JSDispatch entry needs to be allocated and adds to the cache."
+        },
+        {
+          "name": "ReadJSDispatchEntry",
+          "parameters": [
+            "uint8_t data",
+            "SlotAccessor slot_accessor"
+          ],
+          "return_type": "int",
+          "logic": "Reads a cached JSDispatch entry and sets it on the slot."
+        },
+        {
+          "name": "ReadProtectedPointerPrefix",
+          "parameters": [
+            "uint8_t data",
+            "SlotAccessor slot_accessor"
+          ],
+          "return_type": "int",
+          "logic": "Reads a protected pointer prefix from the snapshot."
+        },
+        {
+          "name": "ReadRootArrayConstants",
+          "parameters": [
+            "uint8_t data",
+            "SlotAccessor slot_accessor"
+          ],
+          "return_type": "int",
+          "logic": "Reads a root array from the snapshot."
+        },
+        {
+          "name": "ReadHotObject",
+          "parameters": [
+            "uint8_t data",
+            "SlotAccessor slot_accessor"
+          ],
+          "return_type": "int",
+          "logic": "Reads one of the 'hot' objects from the snapshot, based on the index in hot_objects_ list."
+        },
+        {
+          "name": "ReadFixedRawData",
+          "parameters": [
+            "uint8_t data",
+            "SlotAccessor slot_accessor"
+          ],
+          "return_type": "int",
+          "logic": "Reads a fixed amount of raw data from the snapshot and writes to the slot."
+        },
+        {
+          "name": "ReadFixedRepeatRoot",
+          "parameters": [
+            "uint8_t data",
+            "SlotAccessor slot_accessor"
+          ],
+          "return_type": "int",
+          "logic": "Repeatedly reads root from snapshot. Read `data` number of slots with same `root` value."
+        },
+        {
+          "name": "ReadExternalReferenceCase",
+          "parameters": [],
+          "return_type": "Address",
+          "logic": "Helper function for ReadData to read external references from the snapshot."
+        },
+        {
+          "name": "ReadExternalPointerTag",
+          "parameters": [],
+          "return_type": "ExternalPointerTag",
+          "logic": "Helper function to read external pointer tag from the snapshot byte source"
+        },
+        {
+          "name": "ReadObject",
+          "parameters": [
+            "SnapshotSpace space"
+          ],
+          "return_type": "Handle<HeapObject>",
+          "logic": "Reads an object from the snapshot of a given space."
+        },
+        {
+          "name": "ReadMetaMap",
+          "parameters": [
+            "SnapshotSpace space"
+          ],
+          "return_type": "Handle<HeapObject>",
+          "logic": "Reads a meta map from snapshot of a given space."
+        },
+        {
+          "name": "GetAndResetNextReferenceDescriptor",
+          "parameters": [],
+          "return_type": "ReferenceDescriptor",
+          "logic": "Gets and resets the next reference descriptor."
+        },
+        {
+          "name": "ReadRepeatedRoot",
+          "parameters": [
+            "SlotGetter slot_getter",
+            "int repeat_count"
+          ],
+          "return_type": "int",
+          "logic": "Reads repeated root references from the snapshot."
+        },
+        {
+          "name": "PostProcessNewObject",
+          "parameters": [
+            "DirectHandle<Map> map",
+            "Handle<HeapObject> obj",
+            "SnapshotSpace space"
+          ],
+          "return_type": "void",
+          "logic": "Performs post-processing on newly deserialized objects. Special handling for internalized strings."
+        },
+        {
+          "name": "PostProcessNewJSReceiver",
+          "parameters": [
+            "Tagged<Map> map",
+            "DirectHandle<JSReceiver> obj",
+            "InstanceType instance_type",
+            "SnapshotSpace space"
+          ],
+          "return_type": "void",
+          "logic": "Performs post-processing on newly deserialized JSReceivers."
+        },
+        {
+          "name": "Allocate",
+          "parameters": [
+            "AllocationType allocation",
+            "int size",
+            "AllocationAlignment alignment"
+          ],
+          "return_type": "Tagged<HeapObject>",
+          "logic": "Allocates memory for a new object during deserialization."
+        }
+      ]
+    },
+    {
+      "name": "Deserializer::HotObjectsList",
+      "properties": [
+        "circular_queue_",
+        "index_"
+      ],
+      "methods": [
+        {
+          "name": "Add",
+          "parameters": [
+            "DirectHandle<HeapObject> object"
+          ],
+          "return_type": "void",
+          "logic": "Adds an object to the circular queue (hot objects)."
+        },
+        {
+          "name": "Get",
+          "parameters": [
+            "int index"
+          ],
+          "return_type": "DirectHandle<HeapObject>",
+          "logic": "Gets an object from the circular queue (hot objects) based on index."
+        }
+      ]
+    },
+    {
+      "name": "StringTableInsertionKey",
+      "properties": [
+        "string_",
+        "deserializing_user_code_",
+        "no_gc"
+      ],
+      "methods": [
+        {
+          "name": "StringTableInsertionKey",
+          "parameters": [
+            "Isolate* isolate",
+            "DirectHandle<String> string",
+            "DeserializingUserCodeOption deserializing_user_code"
+          ],
+          "return_type": "StringTableInsertionKey",
+          "logic": "Constructor for StringTableInsertionKey used with Isolate*."
+        },
+        {
+          "name": "StringTableInsertionKey",
+          "parameters": [
+            "LocalIsolate* isolate",
+            "DirectHandle<String> string",
+            "DeserializingUserCodeOption deserializing_user_code"
+          ],
+          "return_type": "StringTableInsertionKey",
+          "logic": "Constructor for StringTableInsertionKey used with LocalIsolate*."
+        },
+        {
+          "name": "IsMatch",
+          "parameters": [
+            "IsolateT* isolate",
+            "Tagged<String> string"
+          ],
+          "return_type": "bool",
+          "logic": "Checks if a given string matches the string stored in the key."
+        },
+        {
+          "name": "PrepareForInsertion",
+          "parameters": [
+            "Isolate* isolate"
+          ],
+          "return_type": "void",
+          "logic": "Prepares the key for insertion into the string table."
+        },
+        {
+          "name": "PrepareForInsertion",
+          "parameters": [
+            "LocalIsolate* isolate"
+          ],
+          "return_type": "void",
+          "logic": "Prepares the key for insertion into the string table."
+        },
+        {
+          "name": "GetHandleForInsertion",
+          "parameters": [
+            "Isolate* isolate"
+          ],
+          "return_type": "DirectHandle<String>",
+          "logic": "Gets the handle for insertion into the string table."
+        }
+      ]
+    }
+  ],
+  "functions": []
+}

@@ -1,0 +1,265 @@
+{
+  "file_path": "/home/kathirks_gc/v8_go/codebase/src/snapshot/embedded/embedded-data.h",
+  "imports": [
+    "src/base/macros.h",
+    "src/builtins/builtins.h",
+    "src/common/globals.h",
+    "src/execution/isolate.h",
+    "src/heap/code-range.h",
+    "src/objects/instruction-stream.h"
+  ],
+  "classes": [
+    {
+      "name": "OffHeapInstructionStream",
+      "properties": [],
+      "methods": [
+        {
+          "name": "PcIsOffHeap",
+          "parameters": [
+            "Isolate* isolate",
+            "Address pc"
+          ],
+          "return_type": "bool",
+          "logic": "Checks if a given program counter (pc) points to an off-heap instruction stream."
+        },
+        {
+          "name": "TryGetAddressForHashing",
+          "parameters": [
+            "Isolate* isolate",
+            "Address address",
+            "uint32_t* hashable_address"
+          ],
+          "return_type": "bool",
+          "logic": "Attempts to convert an address to a hashable uint32_t offset within the embedded code blob. Returns true on success, false otherwise."
+        },
+        {
+          "name": "TryLookupCode",
+          "parameters": [
+            "Isolate* isolate",
+            "Address address"
+          ],
+          "return_type": "Builtin",
+          "logic": "Attempts to look up the corresponding builtin ID for a given address. Returns the builtin ID on success, kNoBuiltinId otherwise."
+        },
+        {
+          "name": "CreateOffHeapOffHeapInstructionStream",
+          "parameters": [
+            "Isolate* isolate",
+            "uint8_t** code",
+            "uint32_t* code_size",
+            "uint8_t** data",
+            "uint32_t* data_size"
+          ],
+          "return_type": "void",
+          "logic": "Creates an executable off-heap area during snapshot creation containing all off-heap code.  This is only used when creating the snapshot."
+        },
+        {
+          "name": "FreeOffHeapOffHeapInstructionStream",
+          "parameters": [
+            "uint8_t* code",
+            "uint32_t code_size",
+            "uint8_t* data",
+            "uint32_t data_size"
+          ],
+          "return_type": "void",
+          "logic": "Frees the memory allocated by CreateOffHeapOffHeapInstructionStream during snapshot creation."
+        }
+      ]
+    },
+    {
+      "name": "EmbeddedData",
+      "properties": [
+        "const uint8_t* code_",
+        "uint32_t code_size_",
+        "const uint8_t* data_",
+        "uint32_t data_size_"
+      ],
+      "methods": [
+        {
+          "name": "NewFromIsolate",
+          "parameters": [
+            "Isolate* isolate"
+          ],
+          "return_type": "EmbeddedData",
+          "logic": "Creates a new EmbeddedData object from the given isolate's heap state, used during snapshot creation."
+        },
+        {
+          "name": "FromBlob",
+          "parameters": [],
+          "return_type": "EmbeddedData",
+          "logic": "Returns the global embedded blob (code and data), which is usually located in .text and .rodata."
+        },
+        {
+          "name": "FromBlob",
+          "parameters": [
+            "Isolate* isolate"
+          ],
+          "return_type": "EmbeddedData",
+          "logic": "Returns a potentially remapped embedded blob for a given isolate. Uses Isolate's embedded blob pointers."
+        },
+        {
+          "name": "FromBlob",
+          "parameters": [
+            "CodeRange* code_range"
+          ],
+          "return_type": "EmbeddedData",
+          "logic": "Returns a potentially remapped embedded blob for a given code range."
+        },
+        {
+          "name": "FromBlobForPc",
+          "parameters": [
+            "Isolate* isolate",
+            "Address maybe_builtin_pc"
+          ],
+          "return_type": "EmbeddedData",
+          "logic": "Returns an EmbeddedData instance suitable for a given program counter, handling different cases of builtin relocation."
+        },
+        {
+          "name": "code",
+          "parameters": [],
+          "return_type": "const uint8_t*",
+          "logic": "Returns a pointer to the code section."
+        },
+        {
+          "name": "code_size",
+          "parameters": [],
+          "return_type": "uint32_t",
+          "logic": "Returns the size of the code section."
+        },
+        {
+          "name": "data",
+          "parameters": [],
+          "return_type": "const uint8_t*",
+          "logic": "Returns a pointer to the data section."
+        },
+        {
+          "name": "data_size",
+          "parameters": [],
+          "return_type": "uint32_t",
+          "logic": "Returns the size of the data section."
+        },
+        {
+          "name": "IsInCodeRange",
+          "parameters": [
+            "Address pc"
+          ],
+          "return_type": "bool",
+          "logic": "Checks if a given program counter (pc) falls within the code range of the embedded blob."
+        },
+        {
+          "name": "Dispose",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Frees the memory allocated for the code and data sections.  Deallocates the data but not the embedded blob"
+        },
+        {
+          "name": "InstructionStartOf",
+          "parameters": [
+            "Builtin builtin"
+          ],
+          "return_type": "Address",
+          "logic": "Returns the starting address of the instruction stream for a given builtin. Inline."
+        },
+        {
+          "name": "InstructionEndOf",
+          "parameters": [
+            "Builtin builtin"
+          ],
+          "return_type": "Address",
+          "logic": "Returns the ending address of the instruction stream for a given builtin. Inline."
+        },
+        {
+          "name": "InstructionSizeOf",
+          "parameters": [
+            "Builtin builtin"
+          ],
+          "return_type": "uint32_t",
+          "logic": "Returns the size of the instruction stream for a given builtin. Inline."
+        },
+        {
+          "name": "InstructionStartOfBytecodeHandlers",
+          "parameters": [],
+          "return_type": "Address",
+          "logic": "Returns the starting address of the bytecode handlers. Inline."
+        },
+        {
+          "name": "InstructionEndOfBytecodeHandlers",
+          "parameters": [],
+          "return_type": "Address",
+          "logic": "Returns the ending address of the bytecode handlers. Inline."
+        },
+        {
+          "name": "MetadataStartOf",
+          "parameters": [
+            "Builtin builtin"
+          ],
+          "return_type": "Address",
+          "logic": "Returns the starting address of the metadata for a given builtin. Inline."
+        },
+        {
+          "name": "AddressForHashing",
+          "parameters": [
+            "Address addr"
+          ],
+          "return_type": "uint32_t",
+          "logic": "Calculates the offset of a given address within the code range for hashing purposes."
+        },
+        {
+          "name": "PaddedInstructionSizeOf",
+          "parameters": [
+            "Builtin builtin"
+          ],
+          "return_type": "uint32_t",
+          "logic": "Returns the padded size of the instruction stream for a given builtin, aligned to kCodeAlignment. Inline."
+        },
+        {
+          "name": "CreateEmbeddedBlobDataHash",
+          "parameters": [],
+          "return_type": "size_t",
+          "logic": "Creates a hash of the embedded data section."
+        },
+        {
+          "name": "CreateEmbeddedBlobCodeHash",
+          "parameters": [],
+          "return_type": "size_t",
+          "logic": "Creates a hash of the embedded code section."
+        },
+        {
+          "name": "EmbeddedBlobDataHash",
+          "parameters": [],
+          "return_type": "size_t",
+          "logic": "Returns the precomputed hash of the embedded data section, stored within the data section."
+        },
+        {
+          "name": "EmbeddedBlobCodeHash",
+          "parameters": [],
+          "return_type": "size_t",
+          "logic": "Returns the precomputed hash of the embedded code section, stored within the data section."
+        },
+        {
+          "name": "IsolateHash",
+          "parameters": [],
+          "return_type": "size_t",
+          "logic": "Returns the precomputed hash of the isolate, stored within the data section."
+        },
+        {
+          "name": "TryLookupCode",
+          "parameters": [
+            "Address address"
+          ],
+          "return_type": "Builtin",
+          "logic": "Looks up a builtin id based on a given address within the embedded blob."
+        },
+        {
+          "name": "GetBuiltinId",
+          "parameters": [
+            "ReorderedBuiltinIndex embedded_index"
+          ],
+          "return_type": "Builtin",
+          "logic": "Returns the builtin ID corresponding to a given index in the reordered builtin list."
+        }
+      ]
+    }
+  ],
+  "functions": []
+}

@@ -1,0 +1,207 @@
+{
+  "metadata": {
+    "path": "/home/kathirks_gc/v8_go/archive/codebase/src/execution/isolate-data.h",
+    "file_name": "isolate-data.h",
+    "language": "cpp",
+    "purpose": "Defines the IsolateData class, which holds data accessible from both C++ runtime and compiled code in the V8 JavaScript engine.  This includes things like the stack guard, roots table, external reference table, and builtin entry points. The layout of this data is carefully managed for performance and compatibility."
+  },
+  "imports": {
+    "metadata": {
+      "language": "cpp",
+      "purpose": "Includes necessary headers for builtins, code generation constants, external reference tables, stack management, thread-local storage, linear allocation, isolate initialization, root table, sandbox pointer tables, utilities, and google test framework (only in test builds)."
+    },
+    "code": "#include \"src/builtins/builtins.h\"\n#include \"src/codegen/constants-arch.h\"\n#include \"src/codegen/external-reference-table.h\"\n#include \"src/execution/stack-guard.h\"\n#include \"src/execution/thread-local-top.h\"\n#include \"src/heap/linear-allocation-area.h\"\n#include \"src/init/isolate-group.h\"\n#include \"src/roots/roots.h\"\n#include \"src/sandbox/code-pointer-table.h\"\n#include \"src/sandbox/cppheap-pointer-table.h\"\n#include \"src/sandbox/external-pointer-table.h\"\n#include \"src/sandbox/trusted-pointer-table.h\"\n#include \"src/utils/utils.h\"\n#include \"testing/gtest/include/gtest/gtest_prod.h\"  // nogncheck"
+  },
+  "classes": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "IsolateData",
+        "extends": null,
+        "implements": [],
+        "about": "Contains a collection of data accessible from both C++ runtime and compiled code.  The compiled code accesses this data indirectly via the root register.",
+        "attributes": [],
+        "dependencies": [
+          "Isolate",
+          "IsolateGroup",
+          "StackGuard",
+          "RootsTable",
+          "ExternalReferenceTable",
+          "ThreadLocalTop",
+          "LinearAllocationArea",
+          "ExternalPointerTable",
+          "CppHeapPointerTable",
+          "TrustedPointerTable",
+          "TrustedPointerPublishingScope",
+          "JSDispatchHandle",
+          "Builtins",
+          "AlignedSlotAllocator"
+        ]
+      },
+      "code": "class IsolateData final {\n public:\n  IsolateData(Isolate* isolate, IsolateGroup* group)\n      :\n#ifdef V8_COMPRESS_POINTERS\n        cage_base_(group->GetPtrComprCageBase()),\n#endif\n        stack_guard_(isolate)\n#ifdef V8_ENABLE_SANDBOX\n        ,\n        trusted_cage_base_(group->GetTrustedPtrComprCageBase()),\n        code_pointer_table_base_address_(\n            group->code_pointer_table()->base_address())\n#endif\n  {\n  }\n\n  IsolateData(const IsolateData&) = delete;\n  IsolateData& operator=(const IsolateData&) = delete;\n\n  static constexpr intptr_t kIsolateRootBias = kRootRegisterBias;\n\n  // The value of the kRootRegister.\n  Address isolate_root() const {\n    return reinterpret_cast<Address>(this) + kIsolateRootBias;\n  }\n\n  // Root-register-relative offsets.\n\n#define V(CamelName, Size, hacker_name)             \\\n  static constexpr int hacker_name##_offset() {     \\\n    return k##CamelName##Offset - kIsolateRootBias; \\\n  }\n  ISOLATE_DATA_FIELDS(V)\n#undef V\n\n  static constexpr int root_slot_offset(RootIndex root_index) {\n    return roots_table_offset() + RootsTable::offset_of(root_index);\n  }\n\n  static constexpr int BuiltinEntrySlotOffset(Builtin id) {\n    DCHECK(Builtins::IsBuiltinId(id));\n    return (Builtins::IsTier0(id) ? builtin_tier0_entry_table_offset()\n                                  : builtin_entry_table_offset()) +\n           Builtins::ToInt(id) * kSystemPointerSize;\n  }\n  // TODO(ishell): remove in favour of typified id version.\n  static constexpr int builtin_slot_offset(int builtin_index) {\n    return BuiltinSlotOffset(Builtins::FromInt(builtin_index));\n  }\n  static constexpr int BuiltinSlotOffset(Builtin id) {\n    return (Builtins::IsTier0(id) ? builtin_tier0_table_offset()\n                                  : builtin_table_offset()) +\n           Builtins::ToInt(id) * kSystemPointerSize;\n  }\n\n  static constexpr int jslimit_offset() {\n    return stack_guard_offset() + StackGuard::jslimit_offset();\n  }\n\n  static constexpr int real_jslimit_offset() {\n    return stack_guard_offset() + StackGuard::real_jslimit_offset();\n  }\n\n#define V(Offset, Size, Name) \\\n  Address Name##_address() const { return reinterpret_cast<Address>(&Name##_); }\n  ISOLATE_DATA_FIELDS(V)\n#undef V\n\n  Address fast_c_call_caller_fp() const { return fast_c_call_caller_fp_; }\n  Address fast_c_call_caller_pc() const { return fast_c_call_caller_pc_; }\n  Address fast_api_call_target() const { return fast_api_call_target_; }\n\n  static constexpr int exception_offset() {\n    return thread_local_top_offset() + ThreadLocalTop::exception_offset();\n  }\n\n  // The value of kPointerCageBaseRegister.\n  Address cage_base() const { return cage_base_; }\n  StackGuard* stack_guard() { return &stack_guard_; }\n  int32_t* regexp_static_result_offsets_vector() const {\n    return regexp_static_result_offsets_vector_;\n  }\n  void set_regexp_static_result_offsets_vector(int32_t* value) {\n    regexp_static_result_offsets_vector_ = value;\n  }\n  Address* builtin_tier0_entry_table() { return builtin_tier0_entry_table_; }\n  Address* builtin_tier0_table() { return builtin_tier0_table_; }\n  RootsTable& roots() { return roots_table_; }\n  Address api_callback_thunk_argument() const {\n    return api_callback_thunk_argument_;\n  }\n  Address regexp_exec_vector_argument() const {\n    return regexp_exec_vector_argument_;\n  }\n  Tagged<Object> continuation_preserved_embedder_data() const {\n    return continuation_preserved_embedder_data_;\n  }\n  void set_continuation_preserved_embedder_data(Tagged<Object> data) {\n    continuation_preserved_embedder_data_ = data;\n  }\n  const RootsTable& roots() const { return roots_table_; }\n  ExternalReferenceTable* external_reference_table() {\n    return &external_reference_table_;\n  }\n  ThreadLocalTop& thread_local_top() { return thread_local_top_; }\n  ThreadLocalTop const& thread_local_top() const { return thread_local_top_; }\n  Address* builtin_entry_table() { return builtin_entry_table_; }\n  Address* builtin_table() { return builtin_table_; }\n#if V8_ENABLE_LEAPTIERING_BOOL && !V8_STATIC_DISPATCH_HANDLES_BOOL\n  JSDispatchHandle builtin_dispatch_handle(Builtin builtin) {\n    return builtin_dispatch_table_[JSBuiltinDispatchHandleRoot::to_idx(\n        builtin)];\n  }\n#endif  // V8_ENABLE_LEAPTIERING_BOOL && !V8_STATIC_DISPATCH_HANDLES_BOOL\n\n  bool stack_is_iterable() const {\n    DCHECK(stack_is_iterable_ == 0 || stack_is_iterable_ == 1);\n    return stack_is_iterable_ != 0;\n  }\n  bool is_marking() const { return is_marking_flag_; }\n\n  // Returns true if this address points to data stored in this instance. If\n  // it's the case then the value can be accessed indirectly through the root\n  // register.\n  bool contains(Address address) const {\n    static_assert(std::is_unsigned<Address>::value);\n    Address start = reinterpret_cast<Address>(this);\n    return (address - start) < sizeof(*this);\n  }\n\n// Offset of a ThreadLocalTop member from {isolate_root()}.\n#define THREAD_LOCAL_TOP_MEMBER_OFFSET(Name)                              \\\n  static constexpr uint32_t Name##_offset() {                             \\\n    return static_cast<uint32_t>(IsolateData::thread_local_top_offset() + \\\n                                 OFFSET_OF(ThreadLocalTop, Name##_));     \\\n  }\n\n  THREAD_LOCAL_TOP_MEMBER_OFFSET(topmost_script_having_context)\n  THREAD_LOCAL_TOP_MEMBER_OFFSET(is_on_central_stack_flag)\n  THREAD_LOCAL_TOP_MEMBER_OFFSET(context)\n#undef THREAD_LOCAL_TOP_MEMBER_OFFSET\n\n  static constexpr intptr_t GetOffset(IsolateFieldId id) {\n    switch (id) {\n      case IsolateFieldId::kUnknown:\n        UNREACHABLE();\n      case IsolateFieldId::kIsolateAddress:\n        return -kIsolateRootBias;\n      case IsolateFieldId::kJsLimitAddress:\n        return IsolateData::jslimit_offset();\n#define CASE(camel, size, name)  \\\n  case IsolateFieldId::k##camel: \\\n    return IsolateData::name##_offset();\n        ISOLATE_DATA_FIELDS(CASE)\n#undef CASE\n      default:\n        UNREACHABLE();\n    }\n  }\n\n private:\n  // Static layout definition.\n  //\n  // Note: The location of fields within IsolateData is significant. The\n  // closer they are to the value of kRootRegister (i.e.: isolate_root()), the\n  // cheaper it is to access them. See also: https://crbug.com/993264.\n  // The recommended guideline is to put frequently-accessed fields close to\n  // the beginning of IsolateData.\n#define FIELDS(V)                                                      \\\n  ISOLATE_DATA_FIELDS(V)                                               \\\n  /* This padding aligns IsolateData size by 8 bytes. */               \\\n  V(Padding,                                                           \\\n    8 + RoundUp<8>(static_cast<int>(kPaddingOffset)) - kPaddingOffset) \\\n  /* Total size. */                                                    \\\n  V(Size, 0)\n\n  DEFINE_FIELD_OFFSET_CONSTANTS_WITH_PURE_NAME(0, FIELDS)\n#undef FIELDS\n\n  const Address cage_base_ = kNullAddress;\n\n  // Fields related to the system and JS stack. In particular, this contains\n  // the stack limit used by stack checks in generated code.\n  StackGuard stack_guard_;\n\n  //\n  // Hot flags that are regularly checked.\n  //\n\n  // These flags are regularly checked by write barriers.\n  // Only valid values are 0 or 1.\n  uint8_t is_marking_flag_ = false;\n  uint8_t is_minor_marking_flag_ = false;\n  uint8_t is_shared_space_isolate_flag_ = false;\n  uint8_t uses_shared_heap_flag_ = false;\n\n  // Storage for is_profiling and should_check_side_effects booleans.\n  // This value is checked on every API callback/getter call.\n  base::Flags<IsolateExecutionModeFlag, uint8_t, std::atomic<uint8_t>>\n      execution_mode_ = {IsolateExecutionModeFlag::kNoFlags};\n  static_assert(sizeof(execution_mode_) == 1);\n\n  //\n  // Not super hot flags, which are put here because we have to align the\n  // builtin entry table to kSystemPointerSize anyway.\n  //\n\n  // Whether the StackFrameIteratorForProfiler can successfully iterate the\n  // current stack. The only valid values are 0 or 1.\n  uint8_t stack_is_iterable_ = 1;\n\n  // Field to pass value for error throwing builtins. Currently, it is used to\n  // pass the type of the `Dataview` operation to print out operation's name in\n  // case of an error.\n  uint8_t error_message_param_;\n\n  // Ensure the following tables are kSystemPointerSize-byte aligned.\n  static_assert(FIELD_SIZE(kTablesAlignmentPaddingOffset) > 0);\n  uint8_t tables_alignment_padding_[FIELD_SIZE(kTablesAlignmentPaddingOffset)];\n\n  // A pointer to the static offsets vector (used to pass results from the\n  // irregexp engine to the rest of V8), or nullptr if the static offsets\n  // vector is currently in use.\n  int32_t* regexp_static_result_offsets_vector_ = nullptr;\n\n  // Tier 0 tables. See also builtin_entry_table_ and builtin_table_.\n  Address builtin_tier0_entry_table_[Builtins::kBuiltinTier0Count] = {};\n  Address builtin_tier0_table_[Builtins::kBuiltinTier0Count] = {};\n\n  LinearAllocationArea new_allocation_info_;\n  LinearAllocationArea old_allocation_info_;\n\n  // Aligns fast_c_call_XXX fields so that they stay in the same CPU cache line.\n  Address fast_c_call_alignment_padding_[kFastCCallAlignmentPaddingCount];\n\n  // Stores the state of the caller for MacroAssembler::CallCFunction so that\n  // the sampling CPU profiler can iterate the stack during such calls. These\n  // are stored on IsolateData so that they can be stored to with only one move\n  // instruction in compiled code.\n  struct {\n    // The FP and PC that are saved right before MacroAssembler::CallCFunction.\n    Address fast_c_call_caller_fp_ = kNullAddress;\n    Address fast_c_call_caller_pc_ = kNullAddress;\n  };\n  // The address of the fast API callback right before it's executed from\n  // generated code.\n  Address fast_api_call_target_ = kNullAddress;\n\n  // Used for implementation of LongTaskStats. Counts the number of potential\n  // long tasks.\n  size_t long_task_stats_counter_ = 0;\n\n  ThreadLocalTop thread_local_top_;\n  HandleScopeData handle_scope_data_;\n\n  // These fields are accessed through the API, offsets must be kept in sync\n  // with v8::internal::Internals (in include/v8-internal.h) constants. The\n  // layout consistency is verified in Isolate::CheckIsolateLayout() using\n  // runtime checks.\n  void* embedder_data_[Internals::kNumIsolateDataSlots] = {};\n\n  // Tables containing pointers to objects outside of the V8 sandbox.\n#ifdef V8_COMPRESS_POINTERS\n  ExternalPointerTable external_pointer_table_;\n  ExternalPointerTable* shared_external_pointer_table_ = nullptr;\n  CppHeapPointerTable cpp_heap_pointer_table_;\n#endif  // V8_COMPRESS_POINTERS\n\n#ifdef V8_ENABLE_SANDBOX\n  const Address trusted_cage_base_;\n\n  TrustedPointerTable trusted_pointer_table_;\n  TrustedPointerTable* shared_trusted_pointer_table_ = nullptr;\n  TrustedPointerPublishingScope* trusted_pointer_publishing_scope_ = nullptr;\n\n  const Address code_pointer_table_base_address_;\n#endif  // V8_ENABLE_SANDBOX\n\n  // This is a storage for an additional argument for the Api callback thunk\n  // functions, see InvokeAccessorGetterCallback and InvokeFunctionCallback.\n  Address api_callback_thunk_argument_ = kNullAddress;\n\n  // Storage for an additional (untagged) argument for\n  // Runtime::kRegExpExecInternal2, required since runtime functions only\n  // accept tagged arguments.\n  Address regexp_exec_vector_argument_ = kNullAddress;\n\n  // This is data that should be preserved on newly created continuations.\n  Tagged<Object> continuation_preserved_embedder_data_ = Smi::zero();\n\n  RootsTable roots_table_;\n  ExternalReferenceTable external_reference_table_;\n\n  // The entry points for builtins. This corresponds to\n  // InstructionStream::InstructionStart() for each InstructionStream object in\n  // the builtins table below. The entry table is in IsolateData for easy access\n  // through kRootRegister.\n  Address builtin_entry_table_[Builtins::kBuiltinCount] = {};\n\n  // The entries in this array are tagged pointers to Code objects.\n  Address builtin_table_[Builtins::kBuiltinCount] = {};\n\n#if V8_ENABLE_LEAPTIERING_BOOL && !V8_STATIC_DISPATCH_HANDLES_BOOL\n  // The entries in this array are dispatch handles for builtins with SFI's.\n  JSDispatchHandle* builtin_dispatch_table() { return builtin_dispatch_table_; }\n  JSDispatchHandle\n      builtin_dispatch_table_[JSBuiltinDispatchHandleRoot::kTableSize] = {};\n#endif  // V8_ENABLE_LEAPTIERING_BOOL && !V8_STATIC_DISPATCH_HANDLES_BOOL\n\n  // Ensure the size is 8-byte aligned in order to make alignment of the field\n  // following the IsolateData field predictable. This solves the issue with\n  // C++ compilers for 32-bit platforms which are not consistent at aligning\n  // int64_t fields.\n  // In order to avoid dealing with zero-size arrays the padding size is always\n  // in the range [8, 15).\n  static_assert(kPaddingOffsetEnd + 1 - kPaddingOffset >= 8);\n  char padding_[kPaddingOffsetEnd + 1 - kPaddingOffset];\n\n  V8_INLINE static void AssertPredictableLayout();\n\n  friend class Isolate;\n  friend class Heap;\n  FRIEND_TEST(HeapTest, ExternalLimitDefault);\n  FRIEND_TEST(HeapTest, ExternalLimitStaysAboveDefaultForExplicitHandling);\n};"
+    }
+  ],
+  "functions": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "method",
+        "name": "AssertPredictableLayout",
+        "parent": "IsolateData",
+        "about": "Asserts that the layout of the IsolateData object is predictable (standard layout) and that the offsets of its members are as expected. This is important for compatibility across different platforms and compilers, especially when dealing with snapshots.",
+        "logic": "Uses static asserts to check that various types and the IsolateData class itself are standard layouts.  It then checks offsets of the fields within IsolateData against pre-defined constants. Finally, asserts that the size of the class is what is expected.",
+        "parameters": [],
+        "return": {
+          "type": "void",
+          "description": "No return value"
+        },
+        "dependencies": []
+      },
+      "code": "void IsolateData::AssertPredictableLayout() {\n  static_assert(std::is_standard_layout<StackGuard>::value);\n  static_assert(std::is_standard_layout<RootsTable>::value);\n  static_assert(std::is_standard_layout<ThreadLocalTop>::value);\n  static_assert(std::is_standard_layout<ExternalReferenceTable>::value);\n  static_assert(std::is_standard_layout<IsolateData>::value);\n  static_assert(std::is_standard_layout<LinearAllocationArea>::value);\n#define V(PureName, Size, Name)                                        \\\n  static_assert(                                                       \\\n      std::is_standard_layout<decltype(IsolateData::Name##_)>::value); \\\n  static_assert(offsetof(IsolateData, Name##_) == k##PureName##Offset);\n  ISOLATE_DATA_FIELDS(V)\n#undef V\n  static_assert(sizeof(IsolateData) == IsolateData::kSizeOffset);\n}"
+    }
+  ],
+  "dependencies": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "Isolate",
+        "about": "Represents an isolated instance of the V8 JavaScript engine."
+      },
+      "code": "class Isolate;",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "IsolateGroup",
+        "about": "Represents a group of isolates that share resources."
+      },
+      "code": "class IsolateGroup;",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "StackGuard",
+        "about": "Manages stack overflow protection."
+      },
+      "code": "class StackGuard;",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "RootsTable",
+        "about": "Stores frequently used objects (roots) for quick access."
+      },
+      "code": "class RootsTable;",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "ExternalReferenceTable",
+        "about": "Stores external references used by the engine."
+      },
+      "code": "class ExternalReferenceTable;",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "ThreadLocalTop",
+        "about": "Stores thread-local data for the isolate."
+      },
+      "code": "class ThreadLocalTop;",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "LinearAllocationArea",
+        "about": "Manages linear allocation of memory."
+      },
+      "code": "class LinearAllocationArea;",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "ExternalPointerTable",
+        "about": "Manages pointers to external data. Used when pointer compression is enabled."
+      },
+      "code": "class ExternalPointerTable;",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "CppHeapPointerTable",
+        "about": "Manages pointers to C++ heap objects. Used when pointer compression is enabled."
+      },
+      "code": "class CppHeapPointerTable;",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "TrustedPointerTable",
+        "about": "Manages trusted pointers for sandbox security."
+      },
+      "code": "class TrustedPointerTable;",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "TrustedPointerPublishingScope",
+        "about": "Manages the scope for publishing trusted pointers in a sandbox environment."
+      },
+      "code": "class TrustedPointerPublishingScope;",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "type",
+        "name": "JSDispatchHandle",
+        "about": "A handle for dispatching to JS functions (builtins)."
+      },
+      "code": "struct JSDispatchHandle;",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "namespace",
+        "name": "Builtins",
+        "about": "Namespace that encapsulates the built-in functions of the V8 engine."
+      },
+      "code": "namespace Builtins { enum Builtin {}; }",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "namespace",
+        "name": "AlignedSlotAllocator",
+        "about": "Namespace that encapsulates the aligned slot allocation"
+      },
+      "code": "class AlignedSlotAllocator;",
+      "type": "class"
+    }
+  ],
+  "file_path": "/home/kathirks_gc/v8_go/archive/codebase/src/execution/isolate-data.h"
+}

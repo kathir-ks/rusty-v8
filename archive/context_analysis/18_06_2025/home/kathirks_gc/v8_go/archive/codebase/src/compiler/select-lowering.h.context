@@ -1,0 +1,100 @@
+{
+  "metadata": {
+    "path": "/home/kathirks_gc/v8_go/archive/codebase/src/compiler/select-lowering.h",
+    "file_name": "select-lowering.h",
+    "language": "cpp",
+    "purpose": "Declares the SelectLowering class, which lowers Select nodes in the compiler graph to diamond-shaped control flow structures."
+  },
+  "imports": {
+    "metadata": {
+      "language": "cpp",
+      "purpose": "Includes the GraphReducer base class for implementing graph reduction passes."
+    },
+    "code": "#include \"src/compiler/graph-reducer.h\""
+  },
+  "classes": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "SelectLowering",
+        "extends": "Reducer",
+        "about": "Lowers Select nodes to diamonds in the compiler graph.",
+        "attributes": [
+          {
+            "name": "graph_assembler_",
+            "type": "JSGraphAssembler*",
+            "access": "private",
+            "purpose": "A pointer to the JSGraphAssembler, used for constructing graph fragments."
+          },
+          {
+            "name": "start_",
+            "type": "Node*",
+            "access": "private",
+            "purpose": "A pointer to the start node of the graph, used as context when building new graph fragments."
+          }
+        ],
+        "dependencies": [
+          "JSGraphAssembler",
+          "TFGraph",
+          "Reducer",
+          "Node"
+        ]
+      },
+      "code": "class SelectLowering final : public Reducer {\n public:\n  SelectLowering(JSGraphAssembler* graph_assembler, TFGraph* graph);\n  ~SelectLowering() override;\n\n  const char* reducer_name() const override { return \"SelectLowering\"; }\n\n  Reduction Reduce(Node* node) override;\n\n private:\n  Reduction LowerSelect(Node* node);\n\n  JSGraphAssembler* gasm() const { return graph_assembler_; }\n  Node* start() const { return start_; }\n\n  JSGraphAssembler* graph_assembler_;\n  Node* start_;\n};"
+    }
+  ],
+  "dependencies": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "JSGraphAssembler",
+        "about": "A helper class for building compiler graphs in V8."
+      },
+      "code": "class JSGraphAssembler;",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "TFGraph",
+        "about": "Type definition for the compiler graph"
+      },
+      "code": "class TFGraph;",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "Node",
+        "about": "Represents a node in the compiler graph."
+      },
+      "code": "class Node;",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "Reducer",
+        "about": "Abstract class for graph reduction passes."
+      },
+      "code": "class Reducer {\n public:\n  virtual ~Reducer() {}\n  virtual Reduction Reduce(Node* node) = 0;\n  virtual const char* reducer_name() const { return \"\"; }\n};",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "Reduction",
+        "about": "Represents the result of a reduction step."
+      },
+      "code": "class Reduction {\n public:\n  bool Changed() const { return replacement_ != nullptr || delete_node_; }\n private:\n  Node* replacement_ = nullptr;\n  bool delete_node_ = false;\n};",
+      "type": "class"
+    }
+  ],
+  "file_path": "/home/kathirks_gc/v8_go/archive/codebase/src/compiler/select-lowering.h"
+}

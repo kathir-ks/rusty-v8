@@ -1,0 +1,77 @@
+{
+  "file_path": "/home/kathirks_gc/v8_go/codebase/src/sandbox/hardware-support.h",
+  "imports": [
+    "include/v8-platform.h",
+    "src/common/globals.h"
+  ],
+  "classes": [
+    {
+      "name": "SandboxHardwareSupport",
+      "properties": [
+        "pkey_"
+      ],
+      "methods": [
+        {
+          "name": "InitializeBeforeThreadCreation",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Allocates a pkey that will be used to optionally block sandbox access. This function should be called once before any threads are created so that new threads inherit access to the new pkey."
+        },
+        {
+          "name": "TryEnable",
+          "parameters": [
+            "Address addr",
+            "size_t size"
+          ],
+          "return_type": "bool",
+          "logic": "Try to set up hardware permissions to the sandbox address space. If successful, future calls to MaybeBlockAccess will block the current thread from accessing the memory."
+        },
+        {
+          "name": "MaybeBlockAccess",
+          "parameters": [],
+          "return_type": "BlockAccessScope",
+          "logic": "If V8_ENABLE_SANDBOX_HARDWARE_SUPPORT is enabled, this function will prevent any access (read or write) to all sandbox memory on the current thread, as long as the returned Scope object is valid. The only exception are read-only pages, which will still be readable."
+        },
+        {
+          "name": "NotifyReadOnlyPageCreated",
+          "parameters": [
+            "Address addr",
+            "size_t size",
+            "PageAllocator::Permission current_permissions"
+          ],
+          "return_type": "void",
+          "logic": "Removes the pkey from read only pages, so that MaybeBlockAccess will still allow read access."
+        },
+        {
+          "name": "SetDefaultPermissionsForSignalHandler",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "This function should only be called by `ThreadIsolatedAllocator::SetDefaultPermissionsForSignalHandler`."
+        }
+      ]
+    },
+    {
+      "name": "BlockAccessScope",
+      "properties": [
+        "pkey_"
+      ],
+      "methods": [
+        {
+          "name": "BlockAccessScope",
+          "parameters": [
+            "int pkey"
+          ],
+          "return_type": "N/A (constructor)",
+          "logic": "Constructor for BlockAccessScope. If V8_ENABLE_SANDBOX_HARDWARE_SUPPORT is defined, takes an integer key as parameter; otherwise it is default constructed."
+        },
+        {
+          "name": "~BlockAccessScope",
+          "parameters": [],
+          "return_type": "N/A (destructor)",
+          "logic": "Destructor for BlockAccessScope, presumably responsible for releasing the hardware lock when `V8_ENABLE_SANDBOX_HARDWARE_SUPPORT` is enabled."
+        }
+      ]
+    }
+  ],
+  "functions": []
+}

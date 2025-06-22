@@ -1,0 +1,155 @@
+{
+  "metadata": {
+    "path": "/home/kathirks_gc/v8_go/archive/codebase/src/baseline/s390/baseline-compiler-s390-inl.h",
+    "file_name": "baseline-compiler-s390-inl.h",
+    "language": "cpp",
+    "purpose": "Inline implementation details for the BaselineCompiler on the s390 architecture."
+  },
+  "imports": {
+    "metadata": {
+      "language": "cpp",
+      "purpose": "Includes necessary headers for logging and baseline compiler functionality."
+    },
+    "code": "#include \"src/base/logging.h\"\n#include \"src/baseline/baseline-compiler.h\""
+  },
+  "functions": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "method",
+        "name": "Prologue",
+        "parent": "BaselineCompiler",
+        "about": "Generates the prologue for a baseline-compiled function on s390 architecture.",
+        "logic": "Enters a baseline stack frame, calls the out-of-line prologue builtin to set up the frame and arguments.",
+        "parameters": [],
+        "return": {
+          "type": "void",
+          "description": "No return value"
+        },
+        "dependencies": [
+          "Builtin",
+          "Builtin::kBaselineOutOfLinePrologue",
+          "StackFrame",
+          "StackFrame::BASELINE"
+        ]
+      },
+      "code": "void BaselineCompiler::Prologue() {\n  // Enter the frame here, since CallBuiltin will override lr.\n  __ masm()->EnterFrame(StackFrame::BASELINE);\n  DCHECK_EQ(kJSFunctionRegister, kJavaScriptCallTargetRegister);\n  int max_frame_size = bytecode_->max_frame_size();\n  CallBuiltin<Builtin::kBaselineOutOfLinePrologue>(\n      kContextRegister, kJSFunctionRegister, kJavaScriptCallArgCountRegister,\n      max_frame_size, kJavaScriptCallNewTargetRegister, bytecode_);\n\n  PrologueFillFrame();\n}"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "method",
+        "name": "PrologueFillFrame",
+        "parent": "BaselineCompiler",
+        "about": "Fills the register portion of the baseline frame with the undefined value, optimizing for size and unrolling loops where possible.",
+        "logic": "Iterates through the registers in the frame, pushing the undefined value (kInterpreterAccumulatorRegister) onto the stack to initialize them.  It uses loop unrolling for larger frames to improve performance. It also handles the optional new target or generator register.",
+        "parameters": [],
+        "return": {
+          "type": "void",
+          "description": "No return value"
+        },
+        "dependencies": [
+          "bytecode_",
+          "bytecode_->incoming_new_target_or_generator_register()",
+          "v8_flags.debug_code",
+          "RootIndex",
+          "RootIndex::kUndefinedValue"
+        ]
+      },
+      "code": "void BaselineCompiler::PrologueFillFrame() {\n  ASM_CODE_COMMENT(&masm_);\n  // Inlined register frame fill\n  interpreter::Register new_target_or_generator_register =\n      bytecode_->incoming_new_target_or_generator_register();\n  if (v8_flags.debug_code) {\n    __ masm()->CompareRoot(kInterpreterAccumulatorRegister,\n                           RootIndex::kUndefinedValue);\n    __ masm()->Assert(eq, AbortReason::kUnexpectedValue);\n  }\n  int register_count = bytecode_->register_count();\n  // Magic value\n  const int kLoopUnrollSize = 8;\n  const int new_target_index = new_target_or_generator_register.index();\n  const bool has_new_target = new_target_index != kMaxInt;\n  if (has_new_target) {\n    DCHECK_LE(new_target_index, register_count);\n    for (int i = 0; i < new_target_index; i++) {\n      __ Push(kInterpreterAccumulatorRegister);\n    }\n    // Push new_target_or_generator.\n    __ Push(kJavaScriptCallNewTargetRegister);\n    register_count -= new_target_index + 1;\n  }\n  if (register_count < 2 * kLoopUnrollSize) {\n    // If the frame is small enough, just unroll the frame fill completely.\n    for (int i = 0; i < register_count; ++i) {\n      __ Push(kInterpreterAccumulatorRegister);\n    }\n\n  } else {\n    // Extract the first few registers to round to the unroll size.\n    int first_registers = register_count % kLoopUnrollSize;\n    for (int i = 0; i < first_registers; ++i) {\n      __ Push(kInterpreterAccumulatorRegister);\n    }\n    BaselineAssembler::ScratchRegisterScope temps(&basm_);\n    Register scratch = temps.AcquireScratch();\n\n    __ Move(scratch, register_count / kLoopUnrollSize);\n    // We enter the loop unconditionally, so make sure we need to loop at least\n    // once.\n    DCHECK_GT(register_count / kLoopUnrollSize, 0);\n    Label loop;\n    __ Bind(&loop);\n    for (int i = 0; i < kLoopUnrollSize; ++i) {\n      __ Push(kInterpreterAccumulatorRegister);\n    }\n    __ masm()->SubS64(scratch, Operand(1));\n    __ masm()->b(gt, &loop);\n  }\n}"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "method",
+        "name": "VerifyFrameSize",
+        "parent": "BaselineCompiler",
+        "about": "Verifies that the current stack pointer matches the expected frame size.",
+        "logic": "Calculates the expected stack pointer based on the fixed frame size and bytecode frame size, then compares it to the frame pointer.  If they don't match, it asserts an error.",
+        "parameters": [],
+        "return": {
+          "type": "void",
+          "description": "No return value"
+        },
+        "dependencies": [
+          "InterpreterFrameConstants::kFixedFrameSizeFromFp",
+          "bytecode_->frame_size()"
+        ]
+      },
+      "code": "void BaselineCompiler::VerifyFrameSize() {\n  BaselineAssembler::ScratchRegisterScope temps(&basm_);\n  Register scratch = temps.AcquireScratch();\n\n  __ masm()->AddS64(scratch, sp,\n                    Operand(InterpreterFrameConstants::kFixedFrameSizeFromFp +\n                            bytecode_->frame_size()));\n  __ masm()->CmpU64(scratch, fp);\n  __ masm()->Assert(eq, AbortReason::kUnexpectedStackPointer);\n}"
+    }
+  ],
+  "dependencies": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "BaselineCompiler",
+        "about": "The BaselineCompiler class"
+      },
+      "code": "class BaselineCompiler {\n                  public:\n                   void Prologue();\n                   void PrologueFillFrame();\n                   void VerifyFrameSize();\n                };",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "BaselineAssembler",
+        "about": "Assembler used by the BaselineCompiler"
+      },
+      "code": "class BaselineAssembler {\n                  public:\n                   class ScratchRegisterScope{\n                     public:\n                      Register AcquireScratch();\n                   };\n                };",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "Assembler",
+        "about": "The Assembler class"
+      },
+      "code": "class Assembler {\n                  public:\n                   void EnterFrame(StackFrame::Type type);\n                   void CompareRoot(Register reg, RootIndex index);\n                   void Assert(Condition cond, AbortReason reason);\n                   void Push(Register reg);\n                   void Move(Register dst, int src);\n                   void SubS64(Register dst, Operand operand);\n                   void b(Condition cond, Label* label);\n                   void AddS64(Register dst, Register src, Operand operand);\n                   void CmpU64(Register reg1, Register reg2);\n                   void Bind(Label* label);\n                };",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "Builtin",
+        "about": "Builtin functions"
+      },
+      "code": "class Builtin {\n                  public:\n                   enum Name {\n                    kBaselineOutOfLinePrologue\n                   };\n                };",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "StackFrame",
+        "about": "StackFrame types"
+      },
+      "code": "class StackFrame {\n                  public:\n                   enum Type {\n                    BASELINE\n                   };\n                };",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "Operand",
+        "about": "Operand class for assembler"
+      },
+      "code": "class Operand {\n                    public:\n                        Operand(int value);\n                };",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "Label",
+        "about": "Label class"
+      },
+      "code": "class Label{};",
+      "type": "class"
+    }
+  ],
+  "file_path": "/home/kathirks_gc/v8_go/archive/codebase/src/baseline/s390/baseline-compiler-s390-inl.h"
+}

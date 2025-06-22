@@ -1,0 +1,76 @@
+{
+  "metadata": {
+    "path": "/home/kathirks_gc/v8_go/archive/codebase/src/diagnostics/disassembler.h",
+    "file_name": "disassembler.h",
+    "language": "cpp",
+    "purpose": "Declares the Disassembler class for decoding and printing machine code instructions."
+  },
+  "imports": {
+    "metadata": {
+      "language": "cpp",
+      "purpose": "Includes necessary headers for code references and allocation utilities."
+    },
+    "code": "#include \"src/codegen/code-reference.h\"\n            #include \"src/utils/allocation.h\""
+  },
+  "classes": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "Disassembler",
+        "extends": "AllStatic",
+        "about": "Provides a static method for disassembling machine code instructions.",
+        "attributes": [],
+        "dependencies": [
+          "Isolate",
+          "CodeReference",
+          "std::ostream"
+        ]
+      },
+      "code": "class Disassembler : public AllStatic {\n            public:\n              // Decode instructions in the the interval [begin, end) and print the\n              // code into os. Returns the number of bytes disassembled or 1 if no\n              // instruction could be decoded.\n              // Does not abort on unimplemented opcodes, but prints them as 'Unimplemented\n              // Instruction'.\n              // the code object is used for name resolution and may be null.\n              // TODO(titzer): accept a {WasmCodeManager*} if {isolate} is null\n              V8_EXPORT_PRIVATE static int Decode(Isolate* isolate, std::ostream& os,\n                                                  uint8_t* begin, uint8_t* end,\n                                                  CodeReference code = {},\n                                                  Address current_pc = kNullAddress,\n                                                  size_t range_limit = 0);\n            };"
+    }
+  ],
+  "dependencies": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "AllStatic",
+        "about": "Base class indicating that the class only contains static members"
+      },
+      "code": "class AllStatic {};",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "Isolate",
+        "about": "Represents an isolated instance of the V8 JavaScript engine."
+      },
+      "code": "class Isolate;",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "CodeReference",
+        "about": "Represents a reference to a code object."
+      },
+      "code": "class CodeReference;",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "type",
+        "name": "Address",
+        "about": "Represents a memory address."
+      },
+      "code": "typedef uintptr_t Address;\n                constexpr Address kNullAddress = 0;",
+      "type": "class"
+    }
+  ],
+  "file_path": "/home/kathirks_gc/v8_go/archive/codebase/src/diagnostics/disassembler.h"
+}

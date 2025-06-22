@@ -1,0 +1,181 @@
+{
+  "metadata": {
+    "path": "/home/kathirks_gc/v8_go/archive/codebase/src/execution/interrupts-scope.h",
+    "file_name": "interrupts-scope.h",
+    "language": "cpp",
+    "purpose": "Defines classes for managing interrupt scopes in the V8 JavaScript engine, allowing for postponing or safely running interrupts."
+  },
+  "imports": {
+    "metadata": {
+      "language": "cpp",
+      "purpose": "Includes necessary headers for isolate management and stack guard functionality."
+    },
+    "code": "#include \"src/execution/isolate.h\"\n#include \"src/execution/stack-guard.h\""
+  },
+  "classes": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "InterruptsScope",
+        "extends": null,
+        "implements": [],
+        "about": "Base class for managing interrupt scopes. Intercepts interrupts based on a specified mask.",
+        "attributes": [
+          {
+            "name": "stack_guard_",
+            "type": "StackGuard*",
+            "access": "private",
+            "purpose": "Pointer to the StackGuard instance for managing stack limits and interrupts."
+          },
+          {
+            "name": "prev_",
+            "type": "InterruptsScope*",
+            "access": "private",
+            "purpose": "Pointer to the previous InterruptsScope in the stack."
+          },
+          {
+            "name": "intercept_mask_",
+            "type": "uint32_t",
+            "access": "private",
+            "purpose": "Bitmask specifying which interrupts this scope should intercept."
+          },
+          {
+            "name": "intercepted_flags_",
+            "type": "uint32_t",
+            "access": "private",
+            "purpose": "Flags indicating which interrupts have been intercepted by this scope."
+          },
+          {
+            "name": "mode_",
+            "type": "Mode",
+            "access": "private",
+            "purpose": "The operating mode of the scope (Postpone, Run, Noop)."
+          }
+        ],
+        "dependencies": [
+          "Isolate",
+          "StackGuard"
+        ]
+      },
+      "code": "class V8_NODISCARD InterruptsScope {\n public:\n  enum Mode : uint8_t { kPostponeInterrupts, kRunInterrupts, kNoop };\n\n  V8_EXPORT_PRIVATE InterruptsScope(Isolate* isolate, uint32_t intercept_mask,\n                                    Mode mode);\n\n  ~InterruptsScope();\n\n  // Find the scope that intercepts this interrupt.\n  // It may be outermost PostponeInterruptsScope or innermost\n  // SafeForInterruptsScope if any.\n  // Return whether the interrupt has been intercepted.\n  bool Intercept(StackGuard::InterruptFlag flag);\n\n private:\n  StackGuard* stack_guard_;\n  InterruptsScope* prev_;\n  const uint32_t intercept_mask_;\n  uint32_t intercepted_flags_;\n  const Mode mode_;\n\n  friend class StackGuard;\n};"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "PostponeInterruptsScope",
+        "extends": "InterruptsScope",
+        "implements": [],
+        "about": "A scope that postpones interrupts. When the scope is left, interrupts are re-enabled.",
+        "attributes": [],
+        "dependencies": [
+          "InterruptsScope",
+          "Isolate",
+          "StackGuard"
+        ]
+      },
+      "code": "class V8_NODISCARD PostponeInterruptsScope : public InterruptsScope {\n public:\n  explicit PostponeInterruptsScope(\n      Isolate* isolate, uint32_t intercept_mask = StackGuard::ALL_INTERRUPTS)\n      : InterruptsScope(isolate, intercept_mask,\n                        InterruptsScope::kPostponeInterrupts) {}\n};"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "SafeForInterruptsScope",
+        "extends": "InterruptsScope",
+        "implements": [],
+        "about": "A scope that overrides PostponeInterruptsScope, allowing interrupts to be run safely.",
+        "attributes": [],
+        "dependencies": [
+          "InterruptsScope",
+          "Isolate",
+          "StackGuard"
+        ]
+      },
+      "code": "class V8_NODISCARD SafeForInterruptsScope : public InterruptsScope {\n public:\n  explicit SafeForInterruptsScope(\n      Isolate* isolate, uint32_t intercept_mask = StackGuard::ALL_INTERRUPTS)\n      : InterruptsScope(isolate, intercept_mask,\n                        InterruptsScope::kRunInterrupts) {}\n};"
+    }
+  ],
+  "functions": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "constructor",
+        "name": "InterruptsScope",
+        "parent": "InterruptsScope",
+        "about": "Constructor for the InterruptsScope class.",
+        "logic": "Initializes the InterruptsScope with the given isolate, intercept mask, and mode. If the mode is not Noop, it pushes the scope onto the stack guard's scope stack.",
+        "parameters": [
+          {
+            "name": "isolate",
+            "type": "Isolate*",
+            "purpose": "The isolate associated with this scope."
+          },
+          {
+            "name": "intercept_mask",
+            "type": "uint32_t",
+            "purpose": "The bitmask of interrupts to intercept."
+          },
+          {
+            "name": "mode",
+            "type": "Mode",
+            "purpose": "The mode of operation for this scope."
+          }
+        ],
+        "return": {
+          "type": "void",
+          "description": "N/A"
+        },
+        "dependencies": [
+          "Isolate",
+          "StackGuard"
+        ]
+      },
+      "code": "V8_EXPORT_PRIVATE InterruptsScope(Isolate* isolate, uint32_t intercept_mask,\n                                    Mode mode)\n      : stack_guard_(nullptr),\n        intercept_mask_(intercept_mask),\n        intercepted_flags_(0),\n        mode_(mode) {\n    if (mode_ != kNoop) {\n      stack_guard_ = isolate->stack_guard();\n      stack_guard_->PushInterruptsScope(this);\n    }\n  }"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "destructor",
+        "name": "~InterruptsScope",
+        "parent": "InterruptsScope",
+        "about": "Destructor for the InterruptsScope class.",
+        "logic": "Pops the scope from the stack guard's scope stack if the mode is not Noop.",
+        "parameters": [],
+        "return": {
+          "type": "void",
+          "description": "N/A"
+        },
+        "dependencies": [
+          "StackGuard"
+        ]
+      },
+      "code": "~InterruptsScope() {\n    if (mode_ != kNoop) {\n      stack_guard_->PopInterruptsScope();\n    }\n  }"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "method",
+        "name": "Intercept",
+        "parent": "InterruptsScope",
+        "about": "Determines if the interrupt should be intercepted by this scope.",
+        "logic": "Abstract method. The actual implementation is probably located in src/execution/stack-guard.cc.",
+        "parameters": [
+          {
+            "name": "flag",
+            "type": "StackGuard::InterruptFlag",
+            "purpose": "The interrupt flag to check."
+          }
+        ],
+        "return": {
+          "type": "bool",
+          "description": "True if the interrupt is intercepted, false otherwise."
+        },
+        "dependencies": [
+          "StackGuard"
+        ]
+      },
+      "code": "// Find the scope that intercepts this interrupt.\n  // It may be outermost PostponeInterruptsScope or innermost\n  // SafeForInterruptsScope if any.\n  // Return whether the interrupt has been intercepted.\n  bool Intercept(StackGuard::InterruptFlag flag);"
+    }
+  ],
+  "file_path": "/home/kathirks_gc/v8_go/archive/codebase/src/execution/interrupts-scope.h"
+}

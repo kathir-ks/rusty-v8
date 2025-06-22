@@ -1,0 +1,200 @@
+{
+  "metadata": {
+    "path": "/home/kathirks_gc/v8_go/archive/codebase/src/torque/torque.cc",
+    "file_name": "torque.cc",
+    "language": "cpp",
+    "purpose": "Main file for the Torque compiler, handling command-line arguments and compilation process."
+  },
+  "imports": {
+    "metadata": {
+      "language": "cpp",
+      "purpose": "Includes necessary headers for source position handling and the Torque compiler."
+    },
+    "code": "#include \"src/torque/source-positions.h\"\n#include \"src/torque/torque-compiler.h\""
+  },
+  "functions": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "function",
+        "name": "ErrorPrefixFor",
+        "parent": null,
+        "about": "Returns a string prefix for Torque error messages based on the message kind.",
+        "logic": "A simple switch statement determines the appropriate prefix string based on the TorqueMessage::Kind.",
+        "parameters": [
+          {
+            "name": "kind",
+            "type": "TorqueMessage::Kind",
+            "purpose": "The type of Torque message (Error or Lint)."
+          }
+        ],
+        "return": {
+          "type": "std::string",
+          "description": "The error prefix string."
+        },
+        "dependencies": []
+      },
+      "code": "std::string ErrorPrefixFor(TorqueMessage::Kind kind) {\n  switch (kind) {\n    case TorqueMessage::Kind::kError:\n      return \"Torque Error\";\n    case TorqueMessage::Kind::kLint:\n      return \"Lint error\";\n  }\n}"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "function",
+        "name": "WrappedMain",
+        "parent": null,
+        "about": "Wraps the main compilation logic for the Torque compiler.",
+        "logic": "Parses command-line arguments, sets compiler options, compiles Torque files, and reports errors.",
+        "parameters": [
+          {
+            "name": "argc",
+            "type": "int",
+            "purpose": "The number of command-line arguments."
+          },
+          {
+            "name": "argv",
+            "type": "const char**",
+            "purpose": "An array of command-line argument strings."
+          }
+        ],
+        "return": {
+          "type": "int",
+          "description": "0 on success, non-zero on failure (though it currently aborts on errors)"
+        },
+        "dependencies": [
+          "TorqueCompilerOptions",
+          "CompileTorque",
+          "SourceFileMap",
+          "TorqueMessage",
+          "PositionAsString",
+          "ErrorPrefixFor",
+          "StringEndsWith",
+          "v8::base::OS::Abort"
+        ]
+      },
+      "code": "int WrappedMain(int argc, const char** argv) {\n  TorqueCompilerOptions options;\n  options.collect_language_server_data = false;\n  options.force_assert_statements = false;\n\n  std::vector<std::string> files;\n\n  for (int i = 1; i < argc; ++i) {\n    // Check for options\n    std::string argument(argv[i]);\n    if (argument == \"-o\") {\n      options.output_directory = argv[++i];\n    } else if (argument == \"-v8-root\") {\n      options.v8_root = std::string(argv[++i]);\n    } else if (argument == \"-m32\") {\n#ifdef V8_COMPRESS_POINTERS\n      std::cerr << \"Pointer compression is incompatible with -m32.\\n\";\n      base::OS::Abort();\n#else\n      options.force_32bit_output = true;\n#endif\n    } else if (argument == \"-annotate-ir\") {\n      options.annotate_ir = true;\n    } else if (argument == \"-strip-v8-root\") {\n      options.strip_v8_root = true;\n    } else {\n      // Strip the v8-root in case it is a prefix of the file path itself.\n      // This is used when building in Google3.\n      if (options.strip_v8_root &&\n          argument.substr(0, options.v8_root.size()) == options.v8_root) {\n        argument = argument.substr(options.v8_root.size() + 1);\n      }\n      // Otherwise it's a .tq file. Remember it for compilation.\n      files.emplace_back(std::move(argument));\n      if (!StringEndsWith(files.back(), \".tq\")) {\n        std::cerr << \"Unexpected command-line argument \\\"\" << files.back()\n                  << \"\\\", expected a .tq file.\\n\";\n        base::OS::Abort();\n      }\n    }\n  }\n\n  TorqueCompilerResult result = CompileTorque(files, options);\n\n  // PositionAsString requires the SourceFileMap to be set to\n  // resolve the file name. Needed to report errors and lint warnings.\n  SourceFileMap::Scope source_file_map_scope(*result.source_file_map);\n\n  for (const TorqueMessage& message : result.messages) {\n    if (message.position) {\n      std::cerr << PositionAsString(*message.position) << \": \";\n    }\n\n    std::cerr << ErrorPrefixFor(message.kind) << \": \" << message.message\n              << \"\\n\";\n  }\n\n  if (!result.messages.empty()) v8::base::OS::Abort();\n\n  return 0;\n}"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "function",
+        "name": "main",
+        "parent": null,
+        "about": "The main entry point of the Torque compiler.",
+        "logic": "Calls the WrappedMain function within the v8::internal::torque namespace.",
+        "parameters": [
+          {
+            "name": "argc",
+            "type": "int",
+            "purpose": "The number of command-line arguments."
+          },
+          {
+            "name": "argv",
+            "type": "const char**",
+            "purpose": "An array of command-line argument strings."
+          }
+        ],
+        "return": {
+          "type": "int",
+          "description": "The return value of the WrappedMain function."
+        },
+        "dependencies": [
+          "v8::internal::torque::WrappedMain"
+        ]
+      },
+      "code": "int main(int argc, const char** argv) {\n  return v8::internal::torque::WrappedMain(argc, argv);\n}"
+    }
+  ],
+  "dependencies": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "TorqueCompilerOptions",
+        "about": "Options that control the Torque compilation process."
+      },
+      "code": "class TorqueCompilerOptions {\n                public:\n                    bool collect_language_server_data;\n                    bool force_assert_statements;\n                    std::string output_directory;\n                    std::string v8_root;\n                    bool force_32bit_output;\n                    bool annotate_ir;\n                    bool strip_v8_root;\n                };",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "function",
+        "name": "CompileTorque",
+        "about": "Compiles Torque files based on given options."
+      },
+      "code": "TorqueCompilerResult CompileTorque(const std::vector<std::string>& files, const TorqueCompilerOptions& options);",
+      "type": "func"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "SourceFileMap",
+        "about": "Maps source file names to their contents."
+      },
+      "code": "class SourceFileMap {\n                public:\n                    class Scope {\n                    public:\n                        Scope(const SourceFileMap& source_file_map);\n                        ~Scope();\n                    };\n                };",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "TorqueMessage",
+        "about": "Represents a message (error, warning, etc.) from the Torque compiler."
+      },
+      "code": "class TorqueMessage {\n                public:\n                    enum class Kind {\n                        kError,\n                        kLint\n                    };\n                    Kind kind;\n                    std::string message;\n                    std::optional<SourcePosition> position;\n                };",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "function",
+        "name": "PositionAsString",
+        "about": "Converts a source position to a string representation."
+      },
+      "code": "std::string PositionAsString(const SourcePosition& position);",
+      "type": "func"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "function",
+        "name": "StringEndsWith",
+        "about": "Checks if a string ends with a given suffix."
+      },
+      "code": "bool StringEndsWith(const std::string& str, const std::string& suffix);",
+      "type": "func"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "function",
+        "name": "v8::base::OS::Abort",
+        "about": "Aborts the program execution."
+      },
+      "code": "namespace v8 { namespace base { namespace OS {\n                    void Abort();\n                }}}",
+      "type": "func"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "TorqueCompilerResult",
+        "about": "Represents the result of Torque compilation."
+      },
+      "code": "class TorqueCompilerResult {\n                public:\n                    std::vector<TorqueMessage> messages;\n                    std::unique_ptr<SourceFileMap> source_file_map;\n                };",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "SourcePosition",
+        "about": "Represents a position in the source code."
+      },
+      "code": "class SourcePosition {\n                    // Implementation details omitted for brevity\n                };",
+      "type": "class"
+    }
+  ],
+  "file_path": "/home/kathirks_gc/v8_go/archive/codebase/src/torque/torque.cc"
+}

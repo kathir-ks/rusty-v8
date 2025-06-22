@@ -1,0 +1,677 @@
+{
+  "metadata": {
+    "path": "/home/kathirks_gc/v8_go/archive/codebase/src/compiler/allocation-builder.h",
+    "file_name": "allocation-builder.h",
+    "language": "cpp",
+    "purpose": "Defines the AllocationBuilder class, which helps construct inline allocations on the simplified operator level in the V8 compiler."
+  },
+  "imports": {
+    "metadata": {
+      "language": "cpp",
+      "purpose": "Includes necessary header files for graph manipulation, node representation, and simplified operators within the V8 compiler."
+    },
+    "code": "#include \"src/compiler/js-graph.h\"\n#include \"src/compiler/node.h\"\n#include \"src/compiler/simplified-operator.h\""
+  },
+  "classes": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "AllocationBuilder",
+        "about": "A helper class to construct inline allocations on the simplified operator level. It manages the effect chain for initial stores and provides helpers for common allocated objects.",
+        "attributes": [
+          {
+            "name": "jsgraph_",
+            "type": "JSGraph*",
+            "access": "private",
+            "purpose": "Pointer to the JSGraph, providing access to the JavaScript graph representation."
+          },
+          {
+            "name": "broker_",
+            "type": "JSHeapBroker*",
+            "access": "private",
+            "purpose": "Pointer to the JSHeapBroker, used for accessing heap objects and constants."
+          },
+          {
+            "name": "allocation_",
+            "type": "Node*",
+            "access": "private",
+            "purpose": "The allocation node representing the allocated object."
+          },
+          {
+            "name": "effect_",
+            "type": "Node*",
+            "access": "private",
+            "purpose": "The current effect node in the effect chain."
+          },
+          {
+            "name": "control_",
+            "type": "Node*",
+            "access": "private",
+            "purpose": "The control node."
+          }
+        ],
+        "dependencies": [
+          "JSGraph",
+          "JSHeapBroker",
+          "Node",
+          "FieldAccess",
+          "ElementAccess",
+          "MapRef",
+          "ObjectRef",
+          "AllocationType",
+          "Type",
+          "Isolate",
+          "TFGraph",
+          "CommonOperatorBuilder",
+          "SimplifiedOperatorBuilder"
+        ]
+      },
+      "code": "class AllocationBuilder final {\n public:\n  AllocationBuilder(JSGraph* jsgraph, JSHeapBroker* broker, Node* effect,\n                    Node* control)\n      : jsgraph_(jsgraph),\n        broker_(broker),\n        allocation_(nullptr),\n        effect_(effect),\n        control_(control) {}\n\n  // Primitive allocation of static size.\n  inline void Allocate(int size,\n                       AllocationType allocation = AllocationType::kYoung,\n                       Type type = Type::Any());\n\n  // Primitive store into a field.\n  void Store(const FieldAccess& access, Node* value) {\n    effect_ = graph()->NewNode(simplified()->StoreField(access), allocation_,\n                               value, effect_, control_);\n  }\n\n  // Primitive store into an element.\n  void Store(ElementAccess const& access, Node* index, Node* value) {\n    effect_ = graph()->NewNode(simplified()->StoreElement(access), allocation_,\n                               index, value, effect_, control_);\n  }\n\n  // Compound allocation of a context.\n  inline void AllocateContext(int variadic_part_length, MapRef map);\n\n  // Compound allocation of a FixedArray.\n  inline bool CanAllocateArray(\n      int length, MapRef map,\n      AllocationType allocation = AllocationType::kYoung);\n  inline void AllocateArray(int length, MapRef map,\n                            AllocationType allocation = AllocationType::kYoung);\n\n  // Compound allocation of a SloppyArgumentsElements\n  inline bool CanAllocateSloppyArgumentElements(\n      int length, MapRef map,\n      AllocationType allocation = AllocationType::kYoung);\n  inline void AllocateSloppyArgumentElements(\n      int length, MapRef map,\n      AllocationType allocation = AllocationType::kYoung);\n\n  // Compound store of a constant into a field.\n  void Store(const FieldAccess& access, ObjectRef value) {\n    if (access.machine_type == MachineType::IndirectPointer()) {\n      Store(access,\n            jsgraph()->TrustedHeapConstant(value.AsHeapObject().object()));\n    } else {\n      Store(access, jsgraph()->ConstantNoHole(value, broker_));\n    }\n  }\n\n  void FinishAndChange(Node* node) {\n    NodeProperties::SetType(allocation_, NodeProperties::GetType(node));\n    node->ReplaceInput(0, allocation_);\n    node->ReplaceInput(1, effect_);\n    node->TrimInputCount(2);\n    NodeProperties::ChangeOp(node, common()->FinishRegion());\n  }\n\n  Node* Finish() {\n    return graph()->NewNode(common()->FinishRegion(), allocation_, effect_);\n  }\n\n protected:\n  JSGraph* jsgraph() { return jsgraph_; }\n  Isolate* isolate() const { return jsgraph_->isolate(); }\n  TFGraph* graph() { return jsgraph_->graph(); }\n  CommonOperatorBuilder* common() { return jsgraph_->common(); }\n  SimplifiedOperatorBuilder* simplified() { return jsgraph_->simplified(); }\n\n private:\n  JSGraph* const jsgraph_;\n  JSHeapBroker* const broker_;\n  Node* allocation_;\n  Node* effect_;\n  Node* control_;\n};"
+    }
+  ],
+  "functions": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "method",
+        "name": "Allocate",
+        "parent": "AllocationBuilder",
+        "about": "Performs a primitive allocation of static size.",
+        "logic": "The actual allocation logic is likely implemented elsewhere, possibly within the JSGraph or SimplifiedOperatorBuilder.  This function probably creates a new node in the graph representing the allocation.",
+        "parameters": [
+          {
+            "name": "size",
+            "type": "int",
+            "purpose": "The size of the object to allocate, in bytes."
+          },
+          {
+            "name": "allocation",
+            "type": "AllocationType",
+            "purpose": "The type of allocation (e.g., young generation, old generation)."
+          },
+          {
+            "name": "type",
+            "type": "Type",
+            "purpose": "The type of the allocated object. Defaults to Type::Any()."
+          }
+        ],
+        "return": {
+          "type": "void",
+          "description": "No explicit return value."
+        },
+        "dependencies": [
+          "AllocationType",
+          "Type"
+        ]
+      },
+      "code": "inline void Allocate(int size,\n                       AllocationType allocation = AllocationType::kYoung,\n                       Type type = Type::Any());"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "method",
+        "name": "Store",
+        "parent": "AllocationBuilder",
+        "about": "Performs a primitive store into a field of the allocated object.",
+        "logic": "Creates a StoreField node in the graph, linking the allocation, the value to store, the current effect, and the control node. Updates the effect chain.",
+        "parameters": [
+          {
+            "name": "access",
+            "type": "FieldAccess",
+            "purpose": "Describes the field to store into (offset, machine type, etc.)."
+          },
+          {
+            "name": "value",
+            "type": "Node*",
+            "purpose": "The node representing the value to store."
+          }
+        ],
+        "return": {
+          "type": "void",
+          "description": "No explicit return value."
+        },
+        "dependencies": [
+          "FieldAccess",
+          "Node",
+          "simplified"
+        ]
+      },
+      "code": "void Store(const FieldAccess& access, Node* value) {\n    effect_ = graph()->NewNode(simplified()->StoreField(access), allocation_,\n                               value, effect_, control_);\n  }"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "method",
+        "name": "Store",
+        "parent": "AllocationBuilder",
+        "about": "Performs a primitive store into an element of the allocated object.",
+        "logic": "Creates a StoreElement node in the graph, linking the allocation, the index of the element, the value to store, the current effect, and the control node. Updates the effect chain.",
+        "parameters": [
+          {
+            "name": "access",
+            "type": "ElementAccess",
+            "purpose": "Describes the element to store into (machine type, etc.)."
+          },
+          {
+            "name": "index",
+            "type": "Node*",
+            "purpose": "The node representing the index of the element."
+          },
+          {
+            "name": "value",
+            "type": "Node*",
+            "purpose": "The node representing the value to store."
+          }
+        ],
+        "return": {
+          "type": "void",
+          "description": "No explicit return value."
+        },
+        "dependencies": [
+          "ElementAccess",
+          "Node",
+          "simplified"
+        ]
+      },
+      "code": "void Store(ElementAccess const& access, Node* index, Node* value) {\n    effect_ = graph()->NewNode(simplified()->StoreElement(access), allocation_,\n                               index, value, effect_, control_);\n  }"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "method",
+        "name": "AllocateContext",
+        "parent": "AllocationBuilder",
+        "about": "Performs a compound allocation of a context.",
+        "logic": "The actual allocation logic is likely implemented elsewhere. This function probably creates a new node in the graph representing the context allocation.",
+        "parameters": [
+          {
+            "name": "variadic_part_length",
+            "type": "int",
+            "purpose": "The length of the variadic part of the context."
+          },
+          {
+            "name": "map",
+            "type": "MapRef",
+            "purpose": "A reference to the map of the context."
+          }
+        ],
+        "return": {
+          "type": "void",
+          "description": "No explicit return value."
+        },
+        "dependencies": [
+          "MapRef"
+        ]
+      },
+      "code": "inline void AllocateContext(int variadic_part_length, MapRef map);"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "method",
+        "name": "CanAllocateArray",
+        "parent": "AllocationBuilder",
+        "about": "Checks if an array of a given length and map can be allocated.",
+        "logic": "Likely checks heap limits and available memory before allocation.",
+        "parameters": [
+          {
+            "name": "length",
+            "type": "int",
+            "purpose": "The length of the array."
+          },
+          {
+            "name": "map",
+            "type": "MapRef",
+            "purpose": "A reference to the map of the array."
+          },
+          {
+            "name": "allocation",
+            "type": "AllocationType",
+            "purpose": "The type of allocation (e.g., young generation, old generation)."
+          }
+        ],
+        "return": {
+          "type": "bool",
+          "description": "True if the array can be allocated, false otherwise."
+        },
+        "dependencies": [
+          "MapRef",
+          "AllocationType"
+        ]
+      },
+      "code": "inline bool CanAllocateArray(\n      int length, MapRef map,\n      AllocationType allocation = AllocationType::kYoung);"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "method",
+        "name": "AllocateArray",
+        "parent": "AllocationBuilder",
+        "about": "Performs a compound allocation of a FixedArray.",
+        "logic": "The actual allocation logic is likely implemented elsewhere. This function probably creates a new node in the graph representing the array allocation.",
+        "parameters": [
+          {
+            "name": "length",
+            "type": "int",
+            "purpose": "The length of the array."
+          },
+          {
+            "name": "map",
+            "type": "MapRef",
+            "purpose": "A reference to the map of the array."
+          },
+          {
+            "name": "allocation",
+            "type": "AllocationType",
+            "purpose": "The type of allocation (e.g., young generation, old generation)."
+          }
+        ],
+        "return": {
+          "type": "void",
+          "description": "No explicit return value."
+        },
+        "dependencies": [
+          "MapRef",
+          "AllocationType"
+        ]
+      },
+      "code": "inline void AllocateArray(int length, MapRef map,\n                            AllocationType allocation = AllocationType::kYoung);"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "method",
+        "name": "CanAllocateSloppyArgumentElements",
+        "parent": "AllocationBuilder",
+        "about": "Checks if SloppyArgumentsElements of a given length and map can be allocated.",
+        "logic": "Likely checks heap limits and available memory before allocation.",
+        "parameters": [
+          {
+            "name": "length",
+            "type": "int",
+            "purpose": "The length of the SloppyArgumentsElements."
+          },
+          {
+            "name": "map",
+            "type": "MapRef",
+            "purpose": "A reference to the map of the SloppyArgumentsElements."
+          },
+          {
+            "name": "allocation",
+            "type": "AllocationType",
+            "purpose": "The type of allocation (e.g., young generation, old generation)."
+          }
+        ],
+        "return": {
+          "type": "bool",
+          "description": "True if the SloppyArgumentsElements can be allocated, false otherwise."
+        },
+        "dependencies": [
+          "MapRef",
+          "AllocationType"
+        ]
+      },
+      "code": "inline bool CanAllocateSloppyArgumentElements(\n      int length, MapRef map,\n      AllocationType allocation = AllocationType::kYoung);"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "method",
+        "name": "AllocateSloppyArgumentElements",
+        "parent": "AllocationBuilder",
+        "about": "Performs a compound allocation of SloppyArgumentsElements.",
+        "logic": "The actual allocation logic is likely implemented elsewhere. This function probably creates a new node in the graph representing the SloppyArgumentsElements allocation.",
+        "parameters": [
+          {
+            "name": "length",
+            "type": "int",
+            "purpose": "The length of the SloppyArgumentsElements."
+          },
+          {
+            "name": "map",
+            "type": "MapRef",
+            "purpose": "A reference to the map of the SloppyArgumentsElements."
+          },
+          {
+            "name": "allocation",
+            "type": "AllocationType",
+            "purpose": "The type of allocation (e.g., young generation, old generation)."
+          }
+        ],
+        "return": {
+          "type": "void",
+          "description": "No explicit return value."
+        },
+        "dependencies": [
+          "MapRef",
+          "AllocationType"
+        ]
+      },
+      "code": "inline void AllocateSloppyArgumentElements(\n      int length, MapRef map,\n      AllocationType allocation = AllocationType::kYoung);"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "method",
+        "name": "Store",
+        "parent": "AllocationBuilder",
+        "about": "Performs a compound store of a constant into a field.",
+        "logic": "If the field is an indirect pointer, stores the raw heap object. Otherwise, stores a constant node representing the value. Uses TrustedHeapConstant or ConstantNoHole depending on the situation.",
+        "parameters": [
+          {
+            "name": "access",
+            "type": "FieldAccess",
+            "purpose": "Describes the field to store into (offset, machine type, etc.)."
+          },
+          {
+            "name": "value",
+            "type": "ObjectRef",
+            "purpose": "A reference to the constant value to store."
+          }
+        ],
+        "return": {
+          "type": "void",
+          "description": "No explicit return value."
+        },
+        "dependencies": [
+          "FieldAccess",
+          "ObjectRef",
+          "jsgraph"
+        ]
+      },
+      "code": "void Store(const FieldAccess& access, ObjectRef value) {\n    if (access.machine_type == MachineType::IndirectPointer()) {\n      Store(access,\n            jsgraph()->TrustedHeapConstant(value.AsHeapObject().object()));\n    } else {\n      Store(access, jsgraph()->ConstantNoHole(value, broker_));\n    }\n  }"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "method",
+        "name": "FinishAndChange",
+        "parent": "AllocationBuilder",
+        "about": "Finishes the allocation and changes the type of a node.",
+        "logic": "Sets the type of the allocation node to the type of the input node. Replaces the input node's inputs with the allocation and effect nodes. Trims the input count of the input node. Changes the operator of the input node to FinishRegion.",
+        "parameters": [
+          {
+            "name": "node",
+            "type": "Node*",
+            "purpose": "The node to finish and change."
+          }
+        ],
+        "return": {
+          "type": "void",
+          "description": "No explicit return value."
+        },
+        "dependencies": [
+          "Node",
+          "NodeProperties"
+        ]
+      },
+      "code": "void FinishAndChange(Node* node) {\n    NodeProperties::SetType(allocation_, NodeProperties::GetType(node));\n    node->ReplaceInput(0, allocation_);\n    node->ReplaceInput(1, effect_);\n    node->TrimInputCount(2);\n    NodeProperties::ChangeOp(node, common()->FinishRegion());\n  }"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "method",
+        "name": "Finish",
+        "parent": "AllocationBuilder",
+        "about": "Finishes the allocation.",
+        "logic": "Creates a FinishRegion node in the graph, linking the allocation and the effect node.",
+        "parameters": [],
+        "return": {
+          "type": "Node*",
+          "description": "The FinishRegion node."
+        },
+        "dependencies": [
+          "Node"
+        ]
+      },
+      "code": "Node* Finish() {\n    return graph()->NewNode(common()->FinishRegion(), allocation_, effect_);\n  }"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "method",
+        "name": "jsgraph",
+        "parent": "AllocationBuilder",
+        "about": "Getter method for jsgraph_ attribute.",
+        "logic": "Returns the jsgraph_ attribute.",
+        "parameters": [],
+        "return": {
+          "type": "JSGraph*",
+          "description": "The jsgraph_ attribute."
+        },
+        "dependencies": []
+      },
+      "code": "protected:\n  JSGraph* jsgraph() { return jsgraph_; }"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "method",
+        "name": "isolate",
+        "parent": "AllocationBuilder",
+        "about": "Getter method for isolate from jsgraph.",
+        "logic": "Returns the isolate from jsgraph_ attribute.",
+        "parameters": [],
+        "return": {
+          "type": "Isolate*",
+          "description": "The isolate from jsgraph_ attribute."
+        },
+        "dependencies": [
+          "Isolate"
+        ]
+      },
+      "code": "Isolate* isolate() const { return jsgraph_->isolate(); }"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "method",
+        "name": "graph",
+        "parent": "AllocationBuilder",
+        "about": "Getter method for graph from jsgraph.",
+        "logic": "Returns the graph from jsgraph_ attribute.",
+        "parameters": [],
+        "return": {
+          "type": "TFGraph*",
+          "description": "The graph from jsgraph_ attribute."
+        },
+        "dependencies": [
+          "TFGraph"
+        ]
+      },
+      "code": "TFGraph* graph() { return jsgraph_->graph(); }"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "method",
+        "name": "common",
+        "parent": "AllocationBuilder",
+        "about": "Getter method for common operator builder from jsgraph.",
+        "logic": "Returns the common operator builder from jsgraph_ attribute.",
+        "parameters": [],
+        "return": {
+          "type": "CommonOperatorBuilder*",
+          "description": "The common operator builder from jsgraph_ attribute."
+        },
+        "dependencies": [
+          "CommonOperatorBuilder"
+        ]
+      },
+      "code": "CommonOperatorBuilder* common() { return jsgraph_->common(); }"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "method",
+        "name": "simplified",
+        "parent": "AllocationBuilder",
+        "about": "Getter method for simplified operator builder from jsgraph.",
+        "logic": "Returns the simplified operator builder from jsgraph_ attribute.",
+        "parameters": [],
+        "return": {
+          "type": "SimplifiedOperatorBuilder*",
+          "description": "The simplified operator builder from jsgraph_ attribute."
+        },
+        "dependencies": [
+          "SimplifiedOperatorBuilder"
+        ]
+      },
+      "code": "SimplifiedOperatorBuilder* simplified() { return jsgraph_->simplified(); }"
+    }
+  ],
+  "dependencies": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "JSGraph",
+        "about": "Represents the JavaScript graph."
+      },
+      "code": "class JSGraph {};",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "JSHeapBroker",
+        "about": "Provides access to heap objects and constants."
+      },
+      "code": "class JSHeapBroker {};",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "Node",
+        "about": "Represents a node in the graph."
+      },
+      "code": "class Node {};",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "FieldAccess",
+        "about": "Describes access to a field of an object."
+      },
+      "code": "class FieldAccess {};",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "ElementAccess",
+        "about": "Describes access to an element of an object."
+      },
+      "code": "class ElementAccess {};",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "MapRef",
+        "about": "Represents a reference to a map."
+      },
+      "code": "class MapRef {};",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "ObjectRef",
+        "about": "Represents a reference to an object."
+      },
+      "code": "class ObjectRef {};",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "enum",
+        "name": "AllocationType",
+        "about": "Represents allocation types (e.g., young generation, old generation)."
+      },
+      "code": "enum class AllocationType { kYoung };",
+      "type": "enum"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "Type",
+        "about": "Represents the type of an object."
+      },
+      "code": "class Type {};",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "Isolate",
+        "about": "Represents an isolated instance of the V8 JavaScript engine."
+      },
+      "code": "class Isolate {};",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "TFGraph",
+        "about": "Represents the TurboFan graph."
+      },
+      "code": "class TFGraph {};",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "CommonOperatorBuilder",
+        "about": "Builds common operators."
+      },
+      "code": "class CommonOperatorBuilder {};",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "SimplifiedOperatorBuilder",
+        "about": "Builds simplified operators."
+      },
+      "code": "class SimplifiedOperatorBuilder {};",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "NodeProperties",
+        "about": "Provides static methods to get and set properties of a node."
+      },
+      "code": "class NodeProperties {\n                    public:\n                        static void SetType(Node* node, Type type);\n                        static Type GetType(Node* node);\n                        static void ChangeOp(Node* node, class Operator* op);\n                };",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "Operator",
+        "about": "Base class for all operators."
+      },
+      "code": "class Operator {};",
+      "type": "class"
+    }
+  ],
+  "file_path": "/home/kathirks_gc/v8_go/archive/codebase/src/compiler/allocation-builder.h"
+}

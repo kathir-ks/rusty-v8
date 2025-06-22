@@ -1,0 +1,115 @@
+{
+  "metadata": {
+    "path": "/home/kathirks_gc/v8_go/archive/codebase/src/execution/encoded-c-signature.cc",
+    "file_name": "encoded-c-signature.cc",
+    "language": "cpp",
+    "purpose": "Implements the EncodedCSignature class, which encodes information about C function signatures for use in fast API calls."
+  },
+  "imports": {
+    "metadata": {
+      "language": "cpp",
+      "purpose": "Includes necessary headers for encoded C signature functionality."
+    },
+    "code": "#include \"src/execution/encoded-c-signature.h\"\n\n#include \"include/v8-fast-api-calls.h\"\n#include \"src/base/bits.h\"\n#include \"src/base/logging.h\""
+  },
+  "classes": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "EncodedCSignature",
+        "about": "Encodes C function signatures for fast API calls.  Stores information about floating-point parameters and return types.",
+        "attributes": [
+          {
+            "name": "bitfield_",
+            "type": "uint32_t",
+            "access": "private",
+            "purpose": "Bitfield used to encode floating-point parameter types and return type."
+          },
+          {
+            "name": "parameter_count_",
+            "type": "int",
+            "access": "private",
+            "purpose": "Stores the number of parameters in the C function signature."
+          }
+        ],
+        "dependencies": [
+          "CFunctionInfo",
+          "CTypeInfo",
+          "base::bits"
+        ]
+      },
+      "code": "namespace v8 {\nnamespace internal {\n\nclass EncodedCSignature {\n public:\n  int FPParameterCount() const;\n\n  EncodedCSignature(const CFunctionInfo* signature);\n\n private:\n  static constexpr uint32_t kReturnIndex = 31;\n\n  bool IsValid() const { return parameter_count_ <= kReturnIndex; }\n  void SetFloat(int i) { bitfield_ |= (1 << i); }\n  void SetReturnFloat32() { bitfield_ |= (1 << kReturnIndex); }\n  void SetReturnFloat64() {\n    bitfield_ |= (1 << kReturnIndex);\n  }\n\n  uint32_t bitfield_ = 0;\n  int parameter_count_ = 0;\n};\n\n}  // namespace internal\n}  // namespace v8"
+    }
+  ],
+  "functions": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "method",
+        "name": "FPParameterCount",
+        "parent": "EncodedCSignature",
+        "about": "Counts the number of floating-point parameters in the encoded signature.",
+        "logic": "Counts the set bits in the bitfield, excluding the bit representing the return type.",
+        "parameters": [],
+        "return": {
+          "type": "int",
+          "description": "The number of floating-point parameters."
+        },
+        "dependencies": [
+          "base::bits::CountPopulation"
+        ]
+      },
+      "code": "int EncodedCSignature::FPParameterCount() const {\n  CHECK(IsValid());\n  return base::bits::CountPopulation(bitfield_ & ~(1 << kReturnIndex));\n}"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "constructor",
+        "name": "EncodedCSignature",
+        "parent": "EncodedCSignature",
+        "about": "Constructs an EncodedCSignature from a CFunctionInfo object.",
+        "logic": "Iterates through the arguments of the CFunctionInfo, setting the corresponding bit in the bitfield if the argument is a floating-point type.  Also handles the return type and the presence of options.",
+        "parameters": [
+          {
+            "name": "signature",
+            "type": "const CFunctionInfo*",
+            "purpose": "The CFunctionInfo object representing the C function signature."
+          }
+        ],
+        "return": {
+          "type": "void",
+          "description": "No return value."
+        },
+        "dependencies": [
+          "CFunctionInfo",
+          "CTypeInfo"
+        ]
+      },
+      "code": "START_ALLOW_USE_DEPRECATED()\nEncodedCSignature::EncodedCSignature(const CFunctionInfo* signature) {\n  parameter_count_ = static_cast<int>(signature->ArgumentCount());\n  for (int i = 0; i < parameter_count_; ++i) {\n    if (signature->ArgumentInfo(i).GetSequenceType() ==\n            CTypeInfo::SequenceType::kScalar &&\n        CTypeInfo::IsFloatingPointType(signature->ArgumentInfo(i).GetType())) {\n      SetFloat(i);\n    }\n  }\n  // The struct holding the options of the CFunction (e.g. callback) is not\n  // included in the number of regular parameters, so we add it manually here.\n  if (signature->HasOptions()) {\n    parameter_count_++;\n  }\n  if (signature->ReturnInfo().GetSequenceType() ==\n          CTypeInfo::SequenceType::kScalar &&\n      CTypeInfo::IsFloatingPointType(signature->ReturnInfo().GetType())) {\n    if (signature->ReturnInfo().GetType() == CTypeInfo::Type::kFloat64) {\n      SetReturnFloat64();\n    } else {\n      SetReturnFloat32();\n    }\n  }\n}\nEND_ALLOW_USE_DEPRECATED()"
+    }
+  ],
+  "dependencies": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "CFunctionInfo",
+        "about": "Provides information about C function signatures."
+      },
+      "code": "class CFunctionInfo {\n                 public:\n                  size_t ArgumentCount() const { return 0; }\n                  CTypeInfo ArgumentInfo(int i) const { return CTypeInfo(); }\n                  bool HasOptions() const { return false; }\n                  CTypeInfo ReturnInfo() const { return CTypeInfo(); }\n                };",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "CTypeInfo",
+        "about": "Provides information about C types."
+      },
+      "code": "class CTypeInfo {\n                 public:\n                  enum class SequenceType { kScalar };\n                  enum class Type { kFloat64, kFloat32 };\n                  SequenceType GetSequenceType() const { return SequenceType::kScalar; }\n                  Type GetType() const { return Type::kFloat64; }\n                  static bool IsFloatingPointType(Type type) { return false; }\n                };",
+      "type": "class"
+    }
+  ],
+  "file_path": "/home/kathirks_gc/v8_go/archive/codebase/src/execution/encoded-c-signature.cc"
+}

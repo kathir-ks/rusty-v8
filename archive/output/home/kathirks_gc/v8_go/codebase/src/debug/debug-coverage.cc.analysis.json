@@ -1,0 +1,353 @@
+{
+  "file_path": "/home/kathirks_gc/v8_go/codebase/src/debug/debug-coverage.cc",
+  "imports": [
+    "src/debug/debug-coverage.h",
+    "src/ast/ast-source-ranges.h",
+    "src/base/hashmap.h",
+    "src/common/assert-scope.h",
+    "src/common/globals.h",
+    "src/debug/debug.h",
+    "src/deoptimizer/deoptimizer.h",
+    "src/execution/frames-inl.h",
+    "src/execution/isolate.h",
+    "src/objects/objects.h"
+  ],
+  "classes": [
+    {
+      "name": "SharedToCounterMap",
+      "properties": [],
+      "methods": [
+        {
+          "name": "Add",
+          "parameters": [
+            "Tagged<SharedFunctionInfo> key",
+            "uint32_t count"
+          ],
+          "return_type": "void",
+          "logic": "Adds a count to the existing count associated with a SharedFunctionInfo key. If the key is not present, it inserts a new entry. Handles overflow by clamping to UINT32_MAX."
+        },
+        {
+          "name": "Get",
+          "parameters": [
+            "Tagged<SharedFunctionInfo> key"
+          ],
+          "return_type": "uint32_t",
+          "logic": "Retrieves the count associated with a SharedFunctionInfo key. Returns 0 if the key is not found."
+        },
+        {
+          "name": "Hash",
+          "parameters": [
+            "Tagged<SharedFunctionInfo> key"
+          ],
+          "return_type": "uint32_t",
+          "logic": "Calculates a hash value for a SharedFunctionInfo key by converting its pointer to a uint32_t."
+        }
+      ]
+    },
+    {
+      "name": "CoverageBlockIterator",
+      "properties": [],
+      "methods": [
+        {
+          "name": "CoverageBlockIterator",
+          "parameters": [
+            "CoverageFunction* function"
+          ],
+          "return_type": "",
+          "logic": "Constructor. Initializes the iterator with a CoverageFunction, asserts that the blocks are sorted, and prepares for iteration."
+        },
+        {
+          "name": "~CoverageBlockIterator",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Destructor. Finalizes the iteration process by writing any remaining data and resizing the block vector, and asserts that the blocks are sorted."
+        },
+        {
+          "name": "HasNext",
+          "parameters": [],
+          "return_type": "bool",
+          "logic": "Checks if there is a next block to iterate."
+        },
+        {
+          "name": "Next",
+          "parameters": [],
+          "return_type": "bool",
+          "logic": "Moves the iterator to the next block. Manages a nesting stack to provide parent-child relationships between coverage blocks. Handles block deletion."
+        },
+        {
+          "name": "GetBlock",
+          "parameters": [],
+          "return_type": "CoverageBlock&",
+          "logic": "Returns a reference to the current coverage block."
+        },
+        {
+          "name": "GetNextBlock",
+          "parameters": [],
+          "return_type": "CoverageBlock&",
+          "logic": "Returns a reference to the next coverage block."
+        },
+        {
+          "name": "GetPreviousBlock",
+          "parameters": [],
+          "return_type": "CoverageBlock&",
+          "logic": "Returns a reference to the previous coverage block."
+        },
+        {
+          "name": "GetParent",
+          "parameters": [],
+          "return_type": "CoverageBlock&",
+          "logic": "Returns a reference to the parent coverage block based on the nesting stack."
+        },
+        {
+          "name": "HasSiblingOrChild",
+          "parameters": [],
+          "return_type": "bool",
+          "logic": "Checks if the current block has a sibling or child."
+        },
+        {
+          "name": "GetSiblingOrChild",
+          "parameters": [],
+          "return_type": "CoverageBlock&",
+          "logic": "Returns a reference to the sibling or child coverage block."
+        },
+        {
+          "name": "IsTopLevel",
+          "parameters": [],
+          "return_type": "bool",
+          "logic": "Checks if the current block is at the top level (i.e., its parent is the function range)."
+        },
+        {
+          "name": "DeleteBlock",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Marks the current block for deletion. The actual deletion occurs during iteration when the next block is accessed or in the destructor."
+        }
+      ]
+    },
+    {
+      "name": "Coverage",
+      "properties": [],
+      "methods": [
+        {
+          "name": "CollectPrecise",
+          "parameters": [
+            "Isolate* isolate"
+          ],
+          "return_type": "std::unique_ptr<Coverage>",
+          "logic": "Collects code coverage information in a precise mode (block or precise, count or binary). Resets feedback vectors after reporting."
+        },
+        {
+          "name": "CollectBestEffort",
+          "parameters": [
+            "Isolate* isolate"
+          ],
+          "return_type": "std::unique_ptr<Coverage>",
+          "logic": "Collects code coverage information in a best-effort mode."
+        },
+        {
+          "name": "Collect",
+          "parameters": [
+            "Isolate* isolate",
+            "v8::debug::CoverageMode collectionMode"
+          ],
+          "return_type": "std::unique_ptr<Coverage>",
+          "logic": "Collects code coverage information based on the specified coverage mode, including function counts and block coverage if enabled.  The primary entrypoint."
+        },
+        {
+          "name": "SelectMode",
+          "parameters": [
+            "Isolate* isolate",
+            "debug::CoverageMode mode"
+          ],
+          "return_type": "void",
+          "logic": "Selects and applies the specified coverage mode, configuring the isolate and potentially triggering source position collection and deoptimization."
+        }
+      ]
+    }
+  ],
+  "functions": [
+    {
+      "name": "StartPosition",
+      "parameters": [
+        "Tagged<SharedFunctionInfo> info"
+      ],
+      "return_type": "int",
+      "logic": "Determines the start position of a SharedFunctionInfo, prioritizing function_token_position if available, otherwise using StartPosition."
+    },
+    {
+      "name": "CompareCoverageBlock",
+      "parameters": [
+        "const CoverageBlock& a",
+        "const CoverageBlock& b"
+      ],
+      "return_type": "bool",
+      "logic": "Compares two CoverageBlock objects based on their start and end positions for sorting. If start positions are equal, compares based on the end position (nested blocks come first)."
+    },
+    {
+      "name": "SortBlockData",
+      "parameters": [
+        "std::vector<CoverageBlock>& v"
+      ],
+      "return_type": "void",
+      "logic": "Sorts a vector of CoverageBlock objects according to the block nesting structure using CompareCoverageBlock."
+    },
+    {
+      "name": "GetSortedBlockData",
+      "parameters": [
+        "Isolate* isolate",
+        "Tagged<SharedFunctionInfo> shared"
+      ],
+      "return_type": "std::vector<CoverageBlock>",
+      "logic": "Extracts block data from a SharedFunctionInfo's CoverageInfo, creates CoverageBlock objects, sorts them, and returns the sorted vector."
+    },
+    {
+      "name": "HaveSameSourceRange",
+      "parameters": [
+        "const CoverageBlock& lhs",
+        "const CoverageBlock& rhs"
+      ],
+      "return_type": "bool",
+      "logic": "Checks if two coverage blocks have the same source range."
+    },
+    {
+      "name": "MergeDuplicateRanges",
+      "parameters": [
+        "CoverageFunction* function"
+      ],
+      "return_type": "void",
+      "logic": "Merges consecutive coverage blocks with the same source range by combining their counts."
+    },
+    {
+      "name": "RewritePositionSingletonsToRanges",
+      "parameters": [
+        "CoverageFunction* function"
+      ],
+      "return_type": "void",
+      "logic": "Rewrites position singletons (created by continuations and unconditional control flow) into ranges by determining their end position based on the next sibling or parent range."
+    },
+    {
+      "name": "MergeConsecutiveRanges",
+      "parameters": [
+        "CoverageFunction* function"
+      ],
+      "return_type": "void",
+      "logic": "Merges consecutive coverage ranges with identical counts."
+    },
+    {
+      "name": "MergeNestedRanges",
+      "parameters": [
+        "CoverageFunction* function"
+      ],
+      "return_type": "void",
+      "logic": "Merges nested coverage ranges with identical counts."
+    },
+    {
+      "name": "RewriteFunctionScopeCounter",
+      "parameters": [
+        "CoverageFunction* function"
+      ],
+      "return_type": "void",
+      "logic": "If a function-scope block exists, overwrite the CoverageFunction's count with it, and removes the block from the function's blocks. For compatibility with non-block modes."
+    },
+    {
+      "name": "FilterAliasedSingletons",
+      "parameters": [
+        "CoverageFunction* function"
+      ],
+      "return_type": "void",
+      "logic": "Filters out position singletons that alias (have the same start position) as existing full ranges. These singletons are only intended to split full ranges and should not expand into new full ranges."
+    },
+    {
+      "name": "FilterUncoveredRanges",
+      "parameters": [
+        "CoverageFunction* function"
+      ],
+      "return_type": "void",
+      "logic": "Filters out coverage ranges with count 0 if their parent also has count 0."
+    },
+    {
+      "name": "FilterEmptyRanges",
+      "parameters": [
+        "CoverageFunction* function"
+      ],
+      "return_type": "void",
+      "logic": "Filters out coverage ranges where the start and end positions are the same (zero length ranges)."
+    },
+    {
+      "name": "ClampToBinary",
+      "parameters": [
+        "CoverageFunction* function"
+      ],
+      "return_type": "void",
+      "logic": "Clamps all block counts to 0 or 1, converting the counts to binary values."
+    },
+    {
+      "name": "ResetAllBlockCounts",
+      "parameters": [
+        "Isolate* isolate",
+        "Tagged<SharedFunctionInfo> shared"
+      ],
+      "return_type": "void",
+      "logic": "Resets all block counts in the CoverageInfo associated with a SharedFunctionInfo to zero."
+    },
+    {
+      "name": "IsBlockMode",
+      "parameters": [
+        "debug::CoverageMode mode"
+      ],
+      "return_type": "bool",
+      "logic": "Checks if the given coverage mode is a block coverage mode (kBlockBinary or kBlockCount)."
+    },
+    {
+      "name": "IsBinaryMode",
+      "parameters": [
+        "debug::CoverageMode mode"
+      ],
+      "return_type": "bool",
+      "logic": "Checks if the given coverage mode is a binary coverage mode (kBlockBinary or kPreciseBinary)."
+    },
+    {
+      "name": "CollectBlockCoverageInternal",
+      "parameters": [
+        "Isolate* isolate",
+        "CoverageFunction* function",
+        "Tagged<SharedFunctionInfo> info",
+        "debug::CoverageMode mode"
+      ],
+      "return_type": "void",
+      "logic": "Collects block coverage data for a given SharedFunctionInfo, performs transformations such as rewriting singletons to ranges, merging consecutive ranges, and filtering uncovered ranges."
+    },
+    {
+      "name": "CollectBlockCoverage",
+      "parameters": [
+        "Isolate* isolate",
+        "CoverageFunction* function",
+        "Tagged<SharedFunctionInfo> info",
+        "debug::CoverageMode mode"
+      ],
+      "return_type": "void",
+      "logic": "Collects block coverage data, performs transformations, and resets all block counts on the DebugInfo to zero."
+    },
+    {
+      "name": "PrintBlockCoverage",
+      "parameters": [
+        "const CoverageFunction* function",
+        "Tagged<SharedFunctionInfo> info",
+        "bool has_nonempty_source_range",
+        "bool function_is_relevant"
+      ],
+      "return_type": "void",
+      "logic": "Prints coverage information for a given function and its blocks, used for debugging."
+    },
+    {
+      "name": "CollectAndMaybeResetCounts",
+      "parameters": [
+        "Isolate* isolate",
+        "SharedToCounterMap* counter_map",
+        "v8::debug::CoverageMode coverage_mode"
+      ],
+      "return_type": "void",
+      "logic": "Collects call counts from FeedbackVectors for all functions. May clear the invocations counts."
+    }
+  ]
+}

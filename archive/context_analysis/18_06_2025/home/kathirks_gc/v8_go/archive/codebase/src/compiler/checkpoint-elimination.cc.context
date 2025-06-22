@@ -1,0 +1,179 @@
+{
+  "metadata": {
+    "path": "/home/kathirks_gc/v8_go/archive/codebase/src/compiler/checkpoint-elimination.cc",
+    "file_name": "checkpoint-elimination.cc",
+    "language": "cpp",
+    "purpose": "This file implements the CheckpointElimination optimization pass for the V8 compiler, which removes redundant checkpoints in the effect chain."
+  },
+  "imports": {
+    "metadata": {
+      "language": "cpp",
+      "purpose": "Includes necessary headers for checkpoint elimination, common operators, and node properties."
+    },
+    "code": "#include \"src/compiler/checkpoint-elimination.h\"\n\n#include \"src/compiler/common-operator.h\"\n#include \"src/compiler/node-properties.h\""
+  },
+  "classes": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "CheckpointElimination",
+        "extends": "AdvancedReducer",
+        "about": "This class implements the checkpoint elimination optimization.",
+        "attributes": [],
+        "dependencies": [
+          "AdvancedReducer",
+          "Editor"
+        ]
+      },
+      "code": "class CheckpointElimination : public AdvancedReducer {\n public:\n  CheckpointElimination(Editor* editor);\n\n private:\n  Reduction ReduceCheckpoint(Node* node);\n  Reduction Reduce(Node* node) override;\n};"
+    }
+  ],
+  "functions": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "method",
+        "name": "CheckpointElimination",
+        "parent": "CheckpointElimination",
+        "about": "Constructor for the CheckpointElimination class.",
+        "logic": "Initializes the AdvancedReducer base class.",
+        "parameters": [
+          {
+            "name": "editor",
+            "type": "Editor*",
+            "purpose": "The editor used to manipulate the graph."
+          }
+        ],
+        "return": {
+          "type": "void",
+          "description": "No return value"
+        },
+        "dependencies": [
+          "Editor",
+          "AdvancedReducer"
+        ]
+      },
+      "code": "CheckpointElimination::CheckpointElimination(Editor* editor)\n    : AdvancedReducer(editor) {}"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "function",
+        "name": "GetFunctionInfo",
+        "about": "Retrieves the FrameStateFunctionInfo from a checkpoint node.",
+        "logic": "Asserts that the given node is a checkpoint.  Then it extracts the frame state input and returns the FrameStateFunctionInfo if the frame state is a kFrameState node, otherwise returns nullptr.",
+        "parameters": [
+          {
+            "name": "checkpoint",
+            "type": "Node*",
+            "purpose": "The checkpoint node."
+          }
+        ],
+        "return": {
+          "type": "FrameStateFunctionInfo const*",
+          "description": "The FrameStateFunctionInfo pointer, or nullptr if not available."
+        },
+        "dependencies": [
+          "Node",
+          "FrameStateFunctionInfo",
+          "NodeProperties",
+          "FrameStateInfoOf",
+          "IrOpcode"
+        ]
+      },
+      "code": "namespace {\n\nFrameStateFunctionInfo const* GetFunctionInfo(Node* checkpoint) {\n  DCHECK_EQ(IrOpcode::kCheckpoint, checkpoint->opcode());\n  Node* frame_state = NodeProperties::GetFrameStateInput(checkpoint);\n  return frame_state->opcode() == IrOpcode::kFrameState\n             ? FrameStateInfoOf(frame_state->op()).function_info()\n             : nullptr;\n}"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "function",
+        "name": "IsRedundantCheckpoint",
+        "about": "Determines if a checkpoint is redundant.",
+        "logic": "A checkpoint is redundant if it is effect-wise dominated by another checkpoint of the same origin (FrameStateFunctionInfo) and there is no observable write in between. It traverses the effect chain backwards, checking for other checkpoints with the same FrameStateFunctionInfo.  Returns false if function_info is null.",
+        "parameters": [
+          {
+            "name": "node",
+            "type": "Node*",
+            "purpose": "The checkpoint node to check."
+          }
+        ],
+        "return": {
+          "type": "bool",
+          "description": "True if the checkpoint is redundant, false otherwise."
+        },
+        "dependencies": [
+          "Node",
+          "FrameStateFunctionInfo",
+          "GetFunctionInfo",
+          "NodeProperties",
+          "Operator",
+          "IrOpcode"
+        ]
+      },
+      "code": "// The given checkpoint is redundant if it is effect-wise dominated by another\n// checkpoint of the same origin (*) and there is no observable write in\n// between. For now we consider a linear effect chain only instead of true\n// effect-wise dominance.\n// \"Same origin\" here refers to the same graph building pass and is expressed as\n// the identity of the checkpoint's FrameStateFunctionInfo pointer. This\n// restriction ensures that an eager deopt from an inlined function will resume\n// the inlined function's bytecode (rather than, say, the call in the caller's\n// bytecode), which in turn is necessary to ensure that we learn something from\n// the deopt in the case where an optimized code object for the inlined function\n// exists. See regress-9945-*.js and v8:9945.\nbool IsRedundantCheckpoint(Node* node) {\n  FrameStateFunctionInfo const* function_info = GetFunctionInfo(node);\n  if (function_info == nullptr) return false;\n  Node* effect = NodeProperties::GetEffectInput(node);\n  while (effect->op()->HasProperty(Operator::kNoWrite) &&\n         effect->op()->EffectInputCount() == 1) {\n    if (effect->opcode() == IrOpcode::kCheckpoint) {\n      return GetFunctionInfo(effect) == function_info;\n    }\n    effect = NodeProperties::GetEffectInput(effect);\n  }\n  return false;\n}\n\n}  // namespace"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "method",
+        "name": "ReduceCheckpoint",
+        "parent": "CheckpointElimination",
+        "about": "Reduces a checkpoint node if it's redundant.",
+        "logic": "Checks if the checkpoint is redundant using IsRedundantCheckpoint. If it is, it replaces the checkpoint with its effect input, effectively removing it from the graph. Otherwise, it returns NoChange.",
+        "parameters": [
+          {
+            "name": "node",
+            "type": "Node*",
+            "purpose": "The checkpoint node to reduce."
+          }
+        ],
+        "return": {
+          "type": "Reduction",
+          "description": "A Reduction object indicating whether a change was made."
+        },
+        "dependencies": [
+          "Node",
+          "IsRedundantCheckpoint",
+          "NodeProperties",
+          "Reduction",
+          "Replace",
+          "NoChange",
+          "IrOpcode"
+        ]
+      },
+      "code": "Reduction CheckpointElimination::ReduceCheckpoint(Node* node) {\n  DCHECK_EQ(IrOpcode::kCheckpoint, node->opcode());\n  if (IsRedundantCheckpoint(node)) {\n    return Replace(NodeProperties::GetEffectInput(node));\n  }\n  return NoChange();\n}"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "method",
+        "name": "Reduce",
+        "parent": "CheckpointElimination",
+        "about": "The main reduction function for the CheckpointElimination class.",
+        "logic": "This function is called for each node in the graph. If the node is a checkpoint, it calls ReduceCheckpoint to attempt to eliminate it. Otherwise, it returns NoChange. It also disables heap access during the reduction process.",
+        "parameters": [
+          {
+            "name": "node",
+            "type": "Node*",
+            "purpose": "The node to reduce."
+          }
+        ],
+        "return": {
+          "type": "Reduction",
+          "description": "A Reduction object indicating whether a change was made."
+        },
+        "dependencies": [
+          "Node",
+          "DisallowHeapAccess",
+          "ReduceCheckpoint",
+          "Reduction",
+          "NoChange",
+          "IrOpcode"
+        ]
+      },
+      "code": "Reduction CheckpointElimination::Reduce(Node* node) {\n  DisallowHeapAccess no_heap_access;\n  switch (node->opcode()) {\n    case IrOpcode::kCheckpoint:\n      return ReduceCheckpoint(node);\n    default:\n      break;\n  }\n  return NoChange();\n}"
+    }
+  ],
+  "file_path": "/home/kathirks_gc/v8_go/archive/codebase/src/compiler/checkpoint-elimination.cc"
+}

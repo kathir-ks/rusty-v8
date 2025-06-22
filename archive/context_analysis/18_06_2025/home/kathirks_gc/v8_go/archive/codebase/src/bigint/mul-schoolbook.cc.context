@@ -1,0 +1,292 @@
+{
+  "metadata": {
+    "path": "/home/kathirks_gc/v8_go/archive/codebase/src/bigint/mul-schoolbook.cc",
+    "file_name": "mul-schoolbook.cc",
+    "language": "cpp",
+    "purpose": "Implements schoolbook multiplication for BigInts, an O(n\u00b2) algorithm. Optimized for performance, especially as a base case for more advanced multiplication algorithms."
+  },
+  "imports": {
+    "metadata": {
+      "language": "cpp",
+      "purpose": "Includes necessary headers for BigInt internal structures, digit arithmetic, and vector arithmetic operations."
+    },
+    "code": "#include \"src/bigint/bigint-internal.h\"\n#include \"src/bigint/digit-arithmetic.h\"\n#include \"src/bigint/vector-arithmetic.h\""
+  },
+  "functions": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "method",
+        "name": "MultiplySingle",
+        "parent": "ProcessorImpl",
+        "about": "Multiplies a BigInt by a single digit.",
+        "logic": "Iterates through the digits of the BigInt, multiplying each digit by the single digit `y`, adding the carry from the previous multiplication, and storing the result in the output.  Handles carries effectively.",
+        "parameters": [
+          {
+            "name": "Z",
+            "type": "RWDigits",
+            "purpose": "The output BigInt where the result is stored."
+          },
+          {
+            "name": "X",
+            "type": "Digits",
+            "purpose": "The input BigInt."
+          },
+          {
+            "name": "y",
+            "type": "digit_t",
+            "purpose": "The single digit to multiply by."
+          }
+        ],
+        "return": {
+          "type": "void",
+          "description": "No return value. The result is stored in Z."
+        },
+        "dependencies": [
+          "digit_mul",
+          "digit_add3"
+        ]
+      },
+      "code": "void ProcessorImpl::MultiplySingle(RWDigits Z, Digits X, digit_t y) {\n  DCHECK(y != 0);\n  digit_t carry = 0;\n  digit_t high = 0;\n  for (int i = 0; i < X.len(); i++) {\n    digit_t new_high;\n    digit_t low = digit_mul(X[i], y, &new_high);\n    Z[i] = digit_add3(low, high, carry, &carry);\n    high = new_high;\n  }\n  AddWorkEstimate(X.len());\n  Z[X.len()] = carry + high;\n  for (int i = X.len() + 1; i < Z.len(); i++) Z[i] = 0;\n}"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "method",
+        "name": "MultiplySchoolbook",
+        "parent": "ProcessorImpl",
+        "about": "Implements the schoolbook multiplication algorithm for BigInts.",
+        "logic": "This is an optimized O(n\u00b2) multiplication algorithm. It avoids bounds and overflow checks by iterating over the digits of the result (Z) rather than the digits of the operands (X and Y). The BODY macro computes each digit of Z as the sum of products of corresponding digits from X and Y.  Unrolls the first two iterations to reduce setup overhead and has separate loops for different portions of the multiplication to avoid unnecessary conditional checks inside the innermost loop.",
+        "parameters": [
+          {
+            "name": "Z",
+            "type": "RWDigits",
+            "purpose": "The output BigInt where the result is stored."
+          },
+          {
+            "name": "X",
+            "type": "Digits",
+            "purpose": "The first input BigInt."
+          },
+          {
+            "name": "Y",
+            "type": "Digits",
+            "purpose": "The second input BigInt."
+          }
+        ],
+        "return": {
+          "type": "void",
+          "description": "No return value. The result is stored in Z."
+        },
+        "dependencies": [
+          "IsDigitNormalized",
+          "digit_mul",
+          "digit_add2",
+          "std::min",
+          "AddWorkEstimate",
+          "RWDigits::Clear"
+        ]
+      },
+      "code": "void ProcessorImpl::MultiplySchoolbook(RWDigits Z, Digits X, Digits Y) {\n  DCHECK(IsDigitNormalized(X));\n  DCHECK(IsDigitNormalized(Y));\n  DCHECK(X.len() >= Y.len());\n  DCHECK(Z.len() >= X.len() + Y.len());\n  if (X.len() == 0 || Y.len() == 0) return Z.Clear();\n  digit_t next, next_carry = 0, carry = 0;\n  // Unrolled first iteration: it's trivial.\n  Z[0] = digit_mul(X[0], Y[0], &next);\n  int i = 1;\n  // Unrolled second iteration: a little less setup.\n  if (i < Y.len()) {\n    digit_t zi = next;\n    next = 0;\n    BODY(0, 1);\n    i++;\n  }\n  // Main part: since X.len() >= Y.len() > i, no bounds checks are needed.\n  for (; i < Y.len(); i++) {\n    digit_t zi = digit_add2(next, carry, &carry);\n    next = next_carry + carry;\n    carry = 0;\n    next_carry = 0;\n    BODY(0, i);\n    AddWorkEstimate(i);\n  }\n  // Last part: i exceeds Y now, we have to be careful about bounds.\n  int loop_end = X.len() + Y.len() - 2;\n  for (; i <= loop_end; i++) {\n    int max_x_index = std::min(i, X.len() - 1);\n    int max_y_index = Y.len() - 1;\n    int min_x_index = i - max_y_index;\n    digit_t zi = digit_add2(next, carry, &carry);\n    next = next_carry + carry;\n    carry = 0;\n    next_carry = 0;\n    BODY(min_x_index, max_x_index);\n    AddWorkEstimate(max_x_index - min_x_index);\n  }\n  // Write the last digit, and zero out any extra space in Z.\n  Z[i++] = digit_add2(next, carry, &carry);\n  DCHECK(carry == 0);\n  for (; i < Z.len(); i++) Z[i] = 0;\n}"
+    }
+  ],
+  "dependencies": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "ProcessorImpl",
+        "about": "Likely a class containing implementations for BigInt operations.  Its definition is not present in this file, but its methods are used."
+      },
+      "code": "class ProcessorImpl {\n public:\n  void MultiplySingle(RWDigits Z, Digits X, digit_t y);\n  void MultiplySchoolbook(RWDigits Z, Digits X, Digits Y);\n};",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "typedef",
+        "name": "Digits",
+        "about": "Represents a sequence of digits of a BigInt.  Its underlying type and structure are not visible here."
+      },
+      "code": "typedef ... Digits;",
+      "type": "typedef"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "typedef",
+        "name": "RWDigits",
+        "about": "Represents a writable sequence of digits of a BigInt. Its underlying type and structure are not visible here."
+      },
+      "code": "typedef ... RWDigits;",
+      "type": "typedef"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "typedef",
+        "name": "digit_t",
+        "about": "The type used to represent a single digit of a BigInt. Not defined here."
+      },
+      "code": "typedef ... digit_t;",
+      "type": "typedef"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "function",
+        "name": "digit_mul",
+        "about": "Multiplies two digits and returns the low and high parts of the result.  Implementation is hidden.",
+        "parameters": [
+          {
+            "name": "a",
+            "type": "digit_t",
+            "purpose": "First digit"
+          },
+          {
+            "name": "b",
+            "type": "digit_t",
+            "purpose": "Second digit"
+          },
+          {
+            "name": "high",
+            "type": "digit_t*",
+            "purpose": "Output parameter to store the high part of the result"
+          }
+        ],
+        "return": {
+          "type": "digit_t",
+          "description": "The low part of the product of a and b"
+        }
+      },
+      "code": "digit_t digit_mul(digit_t a, digit_t b, digit_t* high);",
+      "type": "func"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "function",
+        "name": "digit_add3",
+        "about": "Adds three digits and a carry, returning the result digit and updating the carry. Implementation is hidden.",
+        "parameters": [
+          {
+            "name": "a",
+            "type": "digit_t",
+            "purpose": "First digit"
+          },
+          {
+            "name": "b",
+            "type": "digit_t",
+            "purpose": "Second digit"
+          },
+          {
+            "name": "c",
+            "type": "digit_t",
+            "purpose": "Third digit"
+          },
+          {
+            "name": "carry",
+            "type": "digit_t*",
+            "purpose": "Pointer to carry digit to be updated"
+          }
+        ],
+        "return": {
+          "type": "digit_t",
+          "description": "The resulting digit after adding a, b, c, and carry"
+        }
+      },
+      "code": "digit_t digit_add3(digit_t a, digit_t b, digit_t c, digit_t* carry);",
+      "type": "func"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "function",
+        "name": "digit_add2",
+        "about": "Adds two digits and a carry, returning the result digit and updating the carry. Implementation is hidden.",
+        "parameters": [
+          {
+            "name": "a",
+            "type": "digit_t",
+            "purpose": "First digit"
+          },
+          {
+            "name": "b",
+            "type": "digit_t",
+            "purpose": "Second digit"
+          },
+          {
+            "name": "carry",
+            "type": "digit_t*",
+            "purpose": "Pointer to carry digit to be updated"
+          }
+        ],
+        "return": {
+          "type": "digit_t",
+          "description": "The resulting digit after adding a, b, and carry"
+        }
+      },
+      "code": "digit_t digit_add2(digit_t a, digit_t b, digit_t* carry);",
+      "type": "func"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "function",
+        "name": "IsDigitNormalized",
+        "about": "Checks whether the digits of the BigInt are normalized (no leading zeros). Implementation is hidden.",
+        "parameters": [
+          {
+            "name": "digits",
+            "type": "Digits",
+            "purpose": "The Digits array to check"
+          }
+        ],
+        "return": {
+          "type": "bool",
+          "description": "True if digits are normalized, false otherwise."
+        }
+      },
+      "code": "bool IsDigitNormalized(Digits digits);",
+      "type": "func"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "function",
+        "name": "AddWorkEstimate",
+        "about": "Likely used for performance tracking and adaptive algorithm selection. Its implementation is not present in this file.",
+        "parameters": [
+          {
+            "name": "work",
+            "type": "int",
+            "purpose": "Amount of work done in number of digit operations"
+          }
+        ],
+        "return": {
+          "type": "void",
+          "description": "Nothing"
+        }
+      },
+      "code": "void AddWorkEstimate(int work);",
+      "type": "func"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "method",
+        "name": "Clear",
+        "parent": "RWDigits",
+        "about": "Clears the digits array setting all values to zero.",
+        "parameters": [],
+        "return": {
+          "type": "void",
+          "description": "Nothing"
+        }
+      },
+      "code": "void RWDigits::Clear();",
+      "type": "method"
+    }
+  ],
+  "file_path": "/home/kathirks_gc/v8_go/archive/codebase/src/bigint/mul-schoolbook.cc"
+}

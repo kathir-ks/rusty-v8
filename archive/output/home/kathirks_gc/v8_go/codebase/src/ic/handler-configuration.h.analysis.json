@@ -1,0 +1,443 @@
+{
+  "file_path": "/home/kathirks_gc/v8_go/codebase/src/ic/handler-configuration.h",
+  "imports": [
+    "src/common/globals.h",
+    "src/handles/maybe-handles.h",
+    "src/heap/heap.h",
+    "src/objects/data-handler.h",
+    "src/objects/elements-kind.h",
+    "src/objects/field-index.h",
+    "src/objects/objects.h",
+    "src/utils/utils.h",
+    "src/objects/object-macros.h"
+  ],
+  "classes": [
+    {
+      "name": "LoadHandler",
+      "properties": [],
+      "methods": [
+        {
+          "name": "GetHandlerKind",
+          "parameters": [
+            "Tagged<Smi> smi_handler"
+          ],
+          "return_type": "Kind",
+          "logic": "Decodes the Kind enum from a Smi-encoded handler."
+        },
+        {
+          "name": "LoadNormal",
+          "parameters": [
+            "Isolate* isolate"
+          ],
+          "return_type": "Handle<Smi>",
+          "logic": "Creates a Smi-handler for loading a property from a slow object."
+        },
+        {
+          "name": "LoadGlobal",
+          "parameters": [
+            "Isolate* isolate"
+          ],
+          "return_type": "Handle<Smi>",
+          "logic": "Creates a Smi-handler for loading a property from a global object."
+        },
+        {
+          "name": "LoadInterceptor",
+          "parameters": [
+            "Isolate* isolate"
+          ],
+          "return_type": "Handle<Smi>",
+          "logic": "Creates a Smi-handler for loading a property from an object with an interceptor."
+        },
+        {
+          "name": "LoadSlow",
+          "parameters": [
+            "Isolate* isolate"
+          ],
+          "return_type": "Handle<Smi>",
+          "logic": "Creates a Smi-handler for loading a property from a slow object."
+        },
+        {
+          "name": "LoadField",
+          "parameters": [
+            "Isolate* isolate",
+            "FieldIndex field_index"
+          ],
+          "return_type": "Handle<Smi>",
+          "logic": "Creates a Smi-handler for loading a field from a fast object."
+        },
+        {
+          "name": "LoadConstantFromPrototype",
+          "parameters": [
+            "Isolate* isolate"
+          ],
+          "return_type": "Handle<Smi>",
+          "logic": "Creates a Smi-handler for loading a cached constant from a fast prototype object."
+        },
+        {
+          "name": "LoadAccessorFromPrototype",
+          "parameters": [
+            "Isolate* isolate"
+          ],
+          "return_type": "DirectHandle<Smi>",
+          "logic": "Creates a Smi-handler for calling a getter on a fast object."
+        },
+        {
+          "name": "LoadProxy",
+          "parameters": [
+            "Isolate* isolate"
+          ],
+          "return_type": "Handle<Smi>",
+          "logic": "Creates a Smi-handler for calling a getter on a proxy."
+        },
+        {
+          "name": "LoadNativeDataProperty",
+          "parameters": [
+            "Isolate* isolate",
+            "int descriptor"
+          ],
+          "return_type": "Handle<Smi>",
+          "logic": "Creates a Smi-handler for loading a native data property from a fast object."
+        },
+        {
+          "name": "LoadApiGetter",
+          "parameters": [
+            "Isolate* isolate"
+          ],
+          "return_type": "Handle<Smi>",
+          "logic": "Creates a Smi-handler for calling a native getter on a fast object."
+        },
+        {
+          "name": "LoadModuleExport",
+          "parameters": [
+            "Isolate* isolate",
+            "int index"
+          ],
+          "return_type": "Handle<Smi>",
+          "logic": "Creates a Smi-handler for loading a Module export."
+        },
+        {
+          "name": "LoadWasmStructField",
+          "parameters": [
+            "Isolate* isolate",
+            "WasmValueType type",
+            "int offset"
+          ],
+          "return_type": "DirectHandle<Smi>",
+          "logic": "Creates a Smi-handler for loading a field from a Wasm struct."
+        },
+        {
+          "name": "LoadWasmArrayElement",
+          "parameters": [
+            "Isolate* isolate",
+            "WasmValueType type"
+          ],
+          "return_type": "DirectHandle<Smi>",
+          "logic": "Creates a Smi-handler for loading an element from a Wasm array."
+        },
+        {
+          "name": "LoadFullChain",
+          "parameters": [
+            "Isolate* isolate",
+            "DirectHandle<Map> receiver_map",
+            "const MaybeObjectDirectHandle& holder",
+            "Handle<Smi> smi_handler"
+          ],
+          "return_type": "Handle<Object>",
+          "logic": "Creates a data handler that represents a load of a non-existent property, full chain."
+        },
+        {
+          "name": "LoadFromPrototype",
+          "parameters": [
+            "Isolate* isolate",
+            "DirectHandle<Map> receiver_map",
+            "DirectHandle<JSReceiver> holder",
+            "Tagged<Smi> smi_handler",
+            "MaybeObjectDirectHandle maybe_data1",
+            "MaybeObjectDirectHandle maybe_data2"
+          ],
+          "return_type": "Handle<Object>",
+          "logic": "Creates a data handler representing a prototype chain check followed by a load from the holder."
+        },
+        {
+          "name": "LoadNonExistent",
+          "parameters": [
+            "Isolate* isolate"
+          ],
+          "return_type": "Handle<Smi>",
+          "logic": "Creates a Smi-handler for loading a non-existent property in the context of a prototype chain check."
+        },
+        {
+          "name": "LoadElement",
+          "parameters": [
+            "Isolate* isolate",
+            "ElementsKind elements_kind",
+            "bool is_js_array",
+            "KeyedAccessLoadMode load_mode"
+          ],
+          "return_type": "Handle<Smi>",
+          "logic": "Creates a Smi-handler for loading an element from an array."
+        },
+        {
+          "name": "LoadIndexedString",
+          "parameters": [
+            "Isolate* isolate",
+            "KeyedAccessLoadMode load_mode"
+          ],
+          "return_type": "Handle<Smi>",
+          "logic": "Creates a Smi-handler for loading a character from a String."
+        },
+        {
+          "name": "GetKeyedAccessLoadMode",
+          "parameters": [
+            "Tagged<MaybeObject> handler"
+          ],
+          "return_type": "KeyedAccessLoadMode",
+          "logic": "Decodes the KeyedAccessLoadMode from a handler."
+        },
+        {
+          "name": "CanHandleHolderNotLookupStart",
+          "parameters": [
+            "Tagged<Object> handler"
+          ],
+          "return_type": "bool",
+          "logic": "Returns true if the handler can be used when the holder is not the lookup start object."
+        },
+        {
+          "name": "PrintHandler",
+          "parameters": [
+            "Tagged<Object> handler",
+            "std::ostream& os"
+          ],
+          "return_type": "void",
+          "logic": "Prints the handler to the output stream."
+        }
+      ]
+    },
+    {
+      "name": "StoreHandler",
+      "properties": [],
+      "methods": [
+        {
+          "name": "StoreField",
+          "parameters": [
+            "Isolate* isolate",
+            "int descriptor",
+            "FieldIndex field_index",
+            "PropertyConstness constness",
+            "Representation representation"
+          ],
+          "return_type": "Handle<Smi>",
+          "logic": "Creates a Smi-handler for storing a field to a fast object."
+        },
+        {
+          "name": "StoreSharedStructField",
+          "parameters": [
+            "Isolate* isolate",
+            "int descriptor",
+            "FieldIndex field_index",
+            "Representation representation"
+          ],
+          "return_type": "Handle<Smi>",
+          "logic": "Creates a Smi-handler for storing a field to a JSSharedStruct."
+        },
+        {
+          "name": "StoreOwnTransition",
+          "parameters": [
+            "Isolate* isolate",
+            "Handle<Map> transition_map"
+          ],
+          "return_type": "MaybeObjectHandle",
+          "logic": "Create a store transition handler which doesn't check prototype chain."
+        },
+        {
+          "name": "StoreTransition",
+          "parameters": [
+            "Isolate* isolate",
+            "Handle<Map> transition_map"
+          ],
+          "return_type": "MaybeObjectHandle",
+          "logic": "Create a store transition handler with prototype chain validity cell check."
+        },
+        {
+          "name": "StoreNativeDataProperty",
+          "parameters": [
+            "Isolate* isolate",
+            "int descriptor"
+          ],
+          "return_type": "Handle<Smi>",
+          "logic": "Creates a Smi-handler for storing a native data property on a fast object."
+        },
+        {
+          "name": "StoreAccessorFromPrototype",
+          "parameters": [
+            "Isolate* isolate"
+          ],
+          "return_type": "DirectHandle<Smi>",
+          "logic": "Creates a Smi-handler for calling a setter on a fast object."
+        },
+        {
+          "name": "StoreApiSetter",
+          "parameters": [
+            "Isolate* isolate"
+          ],
+          "return_type": "DirectHandle<Smi>",
+          "logic": "Creates a Smi-handler for calling a native setter on a fast object."
+        },
+        {
+          "name": "StoreThroughPrototype",
+          "parameters": [
+            "Isolate* isolate",
+            "DirectHandle<Map> receiver_map",
+            "DirectHandle<JSReceiver> holder",
+            "Tagged<Smi> smi_handler",
+            "MaybeObjectDirectHandle maybe_data1",
+            "MaybeObjectDirectHandle maybe_data2"
+          ],
+          "return_type": "Handle<Object>",
+          "logic": "Creates a handler for storing a property through the prototype chain."
+        },
+        {
+          "name": "StoreElementTransition",
+          "parameters": [
+            "Isolate* isolate",
+            "DirectHandle<Map> receiver_map",
+            "DirectHandle<Map> transition",
+            "KeyedAccessStoreMode store_mode",
+            "MaybeDirectHandle<UnionOf<Smi, Cell>> prev_validity_cell"
+          ],
+          "return_type": "Handle<Object>",
+          "logic": "Creates a handler for storing an element with a transition."
+        },
+        {
+          "name": "StoreProxy",
+          "parameters": [
+            "Isolate* isolate",
+            "DirectHandle<Map> receiver_map",
+            "Handle<JSProxy> proxy",
+            "DirectHandle<JSReceiver> receiver"
+          ],
+          "return_type": "Handle<Object>",
+          "logic": "Creates a handler for storing a property on a proxy object."
+        },
+        {
+          "name": "StoreGlobal",
+          "parameters": [
+            "Handle<PropertyCell> cell"
+          ],
+          "return_type": "MaybeObjectHandle",
+          "logic": "Creates a handler for storing a property to the property cell of a global object."
+        },
+        {
+          "name": "StoreGlobalProxy",
+          "parameters": [
+            "Isolate* isolate"
+          ],
+          "return_type": "DirectHandle<Smi>",
+          "logic": "Creates a Smi-handler for storing a property to a global proxy object."
+        },
+        {
+          "name": "StoreNormal",
+          "parameters": [
+            "Isolate* isolate"
+          ],
+          "return_type": "Handle<Smi>",
+          "logic": "Creates a Smi-handler for storing a property to a normal object."
+        },
+        {
+          "name": "StoreInterceptor",
+          "parameters": [
+            "Isolate* isolate"
+          ],
+          "return_type": "Handle<Smi>",
+          "logic": "Creates a Smi-handler for storing a property to an object with an interceptor."
+        },
+        {
+          "name": "StoreSloppyArgumentsBuiltin",
+          "parameters": [
+            "Isolate* isolate",
+            "KeyedAccessStoreMode mode"
+          ],
+          "return_type": "Handle<Code>",
+          "logic": "Creates a handler Code object for storing to sloppy arguments."
+        },
+        {
+          "name": "StoreFastElementBuiltin",
+          "parameters": [
+            "Isolate* isolate",
+            "KeyedAccessStoreMode mode"
+          ],
+          "return_type": "Handle<Code>",
+          "logic": "Creates a handler Code object for fast element stores."
+        },
+        {
+          "name": "ElementsTransitionAndStoreBuiltin",
+          "parameters": [
+            "Isolate* isolate",
+            "KeyedAccessStoreMode mode"
+          ],
+          "return_type": "DirectHandle<Code>",
+          "logic": "Creates a handler Code object which transisions the element map and stores the element."
+        },
+        {
+          "name": "StoreSlow",
+          "parameters": [
+            "Isolate* isolate",
+            "KeyedAccessStoreMode store_mode"
+          ],
+          "return_type": "Handle<Smi>",
+          "logic": "Creates a Smi-handler for storing a property using the slow path."
+        },
+        {
+          "name": "StoreProxy",
+          "parameters": [
+            "Isolate* isolate"
+          ],
+          "return_type": "Handle<Smi>",
+          "logic": "Creates a Smi-handler for storing a property on a proxy object."
+        },
+        {
+          "name": "StoreProxy",
+          "parameters": [],
+          "return_type": "Tagged<Smi>",
+          "logic": "Creates a Smi-handler for storing a property on a proxy object (variant with no isolate)."
+        },
+        {
+          "name": "GetKeyedAccessStoreMode",
+          "parameters": [
+            "Tagged<MaybeObject> handler"
+          ],
+          "return_type": "KeyedAccessStoreMode",
+          "logic": "Decodes the KeyedAccessStoreMode from a handler."
+        },
+        {
+          "name": "PrintHandler",
+          "parameters": [
+            "Tagged<Object> handler",
+            "std::ostream& os"
+          ],
+          "return_type": "void",
+          "logic": "Prints the handler to the output stream."
+        }
+      ]
+    }
+  ],
+  "functions": [
+    {
+      "name": "WasmValueType2String",
+      "parameters": [
+        "WasmValueType type"
+      ],
+      "return_type": "const char*",
+      "logic": "Converts a WasmValueType enum value to a string representation."
+    },
+    {
+      "name": "operator<<",
+      "parameters": [
+        "std::ostream& os",
+        "WasmValueType type"
+      ],
+      "return_type": "std::ostream&",
+      "logic": "Overloads the << operator for WasmValueType enum to enable printing to an ostream."
+    }
+  ]
+}

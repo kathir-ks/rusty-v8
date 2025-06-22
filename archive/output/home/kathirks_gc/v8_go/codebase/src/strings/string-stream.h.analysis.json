@@ -1,0 +1,440 @@
+{
+  "file_path": "/home/kathirks_gc/v8_go/codebase/src/strings/string-stream.h",
+  "imports": [
+    "<memory>",
+    "src/base/small-vector.h",
+    "src/base/strings.h",
+    "src/base/vector.h",
+    "src/handles/handles.h",
+    "src/objects/objects.h",
+    "src/objects/tagged.h",
+    "src/utils/allocation.h"
+  ],
+  "classes": [
+    {
+      "name": "StringAllocator",
+      "properties": [],
+      "methods": [
+        {
+          "name": "~StringAllocator",
+          "parameters": [],
+          "return_type": "virtual",
+          "logic": "Virtual destructor for the StringAllocator class."
+        },
+        {
+          "name": "allocate",
+          "parameters": [
+            "bytes"
+          ],
+          "return_type": "char*",
+          "logic": "Abstract method to allocate a number of bytes."
+        },
+        {
+          "name": "grow",
+          "parameters": [
+            "bytes"
+          ],
+          "return_type": "char*",
+          "logic": "Abstract method to allocate a larger buffer and copy the old one."
+        }
+      ]
+    },
+    {
+      "name": "HeapStringAllocator",
+      "properties": [
+        "char* space_"
+      ],
+      "methods": [
+        {
+          "name": "~HeapStringAllocator",
+          "parameters": [],
+          "return_type": "override",
+          "logic": "Destructor that deallocates the memory allocated for the string space."
+        },
+        {
+          "name": "allocate",
+          "parameters": [
+            "bytes"
+          ],
+          "return_type": "char*",
+          "logic": "Allocates memory from the heap."
+        },
+        {
+          "name": "grow",
+          "parameters": [
+            "bytes"
+          ],
+          "return_type": "char*",
+          "logic": "Grows the allocated memory on the heap."
+        }
+      ]
+    },
+    {
+      "name": "FixedStringAllocator",
+      "properties": [
+        "char* buffer_",
+        "unsigned length_"
+      ],
+      "methods": [
+        {
+          "name": "FixedStringAllocator",
+          "parameters": [
+            "char* buffer",
+            "unsigned length"
+          ],
+          "return_type": "constructor",
+          "logic": "Constructor that initializes the fixed-size allocator with a buffer and length."
+        },
+        {
+          "name": "~FixedStringAllocator",
+          "parameters": [],
+          "return_type": "override",
+          "logic": "Default destructor."
+        },
+        {
+          "name": "operator=",
+          "parameters": [
+            "const FixedStringAllocator&"
+          ],
+          "return_type": "FixedStringAllocator&",
+          "logic": "Deleted assignment operator to prevent copying."
+        },
+        {
+          "name": "FixedStringAllocator",
+          "parameters": [
+            "const FixedStringAllocator&"
+          ],
+          "return_type": "constructor",
+          "logic": "Deleted copy constructor to prevent copying."
+        },
+        {
+          "name": "allocate",
+          "parameters": [
+            "bytes"
+          ],
+          "return_type": "char*",
+          "logic": "Allocates memory from the fixed-size buffer. Returns nullptr if the buffer is too small."
+        },
+        {
+          "name": "grow",
+          "parameters": [
+            "bytes"
+          ],
+          "return_type": "char*",
+          "logic": "Attempts to grow the allocated memory, but as this is fixed, will just return the existing buffer if there is space."
+        }
+      ]
+    },
+    {
+      "name": "SmallStringOptimizedAllocator",
+      "properties": [
+        "SmallVector* vector_"
+      ],
+      "methods": [
+        {
+          "name": "SmallStringOptimizedAllocator",
+          "parameters": [
+            "SmallVector* vector"
+          ],
+          "return_type": "constructor",
+          "logic": "Constructor that initializes the allocator with a small vector."
+        },
+        {
+          "name": "allocate",
+          "parameters": [
+            "bytes"
+          ],
+          "return_type": "char*",
+          "logic": "Allocates memory by resizing the small vector to the requested size."
+        },
+        {
+          "name": "grow",
+          "parameters": [
+            "bytes"
+          ],
+          "return_type": "char*",
+          "logic": "Grows the allocated memory by doubling the requested size of small vector, only if new size is bigger and not overflowing."
+        }
+      ]
+    },
+    {
+      "name": "StringStream",
+      "properties": [
+        "StringAllocator* allocator_",
+        "ObjectPrintMode object_print_mode_",
+        "unsigned capacity_",
+        "unsigned length_",
+        "char* buffer_"
+      ],
+      "methods": [
+        {
+          "name": "StringStream",
+          "parameters": [
+            "StringAllocator* allocator",
+            "ObjectPrintMode object_print_mode"
+          ],
+          "return_type": "constructor",
+          "logic": "Constructor that initializes the string stream with an allocator and initial capacity."
+        },
+        {
+          "name": "Put",
+          "parameters": [
+            "char c"
+          ],
+          "return_type": "bool",
+          "logic": "Appends a single character to the stream."
+        },
+        {
+          "name": "Put",
+          "parameters": [
+            "Tagged<String> str"
+          ],
+          "return_type": "bool",
+          "logic": "Appends a string to the stream."
+        },
+        {
+          "name": "Put",
+          "parameters": [
+            "Tagged<String> str",
+            "int start",
+            "int end"
+          ],
+          "return_type": "bool",
+          "logic": "Appends a substring to the stream."
+        },
+        {
+          "name": "Add",
+          "parameters": [
+            "const char* format"
+          ],
+          "return_type": "void",
+          "logic": "Adds a formatted string to the stream (using C-style string format)."
+        },
+        {
+          "name": "Add",
+          "parameters": [
+            "base::Vector<const char> format"
+          ],
+          "return_type": "void",
+          "logic": "Adds a formatted string to the stream (using base::Vector<const char> format)."
+        },
+        {
+          "name": "Add",
+          "parameters": [
+            "const char* format",
+            "Args... args"
+          ],
+          "return_type": "void",
+          "logic": "Adds a formatted string to the stream (variadic template)."
+        },
+        {
+          "name": "Add",
+          "parameters": [
+            "base::Vector<const char> format",
+            "Args... args"
+          ],
+          "return_type": "void",
+          "logic": "Adds a formatted string to the stream (variadic template)."
+        },
+        {
+          "name": "OutputToFile",
+          "parameters": [
+            "FILE* out"
+          ],
+          "return_type": "void",
+          "logic": "Outputs the content of the stream to a file."
+        },
+        {
+          "name": "OutputToStdOut",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Outputs the content of the stream to stdout."
+        },
+        {
+          "name": "Log",
+          "parameters": [
+            "Isolate* isolate"
+          ],
+          "return_type": "void",
+          "logic": "Logs the content of the stream using the Isolate's logging mechanism."
+        },
+        {
+          "name": "ToString",
+          "parameters": [
+            "Isolate* isolate"
+          ],
+          "return_type": "DirectHandle<String>",
+          "logic": "Converts the content of the stream to a V8 string object."
+        },
+        {
+          "name": "ToCString",
+          "parameters": [],
+          "return_type": "std::unique_ptr<char[]>",
+          "logic": "Converts the content of the stream to a null-terminated C-style string."
+        },
+        {
+          "name": "length",
+          "parameters": [],
+          "return_type": "int",
+          "logic": "Returns the current length of the stream."
+        },
+        {
+          "name": "PrintName",
+          "parameters": [
+            "Tagged<Object> o"
+          ],
+          "return_type": "void",
+          "logic": "Prints the name of an object to the stream."
+        },
+        {
+          "name": "PrintFixedArray",
+          "parameters": [
+            "Tagged<FixedArray> array",
+            "unsigned int limit"
+          ],
+          "return_type": "void",
+          "logic": "Prints a fixed array to the stream."
+        },
+        {
+          "name": "PrintByteArray",
+          "parameters": [
+            "Tagged<ByteArray> ba"
+          ],
+          "return_type": "void",
+          "logic": "Prints a byte array to the stream."
+        },
+        {
+          "name": "PrintUsingMap",
+          "parameters": [
+            "Isolate* isolate",
+            "Tagged<JSObject> js_object"
+          ],
+          "return_type": "void",
+          "logic": "Prints a JSObject using its map to the stream."
+        },
+        {
+          "name": "PrintPrototype",
+          "parameters": [
+            "Isolate* isolate",
+            "Tagged<JSFunction> fun",
+            "Tagged<Object> receiver"
+          ],
+          "return_type": "void",
+          "logic": "Prints the prototype of a JSFunction to the stream."
+        },
+        {
+          "name": "PrintSecurityTokenIfChanged",
+          "parameters": [
+            "Isolate* isolate",
+            "Tagged<JSFunction> function"
+          ],
+          "return_type": "void",
+          "logic": "Prints the security token of a JSFunction if it has changed."
+        },
+        {
+          "name": "PrintFunction",
+          "parameters": [
+            "Isolate* isolate",
+            "Tagged<JSFunction> function",
+            "Tagged<Object> receiver"
+          ],
+          "return_type": "void",
+          "logic": "Prints a JSFunction to the stream."
+        },
+        {
+          "name": "Reset",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Resets the stream to its initial state."
+        },
+        {
+          "name": "PrintMentionedObjectCache",
+          "parameters": [
+            "Isolate* isolate"
+          ],
+          "return_type": "void",
+          "logic": "Prints the mentioned object cache of an isolate."
+        },
+        {
+          "name": "ClearMentionedObjectCache",
+          "parameters": [
+            "Isolate* isolate"
+          ],
+          "return_type": "static void",
+          "logic": "Clears the mentioned object cache of an isolate."
+        },
+        {
+          "name": "IsMentionedObjectCacheClear",
+          "parameters": [
+            "Isolate* isolate"
+          ],
+          "return_type": "bool",
+          "logic": "Checks if the mentioned object cache of an isolate is cleared."
+        }
+      ]
+    },
+    {
+      "name": "StringStream::FmtElm",
+      "properties": [],
+      "methods": [
+        {
+          "name": "FmtElm",
+          "parameters": [
+            "int value"
+          ],
+          "return_type": "constructor",
+          "logic": "Constructor for integer formatting element"
+        },
+        {
+          "name": "FmtElm",
+          "parameters": [
+            "double value"
+          ],
+          "return_type": "constructor",
+          "logic": "Constructor for double formatting element"
+        },
+        {
+          "name": "FmtElm",
+          "parameters": [
+            "const char* value"
+          ],
+          "return_type": "constructor",
+          "logic": "Constructor for const char* formatting element"
+        },
+        {
+          "name": "FmtElm",
+          "parameters": [
+            "const base::Vector<const base::uc16>& value"
+          ],
+          "return_type": "constructor",
+          "logic": "Constructor for base::Vector<const base::uc16> formatting element"
+        },
+        {
+          "name": "FmtElm",
+          "parameters": [
+            "Tagged<T> value"
+          ],
+          "return_type": "constructor",
+          "logic": "Constructor for Tagged<T> formatting element"
+        },
+        {
+          "name": "FmtElm",
+          "parameters": [
+            "Handle<T> value"
+          ],
+          "return_type": "constructor",
+          "logic": "Constructor for Handle<T> formatting element"
+        },
+        {
+          "name": "FmtElm",
+          "parameters": [
+            "void* value"
+          ],
+          "return_type": "constructor",
+          "logic": "Constructor for void* formatting element"
+        }
+      ]
+    }
+  ],
+  "functions": []
+}

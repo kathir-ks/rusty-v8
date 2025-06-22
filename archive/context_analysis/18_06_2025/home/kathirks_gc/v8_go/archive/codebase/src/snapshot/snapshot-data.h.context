@@ -1,0 +1,80 @@
+{
+  "metadata": {
+    "path": "/home/kathirks_gc/v8_go/archive/codebase/src/snapshot/snapshot-data.h",
+    "file_name": "snapshot-data.h",
+    "language": "cpp",
+    "purpose": "Defines classes for handling serialized snapshot data in V8."
+  },
+  "imports": {
+    "metadata": {
+      "language": "cpp",
+      "purpose": "Includes necessary headers for bit fields, memory management, vectors, external reference tables, and memory copying."
+    },
+    "code": "#include \"src/base/bit-field.h\"\n            #include \"src/base/memory.h\"\n            #include \"src/base/vector.h\"\n            #include \"src/codegen/external-reference-table.h\"\n            #include \"src/utils/memcopy.h\""
+  },
+  "classes": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "SerializedData",
+        "extends": null,
+        "implements": [],
+        "about": "Base class for handling serialized data, providing basic memory management and header access.",
+        "attributes": [
+          {
+            "name": "data_",
+            "type": "uint8_t*",
+            "access": "protected",
+            "purpose": "Pointer to the serialized data buffer."
+          },
+          {
+            "name": "size_",
+            "type": "uint32_t",
+            "access": "protected",
+            "purpose": "Size of the serialized data in bytes."
+          },
+          {
+            "name": "owns_data_",
+            "type": "bool",
+            "access": "protected",
+            "purpose": "Indicates whether the SerializedData object owns the data buffer and is responsible for freeing it."
+          }
+        ],
+        "dependencies": [
+          "ExternalReferenceTable"
+        ]
+      },
+      "code": "class SerializedData {\n            public:\n              SerializedData(uint8_t* data, int size)\n                  : data_(data), size_(size), owns_data_(false) {}\n              SerializedData() : data_(nullptr), size_(0), owns_data_(false) {}\n              SerializedData(SerializedData&& other) V8_NOEXCEPT\n                  : data_(other.data_),\n                    size_(other.size_),\n                    owns_data_(other.owns_data_) {\n                // Ensure |other| will not attempt to destroy our data in destructor.\n                other.owns_data_ = false;\n              }\n              SerializedData(const SerializedData&) = delete;\n              SerializedData& operator=(const SerializedData&) = delete;\n\n              virtual ~SerializedData() {\n                if (owns_data_) DeleteArray<uint8_t>(data_);\n              }\n\n              uint32_t GetMagicNumber() const { return GetHeaderValue(kMagicNumberOffset); }\n\n              using ChunkSizeBits = base::BitField<uint32_t, 0, 31>;\n              using IsLastChunkBits = base::BitField<bool, 31, 1>;\n\n              static constexpr uint32_t kMagicNumberOffset = 0;\n              static constexpr uint32_t kMagicNumber =\n                  0xC0DE0000 ^ ExternalReferenceTable::kSize;\n\n             protected:\n              void SetHeaderValue(uint32_t offset, uint32_t value) {\n                base::WriteLittleEndianValue(reinterpret_cast<Address>(data_) + offset,\n                                             value);\n              }\n\n              uint32_t GetHeaderValue(uint32_t offset) const {\n                return base::ReadLittleEndianValue<uint32_t>(\n                    reinterpret_cast<Address>(data_) + offset);\n              }\n\n              void AllocateData(uint32_t size);\n\n              void SetMagicNumber() { SetHeaderValue(kMagicNumberOffset, kMagicNumber); }\n\n              uint8_t* data_;\n              uint32_t size_;\n              bool owns_data_;\n            };"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "SnapshotData",
+        "extends": "SerializedData",
+        "implements": [],
+        "about": "Wrapper around reservation sizes and the serialization payload, inheriting from SerializedData and providing specific methods for snapshot handling.",
+        "attributes": [],
+        "dependencies": [
+          "Serializer"
+        ]
+      },
+      "code": "class V8_EXPORT_PRIVATE SnapshotData : public SerializedData {\n            public:\n              // Used when producing.\n              explicit SnapshotData(const Serializer* serializer);\n\n              // Used when consuming.\n              explicit SnapshotData(const base::Vector<const uint8_t> snapshot)\n                  : SerializedData(const_cast<uint8_t*>(snapshot.begin()),\n                                   snapshot.length()) {}\n\n              virtual base::Vector<const uint8_t> Payload() const;\n\n              base::Vector<const uint8_t> RawData() const {\n                return base::Vector<const uint8_t>(data_, size_);\n              }\n\n             protected:\n              // Empty constructor used by SnapshotCompression so it can manually allocate\n              // memory.\n              SnapshotData() : SerializedData() {}\n              friend class SnapshotCompression;\n\n              // Resize used by SnapshotCompression so it can shrink the compressed\n              // SnapshotData.\n              void Resize(uint32_t size) { size_ = size; }\n\n              // The data header consists of uint32_t-sized entries:\n              // [0] magic number and (internal) external reference count\n              // [1] payload length\n              // ... serialized payload\n              static const uint32_t kPayloadLengthOffset = kMagicNumberOffset + kUInt32Size;\n              static const uint32_t kHeaderSize = kPayloadLengthOffset + kUInt32Size;\n            };"
+    }
+  ],
+  "dependencies": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "SnapshotCompression",
+        "about": "Compresses and decompresses snapshot data.",
+        "dependencies": []
+      },
+      "code": "class SnapshotCompression {};",
+      "type": "class"
+    }
+  ],
+  "file_path": "/home/kathirks_gc/v8_go/archive/codebase/src/snapshot/snapshot-data.h"
+}

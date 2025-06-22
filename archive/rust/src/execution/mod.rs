@@ -1,0 +1,36 @@
+// Module declarations for converted execution code
+
+pub mod futex-emulation;
+pub mod embedder-state;
+pub mod protectors;
+pub mod local-isolate;
+pub mod encoded-c-signature;
+pub mod isolate-inl;
+pub mod v8threads;
+pub mod isolate-utils;
+pub mod microtask-queue;
+pub mod frames-inl;
+pub mod tiering-manager;
+pub mod interrupts-scope;
+pub mod simulator-base;
+pub mod stack-guard;
+pub mod arguments-inl;
+pub mod vm-state;
+pub mod mutex-guard-if-off-thread;
+pub mod isolate-data;
+pub mod frames;
+pub mod local-isolate-inl;
+pub mod pointer-authentication-dummy;
+pub mod vm-state-inl;
+pub mod simulator;
+pub mod thread-id;
+pub mod arguments;
+pub mod clobber-registers;
+pub mod isolate;
+pub mod thread-local-top;
+pub mod execution;
+pub mod pointer-authentication;
+pub mod messages;
+pub mod isolate-utils-inl;
+pub mod frame-constants;
+pub mod protectors-inl;

@@ -1,0 +1,84 @@
+{
+  "metadata": {
+    "path": "/home/kathirks_gc/v8_go/archive/codebase/src/baseline/ppc/baseline-compiler-ppc-inl.h",
+    "file_name": "baseline-compiler-ppc-inl.h",
+    "language": "cpp",
+    "purpose": "Provides PPC-specific inline implementations for the BaselineCompiler in V8"
+  },
+  "imports": {
+    "metadata": {
+      "language": "cpp",
+      "purpose": "Includes necessary headers for logging and baseline compilation."
+    },
+    "code": "#include \"src/base/logging.h\"\n#include \"src/baseline/baseline-compiler.h\""
+  },
+  "functions": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "method",
+        "name": "Prologue",
+        "parent": "BaselineCompiler",
+        "about": "Generates the function prologue for Baseline code on PPC architecture.",
+        "logic": "Enters a new stack frame, calls the out-of-line prologue builtin, and fills the frame with initial values.",
+        "parameters": [],
+        "return": {
+          "type": "void",
+          "description": "No return value"
+        },
+        "dependencies": [
+          "CallBuiltin",
+          "kContextRegister",
+          "kJSFunctionRegister",
+          "kJavaScriptCallArgCountRegister",
+          "kJavaScriptCallNewTargetRegister",
+          "bytecode_"
+        ]
+      },
+      "code": "void BaselineCompiler::Prologue() {\n  ASM_CODE_COMMENT(&masm_);\n  __ masm()->EnterFrame(StackFrame::BASELINE);\n  DCHECK_EQ(kJSFunctionRegister, kJavaScriptCallTargetRegister);\n  int max_frame_size = bytecode_->max_frame_size();\n  CallBuiltin<Builtin::kBaselineOutOfLinePrologue>(\n      kContextRegister, kJSFunctionRegister, kJavaScriptCallArgCountRegister,\n      max_frame_size, kJavaScriptCallNewTargetRegister, bytecode_);\n\n  PrologueFillFrame();\n}"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "method",
+        "name": "PrologueFillFrame",
+        "parent": "BaselineCompiler",
+        "about": "Fills the register part of the Baseline stack frame with the undefined value on PPC.",
+        "logic": "Optimizes frame filling by unrolling the loop when the register count is small or using a loop when the register count is large.  Handles the new_target or generator register separately if present.",
+        "parameters": [],
+        "return": {
+          "type": "void",
+          "description": "No return value"
+        },
+        "dependencies": [
+          "kInterpreterAccumulatorRegister",
+          "RootIndex::kUndefinedValue",
+          "bytecode_",
+          "Push"
+        ]
+      },
+      "code": "void BaselineCompiler::PrologueFillFrame() {\n  ASM_CODE_COMMENT(&masm_);\n  // Inlined register frame fill\n  interpreter::Register new_target_or_generator_register =\n      bytecode_->incoming_new_target_or_generator_register();\n  if (v8_flags.debug_code) {\n    __ masm()->CompareRoot(kInterpreterAccumulatorRegister,\n                           RootIndex::kUndefinedValue);\n    __ masm()->Assert(eq, AbortReason::kUnexpectedValue);\n  }\n  int register_count = bytecode_->register_count();\n  // Magic value\n  const int kLoopUnrollSize = 8;\n  const int new_target_index = new_target_or_generator_register.index();\n  const bool has_new_target = new_target_index != kMaxInt;\n  if (has_new_target) {\n    DCHECK_LE(new_target_index, register_count);\n    for (int i = 0; i < new_target_index; i++) {\n      __ Push(kInterpreterAccumulatorRegister);\n    }\n    // Push new_target_or_generator.\n    __ Push(kJavaScriptCallNewTargetRegister);\n    register_count -= new_target_index + 1;\n  }\n  if (register_count < 2 * kLoopUnrollSize) {\n    // If the frame is small enough, just unroll the frame fill completely.\n    for (int i = 0; i < register_count; ++i) {\n      __ Push(kInterpreterAccumulatorRegister);\n    }\n\n  } else {\n    // Extract the first few registers to round to the unroll size.\n    int first_registers = register_count % kLoopUnrollSize;\n    for (int i = 0; i < first_registers; ++i) {\n      __ Push(kInterpreterAccumulatorRegister);\n    }\n    BaselineAssembler::ScratchRegisterScope temps(&basm_);\n    Register scratch = temps.AcquireScratch();\n\n    __ Move(scratch, register_count / kLoopUnrollSize);\n    // We enter the loop unconditionally, so make sure we need to loop at least\n    // once.\n    DCHECK_GT(register_count / kLoopUnrollSize, 0);\n    Label loop;\n    __ Bind(&loop);\n    for (int i = 0; i < kLoopUnrollSize; ++i) {\n      __ Push(kInterpreterAccumulatorRegister);\n    }\n    __ masm()->SubS64(scratch, scratch, Operand(1), r0, LeaveOE, SetRC);\n    __ masm()->bgt(&loop, cr0);\n  }\n}"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "method",
+        "name": "VerifyFrameSize",
+        "parent": "BaselineCompiler",
+        "about": "Verifies the size of the stack frame on PPC.",
+        "logic": "Calculates the expected stack pointer value based on the frame size and compares it with the frame pointer to detect stack corruption.",
+        "parameters": [],
+        "return": {
+          "type": "void",
+          "description": "No return value"
+        },
+        "dependencies": [
+          "InterpreterFrameConstants::kFixedFrameSizeFromFp",
+          "bytecode_"
+        ]
+      },
+      "code": "void BaselineCompiler::VerifyFrameSize() {\n  BaselineAssembler::ScratchRegisterScope temps(&basm_);\n  Register scratch = temps.AcquireScratch();\n\n  __ masm()->AddS64(scratch, sp,\n                    Operand(InterpreterFrameConstants::kFixedFrameSizeFromFp +\n                            bytecode_->frame_size()));\n  __ masm()->CmpU64(scratch, fp);\n  __ masm()->Assert(eq, AbortReason::kUnexpectedStackPointer);\n}"
+    }
+  ],
+  "file_path": "/home/kathirks_gc/v8_go/archive/codebase/src/baseline/ppc/baseline-compiler-ppc-inl.h"
+}

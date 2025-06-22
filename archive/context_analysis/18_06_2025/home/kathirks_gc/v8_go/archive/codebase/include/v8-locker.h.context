@@ -1,0 +1,94 @@
+{
+  "metadata": {
+    "path": "/home/kathirks_gc/v8_go/archive/codebase/include/v8-locker.h",
+    "file_name": "v8-locker.h",
+    "language": "cpp",
+    "purpose": "Defines the Locker and Unlocker classes for managing access to V8 isolates from multiple threads."
+  },
+  "imports": {
+    "metadata": {
+      "language": "cpp",
+      "purpose": "Include the v8 configuration file"
+    },
+    "code": "#include \"v8config.h\"  // NOLINT(build/include_directory)"
+  },
+  "classes": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "Unlocker",
+        "about": "Releases the lock on a V8 isolate, allowing other threads to use it. Intended for use in long-running callbacks from V8.",
+        "attributes": [
+          {
+            "name": "isolate_",
+            "type": "internal::Isolate*",
+            "access": "private",
+            "purpose": "Pointer to the internal isolate."
+          }
+        ],
+        "dependencies": [
+          "Isolate",
+          "internal::Isolate"
+        ]
+      },
+      "code": "class V8_EXPORT Unlocker {\n            public:\n              /**\n               * Initialize Unlocker for a given Isolate.\n               */\n              V8_INLINE explicit Unlocker(Isolate* isolate) { Initialize(isolate); }\n\n              ~Unlocker();\n\n            private:\n              void Initialize(Isolate* isolate);\n\n              internal::Isolate* isolate_;\n            };"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "Locker",
+        "about": "Acquires a lock on a V8 isolate, preventing other threads from using it. Provides a critical section for V8 access.",
+        "attributes": [
+          {
+            "name": "has_lock_",
+            "type": "bool",
+            "access": "private",
+            "purpose": "Indicates whether the locker holds the lock."
+          },
+          {
+            "name": "top_level_",
+            "type": "bool",
+            "access": "private",
+            "purpose": "Indicates if this is the top-level locker."
+          },
+          {
+            "name": "isolate_",
+            "type": "internal::Isolate*",
+            "access": "private",
+            "purpose": "Pointer to the internal isolate."
+          }
+        ],
+        "dependencies": [
+          "Isolate",
+          "internal::Isolate"
+        ]
+      },
+      "code": "class V8_EXPORT Locker {\n            public:\n              /**\n               * Initialize Locker for a given Isolate.\n               */\n              V8_INLINE explicit Locker(Isolate* isolate) { Initialize(isolate); }\n\n              ~Locker();\n\n              /**\n               * Returns whether or not the locker for a given isolate, is locked by the\n               * current thread.\n               */\n              static bool IsLocked(Isolate* isolate);\n\n              // Disallow copying and assigning.\n              Locker(const Locker&) = delete;\n              void operator=(const Locker&) = delete;\n\n            private:\n              void Initialize(Isolate* isolate);\n\n              bool has_lock_;\n              bool top_level_;\n              internal::Isolate* isolate_;\n            };"
+    }
+  ],
+  "dependencies": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "Isolate",
+        "about": "Represents an isolated instance of the V8 JavaScript engine."
+      },
+      "code": "class Isolate;",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "internal::Isolate",
+        "about": "Internal representation of an isolate."
+      },
+      "code": "namespace internal {\n                class Isolate;\n                }  // namespace internal",
+      "type": "class"
+    }
+  ],
+  "file_path": "/home/kathirks_gc/v8_go/archive/codebase/include/v8-locker.h"
+}

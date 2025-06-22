@@ -1,0 +1,376 @@
+{
+  "metadata": {
+    "path": "/home/kathirks_gc/v8_go/archive/codebase/src/bigint/vector-arithmetic.h",
+    "file_name": "vector-arithmetic.h",
+    "language": "cpp",
+    "purpose": "Defines helper functions for performing arithmetic operations on vectors of digits used in BigInt implementations."
+  },
+  "imports": {
+    "metadata": {
+      "language": "cpp",
+      "purpose": "Includes necessary headers for BigInt and digit arithmetic operations."
+    },
+    "code": "#include \"src/bigint/bigint.h\"\n            #include \"src/bigint/digit-arithmetic.h\""
+  },
+  "functions": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "function",
+        "name": "AddAndReturnOverflow",
+        "about": "Adds two digit vectors and returns the carry on overflow.",
+        "logic": "Performs addition of Digits X to RWDigits Z. Returns the carry bit if an overflow occurs during the addition.",
+        "parameters": [
+          {
+            "name": "Z",
+            "type": "RWDigits",
+            "purpose": "The destination digit vector (read-write)."
+          },
+          {
+            "name": "X",
+            "type": "Digits",
+            "purpose": "The source digit vector."
+          }
+        ],
+        "return": {
+          "type": "digit_t",
+          "description": "The carry value (0 or 1)."
+        },
+        "dependencies": []
+      },
+      "code": "digit_t AddAndReturnOverflow(RWDigits Z, Digits X);"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "function",
+        "name": "SubAndReturnBorrow",
+        "about": "Subtracts one digit vector from another and returns the borrow on overflow.",
+        "logic": "Performs subtraction of Digits X from RWDigits Z. Returns the borrow bit if an overflow (underflow) occurs during the subtraction.",
+        "parameters": [
+          {
+            "name": "Z",
+            "type": "RWDigits",
+            "purpose": "The destination digit vector (read-write)."
+          },
+          {
+            "name": "X",
+            "type": "Digits",
+            "purpose": "The source digit vector to subtract."
+          }
+        ],
+        "return": {
+          "type": "digit_t",
+          "description": "The borrow value (0 or 1)."
+        },
+        "dependencies": []
+      },
+      "code": "digit_t SubAndReturnBorrow(RWDigits Z, Digits X);"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "function",
+        "name": "Add",
+        "about": "Adds a single digit to a digit vector.",
+        "logic": "Iterates through the digits of X, adding y and propagating the carry. The loop continues as long as there is a carry.",
+        "parameters": [
+          {
+            "name": "X",
+            "type": "RWDigits",
+            "purpose": "The digit vector to add to (read-write)."
+          },
+          {
+            "name": "y",
+            "type": "digit_t",
+            "purpose": "The digit to add."
+          }
+        ],
+        "return": {
+          "type": "void",
+          "description": "No return value."
+        },
+        "dependencies": [
+          "digit_add2"
+        ]
+      },
+      "code": "inline void Add(RWDigits X, digit_t y) {\n            digit_t carry = y;\n            int i = 0;\n            do {\n                X[i] = digit_add2(X[i], carry, &carry);\n                i++;\n            } while (carry != 0);\n            }"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "function",
+        "name": "Subtract",
+        "about": "Subtracts a single digit from a digit vector.",
+        "logic": "Iterates through the digits of X, subtracting y and propagating the borrow. The loop continues as long as there is a borrow.",
+        "parameters": [
+          {
+            "name": "X",
+            "type": "RWDigits",
+            "purpose": "The digit vector to subtract from (read-write)."
+          },
+          {
+            "name": "y",
+            "type": "digit_t",
+            "purpose": "The digit to subtract."
+          }
+        ],
+        "return": {
+          "type": "void",
+          "description": "No return value."
+        },
+        "dependencies": [
+          "digit_sub"
+        ]
+      },
+      "code": "inline void Subtract(RWDigits X, digit_t y) {\n            digit_t borrow = y;\n            int i = 0;\n            do {\n                X[i] = digit_sub(X[i], borrow, &borrow);\n                i++;\n            } while (borrow != 0);\n            }"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "function",
+        "name": "AddAndReturnCarry",
+        "about": "Adds two digit vectors and returns the carry.",
+        "logic": "Adds Y's digits to the matching digits in X and stores the result in Z, returning the final carry.",
+        "parameters": [
+          {
+            "name": "Z",
+            "type": "RWDigits",
+            "purpose": "The destination digit vector (read-write)."
+          },
+          {
+            "name": "X",
+            "type": "Digits",
+            "purpose": "The first source digit vector."
+          },
+          {
+            "name": "Y",
+            "type": "Digits",
+            "purpose": "The second source digit vector."
+          }
+        ],
+        "return": {
+          "type": "digit_t",
+          "description": "The carry value after addition."
+        },
+        "dependencies": []
+      },
+      "code": "digit_t AddAndReturnCarry(RWDigits Z, Digits X, Digits Y);"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "function",
+        "name": "SubtractAndReturnBorrow",
+        "about": "Subtracts one digit vector from another and returns the borrow.",
+        "logic": "Subtracts Y's digits from the matching digits in X and stores the result in Z, returning the final borrow.",
+        "parameters": [
+          {
+            "name": "Z",
+            "type": "RWDigits",
+            "purpose": "The destination digit vector (read-write)."
+          },
+          {
+            "name": "X",
+            "type": "Digits",
+            "purpose": "The digit vector to subtract from."
+          },
+          {
+            "name": "Y",
+            "type": "Digits",
+            "purpose": "The digit vector to subtract."
+          }
+        ],
+        "return": {
+          "type": "digit_t",
+          "description": "The borrow value after subtraction."
+        },
+        "dependencies": []
+      },
+      "code": "digit_t SubtractAndReturnBorrow(RWDigits Z, Digits X, Digits Y);"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "function",
+        "name": "IsDigitNormalized",
+        "about": "Checks if a digit vector is normalized (no leading zero digits).",
+        "logic": "A digit vector is normalized if its most significant digit is non-zero or if the vector is empty.",
+        "parameters": [
+          {
+            "name": "X",
+            "type": "Digits",
+            "purpose": "The digit vector to check."
+          }
+        ],
+        "return": {
+          "type": "bool",
+          "description": "True if the vector is normalized, false otherwise."
+        },
+        "dependencies": []
+      },
+      "code": "inline bool IsDigitNormalized(Digits X) { return X.len() == 0 || X.msd() != 0; }"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "function",
+        "name": "IsBitNormalized",
+        "about": "Checks if a digit vector is bit-normalized (MSB of the most significant digit is 1).",
+        "logic": "A digit vector is bit-normalized if the most significant bit of its most significant digit is 1.",
+        "parameters": [
+          {
+            "name": "X",
+            "type": "Digits",
+            "purpose": "The digit vector to check."
+          }
+        ],
+        "return": {
+          "type": "bool",
+          "description": "True if the vector is bit-normalized, false otherwise."
+        },
+        "dependencies": [
+          "kDigitBits"
+        ]
+      },
+      "code": "inline bool IsBitNormalized(Digits X) {\n            return (X.msd() >> (kDigitBits - 1)) == 1;\n            }"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "function",
+        "name": "GreaterThanOrEqual",
+        "about": "Compares two digit vectors and returns true if the first is greater than or equal to the second.",
+        "logic": "Compares two Digits A and B, returning true if A >= B.",
+        "parameters": [
+          {
+            "name": "A",
+            "type": "Digits",
+            "purpose": "The first digit vector."
+          },
+          {
+            "name": "B",
+            "type": "Digits",
+            "purpose": "The second digit vector."
+          }
+        ],
+        "return": {
+          "type": "bool",
+          "description": "True if A >= B, false otherwise."
+        },
+        "dependencies": [
+          "Compare"
+        ]
+      },
+      "code": "inline bool GreaterThanOrEqual(Digits A, Digits B) {\n            return Compare(A, B) >= 0;\n            }"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "function",
+        "name": "BitLength",
+        "about": "Calculates the bit length of a digit vector.",
+        "logic": "Calculates the bit length of a Digits X, based on the number of digits and the number of leading zeros in the most significant digit.",
+        "parameters": [
+          {
+            "name": "X",
+            "type": "Digits",
+            "purpose": "The digit vector."
+          }
+        ],
+        "return": {
+          "type": "int",
+          "description": "The bit length of the digit vector."
+        },
+        "dependencies": [
+          "kDigitBits",
+          "CountLeadingZeros"
+        ]
+      },
+      "code": "inline int BitLength(Digits X) {\n            return X.len() * kDigitBits - CountLeadingZeros(X.msd());\n            }"
+    }
+  ],
+  "dependencies": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "function",
+        "name": "digit_add2",
+        "about": "Adds two digits and a carry, returning the result and updating the carry."
+      },
+      "code": "digit_t digit_add2(digit_t a, digit_t b, digit_t* carry);",
+      "type": "func"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "function",
+        "name": "digit_sub",
+        "about": "Subtracts two digits and a borrow, returning the result and updating the borrow."
+      },
+      "code": "digit_t digit_sub(digit_t a, digit_t b, digit_t* borrow);",
+      "type": "func"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "function",
+        "name": "Compare",
+        "about": "Compares two digit vectors, returning -1, 0, or 1 if the first is less than, equal to, or greater than the second."
+      },
+      "code": "int Compare(Digits A, Digits B);",
+      "type": "func"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "function",
+        "name": "CountLeadingZeros",
+        "about": "Counts the number of leading zero bits in a digit."
+      },
+      "code": "int CountLeadingZeros(digit_t x);",
+      "type": "func"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "type",
+        "name": "Digits",
+        "about": "Represents a read-only vector of digits."
+      },
+      "code": "class Digits {\n                public:\n                    int len() const;\n                    digit_t msd() const;\n                };",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "type",
+        "name": "RWDigits",
+        "about": "Represents a read-write vector of digits."
+      },
+      "code": "class RWDigits {\n                public:\n                    digit_t operator[](int i);\n                };",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "type",
+        "name": "digit_t",
+        "about": "Represents a single digit in the BigInt representation."
+      },
+      "code": "typedef unsigned int digit_t;",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "constant",
+        "name": "kDigitBits",
+        "about": "Number of bits in a digit."
+      },
+      "code": "const int kDigitBits;",
+      "type": "variable"
+    }
+  ],
+  "file_path": "/home/kathirks_gc/v8_go/archive/codebase/src/bigint/vector-arithmetic.h"
+}

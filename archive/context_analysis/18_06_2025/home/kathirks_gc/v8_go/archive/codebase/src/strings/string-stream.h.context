@@ -1,0 +1,181 @@
+{
+  "metadata": {
+    "path": "/home/kathirks_gc/v8_go/archive/codebase/src/strings/string-stream.h",
+    "file_name": "string-stream.h",
+    "language": "cpp",
+    "purpose": "Defines the StringStream class for efficient string building and formatting in V8."
+  },
+  "imports": {
+    "metadata": {
+      "language": "cpp",
+      "purpose": "Includes necessary headers for memory management, string manipulation, handles, and object representation."
+    },
+    "code": "#include <memory>\n\n#include \"src/base/small-vector.h\"\n#include \"src/base/strings.h\"\n#include \"src/base/vector.h\"\n#include \"src/handles/handles.h\"\n#include \"src/objects/objects.h\"\n#include \"src/objects/tagged.h\"\n#include \"src/utils/allocation.h\""
+  },
+  "classes": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "StringAllocator",
+        "about": "Abstract base class for string allocators used by StringStream.  Allows different allocation strategies.",
+        "attributes": [],
+        "dependencies": []
+      },
+      "code": "class StringAllocator {\n public:\n  virtual ~StringAllocator() = default;\n  // Allocate a number of bytes.\n  virtual char* allocate(unsigned bytes) = 0;\n  // Allocate a larger number of bytes and copy the old buffer to the new one.\n  // bytes is an input and output parameter passing the old size of the buffer\n  // and returning the new size.  If allocation fails then we return the old\n  // buffer and do not increase the size.\n  virtual char* grow(unsigned* bytes) = 0;\n};"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "HeapStringAllocator",
+        "extends": "StringAllocator",
+        "about": "String allocator that uses the heap for allocation via new[] and delete[].",
+        "attributes": [
+          {
+            "name": "space_",
+            "type": "char*",
+            "access": "private",
+            "purpose": "Pointer to the allocated memory on the heap"
+          }
+        ],
+        "dependencies": []
+      },
+      "code": "class HeapStringAllocator final : public StringAllocator {\n public:\n  ~HeapStringAllocator() override { DeleteArray(space_); }\n  char* allocate(unsigned bytes) override;\n  char* grow(unsigned* bytes) override;\n\n private:\n  char* space_;\n};"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "FixedStringAllocator",
+        "extends": "StringAllocator",
+        "about": "String allocator that uses a fixed-size buffer provided during construction.",
+        "attributes": [
+          {
+            "name": "buffer_",
+            "type": "char*",
+            "access": "private",
+            "purpose": "Pointer to the fixed-size buffer."
+          },
+          {
+            "name": "length_",
+            "type": "unsigned",
+            "access": "private",
+            "purpose": "The maximum length of the fixed-size buffer."
+          }
+        ],
+        "dependencies": []
+      },
+      "code": "class FixedStringAllocator final : public StringAllocator {\n public:\n  FixedStringAllocator(char* buffer, unsigned length)\n      : buffer_(buffer), length_(length) {}\n  ~FixedStringAllocator() override = default;\n  FixedStringAllocator(const FixedStringAllocator&) = delete;\n  FixedStringAllocator& operator=(const FixedStringAllocator&) = delete;\n\n  char* allocate(unsigned bytes) override;\n  char* grow(unsigned* bytes) override;\n\n private:\n  char* buffer_;\n  unsigned length_;\n};"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "SmallStringOptimizedAllocator",
+        "about": "String allocator optimized for small strings using a SmallVector for inline storage.",
+        "attributes": [
+          {
+            "name": "vector_",
+            "type": "SmallVector*",
+            "access": "private",
+            "purpose": "Pointer to the SmallVector used for storage."
+          }
+        ],
+        "dependencies": []
+      },
+      "code": "template <std::size_t kInlineSize>\nclass SmallStringOptimizedAllocator final : public StringAllocator {\n public:\n  using SmallVector = base::SmallVector<char, kInlineSize>;\n\n  explicit SmallStringOptimizedAllocator(SmallVector* vector) V8_NOEXCEPT\n      : vector_(vector) {}\n\n  char* allocate(unsigned bytes) override {\n    vector_->resize(bytes);\n    return vector_->data();\n  }\n\n  char* grow(unsigned* bytes) override {\n    unsigned new_bytes = *bytes * 2;\n    // Check for overflow.\n    if (new_bytes <= *bytes) {\n      return vector_->data();\n    }\n    vector_->resize(new_bytes);\n    *bytes = new_bytes;\n    return vector_->data();\n  }\n\n private:\n  SmallVector* vector_;\n};"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "StringStream",
+        "about": "Class for building strings efficiently using a custom allocator.",
+        "attributes": [
+          {
+            "name": "allocator_",
+            "type": "StringAllocator*",
+            "access": "private",
+            "purpose": "The allocator used for managing the string buffer."
+          },
+          {
+            "name": "object_print_mode_",
+            "type": "ObjectPrintMode",
+            "access": "private",
+            "purpose": "Determines the verbosity of object printing."
+          },
+          {
+            "name": "capacity_",
+            "type": "unsigned",
+            "access": "private",
+            "purpose": "The current allocated capacity of the string buffer."
+          },
+          {
+            "name": "length_",
+            "type": "unsigned",
+            "access": "private",
+            "purpose": "The current length of the string in the buffer."
+          },
+          {
+            "name": "buffer_",
+            "type": "char*",
+            "access": "private",
+            "purpose": "Pointer to the string buffer."
+          }
+        ],
+        "dependencies": [
+          "StringAllocator",
+          "ByteArray",
+          "FixedArray",
+          "JSObject",
+          "JSFunction",
+          "Object",
+          "String",
+          "Isolate"
+        ]
+      },
+      "code": "class StringStream final {\n  class FmtElm final {\n   public:\n    FmtElm(int value) : FmtElm(INT) {  // NOLINT\n      data_.u_int_ = value;\n    }\n    explicit FmtElm(double value) : FmtElm(DOUBLE) {  // NOLINT\n      data_.u_double_ = value;\n    }\n    FmtElm(const char* value) : FmtElm(C_STR) {  // NOLINT\n      data_.u_c_str_ = value;\n    }\n    FmtElm(const base::Vector<const base::uc16>& value)  // NOLINT\n        : FmtElm(LC_STR) {\n      data_.u_lc_str_ = &value;\n    }\n    template <typename T>\n    FmtElm(Tagged<T> value) : FmtElm(OBJ) {  // NOLINT\n      data_.u_obj_ = value.ptr();\n    }\n    template <typename T>\n    FmtElm(Handle<T> value) : FmtElm(HANDLE) {  // NOLINT\n      data_.u_handle_ = value.location();\n    }\n    FmtElm(void* value) : FmtElm(POINTER) {  // NOLINT\n      data_.u_pointer_ = value;\n    }\n\n   private:\n    friend class StringStream;\n    enum Type { INT, DOUBLE, C_STR, LC_STR, OBJ, HANDLE, POINTER };\n\n#ifdef DEBUG\n    Type type_;\n    explicit FmtElm(Type type) : type_(type) {}\n#else\n    explicit FmtElm(Type) {}\n#endif\n\n    union {\n      int u_int_;\n      double u_double_;\n      const char* u_c_str_;\n      const base::Vector<const base::uc16>* u_lc_str_;\n      Address u_obj_;\n      Address* u_handle_;\n      void* u_pointer_;\n    } data_;\n  };\n\n public:\n  enum ObjectPrintMode { kPrintObjectConcise, kPrintObjectVerbose };\n  explicit StringStream(StringAllocator* allocator,\n                        ObjectPrintMode object_print_mode = kPrintObjectVerbose)\n      : allocator_(allocator),\n        object_print_mode_(object_print_mode),\n        capacity_(kInitialCapacity),\n        length_(0),\n        buffer_(allocator_->allocate(kInitialCapacity)) {\n    buffer_[0] = 0;\n  }\n\n  bool Put(char c);\n  bool Put(Tagged<String> str);\n  bool Put(Tagged<String> str, int start, int end);\n  void Add(const char* format) { Add(base::CStrVector(format)); }\n  void Add(base::Vector<const char> format) {\n    Add(format, base::Vector<FmtElm>());\n  }\n\n  template <typename... Args>\n  void Add(const char* format, Args... args) {\n    Add(base::CStrVector(format), args...);\n  }\n\n  template <typename... Args>\n  void Add(base::Vector<const char> format, Args... args) {\n    FmtElm elems[]{args...};\n    Add(format, base::ArrayVector(elems));\n  }\n\n  // Getting the message out.\n  void OutputToFile(FILE* out);\n  void OutputToStdOut() { OutputToFile(stdout); }\n  void Log(Isolate* isolate);\n  DirectHandle<String> ToString(Isolate* isolate);\n  std::unique_ptr<char[]> ToCString() const;\n  int length() const { return length_; }\n\n  // Object printing support.\n  void PrintName(Tagged<Object> o);\n  void PrintFixedArray(Tagged<FixedArray> array, unsigned int limit);\n  void PrintByteArray(Tagged<ByteArray> ba);\n  void PrintUsingMap(Isolate* isolate, Tagged<JSObject> js_object);\n  void PrintPrototype(Isolate* isolate, Tagged<JSFunction> fun,\n                      Tagged<Object> receiver);\n  void PrintSecurityTokenIfChanged(Isolate* isolate,\n                                   Tagged<JSFunction> function);\n  void PrintFunction(Isolate* isolate, Tagged<JSFunction> function,\n                     Tagged<Object> receiver);\n\n  // Reset the stream.\n  void Reset() {\n    length_ = 0;\n    buffer_[0] = 0;\n  }\n\n  // Mentioned object cache support.\n  void PrintMentionedObjectCache(Isolate* isolate);\n  V8_EXPORT_PRIVATE static void ClearMentionedObjectCache(Isolate* isolate);\n#ifdef DEBUG\n  bool IsMentionedObjectCacheClear(Isolate* isolate);\n#endif\n\n  static const int kInitialCapacity = 16;\n\n private:\n  void Add(base::Vector<const char> format, base::Vector<FmtElm> elms);\n  void PrintObject(Tagged<Object> obj);\n\n  StringAllocator* allocator_;\n  ObjectPrintMode object_print_mode_;\n  unsigned capacity_;\n  unsigned length_;  // does not include terminating 0-character\n  char* buffer_;\n\n  bool full() const { return (capacity_ - length_) == 1; }\n  int space() const { return capacity_ - length_; }\n\n  DISALLOW_IMPLICIT_CONSTRUCTORS(StringStream);\n};"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "FmtElm",
+        "parent": "StringStream",
+        "about": "A helper class used by StringStream for formatting.",
+        "attributes": [],
+        "dependencies": []
+      },
+      "code": "class FmtElm final {\n   public:\n    FmtElm(int value) : FmtElm(INT) {  // NOLINT\n      data_.u_int_ = value;\n    }\n    explicit FmtElm(double value) : FmtElm(DOUBLE) {  // NOLINT\n      data_.u_double_ = value;\n    }\n    FmtElm(const char* value) : FmtElm(C_STR) {  // NOLINT\n      data_.u_c_str_ = value;\n    }\n    FmtElm(const base::Vector<const base::uc16>& value)  // NOLINT\n        : FmtElm(LC_STR) {\n      data_.u_lc_str_ = &value;\n    }\n    template <typename T>\n    FmtElm(Tagged<T> value) : FmtElm(OBJ) {  // NOLINT\n      data_.u_obj_ = value.ptr();\n    }\n    template <typename T>\n    FmtElm(Handle<T> value) : FmtElm(HANDLE) {  // NOLINT\n      data_.u_handle_ = value.location();\n    }\n    FmtElm(void* value) : FmtElm(POINTER) {  // NOLINT\n      data_.u_pointer_ = value;\n    }\n\n   private:\n    friend class StringStream;\n    enum Type { INT, DOUBLE, C_STR, LC_STR, OBJ, HANDLE, POINTER };\n\n#ifdef DEBUG\n    Type type_;\n    explicit FmtElm(Type type) : type_(type) {}\n#else\n    explicit FmtElm(Type) {}\n#endif\n\n    union {\n      int u_int_;\n      double u_double_;\n      const char* u_c_str_;\n      const base::Vector<const base::uc16>* u_lc_str_;\n      Address u_obj_;\n      Address* u_handle_;\n      void* u_pointer_;\n    } data_;\n  };"
+    }
+  ],
+  "functions": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "method",
+        "name": "ClearMentionedObjectCache",
+        "parent": "StringStream",
+        "about": "Clears the mentioned object cache for the given isolate.",
+        "logic": "This is a static method that is exported privately, which suggests it is used internally within the V8 engine but not exposed directly in the public API.",
+        "parameters": [
+          {
+            "name": "isolate",
+            "type": "Isolate*",
+            "purpose": "The V8 isolate for which to clear the cache."
+          }
+        ],
+        "return": {
+          "type": "void",
+          "description": "No return value."
+        },
+        "dependencies": [
+          "Isolate"
+        ]
+      },
+      "code": "V8_EXPORT_PRIVATE static void ClearMentionedObjectCache(Isolate* isolate);"
+    }
+  ],
+  "file_path": "/home/kathirks_gc/v8_go/archive/codebase/src/strings/string-stream.h"
+}

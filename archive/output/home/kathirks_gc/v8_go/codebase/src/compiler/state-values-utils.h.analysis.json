@@ -1,0 +1,253 @@
+{
+  "file_path": "/home/kathirks_gc/v8_go/codebase/src/compiler/state-values-utils.h",
+  "imports": [
+    "<array>",
+    "src/compiler/common-operator.h",
+    "src/compiler/js-graph.h",
+    "src/zone/zone-hashmap.h"
+  ],
+  "classes": [
+    {
+      "name": "StateValuesCache",
+      "properties": [
+        "kMaxInputCount",
+        "WorkingBuffer",
+        "NodeKey",
+        "StateValuesKey",
+        "js_graph_",
+        "hash_map_",
+        "working_space_",
+        "empty_state_values_"
+      ],
+      "methods": [
+        {
+          "name": "StateValuesCache",
+          "parameters": [
+            "JSGraph* js_graph"
+          ],
+          "return_type": "void",
+          "logic": "Constructor for the StateValuesCache, initializes the cache with a JSGraph."
+        },
+        {
+          "name": "GetNodeForValues",
+          "parameters": [
+            "Node** values",
+            "size_t count",
+            "const BytecodeLivenessState* liveness"
+          ],
+          "return_type": "Node*",
+          "logic": "Retrieves a Node representing the given values from the cache, or creates a new one if it doesn't exist. Handles liveness information for sparse representation."
+        },
+        {
+          "name": "AreKeysEqual",
+          "parameters": [
+            "void* key1",
+            "void* key2"
+          ],
+          "return_type": "bool",
+          "logic": "Static function to compare two generic keys for equality. Likely used by the hash map."
+        },
+        {
+          "name": "IsKeysEqualToNode",
+          "parameters": [
+            "StateValuesKey* key",
+            "Node* node"
+          ],
+          "return_type": "bool",
+          "logic": "Static function to check if a StateValuesKey is equal to a given Node.  Likely used for cache lookups."
+        },
+        {
+          "name": "AreValueKeysEqual",
+          "parameters": [
+            "StateValuesKey* key1",
+            "StateValuesKey* key2"
+          ],
+          "return_type": "bool",
+          "logic": "Static function to compare two StateValuesKeys for equality. Compares the underlying value arrays."
+        },
+        {
+          "name": "FillBufferWithValues",
+          "parameters": [
+            "WorkingBuffer* node_buffer",
+            "size_t* node_count",
+            "size_t* values_idx",
+            "Node** values",
+            "size_t count",
+            "const BytecodeLivenessState* liveness"
+          ],
+          "return_type": "SparseInputMask::BitMaskType",
+          "logic": "Fills a working buffer with values, sparsely encoded according to liveness information. Returns a bitmask representing the sparse encoding."
+        },
+        {
+          "name": "BuildTree",
+          "parameters": [
+            "size_t* values_idx",
+            "Node** values",
+            "size_t count",
+            "const BytecodeLivenessState* liveness",
+            "size_t level"
+          ],
+          "return_type": "Node*",
+          "logic": "Builds a tree of StateValues nodes from an array of values, taking into account liveness.  Likely a recursive function used for creating the node structure."
+        },
+        {
+          "name": "GetWorkingSpace",
+          "parameters": [
+            "size_t level"
+          ],
+          "return_type": "WorkingBuffer*",
+          "logic": "Retrieves a working buffer for a given level. Used for temporary storage during tree building."
+        },
+        {
+          "name": "GetEmptyStateValues",
+          "parameters": [],
+          "return_type": "Node*",
+          "logic": "Returns the node representing an empty state values object."
+        },
+        {
+          "name": "GetValuesNodeFromCache",
+          "parameters": [
+            "Node** nodes",
+            "size_t count",
+            "SparseInputMask mask"
+          ],
+          "return_type": "Node*",
+          "logic": "Retrieves a node from the cache based on the given nodes, count and input mask, or nullptr if not found."
+        },
+        {
+          "name": "graph",
+          "parameters": [],
+          "return_type": "TFGraph*",
+          "logic": "Accessor method for the TFGraph."
+        },
+        {
+          "name": "common",
+          "parameters": [],
+          "return_type": "CommonOperatorBuilder*",
+          "logic": "Accessor method for the CommonOperatorBuilder."
+        },
+        {
+          "name": "zone",
+          "parameters": [],
+          "return_type": "Zone*",
+          "logic": "Accessor method for the Zone."
+        }
+      ]
+    },
+    {
+      "name": "StateValuesAccess",
+      "properties": [
+        "node_"
+      ],
+      "methods": [
+        {
+          "name": "StateValuesAccess",
+          "parameters": [
+            "Node* node"
+          ],
+          "return_type": "void",
+          "logic": "Constructor for the StateValuesAccess class, initializes the access with a Node."
+        },
+        {
+          "name": "size",
+          "parameters": [],
+          "return_type": "size_t",
+          "logic": "Returns the size of the state values."
+        },
+        {
+          "name": "begin",
+          "parameters": [],
+          "return_type": "iterator",
+          "logic": "Returns an iterator to the beginning of the state values."
+        },
+        {
+          "name": "begin_without_receiver",
+          "parameters": [],
+          "return_type": "iterator",
+          "logic": "Returns an iterator to the beginning of the state values, skipping the receiver."
+        },
+        {
+          "name": "begin_without_receiver_and_skip",
+          "parameters": [
+            "int n_skips"
+          ],
+          "return_type": "iterator",
+          "logic": "Returns an iterator to the beginning of the state values, skipping the receiver and a specified number of additional elements."
+        },
+        {
+          "name": "end",
+          "parameters": [],
+          "return_type": "iterator",
+          "logic": "Returns an iterator to the end of the state values."
+        }
+      ]
+    },
+    {
+      "name": "StateValuesAccess::iterator",
+      "properties": [
+        "kMaxInlineDepth",
+        "stack_",
+        "current_depth_"
+      ],
+      "methods": [
+        {
+          "name": "operator!=",
+          "parameters": [
+            "iterator const& other"
+          ],
+          "return_type": "bool",
+          "logic": "Compares two iterators for inequality."
+        },
+        {
+          "name": "operator++",
+          "parameters": [],
+          "return_type": "iterator&",
+          "logic": "Increments the iterator to the next value."
+        },
+        {
+          "name": "operator*",
+          "parameters": [],
+          "return_type": "TypedNode",
+          "logic": "Dereferences the iterator, returning the current value as a TypedNode."
+        },
+        {
+          "name": "node",
+          "parameters": [],
+          "return_type": "Node*",
+          "logic": "Returns the current Node."
+        },
+        {
+          "name": "done",
+          "parameters": [],
+          "return_type": "bool",
+          "logic": "Checks if the iterator is at the end of the sequence."
+        },
+        {
+          "name": "AdvanceTillNotEmpty",
+          "parameters": [],
+          "return_type": "size_t",
+          "logic": "Advances the iterator until it finds a non-empty node. Returns the number of empty nodes skipped over."
+        }
+      ]
+    },
+    {
+      "name": "StateValuesAccess::TypedNode",
+      "properties": [
+        "node",
+        "type"
+      ],
+      "methods": [
+        {
+          "name": "TypedNode",
+          "parameters": [
+            "Node* node",
+            "MachineType type"
+          ],
+          "return_type": "void",
+          "logic": "Constructor for TypedNode, initializes the node and machine type"
+        }
+      ]
+    }
+  ],
+  "functions": []
+}

@@ -1,0 +1,190 @@
+{
+  "metadata": {
+    "path": "/home/kathirks_gc/v8_go/archive/codebase/src/compiler/turboshaft/wasm-revec-phase.cc",
+    "file_name": "wasm-revec-phase.cc",
+    "language": "cpp",
+    "purpose": "Implements the WasmRevecPhase for Turboshaft compiler, responsible for revec analysis and reduction in WebAssembly compilation."
+  },
+  "imports": {
+    "metadata": {
+      "language": "cpp",
+      "purpose": "Includes necessary headers for WasmRevecPhase functionality, including analysis, reduction, and graph manipulation."
+    },
+    "code": "#include \"src/compiler/turboshaft/wasm-revec-phase.h\"\n\n#include \"src/compiler/js-heap-broker.h\"\n#include \"src/compiler/turboshaft/copying-phase.h\"\n#include \"src/compiler/turboshaft/wasm-revec-reducer.h\"\n#include \"src/execution/isolate-inl.h\""
+  },
+  "functions": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "method",
+        "name": "Run",
+        "parent": "WasmRevecPhase",
+        "about": "Executes the WasmRevec phase of the Turboshaft compiler pipeline.",
+        "logic": "1. Creates a WasmRevecAnalyzer.\n2. Checks if reduction is needed based on the analyzer's result.\n3. If reduction is needed, sets the analyzer in PipelineData, runs the CopyingPhase with WasmRevecReducer, and optionally verifies the resulting graph using a WasmRevecVerifier (if available).\n4. Clears the analyzer from PipelineData.",
+        "parameters": [
+          {
+            "name": "data",
+            "type": "PipelineData*",
+            "purpose": "Pointer to the PipelineData containing compiler state and data."
+          },
+          {
+            "name": "temp_zone",
+            "type": "Zone*",
+            "purpose": "Pointer to a temporary Zone for allocation."
+          }
+        ],
+        "return": {
+          "type": "void",
+          "description": "No return value."
+        },
+        "dependencies": [
+          "WasmRevecAnalyzer",
+          "ShouldReduce",
+          "PipelineData",
+          "set_wasm_revec_analyzer",
+          "UnparkedScopeIfNeeded",
+          "CopyingPhase",
+          "WasmRevecReducer",
+          "Isolate",
+          "TryGetCurrent",
+          "wasm_revec_verifier_for_test",
+          "Verify",
+          "clear_wasm_revec_analyzer"
+        ]
+      },
+      "code": "void WasmRevecPhase::Run(PipelineData* data, Zone* temp_zone) {\n  WasmRevecAnalyzer analyzer(data, temp_zone, data->graph());\n\n  if (analyzer.ShouldReduce()) {\n    data->set_wasm_revec_analyzer(&analyzer);\n    UnparkedScopeIfNeeded scope(data->broker(),\n                                v8_flags.turboshaft_trace_reduction);\n    CopyingPhase<WasmRevecReducer>::Run(data, temp_zone);\n    Isolate* isolate = Isolate::TryGetCurrent();\n    WasmRevecVerifier* revec_observer_for_test =\n        isolate ? isolate->wasm_revec_verifier_for_test() : nullptr;\n    if (revec_observer_for_test) {\n      revec_observer_for_test->Verify(data->graph());\n    }\n    data->clear_wasm_revec_analyzer();\n  }\n}"
+    }
+  ],
+  "classes": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "WasmRevecPhase",
+        "about": "Represents the WasmRevec phase in the Turboshaft compiler pipeline.",
+        "attributes": [],
+        "dependencies": [
+          "PipelineData",
+          "Zone",
+          "WasmRevecAnalyzer",
+          "WasmRevecReducer",
+          "WasmRevecVerifier"
+        ]
+      },
+      "code": "namespace v8::internal::compiler::turboshaft {\n\nvoid WasmRevecPhase::Run(PipelineData* data, Zone* temp_zone) {\n  WasmRevecAnalyzer analyzer(data, temp_zone, data->graph());\n\n  if (analyzer.ShouldReduce()) {\n    data->set_wasm_revec_analyzer(&analyzer);\n    UnparkedScopeIfNeeded scope(data->broker(),\n                                v8_flags.turboshaft_trace_reduction);\n    CopyingPhase<WasmRevecReducer>::Run(data, temp_zone);\n    Isolate* isolate = Isolate::TryGetCurrent();\n    WasmRevecVerifier* revec_observer_for_test =\n        isolate ? isolate->wasm_revec_verifier_for_test() : nullptr;\n    if (revec_observer_for_test) {\n      revec_observer_for_test->Verify(data->graph());\n    }\n    data->clear_wasm_revec_analyzer();\n  }\n}\n\n}  // namespace v8::internal::compiler::turboshaft"
+    }
+  ],
+  "dependencies": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "WasmRevecAnalyzer",
+        "about": "Analyzes the graph for revec optimizations.",
+        "dependencies": []
+      },
+      "code": "class WasmRevecAnalyzer {\n                    public:\n                        WasmRevecAnalyzer(PipelineData* data, Zone* temp_zone, Graph* graph);\n                        bool ShouldReduce();\n                };",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "PipelineData",
+        "about": "Holds the data for a Turboshaft pipeline.",
+        "dependencies": []
+      },
+      "code": "class PipelineData {\n                    public:\n                        Graph* graph();\n                        JSHeapBroker* broker();\n                        void set_wasm_revec_analyzer(WasmRevecAnalyzer* analyzer);\n                        void clear_wasm_revec_analyzer();\n                };",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "Zone",
+        "about": "Memory allocation zone.",
+        "dependencies": []
+      },
+      "code": "class Zone {};",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "UnparkedScopeIfNeeded",
+        "about": "Manages scope unparking if needed.",
+        "dependencies": []
+      },
+      "code": "class UnparkedScopeIfNeeded {\n                    public:\n                        UnparkedScopeIfNeeded(JSHeapBroker* broker, bool trace_reduction);\n                };",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "CopyingPhase",
+        "about": "Generic copying phase for Turboshaft.",
+        "dependencies": []
+      },
+      "code": "template <typename Reducer>\n                class CopyingPhase {\n                    public:\n                        static void Run(PipelineData* data, Zone* temp_zone);\n                };",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "WasmRevecReducer",
+        "about": "Reduces the graph based on revec analysis.",
+        "dependencies": []
+      },
+      "code": "class WasmRevecReducer {};",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "Isolate",
+        "about": "Represents an isolated instance of the V8 JavaScript engine.",
+        "dependencies": []
+      },
+      "code": "class Isolate {\n                    public:\n                        static Isolate* TryGetCurrent();\n                        WasmRevecVerifier* wasm_revec_verifier_for_test();\n                };",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "WasmRevecVerifier",
+        "about": "Verifies the revec transformations.",
+        "dependencies": []
+      },
+      "code": "class WasmRevecVerifier {\n                    public:\n                        void Verify(Graph* graph);\n                };",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "JSHeapBroker",
+        "about": "Provides access to the JS heap.",
+        "dependencies": []
+      },
+      "code": "class JSHeapBroker {\n                // ...\n              };",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "Graph",
+        "about": "Represents the Turboshaft graph.",
+        "dependencies": []
+      },
+      "code": "class Graph {\n                // ...\n              };",
+      "type": "class"
+    }
+  ],
+  "file_path": "/home/kathirks_gc/v8_go/archive/codebase/src/compiler/turboshaft/wasm-revec-phase.cc"
+}

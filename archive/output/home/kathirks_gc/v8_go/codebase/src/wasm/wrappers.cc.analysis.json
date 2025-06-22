@@ -1,0 +1,496 @@
+{
+  "file_path": "/home/kathirks_gc/v8_go/codebase/src/wasm/wrappers.cc",
+  "imports": [
+    "<bit>",
+    "<optional>",
+    "src/base/small-vector.h",
+    "src/codegen/bailout-reason.h",
+    "src/codegen/interface-descriptors-inl.h",
+    "src/compiler/linkage.h",
+    "src/compiler/turboshaft/index.h",
+    "src/compiler/turboshaft/wasm-assembler-helpers.h",
+    "src/execution/isolate-data.h",
+    "src/objects/object-list-macros.h",
+    "src/wasm/turboshaft-graph-interface.h",
+    "src/wasm/wasm-engine.h",
+    "src/wasm/wasm-module.h",
+    "src/wasm/wasm-objects.h",
+    "src/zone/zone.h"
+  ],
+  "classes": [
+    {
+      "name": "WasmWrapperTSGraphBuilder",
+      "properties": [
+        "sig_"
+      ],
+      "methods": [
+        {
+          "name": "WasmWrapperTSGraphBuilder",
+          "parameters": [
+            "Zone* zone",
+            "Assembler& assembler",
+            "const CanonicalSig* sig"
+          ],
+          "return_type": "void",
+          "logic": "Constructor for the WasmWrapperTSGraphBuilder class. Initializes the base class and the sig_ member."
+        },
+        {
+          "name": "AbortIfNot",
+          "parameters": [
+            "V<Word32> condition",
+            "AbortReason abort_reason"
+          ],
+          "return_type": "void",
+          "logic": "Aborts execution if the given condition is false. This is a debug-only function that calls the Runtime::kAbort runtime function with the provided abort reason."
+        },
+        {
+          "name": "ModifyThreadInWasmFlagScope",
+          "parameters": [],
+          "return_type": "N/A",
+          "logic": "A nested class that modifies a thread-local flag indicating whether the current thread is executing within WebAssembly. It's enabled when the trap handler is enabled."
+        },
+        {
+          "name": "LoadExportedFunctionIndexAsSmi",
+          "parameters": [
+            "V<Object> exported_function_data"
+          ],
+          "return_type": "V<Smi>",
+          "logic": "Loads the function index from the exported function data as a Smi."
+        },
+        {
+          "name": "BuildChangeInt32ToSmi",
+          "parameters": [
+            "V<Word32> value"
+          ],
+          "return_type": "V<Smi>",
+          "logic": "Converts an int32 value to a Smi. Handles pointer compression."
+        },
+        {
+          "name": "GetTargetForBuiltinCall",
+          "parameters": [
+            "Builtin builtin"
+          ],
+          "return_type": "V<WordPtr>",
+          "logic": "Retrieves the target address for a given builtin function, using StubCallMode::kCallBuiltinPointer."
+        },
+        {
+          "name": "CallBuiltin",
+          "parameters": [
+            "Builtin name",
+            "OpIndex frame_state",
+            "Operator::Properties properties",
+            "Args... args"
+          ],
+          "return_type": "OpIndex",
+          "logic": "Generates a call to a builtin function with a specified call descriptor. Allows for optional frame state."
+        },
+        {
+          "name": "CallBuiltin",
+          "parameters": [
+            "Builtin name",
+            "Operator::Properties properties",
+            "Args... args"
+          ],
+          "return_type": "OpIndex",
+          "logic": "Generates a call to a builtin function with a specified call descriptor."
+        },
+        {
+          "name": "BuildChangeInt32ToNumber",
+          "parameters": [
+            "V<Word32> value"
+          ],
+          "return_type": "V<Number>",
+          "logic": "Converts an int32 value to a Number (Smi or HeapNumber). It optimizes for Smi conversion when possible."
+        },
+        {
+          "name": "BuildChangeFloat32ToNumber",
+          "parameters": [
+            "V<Float32> value"
+          ],
+          "return_type": "V<Number>",
+          "logic": "Converts a float32 value to a Number by calling the kWasmFloat32ToNumber builtin."
+        },
+        {
+          "name": "BuildChangeFloat64ToNumber",
+          "parameters": [
+            "V<Float64> value"
+          ],
+          "return_type": "V<Number>",
+          "logic": "Converts a float64 value to a Number by calling the kWasmFloat64ToNumber builtin."
+        },
+        {
+          "name": "ToJS",
+          "parameters": [
+            "OpIndex ret",
+            "CanonicalValueType type",
+            "V<Context> context"
+          ],
+          "return_type": "V<Object>",
+          "logic": "Converts a WebAssembly value to a JavaScript value based on the given type. Handles various types, including i32, i64, f32, f64, and references."
+        },
+        {
+          "name": "BuildCallAllocateJSArray",
+          "parameters": [
+            "V<Number> array_length",
+            "V<Object> context"
+          ],
+          "return_type": "V<JSArray>",
+          "logic": "Generates a call to the kWasmAllocateJSArray builtin to allocate a JSArray."
+        },
+        {
+          "name": "BuildCallWasmFromWrapper",
+          "parameters": [
+            "Zone* zone",
+            "const CanonicalSig* sig",
+            "V<Word32> callee",
+            "V<HeapObject> implicit_first_arg",
+            "const base::Vector<OpIndex> args",
+            "base::Vector<OpIndex> returns"
+          ],
+          "return_type": "void",
+          "logic": "Builds a call to a WebAssembly function from a wrapper. Constructs the call descriptor and manages return values."
+        },
+        {
+          "name": "BuildCallAndReturn",
+          "parameters": [
+            "V<Context> js_context",
+            "V<HeapObject> function_data",
+            "base::Vector<OpIndex> args",
+            "bool do_conversion",
+            "bool set_in_wasm_flag"
+          ],
+          "return_type": "OpIndex",
+          "logic": "Builds the call to the Wasm function and handles the return value conversion to JS. Includes setting the ThreadInWasm flag."
+        },
+        {
+          "name": "BuildJSToWasmWrapper",
+          "parameters": [
+            "bool do_conversion",
+            "compiler::turboshaft::OptionalOpIndex frame_state",
+            "bool set_in_wasm_flag"
+          ],
+          "return_type": "void",
+          "logic": "Builds the wrapper for calling a WebAssembly function from JavaScript. Handles parameter conversion, signature checks, and calls the WebAssembly function."
+        },
+        {
+          "name": "BuildWasmToJSWrapper",
+          "parameters": [
+            "ImportCallKind kind",
+            "int expected_arity",
+            "Suspend suspend"
+          ],
+          "return_type": "void",
+          "logic": "Builds the wrapper for calling a JavaScript function from WebAssembly. Handles parameter conversion, arity mismatch, and exception handling."
+        },
+        {
+          "name": "BuildCapiCallWrapper",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Builds a C API wrapper for calling a Wasm function. It marshals data to a C-compatible stack, makes the C call, and marshals back the result."
+        },
+        {
+          "name": "BuildSmiShiftBitsConstant",
+          "parameters": [],
+          "return_type": "V<Word32>",
+          "logic": "Creates a Word32 constant representing the number of bits to shift for Smi values."
+        },
+        {
+          "name": "BuildSmiShiftBitsConstant32",
+          "parameters": [],
+          "return_type": "V<Word32>",
+          "logic": "Creates a Word32 constant representing the number of bits to shift for Smi values (32-bit version)."
+        },
+        {
+          "name": "BuildChangeSmiToInt32",
+          "parameters": [
+            "OpIndex value"
+          ],
+          "return_type": "V<Word32>",
+          "logic": "Converts a Smi value to an int32 value."
+        },
+        {
+          "name": "HeapNumberToFloat64",
+          "parameters": [
+            "V<HeapNumber> input"
+          ],
+          "return_type": "V<Float64>",
+          "logic": "Loads the float64 value from a HeapNumber object."
+        },
+        {
+          "name": "FromJSFast",
+          "parameters": [
+            "OpIndex input",
+            "CanonicalValueType type"
+          ],
+          "return_type": "OpIndex",
+          "logic": "Performs a fast conversion from a JavaScript value to a WebAssembly value, optimized for Smi and HeapNumber types."
+        },
+        {
+          "name": "LoadInstanceType",
+          "parameters": [
+            "V<Map> map"
+          ],
+          "return_type": "OpIndex",
+          "logic": "Loads the instance type from a Map object."
+        },
+        {
+          "name": "BuildCheckString",
+          "parameters": [
+            "OpIndex input",
+            "OpIndex js_context",
+            "CanonicalValueType type"
+          ],
+          "return_type": "OpIndex",
+          "logic": "Builds a check to ensure the input is a JS string. Throws a TypeError if it's not a string, handling nullability."
+        },
+        {
+          "name": "BuildChangeTaggedToFloat64",
+          "parameters": [
+            "OpIndex value",
+            "OpIndex context",
+            "compiler::turboshaft::OptionalOpIndex frame_state"
+          ],
+          "return_type": "V<Float64>",
+          "logic": "Converts a tagged JavaScript value to a float64 value by calling the kWasmTaggedToFloat64 builtin."
+        },
+        {
+          "name": "BuildChangeTaggedToInt32",
+          "parameters": [
+            "OpIndex value",
+            "OpIndex context",
+            "compiler::turboshaft::OptionalOpIndex frame_state"
+          ],
+          "return_type": "OpIndex",
+          "logic": "Converts a tagged JavaScript value to an int32 value. Optimizes for Smi values and calls the kWasmTaggedNonSmiToInt32 builtin for non-Smi values."
+        },
+        {
+          "name": "GetBigIntToI64CallDescriptor",
+          "parameters": [
+            "bool needs_frame_state"
+          ],
+          "return_type": "CallDescriptor*",
+          "logic": "Returns the call descriptor for the BigIntToI64 builtin."
+        },
+        {
+          "name": "BuildChangeBigIntToInt64",
+          "parameters": [
+            "OpIndex input",
+            "OpIndex context",
+            "compiler::turboshaft::OptionalOpIndex frame_state"
+          ],
+          "return_type": "OpIndex",
+          "logic": "Converts a BigInt value to an int64 value by calling the BigIntToI64 builtin."
+        },
+        {
+          "name": "FromJS",
+          "parameters": [
+            "OpIndex input",
+            "OpIndex context",
+            "CanonicalValueType type",
+            "OptionalOpIndex frame_state"
+          ],
+          "return_type": "OpIndex",
+          "logic": "Converts a JavaScript value to a WebAssembly value based on the given type. It handles various types including ref, f32, f64, i32 and i64."
+        },
+        {
+          "name": "QualifiesForFastTransform",
+          "parameters": [],
+          "return_type": "bool",
+          "logic": "Checks whether the function parameters allow for a fast transformation path (only integer and float types)."
+        },
+        {
+          "name": "UnpackMapWord",
+          "parameters": [
+            "OpIndex map_word"
+          ],
+          "return_type": "V<Map>",
+          "logic": "Unpacks a map word to get the Map object (map packing version)."
+        },
+        {
+          "name": "LoadMap",
+          "parameters": [
+            "V<Object> object"
+          ],
+          "return_type": "V<Map>",
+          "logic": "Loads the Map object from the given object. Handles map packing."
+        },
+        {
+          "name": "CanTransformFast",
+          "parameters": [
+            "OpIndex input",
+            "CanonicalValueType type",
+            "TSBlock* slow_path"
+          ],
+          "return_type": "void",
+          "logic": "Checks if a given JS value can be quickly transformed to its Wasm equivalent. Jumps to the slow_path block if not."
+        },
+        {
+          "name": "AddArgumentNodes",
+          "parameters": [
+            "base::Vector<OpIndex> args",
+            "int pos",
+            "base::SmallVector<OpIndex, 16> wasm_params",
+            "const CanonicalSig* sig",
+            "V<Context> context"
+          ],
+          "return_type": "int",
+          "logic": "Converts WebAssembly parameters to JS values and adds them to the arguments vector for a function call."
+        },
+        {
+          "name": "LoadSharedFunctionInfo",
+          "parameters": [
+            "V<Object> js_function"
+          ],
+          "return_type": "OpIndex",
+          "logic": "Loads the SharedFunctionInfo from a JSFunction object."
+        },
+        {
+          "name": "BuildReceiverNode",
+          "parameters": [
+            "OpIndex callable_node",
+            "OpIndex native_context",
+            "V<Undefined> undefined_node"
+          ],
+          "return_type": "OpIndex",
+          "logic": "Determines the receiver for a function call based on the strictness of the function."
+        },
+        {
+          "name": "LoadContextFromJSFunction",
+          "parameters": [
+            "V<JSFunction> js_function"
+          ],
+          "return_type": "V<Context>",
+          "logic": "Loads the Context from a JSFunction object."
+        },
+        {
+          "name": "BuildSetNewStackLimit",
+          "parameters": [
+            "V<WordPtr> old_limit",
+            "V<WordPtr> new_limit"
+          ],
+          "return_type": "void",
+          "logic": "Sets the new stack limit and real limit. Uses a compare-and-swap for the interrupt limit to avoid overwriting a pending interrupt."
+        },
+        {
+          "name": "BuildSwitchToTheCentralStack",
+          "parameters": [
+            "V<WordPtr> old_limit"
+          ],
+          "return_type": "V<WordPtr>",
+          "logic": "Switches to the central stack by updating the stack pointer and stack limit in the isolate data. It also saves the old stack pointer and frame pointer to WasmContinuationObject"
+        },
+        {
+          "name": "BuildSwitchToTheCentralStackIfNeeded",
+          "parameters": [],
+          "return_type": "std::pair<V<WordPtr>, V<WordPtr>>",
+          "logic": "Switches to the central stack if the code is not already running on it. Returns the old stack pointer and stack limit."
+        },
+        {
+          "name": "BuildSwitchBackFromCentralStack",
+          "parameters": [
+            "V<WordPtr> old_sp",
+            "V<WordPtr> old_limit"
+          ],
+          "return_type": "void",
+          "logic": "Switches back from the central stack by restoring the old stack pointer and stack limit."
+        },
+        {
+          "name": "BuildSuspend",
+          "parameters": [
+            "V<Object> value",
+            "V<Object> import_data",
+            "V<WordPtr>* old_sp",
+            "V<WordPtr> old_limit"
+          ],
+          "return_type": "V<Object>",
+          "logic": "Builds the code to suspend execution if the returned value is a promise. This is done for WebAssembly asynchronous functions."
+        },
+        {
+          "name": "BuildMultiReturnFixedArrayFromIterable",
+          "parameters": [
+            "OpIndex iterable",
+            "V<Context> context"
+          ],
+          "return_type": "V<FixedArray>",
+          "logic": "Converts an iterable (like a JS array) to a FixedArray suitable for multiple return values from Wasm."
+        },
+        {
+          "name": "SafeStore",
+          "parameters": [
+            "int offset",
+            "CanonicalValueType type",
+            "OpIndex base",
+            "OpIndex value"
+          ],
+          "return_type": "void",
+          "logic": "Safely stores a value of a specific type at a given offset in memory. It handles alignment and potential compression of tagged values."
+        },
+        {
+          "name": "BuildLoadCallTargetFromExportedFunctionData",
+          "parameters": [
+            "V<WasmFunctionData> function_data"
+          ],
+          "return_type": "V<WordPtr>",
+          "logic": "Loads the call target (function pointer) from the exported function data.  This is only used for CAPI calls."
+        },
+        {
+          "name": "SafeLoad",
+          "parameters": [
+            "OpIndex base",
+            "int offset",
+            "CanonicalValueType type"
+          ],
+          "return_type": "const OpIndex",
+          "logic": "Safely loads a value of a specific type at a given offset in memory. It handles alignment and potential compression of tagged values."
+        }
+      ]
+    },
+    {
+      "name": "ModifyThreadInWasmFlagScope",
+      "properties": [
+        "wasm_wrapper_graph_builder_",
+        "thread_in_wasm_flag_address_"
+      ],
+      "methods": [
+        {
+          "name": "ModifyThreadInWasmFlagScope",
+          "parameters": [
+            "WasmWrapperTSGraphBuilder* wasm_wrapper_graph_builder",
+            "Assembler& asm_"
+          ],
+          "return_type": "N/A",
+          "logic": "Constructor: Sets the 'thread_in_wasm' flag to 'true' when entering Wasm code."
+        },
+        {
+          "name": "~ModifyThreadInWasmFlagScope",
+          "parameters": [],
+          "return_type": "N/A",
+          "logic": "Destructor: Resets the 'thread_in_wasm' flag to 'false' when exiting Wasm code."
+        }
+      ]
+    }
+  ],
+  "functions": [
+    {
+      "name": "GetBuiltinCallDescriptor",
+      "parameters": [
+        "Builtin name",
+        "Zone* zone"
+      ],
+      "return_type": "const TSCallDescriptor*",
+      "logic": "Creates a TSCallDescriptor for a given builtin function."
+    },
+    {
+      "name": "BuildWasmWrapper",
+      "parameters": [
+        "compiler::turboshaft::PipelineData* data",
+        "AccountingAllocator* allocator",
+        "compiler::turboshaft::Graph& graph",
+        "const CanonicalSig* sig",
+        "WrapperCompilationInfo wrapper_info"
+      ],
+      "return_type": "void",
+      "logic": "Builds the WebAssembly wrapper function based on the code kind specified in the WrapperCompilationInfo. Dispatches to different builder methods based on whether it's JS-to-Wasm, Wasm-to-JS, or Wasm-to-CAPI. It leverages WasmWrapperTSGraphBuilder."
+    }
+  ]
+}

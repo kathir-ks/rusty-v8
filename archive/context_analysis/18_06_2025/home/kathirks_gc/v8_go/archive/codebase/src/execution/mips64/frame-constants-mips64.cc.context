@@ -1,0 +1,138 @@
+{
+  "metadata": {
+    "path": "/home/kathirks_gc/v8_go/archive/codebase/src/execution/mips64/frame-constants-mips64.cc",
+    "file_name": "frame-constants-mips64.cc",
+    "language": "cpp",
+    "purpose": "Defines frame constants specific to the MIPS64 architecture for the V8 JavaScript engine."
+  },
+  "imports": {
+    "metadata": {
+      "language": "cpp",
+      "purpose": "Includes necessary header files for assembler, frame constants, and frames."
+    },
+    "code": "#include \"src/codegen/mips64/assembler-mips64-inl.h\"\n#include \"src/execution/frame-constants.h\"\n#include \"src/execution/frames.h\"\n\n#include \"src/execution/mips64/frame-constants-mips64.h\""
+  },
+  "functions": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "function",
+        "name": "fp_register",
+        "parent": "JavaScriptFrame",
+        "about": "Returns the frame pointer register for JavaScript frames.",
+        "logic": "Returns the MIPS64 frame pointer register (fp).",
+        "parameters": [],
+        "return": {
+          "type": "Register",
+          "description": "The frame pointer register."
+        },
+        "dependencies": []
+      },
+      "code": "Register JavaScriptFrame::fp_register() { return v8::internal::fp; }"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "function",
+        "name": "context_register",
+        "parent": "JavaScriptFrame",
+        "about": "Returns the context register for JavaScript frames.",
+        "logic": "Returns the MIPS64 context register (cp).",
+        "parameters": [],
+        "return": {
+          "type": "Register",
+          "description": "The context register."
+        },
+        "dependencies": []
+      },
+      "code": "Register JavaScriptFrame::context_register() { return cp; }"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "function",
+        "name": "constant_pool_pointer_register",
+        "parent": "JavaScriptFrame",
+        "about": "Returns the constant pool pointer register.  Not implemented for MIPS64.",
+        "logic": "This function is not implemented on MIPS64 and will cause the program to crash if called.",
+        "parameters": [],
+        "return": {
+          "type": "Register",
+          "description": "The constant pool pointer register (UNREACHABLE)."
+        },
+        "dependencies": []
+      },
+      "code": "Register JavaScriptFrame::constant_pool_pointer_register() { UNREACHABLE(); }"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "function",
+        "name": "RegisterStackSlotCount",
+        "parent": "UnoptimizedFrameConstants",
+        "about": "Returns the number of stack slots required for a given number of registers in unoptimized frames.",
+        "logic": "Simply returns the register count as the stack slot count.",
+        "parameters": [
+          {
+            "name": "register_count",
+            "type": "int",
+            "purpose": "The number of registers."
+          }
+        ],
+        "return": {
+          "type": "int",
+          "description": "The number of stack slots."
+        },
+        "dependencies": []
+      },
+      "code": "int UnoptimizedFrameConstants::RegisterStackSlotCount(int register_count) {\n  return register_count;\n}"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "function",
+        "name": "PaddingSlotCount",
+        "parent": "BuiltinContinuationFrameConstants",
+        "about": "Returns the number of padding slots required in builtin continuation frames. Always returns 0 for MIPS64.",
+        "logic": "Always returns 0, indicating no padding slots are needed.",
+        "parameters": [
+          {
+            "name": "register_count",
+            "type": "int",
+            "purpose": "The number of registers (unused)."
+          }
+        ],
+        "return": {
+          "type": "int",
+          "description": "The number of padding slots (0)."
+        },
+        "dependencies": []
+      },
+      "code": "int BuiltinContinuationFrameConstants::PaddingSlotCount(int register_count) {\n  USE(register_count);\n  return 0;\n}"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "function",
+        "name": "StackGuardFrameSize",
+        "parent": "MaglevFrame",
+        "about": "Returns the size of the stack guard frame for Maglev frames. Not implemented for MIPS64.",
+        "logic": "This function is not implemented on MIPS64 and will cause the program to crash if called.",
+        "parameters": [
+          {
+            "name": "register_input_count",
+            "type": "int",
+            "purpose": "The number of register inputs (unused)."
+          }
+        ],
+        "return": {
+          "type": "intptr_t",
+          "description": "The size of the stack guard frame (UNREACHABLE)."
+        },
+        "dependencies": []
+      },
+      "code": "intptr_t MaglevFrame::StackGuardFrameSize(int register_input_count) {\n  USE(register_input_count);\n  UNREACHABLE();\n}"
+    }
+  ],
+  "file_path": "/home/kathirks_gc/v8_go/archive/codebase/src/execution/mips64/frame-constants-mips64.cc"
+}

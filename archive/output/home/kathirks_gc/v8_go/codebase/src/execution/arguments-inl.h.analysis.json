@@ -1,0 +1,80 @@
+{
+  "file_path": "/home/kathirks_gc/v8_go/codebase/src/execution/arguments-inl.h",
+  "imports": [
+    "src/execution/arguments.h",
+    "src/handles/handles-inl.h",
+    "src/objects/objects-inl.h",
+    "src/objects/tagged-index.h"
+  ],
+  "classes": [
+    {
+      "name": "Arguments<T>::ChangeValueScope",
+      "properties": [
+        "location_",
+        "old_value_"
+      ],
+      "methods": [
+        {
+          "name": "ChangeValueScope",
+          "parameters": [
+            "Isolate* isolate",
+            "Arguments* args",
+            "int index",
+            "Tagged<Object> value"
+          ],
+          "return_type": "void",
+          "logic": "Constructor for the ChangeValueScope class. It takes the isolate, arguments object, index, and new value as input. It saves the old value at the specified index and updates the argument at the given index with the new value. Uses direct_handle to preserve correct handle semantics."
+        },
+        {
+          "name": "~ChangeValueScope",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Implicit destructor. It's assumed that the base class arguments handle its own deallocation. Although not explicitly present, it's essential for RAII to potentially revert changed values."
+        }
+      ]
+    }
+  ],
+  "functions": [
+    {
+      "name": "smi_value_at",
+      "parameters": [
+        "int index"
+      ],
+      "return_type": "int",
+      "logic": "Retrieves the Smi value at the given index. It first retrieves the object at the specified index, converts it to an Smi and then returns the integer value. It also includes a DCHECK that verifies the value returned is consistent with the tagged index value at the specified index if the object is of type TaggedIndex."
+    },
+    {
+      "name": "positive_smi_value_at",
+      "parameters": [
+        "int index"
+      ],
+      "return_type": "uint32_t",
+      "logic": "Retrieves the positive Smi value at the given index. It calls `smi_value_at` to get the integer value and then checks to make sure the returned value is not negative. It then casts the int to uint32_t for the return. Provides additional checks."
+    },
+    {
+      "name": "tagged_index_value_at",
+      "parameters": [
+        "int index"
+      ],
+      "return_type": "int",
+      "logic": "Retrieves the value of a TaggedIndex at the given index. Casts the object at the given index to a TaggedIndex and returns the underlying integer value of the TaggedIndex."
+    },
+    {
+      "name": "number_value_at",
+      "parameters": [
+        "int index"
+      ],
+      "return_type": "double",
+      "logic": "Retrieves the number value at the given index. It uses the `Object::NumberValue` method to convert the object to a double."
+    },
+    {
+      "name": "atOrUndefined",
+      "parameters": [
+        "Isolate* isolate",
+        "int index"
+      ],
+      "return_type": "Handle<Object>",
+      "logic": "Returns the Object at the given index if it exists. Otherwise, it returns the undefined value from the isolate's factory. Prevents out-of-bounds access."
+    }
+  ]
+}

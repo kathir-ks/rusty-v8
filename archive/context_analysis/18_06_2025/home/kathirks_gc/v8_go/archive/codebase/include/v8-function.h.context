@@ -1,0 +1,53 @@
+{
+  "metadata": {
+    "path": "/home/kathirks_gc/v8_go/archive/codebase/include/v8-function.h",
+    "file_name": "v8-function.h",
+    "language": "cpp",
+    "purpose": "Defines the v8::Function class, which represents a JavaScript function object."
+  },
+  "imports": {
+    "metadata": {
+      "language": "cpp",
+      "purpose": "V8 headers for function callbacks, local handles, messages, objects, templates, and configuration."
+    },
+    "code": "#include \"v8-function-callback.h\"  // NOLINT(build/include_directory)\n            #include \"v8-local-handle.h\"       // NOLINT(build/include_directory)\n            #include \"v8-message.h\"            // NOLINT(build/include_directory)\n            #include \"v8-object.h\"             // NOLINT(build/include_directory)\n            #include \"v8-template.h\"           // NOLINT(build/include_directory)\n            #include \"v8config.h\"              // NOLINT(build/include_directory)"
+  },
+  "classes": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "Function",
+        "extends": "Object",
+        "about": "Represents a JavaScript function object.",
+        "attributes": [],
+        "dependencies": [
+          "Context",
+          "Location",
+          "UnboundScript",
+          "Object",
+          "FunctionCallback",
+          "Local",
+          "Value",
+          "String",
+          "Isolate",
+          "ScriptOrigin"
+        ]
+      },
+      "code": "class V8_EXPORT Function : public Object {\n            public:\n                /**\n                 * Create a function in the current execution context\n                 * for a given FunctionCallback.\n                 */\n                static MaybeLocal<Function> New(\n                    Local<Context> context, FunctionCallback callback,\n                    Local<Value> data = Local<Value>(), int length = 0,\n                    ConstructorBehavior behavior = ConstructorBehavior::kAllow,\n                    SideEffectType side_effect_type = SideEffectType::kHasSideEffect);\n\n                V8_WARN_UNUSED_RESULT MaybeLocal<Object> NewInstance(\n                    Local<Context> context, int argc, Local<Value> argv[]) const;\n\n                V8_WARN_UNUSED_RESULT MaybeLocal<Object> NewInstance(\n                    Local<Context> context) const {\n                    return NewInstance(context, 0, nullptr);\n                }\n\n                /**\n                 * When side effect checks are enabled, passing kHasNoSideEffect allows the\n                 * constructor to be invoked without throwing. Calls made within the\n                 * constructor are still checked.\n                 */\n                V8_WARN_UNUSED_RESULT MaybeLocal<Object> NewInstanceWithSideEffectType(\n                    Local<Context> context, int argc, Local<Value> argv[],\n                    SideEffectType side_effect_type = SideEffectType::kHasSideEffect) const;\n\n                V8_WARN_UNUSED_RESULT MaybeLocal<Value> Call(v8::Isolate* isolate,\n                                                               Local<Context> context,\n                                                               Local<Value> recv, int argc,\n                                                               Local<Value> argv[]);\n                V8_WARN_UNUSED_RESULT MaybeLocal<Value> Call(Local<Context> context,\n                                                               Local<Value> recv, int argc,\n                                                               Local<Value> argv[]);\n\n                void SetName(Local<String> name);\n                Local<Value> GetName() const;\n\n                /**\n                 * Name inferred from variable or property assignment of this function.\n                 * Used to facilitate debugging and profiling of JavaScript code written\n                 * in an OO style, where many functions are anonymous but are assigned\n                 * to object properties.\n                 */\n                Local<Value> GetInferredName() const;\n\n                /**\n                 * displayName if it is set, otherwise name if it is configured, otherwise\n                 * function name, otherwise inferred name.\n                 */\n                Local<Value> GetDebugName() const;\n\n                /**\n                 * Returns zero based line number of function body and\n                 * kLineOffsetNotFound if no information available.\n                 */\n                int GetScriptLineNumber() const;\n                /**\n                 * Returns zero based column number of function body and\n                 * kLineOffsetNotFound if no information available.\n                 */\n                int GetScriptColumnNumber() const;\n\n                /**\n                 * Returns zero based line and column number of function body, else returns\n                 * {-1, -1}.\n                 */\n                Location GetScriptLocation() const;\n\n                /**\n                 * Returns zero based start position (character offset) of function body and\n                 * kLineOffsetNotFound if no information available.\n                 */\n                int GetScriptStartPosition() const;\n\n                /**\n                 * Returns scriptId.\n                 */\n                int ScriptId() const;\n\n                /**\n                 * Returns the original function if this function is bound, else returns\n                 * v8::Undefined.\n                 */\n                Local<Value> GetBoundFunction() const;\n\n                /**\n                 * Calls builtin Function.prototype.toString on this function.\n                 * This is different from Value::ToString() that may call a user-defined\n                 * toString() function, and different than Object::ObjectProtoToString() which\n                 * always serializes \"[object Function]\".\n                 */\n                V8_WARN_UNUSED_RESULT MaybeLocal<String> FunctionProtoToString(\n                    Local<Context> context);\n\n                /**\n                 * Returns true if the function does nothing.\n                 * The function returns false on error.\n                 * Note that this function is experimental. Embedders should not rely on\n                 * this existing. We may remove this function in the future.\n                 */\n                V8_WARN_UNUSED_RESULT bool Experimental_IsNopFunction() const;\n\n                ScriptOrigin GetScriptOrigin() const;\n                V8_INLINE static Function* Cast(Value* value) {\n            #ifdef V8_ENABLE_CHECKS\n                    CheckCast(value);\n            #endif\n                    return static_cast<Function*>(value);\n                }\n\n                static const int kLineOffsetNotFound;\n\n            private:\n                Function();\n                static void CheckCast(Value* obj);\n            };"
+    }
+  ],
+  "dependencies": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "ScriptOrigin",
+        "about": "Represents the origin of a script."
+      },
+      "code": "class ScriptOrigin {};",
+      "type": "class"
+    }
+  ],
+  "file_path": "/home/kathirks_gc/v8_go/archive/codebase/include/v8-function.h"
+}

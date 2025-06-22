@@ -1,0 +1,65 @@
+{
+  "metadata": {
+    "path": "/home/kathirks_gc/v8_go/archive/codebase/src/execution/thread-id.cc",
+    "file_name": "thread-id.cc",
+    "language": "cpp",
+    "purpose": "Provides a mechanism for assigning and retrieving unique IDs for threads within the V8 runtime."
+  },
+  "imports": {
+    "metadata": {
+      "language": "cpp",
+      "purpose": "Includes necessary headers for thread ID management, lazy initialization, and platform-specific features."
+    },
+    "code": "#include \"src/execution/thread-id.h\"\n#include \"src/base/lazy-instance.h\"\n#include \"src/base/platform/platform.h\""
+  },
+  "classes": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "ThreadId",
+        "about": "Represents a thread ID.  Provides static methods for accessing the current thread's ID.",
+        "attributes": [],
+        "dependencies": []
+      },
+      "code": "namespace v8 {\nnamespace internal {\n\nnamespace {\n\nthread_local int thread_id = 0;\n\nstd::atomic<int> next_thread_id{1};\n\n}  // namespace\n\n// static\nThreadId ThreadId::TryGetCurrent() {\n  return thread_id == 0 ? Invalid() : ThreadId(thread_id);\n}\n\n// static\nint ThreadId::GetCurrentThreadId() {\n  if (thread_id == 0) {\n    thread_id = next_thread_id.fetch_add(1);\n    CHECK_LE(1, thread_id);\n  }\n  return thread_id;\n}\n\n}  // namespace internal\n}  // namespace v8"
+    }
+  ],
+  "functions": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "method",
+        "name": "TryGetCurrent",
+        "parent": "ThreadId",
+        "about": "Attempts to get the current thread's ID. Returns Invalid() if no ID has been assigned.",
+        "logic": "Checks the thread_local variable 'thread_id'. If it's 0, it means no ID has been assigned yet, and Invalid() is returned. Otherwise, a ThreadId object is constructed with the current thread_id.",
+        "parameters": [],
+        "return": {
+          "type": "ThreadId",
+          "description": "The current thread's ID, or Invalid() if no ID has been assigned."
+        },
+        "dependencies": []
+      },
+      "code": "ThreadId ThreadId::TryGetCurrent() {\n  return thread_id == 0 ? Invalid() : ThreadId(thread_id);\n}"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "method",
+        "name": "GetCurrentThreadId",
+        "parent": "ThreadId",
+        "about": "Gets the current thread's ID, assigning a new ID if one hasn't been assigned yet.",
+        "logic": "Checks the thread_local variable 'thread_id'. If it's 0, a new ID is assigned using atomic increment. Then returns the thread_id.",
+        "parameters": [],
+        "return": {
+          "type": "int",
+          "description": "The current thread's ID."
+        },
+        "dependencies": []
+      },
+      "code": "int ThreadId::GetCurrentThreadId() {\n  if (thread_id == 0) {\n    thread_id = next_thread_id.fetch_add(1);\n    CHECK_LE(1, thread_id);\n  }\n  return thread_id;\n}"
+    }
+  ],
+  "file_path": "/home/kathirks_gc/v8_go/archive/codebase/src/execution/thread-id.cc"
+}

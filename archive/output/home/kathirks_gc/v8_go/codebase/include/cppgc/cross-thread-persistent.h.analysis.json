@@ -1,0 +1,315 @@
+{
+  "file_path": "/home/kathirks_gc/v8_go/codebase/include/cppgc/cross-thread-persistent.h",
+  "imports": [
+    "<atomic>",
+    "cppgc/internal/persistent-node.h",
+    "cppgc/internal/pointer-policies.h",
+    "cppgc/persistent.h",
+    "cppgc/visitor.h"
+  ],
+  "classes": [
+    {
+      "name": "CrossThreadPersistentBase",
+      "properties": [
+        "raw_",
+        "node_"
+      ],
+      "methods": [
+        {
+          "name": "CrossThreadPersistentBase",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Default constructor."
+        },
+        {
+          "name": "CrossThreadPersistentBase",
+          "parameters": [
+            "const void* raw"
+          ],
+          "return_type": "void",
+          "logic": "Constructor that initializes the raw pointer."
+        },
+        {
+          "name": "GetValueFromGC",
+          "parameters": [],
+          "return_type": "const void*",
+          "logic": "Returns the raw pointer, allowing access to potentially poisoned memory (ASAN)."
+        },
+        {
+          "name": "GetNodeFromGC",
+          "parameters": [],
+          "return_type": "PersistentNode*",
+          "logic": "Returns the associated PersistentNode, allowing access to potentially poisoned memory (ASAN)."
+        },
+        {
+          "name": "ClearFromGC",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Clears both the raw pointer and the PersistentNode, allowing access to potentially poisoned memory (ASAN)."
+        },
+        {
+          "name": "GetNodeSafe",
+          "parameters": [],
+          "return_type": "PersistentNode*",
+          "logic": "Thread-safe check for a valid handle based on a node using atomic load with acquire semantics."
+        },
+        {
+          "name": "SetNodeSafe",
+          "parameters": [
+            "PersistentNode* value"
+          ],
+          "return_type": "void",
+          "logic": "The GC writes using SetNodeSafe() while holding the lock. Uses atomic store with release semantics. It is address sanitizer aware."
+        }
+      ]
+    },
+    {
+      "name": "BasicCrossThreadPersistent",
+      "properties": [],
+      "methods": [
+        {
+          "name": "~BasicCrossThreadPersistent",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Destructor that clears the handle and frees the associated node, using double-checked locking for thread safety."
+        },
+        {
+          "name": "BasicCrossThreadPersistent",
+          "parameters": [
+            "const SourceLocation& loc"
+          ],
+          "return_type": "void",
+          "logic": "Constructor with source location."
+        },
+        {
+          "name": "BasicCrossThreadPersistent",
+          "parameters": [
+            "std::nullptr_t",
+            "const SourceLocation& loc"
+          ],
+          "return_type": "void",
+          "logic": "Constructor with nullptr and source location."
+        },
+        {
+          "name": "BasicCrossThreadPersistent",
+          "parameters": [
+            "SentinelPointer s",
+            "const SourceLocation& loc"
+          ],
+          "return_type": "void",
+          "logic": "Constructor with SentinelPointer and source location."
+        },
+        {
+          "name": "BasicCrossThreadPersistent",
+          "parameters": [
+            "T* raw",
+            "const SourceLocation& loc"
+          ],
+          "return_type": "void",
+          "logic": "Constructor with raw pointer and source location.  Allocates a node in the persistent region."
+        },
+        {
+          "name": "BasicCrossThreadPersistent",
+          "parameters": [
+            "UnsafeCtorTag",
+            "T* raw",
+            "const SourceLocation& loc"
+          ],
+          "return_type": "void",
+          "logic": "Constructor with UnsafeCtorTag and raw pointer and source location. Allocates node in the persistent region (Unsafe because using the UnsafeCtorTag)."
+        },
+        {
+          "name": "BasicCrossThreadPersistent",
+          "parameters": [
+            "T& raw",
+            "const SourceLocation& loc"
+          ],
+          "return_type": "void",
+          "logic": "Constructor with a reference to the object and source location.  Delegates to the pointer constructor."
+        },
+        {
+          "name": "BasicCrossThreadPersistent",
+          "parameters": [
+            "internal::BasicMember<U, MemberBarrierPolicy, MemberWeaknessTag,\n                            MemberCheckingPolicy, MemberStorageType>\n          member",
+            "const SourceLocation& loc"
+          ],
+          "return_type": "void",
+          "logic": "Constructor with a BasicMember and source location. Delegates to the pointer constructor, extracting the raw pointer from the BasicMember."
+        },
+        {
+          "name": "BasicCrossThreadPersistent",
+          "parameters": [
+            "const BasicCrossThreadPersistent& other",
+            "const SourceLocation& loc"
+          ],
+          "return_type": "void",
+          "logic": "Copy constructor with source location. Invokes operator=."
+        },
+        {
+          "name": "BasicCrossThreadPersistent",
+          "parameters": [
+            "const BasicCrossThreadPersistent<U, OtherWeaknessPolicy,\n                                       OtherLocationPolicy,\n                                       OtherCheckingPolicy>& other",
+            "const SourceLocation& loc"
+          ],
+          "return_type": "void",
+          "logic": "Heterogeneous copy constructor with source location. Invokes operator=."
+        },
+        {
+          "name": "BasicCrossThreadPersistent",
+          "parameters": [
+            "BasicCrossThreadPersistent&& other",
+            "const SourceLocation& loc"
+          ],
+          "return_type": "void",
+          "logic": "Move constructor with source location. Invokes operator=."
+        },
+        {
+          "name": "operator=",
+          "parameters": [
+            "const BasicCrossThreadPersistent& other"
+          ],
+          "return_type": "BasicCrossThreadPersistent&",
+          "logic": "Copy assignment operator. Assigns the value of another BasicCrossThreadPersistent."
+        },
+        {
+          "name": "operator=",
+          "parameters": [
+            "const BasicCrossThreadPersistent<U, OtherWeaknessPolicy,\n                                       OtherLocationPolicy,\n                                       OtherCheckingPolicy>& other"
+          ],
+          "return_type": "BasicCrossThreadPersistent&",
+          "logic": "Heterogeneous copy assignment operator. Assigns the value of another BasicCrossThreadPersistent (heterogeneous type)."
+        },
+        {
+          "name": "operator=",
+          "parameters": [
+            "BasicCrossThreadPersistent&& other"
+          ],
+          "return_type": "BasicCrossThreadPersistent&",
+          "logic": "Move assignment operator.  Moves the value from another BasicCrossThreadPersistent."
+        },
+        {
+          "name": "operator=",
+          "parameters": [
+            "T* other"
+          ],
+          "return_type": "BasicCrossThreadPersistent&",
+          "logic": "Assignment operator from a raw pointer."
+        },
+        {
+          "name": "operator=",
+          "parameters": [
+            "internal::BasicMember<U, MemberBarrierPolicy, MemberWeaknessTag,\n                            MemberCheckingPolicy, MemberStorageType>\n          member"
+          ],
+          "return_type": "BasicCrossThreadPersistent&",
+          "logic": "Assignment from a BasicMember."
+        },
+        {
+          "name": "operator=",
+          "parameters": [
+            "std::nullptr_t"
+          ],
+          "return_type": "BasicCrossThreadPersistent&",
+          "logic": "Assignment operator from a nullptr."
+        },
+        {
+          "name": "operator=",
+          "parameters": [
+            "SentinelPointer s"
+          ],
+          "return_type": "BasicCrossThreadPersistent&",
+          "logic": "Assignment operator from a SentinelPointer."
+        },
+        {
+          "name": "Get",
+          "parameters": [],
+          "return_type": "T*",
+          "logic": "Returns a pointer to the stored object. Not thread-safe."
+        },
+        {
+          "name": "Clear",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Clears the stored object."
+        },
+        {
+          "name": "Release",
+          "parameters": [],
+          "return_type": "T*",
+          "logic": "Returns a pointer to the stored object and releases it. Not thread-safe."
+        },
+        {
+          "name": "operator bool",
+          "parameters": [],
+          "return_type": "explicit operator bool()",
+          "logic": "Conversion to boolean. Returns true if an actual object has been stored and false otherwise. Not thread-safe."
+        },
+        {
+          "name": "operator T*",
+          "parameters": [],
+          "return_type": "operator T*()",
+          "logic": "Conversion to object of type T. Not thread-safe."
+        },
+        {
+          "name": "operator->",
+          "parameters": [],
+          "return_type": "T*",
+          "logic": "Dereferences the stored object using pointer operator. Not thread-safe."
+        },
+        {
+          "name": "operator*",
+          "parameters": [],
+          "return_type": "T&",
+          "logic": "Dereferences the stored object using reference operator. Not thread-safe."
+        },
+        {
+          "name": "To",
+          "parameters": [],
+          "return_type": "BasicCrossThreadPersistent<U, OtherWeaknessPolicy, OtherLocationPolicy,\n                             OtherCheckingPolicy>",
+          "logic": "Converts to a different type U. Performs a static cast."
+        },
+        {
+          "name": "Lock",
+          "parameters": [],
+          "return_type": "BasicCrossThreadPersistent<U, internal::StrongCrossThreadPersistentPolicy>",
+          "logic": "Locks the persistent into a strong persistent handle."
+        },
+        {
+          "name": "ClearFromGC",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Frees the node from GC."
+        },
+        {
+          "name": "GetFromGC",
+          "parameters": [],
+          "return_type": "T*",
+          "logic": "Returns the raw value stored in PersistentBase, but uses ASAN-safe access"
+        }
+      ]
+    },
+    {
+      "name": "UnsafeCtorTag",
+      "properties": [],
+      "methods": []
+    }
+  ],
+  "functions": [
+    {
+      "name": "IsValid",
+      "parameters": [
+        "const void* ptr"
+      ],
+      "return_type": "static bool",
+      "logic": "Checks if a pointer is valid (not null and not the sentinel pointer)."
+    },
+    {
+      "name": "TraceAsRoot",
+      "parameters": [
+        "RootVisitor& root_visitor",
+        "const void* ptr"
+      ],
+      "return_type": "static void",
+      "logic": "Traces the object as a root for garbage collection purposes."
+    }
+  ]
+}

@@ -1,0 +1,187 @@
+{
+  "file_path": "/home/kathirks_gc/v8_go/codebase/src/debug/debug-evaluate.cc",
+  "imports": [
+    "src/debug/debug-evaluate.h",
+    "src/builtins/accessors.h",
+    "src/codegen/assembler-inl.h",
+    "src/codegen/compiler.h",
+    "src/codegen/reloc-info.h",
+    "src/codegen/script-details.h",
+    "src/common/globals.h",
+    "src/debug/debug-frames.h",
+    "src/debug/debug-scopes.h",
+    "src/debug/debug.h",
+    "src/execution/frames-inl.h",
+    "src/execution/isolate-inl.h",
+    "src/interpreter/bytecode-array-iterator.h",
+    "src/interpreter/bytecodes.h",
+    "src/objects/code-inl.h",
+    "src/objects/contexts.h",
+    "src/objects/string-set-inl.h",
+    "src/debug/debug-wasm-objects.h"
+  ],
+  "classes": [
+    {
+      "name": "DebugEvaluate::ContextBuilder",
+      "properties": [
+        "isolate_",
+        "frame_inspector_",
+        "scope_iterator_",
+        "evaluation_context_",
+        "context_chain_"
+      ],
+      "methods": [
+        {
+          "name": "outer_info",
+          "parameters": [],
+          "return_type": "DirectHandle<SharedFunctionInfo>",
+          "logic": "Returns the SharedFunctionInfo of the function being debugged."
+        },
+        {
+          "name": "ContextBuilder",
+          "parameters": [
+            "Isolate* isolate",
+            "JavaScriptFrame* frame",
+            "int inlined_jsframe_index"
+          ],
+          "return_type": "void",
+          "logic": "Constructor that builds the context chain for evaluation during debugging. Materializes stack variables and wraps scopes in debug-evaluate contexts."
+        },
+        {
+          "name": "UpdateValues",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Updates the values of stack-allocated variables back to the original frame after evaluation."
+        }
+      ]
+    },
+    {
+      "name": "DebugEvaluate",
+      "properties": [],
+      "methods": []
+    }
+  ],
+  "functions": [
+    {
+      "name": "GetFunctionInfo",
+      "parameters": [
+        "Isolate* isolate",
+        "Handle<String> source",
+        "REPLMode repl_mode"
+      ],
+      "return_type": "MaybeDirectHandle<SharedFunctionInfo>",
+      "logic": "Compiles the given source string into a SharedFunctionInfo, which represents the compiled JavaScript function."
+    },
+    {
+      "name": "DebugEvaluate::Global",
+      "parameters": [
+        "Isolate* isolate",
+        "Handle<String> source",
+        "debug::EvaluateGlobalMode mode",
+        "REPLMode repl_mode"
+      ],
+      "return_type": "MaybeDirectHandle<Object>",
+      "logic": "Evaluates the given source string in the global context. Compiles the source, creates a function, and calls it."
+    },
+    {
+      "name": "DebugEvaluate::Local",
+      "parameters": [
+        "Isolate* isolate",
+        "StackFrameId frame_id",
+        "int inlined_jsframe_index",
+        "DirectHandle<String> source",
+        "bool throw_on_side_effect"
+      ],
+      "return_type": "MaybeDirectHandle<Object>",
+      "logic": "Evaluates the given source string in the local context of a stack frame. Materializes local variables and sets up the appropriate context."
+    },
+    {
+      "name": "DebugEvaluate::WithTopmostArguments",
+      "parameters": [
+        "Isolate* isolate",
+        "DirectHandle<String> source"
+      ],
+      "return_type": "MaybeDirectHandle<Object>",
+      "logic": "Evaluates the given source string in a context that includes the arguments and `this` value of the topmost stack frame."
+    },
+    {
+      "name": "DebugEvaluate::Evaluate",
+      "parameters": [
+        "Isolate* isolate",
+        "DirectHandle<SharedFunctionInfo> outer_info",
+        "DirectHandle<Context> context",
+        "DirectHandle<Object> receiver",
+        "DirectHandle<String> source",
+        "bool throw_on_side_effect"
+      ],
+      "return_type": "MaybeDirectHandle<Object>",
+      "logic": "Compiles and evaluates the given source string in the specified context with the specified receiver."
+    },
+    {
+      "name": "DebugEvaluate::IsSideEffectFreeIntrinsic",
+      "parameters": [
+        "Runtime::FunctionId id"
+      ],
+      "return_type": "bool",
+      "logic": "Determines whether the given runtime function is side-effect free, based on a hardcoded allowlist."
+    },
+    {
+      "name": "BytecodeHasNoSideEffect",
+      "parameters": [
+        "interpreter::Bytecode bytecode"
+      ],
+      "return_type": "bool",
+      "logic": "Determines whether the given bytecode is side-effect free, based on a hardcoded allowlist."
+    },
+    {
+      "name": "BuiltinGetSideEffectState",
+      "parameters": [
+        "Builtin id"
+      ],
+      "return_type": "DebugInfo::SideEffectState",
+      "logic": "Determines side effect state of a builtin based on a hardcoded allowlist."
+    },
+    {
+      "name": "BytecodeRequiresRuntimeCheck",
+      "parameters": [
+        "interpreter::Bytecode bytecode"
+      ],
+      "return_type": "bool",
+      "logic": "Determines whether the given bytecode needs runtime side effect checks. This is used to enable breakpointing when side effect checks are enabled."
+    },
+    {
+      "name": "DebugEvaluate::FunctionGetSideEffectState",
+      "parameters": [
+        "Isolate* isolate",
+        "DirectHandle<SharedFunctionInfo> info"
+      ],
+      "return_type": "DebugInfo::SideEffectState",
+      "logic": "Determines the side effect state of a compiled function based on its bytecode or builtin ID. Used for evaluating code without side effects."
+    },
+    {
+      "name": "TransitivelyCalledBuiltinHasNoSideEffect",
+      "parameters": [
+        "Builtin caller",
+        "Builtin callee"
+      ],
+      "return_type": "bool",
+      "logic": "Checks whether a transitively called builtin from a specified caller builtin is side-effect free."
+    },
+    {
+      "name": "DebugEvaluate::VerifyTransitiveBuiltins",
+      "parameters": [
+        "Isolate* isolate"
+      ],
+      "return_type": "void",
+      "logic": "Verifies that allowlisted builtins only call other allowlisted builtins (or transitively allowed ones), for side effect checking during debugging. This function is only used in debug mode."
+    },
+    {
+      "name": "DebugEvaluate::ApplySideEffectChecks",
+      "parameters": [
+        "Handle<BytecodeArray> bytecode_array"
+      ],
+      "return_type": "void",
+      "logic": "Applies debug breaks to bytecodes requiring runtime checks to ensure that debugger side effect checks will be enforced when those bytecodes are executed."
+    }
+  ]
+}

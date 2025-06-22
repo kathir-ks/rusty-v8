@@ -1,0 +1,48 @@
+{
+  "metadata": {
+    "path": "/home/kathirks_gc/v8_go/archive/codebase/include/v8-source-location.h",
+    "file_name": "v8-source-location.h",
+    "language": "cpp",
+    "purpose": "Defines the SourceLocation class, which encapsulates source code location information (file, function, line number).  It mimics C++20's std::source_location and provides a way to capture the location of a call site.  The class conditionally uses compiler builtins for source location when available, and provides a fallback when they are not."
+  },
+  "imports": {
+    "metadata": {
+      "language": "cpp",
+      "purpose": "Includes standard headers for size_t, string, and v8config"
+    },
+    "code": "#include <cstddef>\n            #include <string>\n\n            #include \"v8config.h\"  // NOLINT(build/include_directory)"
+  },
+  "classes": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "SourceLocation",
+        "about": "Encapsulates source location information (function name, file name, line number). Mimics C++20's std::source_location.",
+        "attributes": [
+          {
+            "name": "function_",
+            "type": "const char*",
+            "access": "private",
+            "purpose": "Stores the name of the function."
+          },
+          {
+            "name": "file_",
+            "type": "const char*",
+            "access": "private",
+            "purpose": "Stores the name of the file."
+          },
+          {
+            "name": "line_",
+            "type": "size_t",
+            "access": "private",
+            "purpose": "Stores the line number."
+          }
+        ],
+        "dependencies": []
+      },
+      "code": "class V8_EXPORT SourceLocation final {\n            public:\n                /**\n                 * Construct source location information corresponding to the location of the\n                 * call site.\n                 */\n            #if V8_SUPPORTS_SOURCE_LOCATION\n                static constexpr SourceLocation Current(\n                    const char* function = __builtin_FUNCTION(),\n                    const char* file = __builtin_FILE(), size_t line = __builtin_LINE()) {\n                    return SourceLocation(function, file, line);\n                }\n            #else\n                static constexpr SourceLocation Current() { return SourceLocation(); }\n            #endif  // V8_SUPPORTS_SOURCE_LOCATION\n\n                /**\n                 * Constructs unspecified source location information.\n                 */\n                constexpr SourceLocation() = default;\n\n                /**\n                 * Returns the name of the function associated with the position represented\n                 * by this object, if any.\n                 *\n                 * \\returns the function name as cstring.\n                 */\n                constexpr const char* Function() const { return function_; }\n\n                /**\n                 * Returns the name of the current source file represented by this object.\n                 *\n                 * \\returns the file name as cstring.\n                 */\n                constexpr const char* FileName() const { return file_; }\n\n                /**\n                 * Returns the line number represented by this object.\n                 *\n                 * \\returns the line number.\n                 */\n                constexpr size_t Line() const { return line_; }\n\n                /**\n                 * Returns a human-readable string representing this object.\n                 *\n                 * \\returns a human-readable string representing source location information.\n                 */\n                std::string ToString() const {\n                    if (!file_) {\n                        return {};\n                    }\n                    return std::string(function_) + \"@\" + file_ + \":\" + std::to_string(line_);\n                }\n\n            private:\n                constexpr SourceLocation(const char* function, const char* file, size_t line)\n                    : function_(function), file_(file), line_(line) {}\n\n                const char* function_ = nullptr;\n                const char* file_ = nullptr;\n                size_t line_ = 0u;\n            };"
+    }
+  ],
+  "file_path": "/home/kathirks_gc/v8_go/archive/codebase/include/v8-source-location.h"
+}

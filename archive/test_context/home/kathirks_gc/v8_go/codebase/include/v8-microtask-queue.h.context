@@ -1,0 +1,163 @@
+{
+  "metadata": {
+    "path": "/home/kathirks_gc/v8_go/codebase/include/v8-microtask-queue.h",
+    "file_name": "v8-microtask-queue.h",
+    "language": "cpp",
+    "purpose": "Declares the MicrotaskQueue and MicrotasksScope classes for managing microtasks in V8."
+  },
+  "imports": {
+    "metadata": {
+      "language": "cpp",
+      "purpose": "Includes standard library headers and V8 specific headers."
+    },
+    "code": "#include <stddef.h>\n            #include <memory>\n            #include \"v8-local-handle.h\"  // NOLINT(build/include_directory)\n            #include \"v8-microtask.h\"     // NOLINT(build/include_directory)\n            #include \"v8config.h\"         // NOLINT(build/include_directory)"
+  },
+  "classes": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "MicrotaskQueue",
+        "about": "Represents the microtask queue, where microtasks are stored and processed.",
+        "attributes": [],
+        "dependencies": [
+          "Isolate",
+          "Function",
+          "MicrotasksPolicy",
+          "Local",
+          "MicrotaskCallback",
+          "MicrotasksCompletedCallbackWithData"
+        ]
+      },
+      "code": "class V8_EXPORT MicrotaskQueue {\n            public:\n                /**\n                * Creates an empty MicrotaskQueue instance.\n                */\n                static std::unique_ptr<MicrotaskQueue> New(\n                    Isolate* isolate, MicrotasksPolicy policy = MicrotasksPolicy::kAuto);\n\n                virtual ~MicrotaskQueue() = default;\n\n                /**\n                * Enqueues the callback to the queue.\n                */\n                virtual void EnqueueMicrotask(Isolate* isolate,\n                                                Local<Function> microtask) = 0;\n\n                /**\n                * Enqueues the callback to the queue.\n                */\n                virtual void EnqueueMicrotask(v8::Isolate* isolate,\n                                                MicrotaskCallback callback,\n                                                void* data = nullptr) = 0;\n\n                /**\n                * Adds a callback to notify the embedder after microtasks were run. The\n                * callback is triggered by explicit RunMicrotasks call or automatic\n                * microtasks execution (see Isolate::SetMicrotasksPolicy).\n                *\n                * Callback will trigger even if microtasks were attempted to run,\n                * but the microtasks queue was empty and no single microtask was actually\n                * executed.\n                *\n                * Executing scripts inside the callback will not re-trigger microtasks and\n                * the callback.\n                */\n                virtual void AddMicrotasksCompletedCallback(\n                    MicrotasksCompletedCallbackWithData callback, void* data = nullptr) = 0;\n\n                /**\n                * Removes callback that was installed by AddMicrotasksCompletedCallback.\n                */\n                virtual void RemoveMicrotasksCompletedCallback(\n                    MicrotasksCompletedCallbackWithData callback, void* data = nullptr) = 0;\n\n                /**\n                * Runs microtasks if no microtask is running on this MicrotaskQueue instance.\n                */\n                virtual void PerformCheckpoint(Isolate* isolate) = 0;\n\n                /**\n                * Returns true if a microtask is running on this MicrotaskQueue instance.\n                */\n                virtual bool IsRunningMicrotasks() const = 0;\n\n                /**\n                * Returns the current depth of nested MicrotasksScope that has\n                * kRunMicrotasks.\n                */\n                virtual int GetMicrotasksScopeDepth() const = 0;\n\n                MicrotaskQueue(const MicrotaskQueue&) = delete;\n                MicrotaskQueue& operator=(const MicrotaskQueue&) = delete;\n\n            private:\n                friend class internal::MicrotaskQueue;\n                MicrotaskQueue() = default;\n            };"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "MicrotasksScope",
+        "about": "This scope is used to control microtasks when MicrotasksPolicy::kScoped is used on Isolate. In this mode every non-primitive call to V8 should be done inside some MicrotasksScope.",
+        "attributes": [
+          {
+            "name": "i_isolate_",
+            "type": "internal::Isolate* const",
+            "access": "private",
+            "purpose": "Pointer to the internal isolate."
+          },
+          {
+            "name": "microtask_queue_",
+            "type": "internal::MicrotaskQueue* const",
+            "access": "private",
+            "purpose": "Pointer to the internal microtask queue."
+          },
+          {
+            "name": "run_",
+            "type": "bool",
+            "access": "private",
+            "purpose": "Indicates if microtasks should be run when the scope exits."
+          }
+        ],
+        "dependencies": [
+          "Local",
+          "Context",
+          "Isolate",
+          "MicrotaskQueue"
+        ]
+      },
+      "code": "class V8_EXPORT V8_NODISCARD MicrotasksScope {\n            public:\n                enum Type { kRunMicrotasks, kDoNotRunMicrotasks };\n\n                MicrotasksScope(Local<Context> context, Type type);\n                MicrotasksScope(Isolate* isolate, MicrotaskQueue* microtask_queue, Type type);\n                ~MicrotasksScope();\n\n                /**\n                * Runs microtasks if no kRunMicrotasks scope is currently active.\n                */\n                static void PerformCheckpoint(Isolate* isolate);\n\n                /**\n                * Returns current depth of nested kRunMicrotasks scopes.\n                */\n                static int GetCurrentDepth(Isolate* isolate);\n\n                /**\n                * Returns true while microtasks are being executed.\n                */\n                static bool IsRunningMicrotasks(Isolate* isolate);\n\n                // Prevent copying.\n                MicrotasksScope(const MicrotasksScope&) = delete;\n                MicrotasksScope& operator=(const MicrotasksScope&) = delete;\n\n            private:\n                internal::Isolate* const i_isolate_;\n                internal::MicrotaskQueue* const microtask_queue_;\n                bool run_;\n            };"
+    }
+  ],
+  "dependencies": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "Isolate",
+        "about": "Represents an isolated instance of the V8 JavaScript engine."
+      },
+      "code": "class Isolate;",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "Function",
+        "about": "Represents a JavaScript function."
+      },
+      "code": "class Function;",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "Local",
+        "about": "Represents a local handle to a V8 object."
+      },
+      "code": "template <typename T> class Local {};",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "Context",
+        "about": "Represents a JavaScript execution context."
+      },
+      "code": "class Context;",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "enum",
+        "name": "MicrotasksPolicy",
+        "about": "Enum for different microtask policies."
+      },
+      "code": "enum class MicrotasksPolicy { kAuto, kExplicit, kScoped };",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "typedef",
+        "name": "MicrotaskCallback",
+        "about": "Callback type for microtasks."
+      },
+      "code": "using MicrotaskCallback = void (*)(v8::Isolate* isolate, void* data);",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "typedef",
+        "name": "MicrotasksCompletedCallbackWithData",
+        "about": "Callback type for when microtasks are completed."
+      },
+      "code": "using MicrotasksCompletedCallbackWithData = void (*)(void* data);",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "internal::Isolate",
+        "about": "Internal isolate class."
+      },
+      "code": "namespace internal { class Isolate; }",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "internal::MicrotaskQueue",
+        "about": "Internal microtask queue class."
+      },
+      "code": "namespace internal { class MicrotaskQueue; }",
+      "type": "class"
+    }
+  ],
+  "file_path": "/home/kathirks_gc/v8_go/codebase/include/v8-microtask-queue.h"
+}

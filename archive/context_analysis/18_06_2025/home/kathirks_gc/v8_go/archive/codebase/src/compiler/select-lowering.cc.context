@@ -1,0 +1,161 @@
+{
+  "metadata": {
+    "path": "/home/kathirks_gc/v8_go/archive/codebase/src/compiler/select-lowering.cc",
+    "file_name": "select-lowering.cc",
+    "language": "cpp",
+    "purpose": "Implements lowering of the Select operator in the Turbofan compiler."
+  },
+  "imports": {
+    "metadata": {
+      "language": "cpp",
+      "purpose": "Includes necessary headers for compiler functionality, graph manipulation, and node operations."
+    },
+    "code": "#include \"src/compiler/select-lowering.h\"\n\n#include \"src/compiler/common-operator.h\"\n#include \"src/compiler/graph-assembler.h\"\n#include \"src/compiler/node.h\"\n#include \"src/compiler/turbofan-graph.h\""
+  },
+  "classes": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "SelectLowering",
+        "about": "Lowers Select nodes in the compiler graph into control flow constructs (if/else blocks).",
+        "attributes": [
+          {
+            "name": "graph_assembler_",
+            "type": "JSGraphAssembler*",
+            "access": "private",
+            "purpose": "Used to build the control flow graph."
+          },
+          {
+            "name": "start_",
+            "type": "Node*",
+            "access": "private",
+            "purpose": "The start node of the graph."
+          }
+        ],
+        "dependencies": [
+          "JSGraphAssembler",
+          "TFGraph",
+          "Node",
+          "SelectParameters"
+        ]
+      },
+      "code": "namespace v8 {\nnamespace internal {\nnamespace compiler {\n\nclass SelectLowering {\n public:\n  SelectLowering(JSGraphAssembler* graph_assembler,\n                               TFGraph* graph);\n  ~SelectLowering();\n\n  Reduction Reduce(Node* node);\n\n private:\n  Reduction LowerSelect(Node* node);\n\n  JSGraphAssembler* graph_assembler_;\n  Node* start_;\n};\n\n}  // namespace compiler\n}  // namespace internal\n}  // namespace v8"
+    }
+  ],
+  "functions": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "method",
+        "name": "SelectLowering",
+        "parent": "SelectLowering",
+        "about": "Constructor for the SelectLowering class.",
+        "logic": "Initializes the graph assembler and start node.",
+        "parameters": [
+          {
+            "name": "graph_assembler",
+            "type": "JSGraphAssembler*",
+            "purpose": "The graph assembler to use."
+          },
+          {
+            "name": "graph",
+            "type": "TFGraph*",
+            "purpose": "The graph being compiled."
+          }
+        ],
+        "return": {
+          "type": "void",
+          "description": "No return value"
+        },
+        "dependencies": [
+          "JSGraphAssembler",
+          "TFGraph"
+        ]
+      },
+      "code": "SelectLowering::SelectLowering(JSGraphAssembler* graph_assembler,\n                               TFGraph* graph)\n    : graph_assembler_(graph_assembler), start_(graph->start()) {}"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "method",
+        "name": "~SelectLowering",
+        "parent": "SelectLowering",
+        "about": "Destructor for the SelectLowering class.",
+        "logic": "Default destructor.",
+        "parameters": [],
+        "return": {
+          "type": "void",
+          "description": "No return value"
+        },
+        "dependencies": []
+      },
+      "code": "SelectLowering::~SelectLowering() = default;"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "method",
+        "name": "Reduce",
+        "parent": "SelectLowering",
+        "about": "Entry point for reducing a node. Checks if the node is a Select node and calls LowerSelect if it is.",
+        "logic": "Checks the opcode of the node and dispatches to LowerSelect.",
+        "parameters": [
+          {
+            "name": "node",
+            "type": "Node*",
+            "purpose": "The node to reduce."
+          }
+        ],
+        "return": {
+          "type": "Reduction",
+          "description": "The result of the reduction (either NoChange or a Changed node)."
+        },
+        "dependencies": [
+          "Node",
+          "IrOpcode",
+          "kSelect",
+          "NoChange",
+          "LowerSelect"
+        ]
+      },
+      "code": "Reduction SelectLowering::Reduce(Node* node) {\n  if (node->opcode() != IrOpcode::kSelect) return NoChange();\n  return LowerSelect(node);\n}"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "method",
+        "name": "LowerSelect",
+        "parent": "SelectLowering",
+        "about": "Lowers a Select node into equivalent control flow using the GraphAssembler.",
+        "logic": "Replaces the Select node with an if-else structure in the graph. The condition input is used to create conditional branches, and the true/false inputs are used to create phi nodes that merge the values after the branches.",
+        "parameters": [
+          {
+            "name": "node",
+            "type": "Node*",
+            "purpose": "The Select node to lower."
+          }
+        ],
+        "return": {
+          "type": "Reduction",
+          "description": "The result of lowering the select node."
+        },
+        "dependencies": [
+          "SelectParameters",
+          "SelectParametersOf",
+          "Node",
+          "JSGraphAssembler",
+          "MakeLabel",
+          "GotoIf",
+          "Goto",
+          "Bind",
+          "Reset",
+          "Changed",
+          "PhiAt"
+        ]
+      },
+      "code": "#define __ gasm()->\n\nReduction SelectLowering::LowerSelect(Node* node) {\n  SelectParameters const p = SelectParametersOf(node->op());\n\n  Node* condition = node->InputAt(0);\n  Node* vtrue = node->InputAt(1);\n  Node* vfalse = node->InputAt(2);\n\n  bool reset_gasm = false;\n  if (gasm()->control() == nullptr) {\n    gasm()->InitializeEffectControl(start(), start());\n    reset_gasm = true;\n  }\n\n  auto done = __ MakeLabel(p.representation());\n\n  __ GotoIf(condition, &done, vtrue);\n  __ Goto(&done, vfalse);\n  __ Bind(&done);\n\n  if (reset_gasm) {\n    gasm()->Reset();\n  }\n\n  return Changed(done.PhiAt(0));\n}\n\n#undef __"
+    }
+  ],
+  "file_path": "/home/kathirks_gc/v8_go/archive/codebase/src/compiler/select-lowering.cc"
+}

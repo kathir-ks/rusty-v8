@@ -1,0 +1,134 @@
+{
+  "metadata": {
+    "path": "/home/kathirks_gc/v8_go/archive/codebase/src/compiler/constant-folding-reducer.cc",
+    "file_name": "constant-folding-reducer.cc",
+    "language": "cpp",
+    "purpose": "Implements a reducer that folds constants in the compiler graph"
+  },
+  "imports": {
+    "metadata": {
+      "language": "cpp",
+      "purpose": "Includes necessary headers for constant folding"
+    },
+    "code": "#include \"src/compiler/constant-folding-reducer.h\"\n\n#include \"src/compiler/js-graph.h\"\n#include \"src/compiler/js-heap-broker.h\"\n#include \"src/objects/objects-inl.h\""
+  },
+  "functions": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "function",
+        "name": "TryGetConstant",
+        "parent": null,
+        "about": "Tries to get a constant node representation for a given node based on its type.",
+        "logic": "Checks if a node's type corresponds to a known constant type (Null, Undefined, MinusZero, NaN, HeapConstant, or PlainNumber with Min == Max). If so, returns the corresponding constant node from the JSGraph. Returns nullptr otherwise.",
+        "parameters": [
+          {
+            "name": "jsgraph",
+            "type": "JSGraph*",
+            "purpose": "The JSGraph used to create constant nodes."
+          },
+          {
+            "name": "node",
+            "type": "Node*",
+            "purpose": "The node to check for constant type."
+          },
+          {
+            "name": "broker",
+            "type": "JSHeapBroker*",
+            "purpose": "The JSHeapBroker used to resolve heap constants."
+          }
+        ],
+        "return": {
+          "type": "Node*",
+          "description": "The constant node if the node has a constant type; otherwise, nullptr."
+        },
+        "dependencies": [
+          "JSGraph",
+          "JSHeapBroker",
+          "Type",
+          "NodeProperties",
+          "Type::Null",
+          "Type::Undefined",
+          "Type::MinusZero",
+          "Type::NaN",
+          "Type::IsHeapConstant",
+          "Type::AsHeapConstant",
+          "Type::Ref",
+          "Type::PlainNumber",
+          "Type::Min",
+          "Type::Max",
+          "Type::IsSingleton",
+          "Type::Equals"
+        ]
+      },
+      "code": "namespace {\nNode* TryGetConstant(JSGraph* jsgraph, Node* node, JSHeapBroker* broker) {\n  Type type = NodeProperties::GetType(node);\n  Node* result;\n  if (type.IsNone()) {\n    result = nullptr;\n  } else if (type.Is(Type::Null())) {\n    result = jsgraph->NullConstant();\n  } else if (type.Is(Type::Undefined())) {\n    result = jsgraph->UndefinedConstant();\n  } else if (type.Is(Type::MinusZero())) {\n    result = jsgraph->MinusZeroConstant();\n  } else if (type.Is(Type::NaN())) {\n    result = jsgraph->NaNConstant();\n  } else if (type.IsHeapConstant()) {\n    result = jsgraph->ConstantNoHole(type.AsHeapConstant()->Ref(), broker);\n  } else if (type.Is(Type::PlainNumber()) && type.Min() == type.Max()) {\n    result = jsgraph->ConstantNoHole(type.Min());\n  } else {\n    result = nullptr;\n  }\n  DCHECK_EQ(result != nullptr, type.IsSingleton());\n  DCHECK_IMPLIES(result != nullptr,\n                 type.Equals(NodeProperties::GetType(result)));\n  return result;\n}\n\n}  // namespace"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "method",
+        "name": "Reduce",
+        "parent": "ConstantFoldingReducer",
+        "about": "Reduces a node to a constant if possible.",
+        "logic": "Checks if a node is typed, eliminatable, and not a FinishRegion or TypeGuard. Then, it attempts to obtain a constant representation using TryGetConstant. If successful, replaces the original node with the constant node.",
+        "parameters": [
+          {
+            "name": "node",
+            "type": "Node*",
+            "purpose": "The node to attempt to reduce."
+          }
+        ],
+        "return": {
+          "type": "Reduction",
+          "description": "Replace(constant) if reduced, NoChange() otherwise."
+        },
+        "dependencies": [
+          "Node",
+          "NodeProperties",
+          "Operator",
+          "IrOpcode",
+          "TryGetConstant",
+          "ReplaceWithValue",
+          "Replace",
+          "Reduction",
+          "NoChange"
+        ]
+      },
+      "code": "Reduction ConstantFoldingReducer::Reduce(Node* node) {\n  if (!NodeProperties::IsConstant(node) && NodeProperties::IsTyped(node) &&\n      node->op()->HasProperty(Operator::kEliminatable) &&\n      node->opcode() != IrOpcode::kFinishRegion &&\n      node->opcode() != IrOpcode::kTypeGuard) {\n    Node* constant = TryGetConstant(jsgraph(), node, broker());\n    if (constant != nullptr) {\n      DCHECK(NodeProperties::IsTyped(constant));\n      DCHECK_EQ(node->op()->ControlOutputCount(), 0);\n      ReplaceWithValue(node, constant);\n      return Replace(constant);\n    }\n  }\n  return NoChange();\n}"
+    }
+  ],
+  "classes": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "ConstantFoldingReducer",
+        "extends": "AdvancedReducer",
+        "implements": [],
+        "about": "A reducer that performs constant folding on nodes in the compiler graph.",
+        "attributes": [
+          {
+            "name": "jsgraph_",
+            "type": "JSGraph*",
+            "access": "private",
+            "purpose": "The JSGraph used for creating and manipulating nodes."
+          },
+          {
+            "name": "broker_",
+            "type": "JSHeapBroker*",
+            "access": "private",
+            "purpose": "The JSHeapBroker used for resolving heap constants."
+          }
+        ],
+        "dependencies": [
+          "AdvancedReducer",
+          "JSGraph",
+          "JSHeapBroker",
+          "Node"
+        ]
+      },
+      "code": "ConstantFoldingReducer::ConstantFoldingReducer(Editor* editor, JSGraph* jsgraph,\n                                               JSHeapBroker* broker)\n    : AdvancedReducer(editor), jsgraph_(jsgraph), broker_(broker) {}\n\nConstantFoldingReducer::~ConstantFoldingReducer() = default;"
+    }
+  ],
+  "file_path": "/home/kathirks_gc/v8_go/archive/codebase/src/compiler/constant-folding-reducer.cc"
+}

@@ -1,0 +1,37 @@
+{
+  "metadata": {
+    "path": "/home/kathirks_gc/v8_go/archive/codebase/src/compiler/turboshaft/utils.cc",
+    "file_name": "utils.cc",
+    "language": "cpp",
+    "purpose": "Provides utility functions for the Turboshaft compiler."
+  },
+  "imports": {
+    "metadata": {
+      "language": "cpp",
+      "purpose": "Includes necessary headers for utility functions, platform features, and compiler flags."
+    },
+    "code": "#include \"src/compiler/turboshaft/utils.h\"\n\n#include \"src/base/platform/platform.h\"\n#include \"src/flags/flags.h\""
+  },
+  "functions": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "function",
+        "name": "ShouldSkipOptimizationStep",
+        "about": "Conditionally skips an optimization step based on flags for debugging purposes.",
+        "logic": "Uses an atomic counter and flag values to determine whether to skip an optimization step or trigger a debug break. This is controlled via the turboshaft_opt_bisect_break and turboshaft_opt_bisect_limit flags. The atomic counter is incremented on each call to this function.",
+        "parameters": [],
+        "return": {
+          "type": "bool",
+          "description": "Returns true if the optimization step should be skipped, false otherwise."
+        },
+        "dependencies": [
+          "v8_flags",
+          "base::OS::DebugBreak"
+        ]
+      },
+      "code": "#ifdef DEBUG\nbool ShouldSkipOptimizationStep() {\n  static std::atomic<uint64_t> counter{0};\n  uint64_t current = counter++;\n  if (current == v8_flags.turboshaft_opt_bisect_break) {\n    base::OS::DebugBreak();\n  }\n  if (current >= v8_flags.turboshaft_opt_bisect_limit) {\n    return true;\n  }\n  return false;\n}\n#endif  // DEBUG"
+    }
+  ],
+  "file_path": "/home/kathirks_gc/v8_go/archive/codebase/src/compiler/turboshaft/utils.cc"
+}

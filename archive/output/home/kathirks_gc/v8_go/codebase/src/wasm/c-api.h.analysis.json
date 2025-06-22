@@ -1,0 +1,80 @@
+{
+  "file_path": "/home/kathirks_gc/v8_go/codebase/src/wasm/c-api.h",
+  "imports": [
+    "include/v8-isolate.h",
+    "include/v8-local-handle.h",
+    "src/common/globals.h",
+    "src/handles/handles.h",
+    "third_party/wasm-api/wasm.hh"
+  ],
+  "classes": [
+    {
+      "name": "StoreImpl",
+      "properties": [
+        "create_params_",
+        "isolate_",
+        "context_",
+        "host_info_map_"
+      ],
+      "methods": [
+        {
+          "name": "~StoreImpl",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Destructor for the StoreImpl class, responsible for cleaning up resources. The exact implementation details would be in the source file, not this header file."
+        },
+        {
+          "name": "destroy",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Explicitly destroys the store, likely freeing allocated memory and resources. The actual implementation is in the source file."
+        },
+        {
+          "name": "isolate",
+          "parameters": [],
+          "return_type": "v8::Isolate*",
+          "logic": "Returns the v8::Isolate associated with this store."
+        },
+        {
+          "name": "i_isolate",
+          "parameters": [],
+          "return_type": "i::Isolate*",
+          "logic": "Returns the internal i::Isolate associated with this store.  It casts the v8::Isolate* to i::Isolate*."
+        },
+        {
+          "name": "context",
+          "parameters": [],
+          "return_type": "v8::Local<v8::Context>",
+          "logic": "Returns the v8::Context associated with this store."
+        },
+        {
+          "name": "get",
+          "parameters": [
+            "i::Isolate* isolate"
+          ],
+          "return_type": "StoreImpl*",
+          "logic": "Static method to retrieve the StoreImpl associated with a given internal isolate. Uses Isolate::GetData to retrieve the StoreImpl which must have been previously associated with the Isolate."
+        },
+        {
+          "name": "SetHostInfo",
+          "parameters": [
+            "i::DirectHandle<i::Object> object",
+            "void* info",
+            "void (*finalizer)(void*)"
+          ],
+          "return_type": "void",
+          "logic": "Associates host-specific information (info) with a given JS object (object). The finalizer is a function that will be called when the information is no longer needed, typically during garbage collection."
+        },
+        {
+          "name": "GetHostInfo",
+          "parameters": [
+            "i::DirectHandle<i::Object> key"
+          ],
+          "return_type": "void*",
+          "logic": "Retrieves the host-specific information associated with a given JS object (key)."
+        }
+      ]
+    }
+  ],
+  "functions": []
+}

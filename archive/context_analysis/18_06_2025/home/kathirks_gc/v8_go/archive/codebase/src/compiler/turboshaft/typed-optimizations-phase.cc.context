@@ -1,0 +1,135 @@
+{
+  "metadata": {
+    "path": "/home/kathirks_gc/v8_go/archive/codebase/src/compiler/turboshaft/typed-optimizations-phase.cc",
+    "file_name": "typed-optimizations-phase.cc",
+    "language": "cpp",
+    "purpose": "Implements the TypedOptimizationsPhase for the Turboshaft compiler, which performs type-based optimizations on the graph."
+  },
+  "imports": {
+    "metadata": {
+      "language": "cpp",
+      "purpose": "Includes necessary headers for the TypedOptimizationsPhase, including the phase itself, JS heap broker, copying phase, type inference reducer, and typed optimizations reducer."
+    },
+    "code": "#include \"src/compiler/turboshaft/typed-optimizations-phase.h\"\n\n#include \"src/compiler/js-heap-broker.h\"\n#include \"src/compiler/turboshaft/copying-phase.h\"\n#include \"src/compiler/turboshaft/phase.h\"\n#include \"src/compiler/turboshaft/type-inference-reducer.h\"\n#include \"src/compiler/turboshaft/typed-optimizations-reducer.h\""
+  },
+  "classes": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "TypedOptimizationsPhase",
+        "about": "Represents a compiler phase that performs type-based optimizations on the Turboshaft graph.",
+        "attributes": [],
+        "dependencies": [
+          "PipelineData",
+          "Zone",
+          "CopyingPhase",
+          "TypedOptimizationsReducer",
+          "TypeInferenceReducer",
+          "TypeInferenceReducerArgs"
+        ]
+      },
+      "code": "namespace v8::internal::compiler::turboshaft {\n\nvoid TypedOptimizationsPhase::Run(PipelineData* data, Zone* temp_zone) {\n#ifdef DEBUG\n  UnparkedScopeIfNeeded scope(data->broker(), v8_flags.turboshaft_trace_typing);\n#endif\n\n  turboshaft::TypeInferenceReducerArgs::Scope typing_args{\n      turboshaft::TypeInferenceReducerArgs::InputGraphTyping::kPrecise,\n      turboshaft::TypeInferenceReducerArgs::OutputGraphTyping::kNone};\n\n  turboshaft::CopyingPhase<turboshaft::TypedOptimizationsReducer,\n                           turboshaft::TypeInferenceReducer>::Run(data,\n                                                                  temp_zone);\n}\n\n}  // namespace v8::internal::compiler::turboshaft"
+    }
+  ],
+  "functions": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "method",
+        "name": "Run",
+        "parent": "TypedOptimizationsPhase",
+        "about": "Executes the typed optimizations phase.",
+        "logic": "This method sets up the type inference and then runs the CopyingPhase with TypedOptimizationsReducer and TypeInferenceReducer.  The DEBUG block is conditionally compiled based on a debug flag.",
+        "parameters": [
+          {
+            "name": "data",
+            "type": "PipelineData*",
+            "purpose": "Pointer to the pipeline data, containing information about the compilation process."
+          },
+          {
+            "name": "temp_zone",
+            "type": "Zone*",
+            "purpose": "Pointer to a temporary zone for memory allocation during the phase."
+          }
+        ],
+        "return": {
+          "type": "void",
+          "description": "No return value."
+        },
+        "dependencies": [
+          "PipelineData",
+          "Zone",
+          "CopyingPhase",
+          "TypedOptimizationsReducer",
+          "TypeInferenceReducer",
+          "TypeInferenceReducerArgs"
+        ]
+      },
+      "code": "void TypedOptimizationsPhase::Run(PipelineData* data, Zone* temp_zone) {\n#ifdef DEBUG\n  UnparkedScopeIfNeeded scope(data->broker(), v8_flags.turboshaft_trace_typing);\n#endif\n\n  turboshaft::TypeInferenceReducerArgs::Scope typing_args{\n      turboshaft::TypeInferenceReducerArgs::InputGraphTyping::kPrecise,\n      turboshaft::TypeInferenceReducerArgs::OutputGraphTyping::kNone};\n\n  turboshaft::CopyingPhase<turboshaft::TypedOptimizationsReducer,\n                           turboshaft::TypeInferenceReducer>::Run(data,\n                                                                  temp_zone);\n}"
+    }
+  ],
+  "dependencies": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "PipelineData",
+        "about": "Provides access to compilation pipeline data."
+      },
+      "code": "class PipelineData;",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "Zone",
+        "about": "Memory allocation zone."
+      },
+      "code": "class Zone;",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "CopyingPhase",
+        "about": "Base class for copying phases in turboshaft."
+      },
+      "code": "template <typename, typename> class CopyingPhase;",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "TypedOptimizationsReducer",
+        "about": "Reducer for typed optimizations in turboshaft."
+      },
+      "code": "class TypedOptimizationsReducer;",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "TypeInferenceReducer",
+        "about": "Reducer for type inference in turboshaft."
+      },
+      "code": "class TypeInferenceReducer;",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "TypeInferenceReducerArgs",
+        "about": "Arguments for the TypeInferenceReducer."
+      },
+      "code": "class TypeInferenceReducerArgs;",
+      "type": "class"
+    }
+  ],
+  "file_path": "/home/kathirks_gc/v8_go/archive/codebase/src/compiler/turboshaft/typed-optimizations-phase.cc"
+}

@@ -1,0 +1,210 @@
+{
+  "file_path": "/home/kathirks_gc/v8_go/codebase/src/compiler/node-observer.h",
+  "imports": [
+    "src/compiler/node.h",
+    "src/compiler/operator.h",
+    "src/zone/zone.h"
+  ],
+  "classes": [
+    {
+      "name": "ObservableNodeState",
+      "properties": [
+        "id_",
+        "op_",
+        "type_"
+      ],
+      "methods": [
+        {
+          "name": "ObservableNodeState",
+          "parameters": [
+            "const Node* node",
+            "Zone* zone"
+          ],
+          "return_type": "void",
+          "logic": "Constructor. Initializes the id_, op_, and type_ members based on the provided node and zone."
+        },
+        {
+          "name": "id",
+          "parameters": [],
+          "return_type": "uint32_t",
+          "logic": "Returns the node's ID."
+        },
+        {
+          "name": "op",
+          "parameters": [],
+          "return_type": "const Operator*",
+          "logic": "Returns the node's operator."
+        },
+        {
+          "name": "opcode",
+          "parameters": [],
+          "return_type": "int16_t",
+          "logic": "Returns the opcode of the node's operator."
+        },
+        {
+          "name": "type",
+          "parameters": [],
+          "return_type": "Type",
+          "logic": "Returns the node's type."
+        }
+      ]
+    },
+    {
+      "name": "NodeObserver",
+      "properties": [
+        "has_observed_changes_"
+      ],
+      "methods": [
+        {
+          "name": "NodeObserver",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Default constructor."
+        },
+        {
+          "name": "~NodeObserver",
+          "parameters": [],
+          "return_type": "virtual",
+          "logic": "Virtual destructor. Important for polymorphism with ZoneObject."
+        },
+        {
+          "name": "OnNodeCreated",
+          "parameters": [
+            "const Node* node"
+          ],
+          "return_type": "Observation",
+          "logic": "Virtual function called when a node is created. Returns Observation::kContinue by default."
+        },
+        {
+          "name": "OnNodeChanged",
+          "parameters": [
+            "const char* reducer_name",
+            "const Node* node",
+            "const ObservableNodeState& old_state"
+          ],
+          "return_type": "Observation",
+          "logic": "Virtual function called when a node is changed. Returns Observation::kContinue by default."
+        },
+        {
+          "name": "set_has_observed_changes",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Sets the has_observed_changes_ flag to true."
+        },
+        {
+          "name": "has_observed_changes",
+          "parameters": [],
+          "return_type": "bool",
+          "logic": "Returns the value of the has_observed_changes_ flag."
+        }
+      ]
+    },
+    {
+      "name": "NodeObservation",
+      "properties": [
+        "observer",
+        "state"
+      ],
+      "methods": [
+        {
+          "name": "NodeObservation",
+          "parameters": [
+            "NodeObserver* node_observer",
+            "const Node* node",
+            "Zone* zone"
+          ],
+          "return_type": "void",
+          "logic": "Constructor. Initializes the observer and state members with the provided node observer, node, and zone."
+        }
+      ]
+    },
+    {
+      "name": "ObserveNodeManager",
+      "properties": [
+        "zone_",
+        "observations_"
+      ],
+      "methods": [
+        {
+          "name": "ObserveNodeManager",
+          "parameters": [
+            "Zone* zone"
+          ],
+          "return_type": "explicit",
+          "logic": "Constructor. Initializes the zone_ and observations_ members."
+        },
+        {
+          "name": "StartObserving",
+          "parameters": [
+            "Node* node",
+            "NodeObserver* observer"
+          ],
+          "return_type": "void",
+          "logic": "Starts observing the given node with the provided observer."
+        },
+        {
+          "name": "OnNodeChanged",
+          "parameters": [
+            "const char* reducer_name",
+            "const Node* old_node",
+            "const Node* new_node"
+          ],
+          "return_type": "void",
+          "logic": "Handles the event when a node is changed."
+        }
+      ]
+    },
+    {
+      "name": "ObserveNodeInfo",
+      "properties": [
+        "observe_node_manager",
+        "node_observer"
+      ],
+      "methods": [
+        {
+          "name": "ObserveNodeInfo",
+          "parameters": [],
+          "return_type": "ObserveNodeInfo",
+          "logic": "Default Constructor"
+        },
+        {
+          "name": "ObserveNodeInfo",
+          "parameters": [
+            "ObserveNodeManager* manager",
+            "NodeObserver* observer"
+          ],
+          "return_type": "ObserveNodeInfo",
+          "logic": "Constructor to set the node observer manager and observer"
+        },
+        {
+          "name": "StartObserving",
+          "parameters": [
+            "Node* node"
+          ],
+          "return_type": "void",
+          "logic": "Starts observing a node using the stored observe_node_manager and node_observer"
+        }
+      ]
+    }
+  ],
+  "functions": [
+    {
+      "name": "operator==",
+      "parameters": [
+        "const ObservableNodeState& lhs",
+        "const ObservableNodeState& rhs"
+      ],
+      "return_type": "bool",
+      "logic": "Compares two ObservableNodeState objects for equality based on their id, operator, and type."
+    },
+    {
+      "name": "operator!=",
+      "parameters": [
+        "const ObservableNodeState& lhs",
+        "const ObservableNodeState& rhs"
+      ],
+      "return_type": "bool",
+      "logic": "Compares two ObservableNodeState objects for inequality by negating the result of the equality operator."
+    }
+  ]
+}

@@ -1,0 +1,98 @@
+{
+  "metadata": {
+    "path": "/home/kathirks_gc/v8_go/archive/codebase/src/logging/runtime-call-stats-scope.h",
+    "file_name": "runtime-call-stats-scope.h",
+    "language": "cpp",
+    "purpose": "Defines a scope for timing runtime calls and collecting statistics, used for performance analysis."
+  },
+  "imports": {
+    "metadata": {
+      "language": "cpp",
+      "purpose": "Includes standard and V8-specific headers for memory management, isolate access, counters, runtime call stats, and tracing flags."
+    },
+    "code": "#include <memory>\n\n            #include \"src/execution/isolate.h\"\n            #include \"src/execution/local-isolate.h\"\n            #include \"src/logging/counters.h\"\n            #include \"src/logging/runtime-call-stats.h\"\n            #include \"src/logging/tracing-flags.h\""
+  },
+  "classes": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "RuntimeCallTimerScope",
+        "about": "A class that measures the execution time of a runtime call.",
+        "attributes": [],
+        "dependencies": [
+          "Isolate",
+          "LocalIsolate",
+          "RuntimeCallCounterId",
+          "RuntimeCallStats",
+          "TracingFlags",
+          "Counters"
+        ]
+      },
+      "code": "RuntimeCallTimerScope::RuntimeCallTimerScope(Isolate* isolate,\n                                                         RuntimeCallCounterId counter_id) {\n              if (V8_LIKELY(!TracingFlags::is_runtime_stats_enabled())) return;\n              stats_ = isolate->counters()->runtime_call_stats();\n              stats_->Enter(&timer_, counter_id);\n            }\n\n            RuntimeCallTimerScope::RuntimeCallTimerScope(\n                LocalIsolate* isolate, RuntimeCallCounterId counter_id,\n                RuntimeCallStats::CounterMode mode) {\n              if (V8_LIKELY(!TracingFlags::is_runtime_stats_enabled())) return;\n              DCHECK_NOT_NULL(isolate->runtime_call_stats());\n              stats_ = isolate->runtime_call_stats();\n              if (mode == RuntimeCallStats::CounterMode::kThreadSpecific) {\n                counter_id = stats_->CounterIdForThread(counter_id);\n              }\n\n              DCHECK(stats_->IsCounterAppropriateForThread(counter_id));\n              stats_->Enter(&timer_, counter_id);\n            }"
+    }
+  ],
+  "dependencies": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "Isolate",
+        "about": "Represents an isolated instance of the V8 JavaScript engine."
+      },
+      "code": "class Isolate;",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "LocalIsolate",
+        "about": "Represents a local, lightweight isolate."
+      },
+      "code": "class LocalIsolate;",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "Counters",
+        "about": "Provides access to various performance counters."
+      },
+      "code": "class Counters;",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "RuntimeCallStats",
+        "about": "Collects statistics about runtime calls."
+      },
+      "code": "class RuntimeCallStats {\n                public:\n                    enum class CounterMode { kNormal, kThreadSpecific };\n                    RuntimeCallCounterId CounterIdForThread(RuntimeCallCounterId id);\n                    bool IsCounterAppropriateForThread(RuntimeCallCounterId id);\n                    void Enter(void* timer, RuntimeCallCounterId id); // Dummy void*\n                };",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "TracingFlags",
+        "about": "Provides access to tracing flags that control the collection of runtime statistics."
+      },
+      "code": "class TracingFlags {\n                public:\n                    static bool is_runtime_stats_enabled();\n                };",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "typedef",
+        "name": "RuntimeCallCounterId",
+        "about": "Represents the ID of a runtime call counter."
+      },
+      "code": "typedef int RuntimeCallCounterId;",
+      "type": "typedef"
+    }
+  ],
+  "file_path": "/home/kathirks_gc/v8_go/archive/codebase/src/logging/runtime-call-stats-scope.h"
+}

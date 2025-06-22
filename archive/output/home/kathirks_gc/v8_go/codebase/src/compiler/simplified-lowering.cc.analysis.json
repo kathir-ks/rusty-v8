@@ -1,0 +1,495 @@
+{
+  "file_path": "/home/kathirks_gc/v8_go/codebase/src/compiler/simplified-lowering.cc",
+  "imports": [
+    "src/compiler/simplified-lowering.h",
+    "limits",
+    "optional",
+    "include/v8-fast-api-calls.h",
+    "src/base/logging.h",
+    "src/base/platform/platform.h",
+    "src/base/small-vector.h",
+    "src/codegen/callable.h",
+    "src/codegen/machine-type.h",
+    "src/codegen/tick-counter.h",
+    "src/compiler/access-builder.h",
+    "src/compiler/common-operator.h",
+    "src/compiler/compiler-source-position-table.h",
+    "src/compiler/diamond.h",
+    "src/compiler/feedback-source.h",
+    "src/compiler/js-heap-broker.h",
+    "src/compiler/linkage.h",
+    "src/compiler/node-matchers.h",
+    "src/compiler/node-observer.h",
+    "src/compiler/node-origin-table.h",
+    "src/compiler/opcodes.h",
+    "src/compiler/operation-typer.h",
+    "src/compiler/operator-properties.h",
+    "src/compiler/representation-change.h",
+    "src/compiler/simplified-lowering-verifier.h",
+    "src/compiler/simplified-operator.h",
+    "src/compiler/turbofan-graph-visualizer.h",
+    "src/compiler/type-cache.h",
+    "src/flags/flags.h",
+    "src/numbers/conversions-inl.h",
+    "src/objects/objects.h",
+    "src/wasm/value-type.h"
+  ],
+  "classes": [
+    {
+      "name": "JSONGraphWriterWithVerifierTypes",
+      "properties": [
+        "verifier_"
+      ],
+      "methods": [
+        {
+          "name": "JSONGraphWriterWithVerifierTypes",
+          "parameters": [
+            "std::ostream& os",
+            "const TFGraph* graph",
+            "const SourcePositionTable* positions",
+            "const NodeOriginTable* origins",
+            "SimplifiedLoweringVerifier* verifier"
+          ],
+          "return_type": "void",
+          "logic": "Constructor for the class, initializes the JSONGraphWriter and the verifier."
+        },
+        {
+          "name": "GetType",
+          "parameters": [
+            "Node* node"
+          ],
+          "return_type": "std::optional<Type>",
+          "logic": "Overrides the GetType method to return the type from the verifier."
+        }
+      ]
+    },
+    {
+      "name": "RepresentationSelector",
+      "properties": [
+        "jsgraph_",
+        "broker_",
+        "zone_",
+        "might_need_revisit_",
+        "count_",
+        "info_",
+        "node_input_use_infos_",
+        "replacements_",
+        "changer_",
+        "revisit_queue_",
+        "traversal_nodes_",
+        "source_positions_",
+        "node_origins_",
+        "type_cache_",
+        "op_typer_",
+        "tick_counter_",
+        "linkage_",
+        "observe_node_manager_",
+        "verifier_",
+        "singleton_true_",
+        "singleton_false_"
+      ],
+      "methods": [
+        {
+          "name": "RepresentationSelector",
+          "parameters": [
+            "JSGraph* jsgraph",
+            "JSHeapBroker* broker",
+            "Zone* zone",
+            "RepresentationChanger* changer",
+            "SourcePositionTable* source_positions",
+            "NodeOriginTable* node_origins",
+            "TickCounter* tick_counter",
+            "Linkage* linkage",
+            "ObserveNodeManager* observe_node_manager",
+            "SimplifiedLoweringVerifier* verifier"
+          ],
+          "return_type": "void",
+          "logic": "Constructor for the RepresentationSelector class, initializing its members."
+        },
+        {
+          "name": "ResetNodeInfoState",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Resets the state of the node information for the next phase of the algorithm."
+        },
+        {
+          "name": "TypeOf",
+          "parameters": [
+            "Node* node"
+          ],
+          "return_type": "Type",
+          "logic": "Returns the feedback type of a node, or the static type if no feedback type is available."
+        },
+        {
+          "name": "FeedbackTypeOf",
+          "parameters": [
+            "Node* node"
+          ],
+          "return_type": "Type",
+          "logic": "Returns the feedback type of a node, or Type::None() if no feedback type is available."
+        },
+        {
+          "name": "TypePhi",
+          "parameters": [
+            "Node* node"
+          ],
+          "return_type": "Type",
+          "logic": "Merges the feedback types of the inputs to a phi node."
+        },
+        {
+          "name": "TypeSelect",
+          "parameters": [
+            "Node* node"
+          ],
+          "return_type": "Type",
+          "logic": "Merges the feedback types of the two value inputs to a select node."
+        },
+        {
+          "name": "UpdateFeedbackType",
+          "parameters": [
+            "Node* node"
+          ],
+          "return_type": "bool",
+          "logic": "Updates the feedback type of a node based on its inputs and operator. Returns true if the type was updated."
+        },
+        {
+          "name": "PrintNodeFeedbackType",
+          "parameters": [
+            "Node* n"
+          ],
+          "return_type": "void",
+          "logic": "Prints the static and feedback types of a node to stdout for debugging purposes."
+        },
+        {
+          "name": "Weaken",
+          "parameters": [
+            "Node* node",
+            "Type previous_type",
+            "Type current_type"
+          ],
+          "return_type": "Type",
+          "logic": "Weakens a type based on previous and current type information, typically for Phi nodes to break cycles."
+        },
+        {
+          "name": "GenerateTraversal",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Generates a pre-order traversal of the graph, starting from the end node."
+        },
+        {
+          "name": "PushNodeToRevisitIfVisited",
+          "parameters": [
+            "Node* node"
+          ],
+          "return_type": "void",
+          "logic": "Pushes a node to the revisit queue if it has already been visited."
+        },
+        {
+          "name": "RetypeNode",
+          "parameters": [
+            "Node* node"
+          ],
+          "return_type": "bool",
+          "logic": "Tries to update the feedback type of the node and sets its machine representation. Returns true if updating the feedback type is successful."
+        },
+        {
+          "name": "PropagateTruncation",
+          "parameters": [
+            "Node* node"
+          ],
+          "return_type": "void",
+          "logic": "Visits a node and marks it as visited. It may change the truncation of its inputs, and add visited nodes to the revisit queue."
+        },
+        {
+          "name": "RunPropagatePhase",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Backward propagation of truncations to a fixpoint."
+        },
+        {
+          "name": "RunRetypePhase",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Forward propagation of types from type feedback to a fixpoint."
+        },
+        {
+          "name": "RunLowerPhase",
+          "parameters": [
+            "SimplifiedLowering* lowering"
+          ],
+          "return_type": "void",
+          "logic": "Lowering and change insertion phase."
+        },
+        {
+          "name": "RunVerifyPhase",
+          "parameters": [
+            "OptimizedCompilationInfo* compilation_info"
+          ],
+          "return_type": "void",
+          "logic": "Verification phase."
+        },
+        {
+          "name": "Run",
+          "parameters": [
+            "SimplifiedLowering* lowering"
+          ],
+          "return_type": "void",
+          "logic": "Runs all phases of the representation selection and lowering process."
+        },
+        {
+          "name": "EnqueueInput",
+          "parameters": [
+            "Node* use_node",
+            "int index",
+            "UseInfo use_info"
+          ],
+          "return_type": "void",
+          "logic": "Placeholder for EnqueueInput in Retype and Lower phases. This specialization is designed to trigger an assertion and should never actually be called."
+        },
+        {
+          "name": "SetOutput",
+          "parameters": [
+            "Node* node",
+            "MachineRepresentation representation",
+            "Type restriction_type"
+          ],
+          "return_type": "void",
+          "logic": "Sets the output representation of a node."
+        },
+        {
+          "name": "ReplaceWithPureNode",
+          "parameters": [
+            "Node* node",
+            "Node* pure_node"
+          ],
+          "return_type": "void",
+          "logic": "Replaces a node in the effect and control chain with a pure node, rewiring effect and control dependencies."
+        },
+        {
+          "name": "ChangeToPureOp",
+          "parameters": [
+            "Node* node",
+            "const Operator* new_op"
+          ],
+          "return_type": "void",
+          "logic": "Changes a node to a pure operator, rewiring effect and control dependencies if necessary."
+        },
+        {
+          "name": "ConvertInput",
+          "parameters": [
+            "Node* node",
+            "int index",
+            "UseInfo use",
+            "Type input_type"
+          ],
+          "return_type": "void",
+          "logic": "Converts an input of a node to a specific representation, inserting a representation change if necessary."
+        },
+        {
+          "name": "ProcessInput",
+          "parameters": [
+            "Node* node",
+            "int index",
+            "UseInfo use"
+          ],
+          "return_type": "void",
+          "logic": "Processes a single input node with the given UseInfo."
+        },
+        {
+          "name": "ProcessRemainingInputs",
+          "parameters": [
+            "Node* node",
+            "int index"
+          ],
+          "return_type": "void",
+          "logic": "Assertion placeholder for ProcessRemainingInputs, ensuring it is not called during Propagate or Retype."
+        },
+        {
+          "name": "MaskShiftOperand",
+          "parameters": [
+            "Node* node",
+            "Type rhs_type"
+          ],
+          "return_type": "void",
+          "logic": "Masks the shift operand to ensure it is within the valid range."
+        },
+        {
+          "name": "VisitSelect",
+          "parameters": [
+            "Node* node",
+            "Truncation truncation",
+            "SimplifiedLowering* lowering"
+          ],
+          "return_type": "void",
+          "logic": "Handles lowering and representation selection for select nodes."
+        },
+        {
+          "name": "VisitPhi",
+          "parameters": [
+            "Node* node",
+            "Truncation truncation",
+            "SimplifiedLowering* lowering"
+          ],
+          "return_type": "void",
+          "logic": "Handles lowering and representation selection for phi nodes."
+        },
+        {
+          "name": "InsertUnreachableIfNecessary",
+          "parameters": [
+            "Node* node"
+          ],
+          "return_type": "void",
+          "logic": "Placeholder to assert that `InsertUnreachableIfNecessary` is not used during incorrect compilation phases."
+        },
+        {
+          "name": "VisitStateValues",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Visits StateValues node"
+        },
+        {
+          "name": "VisitFrameState",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Visits FrameState node"
+        },
+        {
+          "name": "VisitObjectState",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Visits ObjectState node"
+        },
+        {
+          "name": "VisitFastApiCall",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Visits FastApiCall node"
+        },
+        {
+          "name": "VisitCheckBounds",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Visit CheckBounds node"
+        },
+        {
+          "name": "TryOptimizeBigInt64Shift",
+          "parameters": [],
+          "return_type": "bool",
+          "logic": "Try optimize BigInt64 Shift operation"
+        },
+        {
+          "name": "VisitJSWasmCall",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Visit JSWasmCall node"
+        },
+        {
+          "name": "VisitNode",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Main dispatching routine to handle representation selection and lowering for different node types."
+        }
+      ]
+    }
+  ],
+  "functions": [
+    {
+      "name": "MachineRepresentationFromArrayType",
+      "parameters": [
+        "ExternalArrayType array_type"
+      ],
+      "return_type": "MachineRepresentation",
+      "logic": "Returns the appropriate machine representation for a given external array type."
+    },
+    {
+      "name": "CheckedUseInfoAsWord32FromHint",
+      "parameters": [
+        "NumberOperationHint hint",
+        "IdentifyZeros identify_zeros",
+        "const FeedbackSource& feedback"
+      ],
+      "return_type": "UseInfo",
+      "logic": "Returns a UseInfo object for checked Word32 representation based on a NumberOperationHint."
+    },
+    {
+      "name": "CheckedUseInfoAsFloat64FromHint",
+      "parameters": [
+        "NumberOperationHint hint",
+        "const FeedbackSource& feedback",
+        "IdentifyZeros identify_zeros"
+      ],
+      "return_type": "UseInfo",
+      "logic": "Returns a UseInfo object for checked Float64 representation based on a NumberOperationHint."
+    },
+    {
+      "name": "TruncatingUseInfoFromRepresentation",
+      "parameters": [
+        "MachineRepresentation rep"
+      ],
+      "return_type": "UseInfo",
+      "logic": "Returns a UseInfo object with truncation based on a MachineRepresentation."
+    },
+    {
+      "name": "UseInfoForBasePointer",
+      "parameters": [
+        "const FieldAccess& access"
+      ],
+      "return_type": "UseInfo",
+      "logic": "Returns the appropriate UseInfo for the base pointer of a field access, considering taggedness."
+    },
+    {
+      "name": "UseInfoForBasePointer",
+      "parameters": [
+        "const ElementAccess& access"
+      ],
+      "return_type": "UseInfo",
+      "logic": "Returns the appropriate UseInfo for the base pointer of an element access, considering taggedness."
+    },
+    {
+      "name": "ReplaceEffectControlUses",
+      "parameters": [
+        "Node* node",
+        "Node* effect",
+        "Node* control"
+      ],
+      "return_type": "void",
+      "logic": "Replaces effect and control edges of a node with new effect and control nodes."
+    },
+    {
+      "name": "CanOverflowSigned32",
+      "parameters": [
+        "const Operator* op",
+        "Type left",
+        "Type right",
+        "TypeCache const* type_cache",
+        "Zone* type_zone"
+      ],
+      "return_type": "bool",
+      "logic": "Determines if a signed 32-bit addition or subtraction operation can overflow."
+    },
+    {
+      "name": "IsSomePositiveOrderedNumber",
+      "parameters": [
+        "Type type"
+      ],
+      "return_type": "bool",
+      "logic": "Checks if a type is a positive ordered number."
+    },
+    {
+      "name": "IsLargeBigInt",
+      "parameters": [
+        "Type type"
+      ],
+      "return_type": "bool",
+      "logic": "Checks if a type is BigInt and not signed/unsigned BigInt64"
+    },
+    {
+      "name": "IsLoadFloat16ArrayElement",
+      "parameters": [
+        "Node* node"
+      ],
+      "return_type": "bool",
+      "logic": "Checks if the opcode of the node is IrOpcode::kLoadTypedElement or IrOpcode::kLoadDataViewElement and external array type is kExternalFloat16Array."
+    }
+  ]
+}

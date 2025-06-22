@@ -1,0 +1,84 @@
+{
+  "file_path": "/home/kathirks_gc/v8_go/codebase/src/compiler/fast-api-calls.h",
+  "imports": [
+    "include/v8-fast-api-calls.h",
+    "src/compiler/graph-assembler.h"
+  ],
+  "classes": [
+    {
+      "name": "OverloadsResolutionResult",
+      "properties": [
+        "distinguishable_arg_index",
+        "element_type",
+        "target_address"
+      ],
+      "methods": [
+        {
+          "name": "Invalid",
+          "parameters": [],
+          "return_type": "OverloadsResolutionResult",
+          "logic": "Returns an invalid OverloadsResolutionResult object, indicating that overload resolution failed. Sets distinguishable_arg_index to -1 and element_type to kVoid."
+        },
+        {
+          "name": "OverloadsResolutionResult",
+          "parameters": [
+            "int distinguishable_arg_index_",
+            "CTypeInfo::Type element_type_"
+          ],
+          "return_type": "void",
+          "logic": "Constructor for the OverloadsResolutionResult struct. Initializes the distinguishable_arg_index and element_type members. Includes a DCHECK to ensure validity if distinguishable_arg_index is non-negative."
+        },
+        {
+          "name": "is_valid",
+          "parameters": [],
+          "return_type": "bool",
+          "logic": "Checks if the OverloadsResolutionResult is valid. A result is considered valid if distinguishable_arg_index is non-negative."
+        }
+      ]
+    }
+  ],
+  "functions": [
+    {
+      "name": "GetTypedArrayElementsKind",
+      "parameters": [
+        "CTypeInfo::Type type"
+      ],
+      "return_type": "ElementsKind",
+      "logic": "Determines the ElementsKind of a TypedArray based on its CTypeInfo::Type. Likely maps a type to the appropriate element kind, like kUint8Elements, kFloat64Elements, etc."
+    },
+    {
+      "name": "CanOptimizeFastSignature",
+      "parameters": [
+        "const CFunctionInfo* c_signature"
+      ],
+      "return_type": "bool",
+      "logic": "Checks if a given CFunctionInfo (signature) is suitable for fast API call optimization.  This likely involves examining the types and arity of the function's arguments and return type."
+    },
+    {
+      "name": "BuildFastApiCall",
+      "parameters": [
+        "Isolate* isolate",
+        "TFGraph* graph",
+        "GraphAssembler* graph_assembler",
+        "FastApiCallFunction c_function",
+        "Node* data_argument",
+        "const GetParameter& get_parameter",
+        "const ConvertReturnValue& convert_return_value",
+        "const InitializeOptions& initialize_options",
+        "const GenerateSlowApiCall& generate_slow_api_call"
+      ],
+      "return_type": "Node*",
+      "logic": "Builds the graph nodes for a fast API call. Takes a function pointer, arguments, and conversion functions as input.  It uses the provided callbacks to get parameters, convert the return value, initialize options and generate a fallback slow API call."
+    },
+    {
+      "name": "GetFastApiCallTarget",
+      "parameters": [
+        "JSHeapBroker* broker",
+        "FunctionTemplateInfoRef function_template_info",
+        "size_t arg_count"
+      ],
+      "return_type": "FastApiCallFunction",
+      "logic": "Retrieves the target function pointer for a fast API call based on the FunctionTemplateInfo and the number of arguments. This is likely where the specific optimized C function is looked up based on the JavaScript function template."
+    }
+  ]
+}

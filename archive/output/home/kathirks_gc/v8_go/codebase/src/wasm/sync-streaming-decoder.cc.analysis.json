@@ -1,0 +1,91 @@
+{
+  "file_path": "/home/kathirks_gc/v8_go/codebase/src/wasm/sync-streaming-decoder.cc",
+  "imports": [
+    "src/execution/isolate.h",
+    "src/wasm/streaming-decoder.h",
+    "src/wasm/wasm-engine.h",
+    "src/wasm/wasm-objects-inl.h",
+    "src/wasm/wasm-serialization.h"
+  ],
+  "classes": [
+    {
+      "name": "SyncStreamingDecoder",
+      "properties": [
+        "isolate_",
+        "enabled_",
+        "compile_imports_",
+        "context_",
+        "api_method_name_for_errors_",
+        "resolver_",
+        "buffer_",
+        "buffer_size_"
+      ],
+      "methods": [
+        {
+          "name": "SyncStreamingDecoder",
+          "parameters": [
+            "Isolate* isolate",
+            "WasmEnabledFeatures enabled",
+            "CompileTimeImports compile_imports",
+            "DirectHandle<Context> context",
+            "const char* api_method_name_for_errors",
+            "std::shared_ptr<CompilationResultResolver> resolver"
+          ],
+          "return_type": "void",
+          "logic": "Constructor for the SyncStreamingDecoder class. Initializes the member variables with the provided arguments."
+        },
+        {
+          "name": "OnBytesReceived",
+          "parameters": [
+            "base::Vector<const uint8_t> bytes"
+          ],
+          "return_type": "void",
+          "logic": "Called when new bytes are received. Appends the received bytes to the internal buffer."
+        },
+        {
+          "name": "Finish",
+          "parameters": [
+            "bool can_use_compiled_module"
+          ],
+          "return_type": "void",
+          "logic": "Called when all bytes have been received. Compiles the wasm module from the internal buffer, potentially deserializing from cache if `can_use_compiled_module` is true. Notifies the resolver of success or failure."
+        },
+        {
+          "name": "Abort",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Called when the compilation is aborted. Clears the internal buffer."
+        },
+        {
+          "name": "NotifyCompilationDiscarded",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Called when the compilation is discarded. Clears the internal buffer."
+        },
+        {
+          "name": "NotifyNativeModuleCreated",
+          "parameters": [
+            "const std::shared_ptr<NativeModule>&"
+          ],
+          "return_type": "void",
+          "logic": "This function should not be called in SyncStreamingDecoder. It indicates an async process. Asserted as unreachable."
+        }
+      ]
+    }
+  ],
+  "functions": [
+    {
+      "name": "StreamingDecoder::CreateSyncStreamingDecoder",
+      "parameters": [
+        "Isolate* isolate",
+        "WasmEnabledFeatures enabled",
+        "CompileTimeImports compile_imports",
+        "DirectHandle<Context> context",
+        "const char* api_method_name_for_errors",
+        "std::shared_ptr<CompilationResultResolver> resolver"
+      ],
+      "return_type": "std::unique_ptr<StreamingDecoder>",
+      "logic": "Creates and returns a unique pointer to a SyncStreamingDecoder instance."
+    }
+  ]
+}

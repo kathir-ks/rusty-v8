@@ -1,0 +1,228 @@
+{
+  "metadata": {
+    "path": "/home/kathirks_gc/v8_go/archive/codebase/src/asmjs/asm-parser.h",
+    "file_name": "asm-parser.h",
+    "language": "cpp",
+    "purpose": "Header file for the AsmJsParser class, which parses and validates asm.js code and converts it to a WebAssembly module."
+  },
+  "imports": {
+    "metadata": {
+      "language": "cpp",
+      "purpose": "Include standard library and V8 internal headers."
+    },
+    "code": "#include <memory>\n\n            #include \"src/asmjs/asm-scanner.h\"\n            #include \"src/asmjs/asm-types.h\"\n            #include \"src/base/enum-set.h\"\n            #include \"src/base/vector.h\"\n            #include \"src/wasm/wasm-module-builder.h\"\n            #include \"src/zone/zone-containers.h\""
+  },
+  "classes": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "AsmJsParser",
+        "about": "A custom parser, validator, and WebAssembly converter for asm.js.",
+        "attributes": [],
+        "dependencies": [
+          "Utf16CharacterStream",
+          "AsmJsScanner",
+          "AsmType",
+          "EnumSet",
+          "WasmModuleBuilder",
+          "Zone",
+          "ZoneVector",
+          "StandardMember",
+          "StdlibSet",
+          "VarKind",
+          "FunctionImportInfo",
+          "VarInfo",
+          "GlobalImport",
+          "BlockKind",
+          "BlockInfo",
+          "TemporaryVariableScope",
+          "CachedVectors",
+          "CachedVector"
+        ]
+      },
+      "code": "class AsmJsParser {\n            public:\n            // clang-format off\n            enum StandardMember {\n                kInfinity,\n                kNaN,\n            #define V(_unused1, name, _unused2, _unused3) kMath##name,\n                STDLIB_MATH_FUNCTION_LIST(V)\n            #undef V\n            #define V(name, _unused1) kMath##name,\n                STDLIB_MATH_VALUE_LIST(V)\n            #undef V\n            #define V(name, _unused1, _unused2, _unused3) k##name,\n                STDLIB_ARRAY_TYPE_LIST(V)\n            #undef V\n            };\n            // clang-format on\n\n            using StdlibSet = base::EnumSet<StandardMember, uint64_t>;\n\n            explicit AsmJsParser(Zone* zone, uintptr_t stack_limit,\n                                Utf16CharacterStream* stream);\n            bool Run();\n            const char* failure_message() const { return failure_message_; }\n            int failure_location() const { return failure_location_; }\n            WasmModuleBuilder* module_builder() { return module_builder_; }\n            const StdlibSet* stdlib_uses() const { return &stdlib_uses_; }\n\n            private:\n            // clang-format off\n            enum class VarKind {\n                kUnused,\n                kLocal,\n                kGlobal,\n                kSpecial,\n                kFunction,\n                kTable,\n                kImportedFunction,\n            #define V(_unused0, Name, _unused1, _unused2) kMath##Name,\n                STDLIB_MATH_FUNCTION_LIST(V)\n            #undef V\n            #define V(Name, _unused1) kMath##Name,\n                STDLIB_MATH_VALUE_LIST(V)\n            #undef V\n            };\n            // clang-format on\n\n            // A single import in asm.js can require multiple imports in wasm, if the\n            // function is used with different signatures. {cache} keeps the wasm\n            // imports for the single asm.js import of name {function_name}.\n            struct FunctionImportInfo {\n                base::Vector<const char> function_name;\n                ZoneUnorderedMap<FunctionSig, uint32_t> cache;\n\n                // Constructor.\n                FunctionImportInfo(base::Vector<const char> name, Zone* zone)\n                    : function_name(name), cache(zone) {}\n            };\n\n            struct VarInfo {\n                AsmType* type = AsmType::None();\n                WasmFunctionBuilder* function_builder = nullptr;\n                FunctionImportInfo* import = nullptr;\n                uint32_t mask = 0;\n                uint32_t index = 0;\n                VarKind kind = VarKind::kUnused;\n                bool mutable_variable = true;\n                bool function_defined = false;\n            };\n\n            struct GlobalImport {\n                base::Vector<const char> import_name;\n                ValueType value_type;\n                VarInfo* var_info;\n            };\n\n            // Distinguish different kinds of blocks participating in {block_stack}. Each\n            // entry on that stack represents one block in the wasm code, and determines\n            // which block 'break' and 'continue' target in the current context:\n            //  - kRegular: The target of a 'break' (with & without identifier).\n            //              Pushed by an IterationStatement and a SwitchStatement.\n            //  - kLoop   : The target of a 'continue' (with & without identifier).\n            //              Pushed by an IterationStatement.\n            //  - kNamed  : The target of a 'break' with a specific identifier.\n            //              Pushed by a BlockStatement.\n            //  - kOther  : Only used for internal blocks, can never be targeted.\n            enum class BlockKind { kRegular, kLoop, kNamed, kOther };\n\n            // One entry in the {block_stack}, see {BlockKind} above for details. Blocks\n            // without a label have {kTokenNone} set as their label.\n            struct BlockInfo {\n                BlockKind kind;\n                AsmJsScanner::token_t label;\n            };\n\n            // Helper class to make {TempVariable} safe for nesting.\n            class TemporaryVariableScope;\n\n            template <typename T>\n            class CachedVectors {\n            public:\n                explicit CachedVectors(Zone* zone) : reusable_vectors_(zone) {}\n\n                Zone* zone() const { return reusable_vectors_.zone(); }\n\n                inline void fill(ZoneVector<T>* vec) {\n                if (reusable_vectors_.empty()) return;\n                reusable_vectors_.back().swap(*vec);\n                reusable_vectors_.pop_back();\n                vec->clear();\n                }\n\n                inline void reuse(ZoneVector<T>* vec) {\n                reusable_vectors_.emplace_back(std::move(*vec));\n                }\n\n            private:\n                ZoneVector<ZoneVector<T>> reusable_vectors_;\n            };\n\n            template <typename T>\n            class CachedVector final : public ZoneVector<T> {\n            public:\n                explicit CachedVector(CachedVectors<T>* cache)\n                    : ZoneVector<T>(cache->zone()), cache_(cache) {\n                cache->fill(this);\n                }\n                ~CachedVector() { cache_->reuse(this); }\n\n            private:\n                CachedVectors<T>* cache_;\n            };\n\n            Zone* zone_;\n            AsmJsScanner scanner_;\n            WasmModuleBuilder* module_builder_;\n            WasmFunctionBuilder* current_function_builder_;\n            AsmType* return_type_ = nullptr;\n            uintptr_t stack_limit_;\n            StdlibSet stdlib_uses_;\n            base::Vector<VarInfo> global_var_info_;\n            base::Vector<VarInfo> local_var_info_;\n            size_t num_globals_ = 0;\n\n            CachedVectors<ValueType> cached_valuetype_vectors_{zone_};\n            CachedVectors<AsmType*> cached_asm_type_p_vectors_{zone_};\n            CachedVectors<AsmJsScanner::token_t> cached_token_t_vectors_{zone_};\n            CachedVectors<int32_t> cached_int_vectors_{zone_};\n\n            int function_temp_locals_offset_;\n            int function_temp_locals_used_;\n            int function_temp_locals_depth_;\n\n            // Error Handling related\n            bool failed_ = false;\n            const char* failure_message_;\n            int failure_location_ = kNoSourcePosition;\n\n            // Module Related.\n            AsmJsScanner::token_t stdlib_name_ = kTokenNone;\n            AsmJsScanner::token_t foreign_name_ = kTokenNone;\n            AsmJsScanner::token_t heap_name_ = kTokenNone;\n\n            static const AsmJsScanner::token_t kTokenNone = 0;\n\n            // Track if parsing a heap assignment.\n            bool inside_heap_assignment_ = false;\n            AsmType* heap_access_type_ = nullptr;\n\n            ZoneVector<BlockInfo> block_stack_;\n\n            // Types used for stdlib function and their set up.\n            AsmType* stdlib_dq2d_;\n            AsmType* stdlib_dqdq2d_;\n            AsmType* stdlib_i2s_;\n            AsmType* stdlib_ii2s_;\n            AsmType* stdlib_minmax_;\n            AsmType* stdlib_abs_;\n            AsmType* stdlib_ceil_like_;\n            AsmType* stdlib_fround_;\n\n            // When making calls, the return type is needed to lookup signatures.\n            // For `+callsite(..)` or `fround(callsite(..))` use this value to pass\n            // along the coercion.\n            AsmType* call_coercion_ = nullptr;\n\n            // The source position associated with the above {call_coercion}.\n            size_t call_coercion_position_;\n\n            // When making calls, the coercion can also appear in the source stream\n            // syntactically \"behind\" the call site. For `callsite(..)|0` use this\n            // value to flag that such a coercion must happen.\n            AsmType* call_coercion_deferred_ = nullptr;\n\n            // The source position at which requesting a deferred coercion via the\n            // aforementioned {call_coercion_deferred} is allowed.\n            size_t call_coercion_deferred_position_;\n\n            // The code position of the last heap access shift by an immediate value.\n            // For `heap[expr >> value:NumericLiteral]` this indicates from where to\n            // delete code when the expression is used as part of a valid heap access.\n            // Will be set to {kNoHeapAccessShift} if heap access shift wasn't matched.\n            size_t heap_access_shift_position_;\n            uint32_t heap_access_shift_value_;\n            static const size_t kNoHeapAccessShift = -1;\n\n            // Used to track the last label we've seen so it can be matched to later\n            // statements it's attached to.\n            AsmJsScanner::token_t pending_label_ = kTokenNone;\n\n            // Global imports. The list of imported variables that are copied during\n            // module instantiation into a corresponding global variable.\n            ZoneLinkedList<GlobalImport> global_imports_;\n\n            Zone* zone() { return zone_; }\n\n            inline bool Peek(AsmJsScanner::token_t token) {\n                return scanner_.Token() == token;\n            }\n\n            inline bool PeekForZero() {\n                return (scanner_.IsUnsigned() && scanner_.AsUnsigned() == 0);\n            }\n\n            inline bool Check(AsmJsScanner::token_t token) {\n                if (scanner_.Token() == token) {\n                scanner_.Next();\n                return true;\n                } else {\n                return false;\n                }\n            }\n\n            inline bool CheckForZero() {\n                if (scanner_.IsUnsigned() && scanner_.AsUnsigned() == 0) {\n                scanner_.Next();\n                return true;\n                } else {\n                return false;\n                }\n            }\n\n            inline bool CheckForDouble(double* value) {\n                if (scanner_.IsDouble()) {\n                *value = scanner_.AsDouble();\n                scanner_.Next();\n                return true;\n                } else {\n                return false;\n                }\n            }\n\n            inline bool CheckForUnsigned(uint32_t* value) {\n                if (scanner_.IsUnsigned()) {\n                *value = scanner_.AsUnsigned();\n                scanner_.Next();\n                return true;\n                } else {\n                return false;\n                }\n            }\n\n            inline bool CheckForUnsignedBelow(uint32_t limit, uint32_t* value) {\n                if (scanner_.IsUnsigned() && scanner_.AsUnsigned() < limit) {\n                *value = scanner_.AsUnsigned();\n                scanner_.Next();\n                return true;\n                } else {\n                return false;\n                }\n            }\n\n            inline AsmJsScanner::token_t Consume() {\n                AsmJsScanner::token_t ret = scanner_.Token();\n                scanner_.Next();\n                return ret;\n            }\n\n            void SkipSemicolon();\n\n            VarInfo* GetVarInfo(AsmJsScanner::token_t token);\n            uint32_t VarIndex(VarInfo* info);\n            void DeclareGlobal(VarInfo* info, bool mutable_variable, AsmType* type,\n                                ValueType vtype, WasmInitExpr init);\n            void DeclareStdlibFunc(VarInfo* info, VarKind kind, AsmType* type);\n            void AddGlobalImport(base::Vector<const char> name, AsmType* type,\n                                ValueType vtype, bool mutable_variable, VarInfo* info);\n\n            // Allocates a temporary local variable. The given {index} is absolute within\n            // the function body, consider using {TemporaryVariableScope} when nesting.\n            uint32_t TempVariable(int index);\n\n            // Preserves a copy of the scanner's current identifier string in the zone.\n            base::Vector<const char> CopyCurrentIdentifierString();\n\n            // Use to set up block stack layers (including synthetic ones for if-else).\n            // Begin/Loop/End below are implemented with these plus code generation.\n            void BareBegin(BlockKind kind, AsmJsScanner::token_t label = 0);\n            void BareEnd();\n            int FindContinueLabelDepth(AsmJsScanner::token_t label);\n            int FindBreakLabelDepth(AsmJsScanner::token_t label);\n\n            // Use to set up actual wasm blocks/loops.\n            void Begin(AsmJsScanner::token_t label = 0);\n            void Loop(AsmJsScanner::token_t label = 0);\n            void End();\n\n            void InitializeStdlibTypes();\n\n            FunctionSig* ConvertSignature(AsmType* return_type,\n                                        const ZoneVector<AsmType*>& params);\n\n            void ValidateModule();            // 6.1 ValidateModule\n            void ValidateModuleParameters();  // 6.1 ValidateModule - parameters\n            void ValidateModuleVars();        // 6.1 ValidateModule - variables\n            void ValidateModuleVar(bool mutable_variable);\n            void ValidateModuleVarImport(VarInfo* info, bool mutable_variable);\n            void ValidateModuleVarStdlib(VarInfo* info);\n            void ValidateModuleVarNewStdlib(VarInfo* info);\n            void ValidateModuleVarFromGlobal(VarInfo* info, bool mutable_variable);\n\n            void ValidateExport();         // 6.2 ValidateExport\n            void ValidateFunctionTable();  // 6.3 ValidateFunctionTable\n            void ValidateFunction();       // 6.4 ValidateFunction\n            void ValidateFunctionParams(ZoneVector<AsmType*>* params);\n            void ValidateFunctionLocals(size_t param_count,\n                                        ZoneVector<ValueType>* locals);\n            void ValidateStatement();              // 6.5 ValidateStatement\n            void Block();                          // 6.5.1 Block\n            void ExpressionStatement();            // 6.5.2 ExpressionStatement\n            void EmptyStatement();                 // 6.5.3 EmptyStatement\n            void IfStatement();                    // 6.5.4 IfStatement\n            void ReturnStatement();                // 6.5.5 ReturnStatement\n            bool IterationStatement();             // 6.5.6 IterationStatement\n            void WhileStatement();                 // 6.5.6 IterationStatement - while\n            void DoStatement();                    // 6.5.6 IterationStatement - do\n            void ForStatement();                   // 6.5.6 IterationStatement - for\n            void BreakStatement();                 // 6.5.7 BreakStatement\n            void ContinueStatement();              // 6.5.8 ContinueStatement\n            void LabelledStatement();              // 6.5.9 LabelledStatement\n            void SwitchStatement();                // 6.5.10 SwitchStatement\n            void ValidateCase();                   // 6.6. ValidateCase\n            void ValidateDefault();                // 6.7 ValidateDefault\n            AsmType* ValidateExpression();         // 6.8 ValidateExpression\n            AsmType* Expression(AsmType* expect);  // 6.8.1 Expression\n            AsmType* NumericLiteral();             // 6.8.2 NumericLiteral\n            AsmType* Identifier();                 // 6.8.3 Identifier\n            AsmType* CallExpression();             // 6.8.4 CallExpression\n            AsmType* MemberExpression();           // 6.8.5 MemberExpression\n            AsmType* AssignmentExpression();       // 6.8.6 AssignmentExpression\n            AsmType* UnaryExpression();            // 6.8.7 UnaryExpression\n            AsmType* MultiplicativeExpression();   // 6.8.8 MultiplicativeExpression\n            AsmType* AdditiveExpression();         // 6.8.9 AdditiveExpression\n            AsmType* ShiftExpression();            // 6.8.10 ShiftExpression\n            AsmType* RelationalExpression();       // 6.8.11 RelationalExpression\n            AsmType* EqualityExpression();         // 6.8.12 EqualityExpression\n            AsmType* BitwiseANDExpression();       // 6.8.13 BitwiseANDExpression\n            AsmType* BitwiseXORExpression();       // 6.8.14 BitwiseXORExpression\n            AsmType* BitwiseORExpression();        // 6.8.15 BitwiseORExpression\n            AsmType* ConditionalExpression();      // 6.8.16 ConditionalExpression\n            AsmType* ParenthesizedExpression();    // 6.8.17 ParenthesiedExpression\n            AsmType* ValidateCall();               // 6.9 ValidateCall\n            bool PeekCall();                       // 6.9 ValidateCall - helper\n            void ValidateHeapAccess();             // 6.10 ValidateHeapAccess\n            void ValidateFloatCoercion();          // 6.11 ValidateFloatCoercion\n\n            // Used as part of {ForStatement}. Scans forward to the next `)` in order to\n            // skip over the third expression in a for-statement. This is one piece that\n            // makes this parser not be a pure single-pass.\n            void ScanToClosingParenthesis();\n\n            // Used as part of {SwitchStatement}. Collects all case labels in the current\n            // switch-statement, then resets the scanner position. This is one piece that\n            // makes this parser not be a pure single-pass.\n            void GatherCases(ZoneVector<int32_t>* cases);\n            };"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "TemporaryVariableScope",
+        "about": "Helper class to manage temporary variable allocation within nested scopes.",
+        "dependencies": []
+      },
+      "code": "class TemporaryVariableScope;"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "CachedVectors",
+        "about": "A template class to cache and reuse vectors.",
+        "dependencies": [
+          "ZoneVector"
+        ]
+      },
+      "code": "template <typename T>\n            class CachedVectors {\n            public:\n                explicit CachedVectors(Zone* zone) : reusable_vectors_(zone) {}\n\n                Zone* zone() const { return reusable_vectors_.zone(); }\n\n                inline void fill(ZoneVector<T>* vec) {\n                if (reusable_vectors_.empty()) return;\n                reusable_vectors_.back().swap(*vec);\n                reusable_vectors_.pop_back();\n                vec->clear();\n                }\n\n                inline void reuse(ZoneVector<T>* vec) {\n                reusable_vectors_.emplace_back(std::move(*vec));\n                }\n\n            private:\n                ZoneVector<ZoneVector<T>> reusable_vectors_;\n            };"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "CachedVector",
+        "about": "A template class that inherits from ZoneVector and uses CachedVectors for memory management.",
+        "dependencies": [
+          "ZoneVector",
+          "CachedVectors"
+        ]
+      },
+      "code": "template <typename T>\n            class CachedVector final : public ZoneVector<T> {\n            public:\n                explicit CachedVector(CachedVectors<T>* cache)\n                    : ZoneVector<T>(cache->zone()), cache_(cache) {\n                cache->fill(this);\n                }\n                ~CachedVector() { cache_->reuse(this); }\n\n            private:\n                CachedVectors<T>* cache_;\n            };"
+    }
+  ],
+  "dependencies": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "Utf16CharacterStream",
+        "about": "Provides a stream of UTF-16 characters.",
+        "dependencies": []
+      },
+      "code": "class Utf16CharacterStream;",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "AsmJsScanner",
+        "about": "Lexical analyzer for asm.js.",
+        "dependencies": []
+      },
+      "code": "class AsmJsScanner;",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "AsmType",
+        "about": "Represents the types used in asm.js.",
+        "dependencies": []
+      },
+      "code": "class AsmType;",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "EnumSet",
+        "about": "Represents a set of enum values.",
+        "dependencies": []
+      },
+      "code": "template <typename E, typename StorageType> class EnumSet;",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "WasmModuleBuilder",
+        "about": "Builds a WebAssembly module.",
+        "dependencies": []
+      },
+      "code": "class WasmModuleBuilder;",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "Zone",
+        "about": "A memory allocation zone.",
+        "dependencies": []
+      },
+      "code": "class Zone;",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "ZoneVector",
+        "about": "A vector that allocates memory from a Zone.",
+        "dependencies": []
+      },
+      "code": "template <typename T> class ZoneVector;",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "FunctionSig",
+        "about": "Represents the signature of a function.",
+        "dependencies": []
+      },
+      "code": "class FunctionSig;",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "ZoneUnorderedMap",
+        "about": "An unordered map that allocates memory from a Zone.",
+        "dependencies": []
+      },
+      "code": "template <typename K, typename V> class ZoneUnorderedMap;",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "WasmFunctionBuilder",
+        "about": "Builds a WebAssembly function.",
+        "dependencies": []
+      },
+      "code": "class WasmFunctionBuilder;",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "ValueType",
+        "about": "Represents the types of values in WebAssembly.",
+        "dependencies": []
+      },
+      "code": "class ValueType;",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "WasmInitExpr",
+        "about": "Represents the initialization expression of a WebAssembly global variable.",
+        "dependencies": []
+      },
+      "code": "class WasmInitExpr;",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "ZoneLinkedList",
+        "about": "A linked list that allocates memory from a Zone.",
+        "dependencies": []
+      },
+      "code": "template <typename T> class ZoneLinkedList;",
+      "type": "class"
+    }
+  ],
+  "file_path": "/home/kathirks_gc/v8_go/archive/codebase/src/asmjs/asm-parser.h"
+}

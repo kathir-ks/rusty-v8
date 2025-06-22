@@ -1,0 +1,97 @@
+{
+  "file_path": "/home/kathirks_gc/v8_go/codebase/include/cppgc/internal/name-trait.h",
+  "imports": [
+    "<cstddef>",
+    "<cstdint>",
+    "<type_traits>",
+    "cppgc/name-provider.h",
+    "v8config.h"
+  ],
+  "classes": [
+    {
+      "name": "NameBuffer",
+      "properties": [
+        "char name[Size + 1]"
+      ],
+      "methods": [
+        {
+          "name": "FromCString",
+          "parameters": [
+            "const char* str"
+          ],
+          "return_type": "NameBuffer<Size>",
+          "logic": "Creates a NameBuffer from a C-string. Copies the first `Size` characters from `str` into the `name` buffer and null-terminates it."
+        }
+      ]
+    },
+    {
+      "name": "HeapObjectName",
+      "properties": [
+        "const char* value",
+        "bool name_was_hidden"
+      ],
+      "methods": []
+    },
+    {
+      "name": "NameTraitBase",
+      "properties": [],
+      "methods": [
+        {
+          "name": "GetNameFromTypeSignature",
+          "parameters": [
+            "const char*"
+          ],
+          "return_type": "HeapObjectName",
+          "logic": "Protected static method used to derive the heap object name from a type signature (e.g., `__PRETTY_FUNCTION__`). The actual logic of what that method does is hidden since it is only declared."
+        }
+      ]
+    },
+    {
+      "name": "NameTrait",
+      "properties": [],
+      "methods": [
+        {
+          "name": "HasNonHiddenName",
+          "parameters": [],
+          "return_type": "bool",
+          "logic": "Determines if the object of type `T` has a non-hidden name based on build configurations (CPPGC_SUPPORTS_COMPILE_TIME_TYPENAME, CPPGC_SUPPORTS_OBJECT_NAMES) and inheritance from NameProvider."
+        },
+        {
+          "name": "GetName",
+          "parameters": [
+            "const void* obj",
+            "HeapObjectNameForUnnamedObject name_retrieval_mode"
+          ],
+          "return_type": "HeapObjectName",
+          "logic": "Retrieves the HeapObjectName for the object `obj` based on the `name_retrieval_mode`. It casts the void pointer to the type T and calls GetNameFor."
+        },
+        {
+          "name": "GetNameFor",
+          "parameters": [
+            "const NameProvider* name_provider",
+            "HeapObjectNameForUnnamedObject"
+          ],
+          "return_type": "HeapObjectName",
+          "logic": "Retrieves the human-readable name from the `NameProvider` object if the object inherits from `NameProvider`. Returns the name and indicates that it wasn't hidden."
+        },
+        {
+          "name": "GetNameFor",
+          "parameters": [
+            "const void*",
+            "HeapObjectNameForUnnamedObject name_retrieval_mode"
+          ],
+          "return_type": "HeapObjectName",
+          "logic": "Determines name to return based on the name_retrieval_mode enum and several compile time defines (CPPGC_SUPPORTS_COMPILE_TIME_TYPENAME and CPPGC_SUPPORTS_OBJECT_NAMES)."
+        }
+      ]
+    }
+  ],
+  "functions": [
+    {
+      "name": "GetTypename",
+      "parameters": [],
+      "return_type": "const char*",
+      "logic": "Retrieves the type name of the template parameter `T` at compile time using `__PRETTY_FUNCTION__`. It extracts the type name string and stores it in a static buffer for later retrieval."
+    }
+  ]
+}

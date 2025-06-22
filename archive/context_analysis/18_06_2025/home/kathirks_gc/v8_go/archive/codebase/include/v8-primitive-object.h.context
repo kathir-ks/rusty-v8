@@ -1,0 +1,106 @@
+{
+  "metadata": {
+    "path": "/home/kathirks_gc/v8_go/archive/codebase/include/v8-primitive-object.h",
+    "file_name": "v8-primitive-object.h",
+    "language": "cpp",
+    "purpose": "Defines the NumberObject, BigIntObject, BooleanObject, StringObject, and SymbolObject classes, which are object wrappers for primitive values in V8."
+  },
+  "imports": {
+    "metadata": {
+      "language": "cpp",
+      "purpose": "Includes necessary V8 headers for local handles, objects, and configuration."
+    },
+    "code": "#include \"v8-local-handle.h\"  // NOLINT(build/include_directory)\n#include \"v8-object.h\"        // NOLINT(build/include_directory)\n#include \"v8config.h\"         // NOLINT(build/include_directory)"
+  },
+  "classes": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "NumberObject",
+        "extends": "Object",
+        "about": "Represents a Number object (ECMA-262, 4.3.21).",
+        "attributes": [],
+        "dependencies": [
+          "Object",
+          "Isolate",
+          "Local",
+          "Value"
+        ]
+      },
+      "code": "class V8_EXPORT NumberObject : public Object {\n public:\n  static Local<Value> New(Isolate* isolate, double value);\n\n  double ValueOf() const;\n\n  V8_INLINE static NumberObject* Cast(Value* value) {\n#ifdef V8_ENABLE_CHECKS\n    CheckCast(value);\n#endif\n    return static_cast<NumberObject*>(value);\n  }\n\n private:\n  static void CheckCast(Value* obj);\n};"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "BigIntObject",
+        "extends": "Object",
+        "about": "Represents a BigInt object (https://tc39.github.io/proposal-bigint)",
+        "attributes": [],
+        "dependencies": [
+          "Object",
+          "Isolate",
+          "Local",
+          "Value",
+          "BigInt"
+        ]
+      },
+      "code": "class V8_EXPORT BigIntObject : public Object {\n public:\n  static Local<Value> New(Isolate* isolate, int64_t value);\n\n  Local<BigInt> ValueOf() const;\n\n  V8_INLINE static BigIntObject* Cast(Value* value) {\n#ifdef V8_ENABLE_CHECKS\n    CheckCast(value);\n#endif\n    return static_cast<BigIntObject*>(value);\n  }\n\n private:\n  static void CheckCast(Value* obj);\n};"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "BooleanObject",
+        "extends": "Object",
+        "about": "Represents a Boolean object (ECMA-262, 4.3.15).",
+        "attributes": [],
+        "dependencies": [
+          "Object",
+          "Isolate",
+          "Local",
+          "Value"
+        ]
+      },
+      "code": "class V8_EXPORT BooleanObject : public Object {\n public:\n  static Local<Value> New(Isolate* isolate, bool value);\n\n  bool ValueOf() const;\n\n  V8_INLINE static BooleanObject* Cast(Value* value) {\n#ifdef V8_ENABLE_CHECKS\n    CheckCast(value);\n#endif\n    return static_cast<BooleanObject*>(value);\n  }\n\n private:\n  static void CheckCast(Value* obj);\n};"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "StringObject",
+        "extends": "Object",
+        "about": "Represents a String object (ECMA-262, 4.3.18).",
+        "attributes": [],
+        "dependencies": [
+          "Object",
+          "Isolate",
+          "Local",
+          "Value",
+          "String"
+        ]
+      },
+      "code": "class V8_EXPORT StringObject : public Object {\n public:\n  static Local<Value> New(Isolate* isolate, Local<String> value);\n\n  Local<String> ValueOf() const;\n\n  V8_INLINE static StringObject* Cast(Value* value) {\n#ifdef V8_ENABLE_CHECKS\n    CheckCast(value);\n#endif\n    return static_cast<StringObject*>(value);\n  }\n\n private:\n  static void CheckCast(Value* obj);\n};"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "SymbolObject",
+        "extends": "Object",
+        "about": "Represents a Symbol object (ECMA-262 edition 6).",
+        "attributes": [],
+        "dependencies": [
+          "Object",
+          "Isolate",
+          "Local",
+          "Value",
+          "Symbol"
+        ]
+      },
+      "code": "class V8_EXPORT SymbolObject : public Object {\n public:\n  static Local<Value> New(Isolate* isolate, Local<Symbol> value);\n\n  Local<Symbol> ValueOf() const;\n\n  V8_INLINE static SymbolObject* Cast(Value* value) {\n#ifdef V8_ENABLE_CHECKS\n    CheckCast(value);\n#endif\n    return static_cast<SymbolObject*>(value);\n  }\n\n private:\n  static void CheckCast(Value* obj);\n};"
+    }
+  ],
+  "file_path": "/home/kathirks_gc/v8_go/archive/codebase/include/v8-primitive-object.h"
+}

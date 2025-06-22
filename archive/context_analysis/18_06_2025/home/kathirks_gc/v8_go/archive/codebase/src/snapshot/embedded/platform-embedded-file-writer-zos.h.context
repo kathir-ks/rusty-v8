@@ -1,0 +1,522 @@
+{
+  "metadata": {
+    "path": "/home/kathirks_gc/v8_go/archive/codebase/src/snapshot/embedded/platform-embedded-file-writer-zos.h",
+    "file_name": "platform-embedded-file-writer-zos.h",
+    "language": "cpp",
+    "purpose": "Declares the PlatformEmbeddedFileWriterZOS class, which is responsible for writing embedded snapshot files for the z/OS platform.  It inherits from PlatformEmbeddedFileWriterBase and provides platform-specific implementations for various file writing operations."
+  },
+  "imports": {
+    "metadata": {
+      "language": "cpp",
+      "purpose": "Includes necessary header files for macros and the base class."
+    },
+    "code": "#include \"src/base/macros.h\"\n#include \"src/snapshot/embedded/platform-embedded-file-writer-base.h\""
+  },
+  "classes": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "PlatformEmbeddedFileWriterZOS",
+        "extends": "PlatformEmbeddedFileWriterBase",
+        "about": "Implements platform-specific file writing for embedded snapshots on z/OS.",
+        "attributes": [
+          {
+            "name": "target_arch_",
+            "type": "EmbeddedTargetArch",
+            "access": "private",
+            "purpose": "Stores the target architecture for the embedded snapshot."
+          },
+          {
+            "name": "target_os_",
+            "type": "EmbeddedTargetOs",
+            "access": "private",
+            "purpose": "Stores the target operating system (z/OS) for the embedded snapshot."
+          }
+        ],
+        "dependencies": [
+          "PlatformEmbeddedFileWriterBase",
+          "EmbeddedTargetArch",
+          "EmbeddedTargetOs",
+          "DataDirective"
+        ]
+      },
+      "code": "class PlatformEmbeddedFileWriterZOS : public PlatformEmbeddedFileWriterBase {\n public:\n  PlatformEmbeddedFileWriterZOS(EmbeddedTargetArch target_arch,\n                                EmbeddedTargetOs target_os)\n      : target_arch_(target_arch), target_os_(target_os) {\n    USE(target_arch_);\n    USE(target_os_);\n    DCHECK_EQ(target_os_, EmbeddedTargetOs::kZOS);\n  }\n\n  void SectionText() override;\n  void SectionRoData() override;\n\n  void AlignToCodeAlignment() override;\n  void AlignToDataAlignment() override;\n\n  void DeclareUint32(const char* name, uint32_t value) override;\n  void DeclareLabel(const char* name) override;\n  void DeclareLabelProlog(const char* name) override;\n  void DeclareLabelEpilogue() override;\n  void SourceInfo(int fileid, const char* filename, int line) override;\n  void DeclareFunctionBegin(const char* name, uint32_t size) override;\n  void DeclareFunctionEnd(const char* name) override;\n\n  int HexLiteral(uint64_t value) override;\n\n  void Comment(const char* string) override;\n\n  void FilePrologue() override;\n  void DeclareExternalFilename(int fileid, const char* filename) override;\n  void FileEpilogue() override;\n\n  int IndentedDataDirective(DataDirective directive) override;\n\n  DataDirective ByteChunkDataDirective() const override;\n  int WriteByteChunk(const uint8_t* data) override;\n\n private:\n  void DeclareSymbolGlobal(const char* name) override;\n\n private:\n  const EmbeddedTargetArch target_arch_;\n  const EmbeddedTargetOs target_os_;\n};"
+    }
+  ],
+  "functions": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "method",
+        "name": "PlatformEmbeddedFileWriterZOS",
+        "parent": "PlatformEmbeddedFileWriterZOS",
+        "about": "Constructor for the PlatformEmbeddedFileWriterZOS class.",
+        "logic": "Initializes the target architecture and operating system.  It also asserts that the target OS is z/OS.",
+        "parameters": [
+          {
+            "name": "target_arch",
+            "type": "EmbeddedTargetArch",
+            "purpose": "The target architecture for the embedded snapshot."
+          },
+          {
+            "name": "target_os",
+            "type": "EmbeddedTargetOs",
+            "purpose": "The target operating system for the embedded snapshot."
+          }
+        ],
+        "return": {
+          "type": "void",
+          "description": "No return value."
+        },
+        "dependencies": [
+          "EmbeddedTargetArch",
+          "EmbeddedTargetOs"
+        ]
+      },
+      "code": "PlatformEmbeddedFileWriterZOS(EmbeddedTargetArch target_arch,\n                                EmbeddedTargetOs target_os)\n      : target_arch_(target_arch), target_os_(target_os) {\n    USE(target_arch_);\n    USE(target_os_);\n    DCHECK_EQ(target_os_, EmbeddedTargetOs::kZOS);\n  }"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "method",
+        "name": "SectionText",
+        "parent": "PlatformEmbeddedFileWriterZOS",
+        "about": "Declares the start of the text section in the output file.",
+        "logic": "Platform-specific implementation to declare the text section.",
+        "parameters": [],
+        "return": {
+          "type": "void",
+          "description": "No return value."
+        },
+        "dependencies": []
+      },
+      "code": "void SectionText() override;"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "method",
+        "name": "SectionRoData",
+        "parent": "PlatformEmbeddedFileWriterZOS",
+        "about": "Declares the start of the read-only data section in the output file.",
+        "logic": "Platform-specific implementation to declare the read-only data section.",
+        "parameters": [],
+        "return": {
+          "type": "void",
+          "description": "No return value."
+        },
+        "dependencies": []
+      },
+      "code": "void SectionRoData() override;"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "method",
+        "name": "AlignToCodeAlignment",
+        "parent": "PlatformEmbeddedFileWriterZOS",
+        "about": "Aligns the output file to the required code alignment.",
+        "logic": "Platform-specific implementation for code alignment.",
+        "parameters": [],
+        "return": {
+          "type": "void",
+          "description": "No return value."
+        },
+        "dependencies": []
+      },
+      "code": "void AlignToCodeAlignment() override;"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "method",
+        "name": "AlignToDataAlignment",
+        "parent": "PlatformEmbeddedFileWriterZOS",
+        "about": "Aligns the output file to the required data alignment.",
+        "logic": "Platform-specific implementation for data alignment.",
+        "parameters": [],
+        "return": {
+          "type": "void",
+          "description": "No return value."
+        },
+        "dependencies": []
+      },
+      "code": "void AlignToDataAlignment() override;"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "method",
+        "name": "DeclareUint32",
+        "parent": "PlatformEmbeddedFileWriterZOS",
+        "about": "Declares a 32-bit unsigned integer in the output file.",
+        "logic": "Platform-specific implementation for declaring a uint32_t.",
+        "parameters": [
+          {
+            "name": "name",
+            "type": "const char*",
+            "purpose": "The name of the integer."
+          },
+          {
+            "name": "value",
+            "type": "uint32_t",
+            "purpose": "The value of the integer."
+          }
+        ],
+        "return": {
+          "type": "void",
+          "description": "No return value."
+        },
+        "dependencies": []
+      },
+      "code": "void DeclareUint32(const char* name, uint32_t value) override;"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "method",
+        "name": "DeclareLabel",
+        "parent": "PlatformEmbeddedFileWriterZOS",
+        "about": "Declares a label in the output file.",
+        "logic": "Platform-specific implementation for declaring a label.",
+        "parameters": [
+          {
+            "name": "name",
+            "type": "const char*",
+            "purpose": "The name of the label."
+          }
+        ],
+        "return": {
+          "type": "void",
+          "description": "No return value."
+        },
+        "dependencies": []
+      },
+      "code": "void DeclareLabel(const char* name) override;"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "method",
+        "name": "DeclareLabelProlog",
+        "parent": "PlatformEmbeddedFileWriterZOS",
+        "about": "Declares a label for the function prologue in the output file.",
+        "logic": "Platform-specific implementation for declaring function prologue label.",
+        "parameters": [
+          {
+            "name": "name",
+            "type": "const char*",
+            "purpose": "The name of the label."
+          }
+        ],
+        "return": {
+          "type": "void",
+          "description": "No return value."
+        },
+        "dependencies": []
+      },
+      "code": "void DeclareLabelProlog(const char* name) override;"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "method",
+        "name": "DeclareLabelEpilogue",
+        "parent": "PlatformEmbeddedFileWriterZOS",
+        "about": "Declares a label for the function epilogue in the output file.",
+        "logic": "Platform-specific implementation for declaring function epilogue label.",
+        "parameters": [],
+        "return": {
+          "type": "void",
+          "description": "No return value."
+        },
+        "dependencies": []
+      },
+      "code": "void DeclareLabelEpilogue() override;"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "method",
+        "name": "SourceInfo",
+        "parent": "PlatformEmbeddedFileWriterZOS",
+        "about": "Adds source code information to the output file.",
+        "logic": "Platform-specific implementation for adding source information.",
+        "parameters": [
+          {
+            "name": "fileid",
+            "type": "int",
+            "purpose": "File ID."
+          },
+          {
+            "name": "filename",
+            "type": "const char*",
+            "purpose": "Filename."
+          },
+          {
+            "name": "line",
+            "type": "int",
+            "purpose": "Line number."
+          }
+        ],
+        "return": {
+          "type": "void",
+          "description": "No return value."
+        },
+        "dependencies": []
+      },
+      "code": "void SourceInfo(int fileid, const char* filename, int line) override;"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "method",
+        "name": "DeclareFunctionBegin",
+        "parent": "PlatformEmbeddedFileWriterZOS",
+        "about": "Declares the beginning of a function in the output file.",
+        "logic": "Platform-specific implementation for declaring function start.",
+        "parameters": [
+          {
+            "name": "name",
+            "type": "const char*",
+            "purpose": "The name of the function."
+          },
+          {
+            "name": "size",
+            "type": "uint32_t",
+            "purpose": "The size of the function."
+          }
+        ],
+        "return": {
+          "type": "void",
+          "description": "No return value."
+        },
+        "dependencies": []
+      },
+      "code": "void DeclareFunctionBegin(const char* name, uint32_t size) override;"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "method",
+        "name": "DeclareFunctionEnd",
+        "parent": "PlatformEmbeddedFileWriterZOS",
+        "about": "Declares the end of a function in the output file.",
+        "logic": "Platform-specific implementation for declaring function end.",
+        "parameters": [
+          {
+            "name": "name",
+            "type": "const char*",
+            "purpose": "The name of the function."
+          }
+        ],
+        "return": {
+          "type": "void",
+          "description": "No return value."
+        },
+        "dependencies": []
+      },
+      "code": "void DeclareFunctionEnd(const char* name) override;"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "method",
+        "name": "HexLiteral",
+        "parent": "PlatformEmbeddedFileWriterZOS",
+        "about": "Writes a 64-bit hexadecimal literal to the output file.",
+        "logic": "Platform-specific implementation for writing a hex literal.",
+        "parameters": [
+          {
+            "name": "value",
+            "type": "uint64_t",
+            "purpose": "The value of the hex literal."
+          }
+        ],
+        "return": {
+          "type": "int",
+          "description": "Return value depends on implementation, likely success/failure indicator."
+        },
+        "dependencies": []
+      },
+      "code": "int HexLiteral(uint64_t value) override;"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "method",
+        "name": "Comment",
+        "parent": "PlatformEmbeddedFileWriterZOS",
+        "about": "Adds a comment to the output file.",
+        "logic": "Platform-specific implementation for adding a comment.",
+        "parameters": [
+          {
+            "name": "string",
+            "type": "const char*",
+            "purpose": "The comment string."
+          }
+        ],
+        "return": {
+          "type": "void",
+          "description": "No return value."
+        },
+        "dependencies": []
+      },
+      "code": "void Comment(const char* string) override;"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "method",
+        "name": "FilePrologue",
+        "parent": "PlatformEmbeddedFileWriterZOS",
+        "about": "Writes the file prologue to the output file.",
+        "logic": "Platform-specific implementation for writing file prologue.",
+        "parameters": [],
+        "return": {
+          "type": "void",
+          "description": "No return value."
+        },
+        "dependencies": []
+      },
+      "code": "void FilePrologue() override;"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "method",
+        "name": "DeclareExternalFilename",
+        "parent": "PlatformEmbeddedFileWriterZOS",
+        "about": "Declares an external filename in the output file.",
+        "logic": "Platform-specific implementation for declaring an external filename.",
+        "parameters": [
+          {
+            "name": "fileid",
+            "type": "int",
+            "purpose": "The ID of the file."
+          },
+          {
+            "name": "filename",
+            "type": "const char*",
+            "purpose": "The name of the file."
+          }
+        ],
+        "return": {
+          "type": "void",
+          "description": "No return value."
+        },
+        "dependencies": []
+      },
+      "code": "void DeclareExternalFilename(int fileid, const char* filename) override;"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "method",
+        "name": "FileEpilogue",
+        "parent": "PlatformEmbeddedFileWriterZOS",
+        "about": "Writes the file epilogue to the output file.",
+        "logic": "Platform-specific implementation for writing file epilogue.",
+        "parameters": [],
+        "return": {
+          "type": "void",
+          "description": "No return value."
+        },
+        "dependencies": []
+      },
+      "code": "void FileEpilogue() override;"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "method",
+        "name": "IndentedDataDirective",
+        "parent": "PlatformEmbeddedFileWriterZOS",
+        "about": "Writes a data directive to the output file, indented.",
+        "logic": "Platform-specific implementation for writing an indented data directive.",
+        "parameters": [
+          {
+            "name": "directive",
+            "type": "DataDirective",
+            "purpose": "The data directive to write."
+          }
+        ],
+        "return": {
+          "type": "int",
+          "description": "Return value depends on implementation, likely success/failure indicator."
+        },
+        "dependencies": [
+          "DataDirective"
+        ]
+      },
+      "code": "int IndentedDataDirective(DataDirective directive) override;"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "method",
+        "name": "ByteChunkDataDirective",
+        "parent": "PlatformEmbeddedFileWriterZOS",
+        "about": "Returns the data directive for a byte chunk.",
+        "logic": "Platform-specific implementation for returning the byte chunk data directive.",
+        "parameters": [],
+        "return": {
+          "type": "DataDirective",
+          "description": "The data directive for a byte chunk."
+        },
+        "dependencies": [
+          "DataDirective"
+        ]
+      },
+      "code": "DataDirective ByteChunkDataDirective() const override;"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "method",
+        "name": "WriteByteChunk",
+        "parent": "PlatformEmbeddedFileWriterZOS",
+        "about": "Writes a chunk of bytes to the output file.",
+        "logic": "Platform-specific implementation for writing a byte chunk.",
+        "parameters": [
+          {
+            "name": "data",
+            "type": "const uint8_t*",
+            "purpose": "The data to write."
+          }
+        ],
+        "return": {
+          "type": "int",
+          "description": "Return value depends on implementation, likely success/failure indicator."
+        },
+        "dependencies": []
+      },
+      "code": "int WriteByteChunk(const uint8_t* data) override;"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "method",
+        "name": "DeclareSymbolGlobal",
+        "parent": "PlatformEmbeddedFileWriterZOS",
+        "about": "Declares a symbol as global in the output file.",
+        "logic": "Platform-specific implementation for declaring a global symbol.",
+        "parameters": [
+          {
+            "name": "name",
+            "type": "const char*",
+            "purpose": "The name of the symbol."
+          }
+        ],
+        "return": {
+          "type": "void",
+          "description": "No return value."
+        },
+        "dependencies": []
+      },
+      "code": "private:\n  void DeclareSymbolGlobal(const char* name) override;"
+    }
+  ],
+  "file_path": "/home/kathirks_gc/v8_go/archive/codebase/src/snapshot/embedded/platform-embedded-file-writer-zos.h"
+}

@@ -1,0 +1,54 @@
+{
+  "metadata": {
+    "path": "/home/kathirks_gc/v8_go/archive/codebase/src/compiler/turboshaft/store-store-elimination-phase.cc",
+    "file_name": "store-store-elimination-phase.cc",
+    "language": "cpp",
+    "purpose": "Implements the store-store elimination phase in the Turboshaft compiler pipeline, which removes redundant store operations."
+  },
+  "imports": {
+    "metadata": {
+      "language": "cpp",
+      "purpose": "Includes necessary header files for store-store elimination and other related compiler phases."
+    },
+    "code": "#include \"src/compiler/turboshaft/store-store-elimination-phase.h\"\n\n#include \"src/compiler/turboshaft/branch-elimination-reducer.h\"\n#include \"src/compiler/turboshaft/copying-phase.h\"\n#include \"src/compiler/turboshaft/late-load-elimination-reducer.h\"\n#include \"src/compiler/turboshaft/loop-unrolling-reducer.h\"\n#include \"src/compiler/turboshaft/machine-optimization-reducer.h\"\n#include \"src/compiler/turboshaft/required-optimization-reducer.h\"\n#include \"src/compiler/turboshaft/store-store-elimination-reducer-inl.h\"\n#include \"src/compiler/turboshaft/value-numbering-reducer.h\"\n#include \"src/compiler/turboshaft/variable-reducer.h\"\n#include \"src/numbers/conversions-inl.h\""
+  },
+  "functions": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "function",
+        "name": "Run",
+        "parent": "StoreStoreEliminationPhase",
+        "about": "Runs the store-store elimination phase as part of the Turboshaft compiler pipeline.",
+        "logic": "Instantiates and runs the CopyingPhase with a specific set of reducers, including StoreStoreEliminationReducer. This CopyingPhase is responsible for traversing the graph and applying the reducers to optimize the code.",
+        "parameters": [
+          {
+            "name": "data",
+            "type": "PipelineData*",
+            "purpose": "Pointer to the pipeline data, which contains information about the compilation process."
+          },
+          {
+            "name": "temp_zone",
+            "type": "Zone*",
+            "purpose": "Pointer to a temporary zone used for memory allocation during the phase."
+          }
+        ],
+        "return": {
+          "type": "void",
+          "description": "No return value."
+        },
+        "dependencies": [
+          "CopyingPhase",
+          "LoopStackCheckElisionReducer",
+          "StoreStoreEliminationReducer",
+          "LateLoadEliminationReducer",
+          "MachineOptimizationReducer",
+          "BranchEliminationReducer",
+          "ValueNumberingReducer"
+        ]
+      },
+      "code": "void StoreStoreEliminationPhase::Run(PipelineData* data, Zone* temp_zone) {\n  turboshaft::CopyingPhase<\n      LoopStackCheckElisionReducer, StoreStoreEliminationReducer,\n      LateLoadEliminationReducer, MachineOptimizationReducer,\n      BranchEliminationReducer, ValueNumberingReducer>::Run(data, temp_zone);\n}"
+    }
+  ],
+  "file_path": "/home/kathirks_gc/v8_go/archive/codebase/src/compiler/turboshaft/store-store-elimination-phase.cc"
+}

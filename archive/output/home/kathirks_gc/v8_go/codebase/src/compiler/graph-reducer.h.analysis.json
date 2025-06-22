@@ -1,0 +1,388 @@
+{
+  "file_path": "/home/kathirks_gc/v8_go/codebase/src/compiler/graph-reducer.h",
+  "imports": [
+    "src/base/compiler-specific.h",
+    "src/compiler/node-marker.h",
+    "src/compiler/node-properties.h",
+    "src/compiler/turbofan-graph.h",
+    "src/zone/zone-containers.h"
+  ],
+  "classes": [
+    {
+      "name": "Reduction",
+      "properties": [
+        "Node* replacement_"
+      ],
+      "methods": [
+        {
+          "name": "Reduction",
+          "parameters": [
+            "Node* replacement = nullptr"
+          ],
+          "return_type": "Reduction",
+          "logic": "Constructor for the Reduction class. Initializes replacement_ to nullptr by default or the passed Node*."
+        },
+        {
+          "name": "replacement",
+          "parameters": [],
+          "return_type": "Node*",
+          "logic": "Returns the replacement node."
+        },
+        {
+          "name": "Changed",
+          "parameters": [],
+          "return_type": "bool",
+          "logic": "Returns true if a replacement node exists (i.e., the reduction resulted in a change)."
+        },
+        {
+          "name": "FollowedBy",
+          "parameters": [
+            "Reduction next"
+          ],
+          "return_type": "Reduction",
+          "logic": "Chains two reductions together. If the second reduction resulted in a change, return the second, otherwise return the first."
+        }
+      ]
+    },
+    {
+      "name": "Reducer",
+      "properties": [],
+      "methods": [
+        {
+          "name": "~Reducer",
+          "parameters": [],
+          "return_type": "virtual",
+          "logic": "Virtual destructor to allow proper cleanup of derived classes."
+        },
+        {
+          "name": "reducer_name",
+          "parameters": [],
+          "return_type": "const char*",
+          "logic": "Returns the name of the reducer, used for tracing."
+        },
+        {
+          "name": "Reduce",
+          "parameters": [
+            "Node* node",
+            "ObserveNodeManager* observe_node_manager"
+          ],
+          "return_type": "Reduction",
+          "logic": "Attempts to reduce a given node. Calls the pure virtual Reduce(Node*) method."
+        },
+        {
+          "name": "Finalize",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Invoked by the GraphReducer when all nodes are done. Allows for additional reductions at the end."
+        },
+        {
+          "name": "NoChange",
+          "parameters": [],
+          "return_type": "Reduction",
+          "logic": "Helper function to return a Reduction indicating no change."
+        },
+        {
+          "name": "Replace",
+          "parameters": [
+            "Node* node"
+          ],
+          "return_type": "Reduction",
+          "logic": "Helper function to return a Reduction with the specified node as a replacement."
+        },
+        {
+          "name": "Changed",
+          "parameters": [
+            "Node* node"
+          ],
+          "return_type": "Reduction",
+          "logic": "Helper function to return a Reduction with the specified node as a replacement. (Semantically similar to Replace)."
+        },
+        {
+          "name": "Reduce",
+          "parameters": [
+            "Node* node"
+          ],
+          "return_type": "Reduction",
+          "logic": "Pure virtual method to be implemented by derived classes. Performs the actual reduction logic for a given node."
+        }
+      ]
+    },
+    {
+      "name": "AdvancedReducer",
+      "properties": [
+        "Editor* const editor_"
+      ],
+      "methods": [
+        {
+          "name": "AdvancedReducer",
+          "parameters": [
+            "Editor* editor"
+          ],
+          "return_type": "AdvancedReducer",
+          "logic": "Constructor for the AdvancedReducer class. Initializes the editor_ member."
+        },
+        {
+          "name": "Replace",
+          "parameters": [
+            "Node* node"
+          ],
+          "return_type": "Reduction",
+          "logic": "Helper function to return a Reduction with the specified node as a replacement.  Calls Reducer::Replace."
+        },
+        {
+          "name": "Replace",
+          "parameters": [
+            "Node* node",
+            "Node* replacement"
+          ],
+          "return_type": "void",
+          "logic": "Replaces a node with a replacement in the graph, using the editor interface."
+        },
+        {
+          "name": "Replace",
+          "parameters": [
+            "Node* node",
+            "Node* replacement",
+            "NodeId max_id"
+          ],
+          "return_type": "void",
+          "logic": "Replaces a node with a replacement in the graph, using the editor interface, considering node ids."
+        },
+        {
+          "name": "Revisit",
+          "parameters": [
+            "Node* node"
+          ],
+          "return_type": "void",
+          "logic": "Adds a node to the revisit queue, using the editor interface."
+        },
+        {
+          "name": "ReplaceWithValue",
+          "parameters": [
+            "Node* node",
+            "Node* value",
+            "Node* effect",
+            "Node* control"
+          ],
+          "return_type": "void",
+          "logic": "Replaces uses of a node with a given value, effect, and control node, using the editor interface."
+        },
+        {
+          "name": "RelaxEffectsAndControls",
+          "parameters": [
+            "Node* node"
+          ],
+          "return_type": "void",
+          "logic": "Replaces effect and control uses of a node with the node's effect and control input, respectively."
+        },
+        {
+          "name": "RelaxControls",
+          "parameters": [
+            "Node* node",
+            "Node* control"
+          ],
+          "return_type": "void",
+          "logic": "Replaces control uses of a node with either the given control node or the node's control input."
+        },
+        {
+          "name": "MergeControlToEnd",
+          "parameters": [
+            "TFGraph* graph",
+            "CommonOperatorBuilder* common",
+            "Node* node"
+          ],
+          "return_type": "void",
+          "logic": "Merges a control node to the end of the graph, and then revisits the end node."
+        }
+      ]
+    },
+    {
+      "name": "AdvancedReducer::Editor",
+      "properties": [],
+      "methods": [
+        {
+          "name": "~Editor",
+          "parameters": [],
+          "return_type": "virtual",
+          "logic": "Virtual destructor to allow proper cleanup of derived classes."
+        },
+        {
+          "name": "Replace",
+          "parameters": [
+            "Node* node",
+            "Node* replacement"
+          ],
+          "return_type": "void",
+          "logic": "Replaces a node with a replacement in the graph."
+        },
+        {
+          "name": "Replace",
+          "parameters": [
+            "Node* node",
+            "Node* replacement",
+            "NodeId max_id"
+          ],
+          "return_type": "void",
+          "logic": "Replaces a node with a replacement in the graph, but only replaces uses of node whose id is less than or equal to max_id if the replacements id is greater than max_id."
+        },
+        {
+          "name": "Revisit",
+          "parameters": [
+            "Node* node"
+          ],
+          "return_type": "void",
+          "logic": "Revisits a node later."
+        },
+        {
+          "name": "ReplaceWithValue",
+          "parameters": [
+            "Node* node",
+            "Node* value",
+            "Node* effect",
+            "Node* control"
+          ],
+          "return_type": "void",
+          "logic": "Replaces value, effect, and control uses of a node with given nodes."
+        }
+      ]
+    },
+    {
+      "name": "GraphReducer",
+      "properties": [
+        "TFGraph* const graph_",
+        "Node* const dead_",
+        "NodeMarker<State> state_",
+        "ZoneVector<Reducer*> reducers_",
+        "ZoneQueue<Node*> revisit_",
+        "ZoneStack<NodeState> stack_",
+        "TickCounter* const tick_counter_",
+        "JSHeapBroker* const broker_",
+        "ObserveNodeManager* const observe_node_manager_"
+      ],
+      "methods": [
+        {
+          "name": "GraphReducer",
+          "parameters": [
+            "Zone* zone",
+            "TFGraph* graph",
+            "TickCounter* tick_counter",
+            "JSHeapBroker* broker",
+            "Node* dead = nullptr",
+            "ObserveNodeManager* observe_node_manager = nullptr"
+          ],
+          "return_type": "GraphReducer",
+          "logic": "Constructor for the GraphReducer class.  Initializes internal data structures."
+        },
+        {
+          "name": "~GraphReducer",
+          "parameters": [],
+          "return_type": "GraphReducer",
+          "logic": "Destructor for the GraphReducer class."
+        },
+        {
+          "name": "graph",
+          "parameters": [],
+          "return_type": "TFGraph*",
+          "logic": "Returns the underlying graph."
+        },
+        {
+          "name": "AddReducer",
+          "parameters": [
+            "Reducer* reducer"
+          ],
+          "return_type": "void",
+          "logic": "Adds a reducer to the list of reducers used by the graph reducer."
+        },
+        {
+          "name": "ReduceNode",
+          "parameters": [
+            "Node* const"
+          ],
+          "return_type": "void",
+          "logic": "Reduces a single node in the graph."
+        },
+        {
+          "name": "ReduceGraph",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Reduces the entire graph by iterating through all nodes."
+        },
+        {
+          "name": "Reduce",
+          "parameters": [
+            "Node* const"
+          ],
+          "return_type": "Reduction",
+          "logic": "Reduces a single node using all added reducers."
+        },
+        {
+          "name": "ReduceTop",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Reduces the node on top of the stack."
+        },
+        {
+          "name": "Replace",
+          "parameters": [
+            "Node* node",
+            "Node* replacement"
+          ],
+          "return_type": "void",
+          "logic": "Replaces a node with a replacement in the graph."
+        },
+        {
+          "name": "ReplaceWithValue",
+          "parameters": [
+            "Node* node",
+            "Node* value",
+            "Node* effect",
+            "Node* control"
+          ],
+          "return_type": "void",
+          "logic": "Replaces all uses of a node with value, effect, and control."
+        },
+        {
+          "name": "Replace",
+          "parameters": [
+            "Node* node",
+            "Node* replacement",
+            "NodeId max_id"
+          ],
+          "return_type": "void",
+          "logic": "Replaces all uses of a node with a replacement based on node ids."
+        },
+        {
+          "name": "Pop",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Pops a node from the stack."
+        },
+        {
+          "name": "Push",
+          "parameters": [
+            "Node* node"
+          ],
+          "return_type": "void",
+          "logic": "Pushes a node onto the stack."
+        },
+        {
+          "name": "Recurse",
+          "parameters": [
+            "Node* node"
+          ],
+          "return_type": "bool",
+          "logic": "Adds a node to the revisit queue if it hasn't been visited yet."
+        },
+        {
+          "name": "Revisit",
+          "parameters": [
+            "Node* node"
+          ],
+          "return_type": "void",
+          "logic": "Adds a node to the revisit queue."
+        }
+      ]
+    }
+  ],
+  "functions": []
+}

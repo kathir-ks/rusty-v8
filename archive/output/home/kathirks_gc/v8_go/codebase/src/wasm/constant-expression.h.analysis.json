@@ -1,0 +1,143 @@
+{
+  "file_path": "/home/kathirks_gc/v8_go/codebase/src/wasm/constant-expression.h",
+  "imports": [
+    "<stdint.h>",
+    "<variant>",
+    "src/base/bit-field.h",
+    "src/wasm/value-type.h",
+    "src/wasm/wasm-value.h"
+  ],
+  "classes": [
+    {
+      "name": "ConstantExpression",
+      "properties": [
+        "bit_field_"
+      ],
+      "methods": [
+        {
+          "name": "ConstantExpression",
+          "parameters": [],
+          "return_type": "constexpr ConstantExpression",
+          "logic": "Default constructor, initializes the object."
+        },
+        {
+          "name": "I32Const",
+          "parameters": [
+            "int32_t value"
+          ],
+          "return_type": "static constexpr ConstantExpression",
+          "logic": "Creates a ConstantExpression representing an i32 constant."
+        },
+        {
+          "name": "RefFunc",
+          "parameters": [
+            "uint32_t index"
+          ],
+          "return_type": "static constexpr ConstantExpression",
+          "logic": "Creates a ConstantExpression representing a reference to a function."
+        },
+        {
+          "name": "RefNull",
+          "parameters": [
+            "HeapType type"
+          ],
+          "return_type": "static constexpr ConstantExpression",
+          "logic": "Creates a ConstantExpression representing a null reference of a specific type."
+        },
+        {
+          "name": "WireBytes",
+          "parameters": [
+            "uint32_t offset",
+            "uint32_t length"
+          ],
+          "return_type": "static constexpr ConstantExpression",
+          "logic": "Creates a ConstantExpression representing a reference to raw bytes in the module's wire format."
+        },
+        {
+          "name": "kind",
+          "parameters": [],
+          "return_type": "constexpr Kind",
+          "logic": "Returns the kind of constant expression."
+        },
+        {
+          "name": "is_set",
+          "parameters": [],
+          "return_type": "constexpr bool",
+          "logic": "Checks if the constant expression is set (not empty)."
+        },
+        {
+          "name": "index",
+          "parameters": [],
+          "return_type": "constexpr uint32_t",
+          "logic": "Returns the index of the function when the kind is kRefFunc. Asserts if the kind is not kRefFunc."
+        },
+        {
+          "name": "type",
+          "parameters": [],
+          "return_type": "constexpr HeapType",
+          "logic": "Returns the HeapType when the kind is kRefNull. Asserts if the kind is not kRefNull."
+        },
+        {
+          "name": "i32_value",
+          "parameters": [],
+          "return_type": "constexpr int32_t",
+          "logic": "Returns the i32 value when the kind is kI32Const. Asserts if the kind is not kI32Const."
+        },
+        {
+          "name": "wire_bytes_ref",
+          "parameters": [],
+          "return_type": "WireBytesRef",
+          "logic": "Returns a WireBytesRef to the raw bytes when the kind is kWireBytesRef."
+        },
+        {
+          "name": "ConstantExpression",
+          "parameters": [
+            "uint64_t bit_field"
+          ],
+          "return_type": "explicit constexpr ConstantExpression",
+          "logic": "Private constructor that takes a bitfield used for efficient storage."
+        }
+      ]
+    }
+  ],
+  "functions": [
+    {
+      "name": "is_error",
+      "parameters": [
+        "ValueOrError result"
+      ],
+      "return_type": "bool",
+      "logic": "Checks if a ValueOrError variant holds a MessageTemplate (an error)."
+    },
+    {
+      "name": "to_error",
+      "parameters": [
+        "ValueOrError result"
+      ],
+      "return_type": "MessageTemplate",
+      "logic": "Extracts the MessageTemplate from a ValueOrError variant. Assumes it holds a MessageTemplate."
+    },
+    {
+      "name": "to_value",
+      "parameters": [
+        "ValueOrError result"
+      ],
+      "return_type": "WasmValue",
+      "logic": "Extracts the WasmValue from a ValueOrError variant. Assumes it holds a WasmValue."
+    },
+    {
+      "name": "EvaluateConstantExpression",
+      "parameters": [
+        "Zone* zone",
+        "ConstantExpression expr",
+        "ValueType expected",
+        "const WasmModule* module",
+        "Isolate* isolate",
+        "DirectHandle<WasmTrustedInstanceData> trusted_instance_data",
+        "DirectHandle<WasmTrustedInstanceData> shared_trusted_instance_data"
+      ],
+      "return_type": "ValueOrError",
+      "logic": "Evaluates a constant expression within a given Wasm module's context. Returns either a WasmValue representing the result of the evaluation or a MessageTemplate representing an error that occurred during the evaluation.  The zone is reset during this process."
+    }
+  ]
+}

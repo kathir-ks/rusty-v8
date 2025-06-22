@@ -1,0 +1,82 @@
+{
+  "metadata": {
+    "path": "/home/kathirks_gc/v8_go/archive/codebase/src/compiler/turboshaft/wasm-debug-memory-lowering-phase.cc",
+    "file_name": "wasm-debug-memory-lowering-phase.cc",
+    "language": "cpp",
+    "purpose": "Implements the WasmDebugMemoryLoweringPhase for Turboshaft compiler in debug mode. This phase lowers memory operations for debugging purposes."
+  },
+  "imports": {
+    "metadata": {
+      "language": "cpp",
+      "purpose": "Includes necessary header files for the phase implementation, including debug configurations, memory optimization reducer, and the base phase class."
+    },
+    "code": "#include \"src/compiler/turboshaft/wasm-debug-memory-lowering-phase.h\"\n\n#include \"src/compiler/turboshaft/memory-optimization-reducer.h\"\n#include \"src/compiler/turboshaft/phase.h\""
+  },
+  "functions": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "method",
+        "name": "Run",
+        "parent": "WasmDebugMemoryLoweringPhase",
+        "about": "Runs the memory lowering phase using the MemoryOptimizationReducer.",
+        "logic": "This function creates a UnparkedScopeIfNeeded based on the turboshaft_trace_reduction flag and then calls the CopyingPhase::Run method with the MemoryOptimizationReducer.  The UnparkedScopeIfNeeded handles tracing and debugging.",
+        "parameters": [
+          {
+            "name": "data",
+            "type": "PipelineData*",
+            "purpose": "Pointer to the pipeline data."
+          },
+          {
+            "name": "temp_zone",
+            "type": "Zone*",
+            "purpose": "Pointer to a temporary zone for memory allocation."
+          }
+        ],
+        "return": {
+          "type": "void",
+          "description": "No return value."
+        },
+        "dependencies": [
+          "UnparkedScopeIfNeeded",
+          "MemoryOptimizationReducer",
+          "CopyingPhase"
+        ]
+      },
+      "code": "void WasmDebugMemoryLoweringPhase::Run(PipelineData* data, Zone* temp_zone) {\n  UnparkedScopeIfNeeded scope(data->broker(),\n                              v8_flags.turboshaft_trace_reduction);\n  CopyingPhase<MemoryOptimizationReducer>::Run(data, temp_zone);\n}"
+    }
+  ],
+  "classes": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "UnparkedScopeIfNeeded",
+        "about": "A class that conditionally creates a scope for tracing reduction if needed.",
+        "dependencies": []
+      },
+      "code": "// Placeholder: Assuming UnparkedScopeIfNeeded exists and handles tracing.\n            // The actual implementation details are not provided in the given code.\n            class UnparkedScopeIfNeeded {\n            public:\n                UnparkedScopeIfNeeded(void* broker, bool trace_reduction);\n                ~UnparkedScopeIfNeeded();\n            };"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "MemoryOptimizationReducer",
+        "about": "A reducer class for memory optimization.",
+        "dependencies": []
+      },
+      "code": "// Placeholder: Assuming MemoryOptimizationReducer is a class for memory optimization.\n            // The actual implementation details are not provided in the given code.\n            class MemoryOptimizationReducer {};"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "CopyingPhase",
+        "about": "Base class for copying phases in the Turboshaft compiler.",
+        "dependencies": []
+      },
+      "code": "// Placeholder: Assuming CopyingPhase is a template class.\n            template <typename T>\n            class CopyingPhase {\n            public:\n                static void Run(void* data, void* temp_zone);\n            };"
+    }
+  ],
+  "file_path": "/home/kathirks_gc/v8_go/archive/codebase/src/compiler/turboshaft/wasm-debug-memory-lowering-phase.cc"
+}

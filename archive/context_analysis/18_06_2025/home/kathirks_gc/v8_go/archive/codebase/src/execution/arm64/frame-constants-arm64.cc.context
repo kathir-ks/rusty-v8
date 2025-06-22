@@ -1,0 +1,101 @@
+{
+  "metadata": {
+    "path": "/home/kathirks_gc/v8_go/archive/codebase/src/execution/arm64/frame-constants-arm64.cc",
+    "file_name": "frame-constants-arm64.cc",
+    "language": "cpp",
+    "purpose": "Defines constants related to stack frame layout on ARM64 architecture for the V8 JavaScript engine."
+  },
+  "imports": {
+    "metadata": {
+      "language": "cpp",
+      "purpose": "Includes definitions for frames."
+    },
+    "code": "#include \"src/execution/frames.h\""
+  },
+  "classes": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "JavaScriptFrame",
+        "about": "Provides access to registers used within JavaScript frames.",
+        "attributes": [],
+        "dependencies": []
+      },
+      "code": "namespace v8 {\nnamespace internal {\n\nRegister JavaScriptFrame::fp_register() { return v8::internal::fp; }\nRegister JavaScriptFrame::context_register() { return cp; }\nRegister JavaScriptFrame::constant_pool_pointer_register() { UNREACHABLE(); }"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "UnoptimizedFrameConstants",
+        "about": "Defines constants for unoptimized frames.",
+        "attributes": [],
+        "dependencies": []
+      },
+      "code": "int UnoptimizedFrameConstants::RegisterStackSlotCount(int register_count) {\n  static_assert(InterpreterFrameConstants::kFixedFrameSize % 16 == 0);\n  // Round up to a multiple of two, to make the frame a multiple of 16 bytes.\n  return RoundUp(register_count, 2);\n}"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "BuiltinContinuationFrameConstants",
+        "about": "Defines constants for builtin continuation frames.",
+        "attributes": [],
+        "dependencies": []
+      },
+      "code": "int BuiltinContinuationFrameConstants::PaddingSlotCount(int register_count) {\n  // Round the total slot count up to a multiple of two, to make the frame a\n  // multiple of 16 bytes.\n  int slot_count = kFixedSlotCount + register_count;\n  int rounded_slot_count = RoundUp(slot_count, 2);\n  return rounded_slot_count - slot_count;\n}"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "MaglevFrame",
+        "about": "Defines constants related to Maglev frames.",
+        "attributes": [],
+        "dependencies": []
+      },
+      "code": "// static\nintptr_t MaglevFrame::StackGuardFrameSize(int register_input_count) {\n  // Include any paddings from kFixedFrameSizeFromFp, an extra slot + padding\n  // for the single argument into StackGuardWithGap and finally padded register\n  // input count.\n  int slot_count = RoundUp(StandardFrameConstants::kFixedSlotCountFromFp, 2) +\n                   2 /* argument */ + RoundUp(register_input_count, 2);\n  return slot_count * kSystemPointerSize;\n}"
+    }
+  ],
+  "dependencies": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "StandardFrameConstants",
+        "about": "Constants related to standard frames."
+      },
+      "code": "class StandardFrameConstants {\n                public:\n                    static const int kFixedSlotCountFromFp;\n                };",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "function",
+        "name": "RoundUp",
+        "about": "Rounds up a number to the nearest multiple of a given value.",
+        "parameters": [
+          {
+            "name": "number",
+            "type": "int",
+            "purpose": "The number to round up"
+          },
+          {
+            "name": "multiple",
+            "type": "int",
+            "purpose": "The multiple to round to"
+          }
+        ],
+        "return": {
+          "type": "int",
+          "description": "The rounded up number"
+        }
+      },
+      "code": "int RoundUp(int number, int multiple);",
+      "type": "func"
+    }
+  ],
+  "file_level_code_content": "}  // namespace internal\n}  // namespace v8\n\n#endif  // V8_TARGET_ARCH_ARM64",
+  "file_path": "/home/kathirks_gc/v8_go/archive/codebase/src/execution/arm64/frame-constants-arm64.cc"
+}

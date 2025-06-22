@@ -1,0 +1,80 @@
+{
+  "metadata": {
+    "path": "/home/kathirks_gc/v8_go/archive/codebase/src/compiler/turboshaft/wasm-optimize-phase.cc",
+    "file_name": "wasm-optimize-phase.cc",
+    "language": "cpp",
+    "purpose": "Defines the WasmOptimizePhase which runs a series of optimization reducers on the Turboshaft graph specifically tailored for WebAssembly compilation."
+  },
+  "imports": {
+    "metadata": {
+      "language": "cpp",
+      "purpose": "Includes necessary header files for Turboshaft optimization phases and reducers."
+    },
+    "code": "#include \"src/compiler/turboshaft/wasm-optimize-phase.h\"\n\n#include \"src/compiler/js-heap-broker.h\"\n#include \"src/compiler/turboshaft/branch-elimination-reducer.h\"\n#include \"src/compiler/turboshaft/copying-phase.h\"\n#include \"src/compiler/turboshaft/late-escape-analysis-reducer.h\"\n#include \"src/compiler/turboshaft/late-load-elimination-reducer.h\"\n#include \"src/compiler/turboshaft/machine-optimization-reducer.h\"\n#include \"src/compiler/turboshaft/memory-optimization-reducer.h\"\n#include \"src/compiler/turboshaft/phase.h\"\n#include \"src/compiler/turboshaft/value-numbering-reducer.h\"\n#include \"src/compiler/turboshaft/variable-reducer.h\"\n#include \"src/compiler/turboshaft/wasm-lowering-reducer.h\"\n#include \"src/numbers/conversions-inl.h\"\n#include \"src/roots/roots-inl.h\""
+  },
+  "classes": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "WasmOptimizePhase",
+        "about": "A compiler phase that optimizes the Turboshaft graph specifically for WebAssembly.",
+        "dependencies": [
+          "PipelineData",
+          "Zone",
+          "UnparkedScopeIfNeeded",
+          "CopyingPhase",
+          "LateEscapeAnalysisReducer",
+          "MachineOptimizationReducer",
+          "MemoryOptimizationReducer",
+          "BranchEliminationReducer",
+          "LateLoadEliminationReducer",
+          "ValueNumberingReducer"
+        ]
+      },
+      "code": "namespace v8::internal::compiler::turboshaft {\n\nvoid WasmOptimizePhase::Run(PipelineData* data, Zone* temp_zone) {\n  UnparkedScopeIfNeeded scope(data->broker(),\n                              v8_flags.turboshaft_trace_reduction);\n  CopyingPhase<LateEscapeAnalysisReducer, MachineOptimizationReducer,\n               MemoryOptimizationReducer, BranchEliminationReducer,\n               LateLoadEliminationReducer,\n               ValueNumberingReducer>::Run(data, temp_zone);\n}\n\n}  // namespace v8::internal::compiler::turboshaft"
+    }
+  ],
+  "functions": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "method",
+        "name": "Run",
+        "parent": "WasmOptimizePhase",
+        "about": "Executes the WebAssembly optimization phase.  It's the main entry point for this optimization sequence.",
+        "logic": "The function creates an UnparkedScopeIfNeeded, likely for managing JS heap access and then calls CopyingPhase with a series of reducers to perform optimizations.",
+        "parameters": [
+          {
+            "name": "data",
+            "type": "PipelineData*",
+            "purpose": "Contains data shared across the compilation pipeline."
+          },
+          {
+            "name": "temp_zone",
+            "type": "Zone*",
+            "purpose": "A temporary memory zone for allocations during the optimization phase."
+          }
+        ],
+        "return": {
+          "type": "void",
+          "description": "No return value."
+        },
+        "dependencies": [
+          "PipelineData",
+          "Zone",
+          "UnparkedScopeIfNeeded",
+          "CopyingPhase",
+          "LateEscapeAnalysisReducer",
+          "MachineOptimizationReducer",
+          "MemoryOptimizationReducer",
+          "BranchEliminationReducer",
+          "LateLoadEliminationReducer",
+          "ValueNumberingReducer"
+        ]
+      },
+      "code": "void WasmOptimizePhase::Run(PipelineData* data, Zone* temp_zone) {\n  UnparkedScopeIfNeeded scope(data->broker(),\n                              v8_flags.turboshaft_trace_reduction);\n  CopyingPhase<LateEscapeAnalysisReducer, MachineOptimizationReducer,\n               MemoryOptimizationReducer, BranchEliminationReducer,\n               LateLoadEliminationReducer,\n               ValueNumberingReducer>::Run(data, temp_zone);\n}"
+    }
+  ],
+  "file_path": "/home/kathirks_gc/v8_go/archive/codebase/src/compiler/turboshaft/wasm-optimize-phase.cc"
+}

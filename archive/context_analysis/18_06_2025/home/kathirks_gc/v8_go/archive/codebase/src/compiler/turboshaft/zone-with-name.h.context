@@ -1,0 +1,98 @@
+{
+  "metadata": {
+    "path": "/home/kathirks_gc/v8_go/archive/codebase/src/compiler/turboshaft/zone-with-name.h",
+    "file_name": "zone-with-name.h",
+    "language": "cpp",
+    "purpose": "Defines ZoneWithName and ZoneWithNamePointer classes for zone-based memory management with compile-time name association (primarily for debugging)."
+  },
+  "imports": {
+    "metadata": {
+      "language": "cpp",
+      "purpose": "Includes necessary headers for string literals and zone statistics."
+    },
+    "code": "#include \"src/base/template-meta-programming/string-literal.h\"\n#include \"src/compiler/zone-stats.h\""
+  },
+  "classes": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "ZoneWithNamePointerImpl",
+        "about": "Wrapper around a raw pointer that encodes the zone's name in its type (debug builds only).",
+        "attributes": [
+          {
+            "name": "ptr_",
+            "type": "pointer_type",
+            "access": "private",
+            "purpose": "The underlying raw pointer."
+          }
+        ],
+        "dependencies": []
+      },
+      "code": "template <typename T, base::tmp::StringLiteral Name>\nclass ZoneWithNamePointerImpl final {\n public:\n  using pointer_type = T*;\n\n  ZoneWithNamePointerImpl() = default;\n  ZoneWithNamePointerImpl(std::nullptr_t)  // NOLINT(runtime/explicit)\n      : ptr_(nullptr) {}\n  explicit ZoneWithNamePointerImpl(pointer_type ptr) : ptr_(ptr) {}\n\n  ZoneWithNamePointerImpl(const ZoneWithNamePointerImpl&) V8_NOEXCEPT = default;\n  ZoneWithNamePointerImpl(ZoneWithNamePointerImpl&&) V8_NOEXCEPT = default;\n  template <typename U>\n  ZoneWithNamePointerImpl(const ZoneWithNamePointerImpl<U, Name>& other)\n      V8_NOEXCEPT  // NOLINT(runtime/explicit)\n    requires(std::is_convertible_v<U*, pointer_type>)\n      : ptr_(static_cast<U*>(other)) {}\n  ZoneWithNamePointerImpl& operator=(const ZoneWithNamePointerImpl&)\n      V8_NOEXCEPT = default;\n  ZoneWithNamePointerImpl& operator=(ZoneWithNamePointerImpl&&)\n      V8_NOEXCEPT = default;\n  template <typename U>\n  ZoneWithNamePointerImpl& operator=(\n      const ZoneWithNamePointerImpl<U, Name>& other) V8_NOEXCEPT\n    requires(std::is_convertible_v<U*, pointer_type>)\n  {\n    ptr_ = static_cast<U*>(other);\n  }\n\n  operator pointer_type() const { return get(); }  // NOLINT(runtime/explicit)\n  T& operator*() const { return *get(); }\n  pointer_type operator->() { return get(); }\n\n private:\n  pointer_type get() const { return ptr_; }\n\n  pointer_type ptr_ = pointer_type{};\n};"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "ZoneWithName",
+        "about": "Manages a Zone with an associated name for debug identification.",
+        "attributes": [
+          {
+            "name": "scope_",
+            "type": "ZoneStats::Scope",
+            "access": "private",
+            "purpose": "The ZoneStats::Scope object that manages the underlying Zone."
+          }
+        ],
+        "dependencies": [
+          "ZoneStats::Scope"
+        ]
+      },
+      "code": "#ifdef HAS_CPP_CLASS_TYPES_AS_TEMPLATE_ARGS\ntemplate <base::tmp::StringLiteral Name>\n#else\ntemplate <auto Name>\n#endif\nclass ZoneWithName final {\n public:\n  ZoneWithName(ZoneStats* pool, const char* name,\n               bool support_zone_compression = false)\n      : scope_(pool, name, support_zone_compression) {\n#ifdef HAS_CPP_CLASS_TYPES_AS_TEMPLATE_ARGS\n    DCHECK_EQ(std::strcmp(name, Name.c_str()), 0);\n#endif\n  }\n\n  ZoneWithName(const ZoneWithName&) = delete;\n  ZoneWithName(ZoneWithName&& other) V8_NOEXCEPT\n      : scope_(std::move(other.scope_)) {}\n  ZoneWithName& operator=(const ZoneWithName&) = delete;\n  ZoneWithName& operator=(ZoneWithName&& other) V8_NOEXCEPT {\n    scope_ = std::move(other.scope_);\n    return *this;\n  }\n\n  template <typename T, typename... Args>\n  ZoneWithNamePointer<T, Name> New(Args&&... args) {\n    return ZoneWithNamePointer<T, Name>{\n        get()->template New<T>(std::forward<Args>(args)...)};\n  }\n\n  template <typename T>\n  ZoneWithNamePointer<T, Name> AllocateArray(size_t length) {\n    return ZoneWithNamePointer<T, Name>{\n        get()->template AllocateArray<T>(length)};\n  }\n\n  Zone* get() { return scope_.zone(); }\n  operator Zone*() { return get(); }  // NOLINT(runtime/explicit)\n  Zone* operator->() { return get(); }\n\n  void Destroy() { scope_.Destroy(); }\n\n private:\n  // NOTE: `ZoneStats::Scope` actually allocates a new zone.\n  ZoneStats::Scope scope_;\n};"
+    }
+  ],
+  "functions": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "function",
+        "name": "ZoneWithNamePointer",
+        "about": "Type alias for ZoneWithNamePointerImpl in debug builds, or a raw pointer in release builds.",
+        "logic": "Conditionally defines ZoneWithNamePointer as ZoneWithNamePointerImpl or T* based on debug and template argument support.",
+        "parameters": [],
+        "return": {
+          "type": "T*",
+          "description": "A pointer to T, either wrapped or raw."
+        },
+        "dependencies": [
+          "ZoneWithNamePointerImpl"
+        ]
+      },
+      "code": "template <typename T, base::tmp::StringLiteral Name>\nusing ZoneWithNamePointer = ZoneWithNamePointerImpl<T, Name>;"
+    }
+  ],
+  "dependencies": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "ZoneStats",
+        "about": "Provides statistics and management for memory zones."
+      },
+      "code": "namespace v8::internal::compiler {\n                class ZoneStats {\n                public:\n                    class Scope {\n                        Scope(ZoneStats* pool, const char* name, bool support_zone_compression = false);\n                        Zone* zone();\n                        void Destroy();\n                    };\n                };\n            }",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "Zone",
+        "about": "Represents a memory zone for allocation."
+      },
+      "code": "namespace v8::internal {\n                class Zone {\n                public:\n                    template <typename T, typename... Args>\n                    T* New(Args&&... args);\n\n                    template <typename T>\n                    T* AllocateArray(size_t length);\n                };\n            }",
+      "type": "class"
+    }
+  ],
+  "file_path": "/home/kathirks_gc/v8_go/archive/codebase/src/compiler/turboshaft/zone-with-name.h"
+}

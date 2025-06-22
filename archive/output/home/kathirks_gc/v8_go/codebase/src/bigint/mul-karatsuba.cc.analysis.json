@@ -1,0 +1,93 @@
+{
+  "file_path": "/home/kathirks_gc/v8_go/codebase/src/bigint/mul-karatsuba.cc",
+  "imports": [
+    "<algorithm>",
+    "<utility>",
+    "src/bigint/bigint-internal.h",
+    "src/bigint/digit-arithmetic.h",
+    "src/bigint/util.h",
+    "src/bigint/vector-arithmetic.h"
+  ],
+  "classes": [
+    {
+      "name": "ProcessorImpl",
+      "properties": [],
+      "methods": [
+        {
+          "name": "MultiplyKaratsuba",
+          "parameters": [
+            "RWDigits Z",
+            "Digits X",
+            "Digits Y"
+          ],
+          "return_type": "void",
+          "logic": "Top-level function to multiply two large numbers using the Karatsuba algorithm. It prepares the input and scratch space, then calls the KaratsubaStart function."
+        },
+        {
+          "name": "KaratsubaStart",
+          "parameters": [
+            "RWDigits Z",
+            "Digits X",
+            "Digits Y",
+            "RWDigits scratch",
+            "int k"
+          ],
+          "return_type": "void",
+          "logic": "Entry point for Karatsuba-based multiplication. Handles unequal input lengths by dividing the larger input into chunks. It calls KaratsubaMain for the initial multiplication and then iterates over any remaining chunks."
+        },
+        {
+          "name": "KaratsubaChunk",
+          "parameters": [
+            "RWDigits Z",
+            "Digits X",
+            "Digits Y",
+            "RWDigits scratch"
+          ],
+          "return_type": "void",
+          "logic": "Entry point for chunk-wise multiplications. Selects the appropriate multiplication algorithm based on the input sizes. It calls simpler algorithms (MultiplySingle, MultiplySchoolbook) if the input is small enough, or KaratsubaStart if it is larger."
+        },
+        {
+          "name": "KaratsubaMain",
+          "parameters": [
+            "RWDigits Z",
+            "Digits X",
+            "Digits Y",
+            "RWDigits scratch",
+            "int n"
+          ],
+          "return_type": "void",
+          "logic": "Recursive implementation of the Karatsuba algorithm. It divides the inputs into halves, recursively multiplies the halves, and combines the results. If the input size is below a certain threshold, it uses the schoolbook multiplication algorithm."
+        }
+      ]
+    }
+  ],
+  "functions": [
+    {
+      "name": "RoundUpLen",
+      "parameters": [
+        "int len"
+      ],
+      "return_type": "int",
+      "logic": "Rounds up the input length to a more suitable value for the Karatsuba algorithm, based on some heuristics. This is used to improve performance."
+    },
+    {
+      "name": "KaratsubaLength",
+      "parameters": [
+        "int n"
+      ],
+      "return_type": "int",
+      "logic": "Calculates the length to be used for Karatsuba multiplication based on the input length. It uses RoundUpLen and a threshold (kKaratsubaThreshold)."
+    },
+    {
+      "name": "KaratsubaSubtractionHelper",
+      "parameters": [
+        "RWDigits result",
+        "Digits X",
+        "Digits Y",
+        "int* sign"
+      ],
+      "return_type": "void",
+      "logic": "Performs the specific subtraction required by the Karatsuba algorithm (X - Y), and tracks the sign of the result. If Y is greater than X, it swaps them and negates the sign."
+    }
+  ]
+}

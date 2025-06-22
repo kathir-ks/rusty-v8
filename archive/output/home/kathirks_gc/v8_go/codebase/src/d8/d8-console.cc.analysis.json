@@ -1,0 +1,242 @@
+{
+  "file_path": "/home/kathirks_gc/v8_go/codebase/src/d8/d8-console.cc",
+  "imports": [
+    "stdio.h",
+    "fstream",
+    "include/v8-profiler.h",
+    "src/d8/d8.h",
+    "src/execution/isolate.h"
+  ],
+  "classes": [
+    {
+      "name": "FileOutputStream",
+      "properties": [
+        "os_"
+      ],
+      "methods": [
+        {
+          "name": "FileOutputStream",
+          "parameters": [
+            "const char* filename"
+          ],
+          "return_type": "constructor",
+          "logic": "Constructor for FileOutputStream. Opens a file with the given filename in truncation mode for writing."
+        },
+        {
+          "name": "WriteAsciiChunk",
+          "parameters": [
+            "char* data",
+            "int size"
+          ],
+          "return_type": "WriteResult",
+          "logic": "Writes a chunk of ASCII data to the file stream. Returns kContinue to indicate that the writing process should continue."
+        },
+        {
+          "name": "EndOfStream",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Closes the file stream."
+        }
+      ]
+    },
+    {
+      "name": "StringOutputStream",
+      "properties": [
+        "os_"
+      ],
+      "methods": [
+        {
+          "name": "WriteAsciiChunk",
+          "parameters": [
+            "char* data",
+            "int size"
+          ],
+          "return_type": "WriteResult",
+          "logic": "Writes a chunk of ASCII data to the string stream. Returns kContinue."
+        },
+        {
+          "name": "EndOfStream",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Does nothing, as the string stream doesn't need explicit closing."
+        },
+        {
+          "name": "result",
+          "parameters": [],
+          "return_type": "std::string",
+          "logic": "Returns the string accumulated in the string stream."
+        }
+      ]
+    },
+    {
+      "name": "D8Console",
+      "properties": [
+        "isolate_",
+        "origin_",
+        "profiler_",
+        "profiler_active_",
+        "timers_"
+      ],
+      "methods": [
+        {
+          "name": "D8Console",
+          "parameters": [
+            "Isolate* isolate"
+          ],
+          "return_type": "constructor",
+          "logic": "Constructor for D8Console. Initializes the isolate and origin time."
+        },
+        {
+          "name": "~D8Console",
+          "parameters": [],
+          "return_type": "destructor",
+          "logic": "Destructor for D8Console. Asserts that profiler_ is null."
+        },
+        {
+          "name": "DisposeProfiler",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Stops and disposes the CPU profiler, if it exists."
+        },
+        {
+          "name": "Assert",
+          "parameters": [
+            "const debug::ConsoleCallArguments& args",
+            "const v8::debug::ConsoleContext&"
+          ],
+          "return_type": "void",
+          "logic": "Implements console.assert. Throws an error if the first argument is false-ish."
+        },
+        {
+          "name": "Log",
+          "parameters": [
+            "const debug::ConsoleCallArguments& args",
+            "const v8::debug::ConsoleContext&"
+          ],
+          "return_type": "void",
+          "logic": "Implements console.log. Writes the arguments to stdout."
+        },
+        {
+          "name": "Error",
+          "parameters": [
+            "const debug::ConsoleCallArguments& args",
+            "const v8::debug::ConsoleContext&"
+          ],
+          "return_type": "void",
+          "logic": "Implements console.error. Writes the arguments to stderr."
+        },
+        {
+          "name": "Warn",
+          "parameters": [
+            "const debug::ConsoleCallArguments& args",
+            "const v8::debug::ConsoleContext&"
+          ],
+          "return_type": "void",
+          "logic": "Implements console.warn. Writes the arguments to stdout."
+        },
+        {
+          "name": "Info",
+          "parameters": [
+            "const debug::ConsoleCallArguments& args",
+            "const v8::debug::ConsoleContext&"
+          ],
+          "return_type": "void",
+          "logic": "Implements console.info. Writes the arguments to stdout."
+        },
+        {
+          "name": "Debug",
+          "parameters": [
+            "const debug::ConsoleCallArguments& args",
+            "const v8::debug::ConsoleContext&"
+          ],
+          "return_type": "void",
+          "logic": "Implements console.debug. Writes the arguments to stdout."
+        },
+        {
+          "name": "Profile",
+          "parameters": [
+            "const debug::ConsoleCallArguments& args",
+            "const v8::debug::ConsoleContext&"
+          ],
+          "return_type": "void",
+          "logic": "Implements console.profile. Starts CPU profiling."
+        },
+        {
+          "name": "ProfileEnd",
+          "parameters": [
+            "const debug::ConsoleCallArguments& args",
+            "const v8::debug::ConsoleContext&"
+          ],
+          "return_type": "void",
+          "logic": "Implements console.profileEnd. Stops CPU profiling and serializes the profile.  Outputs to file or triggers onProfileEnd listener."
+        },
+        {
+          "name": "Time",
+          "parameters": [
+            "const debug::ConsoleCallArguments& args",
+            "const v8::debug::ConsoleContext&"
+          ],
+          "return_type": "void",
+          "logic": "Implements console.time. Starts a timer with the given label."
+        },
+        {
+          "name": "TimeLog",
+          "parameters": [
+            "const debug::ConsoleCallArguments& args",
+            "const v8::debug::ConsoleContext&"
+          ],
+          "return_type": "void",
+          "logic": "Implements console.timeLog. Logs the time elapsed since the timer with the given label was started."
+        },
+        {
+          "name": "TimeEnd",
+          "parameters": [
+            "const debug::ConsoleCallArguments& args",
+            "const v8::debug::ConsoleContext&"
+          ],
+          "return_type": "void",
+          "logic": "Implements console.timeEnd. Logs the time elapsed since the timer with the given label was started and stops the timer."
+        },
+        {
+          "name": "TimeStamp",
+          "parameters": [
+            "const debug::ConsoleCallArguments& args",
+            "const v8::debug::ConsoleContext&"
+          ],
+          "return_type": "void",
+          "logic": "Implements console.timeStamp. Logs the time elapsed since the D8Console object was created."
+        },
+        {
+          "name": "Trace",
+          "parameters": [
+            "const debug::ConsoleCallArguments& args",
+            "const v8::debug::ConsoleContext&"
+          ],
+          "return_type": "void",
+          "logic": "Implements console.trace. Prints the current stack trace."
+        }
+      ]
+    }
+  ],
+  "functions": [
+    {
+      "name": "WriteToFile",
+      "parameters": [
+        "const char* prefix",
+        "FILE* file",
+        "Isolate* isolate",
+        "const debug::ConsoleCallArguments& args"
+      ],
+      "return_type": "void",
+      "logic": "Writes the console arguments to the given file with an optional prefix. Handles Symbol to String conversion and error checking."
+    },
+    {
+      "name": "GetTimerLabel",
+      "parameters": [
+        "const debug::ConsoleCallArguments& args"
+      ],
+      "return_type": "std::optional<std::string>",
+      "logic": "Extracts the timer label from the console arguments. If no label is provided, it defaults to 'default'. Returns std::nullopt if an error occurs during string conversion."
+    }
+  ]
+}

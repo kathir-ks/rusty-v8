@@ -1,0 +1,321 @@
+{
+  "file_path": "/home/kathirks_gc/v8_go/codebase/src/sandbox/external-pointer-table.h",
+  "imports": [
+    "include/v8config.h",
+    "src/base/atomicops.h",
+    "src/base/memory.h",
+    "src/common/globals.h",
+    "src/sandbox/check.h",
+    "src/sandbox/compactible-external-entity-table.h",
+    "src/sandbox/tagged-payload.h",
+    "src/utils/allocation.h"
+  ],
+  "classes": [
+    {
+      "name": "ExternalPointerTableEntry",
+      "properties": [
+        "payload_",
+        "raw_pointer_for_lsan_"
+      ],
+      "methods": [
+        {
+          "name": "MakeExternalPointerEntry",
+          "parameters": [
+            "Address value",
+            "ExternalPointerTag tag",
+            "bool mark_as_alive"
+          ],
+          "return_type": "void",
+          "logic": "Makes this entry an external pointer entry containing the given pointer tagged with the given tag."
+        },
+        {
+          "name": "GetExternalPointer",
+          "parameters": [
+            "ExternalPointerTagRange tag_range"
+          ],
+          "return_type": "Address",
+          "logic": "Loads and untags the external pointer stored in this entry. It checks if the tag matches the expected range before untagging."
+        },
+        {
+          "name": "SetExternalPointer",
+          "parameters": [
+            "Address value",
+            "ExternalPointerTag tag"
+          ],
+          "return_type": "void",
+          "logic": "Tags and stores the given external pointer in this entry."
+        },
+        {
+          "name": "HasExternalPointer",
+          "parameters": [
+            "ExternalPointerTagRange tag_range"
+          ],
+          "return_type": "bool",
+          "logic": "Returns true if this entry contains an external pointer with the given tag."
+        },
+        {
+          "name": "ExchangeExternalPointer",
+          "parameters": [
+            "Address value",
+            "ExternalPointerTag tag"
+          ],
+          "return_type": "Address",
+          "logic": "Exchanges the external pointer stored in this entry with the provided one and returns the old external pointer."
+        },
+        {
+          "name": "GetExternalPointerTag",
+          "parameters": [],
+          "return_type": "ExternalPointerTag",
+          "logic": "Loads the tag of the external pointer stored in this entry."
+        },
+        {
+          "name": "ExtractManagedResourceOrNull",
+          "parameters": [],
+          "return_type": "Address",
+          "logic": "Returns the address of the managed resource contained in this entry or nullptr if this entry does not reference a managed resource."
+        },
+        {
+          "name": "MakeZappedEntry",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Invalidates the entry, making it crash on dereference."
+        },
+        {
+          "name": "MakeFreelistEntry",
+          "parameters": [
+            "uint32_t next_entry_index"
+          ],
+          "return_type": "void",
+          "logic": "Makes this entry a freelist entry, containing the index of the next entry on the freelist."
+        },
+        {
+          "name": "GetNextFreelistEntryIndex",
+          "parameters": [],
+          "return_type": "uint32_t",
+          "logic": "Gets the index of the next entry on the freelist."
+        },
+        {
+          "name": "MakeEvacuationEntry",
+          "parameters": [
+            "Address handle_location"
+          ],
+          "return_type": "void",
+          "logic": "Makes this entry an evacuation entry containing the address of the handle to the entry being evacuated."
+        },
+        {
+          "name": "HasEvacuationEntry",
+          "parameters": [],
+          "return_type": "bool",
+          "logic": "Returns true if this entry contains an evacuation entry."
+        },
+        {
+          "name": "Evacuate",
+          "parameters": [
+            "ExternalPointerTableEntry& dest",
+            "EvacuateMarkMode mode"
+          ],
+          "return_type": "void",
+          "logic": "Moves the content of this entry into the provided entry, possibly clearing the marking bit. Invalidates the source entry."
+        },
+        {
+          "name": "Mark",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Marks this entry as alive during table garbage collection."
+        }
+      ]
+    },
+    {
+      "name": "ExternalPointerTable",
+      "properties": [],
+      "methods": [
+        {
+          "name": "SetUpFromReadOnlyArtifacts",
+          "parameters": [
+            "Space* read_only_space",
+            "const ReadOnlyArtifacts* artifacts"
+          ],
+          "return_type": "void",
+          "logic": "Initializes all slots in the RO space from pre-existing artifacts."
+        },
+        {
+          "name": "Get",
+          "parameters": [
+            "ExternalPointerHandle handle",
+            "ExternalPointerTagRange tag_range"
+          ],
+          "return_type": "Address",
+          "logic": "Retrieves the entry referenced by the given handle."
+        },
+        {
+          "name": "Set",
+          "parameters": [
+            "ExternalPointerHandle handle",
+            "Address value",
+            "ExternalPointerTag tag"
+          ],
+          "return_type": "void",
+          "logic": "Sets the entry referenced by the given handle."
+        },
+        {
+          "name": "Exchange",
+          "parameters": [
+            "ExternalPointerHandle handle",
+            "Address value",
+            "ExternalPointerTag tag"
+          ],
+          "return_type": "Address",
+          "logic": "Exchanges the entry referenced by the given handle with the given value, returning the previous value."
+        },
+        {
+          "name": "GetTag",
+          "parameters": [
+            "ExternalPointerHandle handle"
+          ],
+          "return_type": "ExternalPointerTag",
+          "logic": "Retrieves the tag used for the entry referenced by the given handle."
+        },
+        {
+          "name": "Zap",
+          "parameters": [
+            "ExternalPointerHandle handle"
+          ],
+          "return_type": "void",
+          "logic": "Invalidates the entry referenced by the given handle."
+        },
+        {
+          "name": "AllocateAndInitializeEntry",
+          "parameters": [
+            "Space* space",
+            "Address initial_value",
+            "ExternalPointerTag tag"
+          ],
+          "return_type": "ExternalPointerHandle",
+          "logic": "Allocates a new entry in the given space. The caller must provide the initial value and tag for the entry."
+        },
+        {
+          "name": "Mark",
+          "parameters": [
+            "Space* space",
+            "ExternalPointerHandle handle",
+            "Address handle_location"
+          ],
+          "return_type": "void",
+          "logic": "Marks the specified entry as alive, potentially marking it for evacuation during compaction."
+        },
+        {
+          "name": "Evacuate",
+          "parameters": [
+            "Space* from_space",
+            "Space* to_space",
+            "ExternalPointerHandle handle",
+            "Address handle_location",
+            "EvacuateMarkMode mode"
+          ],
+          "return_type": "void",
+          "logic": "Evacuates the specified entry from one space to another, updating the handle location in place."
+        },
+        {
+          "name": "EvacuateAndSweepAndCompact",
+          "parameters": [
+            "Space* to_space",
+            "Space* from_space",
+            "Counters* counters"
+          ],
+          "return_type": "uint32_t",
+          "logic": "Evacuates all segments from from_space to to_space, leaving from_space empty. Then free unmarked entries, finishing compaction and collecting freed entries onto to_space's free list."
+        },
+        {
+          "name": "SweepAndCompact",
+          "parameters": [
+            "Space* space",
+            "Counters* counters"
+          ],
+          "return_type": "uint32_t",
+          "logic": "Sweeps and compacts the specified space, building a free list from dead entries and clearing marking bits from live entries."
+        },
+        {
+          "name": "Sweep",
+          "parameters": [
+            "Space* space",
+            "Counters* counters"
+          ],
+          "return_type": "uint32_t",
+          "logic": "Sweeps the specified space, building a free list from dead entries."
+        },
+        {
+          "name": "UpdateAllEvacuationEntries",
+          "parameters": [
+            "Space*",
+            "std::function<Address(Address)>"
+          ],
+          "return_type": "void",
+          "logic": "Updates all evacuation entries with new handle locations, using the provided function to map old locations to new ones."
+        },
+        {
+          "name": "Contains",
+          "parameters": [
+            "Space* space",
+            "ExternalPointerHandle handle"
+          ],
+          "return_type": "bool",
+          "logic": "Checks if the given handle is contained within the specified space."
+        }
+      ]
+    },
+    {
+      "name": "ExternalPointerTable::Space",
+      "properties": [
+        "allocate_black_"
+      ],
+      "methods": [
+        {
+          "name": "NotifyExternalPointerFieldInvalidated",
+          "parameters": [
+            "Address field_address",
+            "ExternalPointerTagRange tag_range"
+          ],
+          "return_type": "void",
+          "logic": "Notifies the space that an external pointer field has been invalidated."
+        },
+        {
+          "name": "AssertEmpty",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Asserts that the space is empty."
+        },
+        {
+          "name": "allocate_black",
+          "parameters": [],
+          "return_type": "bool",
+          "logic": "Getter for the allocate_black_ flag."
+        },
+        {
+          "name": "set_allocate_black",
+          "parameters": [
+            "bool allocate_black"
+          ],
+          "return_type": "void",
+          "logic": "Setter for the allocate_black_ flag."
+        }
+      ]
+    },
+    {
+      "name": "ExternalPointerTable::ManagedResource",
+      "properties": [
+        "owning_table_",
+        "ept_entry_"
+      ],
+      "methods": [
+        {
+          "name": "ZapExternalPointerTableEntry",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Zaps/invalidates the EPT entry associated with this managed resource."
+        }
+      ]
+    }
+  ],
+  "functions": [],
+  "comments": "The code defines the ExternalPointerTable, used by V8 to safely reference objects outside the V8 heap, especially in the context of the V8 sandbox.  It includes mechanisms for type safety, garbage collection, generational collection, and table compaction."
+}

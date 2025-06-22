@@ -1,0 +1,78 @@
+{
+  "metadata": {
+    "path": "/home/kathirks_gc/v8_go/archive/codebase/src/compiler/backend/jump-threading.h",
+    "file_name": "jump-threading.h",
+    "language": "cpp",
+    "purpose": "Declares the JumpThreading class, which optimizes instruction sequences by forwarding jumps to ultimate destinations, removing redundant jumps and potentially negating branches."
+  },
+  "imports": {
+    "metadata": {
+      "language": "cpp",
+      "purpose": "Includes the Instruction definition for instruction processing"
+    },
+    "code": "#include \"src/compiler/backend/instruction.h\""
+  },
+  "classes": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "JumpThreading",
+        "extends": null,
+        "implements": [],
+        "about": "Optimizes instruction sequences by forwarding jumps to their ultimate destinations. This removes redundant jumps and potentially negates branches.",
+        "attributes": [],
+        "dependencies": [
+          "RpoNumber",
+          "InstructionSequence",
+          "Zone",
+          "ZoneVector"
+        ]
+      },
+      "code": "class V8_EXPORT_PRIVATE JumpThreading {\n public:\n  // Compute the forwarding map of basic blocks to their ultimate destination.\n  // Returns {true} if there is at least one block that is forwarded.\n  static bool ComputeForwarding(Zone* local_zone, ZoneVector<RpoNumber>* result,\n                                InstructionSequence* code, bool frame_at_start);\n\n  // Rewrite the instructions to forward jumps and branches.\n  // May also negate some branches.\n  static void ApplyForwarding(Zone* local_zone,\n                              ZoneVector<RpoNumber> const& forwarding,\n                              InstructionSequence* code);\n};"
+    }
+  ],
+  "dependencies": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "RpoNumber",
+        "about": "Represents a reverse postorder number for basic blocks."
+      },
+      "code": "class RpoNumber {};",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "InstructionSequence",
+        "about": "Represents a sequence of instructions."
+      },
+      "code": "class InstructionSequence {};",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "Zone",
+        "about": "Represents a memory allocation zone."
+      },
+      "code": "class Zone {};",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "ZoneVector",
+        "about": "Represents a vector allocated in a Zone."
+      },
+      "code": "template <typename T> class ZoneVector {};",
+      "type": "class"
+    }
+  ],
+  "file_path": "/home/kathirks_gc/v8_go/archive/codebase/src/compiler/backend/jump-threading.h"
+}

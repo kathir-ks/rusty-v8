@@ -1,0 +1,136 @@
+{
+  "metadata": {
+    "path": "/home/kathirks_gc/v8_go/archive/codebase/include/cppgc/sentinel-pointer.h",
+    "file_name": "sentinel-pointer.h",
+    "language": "cpp",
+    "purpose": "Defines a sentinel pointer type used to denote special members with embedder-defined semantics in cppgc."
+  },
+  "imports": {
+    "metadata": {
+      "language": "cpp",
+      "purpose": "Includes standard integer types and internal API constants."
+    },
+    "code": "#include <cstdint>\n\n#include \"cppgc/internal/api-constants.h\""
+  },
+  "classes": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "struct",
+        "name": "SentinelPointer",
+        "about": "Special tag type used to denote some sentinel member. The semantics of the sentinel is defined by the embedder.",
+        "attributes": [],
+        "dependencies": [
+          "api_constants::kPointerCompressionShift"
+        ]
+      },
+      "code": "struct SentinelPointer {\n#if defined(CPPGC_POINTER_COMPRESSION)\n  static constexpr intptr_t kSentinelValue =\n      1 << api_constants::kPointerCompressionShift;\n#else   // !defined(CPPGC_POINTER_COMPRESSION)\n  static constexpr intptr_t kSentinelValue = 0b10;\n#endif  // !defined(CPPGC_POINTER_COMPRESSION)\n  template <typename T>\n  operator T*() const {\n    return reinterpret_cast<T*>(kSentinelValue);\n  }\n  // Hidden friends.\n  friend bool operator==(SentinelPointer, SentinelPointer) { return true; }\n  friend bool operator!=(SentinelPointer, SentinelPointer) { return false; }\n};"
+    }
+  ],
+  "dependencies": [
+    {
+      "metadata": {},
+      "code": "",
+      "type": "metadata"
+    },
+    {
+      "metadata": {},
+      "code": "",
+      "type": "code"
+    }
+  ],
+  "functions": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "function",
+        "name": "operator T*",
+        "parent": "SentinelPointer",
+        "about": "Conversion operator to any pointer type T*.",
+        "logic": "Returns a pointer with the value of kSentinelValue, reinterpreted as T*.",
+        "parameters": [],
+        "return": {
+          "type": "T*",
+          "description": "A pointer to T with the sentinel value."
+        },
+        "dependencies": []
+      },
+      "code": "template <typename T>\n  operator T*() const {\n    return reinterpret_cast<T*>(kSentinelValue);\n  }"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "friend function",
+        "name": "operator==",
+        "parent": "SentinelPointer",
+        "about": "Equality operator for SentinelPointer.",
+        "logic": "Always returns true.",
+        "parameters": [
+          {
+            "name": "lhs",
+            "type": "SentinelPointer",
+            "purpose": "Left-hand side operand."
+          },
+          {
+            "name": "rhs",
+            "type": "SentinelPointer",
+            "purpose": "Right-hand side operand."
+          }
+        ],
+        "return": {
+          "type": "bool",
+          "description": "Always true."
+        },
+        "dependencies": []
+      },
+      "code": "friend bool operator==(SentinelPointer, SentinelPointer) { return true; }"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "friend function",
+        "name": "operator!=",
+        "parent": "SentinelPointer",
+        "about": "Inequality operator for SentinelPointer.",
+        "logic": "Always returns false.",
+        "parameters": [
+          {
+            "name": "lhs",
+            "type": "SentinelPointer",
+            "purpose": "Left-hand side operand."
+          },
+          {
+            "name": "rhs",
+            "type": "SentinelPointer",
+            "purpose": "Right-hand side operand."
+          }
+        ],
+        "return": {
+          "type": "bool",
+          "description": "Always false."
+        },
+        "dependencies": []
+      },
+      "code": "friend bool operator!=(SentinelPointer, SentinelPointer) { return false; }"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "variable",
+        "name": "kSentinelPointer",
+        "about": "Global constant SentinelPointer instance.",
+        "logic": "constexpr variable of SentinelPointer type",
+        "parameters": [],
+        "return": {
+          "type": "internal::SentinelPointer",
+          "description": "A const SentinelPointer"
+        },
+        "dependencies": [
+          "internal::SentinelPointer"
+        ]
+      },
+      "code": "constexpr internal::SentinelPointer kSentinelPointer;"
+    }
+  ],
+  "file_path": "/home/kathirks_gc/v8_go/archive/codebase/include/cppgc/sentinel-pointer.h"
+}

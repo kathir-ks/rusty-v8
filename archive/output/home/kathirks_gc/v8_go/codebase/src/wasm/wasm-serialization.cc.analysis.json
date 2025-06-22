@@ -1,0 +1,527 @@
+{
+  "file_path": "/home/kathirks_gc/v8_go/codebase/src/wasm/wasm-serialization.cc",
+  "imports": [
+    "src/wasm/wasm-serialization.h",
+    "src/codegen/assembler-arch.h",
+    "src/codegen/assembler-inl.h",
+    "src/debug/debug.h",
+    "src/runtime/runtime.h",
+    "src/snapshot/snapshot-data.h",
+    "src/utils/ostreams.h",
+    "src/utils/version.h",
+    "src/wasm/code-space-access.h",
+    "src/wasm/function-compiler.h",
+    "src/wasm/module-compiler.h",
+    "src/wasm/module-decoder.h",
+    "src/wasm/wasm-code-manager.h",
+    "src/wasm/wasm-engine.h",
+    "src/wasm/wasm-module.h",
+    "src/wasm/wasm-objects-inl.h",
+    "src/wasm/wasm-objects.h",
+    "src/wasm/wasm-result.h",
+    "src/wasm/well-known-imports.h"
+  ],
+  "classes": [
+    {
+      "name": "Writer",
+      "properties": [
+        "start_",
+        "end_",
+        "pos_"
+      ],
+      "methods": [
+        {
+          "name": "Writer",
+          "parameters": [
+            "buffer"
+          ],
+          "return_type": "void",
+          "logic": "Constructor. Initializes the writer with a given buffer."
+        },
+        {
+          "name": "bytes_written",
+          "parameters": [],
+          "return_type": "size_t",
+          "logic": "Returns the number of bytes written to the buffer."
+        },
+        {
+          "name": "current_location",
+          "parameters": [],
+          "return_type": "uint8_t*",
+          "logic": "Returns a pointer to the current location in the buffer."
+        },
+        {
+          "name": "current_size",
+          "parameters": [],
+          "return_type": "size_t",
+          "logic": "Returns the remaining size of the buffer."
+        },
+        {
+          "name": "current_buffer",
+          "parameters": [],
+          "return_type": "base::Vector<uint8_t>",
+          "logic": "Returns a Vector representing the available portion of the buffer."
+        },
+        {
+          "name": "Write",
+          "parameters": [
+            "value"
+          ],
+          "return_type": "void",
+          "logic": "Writes a value to the buffer.  Overloaded for different types. Performs a size check and advances the write position."
+        },
+        {
+          "name": "WriteVector",
+          "parameters": [
+            "v"
+          ],
+          "return_type": "void",
+          "logic": "Writes a vector of values to the buffer. Performs size check and advances the write position."
+        },
+        {
+          "name": "Skip",
+          "parameters": [
+            "size"
+          ],
+          "return_type": "void",
+          "logic": "Skips a specified number of bytes in the buffer."
+        }
+      ]
+    },
+    {
+      "name": "Reader",
+      "properties": [
+        "start_",
+        "end_",
+        "pos_"
+      ],
+      "methods": [
+        {
+          "name": "Reader",
+          "parameters": [
+            "buffer"
+          ],
+          "return_type": "void",
+          "logic": "Constructor. Initializes the reader with a given buffer."
+        },
+        {
+          "name": "bytes_read",
+          "parameters": [],
+          "return_type": "size_t",
+          "logic": "Returns the number of bytes read from the buffer."
+        },
+        {
+          "name": "current_location",
+          "parameters": [],
+          "return_type": "const uint8_t*",
+          "logic": "Returns a pointer to the current location in the buffer."
+        },
+        {
+          "name": "current_size",
+          "parameters": [],
+          "return_type": "size_t",
+          "logic": "Returns the remaining size of the buffer."
+        },
+        {
+          "name": "current_buffer",
+          "parameters": [],
+          "return_type": "base::Vector<const uint8_t>",
+          "logic": "Returns a Vector representing the available portion of the buffer."
+        },
+        {
+          "name": "Read",
+          "parameters": [],
+          "return_type": "T",
+          "logic": "Reads a value from the buffer.  Overloaded for different types. Performs a size check and advances the read position."
+        },
+        {
+          "name": "ReadVector",
+          "parameters": [
+            "size"
+          ],
+          "return_type": "base::Vector<const T>",
+          "logic": "Reads a vector of values from the buffer. Performs a size check and advances the read position."
+        },
+        {
+          "name": "Skip",
+          "parameters": [
+            "size"
+          ],
+          "return_type": "void",
+          "logic": "Skips a specified number of bytes in the buffer."
+        }
+      ]
+    },
+    {
+      "name": "ExternalReferenceList",
+      "properties": [
+        "external_reference_by_tag_",
+        "tags_ordered_by_address_"
+      ],
+      "methods": [
+        {
+          "name": "tag_from_address",
+          "parameters": [
+            "ext_ref_address"
+          ],
+          "return_type": "uint32_t",
+          "logic": "Converts an external reference address to a tag (index) using binary search."
+        },
+        {
+          "name": "address_from_tag",
+          "parameters": [
+            "tag"
+          ],
+          "return_type": "Address",
+          "logic": "Converts an external reference tag (index) to an address."
+        },
+        {
+          "name": "Get",
+          "parameters": [],
+          "return_type": "const ExternalReferenceList&",
+          "logic": "Returns the singleton instance of the ExternalReferenceList."
+        },
+        {
+          "name": "ExternalReferenceList",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Private constructor, initializes the external_reference_by_tag_ array and orders the tags by address. Called only once for the static instance."
+        }
+      ]
+    },
+    {
+      "name": "NativeModuleSerializer",
+      "properties": [
+        "native_module_",
+        "code_table_",
+        "import_statuses_",
+        "canonical_sig_ids_to_module_local_ids_",
+        "write_called_",
+        "total_written_code_",
+        "num_turbofan_functions_"
+      ],
+      "methods": [
+        {
+          "name": "NativeModuleSerializer",
+          "parameters": [
+            "module",
+            "code_table",
+            "import_statuses"
+          ],
+          "return_type": "void",
+          "logic": "Constructor. Initializes the serializer with a NativeModule and code table."
+        },
+        {
+          "name": "MeasureCode",
+          "parameters": [
+            "code"
+          ],
+          "return_type": "size_t",
+          "logic": "Measures the size required to serialize a single WasmCode object."
+        },
+        {
+          "name": "Measure",
+          "parameters": [],
+          "return_type": "size_t",
+          "logic": "Measures the total size required to serialize the NativeModule."
+        },
+        {
+          "name": "WriteHeader",
+          "parameters": [
+            "writer",
+            "total_code_size"
+          ],
+          "return_type": "void",
+          "logic": "Writes the header information for the serialized NativeModule to the given Writer."
+        },
+        {
+          "name": "WriteCode",
+          "parameters": [
+            "code",
+            "writer",
+            "function_index_map"
+          ],
+          "return_type": "void",
+          "logic": "Writes the code of a single WasmCode object to the given Writer."
+        },
+        {
+          "name": "WriteTieringBudget",
+          "parameters": [
+            "writer"
+          ],
+          "return_type": "void",
+          "logic": "Writes the tiering budget array to the given Writer."
+        },
+        {
+          "name": "CanonicalSigIdToModuleLocalTypeId",
+          "parameters": [
+            "canonical_sig_id"
+          ],
+          "return_type": "uint32_t",
+          "logic": "Converts a canonical signature ID to a module-local type ID, lazily populating the internal map."
+        },
+        {
+          "name": "Write",
+          "parameters": [
+            "writer"
+          ],
+          "return_type": "bool",
+          "logic": "Writes the NativeModule to the given Writer. Serializes header and code, and returns true on success."
+        }
+      ]
+    },
+    {
+      "name": "WasmSerializer",
+      "properties": [
+        "native_module_",
+        "code_table_",
+        "import_statuses_"
+      ],
+      "methods": [
+        {
+          "name": "WasmSerializer",
+          "parameters": [
+            "native_module"
+          ],
+          "return_type": "void",
+          "logic": "Constructor. Takes the NativeModule to serialize."
+        },
+        {
+          "name": "GetSerializedNativeModuleSize",
+          "parameters": [],
+          "return_type": "size_t",
+          "logic": "Returns the size of the serialized native module."
+        },
+        {
+          "name": "SerializeNativeModule",
+          "parameters": [
+            "buffer"
+          ],
+          "return_type": "bool",
+          "logic": "Serializes the native module to the given buffer."
+        }
+      ]
+    },
+    {
+      "name": "DeserializationQueue",
+      "properties": [
+        "mutex_",
+        "queue_"
+      ],
+      "methods": [
+        {
+          "name": "Add",
+          "parameters": [
+            "batch"
+          ],
+          "return_type": "void",
+          "logic": "Adds a batch of DeserializationUnit to the queue."
+        },
+        {
+          "name": "Pop",
+          "parameters": [],
+          "return_type": "std::vector<DeserializationUnit>",
+          "logic": "Pops the first batch from the queue."
+        },
+        {
+          "name": "PopAll",
+          "parameters": [],
+          "return_type": "std::vector<DeserializationUnit>",
+          "logic": "Pops all batches from the queue."
+        },
+        {
+          "name": "NumBatches",
+          "parameters": [],
+          "return_type": "size_t",
+          "logic": "Returns the number of batches in the queue."
+        }
+      ]
+    },
+    {
+      "name": "NativeModuleDeserializer",
+      "properties": [
+        "native_module_",
+        "remaining_code_size_",
+        "all_functions_validated_",
+        "compile_imports_",
+        "current_code_space_",
+        "current_jump_tables_",
+        "lazy_functions_",
+        "eager_functions_"
+      ],
+      "methods": [
+        {
+          "name": "NativeModuleDeserializer",
+          "parameters": [
+            "native_module"
+          ],
+          "return_type": "void",
+          "logic": "Constructor."
+        },
+        {
+          "name": "Read",
+          "parameters": [
+            "reader"
+          ],
+          "return_type": "bool",
+          "logic": "Reads the serialized data from the Reader and deserializes the NativeModule."
+        },
+        {
+          "name": "lazy_functions",
+          "parameters": [],
+          "return_type": "base::Vector<const int>",
+          "logic": "Returns the list of lazy functions."
+        },
+        {
+          "name": "eager_functions",
+          "parameters": [],
+          "return_type": "base::Vector<const int>",
+          "logic": "Returns the list of eager functions."
+        },
+        {
+          "name": "ReadHeader",
+          "parameters": [
+            "reader"
+          ],
+          "return_type": "void",
+          "logic": "Reads the header information from the Reader."
+        },
+        {
+          "name": "ReadCode",
+          "parameters": [
+            "fn_index",
+            "reader"
+          ],
+          "return_type": "DeserializationUnit",
+          "logic": "Reads the code for a single function from the Reader."
+        },
+        {
+          "name": "ReadTieringBudget",
+          "parameters": [
+            "reader"
+          ],
+          "return_type": "void",
+          "logic": "Reads the tiering budget array from the Reader."
+        },
+        {
+          "name": "CopyAndRelocate",
+          "parameters": [
+            "unit"
+          ],
+          "return_type": "void",
+          "logic": "Copies the code from the deserialization unit and performs relocation."
+        },
+        {
+          "name": "Publish",
+          "parameters": [
+            "batch"
+          ],
+          "return_type": "void",
+          "logic": "Publishes a batch of deserialized code objects."
+        }
+      ]
+    },
+    {
+      "name": "DeserializeCodeTask",
+      "properties": [
+        "deserializer_",
+        "reloc_queue_",
+        "publish_queue_",
+        "publishing_"
+      ],
+      "methods": [
+        {
+          "name": "DeserializeCodeTask",
+          "parameters": [
+            "deserializer",
+            "reloc_queue"
+          ],
+          "return_type": "void",
+          "logic": "Constructor."
+        },
+        {
+          "name": "Run",
+          "parameters": [
+            "delegate"
+          ],
+          "return_type": "void",
+          "logic": "Runs the deserialization task."
+        },
+        {
+          "name": "GetMaxConcurrency",
+          "parameters": [
+            "worker_count"
+          ],
+          "return_type": "size_t",
+          "logic": "Gets the maximum concurrency of the task."
+        },
+        {
+          "name": "TryPublishing",
+          "parameters": [
+            "delegate"
+          ],
+          "return_type": "bool",
+          "logic": "Attempt to publish finished batches in sequence."
+        }
+      ]
+    },
+    {
+      "name": "DeserializationUnit",
+      "properties": [
+        "src_code_buffer",
+        "code",
+        "jump_tables"
+      ],
+      "methods": []
+    }
+  ],
+  "functions": [
+    {
+      "name": "WriteHeader",
+      "parameters": [
+        "writer",
+        "enabled_features"
+      ],
+      "return_type": "void",
+      "logic": "Writes the header to the writer, including magic number, version hash, CPU features, flag list hash, and enabled features."
+    },
+    {
+      "name": "SetWasmCalleeTag",
+      "parameters": [
+        "rinfo",
+        "tag"
+      ],
+      "return_type": "void",
+      "logic": "Sets the Wasm callee tag in the given RelocInfo based on the target architecture.  On x64/ia32, it writes the tag to the target address. On ARM64, it writes the tag to either a literal load or direct branch."
+    },
+    {
+      "name": "GetWasmCalleeTag",
+      "parameters": [
+        "rinfo"
+      ],
+      "return_type": "uint32_t",
+      "logic": "Gets the Wasm callee tag from the given RelocInfo based on the target architecture.  On x64/ia32, it reads the tag from the target address. On ARM64, reads the target address from a literal load or direct branch."
+    },
+    {
+      "name": "IsSupportedVersion",
+      "parameters": [
+        "header",
+        "enabled_features"
+      ],
+      "return_type": "bool",
+      "logic": "Checks if the provided header matches the expected header for the current version and enabled features."
+    },
+    {
+      "name": "DeserializeNativeModule",
+      "parameters": [
+        "isolate",
+        "data",
+        "wire_bytes_vec",
+        "compile_imports",
+        "source_url"
+      ],
+      "return_type": "MaybeDirectHandle<WasmModuleObject>",
+      "logic": "Deserializes a NativeModule from the given data, wire bytes, and compile imports, and returns a WasmModuleObject."
+    }
+  ]
+}

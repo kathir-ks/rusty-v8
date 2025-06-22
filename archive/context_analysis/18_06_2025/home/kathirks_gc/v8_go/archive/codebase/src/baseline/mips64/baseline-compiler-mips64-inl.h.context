@@ -1,0 +1,134 @@
+{
+  "metadata": {
+    "path": "/home/kathirks_gc/v8_go/archive/codebase/src/baseline/mips64/baseline-compiler-mips64-inl.h",
+    "file_name": "baseline-compiler-mips64-inl.h",
+    "language": "cpp",
+    "purpose": "Provides MIPS64-specific inline implementations for the baseline compiler."
+  },
+  "imports": {
+    "metadata": {
+      "language": "cpp",
+      "purpose": "Includes necessary headers for logging and baseline compiler functionality."
+    },
+    "code": "#include \"src/base/logging.h\"\n#include \"src/baseline/baseline-compiler.h\""
+  },
+  "functions": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "method",
+        "name": "Prologue",
+        "parent": "BaselineCompiler",
+        "about": "Generates the prologue for a baseline-compiled function on MIPS64.",
+        "logic": "Enters the frame, saves the context, function, argument count, and new target registers, and calls the out-of-line prologue builtin to initialize the frame. Then calls the helper function PrologueFillFrame().",
+        "parameters": [],
+        "return": {
+          "type": "void",
+          "description": "No return value"
+        },
+        "dependencies": [
+          "Builtin",
+          "BaselineOutOfLinePrologue",
+          "StackFrame",
+          "PrologueFillFrame"
+        ]
+      },
+      "code": "void BaselineCompiler::Prologue() {\n  ASM_CODE_COMMENT(&masm_);\n  __ masm()->EnterFrame(StackFrame::BASELINE);\n  DCHECK_EQ(kJSFunctionRegister, kJavaScriptCallTargetRegister);\n  int max_frame_size = bytecode_->max_frame_size();\n  CallBuiltin<Builtin::kBaselineOutOfLinePrologue>(\n      kContextRegister, kJSFunctionRegister, kJavaScriptCallArgCountRegister,\n      max_frame_size, kJavaScriptCallNewTargetRegister, bytecode_);\n\n  PrologueFillFrame();\n}"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "method",
+        "name": "PrologueFillFrame",
+        "parent": "BaselineCompiler",
+        "about": "Fills the register portion of the baseline frame with undefined values on MIPS64.",
+        "logic": "Initializes the register file by pushing undefined values onto the stack. It distinguishes two cases, whether new_target_or_generator exists or not. Uses loop unrolling for performance when register count exceeds a threshold.",
+        "parameters": [],
+        "return": {
+          "type": "void",
+          "description": "No return value"
+        },
+        "dependencies": [
+          "RootIndex",
+          "kUndefinedValue",
+          "kMaxInt"
+        ]
+      },
+      "code": "void BaselineCompiler::PrologueFillFrame() {\n  ASM_CODE_COMMENT(&masm_);\n  // Inlined register frame fill\n  interpreter::Register new_target_or_generator_register =\n      bytecode_->incoming_new_target_or_generator_register();\n  __ LoadRoot(kInterpreterAccumulatorRegister, RootIndex::kUndefinedValue);\n  int register_count = bytecode_->register_count();\n  // Magic value\n  const int kLoopUnrollSize = 8;\n  const int new_target_index = new_target_or_generator_register.index();\n  const bool has_new_target = new_target_index != kMaxInt;\n  if (has_new_target) {\n    DCHECK_LE(new_target_index, register_count);\n    __ masm()->Daddu(sp, sp, Operand(-(kPointerSize * new_target_index)));\n    for (int i = 0; i < new_target_index; i++) {\n      __ masm()->Sd(kInterpreterAccumulatorRegister, MemOperand(sp, i * 8));\n    }\n    // Push new_target_or_generator.\n    __ Push(kJavaScriptCallNewTargetRegister);\n    register_count -= new_target_index + 1;\n  }\n  if (register_count < 2 * kLoopUnrollSize) {\n    // If the frame is small enough, just unroll the frame fill completely.\n    __ masm()->Daddu(sp, sp, Operand(-(kPointerSize * register_count)));\n    for (int i = 0; i < register_count; ++i) {\n      __ masm()->Sd(kInterpreterAccumulatorRegister, MemOperand(sp, i * 8));\n    }\n  } else {\n    __ masm()->Daddu(sp, sp, Operand(-(kPointerSize * register_count)));\n    for (int i = 0; i < register_count; ++i) {\n      __ masm()->Sd(kInterpreterAccumulatorRegister, MemOperand(sp, i * 8));\n    }\n  }\n}"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "method",
+        "name": "VerifyFrameSize",
+        "parent": "BaselineCompiler",
+        "about": "Verifies the size of the frame against the expected size on MIPS64.",
+        "logic": "Calculates the expected stack pointer value based on the frame size and compares it against the actual stack pointer. Asserts if the values do not match, indicating a stack corruption.",
+        "parameters": [],
+        "return": {
+          "type": "void",
+          "description": "No return value"
+        },
+        "dependencies": [
+          "InterpreterFrameConstants",
+          "AbortReason",
+          "kUnexpectedStackPointer"
+        ]
+      },
+      "code": "void BaselineCompiler::VerifyFrameSize() {\n  ASM_CODE_COMMENT(&masm_);\n  __ masm()->Daddu(kScratchReg, sp,\n                   Operand(InterpreterFrameConstants::kFixedFrameSizeFromFp +\n                           bytecode_->frame_size()));\n  __ masm()->Assert(eq, AbortReason::kUnexpectedStackPointer, kScratchReg,\n                    Operand(fp));\n}"
+    }
+  ],
+  "dependencies": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "BaselineCompiler",
+        "about": "Abstracts the architecture specific BaselineCompiler"
+      },
+      "code": "class BaselineCompiler {\n                    public:\n                        void Prologue();\n                        void PrologueFillFrame();\n                        void VerifyFrameSize();\n                };",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "Assembler",
+        "about": "Provides an interface to generate machine code instructions"
+      },
+      "code": "class Assembler {\n                    public:\n                        void EnterFrame(StackFrame::Type type);\n                        void Daddu(Register dest, Register src, Operand op);\n                        void Sd(Register source, MemOperand dest);\n                        void Push(Register source);\n                        void Assert(Condition condition, AbortReason reason, Register reg1, Operand reg2);\n                };",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "StackFrame",
+        "about": "Represents the stack frame structure."
+      },
+      "code": "class StackFrame {\n                    public:\n                        enum Type {\n                            BASELINE\n                        };\n                };",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "MemOperand",
+        "about": "Represents a memory operand."
+      },
+      "code": "class MemOperand {\n                    public:\n                        MemOperand(Register base, int offset);\n                };",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "Operand",
+        "about": "Represents an operand."
+      },
+      "code": "class Operand {\n                    public:\n                        Operand(int value);\n                };",
+      "type": "class"
+    }
+  ],
+  "file_path": "/home/kathirks_gc/v8_go/archive/codebase/src/baseline/mips64/baseline-compiler-mips64-inl.h"
+}

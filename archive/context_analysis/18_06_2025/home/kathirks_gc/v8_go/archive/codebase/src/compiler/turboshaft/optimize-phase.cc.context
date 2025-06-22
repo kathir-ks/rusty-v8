@@ -1,0 +1,55 @@
+{
+  "metadata": {
+    "path": "/home/kathirks_gc/v8_go/archive/codebase/src/compiler/turboshaft/optimize-phase.cc",
+    "file_name": "optimize-phase.cc",
+    "language": "cpp",
+    "purpose": "Defines the OptimizePhase for the Turboshaft compiler, which runs a series of optimization reducers."
+  },
+  "imports": {
+    "metadata": {
+      "language": "cpp",
+      "purpose": "Includes necessary headers for the OptimizePhase and its dependencies."
+    },
+    "code": "#include \"src/compiler/turboshaft/optimize-phase.h\"\n\n#include \"src/compiler/js-heap-broker.h\"\n#include \"src/compiler/turboshaft/copying-phase.h\"\n#include \"src/compiler/turboshaft/late-escape-analysis-reducer.h\"\n#include \"src/compiler/turboshaft/machine-optimization-reducer.h\"\n#include \"src/compiler/turboshaft/memory-optimization-reducer.h\"\n#include \"src/compiler/turboshaft/phase.h\"\n#include \"src/compiler/turboshaft/pretenuring-propagation-reducer.h\"\n#include \"src/compiler/turboshaft/required-optimization-reducer.h\"\n#include \"src/compiler/turboshaft/structural-optimization-reducer.h\"\n#include \"src/compiler/turboshaft/value-numbering-reducer.h\"\n#include \"src/compiler/turboshaft/variable-reducer.h\"\n#include \"src/numbers/conversions-inl.h\"\n#include \"src/roots/roots-inl.h\""
+  },
+  "functions": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "method",
+        "name": "Run",
+        "parent": "OptimizePhase",
+        "about": "Runs the optimization phase of the Turboshaft compiler.",
+        "logic": "Executes a copying phase with a series of optimization reducers: StructuralOptimizationReducer, LateEscapeAnalysisReducer, PretenuringPropagationReducer, MemoryOptimizationReducer, MachineOptimizationReducer, and ValueNumberingReducer. Uses UnparkedScopeIfNeeded for tracing reduction if enabled.",
+        "parameters": [
+          {
+            "name": "data",
+            "type": "PipelineData*",
+            "purpose": "Pointer to the pipeline data structure."
+          },
+          {
+            "name": "temp_zone",
+            "type": "Zone*",
+            "purpose": "Pointer to a temporary zone for memory allocation."
+          }
+        ],
+        "return": {
+          "type": "void",
+          "description": "No return value."
+        },
+        "dependencies": [
+          "UnparkedScopeIfNeeded",
+          "turboshaft::CopyingPhase",
+          "turboshaft::StructuralOptimizationReducer",
+          "turboshaft::LateEscapeAnalysisReducer",
+          "turboshaft::PretenuringPropagationReducer",
+          "turboshaft::MemoryOptimizationReducer",
+          "turboshaft::MachineOptimizationReducer",
+          "turboshaft::ValueNumberingReducer"
+        ]
+      },
+      "code": "void OptimizePhase::Run(PipelineData* data, Zone* temp_zone) {\n  UnparkedScopeIfNeeded scope(data->broker(),\n                              v8_flags.turboshaft_trace_reduction);\n  turboshaft::CopyingPhase<turboshaft::StructuralOptimizationReducer,\n                           turboshaft::LateEscapeAnalysisReducer,\n                           turboshaft::PretenuringPropagationReducer,\n                           turboshaft::MemoryOptimizationReducer,\n                           turboshaft::MachineOptimizationReducer,\n                           turboshaft::ValueNumberingReducer>::Run(data,\n                                                                   temp_zone);\n}"
+    }
+  ],
+  "file_path": "/home/kathirks_gc/v8_go/archive/codebase/src/compiler/turboshaft/optimize-phase.cc"
+}

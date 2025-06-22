@@ -1,0 +1,84 @@
+{
+  "file_path": "/home/kathirks_gc/v8_go/codebase/src/compiler/turboshaft/memory-optimization-reducer.cc",
+  "imports": [
+    "src/compiler/turboshaft/memory-optimization-reducer.h",
+    "<optional>",
+    "src/codegen/interface-descriptors-inl.h",
+    "src/compiler/linkage.h",
+    "src/roots/roots-inl.h"
+  ],
+  "classes": [
+    {
+      "name": "MemoryAnalyzer",
+      "properties": [
+        "block_states",
+        "current_block",
+        "state",
+        "input_graph",
+        "allocation_folding",
+        "folded_into",
+        "reserved_size",
+        "skipped_write_barriers"
+      ],
+      "methods": [
+        {
+          "name": "Run",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Iterates through each block in the input graph and processes each operation within the block. Updates the block states and maintains the current state."
+        },
+        {
+          "name": "Process",
+          "parameters": [
+            "const Operation& op"
+          ],
+          "return_type": "void",
+          "logic": "Processes a single operation. Handles AllocateOp and StoreOp specially. If the operation can allocate, it resets the current state. If the operation is a block terminator, it processes it accordingly."
+        },
+        {
+          "name": "ProcessBlockTerminator",
+          "parameters": [
+            "const Operation& terminator"
+          ],
+          "return_type": "void",
+          "logic": "Processes a block terminator operation (e.g., GotoOp). Merges the current state into successor blocks and handles loop backedges by restarting the analysis from the loop header if the state changed. Also detects allocation loops early."
+        },
+        {
+          "name": "ProcessAllocation",
+          "parameters": [
+            "const AllocateOp& alloc"
+          ],
+          "return_type": "void",
+          "logic": "Processes an allocation operation. Attempts to fold the allocation into a previous dominating allocation if possible, considering static size and type. Updates the reserved size and folded_into maps accordingly."
+        },
+        {
+          "name": "ProcessStore",
+          "parameters": [
+            "const StoreOp& store"
+          ],
+          "return_type": "void",
+          "logic": "Processes a store operation. Checks if the write barrier can be skipped and updates the `skipped_write_barriers` set accordingly."
+        },
+        {
+          "name": "MergeCurrentStateIntoSuccessor",
+          "parameters": [
+            "const Block* successor"
+          ],
+          "return_type": "void",
+          "logic": "Merges the current block state into the successor block's state. Ensures that last allocations are consistent across predecessors and takes the maximum allocation size."
+        }
+      ]
+    }
+  ],
+  "functions": [
+    {
+      "name": "CreateAllocateBuiltinDescriptor",
+      "parameters": [
+        "Zone* zone",
+        "Isolate* isolate"
+      ],
+      "return_type": "const TSCallDescriptor*",
+      "logic": "Creates a TSCallDescriptor for the Allocate builtin function, using the Linkage utility for creating stub call descriptors."
+    }
+  ]
+}

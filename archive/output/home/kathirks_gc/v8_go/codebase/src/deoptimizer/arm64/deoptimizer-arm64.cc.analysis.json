@@ -1,0 +1,104 @@
+{
+  "file_path": "/home/kathirks_gc/v8_go/codebase/src/deoptimizer/arm64/deoptimizer-arm64.cc",
+  "imports": [
+    "src/api/api.h",
+    "src/deoptimizer/deoptimizer.h",
+    "src/execution/pointer-authentication.h"
+  ],
+  "classes": [
+    {
+      "name": "Deoptimizer",
+      "properties": [
+        "kEagerDeoptExitSize",
+        "kLazyDeoptExitSize",
+        "kAdaptShadowStackOffsetToSubtract"
+      ],
+      "methods": [
+        {
+          "name": "PatchToJump",
+          "parameters": [
+            "Address pc",
+            "Address new_pc"
+          ],
+          "return_type": "void",
+          "logic": "This function is intended to patch code at a given address to jump to a new address, but on ARM64, it is marked as UNREACHABLE(). This suggests that this functionality is not implemented or needed on this architecture."
+        }
+      ]
+    },
+    {
+      "name": "RegisterValues",
+      "properties": [
+        "simd128_registers_"
+      ],
+      "methods": [
+        {
+          "name": "GetFloatRegister",
+          "parameters": [
+            "unsigned n"
+          ],
+          "return_type": "Float32",
+          "logic": "Retrieves a single-precision floating-point value from the SIMD register array at the given index."
+        },
+        {
+          "name": "GetDoubleRegister",
+          "parameters": [
+            "unsigned n"
+          ],
+          "return_type": "Float64",
+          "logic": "Retrieves a double-precision floating-point value from the SIMD register array at the given index."
+        },
+        {
+          "name": "SetDoubleRegister",
+          "parameters": [
+            "unsigned n",
+            "Float64 value"
+          ],
+          "return_type": "void",
+          "logic": "Sets a double-precision floating-point value in the SIMD register array at the given index."
+        }
+      ]
+    },
+    {
+      "name": "FrameDescription",
+      "properties": [],
+      "methods": [
+        {
+          "name": "SetCallerPc",
+          "parameters": [
+            "unsigned offset",
+            "intptr_t value"
+          ],
+          "return_type": "void",
+          "logic": "Sets the caller's program counter (PC) in the frame.  It signs the pointer for pointer authentication and checks it."
+        },
+        {
+          "name": "SetCallerFp",
+          "parameters": [
+            "unsigned offset",
+            "intptr_t value"
+          ],
+          "return_type": "void",
+          "logic": "Sets the caller's frame pointer (FP) in the frame."
+        },
+        {
+          "name": "SetCallerConstantPool",
+          "parameters": [
+            "unsigned offset",
+            "intptr_t value"
+          ],
+          "return_type": "void",
+          "logic": "This function is marked as UNREACHABLE(), indicating that setting the caller's constant pool is not supported on ARM64."
+        },
+        {
+          "name": "SetPc",
+          "parameters": [
+            "intptr_t pc"
+          ],
+          "return_type": "void",
+          "logic": "Sets the current program counter (PC) in the FrameDescription. It uses PointerAuthentication::StripPAC to remove any pointer authentication codes and ensures the validity of the return address."
+        }
+      ]
+    }
+  ],
+  "functions": []
+}

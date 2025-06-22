@@ -1,0 +1,54 @@
+{
+  "metadata": {
+    "path": "/home/kathirks_gc/v8_go/archive/codebase/src/snapshot/embedded/embedded-file-writer-interface.h",
+    "file_name": "embedded-file-writer-interface.h",
+    "language": "cpp",
+    "purpose": "Defines the EmbeddedFileWriterInterface class, which provides an interface for writing embedded files with source code information and unwind data."
+  },
+  "imports": {
+    "metadata": {
+      "language": "cpp",
+      "purpose": "Includes v8config.h for configuration settings."
+    },
+    "code": "#include \"v8config.h\"  // NOLINT(build/include_directory)"
+  },
+  "classes": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "EmbeddedFileWriterInterface",
+        "about": "Abstract interface for writing embedded files, handling source code information for builtins, and setting unwind data (on Windows 64-bit).",
+        "attributes": [],
+        "dependencies": [
+          "Builtins",
+          "win64_unwindinfo::BuiltinUnwindInfo"
+        ]
+      },
+      "code": "class EmbeddedFileWriterInterface {\n            public:\n            // We maintain a database of filenames to synthetic IDs.\n            virtual int LookupOrAddExternallyCompiledFilename(const char* filename) = 0;\n            virtual const char* GetExternallyCompiledFilename(int index) const = 0;\n            virtual int GetExternallyCompiledFilenameCount() const = 0;\n\n            // The isolate will call the method below just prior to replacing the\n            // compiled builtin InstructionStream objects with trampolines.\n            virtual void PrepareBuiltinSourcePositionMap(Builtins* builtins) = 0;\n\n            #if defined(V8_OS_WIN64)\n            virtual void SetBuiltinUnwindData(\n                Builtin builtin,\n                const win64_unwindinfo::BuiltinUnwindInfo& unwinding_info) = 0;\n            #endif  // V8_OS_WIN64\n            };"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "Builtins",
+        "about": "Forward declaration for Builtins class, used in PrepareBuiltinSourcePositionMap.",
+        "attributes": []
+      },
+      "code": "class Builtins;"
+    }
+  ],
+  "dependencies": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "namespace",
+        "name": "win64_unwindinfo",
+        "about": "Namespace containing classes for handling unwind information on Windows 64-bit."
+      },
+      "code": "namespace win64_unwindinfo {\n                class BuiltinUnwindInfo;\n                }",
+      "type": "namespace"
+    }
+  ],
+  "file_path": "/home/kathirks_gc/v8_go/archive/codebase/src/snapshot/embedded/embedded-file-writer-interface.h"
+}

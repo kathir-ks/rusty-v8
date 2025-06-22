@@ -1,0 +1,286 @@
+{
+  "metadata": {
+    "path": "/home/kathirks_gc/v8_go/archive/codebase/src/compiler/turboshaft/register-allocation-phase.h",
+    "file_name": "register-allocation-phase.h",
+    "language": "cpp",
+    "purpose": "Defines the phases for register allocation in the Turboshaft compiler."
+  },
+  "imports": {
+    "metadata": {
+      "language": "cpp",
+      "purpose": "Includes necessary headers for register allocation, frame elision, jump threading, move optimization, and turboshaft phases."
+    },
+    "code": "#include \"src/compiler/backend/frame-elider.h\"\n#include \"src/compiler/backend/jump-threading.h\"\n#include \"src/compiler/backend/move-optimizer.h\"\n#include \"src/compiler/backend/register-allocator.h\"\n#include \"src/compiler/turboshaft/block-instrumentation-reducer.h\"\n#include \"src/compiler/turboshaft/copying-phase.h\"\n#include \"src/compiler/turboshaft/phase.h\"\n#include \"src/compiler/turboshaft/value-numbering-reducer.h\""
+  },
+  "classes": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "struct",
+        "name": "MeetRegisterConstraintsPhase",
+        "about": "Phase to meet the register constraints.",
+        "attributes": [],
+        "dependencies": [
+          "PipelineData",
+          "Zone",
+          "ConstraintBuilder"
+        ]
+      },
+      "code": "struct MeetRegisterConstraintsPhase {\n  DECL_TURBOSHAFT_PHASE_CONSTANTS_WITH_LEGACY_NAME(MeetRegisterConstraints)\n  static constexpr bool kOutputIsTraceableGraph = false;\n\n  void Run(PipelineData* data, Zone* temp_zone) {\n    ConstraintBuilder builder(data->register_allocation_data());\n    builder.MeetRegisterConstraints();\n  }\n};"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "struct",
+        "name": "ResolvePhisPhase",
+        "about": "Phase to resolve phi nodes.",
+        "attributes": [],
+        "dependencies": [
+          "PipelineData",
+          "Zone",
+          "ConstraintBuilder"
+        ]
+      },
+      "code": "struct ResolvePhisPhase {\n  DECL_TURBOSHAFT_PHASE_CONSTANTS_WITH_LEGACY_NAME(ResolvePhis)\n  static constexpr bool kOutputIsTraceableGraph = false;\n\n  void Run(PipelineData* data, Zone* temp_zone) {\n    ConstraintBuilder builder(data->register_allocation_data());\n    builder.ResolvePhis();\n  }\n};"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "struct",
+        "name": "BuildLiveRangesPhase",
+        "about": "Phase to build live ranges.",
+        "attributes": [],
+        "dependencies": [
+          "PipelineData",
+          "Zone",
+          "LiveRangeBuilder"
+        ]
+      },
+      "code": "struct BuildLiveRangesPhase {\n  DECL_TURBOSHAFT_PHASE_CONSTANTS_WITH_LEGACY_NAME(BuildLiveRanges)\n  static constexpr bool kOutputIsTraceableGraph = false;\n\n  void Run(PipelineData* data, Zone* temp_zone) {\n    LiveRangeBuilder builder(data->register_allocation_data(), temp_zone);\n    builder.BuildLiveRanges();\n  }\n};"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "struct",
+        "name": "BuildLiveRangeBundlesPhase",
+        "about": "Phase to build live range bundles.",
+        "attributes": [],
+        "dependencies": [
+          "PipelineData",
+          "BundleBuilder"
+        ]
+      },
+      "code": "struct BuildLiveRangeBundlesPhase {\n  DECL_TURBOSHAFT_PHASE_CONSTANTS_WITH_LEGACY_NAME(BuildLiveRangeBundles)\n  static constexpr bool kOutputIsTraceableGraph = false;\n\n  void Run(PipelineData* data, Zone* temp_zone) {\n    BundleBuilder builder(data->register_allocation_data());\n    builder.BuildBundles();\n  }\n};"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "struct",
+        "name": "AllocateGeneralRegistersPhase",
+        "about": "Phase to allocate general registers.",
+        "attributes": [],
+        "dependencies": [
+          "PipelineData",
+          "Zone",
+          "RegAllocator",
+          "RegisterKind"
+        ]
+      },
+      "code": "template <typename RegAllocator>\nstruct AllocateGeneralRegistersPhase {\n  DECL_TURBOSHAFT_PHASE_CONSTANTS_WITH_LEGACY_NAME(AllocateGeneralRegisters)\n  static constexpr bool kOutputIsTraceableGraph = false;\n\n  void Run(PipelineData* data, Zone* temp_zone) {\n    RegAllocator allocator(data->register_allocation_data(),\n                           RegisterKind::kGeneral, temp_zone);\n    allocator.AllocateRegisters();\n  }\n};"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "struct",
+        "name": "AllocateFPRegistersPhase",
+        "about": "Phase to allocate floating-point registers.",
+        "attributes": [],
+        "dependencies": [
+          "PipelineData",
+          "Zone",
+          "RegAllocator",
+          "RegisterKind"
+        ]
+      },
+      "code": "template <typename RegAllocator>\nstruct AllocateFPRegistersPhase {\n  DECL_TURBOSHAFT_PHASE_CONSTANTS_WITH_LEGACY_NAME(AllocateFPRegisters)\n  static constexpr bool kOutputIsTraceableGraph = false;\n\n  void Run(PipelineData* data, Zone* temp_zone) {\n    RegAllocator allocator(data->register_allocation_data(),\n                           RegisterKind::kDouble, temp_zone);\n    allocator.AllocateRegisters();\n  }\n};"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "struct",
+        "name": "AllocateSimd128RegistersPhase",
+        "about": "Phase to allocate SIMD128 registers.",
+        "attributes": [],
+        "dependencies": [
+          "PipelineData",
+          "Zone",
+          "RegAllocator",
+          "RegisterKind"
+        ]
+      },
+      "code": "template <typename RegAllocator>\nstruct AllocateSimd128RegistersPhase {\n  DECL_TURBOSHAFT_PHASE_CONSTANTS_WITH_LEGACY_NAME(AllocateSimd128Registers)\n  static constexpr bool kOutputIsTraceableGraph = false;\n\n  void Run(PipelineData* data, Zone* temp_zone) {\n    RegAllocator allocator(data->register_allocation_data(),\n                           RegisterKind::kSimd128, temp_zone);\n    allocator.AllocateRegisters();\n  }\n};"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "struct",
+        "name": "DecideSpillingModePhase",
+        "about": "Phase to decide spilling mode.",
+        "attributes": [],
+        "dependencies": [
+          "PipelineData",
+          "OperandAssigner"
+        ]
+      },
+      "code": "struct DecideSpillingModePhase {\n  DECL_TURBOSHAFT_PHASE_CONSTANTS_WITH_LEGACY_NAME(DecideSpillingMode)\n  static constexpr bool kOutputIsTraceableGraph = false;\n\n  void Run(PipelineData* data, Zone* temp_zone) {\n    OperandAssigner assigner(data->register_allocation_data());\n    assigner.DecideSpillingMode();\n  }\n};"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "struct",
+        "name": "AssignSpillSlotsPhase",
+        "about": "Phase to assign spill slots.",
+        "attributes": [],
+        "dependencies": [
+          "PipelineData",
+          "OperandAssigner"
+        ]
+      },
+      "code": "struct AssignSpillSlotsPhase {\n  DECL_TURBOSHAFT_PHASE_CONSTANTS_WITH_LEGACY_NAME(AssignSpillSlots)\n  static constexpr bool kOutputIsTraceableGraph = false;\n\n  void Run(PipelineData* data, Zone* temp_zone) {\n    OperandAssigner assigner(data->register_allocation_data());\n    assigner.AssignSpillSlots();\n  }\n};"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "struct",
+        "name": "CommitAssignmentPhase",
+        "about": "Phase to commit assignment.",
+        "attributes": [],
+        "dependencies": [
+          "PipelineData",
+          "OperandAssigner"
+        ]
+      },
+      "code": "struct CommitAssignmentPhase {\n  DECL_TURBOSHAFT_PHASE_CONSTANTS_WITH_LEGACY_NAME(CommitAssignment)\n  static constexpr bool kOutputIsTraceableGraph = false;\n\n  void Run(PipelineData* data, Zone* temp_zone) {\n    OperandAssigner assigner(data->register_allocation_data());\n    assigner.CommitAssignment();\n  }\n};"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "struct",
+        "name": "PopulateReferenceMapsPhase",
+        "about": "Phase to populate reference maps.",
+        "attributes": [],
+        "dependencies": [
+          "PipelineData",
+          "ReferenceMapPopulator"
+        ]
+      },
+      "code": "struct PopulateReferenceMapsPhase {\n  DECL_TURBOSHAFT_PHASE_CONSTANTS_WITH_LEGACY_NAME(PopulateReferenceMaps)\n  static constexpr bool kOutputIsTraceableGraph = false;\n\n  void Run(PipelineData* data, Zone* temp_zone) {\n    ReferenceMapPopulator populator(data->register_allocation_data());\n    populator.PopulateReferenceMaps();\n  }\n};"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "struct",
+        "name": "ConnectRangesPhase",
+        "about": "Phase to connect live ranges.",
+        "attributes": [],
+        "dependencies": [
+          "PipelineData",
+          "Zone",
+          "LiveRangeConnector"
+        ]
+      },
+      "code": "struct ConnectRangesPhase {\n  DECL_TURBOSHAFT_PHASE_CONSTANTS_WITH_LEGACY_NAME(ConnectRanges)\n  static constexpr bool kOutputIsTraceableGraph = false;\n\n  void Run(PipelineData* data, Zone* temp_zone) {\n    LiveRangeConnector connector(data->register_allocation_data());\n    connector.ConnectRanges(temp_zone);\n  }\n};"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "struct",
+        "name": "ResolveControlFlowPhase",
+        "about": "Phase to resolve control flow.",
+        "attributes": [],
+        "dependencies": [
+          "PipelineData",
+          "Zone",
+          "LiveRangeConnector"
+        ]
+      },
+      "code": "struct ResolveControlFlowPhase {\n  DECL_TURBOSHAFT_PHASE_CONSTANTS_WITH_LEGACY_NAME(ResolveControlFlow)\n  static constexpr bool kOutputIsTraceableGraph = false;\n\n  void Run(PipelineData* data, Zone* temp_zone) {\n    LiveRangeConnector connector(data->register_allocation_data());\n    connector.ResolveControlFlow(temp_zone);\n  }\n};"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "struct",
+        "name": "OptimizeMovesPhase",
+        "about": "Phase to optimize moves.",
+        "attributes": [],
+        "dependencies": [
+          "Zone",
+          "MoveOptimizer",
+          "PipelineData"
+        ]
+      },
+      "code": "struct OptimizeMovesPhase {\n  DECL_TURBOSHAFT_PHASE_CONSTANTS_WITH_LEGACY_NAME(OptimizeMoves)\n  static constexpr bool kOutputIsTraceableGraph = false;\n\n  void Run(PipelineData* data, Zone* temp_zone) {\n    MoveOptimizer move_optimizer(temp_zone, data->sequence());\n    move_optimizer.Run();\n  }\n};"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "struct",
+        "name": "FrameElisionPhase",
+        "about": "Phase to perform frame elision.",
+        "attributes": [],
+        "dependencies": [
+          "PipelineData",
+          "FrameElider",
+          "CodeKind",
+          "Builtin"
+        ]
+      },
+      "code": "struct FrameElisionPhase {\n  DECL_TURBOSHAFT_PHASE_CONSTANTS_WITH_LEGACY_NAME(FrameElision)\n  static constexpr bool kOutputIsTraceableGraph = false;\n\n  void Run(PipelineData* data, Zone* temp_zone) {\n#if V8_ENABLE_WEBASSEMBLY\n    const bool is_wasm_to_js =\n        data->info()->code_kind() == CodeKind::WASM_TO_JS_FUNCTION ||\n        data->info()->builtin() == Builtin::kWasmToJsWrapperCSA;\n#else\n    const bool is_wasm_to_js = false;\n#endif\n    FrameElider(data->sequence(), false, is_wasm_to_js).Run();\n  }\n};"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "struct",
+        "name": "JumpThreadingPhase",
+        "about": "Phase to perform jump threading.",
+        "attributes": [],
+        "dependencies": [
+          "PipelineData",
+          "Zone",
+          "JumpThreading",
+          "RpoNumber"
+        ]
+      },
+      "code": "struct JumpThreadingPhase {\n  DECL_TURBOSHAFT_PHASE_CONSTANTS_WITH_LEGACY_NAME(JumpThreading)\n  static constexpr bool kOutputIsTraceableGraph = false;\n\n  void Run(PipelineData* data, Zone* temp_zone, bool frame_at_start) {\n    ZoneVector<RpoNumber> result(temp_zone);\n    if (JumpThreading::ComputeForwarding(temp_zone, &result, data->sequence(),\n                                         frame_at_start)) {\n      JumpThreading::ApplyForwarding(temp_zone, result, data->sequence());\n    }\n  }\n};"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "struct",
+        "name": "AssembleCodePhase",
+        "about": "Phase to assemble code.",
+        "attributes": [],
+        "dependencies": [
+          "PipelineData",
+          "CodeGenerator"
+        ]
+      },
+      "code": "struct AssembleCodePhase {\n  DECL_TURBOSHAFT_PHASE_CONSTANTS_WITH_LEGACY_NAME(AssembleCode)\n  static constexpr bool kOutputIsTraceableGraph = false;\n\n  void Run(PipelineData* data, Zone* temp_zone) {\n    CodeGenerator* code_generator = data->code_generator();\n    DCHECK_NOT_NULL(code_generator);\n    code_generator->AssembleCode();\n  }\n};"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "struct",
+        "name": "FinalizeCodePhase",
+        "about": "Phase to finalize code.",
+        "attributes": [],
+        "dependencies": [
+          "PipelineData",
+          "CodeGenerator"
+        ]
+      },
+      "code": "struct FinalizeCodePhase {\n  DECL_TURBOSHAFT_MAIN_THREAD_PIPELINE_PHASE_CONSTANTS_WITH_LEGACY_NAME(\n      FinalizeCode)\n  static constexpr bool kOutputIsTraceableGraph = false;\n\n  void Run(PipelineData* data, Zone* temp_zone) {\n    CodeGenerator* code_generator = data->code_generator();\n    DCHECK_NOT_NULL(code_generator);\n    data->set_code(code_generator->FinalizeCode());\n  }\n};"
+    }
+  ],
+  "file_path": "/home/kathirks_gc/v8_go/archive/codebase/src/compiler/turboshaft/register-allocation-phase.h"
+}

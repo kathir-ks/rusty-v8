@@ -1,0 +1,141 @@
+{
+  "metadata": {
+    "path": "/home/kathirks_gc/v8_go/archive/codebase/src/compiler/turboshaft/instruction-selection-normalization-reducer.h",
+    "file_name": "instruction-selection-normalization-reducer.h",
+    "language": "cpp",
+    "purpose": "Defines a reducer class that normalizes the Turboshaft graph to simplify instruction selection. It ensures constants are on the right-hand side of commutative binary operations and replaces multiplications by small powers of 2 with shifts."
+  },
+  "imports": {
+    "metadata": {
+      "language": "cpp",
+      "purpose": "Includes necessary headers for bit manipulation, assembler, copying phase, index management, operations, and representations."
+    },
+    "code": "#include \"src/base/bits.h\"\n#include \"src/compiler/turboshaft/assembler.h\"\n#include \"src/compiler/turboshaft/copying-phase.h\"\n#include \"src/compiler/turboshaft/index.h\"\n#include \"src/compiler/turboshaft/operations.h\"\n#include \"src/compiler/turboshaft/representations.h\""
+  },
+  "classes": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "InstructionSelectionNormalizationReducer",
+        "extends": "Next",
+        "about": "Normalizes the Turboshaft graph to simplify instruction selection.  Ensures constants are on the right-hand side of commutative binary operations and replaces multiplications by small powers of 2 with shifts.",
+        "attributes": [],
+        "dependencies": [
+          "Next",
+          "WordBinopOp",
+          "WordRepresentation",
+          "ComparisonOp",
+          "RegisterRepresentation",
+          "ConstantOp",
+          "ChangeOp",
+          "TaggedBitcastOp"
+        ]
+      },
+      "code": "template <typename Next>\nclass InstructionSelectionNormalizationReducer : public Next {\n public:\n  TURBOSHAFT_REDUCER_BOILERPLATE(InstructionSelectionNormalization)\n\n  V<Word> REDUCE(WordBinop)(V<Word> left, V<Word> right, WordBinopOp::Kind kind,\n                            WordRepresentation rep) {\n    // Putting constant on the right side.\n    if (WordBinopOp::IsCommutative(kind)) {\n      if (!IsSimpleConstant(right) && IsSimpleConstant(left)) {\n        std::swap(left, right);\n      } else if (!IsComplexConstant(right) && IsComplexConstant(left)) {\n        std::swap(left, right);\n      }\n    }\n\n    // Transforming multiplications by power of two constants into shifts\n    if (kind == WordBinopOp::Kind::kMul) {\n      int64_t cst;\n      if (__ matcher().MatchPowerOfTwoWordConstant(right, &cst, rep) &&\n          cst < rep.bit_width()) {\n        return __ ShiftLeft(left, base::bits::WhichPowerOfTwo(cst), rep);\n      }\n    }\n\n    return Next::ReduceWordBinop(left, right, kind, rep);\n  }\n\n  V<Word32> REDUCE(Comparison)(V<Any> left, V<Any> right,\n                               ComparisonOp::Kind kind,\n                               RegisterRepresentation rep) {\n    if (ComparisonOp::IsCommutative(kind)) {\n      if (!IsSimpleConstant(right) && IsSimpleConstant(left)) {\n        std::swap(left, right);\n      } else if (!IsComplexConstant(right) && IsComplexConstant(left)) {\n        std::swap(left, right);\n      }\n    }\n    return Next::ReduceComparison(left, right, kind, rep);\n  }\n\n private:\n  // Return true if {index} is a literal ConsantOp.\n  bool IsSimpleConstant(V<Any> index) {\n    return __ Get(index).template Is<ConstantOp>();\n  }\n  // Return true if {index} is a ConstantOp or a (chain of) Change/Cast/Bitcast\n  // of a ConstantOp. Such an operation is succeptible to be recognized as a\n  // constant by the instruction selector, and as such should rather be on the\n  // right-hande side of commutative binops.\n  bool IsComplexConstant(V<Any> index) {\n    const Operation& op = __ Get(index);\n    switch (op.opcode) {\n      case Opcode::kConstant:\n        return true;\n      case Opcode::kChange:\n        return IsComplexConstant(op.Cast<ChangeOp>().input());\n      case Opcode::kTaggedBitcast:\n        return IsComplexConstant(op.Cast<TaggedBitcastOp>().input());\n      case Opcode::kTryChange:\n        return IsComplexConstant(op.Cast<ChangeOp>().input());\n      default:\n        return false;\n    }\n  }\n};"
+    }
+  ],
+  "dependencies": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "Next",
+        "about": "Base class for the reducer, type parameter for InstructionSelectionNormalizationReducer"
+      },
+      "code": "class Next {};",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "WordBinopOp",
+        "about": "Represents a word binary operation."
+      },
+      "code": "class WordBinopOp {\n                public:\n                    enum class Kind { kMul };\n                    static bool IsCommutative(Kind kind);\n                };",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "WordRepresentation",
+        "about": "Represents the bit width"
+      },
+      "code": "class WordRepresentation {\n                public:\n                    int bit_width();\n                };",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "ComparisonOp",
+        "about": "Represents a comparison operation."
+      },
+      "code": "class ComparisonOp {\n                    public:\n                        enum class Kind { kEqual };\n                        static bool IsCommutative(Kind kind);\n                };",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "RegisterRepresentation",
+        "about": "Class for RegisterRepresentation"
+      },
+      "code": "class RegisterRepresentation {};",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "ConstantOp",
+        "about": "Class for ConstantOp"
+      },
+      "code": "class ConstantOp {};",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "ChangeOp",
+        "about": "Class for ChangeOp"
+      },
+      "code": "class ChangeOp {\n                    public:\n                        V<Any> input();\n                };",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "TaggedBitcastOp",
+        "about": "Class for TaggedBitcastOp"
+      },
+      "code": "class TaggedBitcastOp {\n                    public:\n                        V<Any> input();\n                };",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "base::bits",
+        "about": "Namespace for bit manipulation utilities"
+      },
+      "code": "namespace base { namespace bits {\n                    int WhichPowerOfTwo(int64_t v);\n                }}",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "Operation",
+        "about": "Represents a turboshaft operation"
+      },
+      "code": "class Operation {\n                    public:\n                        enum class Opcode {\n                            kConstant,\n                            kChange,\n                            kTaggedBitcast,\n                            kTryChange\n                        };\n                        Opcode opcode;\n                        template <typename T>\n                        const T& Cast() const;\n                };",
+      "type": "class"
+    }
+  ],
+  "file_path": "/home/kathirks_gc/v8_go/archive/codebase/src/compiler/turboshaft/instruction-selection-normalization-reducer.h"
+}

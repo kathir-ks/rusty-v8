@@ -1,0 +1,335 @@
+{
+  "file_path": "/home/kathirks_gc/v8_go/codebase/src/maglev/maglev-basic-block.h",
+  "imports": [
+    "<vector>",
+    "src/base/small-vector.h",
+    "src/codegen/label.h",
+    "src/compiler/turboshaft/snapshot-table.h",
+    "src/maglev/maglev-interpreter-frame-state.h",
+    "src/maglev/maglev-ir.h",
+    "src/zone/zone-list.h",
+    "src/zone/zone.h"
+  ],
+  "classes": [
+    {
+      "name": "BasicBlock",
+      "properties": [
+        "type_",
+        "is_start_block_of_switch_case_",
+        "nodes_",
+        "control_node_",
+        "state_",
+        "edge_split_block_register_state_",
+        "predecessor_",
+        "label_",
+        "reload_hints_",
+        "spill_hints_",
+        "snapshot_",
+        "real_jump_target_cache_",
+        "deferred_"
+      ],
+      "methods": [
+        {
+          "name": "BasicBlock",
+          "parameters": [
+            "MergePointInterpreterFrameState* state",
+            "Zone* zone"
+          ],
+          "return_type": "BasicBlock",
+          "logic": "Constructor for the BasicBlock class. Initializes member variables based on the provided state and zone."
+        },
+        {
+          "name": "first_id",
+          "parameters": [],
+          "return_type": "NodeIdT",
+          "logic": "Returns the ID of the first node in the block. If there are phis, returns the ID of the first phi node; otherwise, returns the ID of the first non-phi node."
+        },
+        {
+          "name": "Print",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Used for debugging. This function is not implemented in the header.  It's likely implemented in a .cc file."
+        },
+        {
+          "name": "first_non_phi_id",
+          "parameters": [],
+          "return_type": "NodeIdT",
+          "logic": "Returns the ID of the first node in the block that is not an Identity node, or the control node's ID if no such node exists."
+        },
+        {
+          "name": "FirstNonGapMoveId",
+          "parameters": [],
+          "return_type": "NodeIdT",
+          "logic": "Returns the ID of the first non-GapMove and non-Identity node in the block, or the control node's ID if no such node exists."
+        },
+        {
+          "name": "nodes",
+          "parameters": [],
+          "return_type": "ZoneVector<Node*>&",
+          "logic": "Returns a mutable reference to the vector of nodes in the block."
+        },
+        {
+          "name": "control_node",
+          "parameters": [],
+          "return_type": "ControlNode*",
+          "logic": "Returns the control node of the block."
+        },
+        {
+          "name": "set_control_node",
+          "parameters": [
+            "ControlNode* control_node"
+          ],
+          "return_type": "void",
+          "logic": "Sets the control node of the block."
+        },
+        {
+          "name": "reset_control_node",
+          "parameters": [],
+          "return_type": "ControlNode*",
+          "logic": "Resets the control node of the block to null and returns the previous control node."
+        },
+        {
+          "name": "Split",
+          "parameters": [
+            "Node* node",
+            "Zone* zone"
+          ],
+          "return_type": "ZoneVector<Node*>",
+          "logic": "Splits the basic block at the given node. Moves all nodes after the specified node to a new ZoneVector, and returns this vector. The given node itself is removed."
+        },
+        {
+          "name": "has_phi",
+          "parameters": [],
+          "return_type": "bool",
+          "logic": "Returns true if the block has phi nodes; false otherwise."
+        },
+        {
+          "name": "is_merge_block",
+          "parameters": [],
+          "return_type": "bool",
+          "logic": "Returns true if the block is a merge block; false otherwise."
+        },
+        {
+          "name": "is_edge_split_block",
+          "parameters": [],
+          "return_type": "bool",
+          "logic": "Returns true if the block is an edge split block; false otherwise."
+        },
+        {
+          "name": "is_loop",
+          "parameters": [],
+          "return_type": "bool",
+          "logic": "Returns true if the block is a loop header; false otherwise."
+        },
+        {
+          "name": "edge_split_block_register_state",
+          "parameters": [],
+          "return_type": "MergePointRegisterState&",
+          "logic": "Returns a mutable reference to the register state of an edge split block. Asserts that the block is indeed an edge split block."
+        },
+        {
+          "name": "contains_node_id",
+          "parameters": [
+            "NodeIdT id"
+          ],
+          "return_type": "bool",
+          "logic": "Checks if the given NodeId is within the range of NodeIds present in the block."
+        },
+        {
+          "name": "set_edge_split_block_register_state",
+          "parameters": [
+            "MergePointRegisterState* register_state"
+          ],
+          "return_type": "void",
+          "logic": "Sets the register state of the edge split block."
+        },
+        {
+          "name": "set_edge_split_block",
+          "parameters": [
+            "BasicBlock* predecessor"
+          ],
+          "return_type": "void",
+          "logic": "Sets the block as an edge split block. Used when creating a new block between a jump and its target."
+        },
+        {
+          "name": "predecessor",
+          "parameters": [],
+          "return_type": "BasicBlock*",
+          "logic": "Returns the predecessor block for edge-split and other blocks."
+        },
+        {
+          "name": "set_predecessor",
+          "parameters": [
+            "BasicBlock* predecessor"
+          ],
+          "return_type": "void",
+          "logic": "Sets the predecessor block of this block. Used for edge split and other blocks."
+        },
+        {
+          "name": "is_start_block_of_switch_case",
+          "parameters": [],
+          "return_type": "bool",
+          "logic": "Returns whether the block is a start block of a switch case statement."
+        },
+        {
+          "name": "set_start_block_of_switch_case",
+          "parameters": [
+            "bool value"
+          ],
+          "return_type": "void",
+          "logic": "Sets whether the block is a start block of a switch case statement."
+        },
+        {
+          "name": "phis",
+          "parameters": [],
+          "return_type": "Phi::List*",
+          "logic": "Returns the list of phi nodes in the block.  Assumes the block has a state and phis."
+        },
+        {
+          "name": "AddPhi",
+          "parameters": [
+            "Phi* phi"
+          ],
+          "return_type": "void",
+          "logic": "Adds a phi node to the list of phi nodes in the block.  Assumes the block has a state."
+        },
+        {
+          "name": "predecessor_count",
+          "parameters": [],
+          "return_type": "int",
+          "logic": "Returns the number of predecessor blocks. Assumes the block has a state."
+        },
+        {
+          "name": "predecessor_at",
+          "parameters": [
+            "int i"
+          ],
+          "return_type": "BasicBlock*",
+          "logic": "Returns the predecessor block at the specified index. Assumes the block has a state."
+        },
+        {
+          "name": "backedge_predecessor",
+          "parameters": [],
+          "return_type": "BasicBlock*",
+          "logic": "Returns the backedge predecessor of the loop. Assumes it's a loop."
+        },
+        {
+          "name": "predecessor_id",
+          "parameters": [],
+          "return_type": "int",
+          "logic": "Returns the predecessor ID from the unconditional control node."
+        },
+        {
+          "name": "set_predecessor_id",
+          "parameters": [
+            "int id"
+          ],
+          "return_type": "void",
+          "logic": "Sets the predecessor ID on the unconditional control node."
+        },
+        {
+          "name": "successors",
+          "parameters": [],
+          "return_type": "base::SmallVector<BasicBlock*, 2>",
+          "logic": "Returns a vector containing the successor blocks of the current block, determined by the type of the control node."
+        },
+        {
+          "name": "ForEachPredecessor",
+          "parameters": [
+            "Func&& functor"
+          ],
+          "return_type": "void",
+          "logic": "Iterates over the predecessors of the basic block, applying the provided functor to each predecessor."
+        },
+        {
+          "name": "ForEachSuccessorFollowing",
+          "parameters": [
+            "ControlNode* control",
+            "Func&& functor"
+          ],
+          "return_type": "void",
+          "logic": "Static helper method that iterates over the successors of a control node based on its type (UnconditionalControlNode, BranchControlNode, Switch), applying the provided functor to each successor."
+        },
+        {
+          "name": "ForEachSuccessor",
+          "parameters": [
+            "Func&& functor"
+          ],
+          "return_type": "void",
+          "logic": "Iterates over the successor blocks of the current block, applying the provided functor to each successor."
+        },
+        {
+          "name": "label",
+          "parameters": [],
+          "return_type": "Label*",
+          "logic": "Returns the label associated with this basic block. Asserts that this is the real jump target."
+        },
+        {
+          "name": "state",
+          "parameters": [],
+          "return_type": "MergePointInterpreterFrameState*",
+          "logic": "Returns the interpreter frame state associated with this block. Assumes that the block has a state."
+        },
+        {
+          "name": "has_state",
+          "parameters": [],
+          "return_type": "bool",
+          "logic": "Returns true if the block has an associated interpreter frame state; false otherwise."
+        },
+        {
+          "name": "is_exception_handler_block",
+          "parameters": [],
+          "return_type": "bool",
+          "logic": "Returns true if the block is an exception handler block; false otherwise."
+        },
+        {
+          "name": "snapshot",
+          "parameters": [],
+          "return_type": "Snapshot",
+          "logic": "Returns the snapshot associated with this block. Asserts the snapshot has a value."
+        },
+        {
+          "name": "SetSnapshot",
+          "parameters": [
+            "Snapshot snapshot"
+          ],
+          "return_type": "void",
+          "logic": "Sets the snapshot for the basic block."
+        },
+        {
+          "name": "reload_hints",
+          "parameters": [],
+          "return_type": "ZonePtrList<ValueNode>&",
+          "logic": "Returns a mutable reference to the list of reload hints for the block."
+        },
+        {
+          "name": "spill_hints",
+          "parameters": [],
+          "return_type": "ZonePtrList<ValueNode>&",
+          "logic": "Returns a mutable reference to the list of spill hints for the block."
+        },
+        {
+          "name": "RealJumpTarget",
+          "parameters": [],
+          "return_type": "BasicBlock*",
+          "logic": "Attempts to find the real jump target of a chain of empty basic blocks ending in an unconditional jump.  If the basic block is an empty block containing only an unconditional jump to the successor block, return the successor block. Caches the result."
+        },
+        {
+          "name": "is_deferred",
+          "parameters": [],
+          "return_type": "bool",
+          "logic": "Returns whether the block is deferred."
+        },
+        {
+          "name": "set_deferred",
+          "parameters": [
+            "bool deferred"
+          ],
+          "return_type": "void",
+          "logic": "Sets whether the block is deferred."
+        }
+      ]
+    }
+  ],
+  "functions": []
+}

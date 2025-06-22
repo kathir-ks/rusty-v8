@@ -1,0 +1,118 @@
+{
+  "file_path": "/home/kathirks_gc/v8_go/codebase/src/compiler/turboshaft/fast-hash.h",
+  "imports": [
+    "<tuple>",
+    "src/base/hashing.h",
+    "src/base/vector.h"
+  ],
+  "classes": [
+    {
+      "name": "fast_hash",
+      "properties": [],
+      "methods": [
+        {
+          "name": "operator()",
+          "parameters": [
+            "const T& v"
+          ],
+          "return_type": "size_t",
+          "logic": "This function overloads the function call operator. It returns a hash value for the given object 'v'. If 'T' is an enum, it casts 'v' to size_t and returns it. Otherwise, it uses base::hash<T>()(v) to compute the hash value."
+        }
+      ]
+    },
+    {
+      "name": "fast_hash<std::pair<T1, T2>>",
+      "properties": [],
+      "methods": [
+        {
+          "name": "operator()",
+          "parameters": [
+            "const std::pair<T1, T2>& v"
+          ],
+          "return_type": "size_t",
+          "logic": "This is a specialization of the fast_hash struct for std::pair. It combines the hash values of the first and second elements of the pair using fast_hash_combine."
+        }
+      ]
+    },
+    {
+      "name": "fast_hash<std::tuple<Ts...>>",
+      "properties": [],
+      "methods": [
+        {
+          "name": "operator()",
+          "parameters": [
+            "const std::tuple<Ts...>& v"
+          ],
+          "return_type": "size_t",
+          "logic": "This is a specialization of the fast_hash struct for std::tuple. It calls the impl method to compute the hash value for the tuple."
+        },
+        {
+          "name": "impl",
+          "parameters": [
+            "std::tuple<Ts...> const& v",
+            "std::index_sequence<I...>"
+          ],
+          "return_type": "size_t",
+          "logic": "This is a helper method for hashing tuples. It uses fast_hash_combine to combine the hash values of all elements in the tuple."
+        }
+      ]
+    },
+    {
+      "name": "fast_hash<base::Vector<T>>",
+      "properties": [],
+      "methods": [
+        {
+          "name": "operator()",
+          "parameters": [
+            "base::Vector<T> v"
+          ],
+          "return_type": "size_t",
+          "logic": "This is a specialization of the fast_hash struct for base::Vector. It calls fast_hash_range to compute the hash value based on the range from the vector's begin to end."
+        }
+      ]
+    }
+  ],
+  "functions": [
+    {
+      "name": "fast_hash_combine",
+      "parameters": [],
+      "return_type": "size_t",
+      "logic": "Returns 0. Base case for combining hash values."
+    },
+    {
+      "name": "fast_hash_combine",
+      "parameters": [
+        "size_t acc"
+      ],
+      "return_type": "size_t",
+      "logic": "Returns the accumulator. Base case for combining hash values."
+    },
+    {
+      "name": "fast_hash_combine",
+      "parameters": [
+        "size_t acc",
+        "size_t value"
+      ],
+      "return_type": "size_t",
+      "logic": "Combines two hash values using a simple multiplication and addition.  Returns 17 * acc + value."
+    },
+    {
+      "name": "fast_hash_combine",
+      "parameters": [
+        "T const& v",
+        "Ts const&... vs"
+      ],
+      "return_type": "size_t",
+      "logic": "Recursively combines multiple hash values using the fast_hash struct to get a hash for the first argument, and combines it with the result of combining the remaining arguments."
+    },
+    {
+      "name": "fast_hash_range",
+      "parameters": [
+        "Iterator first",
+        "Iterator last"
+      ],
+      "return_type": "size_t",
+      "logic": "Computes a hash value for a range of elements defined by iterators. It iterates through the range and combines the hash value of each element with the accumulator using fast_hash_combine."
+    }
+  ]
+}

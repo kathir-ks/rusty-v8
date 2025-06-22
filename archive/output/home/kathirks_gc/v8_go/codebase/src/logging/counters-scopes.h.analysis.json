@@ -1,0 +1,255 @@
+{
+  "file_path": "/home/kathirks_gc/v8_go/codebase/src/logging/counters-scopes.h",
+  "imports": [
+    "src/execution/isolate.h",
+    "src/logging/counters.h",
+    "src/logging/log.h"
+  ],
+  "classes": [
+    {
+      "name": "BaseTimedHistogramScope",
+      "properties": [
+        "timer_",
+        "histogram_"
+      ],
+      "methods": [
+        {
+          "name": "BaseTimedHistogramScope",
+          "parameters": [
+            "TimedHistogram* histogram"
+          ],
+          "return_type": "void",
+          "logic": "Constructor. Initializes the histogram_ member."
+        },
+        {
+          "name": "StartInternal",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Starts the timer and toggles the running state of the histogram. Only called when the histogram is enabled."
+        },
+        {
+          "name": "StopInternal",
+          "parameters": [],
+          "return_type": "base::TimeDelta",
+          "logic": "Stops the timer, records the elapsed time in the histogram, and returns the elapsed time. Only called when the histogram is enabled."
+        },
+        {
+          "name": "Start",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Starts the timing if the histogram is enabled by calling StartInternal()."
+        },
+        {
+          "name": "Stop",
+          "parameters": [],
+          "return_type": "base::TimeDelta",
+          "logic": "Stops the timing if the histogram is enabled by calling StopInternal(). Otherwise returns a time of -1 microseconds."
+        },
+        {
+          "name": "LogStart",
+          "parameters": [
+            "Isolate* isolate"
+          ],
+          "return_type": "void",
+          "logic": "Logs the start of the event to the V8 file logger."
+        },
+        {
+          "name": "LogEnd",
+          "parameters": [
+            "Isolate* isolate"
+          ],
+          "return_type": "void",
+          "logic": "Logs the end of the event to the V8 file logger."
+        }
+      ]
+    },
+    {
+      "name": "TimedHistogramScope",
+      "properties": [
+        "isolate_",
+        "result_in_microseconds_"
+      ],
+      "methods": [
+        {
+          "name": "TimedHistogramScope",
+          "parameters": [
+            "TimedHistogram* histogram",
+            "Isolate* isolate",
+            "int64_t* result_in_microseconds"
+          ],
+          "return_type": "void",
+          "logic": "Constructor. Starts the timing and logs the start event. Optionally stores the result in microseconds."
+        },
+        {
+          "name": "~TimedHistogramScope",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Destructor. Stops the timing, logs the end event, and stores the elapsed time in microseconds if a pointer is provided."
+        }
+      ]
+    },
+    {
+      "name": "OptionalTimedHistogramScope",
+      "properties": [
+        "isolate_",
+        "mode_"
+      ],
+      "methods": [
+        {
+          "name": "OptionalTimedHistogramScope",
+          "parameters": [
+            "TimedHistogram* histogram",
+            "Isolate* isolate",
+            "OptionalTimedHistogramScopeMode mode"
+          ],
+          "return_type": "void",
+          "logic": "Constructor. Starts the timing and logs the start event if the mode is TAKE_TIME."
+        },
+        {
+          "name": "~OptionalTimedHistogramScope",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Destructor. Stops the timing and logs the end event if the mode is TAKE_TIME."
+        }
+      ]
+    },
+    {
+      "name": "LazyTimedHistogramScope",
+      "properties": [
+        "result_in_microseconds_"
+      ],
+      "methods": [
+        {
+          "name": "LazyTimedHistogramScope",
+          "parameters": [
+            "int64_t* result_in_microseconds"
+          ],
+          "return_type": "void",
+          "logic": "Constructor. Starts the timer."
+        },
+        {
+          "name": "~LazyTimedHistogramScope",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Destructor. Stops the timing and stores the elapsed time in microseconds if a pointer is provided."
+        },
+        {
+          "name": "set_histogram",
+          "parameters": [
+            "TimedHistogram* histogram"
+          ],
+          "return_type": "void",
+          "logic": "Sets the histogram to be used.  It also toggles the running state if enabled."
+        }
+      ]
+    },
+    {
+      "name": "NestedTimedHistogramScope",
+      "properties": [
+        "previous_scope_",
+        "isolate_"
+      ],
+      "methods": [
+        {
+          "name": "NestedTimedHistogramScope",
+          "parameters": [
+            "NestedTimedHistogram* histogram",
+            "Isolate* isolate"
+          ],
+          "return_type": "void",
+          "logic": "Constructor. Starts the timing."
+        },
+        {
+          "name": "~NestedTimedHistogramScope",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Destructor. Stops the timing."
+        },
+        {
+          "name": "StartInteral",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Enters the nested histogram and starts the timer. Pauses the previous scope if it exists."
+        },
+        {
+          "name": "StopInternal",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Leaves the nested histogram, stops the timer, records the elapsed time, and resumes the previous scope if it exists. Also records long task time if applicable."
+        },
+        {
+          "name": "Start",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Starts the timing if the histogram is enabled."
+        },
+        {
+          "name": "Stop",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Stops the timing if the histogram is enabled."
+        },
+        {
+          "name": "Pause",
+          "parameters": [
+            "base::TimeTicks now"
+          ],
+          "return_type": "void",
+          "logic": "Pauses the timer."
+        },
+        {
+          "name": "Resume",
+          "parameters": [
+            "base::TimeTicks now"
+          ],
+          "return_type": "void",
+          "logic": "Resumes the timer."
+        },
+        {
+          "name": "RecordLongTaskTime",
+          "parameters": [
+            "base::TimeDelta elapsed"
+          ],
+          "return_type": "void",
+          "logic": "Records long task time if the histogram is the execute histogram."
+        },
+        {
+          "name": "timed_histogram",
+          "parameters": [],
+          "return_type": "NestedTimedHistogram*",
+          "logic": "Casts the histogram_ to a NestedTimedHistogram*."
+        }
+      ]
+    },
+    {
+      "name": "PauseNestedTimedHistogramScope",
+      "properties": [
+        "histogram_",
+        "previous_scope_"
+      ],
+      "methods": [
+        {
+          "name": "PauseNestedTimedHistogramScope",
+          "parameters": [
+            "NestedTimedHistogram* histogram"
+          ],
+          "return_type": "void",
+          "logic": "Constructor. Enters the nested histogram and pauses the previous scope."
+        },
+        {
+          "name": "~PauseNestedTimedHistogramScope",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Destructor. Leaves the nested histogram and resumes the previous scope."
+        },
+        {
+          "name": "isEnabled",
+          "parameters": [],
+          "return_type": "bool",
+          "logic": "Checks if the timer is enabled."
+        }
+      ]
+    }
+  ],
+  "functions": []
+}

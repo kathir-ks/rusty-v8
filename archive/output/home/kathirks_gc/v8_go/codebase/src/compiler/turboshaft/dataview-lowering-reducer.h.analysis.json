@@ -1,0 +1,49 @@
+{
+  "file_path": "/home/kathirks_gc/v8_go/codebase/src/compiler/turboshaft/dataview-lowering-reducer.h",
+  "imports": [
+    "src/compiler/turboshaft/assembler.h"
+  ],
+  "classes": [
+    {
+      "name": "DataViewLoweringReducer",
+      "properties": [],
+      "methods": [
+        {
+          "name": "BuildReverseBytes",
+          "parameters": [
+            "ExternalArrayType type",
+            "OpIndex value"
+          ],
+          "return_type": "OpIndex",
+          "logic": "Reverses the byte order of a value based on its ExternalArrayType.  It uses different reversal methods depending on the size of the data type. It also includes special handling for floating point types, by bitcasting to integer, reversing the bytes, and bitcasting back to float. Leverages assembler instructions for efficiency."
+        },
+        {
+          "name": "REDUCE(LoadDataViewElement)",
+          "parameters": [
+            "V<Object> object",
+            "V<WordPtr> storage",
+            "V<WordPtr> index",
+            "V<Word32> is_little_endian",
+            "ExternalArrayType element_type"
+          ],
+          "return_type": "OpIndex",
+          "logic": "Lowers the `LoadDataViewElement` operation. It loads a value from memory at the specified index and storage location, considering the endianness. If the target architecture's endianness differs from the data's endianness, it reverses the byte order. Finally, it retains the object to prevent premature garbage collection."
+        },
+        {
+          "name": "REDUCE(StoreDataViewElement)",
+          "parameters": [
+            "V<Object> object",
+            "V<WordPtr> storage",
+            "V<WordPtr> index",
+            "OpIndex value",
+            "V<Word32> is_little_endian",
+            "ExternalArrayType element_type"
+          ],
+          "return_type": "{}",
+          "logic": "Lowers the `StoreDataViewElement` operation. It stores a value to memory at the specified index and storage location, considering the endianness. If the target architecture's endianness differs from the data's endianness, it reverses the byte order before storing.  It retains the object to prevent premature garbage collection. It doesn't return any meaningful value (indicated by `{}`)."
+        }
+      ]
+    }
+  ],
+  "functions": []
+}

@@ -1,0 +1,79 @@
+{
+  "file_path": "/home/kathirks_gc/v8_go/codebase/include/v8-embedder-state-scope.h",
+  "imports": [
+    "<memory>",
+    "v8-internal.h",
+    "v8-local-handle.h"
+  ],
+  "classes": [
+    {
+      "name": "EmbedderStateScope",
+      "properties": [
+        "embedder_state_"
+      ],
+      "methods": [
+        {
+          "name": "EmbedderStateScope",
+          "parameters": [
+            "Isolate* isolate",
+            "Local<v8::Context> context",
+            "EmbedderStateTag tag"
+          ],
+          "return_type": "void",
+          "logic": "Constructor. Pushes a new embedder state onto the isolate stack. The exact mechanism is implementation defined but it is expected to manage the lifetime of `embedder_state_` based on the scope."
+        },
+        {
+          "name": "~EmbedderStateScope",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Destructor. Pops the embedder state from the isolate stack.  This likely involves releasing the `embedder_state_` object."
+        },
+        {
+          "name": "operator new",
+          "parameters": [
+            "size_t size"
+          ],
+          "return_type": "void*",
+          "logic": "Deleted operator new to prevent dynamic allocation of EmbedderStateScope objects on the heap."
+        },
+        {
+          "name": "operator new[]",
+          "parameters": [
+            "size_t size"
+          ],
+          "return_type": "void*",
+          "logic": "Deleted operator new[] to prevent dynamic array allocation of EmbedderStateScope objects on the heap."
+        },
+        {
+          "name": "operator delete",
+          "parameters": [
+            "void* ptr",
+            "size_t size"
+          ],
+          "return_type": "void",
+          "logic": "Deleted operator delete to prevent dynamic deallocation of EmbedderStateScope objects. Must be private because deleting as deleted is not spec compliant."
+        },
+        {
+          "name": "operator delete[]",
+          "parameters": [
+            "void* ptr",
+            "size_t size"
+          ],
+          "return_type": "void",
+          "logic": "Deleted operator delete[] to prevent dynamic array deallocation of EmbedderStateScope objects. Must be private because deleting as deleted is not spec compliant."
+        }
+      ]
+    }
+  ],
+  "functions": [],
+  "enums": [
+    {
+      "name": "EmbedderStateTag",
+      "type": "uint8_t",
+      "values": [
+        "EMPTY",
+        "OTHER"
+      ]
+    }
+  ]
+}

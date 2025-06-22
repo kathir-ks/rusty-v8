@@ -1,0 +1,228 @@
+{
+  "metadata": {
+    "path": "/home/kathirks_gc/v8_go/archive/codebase/src/torque/type-visitor.h",
+    "file_name": "type-visitor.h",
+    "language": "cpp",
+    "purpose": "Defines the TypeVisitor class which computes and visits types in the Torque language."
+  },
+  "imports": {
+    "metadata": {
+      "language": "cpp",
+      "purpose": "Includes necessary headers for optional values, vectors, and Torque AST and types."
+    },
+    "code": "#include <optional>\n\n#include \"src/torque/ast.h\"\n#include \"src/torque/types.h\""
+  },
+  "classes": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "TypeVisitor",
+        "about": "Visits type expressions and declarations to compute and process types in Torque.",
+        "attributes": [],
+        "dependencies": [
+          "TypeExpression",
+          "TypeVector",
+          "Type",
+          "ClassType",
+          "ClassDeclaration",
+          "StructType",
+          "StructDeclaration",
+          "Signature",
+          "CallableDeclaration",
+          "BitFieldStructType",
+          "TypeDeclaration",
+          "AbstractTypeDeclaration",
+          "TypeAliasDeclaration",
+          "BitFieldStructDeclaration",
+          "Scope",
+          "MaybeSpecializationKey"
+        ]
+      },
+      "code": "class TypeVisitor {\n public:\n  static TypeVector ComputeTypeVector(const std::vector<TypeExpression*>& v);\n  static const Type* ComputeType(TypeExpression* type_expression);\n  static void VisitClassFieldsAndMethods(\n      ClassType* class_type, const ClassDeclaration* class_declaration);\n  static void VisitStructMethods(StructType* struct_type,\n                                 const StructDeclaration* struct_declaration);\n  static Signature MakeSignature(const CallableDeclaration* declaration);\n  // Can return either StructType or BitFieldStructType, since they can both be\n  // used in struct expressions like `MyStruct{ a: 0, b: foo }`\n  static const Type* ComputeTypeForStructExpression(\n      TypeExpression* type_expression,\n      const std::vector<const Type*>& term_argument_types);\n\n private:\n  friend class TypeAlias;\n  friend class TypeOracle;\n  static const Type* ComputeType(\n      TypeDeclaration* decl,\n      MaybeSpecializationKey specialized_from = std::nullopt,\n      Scope* specialization_requester = nullptr);\n  static const AbstractType* ComputeType(\n      AbstractTypeDeclaration* decl, MaybeSpecializationKey specialized_from);\n  static const Type* ComputeType(TypeAliasDeclaration* decl,\n                                 MaybeSpecializationKey specialized_from);\n  static const BitFieldStructType* ComputeType(\n      BitFieldStructDeclaration* decl, MaybeSpecializationKey specialized_from);\n  static const StructType* ComputeType(StructDeclaration* decl,\n                                       MaybeSpecializationKey specialized_from);\n  static const ClassType* ComputeType(ClassDeclaration* decl,\n                                      MaybeSpecializationKey specialized_from);\n};"
+    }
+  ],
+  "dependencies": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "TypeAlias",
+        "about": "Forward declaration of TypeAlias class"
+      },
+      "code": "class TypeAlias;",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "TypeOracle",
+        "about": "Forward declaration of TypeOracle class"
+      },
+      "code": "class TypeOracle;",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "TypeExpression",
+        "about": "Abstract syntax tree node representing a type expression."
+      },
+      "code": "class TypeExpression;",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "Type",
+        "about": "Base class for all types in Torque."
+      },
+      "code": "class Type;",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "ClassType",
+        "about": "Represents a class type in Torque."
+      },
+      "code": "class ClassType;",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "ClassDeclaration",
+        "about": "Represents a class declaration in Torque's AST."
+      },
+      "code": "class ClassDeclaration;",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "StructType",
+        "about": "Represents a struct type in Torque."
+      },
+      "code": "class StructType;",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "StructDeclaration",
+        "about": "Represents a struct declaration in Torque's AST."
+      },
+      "code": "class StructDeclaration;",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "Signature",
+        "about": "Represents the signature of a callable entity."
+      },
+      "code": "class Signature;",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "CallableDeclaration",
+        "about": "Represents a callable declaration in Torque's AST."
+      },
+      "code": "class CallableDeclaration;",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "BitFieldStructType",
+        "about": "Represents a bitfield struct type in Torque."
+      },
+      "code": "class BitFieldStructType;",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "TypeDeclaration",
+        "about": "Represents a generic type declaration."
+      },
+      "code": "class TypeDeclaration;",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "AbstractTypeDeclaration",
+        "about": "Represents an abstract type declaration."
+      },
+      "code": "class AbstractTypeDeclaration;",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "TypeAliasDeclaration",
+        "about": "Represents a type alias declaration."
+      },
+      "code": "class TypeAliasDeclaration;",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "BitFieldStructDeclaration",
+        "about": "Represents a bitfield struct declaration."
+      },
+      "code": "class BitFieldStructDeclaration;",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "Scope",
+        "about": "Represents a scope in Torque's AST."
+      },
+      "code": "class Scope;",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "MaybeSpecializationKey",
+        "about": "Represents optional specialization key."
+      },
+      "code": "using MaybeSpecializationKey = std::optional<int>;",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "TypeVector",
+        "about": "Type alias for vector of const Type*."
+      },
+      "code": "using TypeVector = std::vector<const Type*>;",
+      "type": "class"
+    }
+  ],
+  "file_path": "/home/kathirks_gc/v8_go/archive/codebase/src/torque/type-visitor.h"
+}

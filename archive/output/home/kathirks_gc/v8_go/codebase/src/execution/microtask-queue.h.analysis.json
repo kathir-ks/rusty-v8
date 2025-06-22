@@ -1,0 +1,291 @@
+{
+  "file_path": "/home/kathirks_gc/v8_go/codebase/src/execution/microtask-queue.h",
+  "imports": [
+    "<stdint.h>",
+    "<memory>",
+    "<vector>",
+    "include/v8-internal.h",
+    "include/v8-microtask-queue.h",
+    "src/base/macros.h"
+  ],
+  "classes": [
+    {
+      "name": "MicrotaskQueue",
+      "properties": [
+        "size_",
+        "capacity_",
+        "start_",
+        "ring_buffer_",
+        "finished_microtask_count_",
+        "next_",
+        "prev_",
+        "microtasks_depth_",
+        "microtasks_suppressions_",
+        "debug_microtasks_depth_",
+        "microtasks_policy_",
+        "is_running_microtasks_",
+        "is_running_completed_callbacks_",
+        "microtasks_completed_callbacks_",
+        "microtasks_completed_callbacks_cow_",
+        "kRingBufferOffset",
+        "kCapacityOffset",
+        "kSizeOffset",
+        "kStartOffset",
+        "kFinishedMicrotaskCountOffset",
+        "kMinimumCapacity"
+      ],
+      "methods": [
+        {
+          "name": "SetUpDefaultMicrotaskQueue",
+          "parameters": [
+            "Isolate* isolate"
+          ],
+          "return_type": "void",
+          "logic": "Sets up the default microtask queue for the given isolate."
+        },
+        {
+          "name": "New",
+          "parameters": [
+            "Isolate* isolate"
+          ],
+          "return_type": "std::unique_ptr<MicrotaskQueue>",
+          "logic": "Creates a new MicrotaskQueue instance."
+        },
+        {
+          "name": "~MicrotaskQueue",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Destructor for the MicrotaskQueue class."
+        },
+        {
+          "name": "CallEnqueueMicrotask",
+          "parameters": [
+            "Isolate* isolate",
+            "intptr_t microtask_queue_pointer",
+            "Address raw_microtask"
+          ],
+          "return_type": "Address",
+          "logic": "Enqueues a microtask using raw Address values, called via ExternalReference. Returns Smi::kZero due to CallCFunction."
+        },
+        {
+          "name": "EnqueueMicrotask",
+          "parameters": [
+            "v8::Isolate* isolate",
+            "v8::Local<Function> microtask"
+          ],
+          "return_type": "void",
+          "logic": "Enqueues a microtask that is a JavaScript function."
+        },
+        {
+          "name": "EnqueueMicrotask",
+          "parameters": [
+            "v8::Isolate* isolate",
+            "v8::MicrotaskCallback callback",
+            "void* data"
+          ],
+          "return_type": "void",
+          "logic": "Enqueues a microtask that is a C++ callback."
+        },
+        {
+          "name": "PerformCheckpoint",
+          "parameters": [
+            "v8::Isolate* isolate"
+          ],
+          "return_type": "void",
+          "logic": "Performs a checkpoint to run microtasks if it's safe to do so."
+        },
+        {
+          "name": "ShouldPerfomCheckpoint",
+          "parameters": [],
+          "return_type": "bool",
+          "logic": "Checks if a microtask checkpoint should be performed based on various conditions (running microtasks, scope depth, suppressions)."
+        },
+        {
+          "name": "EnqueueMicrotask",
+          "parameters": [
+            "Tagged<Microtask> microtask"
+          ],
+          "return_type": "void",
+          "logic": "Enqueues a microtask (internal version using Tagged<Microtask>)."
+        },
+        {
+          "name": "AddMicrotasksCompletedCallback",
+          "parameters": [
+            "MicrotasksCompletedCallbackWithData callback",
+            "void* data"
+          ],
+          "return_type": "void",
+          "logic": "Adds a callback to be executed when microtasks are completed."
+        },
+        {
+          "name": "RemoveMicrotasksCompletedCallback",
+          "parameters": [
+            "MicrotasksCompletedCallbackWithData callback",
+            "void* data"
+          ],
+          "return_type": "void",
+          "logic": "Removes a microtasks completed callback."
+        },
+        {
+          "name": "IsRunningMicrotasks",
+          "parameters": [],
+          "return_type": "bool",
+          "logic": "Checks if microtasks are currently being executed."
+        },
+        {
+          "name": "RunMicrotasks",
+          "parameters": [
+            "Isolate* isolate"
+          ],
+          "return_type": "int",
+          "logic": "Runs all queued microtasks. Returns -1 if the execution is terminating, otherwise, returns the number of microtasks that ran."
+        },
+        {
+          "name": "IterateMicrotasks",
+          "parameters": [
+            "RootVisitor* visitor"
+          ],
+          "return_type": "void",
+          "logic": "Iterates all pending microtasks in the queue as strong roots for garbage collection purposes."
+        },
+        {
+          "name": "IncrementMicrotasksScopeDepth",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Increments the microtasks scope depth."
+        },
+        {
+          "name": "DecrementMicrotasksScopeDepth",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Decrements the microtasks scope depth."
+        },
+        {
+          "name": "GetMicrotasksScopeDepth",
+          "parameters": [],
+          "return_type": "int",
+          "logic": "Returns the current microtasks scope depth."
+        },
+        {
+          "name": "IncrementMicrotasksSuppressions",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Increments the microtasks suppressions count."
+        },
+        {
+          "name": "DecrementMicrotasksSuppressions",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Decrements the microtasks suppressions count."
+        },
+        {
+          "name": "HasMicrotasksSuppressions",
+          "parameters": [],
+          "return_type": "bool",
+          "logic": "Checks if microtasks are currently suppressed."
+        },
+        {
+          "name": "IncrementDebugMicrotasksScopeDepth",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Increments the debug microtasks scope depth (debug build only)."
+        },
+        {
+          "name": "DecrementDebugMicrotasksScopeDepth",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Decrements the debug microtasks scope depth (debug build only)."
+        },
+        {
+          "name": "DebugMicrotasksScopeDepthIsZero",
+          "parameters": [],
+          "return_type": "bool",
+          "logic": "Checks if the debug microtasks scope depth is zero (debug build only)."
+        },
+        {
+          "name": "set_microtasks_policy",
+          "parameters": [
+            "v8::MicrotasksPolicy microtasks_policy"
+          ],
+          "return_type": "void",
+          "logic": "Sets the microtasks policy."
+        },
+        {
+          "name": "microtasks_policy",
+          "parameters": [],
+          "return_type": "v8::MicrotasksPolicy",
+          "logic": "Returns the current microtasks policy."
+        },
+        {
+          "name": "capacity",
+          "parameters": [],
+          "return_type": "intptr_t",
+          "logic": "Returns the capacity of the microtask queue."
+        },
+        {
+          "name": "size",
+          "parameters": [],
+          "return_type": "intptr_t",
+          "logic": "Returns the current size of the microtask queue."
+        },
+        {
+          "name": "start",
+          "parameters": [],
+          "return_type": "intptr_t",
+          "logic": "Returns the start index of the ring buffer."
+        },
+        {
+          "name": "get",
+          "parameters": [
+            "intptr_t index"
+          ],
+          "return_type": "Tagged<Microtask>",
+          "logic": "Retrieves a Microtask at a given index in the ring buffer."
+        },
+        {
+          "name": "next",
+          "parameters": [],
+          "return_type": "MicrotaskQueue*",
+          "logic": "Returns the next MicrotaskQueue in the doubly linked list."
+        },
+        {
+          "name": "prev",
+          "parameters": [],
+          "return_type": "MicrotaskQueue*",
+          "logic": "Returns the previous MicrotaskQueue in the doubly linked list."
+        },
+        {
+          "name": "PerformCheckpointInternal",
+          "parameters": [
+            "v8::Isolate* v8_isolate"
+          ],
+          "return_type": "void",
+          "logic": "Internal implementation of PerformCheckpoint. Runs microtasks if conditions allow."
+        },
+        {
+          "name": "OnCompleted",
+          "parameters": [
+            "Isolate* isolate"
+          ],
+          "return_type": "void",
+          "logic": "Handles actions to be performed when microtasks are completed."
+        },
+        {
+          "name": "MicrotaskQueue",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Private constructor for the MicrotaskQueue class."
+        },
+        {
+          "name": "ResizeBuffer",
+          "parameters": [
+            "intptr_t new_capacity"
+          ],
+          "return_type": "void",
+          "logic": "Resizes the ring buffer of the microtask queue."
+        }
+      ]
+    }
+  ],
+  "functions": []
+}

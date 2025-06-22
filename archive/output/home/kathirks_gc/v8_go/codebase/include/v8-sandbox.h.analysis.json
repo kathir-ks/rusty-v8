@@ -1,0 +1,96 @@
+{
+  "file_path": "/home/kathirks_gc/v8_go/codebase/include/v8-sandbox.h",
+  "imports": [
+    "<cstdint>",
+    "v8-internal.h",
+    "v8config.h"
+  ],
+  "classes": [
+    {
+      "name": "SandboxHardwareSupport",
+      "properties": [],
+      "methods": [
+        {
+          "name": "InitializeBeforeThreadCreation",
+          "parameters": [],
+          "return_type": "static void",
+          "logic": "Initializes sandbox hardware support. This function needs to be called before creating any thread that might access sandbox memory. It sets up hardware permissions to the memory that will be inherited on clone."
+        }
+      ]
+    }
+  ],
+  "functions": [],
+  "enums": [
+    {
+      "name": "CppHeapPointerTag",
+      "values": [
+        "kFirstTag = 0",
+        "kNullTag = 0",
+        "kDefaultTag = 0x7000",
+        "kZappedEntryTag = 0x7ffd",
+        "kEvacuationEntryTag = 0x7ffe",
+        "kFreeEntryTag = 0x7fff",
+        "kLastTag = 0x7fff"
+      ],
+      "logic": "Defines a pointer tag used for wrapping and unwrapping `CppHeap` pointers. These tags are used in a range-based type checking scheme to ensure type safety when accessing pointers within the C++ heap.  It is used with JS API wrapper objects that rely on `v8::Object::Wrap()` and `v8::Object::Unwrap()`."
+    }
+  ],
+  "structs": [
+    {
+      "name": "CppHeapPointerTagRange",
+      "properties": [
+        "CppHeapPointerTag lower_bound",
+        "CppHeapPointerTag upper_bound"
+      ],
+      "methods": [
+        {
+          "name": "CppHeapPointerTagRange",
+          "parameters": [
+            "CppHeapPointerTag lower",
+            "CppHeapPointerTag upper"
+          ],
+          "return_type": "constexpr CppHeapPointerTagRange",
+          "logic": "Constructor for the CppHeapPointerTagRange struct. Initializes the lower_bound and upper_bound properties."
+        },
+        {
+          "name": "CheckTagOf",
+          "parameters": [
+            "uint64_t entry"
+          ],
+          "return_type": "bool",
+          "logic": "Checks if the tag of the given CppHeapPointerTable entry is within this range. Returns true if the check is successful, false otherwise. It encodes implementation details of the CppHeapPointerTable, which is necessary as it is used by ReadCppHeapPointerField."
+        }
+      ],
+      "logic": "Represents a range of CppHeapPointerTags. Used for type checks against supertypes, which cover a range of types (their subtypes). Represents the range [lower_bound, upper_bound]."
+    }
+  ],
+  "constants": [
+    {
+      "name": "kAnyCppHeapPointer",
+      "type": "CppHeapPointerTagRange",
+      "value": "CppHeapPointerTagRange(CppHeapPointerTag::kFirstTag, CppHeapPointerTag::kLastTag)",
+      "logic": "Represents a CppHeapPointerTagRange that covers any possible CppHeapPointerTag."
+    }
+  ],
+  "internal_functions": [
+    {
+      "name": "GetCppHeapPointerTableBase",
+      "parameters": [
+        "v8::Isolate* isolate"
+      ],
+      "return_type": "static Address*",
+      "logic": "Returns the base address of the CppHeapPointerTable for the given isolate. This function is only compiled when V8_COMPRESS_POINTERS is defined."
+    },
+    {
+      "name": "ReadCppHeapPointerField",
+      "parameters": [
+        "v8::Isolate* isolate",
+        "Address heap_object_ptr",
+        "int offset",
+        "CppHeapPointerTagRange tag_range"
+      ],
+      "return_type": "static T*",
+      "logic": "Reads a C++ heap pointer field from a heap object at the given offset and performs a type check using the provided tag range. If the type check fails, it returns nullptr.  This function is templated and only compiled when V8_COMPRESS_POINTERS is defined.  Otherwise reads raw field at address."
+    }
+  ]
+}

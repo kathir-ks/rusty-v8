@@ -1,0 +1,98 @@
+{
+  "metadata": {
+    "path": "/home/kathirks_gc/v8_go/archive/codebase/src/init/setup-isolate.h",
+    "file_name": "setup-isolate.h",
+    "language": "cpp",
+    "purpose": "Declares the SetupIsolateDelegate class, which handles the initialization of components like builtins and interpreter bytecode handlers in the V8 JavaScript engine.  It provides an abstraction layer to load these components from a snapshot or generate them from scratch."
+  },
+  "imports": {
+    "metadata": {
+      "language": "cpp",
+      "purpose": "Includes necessary headers for macros."
+    },
+    "code": "#include \"src/base/macros.h\""
+  },
+  "classes": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "SetupIsolateDelegate",
+        "about": "Abstracts the initialization of components (builtins, bytecode handlers) by loading from snapshot or generating from scratch.",
+        "attributes": [],
+        "dependencies": [
+          "Isolate",
+          "Builtins",
+          "Code",
+          "Heap",
+          "Builtin",
+          "Tagged"
+        ]
+      },
+      "code": "class V8_EXPORT_PRIVATE SetupIsolateDelegate {\n public:\n  SetupIsolateDelegate() = default;\n  virtual ~SetupIsolateDelegate() = default;\n\n  virtual bool SetupHeap(Isolate* isolate, bool create_heap_objects);\n  virtual void SetupBuiltins(Isolate* isolate, bool compile_builtins);\n\n protected:\n  static void SetupBuiltinsInternal(Isolate* isolate);\n  static void AddBuiltin(Builtins* builtins, Builtin builtin,\n                         Tagged<Code> code);\n  static void PopulateWithPlaceholders(Isolate* isolate);\n  static void ReplacePlaceholders(Isolate* isolate);\n\n  static bool SetupHeapInternal(Isolate* isolate);\n};"
+    }
+  ],
+  "dependencies": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "Isolate",
+        "about": "Represents an isolated instance of the V8 JavaScript engine."
+      },
+      "code": "class Isolate;",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "Builtins",
+        "about": "Manages the built-in functions of the V8 engine."
+      },
+      "code": "class Builtins;",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "Code",
+        "about": "Represents compiled code in the V8 engine."
+      },
+      "code": "class Code;",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "Heap",
+        "about": "Manages the memory heap used by the V8 engine."
+      },
+      "code": "class Heap;",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "template",
+        "name": "Tagged",
+        "about": "Represents a tagged pointer in the V8 engine."
+      },
+      "code": "template <typename T>\nclass Tagged;",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "enum",
+        "name": "Builtin",
+        "about": "Enumerates the different built-in functions."
+      },
+      "code": "enum class Builtin : int32_t;",
+      "type": "enum"
+    }
+  ],
+  "file_path": "/home/kathirks_gc/v8_go/archive/codebase/src/init/setup-isolate.h"
+}

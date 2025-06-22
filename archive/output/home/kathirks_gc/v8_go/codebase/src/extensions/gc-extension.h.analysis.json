@@ -1,0 +1,55 @@
+{
+  "file_path": "/home/kathirks_gc/v8_go/codebase/src/extensions/gc-extension.h",
+  "imports": [
+    "include/v8-extension.h",
+    "include/v8-local-handle.h",
+    "src/base/strings.h"
+  ],
+  "classes": [
+    {
+      "name": "GCExtension",
+      "properties": [
+        "buffer_"
+      ],
+      "methods": [
+        {
+          "name": "GCExtension",
+          "parameters": [
+            "const char* fun_name"
+          ],
+          "return_type": "void",
+          "logic": "Constructor for the GCExtension class. It initializes the extension with a name and builds the JavaScript source code that exposes the garbage collection function."
+        },
+        {
+          "name": "GetNativeFunctionTemplate",
+          "parameters": [
+            "v8::Isolate* isolate",
+            "v8::Local<v8::String> name"
+          ],
+          "return_type": "v8::Local<v8::FunctionTemplate>",
+          "logic": "Overrides the base class method to provide a native function template for the garbage collection function.  This links the JavaScript name (like 'gc') to the native C++ implementation (the GC function)."
+        },
+        {
+          "name": "GC",
+          "parameters": [
+            "const v8::FunctionCallbackInfo<v8::Value>& info"
+          ],
+          "return_type": "void",
+          "logic": "Static method that implements the garbage collection functionality.  It parses options passed from JavaScript (type, execution, flavor, filename) and triggers the appropriate garbage collection action."
+        },
+        {
+          "name": "BuildSource",
+          "parameters": [
+            "char* buf",
+            "size_t size",
+            "const char* fun_name"
+          ],
+          "return_type": "const char*",
+          "logic": "Static method that builds the JavaScript source code that exposes the garbage collection function. It creates a simple string \"native function fun_name();\" using SNPrintF."
+        }
+      ]
+    }
+  ],
+  "functions": [],
+  "explanation": "This file defines the GCExtension class, which is a V8 extension that exposes garbage collection functionality to JavaScript. It allows JavaScript code to trigger major or minor garbage collections, either synchronously or asynchronously, and optionally take heap snapshots.  The `GC` method is the core implementation that gets called from JavaScript and parses options to control the GC behavior."
+}

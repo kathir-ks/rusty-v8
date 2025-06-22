@@ -1,0 +1,160 @@
+{
+  "metadata": {
+    "path": "/home/kathirks_gc/v8_go/archive/codebase/src/compiler/wasm-escape-analysis.cc",
+    "file_name": "wasm-escape-analysis.cc",
+    "language": "cpp",
+    "purpose": "Implements escape analysis for WebAssembly code to optimize allocations."
+  },
+  "imports": {
+    "metadata": {
+      "language": "cpp",
+      "purpose": "Includes necessary headers for compiler, machine graph, and node properties."
+    },
+    "code": "#include \"src/compiler/wasm-escape-analysis.h\"\n\n#include \"src/compiler/machine-graph.h\"\n#include \"src/compiler/node-properties.h\""
+  },
+  "classes": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "WasmEscapeAnalysis",
+        "extends": null,
+        "implements": [],
+        "about": "Performs escape analysis on WebAssembly code to identify allocations that do not escape the current context and can be optimized away.",
+        "attributes": [],
+        "dependencies": []
+      },
+      "code": "namespace v8 {\nnamespace internal {\nnamespace compiler {\n\nclass WasmEscapeAnalysis final : public GraphReducer {\n public:\n  explicit WasmEscapeAnalysis(Editor* editor, MachineGraph* mcgraph)\n      : GraphReducer(editor), mcgraph_(mcgraph) {}\n\n  Reduction Reduce(Node* node) override;\n\n private:\n  Reduction ReduceAllocateRaw(Node* node);\n\n  MachineGraph* mcgraph_;\n};\n\n}  // namespace compiler\n}  // namespace internal\n}  // namespace v8"
+    }
+  ],
+  "functions": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "method",
+        "name": "Reduce",
+        "parent": "WasmEscapeAnalysis",
+        "about": "Reduces a given node based on its opcode during escape analysis.",
+        "logic": "This function acts as a dispatcher based on the node's opcode.  Currently, it only handles kAllocateRaw nodes. Other nodes return NoChange().",
+        "parameters": [
+          {
+            "name": "node",
+            "type": "Node*",
+            "purpose": "The node to be reduced."
+          }
+        ],
+        "return": {
+          "type": "Reduction",
+          "description": "A Reduction indicating whether the node was changed or not."
+        },
+        "dependencies": [
+          "ReduceAllocateRaw"
+        ]
+      },
+      "code": "Reduction WasmEscapeAnalysis::Reduce(Node* node) {\n  switch (node->opcode()) {\n    case IrOpcode::kAllocateRaw:\n      return ReduceAllocateRaw(node);\n    default:\n      return NoChange();\n  }\n}"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "method",
+        "name": "ReduceAllocateRaw",
+        "parent": "WasmEscapeAnalysis",
+        "about": "Attempts to reduce an AllocateRaw node by removing it if its uses can be eliminated.",
+        "logic": "The function checks if all uses of the allocation are either StoreToObject/InitializeImmutableInObject nodes where the allocation's value is being stored, or Phi nodes with no uses.  If so, the StoreToObject/InitializeImmutableInObject nodes are replaced with Dead nodes, and the allocation is also replaced with a Dead node, effectively removing it from the graph. If a StoreToObject node is removed, the stored value is revisited for further reductions.",
+        "parameters": [
+          {
+            "name": "node",
+            "type": "Node*",
+            "purpose": "The AllocateRaw node to be reduced."
+          }
+        ],
+        "return": {
+          "type": "Reduction",
+          "description": "A Reduction indicating whether the node was changed or not."
+        },
+        "dependencies": []
+      },
+      "code": "Reduction WasmEscapeAnalysis::ReduceAllocateRaw(Node* node) {\n  DCHECK_EQ(node->opcode(), IrOpcode::kAllocateRaw);\n  // TODO(manoskouk): Account for phis that still have uses.\n\n  // Collect all value edges of {node} in this vector.\n  std::vector<Edge> value_edges;\n  for (Edge edge : node->use_edges()) {\n    if (NodeProperties::IsValueEdge(edge)) {\n      if ((edge.from()->opcode() == IrOpcode::kPhi &&\n           edge.from()->use_edges().empty()) ||\n          (edge.index() == 0 &&\n           (edge.from()->opcode() == IrOpcode::kStoreToObject ||\n            edge.from()->opcode() == IrOpcode::kInitializeImmutableInObject))) {\n        // StoreToObject, InitializeImmutableInObject and phis without uses can\n        // be replaced and do not require the allocation.\n        value_edges.push_back(edge);\n      } else {\n        // Allocation not reducible.\n        return NoChange();\n      }\n    }\n  }\n\n  // Remove all discovered stores from the effect chain.\n  for (Edge edge : value_edges) {\n    DCHECK(NodeProperties::IsValueEdge(edge));\n    Node* use = edge.from();\n\n    if (use->opcode() == IrOpcode::kPhi) {\n      DCHECK(use->use_edges().empty());\n      // Useless phi. Kill it.\n      use->Kill();\n\n    } else {\n      DCHECK_EQ(edge.index(), 0);\n      DCHECK(!use->IsDead());\n      DCHECK(use->opcode() == IrOpcode::kStoreToObject ||\n             use->opcode() == IrOpcode::kInitializeImmutableInObject);\n      // The value stored by this StoreToObject node might be another allocation\n      // which has no more uses. Therefore we have to revisit it. Note that this\n      // will not happen automatically: ReplaceWithValue does not trigger\n      // revisits of former inputs of the replaced node.\n      Node* stored_value = NodeProperties::GetValueInput(use, 2);\n      Revisit(stored_value);\n      ReplaceWithValue(use, mcgraph_->Dead(),\n                       NodeProperties::GetEffectInput(use), mcgraph_->Dead());\n      use->Kill();\n    }\n  }\n\n  // Remove the allocation from the effect and control chains.\n  ReplaceWithValue(node, mcgraph_->Dead(), NodeProperties::GetEffectInput(node),\n                   NodeProperties::GetControlInput(node));\n\n  return Changed(node);\n}"
+    }
+  ],
+  "dependencies": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "GraphReducer",
+        "about": "Base class for graph reducers in the compiler.",
+        "dependencies": []
+      },
+      "code": "class GraphReducer {\n                    public:\n                        explicit GraphReducer(Editor* editor) : editor_(editor) {}\n                        virtual Reduction Reduce(Node* node) = 0;\n                    protected:\n                        Editor* editor() { return editor_; }\n                        void Revisit(Node* node) { editor()->Revisit(node); }\n                        Reduction Changed(Node* node) { return Reduction::Changed(node); }\n                        Reduction NoChange() { return Reduction::NoChange(); }\n                    private:\n                        Editor* editor_;\n                };",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "Editor",
+        "about": "Provides editing capabilities for the graph during reduction.",
+        "dependencies": []
+      },
+      "code": "class Editor {\n                    public:\n                        virtual void Revisit(Node* node) = 0;\n                };",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "MachineGraph",
+        "about": "Represents the machine-level graph being compiled.",
+        "dependencies": []
+      },
+      "code": "class MachineGraph {\n                    public:\n                        Node* Dead() { return nullptr; }\n                };",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "Node",
+        "about": "Represents a node in the graph.",
+        "dependencies": []
+      },
+      "code": "class Node {\n                    public:\n                        IrOpcode::Value opcode() const { return IrOpcode::kInvalid; }\n                        void Kill() {}\n                        bool IsDead() const { return false; }\n                        ZonePtrList<Edge> use_edges() { return ZonePtrList<Edge>(nullptr, 0); }\n                };",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "NodeProperties",
+        "about": "Provides access to node properties like value, effect, and control inputs.",
+        "dependencies": []
+      },
+      "code": "class NodeProperties {\n                    public:\n                        static bool IsValueEdge(Edge edge) { return true; }\n                        static Node* GetValueInput(Node* node, int index) { return nullptr; }\n                        static Node* GetEffectInput(Node* node) { return nullptr; }\n                        static Node* GetControlInput(Node* node) { return nullptr; }\n                };",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "Edge",
+        "about": "Represents an edge in the graph.",
+        "dependencies": []
+      },
+      "code": "class Edge {\n                    public:\n                        Node* from() { return nullptr; }\n                        int index() { return 0; }\n                };",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "namespace",
+        "name": "IrOpcode",
+        "about": "Defines opcodes for the intermediate representation.",
+        "dependencies": []
+      },
+      "code": "namespace IrOpcode {\n                    enum Value {\n                        kInvalid,\n                        kAllocateRaw,\n                        kPhi,\n                        kStoreToObject,\n                        kInitializeImmutableInObject\n                    };\n                }",
+      "type": "namespace"
+    }
+  ],
+  "file_path": "/home/kathirks_gc/v8_go/archive/codebase/src/compiler/wasm-escape-analysis.cc"
+}

@@ -1,0 +1,851 @@
+{
+  "file_path": "/home/kathirks_gc/v8_go/codebase/src/d8/d8-test.cc",
+  "imports": [
+    "src/d8/d8.h",
+    "include/v8-fast-api-calls.h",
+    "include/v8-template.h",
+    "src/api/api-inl.h"
+  ],
+  "classes": [
+    {
+      "name": "FastCApiObject",
+      "properties": [
+        "fast_call_count_",
+        "slow_call_count_",
+        "attribute_value_",
+        "supports_fp_params_",
+        "kV8WrapperObjectIndex"
+      ],
+      "methods": [
+        {
+          "name": "instance",
+          "parameters": [],
+          "return_type": "FastCApiObject&",
+          "logic": "Returns a static instance of the FastCApiObject."
+        },
+        {
+          "name": "ThrowNoFallbackFastCallbackPatch",
+          "parameters": [
+            "receiver"
+          ],
+          "return_type": "AnyCType",
+          "logic": "A patch function that calls ThrowNoFallbackFastCallback and returns an AnyCType, used when V8_USE_SIMULATOR_WITH_GENERIC_C_CALLS is defined."
+        },
+        {
+          "name": "ThrowNoFallbackFastCallback",
+          "parameters": [
+            "receiver"
+          ],
+          "return_type": "int",
+          "logic": "Throws an exception from a fast callback and increments the fast call count. This is for testing error handling in fast API calls when no fallback function is specified."
+        },
+        {
+          "name": "ThrowFallbackSlowCallback",
+          "parameters": [
+            "info"
+          ],
+          "return_type": "void",
+          "logic": "Throws an exception from a slow callback and increments the slow call count.  This is used as a fallback when ThrowNoFallbackFastCallback fails."
+        },
+        {
+          "name": "CopyStringFastCallbackPatch",
+          "parameters": [
+            "receiver",
+            "source",
+            "out",
+            "options"
+          ],
+          "return_type": "AnyCType",
+          "logic": "A patch function that calls CopyStringFastCallback and returns an AnyCType, used when V8_USE_SIMULATOR_WITH_GENERIC_C_CALLS is defined."
+        },
+        {
+          "name": "CopyStringFastCallback",
+          "parameters": [
+            "receiver",
+            "source",
+            "out",
+            "options"
+          ],
+          "return_type": "void",
+          "logic": "Copies a string from a FastOneByteString to a Uint8Array using fast API calls, increments the fast call count, and throws an error if the parameters are invalid."
+        },
+        {
+          "name": "CopyStringSlowCallback",
+          "parameters": [
+            "info"
+          ],
+          "return_type": "void",
+          "logic": "A slow callback that increments the slow call count. Used as a fallback for CopyStringFastCallback."
+        },
+        {
+          "name": "AddAllFastCallbackPatch",
+          "parameters": [
+            "receiver",
+            "arg_i32",
+            "arg_u32",
+            "arg_i64",
+            "arg_u64",
+            "arg_f32",
+            "arg_f64",
+            "options"
+          ],
+          "return_type": "AnyCType",
+          "logic": "A patch function that calls AddAllFastCallback and returns an AnyCType, used when V8_USE_SIMULATOR_WITH_GENERIC_C_CALLS is defined."
+        },
+        {
+          "name": "AddAllFastCallback",
+          "parameters": [
+            "receiver",
+            "arg_i32",
+            "arg_u32",
+            "arg_i64",
+            "arg_u64",
+            "arg_f32",
+            "arg_f64",
+            "options"
+          ],
+          "return_type": "double",
+          "logic": "Adds all the given numeric arguments using fast API calls, increments the fast call count, and returns the sum as a double."
+        },
+        {
+          "name": "AddAllFastCallbackNoOptionsPatch",
+          "parameters": [
+            "receiver",
+            "arg_i32",
+            "arg_u32",
+            "arg_i64",
+            "arg_u64",
+            "arg_f32",
+            "arg_f64"
+          ],
+          "return_type": "AnyCType",
+          "logic": "A patch function that calls AddAllFastCallbackNoOptions and returns an AnyCType, used when V8_USE_SIMULATOR_WITH_GENERIC_C_CALLS is defined."
+        },
+        {
+          "name": "AddAllFastCallbackNoOptions",
+          "parameters": [
+            "receiver",
+            "arg_i32",
+            "arg_u32",
+            "arg_i64",
+            "arg_u64",
+            "arg_f32",
+            "arg_f64"
+          ],
+          "return_type": "double",
+          "logic": "Adds all the given numeric arguments using fast API calls (without options), increments the fast call count, and returns the sum as a double."
+        },
+        {
+          "name": "AddAllSlowCallback",
+          "parameters": [
+            "info"
+          ],
+          "return_type": "void",
+          "logic": "Adds all the numeric arguments passed via FunctionCallbackInfo using slow API calls, increments the slow call count, and sets the return value to the sum."
+        },
+        {
+          "name": "AddAllSequenceFastCallbackPatch",
+          "parameters": [
+            "receiver",
+            "seq_arg",
+            "options"
+          ],
+          "return_type": "AnyCType",
+          "logic": "A patch function that calls AddAllSequenceFastCallback and returns an AnyCType, used when V8_USE_SIMULATOR_WITH_GENERIC_C_CALLS is defined."
+        },
+        {
+          "name": "AddAllSequenceJSArrayHelper",
+          "parameters": [
+            "isolate",
+            "seq_arg"
+          ],
+          "return_type": "Type",
+          "logic": "Helper function to sum the elements of a JavaScript array."
+        },
+        {
+          "name": "AddAllSequenceFastCallback",
+          "parameters": [
+            "receiver",
+            "seq_arg",
+            "options"
+          ],
+          "return_type": "Type",
+          "logic": "Adds all the elements of a sequence (array or typed array) using fast API calls, increments the fast call count, and returns the sum. Attempts to copy the array efficiently before falling back to JS array access."
+        },
+        {
+          "name": "AddAllSequenceSlowCallback",
+          "parameters": [
+            "info"
+          ],
+          "return_type": "void",
+          "logic": "Adds all the elements of a sequence (array or typed array) using slow API calls, increments the slow call count, and sets the return value to the sum."
+        },
+        {
+          "name": "AddAllTypedArrayFastCallbackPatch",
+          "parameters": [
+            "receiver",
+            "typed_array_arg",
+            "options"
+          ],
+          "return_type": "AnyCType",
+          "logic": "A patch function that calls AddAllTypedArrayFastCallback and returns an AnyCType, used when V8_USE_SIMULATOR_WITH_GENERIC_C_CALLS is defined."
+        },
+        {
+          "name": "AddAllTypedArrayFastCallback",
+          "parameters": [
+            "receiver",
+            "typed_array_arg",
+            "options"
+          ],
+          "return_type": "Type",
+          "logic": "Adds all the elements of a typed array using fast API calls, increments the fast call count, and returns the sum."
+        },
+        {
+          "name": "AddAllTypedArraySlowCallback",
+          "parameters": [
+            "info"
+          ],
+          "return_type": "void",
+          "logic": "Adds all the elements of a typed array using slow API calls, increments the slow call count, and sets the return value to the sum."
+        },
+        {
+          "name": "Add32BitIntFastCallbackPatch",
+          "parameters": [
+            "receiver",
+            "arg_i32",
+            "arg_u32",
+            "options"
+          ],
+          "return_type": "AnyCType",
+          "logic": "A patch function that calls Add32BitIntFastCallback and returns an AnyCType, used when V8_USE_SIMULATOR_WITH_GENERIC_C_CALLS is defined."
+        },
+        {
+          "name": "Add32BitIntFastCallback",
+          "parameters": [
+            "receiver",
+            "arg_i32",
+            "arg_u32",
+            "options"
+          ],
+          "return_type": "int",
+          "logic": "Adds two 32-bit integer arguments using fast API calls, increments the fast call count, and returns the sum."
+        },
+        {
+          "name": "Add32BitIntSlowCallback",
+          "parameters": [
+            "info"
+          ],
+          "return_type": "void",
+          "logic": "Adds two 32-bit integer arguments passed via FunctionCallbackInfo using slow API calls, increments the slow call count, and sets the return value to the sum."
+        },
+        {
+          "name": "AddAll32BitIntFastCallback_8ArgsPatch",
+          "parameters": [
+            "receiver",
+            "arg1_i32",
+            "arg2_i32",
+            "arg3_i32",
+            "arg4_u32",
+            "arg5_u32",
+            "arg6_u32",
+            "arg7_u32",
+            "arg8_u32",
+            "options"
+          ],
+          "return_type": "AnyCType",
+          "logic": "A patch function that calls AddAll32BitIntFastCallback_8Args and returns an AnyCType, used when V8_USE_SIMULATOR_WITH_GENERIC_C_CALLS is defined."
+        },
+        {
+          "name": "AddAll32BitIntFastCallback_6ArgsPatch",
+          "parameters": [
+            "receiver",
+            "arg1_i32",
+            "arg2_i32",
+            "arg3_i32",
+            "arg4_u32",
+            "arg5_u32",
+            "arg6_u32",
+            "options"
+          ],
+          "return_type": "AnyCType",
+          "logic": "A patch function that calls AddAll32BitIntFastCallback_6Args and returns an AnyCType, used when V8_USE_SIMULATOR_WITH_GENERIC_C_CALLS is defined."
+        },
+        {
+          "name": "AddAll32BitIntFastCallback_5ArgsPatch",
+          "parameters": [
+            "receiver",
+            "arg1_i32",
+            "arg2_i32",
+            "arg3_i32",
+            "arg4_u32",
+            "arg5_u32",
+            "options"
+          ],
+          "return_type": "AnyCType",
+          "logic": "A patch function that calls AddAll32BitIntFastCallback_5Args and returns an AnyCType, used when V8_USE_SIMULATOR_WITH_GENERIC_C_CALLS is defined."
+        },
+        {
+          "name": "AddAll32BitIntFastCallback_8Args",
+          "parameters": [
+            "receiver",
+            "arg1_i32",
+            "arg2_i32",
+            "arg3_i32",
+            "arg4_u32",
+            "arg5_u32",
+            "arg6_u32",
+            "arg7_u32",
+            "arg8_u32",
+            "options"
+          ],
+          "return_type": "int",
+          "logic": "Adds eight 32-bit integer arguments using fast API calls, increments the fast call count, and returns the sum (clamped to INT_MIN/INT_MAX)."
+        },
+        {
+          "name": "AddAll32BitIntFastCallback_6Args",
+          "parameters": [
+            "receiver",
+            "arg1_i32",
+            "arg2_i32",
+            "arg3_i32",
+            "arg4_u32",
+            "arg5_u32",
+            "arg6_u32",
+            "options"
+          ],
+          "return_type": "int",
+          "logic": "Adds six 32-bit integer arguments using fast API calls, increments the fast call count, and returns the sum (clamped to INT_MIN/INT_MAX)."
+        },
+        {
+          "name": "AddAll32BitIntFastCallback_5Args",
+          "parameters": [
+            "receiver",
+            "arg1_i32",
+            "arg2_i32",
+            "arg3_i32",
+            "arg4_u32",
+            "arg5_u32",
+            "options"
+          ],
+          "return_type": "int",
+          "logic": "Adds five 32-bit integer arguments using fast API calls, increments the fast call count, and returns the sum (clamped to INT_MIN/INT_MAX)."
+        },
+        {
+          "name": "AddAll32BitIntSlowCallback",
+          "parameters": [
+            "info"
+          ],
+          "return_type": "void",
+          "logic": "Adds several 32-bit integer arguments passed via FunctionCallbackInfo using slow API calls, increments the slow call count, and sets the return value to the sum."
+        },
+        {
+          "name": "AddAllAnnotateFastCallbackPatch",
+          "parameters": [
+            "receiver",
+            "arg_i32",
+            "arg_u32",
+            "arg_i64",
+            "arg_u64",
+            "options"
+          ],
+          "return_type": "AnyCType",
+          "logic": "A patch function that calls AddAllAnnotateFastCallback and returns an AnyCType, used when V8_USE_SIMULATOR_WITH_GENERIC_C_CALLS is defined."
+        },
+        {
+          "name": "AddAllAnnotateFastCallback",
+          "parameters": [
+            "receiver",
+            "arg_i32",
+            "arg_u32",
+            "arg_i64",
+            "arg_u64",
+            "options"
+          ],
+          "return_type": "double",
+          "logic": "Adds four integer arguments using fast API calls with annotation, increments the fast call count, and returns the sum as a double."
+        },
+        {
+          "name": "AddAllAnnotateSlowCallback",
+          "parameters": [
+            "info"
+          ],
+          "return_type": "void",
+          "logic": "Adds four integer arguments passed via FunctionCallbackInfo using slow API calls, increments the slow call count, and sets the return value to the sum."
+        },
+        {
+          "name": "EnforceRangeCompareI32Patch",
+          "parameters": [
+            "receiver",
+            "real_arg",
+            "checked_arg",
+            "options"
+          ],
+          "return_type": "AnyCType",
+          "logic": "A patch function that calls EnforceRangeCompare and returns an AnyCType, used when V8_USE_SIMULATOR_WITH_GENERIC_C_CALLS is defined."
+        },
+        {
+          "name": "EnforceRangeCompareU32Patch",
+          "parameters": [
+            "receiver",
+            "real_arg",
+            "checked_arg",
+            "options"
+          ],
+          "return_type": "AnyCType",
+          "logic": "A patch function that calls EnforceRangeCompare and returns an AnyCType, used when V8_USE_SIMULATOR_WITH_GENERIC_C_CALLS is defined."
+        },
+        {
+          "name": "EnforceRangeCompareI64Patch",
+          "parameters": [
+            "receiver",
+            "real_arg",
+            "checked_arg",
+            "options"
+          ],
+          "return_type": "AnyCType",
+          "logic": "A patch function that calls EnforceRangeCompare and returns an AnyCType, used when V8_USE_SIMULATOR_WITH_GENERIC_C_CALLS is defined."
+        },
+        {
+          "name": "EnforceRangeCompareU64Patch",
+          "parameters": [
+            "receiver",
+            "real_arg",
+            "checked_arg",
+            "options"
+          ],
+          "return_type": "AnyCType",
+          "logic": "A patch function that calls EnforceRangeCompare and returns an AnyCType, used when V8_USE_SIMULATOR_WITH_GENERIC_C_CALLS is defined."
+        },
+        {
+          "name": "EnforceRangeCompare",
+          "parameters": [
+            "receiver",
+            "real_arg",
+            "checked_arg",
+            "options"
+          ],
+          "return_type": "bool",
+          "logic": "Compares a double with an integer (after converting the double to the integer type), enforcing that the double is within the range of the integer type, using fast API calls."
+        },
+        {
+          "name": "EnforceRangeCompareSlowCallback",
+          "parameters": [
+            "info"
+          ],
+          "return_type": "void",
+          "logic": "Compares a double with an integer (after converting the double to the integer type), enforcing that the double is within the range of the integer type, using slow API calls."
+        },
+        {
+          "name": "ClampCompareI32Patch",
+          "parameters": [
+            "receiver",
+            "in_range",
+            "real_arg",
+            "checked_arg",
+            "options"
+          ],
+          "return_type": "AnyCType",
+          "logic": "A patch function that calls ClampCompare and returns an AnyCType, used when V8_USE_SIMULATOR_WITH_GENERIC_C_CALLS is defined."
+        },
+        {
+          "name": "ClampCompareU32Patch",
+          "parameters": [
+            "receiver",
+            "in_range",
+            "real_arg",
+            "checked_arg",
+            "options"
+          ],
+          "return_type": "AnyCType",
+          "logic": "A patch function that calls ClampCompare and returns an AnyCType, used when V8_USE_SIMULATOR_WITH_GENERIC_C_CALLS is defined."
+        },
+        {
+          "name": "ClampCompareI64Patch",
+          "parameters": [
+            "receiver",
+            "in_range",
+            "real_arg",
+            "checked_arg",
+            "options"
+          ],
+          "return_type": "AnyCType",
+          "logic": "A patch function that calls ClampCompare and returns an AnyCType, used when V8_USE_SIMULATOR_WITH_GENERIC_C_CALLS is defined."
+        },
+        {
+          "name": "ClampCompareU64Patch",
+          "parameters": [
+            "receiver",
+            "in_range",
+            "real_arg",
+            "checked_arg",
+            "options"
+          ],
+          "return_type": "AnyCType",
+          "logic": "A patch function that calls ClampCompare and returns an AnyCType, used when V8_USE_SIMULATOR_WITH_GENERIC_C_CALLS is defined."
+        },
+        {
+          "name": "ClampCompareCompute",
+          "parameters": [
+            "in_range",
+            "real_arg",
+            "checked_arg"
+          ],
+          "return_type": "double",
+          "logic": "Helper function for ClampCompare, clamps a real number to the range of IntegerT."
+        },
+        {
+          "name": "ClampCompare",
+          "parameters": [
+            "receiver",
+            "in_range",
+            "real_arg",
+            "checked_arg",
+            "options"
+          ],
+          "return_type": "double",
+          "logic": "Clamps a double to the range of an IntegerT and compares it with a given value. Simulates clamping behavior."
+        },
+        {
+          "name": "ClampCompareSlowCallback",
+          "parameters": [
+            "info"
+          ],
+          "return_type": "void",
+          "logic": "Slow callback version of ClampCompare."
+        },
+        {
+          "name": "IsFastCApiObjectFastCallback",
+          "parameters": [
+            "receiver",
+            "arg",
+            "options"
+          ],
+          "return_type": "bool",
+          "logic": "Checks if a given argument is a valid FastCApiObject instance using fast API calls."
+        },
+        {
+          "name": "IsFastCApiObjectSlowCallback",
+          "parameters": [
+            "info"
+          ],
+          "return_type": "void",
+          "logic": "Checks if a given argument is a valid FastCApiObject instance using slow API calls."
+        },
+        {
+          "name": "TestWasmMemoryFastCallback",
+          "parameters": [
+            "receiver",
+            "address",
+            "options"
+          ],
+          "return_type": "bool",
+          "logic": "Tests accessing Wasm memory from a fast callback."
+        },
+        {
+          "name": "TestWasmMemorySlowCallback",
+          "parameters": [
+            "info"
+          ],
+          "return_type": "void",
+          "logic": "Slow callback version of TestWasmMemoryFastCallback. Intentionally throws an error to verify it's not reachable."
+        },
+        {
+          "name": "AssertIsExternal",
+          "parameters": [
+            "info"
+          ],
+          "return_type": "void",
+          "logic": "Asserts that the first argument is an external, throwing error if it is not."
+        },
+        {
+          "name": "GetPointerFastCallback",
+          "parameters": [
+            "receiver",
+            "options"
+          ],
+          "return_type": "void*",
+          "logic": "Returns a pointer to the FastCApiObject instance using fast API calls."
+        },
+        {
+          "name": "GetPointerSlowCallback",
+          "parameters": [
+            "info"
+          ],
+          "return_type": "void",
+          "logic": "Returns a pointer to the FastCApiObject instance as an External value using slow API calls."
+        },
+        {
+          "name": "GetNullPointerFastCallback",
+          "parameters": [
+            "receiver",
+            "options"
+          ],
+          "return_type": "void*",
+          "logic": "Returns a null pointer using fast API calls."
+        },
+        {
+          "name": "GetNullPointerSlowCallback",
+          "parameters": [
+            "info"
+          ],
+          "return_type": "void",
+          "logic": "Returns a null pointer as a Null value using slow API calls."
+        },
+        {
+          "name": "PassPointerFastCallback",
+          "parameters": [
+            "receiver",
+            "pointer",
+            "options"
+          ],
+          "return_type": "void*",
+          "logic": "Passes a pointer through the fast API callback."
+        },
+        {
+          "name": "PassPointerSlowCallback",
+          "parameters": [
+            "info"
+          ],
+          "return_type": "void",
+          "logic": "Passes an external through the slow API callback."
+        },
+        {
+          "name": "ComparePointersFastCallback",
+          "parameters": [
+            "receiver",
+            "pointer_a",
+            "pointer_b",
+            "options"
+          ],
+          "return_type": "bool",
+          "logic": "Compares two pointers for equality, using fast API calls."
+        },
+        {
+          "name": "ComparePointersSlowCallback",
+          "parameters": [
+            "info"
+          ],
+          "return_type": "void",
+          "logic": "Compares two pointers for equality, using slow API calls. Handles null and External values as inputs."
+        },
+        {
+          "name": "sumInt64FastCallback",
+          "parameters": [
+            "receiver",
+            "a",
+            "b",
+            "options"
+          ],
+          "return_type": "int64_t",
+          "logic": "Sums two int64_t numbers passed using the fast API."
+        },
+        {
+          "name": "Convert",
+          "parameters": [
+            "value",
+            "out_result"
+          ],
+          "return_type": "bool",
+          "logic": "Converts a double to a numeric type T."
+        },
+        {
+          "name": "sumInt64AsNumberSlowCallback",
+          "parameters": [
+            "info"
+          ],
+          "return_type": "void",
+          "logic": "Sums two int64 values passed as numbers, returns the result as a number."
+        },
+        {
+          "name": "sumInt64AsBigIntSlowCallback",
+          "parameters": [
+            "info"
+          ],
+          "return_type": "void",
+          "logic": "Sums two int64 values passed as BigInts, returns the result as a BigInt."
+        },
+        {
+          "name": "sumUint64FastCallback",
+          "parameters": [
+            "receiver",
+            "a",
+            "b",
+            "options"
+          ],
+          "return_type": "uint64_t",
+          "logic": "Sums two uint64_t numbers passed using the fast API."
+        },
+        {
+          "name": "sumUint64AsNumberSlowCallback",
+          "parameters": [
+            "info"
+          ],
+          "return_type": "void",
+          "logic": "Sums two uint64 values passed as numbers, returns the result as a number."
+        },
+        {
+          "name": "sumUint64AsBigIntSlowCallback",
+          "parameters": [
+            "info"
+          ],
+          "return_type": "void",
+          "logic": "Sums two uint64 values passed as BigInts, returns the result as a BigInt."
+        },
+        {
+          "name": "AttributeGetterSlowCallback",
+          "parameters": [
+            "info"
+          ],
+          "return_type": "void",
+          "logic": "Getter for the attribute_value_ using the slow API calls."
+        },
+        {
+          "name": "AttributeGetterFastCallback",
+          "parameters": [
+            "receiver",
+            "options"
+          ],
+          "return_type": "int",
+          "logic": "Getter for the attribute_value_ using the fast API calls."
+        },
+        {
+          "name": "AttributeGetterFastCallbackPatch",
+          "parameters": [
+            "receiver",
+            "options"
+          ],
+          "return_type": "AnyCType",
+          "logic": "A patch function that calls AttributeGetterFastCallback and returns an AnyCType, used when V8_USE_SIMULATOR_WITH_GENERIC_C_CALLS is defined."
+        },
+        {
+          "name": "AttributeSetterSlowCallback",
+          "parameters": [
+            "info"
+          ],
+          "return_type": "void",
+          "logic": "Setter for the attribute_value_ using the slow API calls."
+        },
+        {
+          "name": "AttributeSetterFastCallback",
+          "parameters": [
+            "receiver",
+            "value",
+            "options"
+          ],
+          "return_type": "void",
+          "logic": "Setter for the attribute_value_ using the fast API calls."
+        },
+        {
+          "name": "AttributeSetterFastCallbackPatch",
+          "parameters": [
+            "receiver",
+            "value",
+            "options"
+          ],
+          "return_type": "void",
+          "logic": "A patch function that calls AttributeSetterFastCallback, used when V8_USE_SIMULATOR_WITH_GENERIC_C_CALLS is defined."
+        },
+        {
+          "name": "FastCallCount",
+          "parameters": [
+            "info"
+          ],
+          "return_type": "void",
+          "logic": "Returns the fast_call_count_."
+        },
+        {
+          "name": "SlowCallCount",
+          "parameters": [
+            "info"
+          ],
+          "return_type": "void",
+          "logic": "Returns the slow_call_count_."
+        },
+        {
+          "name": "ResetCounts",
+          "parameters": [
+            "info"
+          ],
+          "return_type": "void",
+          "logic": "Resets both fast_call_count_ and slow_call_count_ to 0."
+        },
+        {
+          "name": "SupportsFPParams",
+          "parameters": [
+            "info"
+          ],
+          "return_type": "void",
+          "logic": "Returns a boolean indicating whether floating-point parameters are supported."
+        },
+        {
+          "name": "fast_call_count",
+          "parameters": [],
+          "return_type": "int",
+          "logic": "Returns the value of fast_call_count_."
+        },
+        {
+          "name": "slow_call_count",
+          "parameters": [],
+          "return_type": "int",
+          "logic": "Returns the value of slow_call_count_."
+        },
+        {
+          "name": "reset_counts",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Resets the fast and slow call counters."
+        },
+        {
+          "name": "IsValidApiObject",
+          "parameters": [
+            "object"
+          ],
+          "return_type": "bool",
+          "logic": "Checks if a given object is a valid API object."
+        },
+        {
+          "name": "UnwrapObject",
+          "parameters": [
+            "object"
+          ],
+          "return_type": "FastCApiObject*",
+          "logic": "Unwraps a FastCApiObject from a Local<Object>."
+        }
+      ]
+    }
+  ],
+  "functions": [
+    {
+      "name": "CreateFastCAPIObject",
+      "parameters": [
+        "info"
+      ],
+      "return_type": "void",
+      "logic": "Constructor for the FastCAPI object that is exposed to JavaScript. Sets the internal field and accessor properties."
+    },
+    {
+      "name": "Shell::CreateTestFastCApiTemplate",
+      "parameters": [
+        "isolate"
+      ],
+      "return_type": "Local<FunctionTemplate>",
+      "logic": "Creates a FunctionTemplate for the FastCAPI object, setting up its prototype with various methods and properties. Exposes the template to the isolate."
+    },
+    {
+      "name": "CreateLeafInterfaceObject",
+      "parameters": [
+        "info"
+      ],
+      "return_type": "void",
+      "logic": "Constructor for the LeafInterfaceType object that is exposed to JavaScript. Throws error if not used with 'new'."
+    },
+    {
+      "name": "Shell::CreateLeafInterfaceTypeTemplate",
+      "parameters": [
+        "isolate"
+      ],
+      "return_type": "Local<FunctionTemplate>",
+      "logic": "Creates a FunctionTemplate for the LeafInterfaceType object and exposes the template to the isolate."
+    }
+  ]
+}

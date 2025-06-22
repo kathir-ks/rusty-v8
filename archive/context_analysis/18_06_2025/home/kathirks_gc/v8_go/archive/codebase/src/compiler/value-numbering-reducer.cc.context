@@ -1,0 +1,195 @@
+{
+  "metadata": {
+    "path": "/home/kathirks_gc/v8_go/archive/codebase/src/compiler/value-numbering-reducer.cc",
+    "file_name": "value-numbering-reducer.cc",
+    "language": "cpp",
+    "purpose": "Implements a value numbering reducer for the V8 compiler. This reducer identifies and replaces redundant nodes in the graph based on their operator and inputs, improving code efficiency."
+  },
+  "imports": {
+    "metadata": {
+      "language": "cpp",
+      "purpose": "Includes necessary headers for value numbering reducer functionality, standard library functions, node properties, and node manipulation."
+    },
+    "code": "#include \"src/compiler/value-numbering-reducer.h\"\n\n#include <cstring>\n\n#include \"src/compiler/node-properties.h\"\n#include \"src/compiler/node.h\""
+  },
+  "classes": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "ValueNumberingReducer",
+        "extends": null,
+        "implements": [],
+        "about": "This class implements a value numbering reducer for the V8 compiler.",
+        "attributes": [
+          {
+            "name": "entries_",
+            "type": "Node**",
+            "access": "private",
+            "purpose": "Hash table entries for storing nodes."
+          },
+          {
+            "name": "capacity_",
+            "type": "size_t",
+            "access": "private",
+            "purpose": "Hash table capacity."
+          },
+          {
+            "name": "size_",
+            "type": "size_t",
+            "access": "private",
+            "purpose": "Number of entries in the hash table."
+          },
+          {
+            "name": "temp_zone_",
+            "type": "Zone*",
+            "access": "private",
+            "purpose": "Temporary memory zone for allocations."
+          },
+          {
+            "name": "graph_zone_",
+            "type": "Zone*",
+            "access": "private",
+            "purpose": "Memory zone for the graph."
+          }
+        ],
+        "dependencies": [
+          "Node",
+          "NodeProperties",
+          "Zone",
+          "Operator"
+        ]
+      },
+      "code": "class ValueNumberingReducer {\n public:\n  ValueNumberingReducer(Zone* temp_zone, Zone* graph_zone);\n  ~ValueNumberingReducer();\n\n  Reduction Reduce(Node* node);\n\n private:\n  Reduction ReplaceIfTypesMatch(Node* node, Node* replacement);\n  void Grow();\n\n  static const size_t kInitialCapacity = 16;\n\n  Node** entries_;\n  size_t capacity_;\n  size_t size_;\n  Zone* temp_zone_;\n  Zone* graph_zone_;\n};"
+    }
+  ],
+  "functions": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "function",
+        "name": "ValueNumberingReducer",
+        "parent": "ValueNumberingReducer",
+        "about": "Constructor for the ValueNumberingReducer class.",
+        "logic": "Initializes the member variables of the class.",
+        "parameters": [
+          {
+            "name": "temp_zone",
+            "type": "Zone*",
+            "purpose": "The temporary memory zone to use."
+          },
+          {
+            "name": "graph_zone",
+            "type": "Zone*",
+            "purpose": "The graph's memory zone."
+          }
+        ],
+        "return": {
+          "type": "void",
+          "description": "No return value."
+        },
+        "dependencies": [
+          "Zone"
+        ]
+      },
+      "code": "ValueNumberingReducer::ValueNumberingReducer(Zone* temp_zone, Zone* graph_zone)\n    : entries_(nullptr),\n      capacity_(0),\n      size_(0),\n      temp_zone_(temp_zone),\n      graph_zone_(graph_zone) {}"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "function",
+        "name": "~ValueNumberingReducer",
+        "parent": "ValueNumberingReducer",
+        "about": "Destructor for the ValueNumberingReducer class.",
+        "logic": "Default destructor.",
+        "return": {
+          "type": "void",
+          "description": "No return value."
+        },
+        "dependencies": []
+      },
+      "code": "ValueNumberingReducer::~ValueNumberingReducer() = default;"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "function",
+        "name": "Reduce",
+        "parent": "ValueNumberingReducer",
+        "about": "Reduces a node by checking if an equivalent node already exists in the hash table.",
+        "logic": "This function implements the core value numbering logic. It checks if the node is idempotent. It then calculates the hash of the node and searches the hash table for an equivalent node. If an equivalent node is found, it is replaced. If not, the node is added to the hash table.",
+        "parameters": [
+          {
+            "name": "node",
+            "type": "Node*",
+            "purpose": "The node to reduce."
+          }
+        ],
+        "return": {
+          "type": "Reduction",
+          "description": "A Reduction object indicating whether the node was changed or replaced."
+        },
+        "dependencies": [
+          "Node",
+          "NodeProperties",
+          "Operator",
+          "ReplaceIfTypesMatch"
+        ]
+      },
+      "code": "Reduction ValueNumberingReducer::Reduce(Node* node) {\n  if (!node->op()->HasProperty(Operator::kIdempotent)) return NoChange();\n\n  const size_t hash = NodeProperties::HashCode(node);\n  if (!entries_) {\n    DCHECK_EQ(0, size_);\n    DCHECK_EQ(0, capacity_);\n    // Allocate the initial entries and insert the first entry.\n    capacity_ = kInitialCapacity;\n    entries_ = temp_zone()->AllocateArray<Node*>(kInitialCapacity);\n    memset(entries_, 0, sizeof(*entries_) * kInitialCapacity);\n    entries_[hash & (kInitialCapacity - 1)] = node;\n    size_ = 1;\n    return NoChange();\n  }\n\n  DCHECK(size_ < capacity_);\n  DCHECK(size_ + size_ / 4 < capacity_);\n\n  const size_t mask = capacity_ - 1;\n  size_t dead = capacity_;\n\n  for (size_t i = hash & mask;; i = (i + 1) & mask) {\n    Node* entry = entries_[i];\n    if (!entry) {\n      if (dead != capacity_) {\n        // Reuse dead entry that we discovered on the way.\n        entries_[dead] = node;\n      } else {\n        // Have to insert a new entry.\n        entries_[i] = node;\n        size_++;\n\n        // Resize to keep load factor below 80%\n        if (size_ + size_ / 4 >= capacity_) Grow();\n      }\n      DCHECK(size_ + size_ / 4 < capacity_);\n      return NoChange();\n    }\n\n    if (entry == node) {\n      // We need to check for a certain class of collisions here. Imagine the\n      // following scenario:\n      //\n      //  1. We insert node1 with op1 and certain inputs at index i.\n      //  2. We insert node2 with op2 and certain inputs at index i+1.\n      //  3. Some other reducer changes node1 to op2 and the inputs from node2.\n      //\n      // Now we are called again to reduce node1, and we would return NoChange\n      // in this case because we find node1 first, but what we should actually\n      // do is return Replace(node2) instead.\n      for (size_t j = (i + 1) & mask;; j = (j + 1) & mask) {\n        Node* other_entry = entries_[j];\n        if (!other_entry) {\n          // No collision, {node} is fine.\n          return NoChange();\n        }\n        if (other_entry->IsDead()) {\n          continue;\n        }\n        if (other_entry == node) {\n          // Collision with ourselves, doesn't count as a real collision.\n          // Opportunistically clean-up the duplicate entry if we're at the end\n          // of a bucket.\n          if (!entries_[(j + 1) & mask]) {\n            entries_[j] = nullptr;\n            size_--;\n            return NoChange();\n          }\n          // Otherwise, keep searching for another collision.\n          continue;\n        }\n        if (NodeProperties::Equals(other_entry, node)) {\n          Reduction reduction = ReplaceIfTypesMatch(node, other_entry);\n          if (reduction.Changed()) {\n            // Overwrite the colliding entry with the actual entry.\n            entries_[i] = other_entry;\n            // Opportunistically clean-up the duplicate entry if we're at the\n            // end of a bucket.\n            if (!entries_[(j + 1) & mask]) {\n              entries_[j] = nullptr;\n              size_--;\n            }\n          }\n          return reduction;\n        }\n      }\n    }\n\n    // Skip dead entries, but remember their indices so we can reuse them.\n    if (entry->IsDead()) {\n      dead = i;\n      continue;\n    }\n    if (NodeProperties::Equals(entry, node)) {\n      return ReplaceIfTypesMatch(node, entry);\n    }\n  }\n}"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "function",
+        "name": "ReplaceIfTypesMatch",
+        "parent": "ValueNumberingReducer",
+        "about": "Replaces a node with a replacement node if their types are compatible.",
+        "logic": "This function checks if the replacement node has at least as good type as the original node. If the types are comparable, the replacement is performed, otherwise the function returns NoChange.",
+        "parameters": [
+          {
+            "name": "node",
+            "type": "Node*",
+            "purpose": "The original node to replace."
+          },
+          {
+            "name": "replacement",
+            "type": "Node*",
+            "purpose": "The replacement node."
+          }
+        ],
+        "return": {
+          "type": "Reduction",
+          "description": "A Reduction object indicating whether the node was replaced."
+        },
+        "dependencies": [
+          "Node",
+          "NodeProperties",
+          "Type"
+        ]
+      },
+      "code": "Reduction ValueNumberingReducer::ReplaceIfTypesMatch(Node* node,\n                                                     Node* replacement) {\n  // Make sure the replacement has at least as good type as the original node.\n  if (NodeProperties::IsTyped(replacement) && NodeProperties::IsTyped(node)) {\n    Type replacement_type = NodeProperties::GetType(replacement);\n    Type node_type = NodeProperties::GetType(node);\n    if (!replacement_type.Is(node_type)) {\n      // Ideally, we would set an intersection of {replacement_type} and\n      // {node_type} here. However, typing of NumberConstants assigns different\n      // types to constants with the same value (it creates a fresh heap\n      // number), which would make the intersection empty. To be safe, we use\n      // the smaller type if the types are comparable.\n      if (node_type.Is(replacement_type)) {\n        NodeProperties::SetType(replacement, node_type);\n      } else {\n        // Types are not comparable => do not replace.\n        return NoChange();\n      }\n    }\n  }\n  return Replace(replacement);\n}"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "function",
+        "name": "Grow",
+        "parent": "ValueNumberingReducer",
+        "about": "Grows the hash table by doubling its capacity.",
+        "logic": "This function allocates a new hash table with double the capacity of the old one. It then rehashes all the entries from the old table into the new one.",
+        "parameters": [],
+        "return": {
+          "type": "void",
+          "description": "No return value."
+        },
+        "dependencies": [
+          "Node",
+          "NodeProperties"
+        ]
+      },
+      "code": "void ValueNumberingReducer::Grow() {\n  // Allocate a new block of entries double the previous capacity.\n  Node** const old_entries = entries_;\n  size_t const old_capacity = capacity_;\n  capacity_ *= 2;\n  entries_ = temp_zone()->AllocateArray<Node*>(capacity_);\n  memset(entries_, 0, sizeof(*entries_) * capacity_);\n  size_ = 0;\n  size_t const mask = capacity_ - 1;\n\n  // Insert the old entries into the new block (skipping dead nodes).\n  for (size_t i = 0; i < old_capacity; ++i) {\n    Node* const old_entry = old_entries[i];\n    if (!old_entry || old_entry->IsDead()) continue;\n    for (size_t j = NodeProperties::HashCode(old_entry) & mask;;\n         j = (j + 1) & mask) {\n      Node* const entry = entries_[j];\n      if (entry == old_entry) {\n        // Skip duplicate of the old entry.\n        break;\n      }\n      if (!entry) {\n        entries_[j] = old_entry;\n        size_++;\n        break;\n      }\n    }\n  }\n}"
+    }
+  ],
+  "file_path": "/home/kathirks_gc/v8_go/archive/codebase/src/compiler/value-numbering-reducer.cc"
+}

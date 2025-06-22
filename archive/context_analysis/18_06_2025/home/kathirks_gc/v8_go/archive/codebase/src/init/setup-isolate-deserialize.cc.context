@@ -1,0 +1,92 @@
+{
+  "metadata": {
+    "path": "/home/kathirks_gc/v8_go/archive/codebase/src/init/setup-isolate-deserialize.cc",
+    "file_name": "setup-isolate-deserialize.cc",
+    "language": "cpp",
+    "purpose": "Provides an implementation of SetupIsolateDelegate that skips heap setup and builtin compilation during isolate initialization, assuming these will be deserialized from a snapshot."
+  },
+  "imports": {
+    "metadata": {
+      "language": "cpp",
+      "purpose": "Provides the SetupIsolate class/interface used for setting up a V8 isolate.",
+      "library": "src/init/setup-isolate.h"
+    },
+    "code": "#include \"src/init/setup-isolate.h\""
+  },
+  "classes": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "SetupIsolateDelegate",
+        "about": "Delegate class responsible for setting up an isolate by skipping heap and builtin compilation during deserialization.",
+        "dependencies": []
+      },
+      "code": "namespace v8 {\nnamespace internal {"
+    }
+  ],
+  "functions": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "method",
+        "name": "SetupHeap",
+        "parent": "SetupIsolateDelegate",
+        "about": "Sets up the heap for the isolate by skipping object creation, assuming deserialization.",
+        "logic": "Asserts that `create_heap_objects` is false, indicating that the heap will be deserialized from a snapshot. Returns true.",
+        "parameters": [
+          {
+            "name": "isolate",
+            "type": "Isolate*",
+            "purpose": "The isolate to set up."
+          },
+          {
+            "name": "create_heap_objects",
+            "type": "bool",
+            "purpose": "Flag indicating whether to create heap objects."
+          }
+        ],
+        "return": {
+          "type": "bool",
+          "description": "Returns true to indicate success."
+        },
+        "dependencies": [
+          "Isolate"
+        ]
+      },
+      "code": "bool SetupIsolateDelegate::SetupHeap(Isolate* isolate,\n                                     bool create_heap_objects) {\n  // No actual work to be done; heap will be deserialized from the snapshot.\n  CHECK_WITH_MSG(!create_heap_objects,\n                 \"Heap setup supported only in mksnapshot\");\n  return true;\n}"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "method",
+        "name": "SetupBuiltins",
+        "parent": "SetupIsolateDelegate",
+        "about": "Sets up the builtins for the isolate by skipping compilation, assuming deserialization.",
+        "logic": "Asserts that `compile_builtins` is false, indicating that the builtins will be deserialized from a snapshot.",
+        "parameters": [
+          {
+            "name": "isolate",
+            "type": "Isolate*",
+            "purpose": "The isolate to set up."
+          },
+          {
+            "name": "compile_builtins",
+            "type": "bool",
+            "purpose": "Flag indicating whether to compile builtins."
+          }
+        ],
+        "return": {
+          "type": "void",
+          "description": "No return value."
+        },
+        "dependencies": [
+          "Isolate"
+        ]
+      },
+      "code": "void SetupIsolateDelegate::SetupBuiltins(Isolate* isolate,\n                                         bool compile_builtins) {\n  // No actual work to be done; builtins will be deserialized from the snapshot.\n  CHECK_WITH_MSG(!compile_builtins,\n                 \"Builtin compilation supported only in mksnapshot\");\n}"
+    }
+  ],
+  "file_level_code_content": "}  // namespace internal\n}  // namespace v8",
+  "file_path": "/home/kathirks_gc/v8_go/archive/codebase/src/init/setup-isolate-deserialize.cc"
+}

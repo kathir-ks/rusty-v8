@@ -1,0 +1,120 @@
+{
+  "metadata": {
+    "path": "/home/kathirks_gc/v8_go/archive/codebase/src/compiler/turboshaft/decompression-optimization-phase.cc",
+    "file_name": "decompression-optimization-phase.cc",
+    "language": "cpp",
+    "purpose": "Defines the DecompressionOptimizationPhase class which runs the decompression optimization for Turboshaft."
+  },
+  "imports": {
+    "metadata": {
+      "language": "cpp",
+      "purpose": "Includes necessary headers for decompression optimization."
+    },
+    "code": "#include \"src/compiler/turboshaft/decompression-optimization-phase.h\"\n\n#include \"src/compiler/turboshaft/decompression-optimization.h\""
+  },
+  "classes": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "DecompressionOptimizationPhase",
+        "about": "A compiler phase responsible for performing decompression optimization in the Turboshaft compiler.",
+        "attributes": [],
+        "dependencies": [
+          "PipelineData",
+          "Zone",
+          "RunDecompressionOptimization"
+        ]
+      },
+      "code": "namespace v8::internal::compiler::turboshaft {\n\nclass DecompressionOptimizationPhase {\n public:\n  static void Run(PipelineData* data, Zone* temp_zone);\n};\n\n}  // namespace v8::internal::compiler::turboshaft"
+    }
+  ],
+  "functions": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "method",
+        "name": "Run",
+        "parent": "DecompressionOptimizationPhase",
+        "about": "Runs the decompression optimization on the given graph.",
+        "logic": "Checks if pointer compression is enabled. If so, it calls RunDecompressionOptimization with the graph and a temporary zone.",
+        "parameters": [
+          {
+            "name": "data",
+            "type": "PipelineData*",
+            "purpose": "The pipeline data containing the graph to optimize."
+          },
+          {
+            "name": "temp_zone",
+            "type": "Zone*",
+            "purpose": "A temporary zone to use during the optimization."
+          }
+        ],
+        "return": {
+          "type": "void",
+          "description": "No return value."
+        },
+        "dependencies": [
+          "COMPRESS_POINTERS_BOOL",
+          "RunDecompressionOptimization",
+          "PipelineData",
+          "Zone"
+        ]
+      },
+      "code": "namespace v8::internal::compiler::turboshaft {\n\nvoid DecompressionOptimizationPhase::Run(PipelineData* data, Zone* temp_zone) {\n  if (!COMPRESS_POINTERS_BOOL) return;\n  RunDecompressionOptimization(data->graph(), temp_zone);\n}\n\n}  // namespace v8::internal::compiler::turboshaft"
+    }
+  ],
+  "dependencies": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "function",
+        "name": "RunDecompressionOptimization",
+        "about": "Performs the actual decompression optimization on the graph."
+      },
+      "code": "void RunDecompressionOptimization(Graph* graph, Zone* temp_zone);",
+      "type": "func"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "PipelineData",
+        "about": "Carries data needed by compilation pipeline."
+      },
+      "code": "class PipelineData {\n public:\n  Graph* graph() { return nullptr; }\n};",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "Zone",
+        "about": "Memory allocation zone."
+      },
+      "code": "class Zone {};",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "Graph",
+        "about": "Represents the compiler's intermediate representation graph."
+      },
+      "code": "class Graph {};",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "macro",
+        "name": "COMPRESS_POINTERS_BOOL",
+        "about": "A boolean indicating whether pointer compression is enabled."
+      },
+      "code": "#define COMPRESS_POINTERS_BOOL false",
+      "type": "macro"
+    }
+  ],
+  "file_path": "/home/kathirks_gc/v8_go/archive/codebase/src/compiler/turboshaft/decompression-optimization-phase.cc"
+}

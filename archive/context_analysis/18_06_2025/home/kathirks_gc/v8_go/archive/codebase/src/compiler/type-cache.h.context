@@ -1,0 +1,561 @@
+{
+  "metadata": {
+    "path": "/home/kathirks_gc/v8_go/archive/codebase/src/compiler/type-cache.h",
+    "file_name": "type-cache.h",
+    "language": "cpp",
+    "purpose": "Defines the TypeCache class, which provides a cache of commonly used Type objects for the compiler."
+  },
+  "imports": {
+    "metadata": {
+      "language": "cpp",
+      "purpose": "Includes necessary headers for globals, Turbofan types, date functions, JS array buffers, and strings."
+    },
+    "code": "#include \"src/compiler/globals.h\"\n#include \"src/compiler/turbofan-types.h\"\n#include \"src/date/date.h\"\n#include \"src/objects/js-array-buffer.h\"\n#include \"src/objects/string.h\""
+  },
+  "classes": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "TypeCache",
+        "extends": null,
+        "implements": [],
+        "about": "Provides a cache of commonly used Type objects, improving performance by reusing existing Type objects instead of creating new ones repeatedly.",
+        "attributes": [
+          {
+            "name": "allocator",
+            "type": "AccountingAllocator",
+            "access": "private",
+            "purpose": "Allocator used for allocating memory for Type objects."
+          },
+          {
+            "name": "zone_",
+            "type": "Zone",
+            "access": "private",
+            "purpose": "A memory zone used for allocating Type objects.  It's associated with the allocator."
+          },
+          {
+            "name": "kInt8",
+            "type": "Type const",
+            "access": "public",
+            "purpose": "Represents the type for int8_t."
+          },
+          {
+            "name": "kUint8",
+            "type": "Type const",
+            "access": "public",
+            "purpose": "Represents the type for uint8_t."
+          },
+          {
+            "name": "kUint8Clamped",
+            "type": "Type const",
+            "access": "public",
+            "purpose": "Represents the type for uint8_t, clamped."
+          },
+          {
+            "name": "kUint8OrMinusZeroOrNaN",
+            "type": "Type const",
+            "access": "public",
+            "purpose": "Represents the union type of uint8, MinusZero, or NaN."
+          },
+          {
+            "name": "kInt16",
+            "type": "Type const",
+            "access": "public",
+            "purpose": "Represents the type for int16_t."
+          },
+          {
+            "name": "kUint16",
+            "type": "Type const",
+            "access": "public",
+            "purpose": "Represents the type for uint16_t."
+          },
+          {
+            "name": "kUnsigned31",
+            "type": "Type const",
+            "access": "public",
+            "purpose": "Represents the type for unsigned 31-bit integers."
+          },
+          {
+            "name": "kInt32",
+            "type": "Type const",
+            "access": "public",
+            "purpose": "Represents the type for signed 32-bit integers."
+          },
+          {
+            "name": "kUint32",
+            "type": "Type const",
+            "access": "public",
+            "purpose": "Represents the type for unsigned 32-bit integers."
+          },
+          {
+            "name": "kDoubleRepresentableInt64",
+            "type": "Type const",
+            "access": "public",
+            "purpose": "Represents the type for int64 that can be represented exactly as a double."
+          },
+          {
+            "name": "kDoubleRepresentableInt64OrMinusZero",
+            "type": "Type const",
+            "access": "public",
+            "purpose": "Represents the union type of double representable int64 or minus zero."
+          },
+          {
+            "name": "kDoubleRepresentableUint64",
+            "type": "Type const",
+            "access": "public",
+            "purpose": "Represents the type for uint64 that can be represented exactly as a double."
+          },
+          {
+            "name": "kFloat16",
+            "type": "Type const",
+            "access": "public",
+            "purpose": "Represents the type for Float16 (Number in JS)."
+          },
+          {
+            "name": "kFloat32",
+            "type": "Type const",
+            "access": "public",
+            "purpose": "Represents the type for Float32 (Number in JS)."
+          },
+          {
+            "name": "kFloat64",
+            "type": "Type const",
+            "access": "public",
+            "purpose": "Represents the type for Float64 (Number in JS)."
+          },
+          {
+            "name": "kBigInt64",
+            "type": "Type const",
+            "access": "public",
+            "purpose": "Represents the type for BigInt64."
+          },
+          {
+            "name": "kBigUint64",
+            "type": "Type const",
+            "access": "public",
+            "purpose": "Represents the type for BigUint64."
+          },
+          {
+            "name": "kHoleySmi",
+            "type": "Type const",
+            "access": "public",
+            "purpose": "Represents the union type of SignedSmall or Hole."
+          },
+          {
+            "name": "kSingletonZero",
+            "type": "Type const",
+            "access": "public",
+            "purpose": "Represents the type for the singleton value 0.0."
+          },
+          {
+            "name": "kSingletonOne",
+            "type": "Type const",
+            "access": "public",
+            "purpose": "Represents the type for the singleton value 1.0."
+          },
+          {
+            "name": "kSingletonTen",
+            "type": "Type const",
+            "access": "public",
+            "purpose": "Represents the type for the singleton value 10.0."
+          },
+          {
+            "name": "kSingletonMinusOne",
+            "type": "Type const",
+            "access": "public",
+            "purpose": "Represents the type for the singleton value -1.0."
+          },
+          {
+            "name": "kZeroOrMinusZero",
+            "type": "Type const",
+            "access": "public",
+            "purpose": "Represents the union type of 0.0 or MinusZero."
+          },
+          {
+            "name": "kZeroOrUndefined",
+            "type": "Type const",
+            "access": "public",
+            "purpose": "Represents the union type of 0.0 or Undefined."
+          },
+          {
+            "name": "kTenOrUndefined",
+            "type": "Type const",
+            "access": "public",
+            "purpose": "Represents the union type of 10.0 or Undefined."
+          },
+          {
+            "name": "kMinusOneOrZero",
+            "type": "Type const",
+            "access": "public",
+            "purpose": "Represents the range type from -1.0 to 0.0."
+          },
+          {
+            "name": "kMinusOneToOneOrMinusZeroOrNaN",
+            "type": "Type const",
+            "access": "public",
+            "purpose": "Represents the union type from range -1.0 to 1.0, MinusZero, or NaN."
+          },
+          {
+            "name": "kZeroOrOne",
+            "type": "Type const",
+            "access": "public",
+            "purpose": "Represents the range type from 0.0 to 1.0."
+          },
+          {
+            "name": "kZeroOrOneOrNaN",
+            "type": "Type const",
+            "access": "public",
+            "purpose": "Represents the union type from range 0.0 to 1.0, or NaN."
+          },
+          {
+            "name": "kZeroToThirtyOne",
+            "type": "Type const",
+            "access": "public",
+            "purpose": "Represents the range type from 0.0 to 31.0."
+          },
+          {
+            "name": "kZeroToThirtyTwo",
+            "type": "Type const",
+            "access": "public",
+            "purpose": "Represents the range type from 0.0 to 32.0."
+          },
+          {
+            "name": "kZeroish",
+            "type": "Type const",
+            "access": "public",
+            "purpose": "Represents the union type from the singleton zero, MinusZero, or NaN."
+          },
+          {
+            "name": "kInteger",
+            "type": "Type const",
+            "access": "public",
+            "purpose": "Represents the range type from -V8_INFINITY to V8_INFINITY."
+          },
+          {
+            "name": "kIntegerOrMinusZero",
+            "type": "Type const",
+            "access": "public",
+            "purpose": "Represents the union type from the Integer type or MinusZero."
+          },
+          {
+            "name": "kIntegerOrMinusZeroOrNaN",
+            "type": "Type const",
+            "access": "public",
+            "purpose": "Represents the union type from the IntegerOrMinusZero type or NaN."
+          },
+          {
+            "name": "kPositiveInteger",
+            "type": "Type const",
+            "access": "public",
+            "purpose": "Represents the range type from 0.0 to V8_INFINITY."
+          },
+          {
+            "name": "kPositiveIntegerOrMinusZero",
+            "type": "Type const",
+            "access": "public",
+            "purpose": "Represents the union type from the PositiveInteger type or MinusZero."
+          },
+          {
+            "name": "kPositiveIntegerOrNaN",
+            "type": "Type const",
+            "access": "public",
+            "purpose": "Represents the union type from the PositiveInteger type or NaN."
+          },
+          {
+            "name": "kPositiveIntegerOrMinusZeroOrNaN",
+            "type": "Type const",
+            "access": "public",
+            "purpose": "Represents the union type from the PositiveIntegerOrMinusZero type or NaN."
+          },
+          {
+            "name": "kSafeInteger",
+            "type": "Type const",
+            "access": "public",
+            "purpose": "Represents the range type from -kMaxSafeInteger to kMaxSafeInteger."
+          },
+          {
+            "name": "kAdditiveSafeInteger",
+            "type": "Type const",
+            "access": "public",
+            "purpose": "Represents the range type from kMinAdditiveSafeInteger to kMaxAdditiveSafeInteger."
+          },
+          {
+            "name": "kAdditiveSafeIntegerOrMinusZero",
+            "type": "Type const",
+            "access": "public",
+            "purpose": "Represents the union type from the AdditiveSafeInteger type or MinusZero."
+          },
+          {
+            "name": "kSafeIntegerOrMinusZero",
+            "type": "Type const",
+            "access": "public",
+            "purpose": "Represents the union type from the SafeInteger type or MinusZero."
+          },
+          {
+            "name": "kPositiveSafeInteger",
+            "type": "Type const",
+            "access": "public",
+            "purpose": "Represents the range type from 0.0 to kMaxSafeInteger."
+          },
+          {
+            "name": "kFixedArrayLengthType",
+            "type": "Type const",
+            "access": "public",
+            "purpose": "Represents the range type from 0.0 to FixedArray::kMaxLength, representing a valid fixed array length."
+          },
+          {
+            "name": "kWeakFixedArrayLengthType",
+            "type": "Type const",
+            "access": "public",
+            "purpose": "Represents the range type from 0.0 to WeakFixedArray::kMaxCapacity, representing the maximum capacity of a weak fixed array."
+          },
+          {
+            "name": "kFixedDoubleArrayLengthType",
+            "type": "Type const",
+            "access": "public",
+            "purpose": "Represents the range type from 0.0 to FixedDoubleArray::kMaxLength, representing a valid fixed double array length."
+          },
+          {
+            "name": "kJSArrayLengthType",
+            "type": "Type const",
+            "access": "public",
+            "purpose": "Represents the JSArray length type (Unsigned32)."
+          },
+          {
+            "name": "kJSArrayBufferByteLengthType",
+            "type": "Type const",
+            "access": "public",
+            "purpose": "Represents the JSArrayBuffer byte length type.  Limited to safe integer range, but on 32-bit architectures it can be uint32_t."
+          },
+          {
+            "name": "kJSArrayBufferViewByteLengthType",
+            "type": "Type const",
+            "access": "public",
+            "purpose": "Represents the byte length type of JSArrayBufferView, same as JSArrayBuffer::byte_length."
+          },
+          {
+            "name": "kJSArrayBufferViewByteOffsetType",
+            "type": "Type const",
+            "access": "public",
+            "purpose": "Represents the byte offset type of JSArrayBufferView, same as JSArrayBuffer::byte_length."
+          },
+          {
+            "name": "kJSTypedArrayLengthType",
+            "type": "Type const",
+            "access": "public",
+            "purpose": "Represents the length type for a JSTypedArray. The range is [0.0, JSTypedArray::kMaxByteLength]."
+          },
+          {
+            "name": "kStringLengthType",
+            "type": "Type const",
+            "access": "public",
+            "purpose": "Represents the length type for String. The range is [0.0, String::kMaxLength]."
+          },
+          {
+            "name": "kTimeValueType",
+            "type": "Type const",
+            "access": "public",
+            "purpose": "Represents the range type from -DateCache::kMaxTimeInMs to DateCache::kMaxTimeInMs, representing a time value."
+          },
+          {
+            "name": "kJSDateDayType",
+            "type": "Type const",
+            "access": "public",
+            "purpose": "Represents the day type for a JSDate, union of the range from 1 to 31 or NaN."
+          },
+          {
+            "name": "kJSDateHourType",
+            "type": "Type const",
+            "access": "public",
+            "purpose": "Represents the hour type for a JSDate, union of the range from 0 to 23 or NaN."
+          },
+          {
+            "name": "kJSDateMinuteType",
+            "type": "Type const",
+            "access": "public",
+            "purpose": "Represents the minute type for a JSDate, union of the range from 0 to 59 or NaN."
+          },
+          {
+            "name": "kJSDateMonthType",
+            "type": "Type const",
+            "access": "public",
+            "purpose": "Represents the month type for a JSDate, union of the range from 0 to 11 or NaN."
+          },
+          {
+            "name": "kJSDateSecondType",
+            "type": "Type const",
+            "access": "public",
+            "purpose": "Represents the second type for a JSDate, same as the minute type."
+          },
+          {
+            "name": "kJSDateValueType",
+            "type": "Type const",
+            "access": "public",
+            "purpose": "Represents the value type for a JSDate, union of the kTimeValueType or NaN."
+          },
+          {
+            "name": "kJSDateWeekdayType",
+            "type": "Type const",
+            "access": "public",
+            "purpose": "Represents the weekday type for a JSDate, union of the range from 0 to 6 or NaN."
+          },
+          {
+            "name": "kJSDateYearType",
+            "type": "Type const",
+            "access": "public",
+            "purpose": "Represents the year type for a JSDate, union of the range from -271821 to 275760 or NaN."
+          },
+          {
+            "name": "kArgumentsLengthType",
+            "type": "Type const",
+            "access": "public",
+            "purpose": "Represents the length type for the arguments object of a JavaScript function, which will always be within the range [0, FixedArray::kMaxLength]."
+          },
+          {
+            "name": "kRestLengthType",
+            "type": "Type const",
+            "access": "public",
+            "purpose": "Represents the length type for the rest parameters, which will always be within the range [0, FixedArray::kMaxLength]."
+          },
+          {
+            "name": "kJSArrayIteratorKindType",
+            "type": "Type const",
+            "access": "public",
+            "purpose": "Represents the kind property for a JSArrayIterator, which must be in the range [0, 2]."
+          }
+        ],
+        "dependencies": [
+          "AccountingAllocator",
+          "Zone",
+          "Type",
+          "FixedArray",
+          "WeakFixedArray",
+          "FixedDoubleArray",
+          "JSArrayBuffer",
+          "JSTypedArray",
+          "String",
+          "DateCache",
+          "V8_INFINITY",
+          "kMaxSafeInteger",
+          "kMinAdditiveSafeInteger",
+          "kMaxAdditiveSafeInteger",
+          "std::numeric_limits"
+        ]
+      },
+      "code": "class V8_EXPORT_PRIVATE TypeCache final {\n private:\n  // This has to be first for the initialization magic to work.\n  AccountingAllocator allocator;\n  Zone zone_;\n\n public:\n  static TypeCache const* Get();\n\n  TypeCache() : zone_(&allocator, ZONE_NAME) {}\n\n  Type const kInt8 = CreateRange<int8_t>();\n  Type const kUint8 = CreateRange<uint8_t>();\n  Type const kUint8Clamped = kUint8;\n  Type const kUint8OrMinusZeroOrNaN =\n      Type::Union(kUint8, Type::MinusZeroOrNaN(), zone());\n  Type const kInt16 = CreateRange<int16_t>();\n  Type const kUint16 = CreateRange<uint16_t>();\n  Type const kUnsigned31 = Type::Unsigned31();\n  Type const kInt32 = Type::Signed32();\n  Type const kUint32 = Type::Unsigned32();\n  Type const kDoubleRepresentableInt64 = CreateRange(\n      std::numeric_limits<int64_t>::min(), kMaxDoubleRepresentableInt64);\n  Type const kDoubleRepresentableInt64OrMinusZero =\n      Type::Union(kDoubleRepresentableInt64, Type::MinusZero(), zone());\n  Type const kDoubleRepresentableUint64 = CreateRange(\n      std::numeric_limits<uint64_t>::min(), kMaxDoubleRepresentableUint64);\n  Type const kFloat16 = Type::Number();\n  Type const kFloat32 = Type::Number();\n  Type const kFloat64 = Type::Number();\n  Type const kBigInt64 = Type::SignedBigInt64();\n  Type const kBigUint64 = Type::UnsignedBigInt64();\n\n  Type const kHoleySmi = Type::Union(Type::SignedSmall(), Type::Hole(), zone());\n\n  Type const kSingletonZero = CreateRange(0.0, 0.0);\n  Type const kSingletonOne = CreateRange(1.0, 1.0);\n  Type const kSingletonTen = CreateRange(10.0, 10.0);\n  Type const kSingletonMinusOne = CreateRange(-1.0, -1.0);\n  Type const kZeroOrMinusZero =\n      Type::Union(kSingletonZero, Type::MinusZero(), zone());\n  Type const kZeroOrUndefined =\n      Type::Union(kSingletonZero, Type::Undefined(), zone());\n  Type const kTenOrUndefined =\n      Type::Union(kSingletonTen, Type::Undefined(), zone());\n  Type const kMinusOneOrZero = CreateRange(-1.0, 0.0);\n  Type const kMinusOneToOneOrMinusZeroOrNaN = Type::Union(\n      Type::Union(CreateRange(-1.0, 1.0), Type::MinusZero(), zone()),\n      Type::NaN(), zone());\n  Type const kZeroOrOne = CreateRange(0.0, 1.0);\n  Type const kZeroOrOneOrNaN = Type::Union(kZeroOrOne, Type::NaN(), zone());\n  Type const kZeroToThirtyOne = CreateRange(0.0, 31.0);\n  Type const kZeroToThirtyTwo = CreateRange(0.0, 32.0);\n  Type const kZeroish =\n      Type::Union(kSingletonZero, Type::MinusZeroOrNaN(), zone());\n  Type const kInteger = CreateRange(-V8_INFINITY, V8_INFINITY);\n  Type const kIntegerOrMinusZero =\n      Type::Union(kInteger, Type::MinusZero(), zone());\n  Type const kIntegerOrMinusZeroOrNaN =\n      Type::Union(kIntegerOrMinusZero, Type::NaN(), zone());\n  Type const kPositiveInteger = CreateRange(0.0, V8_INFINITY);\n  Type const kPositiveIntegerOrMinusZero =\n      Type::Union(kPositiveInteger, Type::MinusZero(), zone());\n  Type const kPositiveIntegerOrNaN =\n      Type::Union(kPositiveInteger, Type::NaN(), zone());\n  Type const kPositiveIntegerOrMinusZeroOrNaN =\n      Type::Union(kPositiveIntegerOrMinusZero, Type::NaN(), zone());\n\n  Type const kSafeInteger = CreateRange(-kMaxSafeInteger, kMaxSafeInteger);\n  Type const kAdditiveSafeInteger =\n      CreateRange(kMinAdditiveSafeInteger, kMaxAdditiveSafeInteger);\n  Type const kAdditiveSafeIntegerOrMinusZero =\n      Type::Union(kAdditiveSafeInteger, Type::MinusZero(), zone());\n  Type const kSafeIntegerOrMinusZero =\n      Type::Union(kSafeInteger, Type::MinusZero(), zone());\n  Type const kPositiveSafeInteger = CreateRange(0.0, kMaxSafeInteger);\n\n  // The FixedArray::length property always containts a smi in the range\n  // [0, FixedArray::kMaxLength].\n  Type const kFixedArrayLengthType = CreateRange(0.0, FixedArray::kMaxLength);\n\n  // The WeakFixedArray::length property always containts a smi in the range:\n  Type const kWeakFixedArrayLengthType =\n      CreateRange(0.0, WeakFixedArray::kMaxCapacity);\n\n  // The FixedDoubleArray::length property always containts a smi in the range\n  // [0, FixedDoubleArray::kMaxLength].\n  Type const kFixedDoubleArrayLengthType =\n      CreateRange(0.0, FixedDoubleArray::kMaxLength);\n\n  // The JSArray::length property always contains a tagged number in the range\n  // [0, kMaxUInt32].\n  Type const kJSArrayLengthType = Type::Unsigned32();\n\n  // The JSArrayBuffer::byte_length property is limited to safe integer range\n  // per specification, but on 32-bit architectures is implemented as uint32_t\n  // field, so it's in the [0, kMaxUInt32] range in that case.\n  Type const kJSArrayBufferByteLengthType =\n      CreateRange(0.0, JSArrayBuffer::kMaxByteLength);\n\n  // The type for the JSArrayBufferView::byte_length property is the same as\n  // JSArrayBuffer::byte_length above.\n  Type const kJSArrayBufferViewByteLengthType = kJSArrayBufferByteLengthType;\n\n  // The type for the JSArrayBufferView::byte_offset property is the same as\n  // JSArrayBuffer::byte_length above.\n  Type const kJSArrayBufferViewByteOffsetType = kJSArrayBufferByteLengthType;\n\n  // The JSTypedArray::length property always contains an untagged number in\n  // the range [0, JSTypedArray::kMaxByteLength].\n  Type const kJSTypedArrayLengthType =\n      CreateRange(0.0, JSTypedArray::kMaxByteLength);\n\n  // The String::length property always contains a smi in the range\n  // [0, String::kMaxLength].\n  Type const kStringLengthType = CreateRange(0.0, String::kMaxLength);\n\n  // A time value always contains a tagged number in the range\n  // [-kMaxTimeInMs, kMaxTimeInMs].\n  Type const kTimeValueType =\n      CreateRange(-DateCache::kMaxTimeInMs, DateCache::kMaxTimeInMs);\n\n  // The JSDate::day property always contains a tagged number in the range\n  // [1, 31] or NaN.\n  Type const kJSDateDayType =\n      Type::Union(CreateRange(1, 31.0), Type::NaN(), zone());\n\n  // The JSDate::hour property always contains a tagged number in the range\n  // [0, 23] or NaN.\n  Type const kJSDateHourType =\n      Type::Union(CreateRange(0, 23.0), Type::NaN(), zone());\n\n  // The JSDate::minute property always contains a tagged number in the range\n  // [0, 59] or NaN.\n  Type const kJSDateMinuteType =\n      Type::Union(CreateRange(0, 59.0), Type::NaN(), zone());\n\n  // The JSDate::month property always contains a tagged number in the range\n  // [0, 11] or NaN.\n  Type const kJSDateMonthType =\n      Type::Union(CreateRange(0, 11.0), Type::NaN(), zone());\n\n  // The JSDate::second property always contains a tagged number in the range\n  // [0, 59] or NaN.\n  Type const kJSDateSecondType = kJSDateMinuteType;\n\n  // The JSDate::value property always contains a tagged number in the range\n  // [-kMaxTimeInMs, kMaxTimeInMs] or NaN.\n  Type const kJSDateValueType =\n      Type::Union(kTimeValueType, Type::NaN(), zone());\n\n  // The JSDate::weekday property always contains a tagged number in the range\n  // [0, 6] or NaN.\n  Type const kJSDateWeekdayType =\n      Type::Union(CreateRange(0, 6.0), Type::NaN(), zone());\n\n  // The JSDate::year property always contains a tagged number in the range\n  // [-271821, 275760] or NaN.\n  Type const kJSDateYearType =\n      Type::Union(CreateRange(-271821, 275760), Type::NaN(), zone());\n\n  // The valid number of arguments for JavaScript functions. We can never\n  // materialize more than the max size of a fixed array, because we require a\n  // fixed array in spread/apply calls.\n  Type const kArgumentsLengthType = CreateRange(0.0, FixedArray::kMaxLength);\n\n  // The valid number of arguments for rest parameters. We can never\n  // materialize more than the max size of a fixed array, because we require a\n  // fixed array in spread/apply calls.\n  Type const kRestLengthType = CreateRange(0.0, FixedArray::kMaxLength);\n\n  // The JSArrayIterator::kind property always contains an integer in the\n  // range [0, 2], representing the possible IterationKinds.\n  Type const kJSArrayIteratorKindType = CreateRange(0.0, 2.0);\n\n private:\n  template <typename T>\n  Type CreateRange() {\n    T min = std::numeric_limits<T>::min();\n    T max = std::numeric_limits<T>::max();\n    DCHECK_EQ(min, static_cast<T>(static_cast<double>(min)));\n    DCHECK_EQ(max, static_cast<T>(static_cast<double>(max)));\n    return CreateRange(min, max);\n  }\n\n  Type CreateRange(double min, double max) {\n    return Type::Range(min, max, zone());\n  }\n\n  Zone* zone() { return &zone_; }\n};"
+    }
+  ],
+  "functions": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "method",
+        "name": "Get",
+        "parent": "TypeCache",
+        "about": "Returns a pointer to the TypeCache instance.",
+        "logic": "This method likely implements a singleton pattern to ensure only one instance of TypeCache exists.",
+        "parameters": [],
+        "return": {
+          "type": "TypeCache const*",
+          "description": "A pointer to the TypeCache instance."
+        },
+        "dependencies": []
+      },
+      "code": "static TypeCache const* Get();"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "constructor",
+        "name": "TypeCache",
+        "parent": "TypeCache",
+        "about": "Constructor for the TypeCache class.",
+        "logic": "Initializes the zone_ member with the provided allocator and a name.",
+        "parameters": [],
+        "return": {
+          "type": "void",
+          "description": "N/A"
+        },
+        "dependencies": [
+          "AccountingAllocator",
+          "Zone",
+          "ZONE_NAME"
+        ]
+      },
+      "code": "TypeCache() : zone_(&allocator, ZONE_NAME) {}"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "method",
+        "name": "CreateRange",
+        "parent": "TypeCache",
+        "about": "Creates a Type object representing a range of values for a given type T.",
+        "logic": "Determines the min and max values for the type T using std::numeric_limits and then calls the double version of CreateRange.",
+        "parameters": [],
+        "return": {
+          "type": "Type",
+          "description": "A Type object representing the range."
+        },
+        "dependencies": [
+          "std::numeric_limits",
+          "Type",
+          "CreateRange(double min, double max)"
+        ]
+      },
+      "code": "template <typename T>\n  Type CreateRange() {\n    T min = std::numeric_limits<T>::min();\n    T max = std::numeric_limits<T>::max();\n    DCHECK_EQ(min, static_cast<T>(static_cast<double>(min)));\n    DCHECK_EQ(max, static_cast<T>(static_cast<double>(max)));\n    return CreateRange(min, max);\n  }"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "method",
+        "name": "CreateRange",
+        "parent": "TypeCache",
+        "about": "Creates a Type object representing a range of double values.",
+        "logic": "Calls Type::Range with the provided min and max values and the current zone.",
+        "parameters": [
+          {
+            "name": "min",
+            "type": "double",
+            "purpose": "The minimum value of the range."
+          },
+          {
+            "name": "max",
+            "type": "double",
+            "purpose": "The maximum value of the range."
+          }
+        ],
+        "return": {
+          "type": "Type",
+          "description": "A Type object representing the range."
+        },
+        "dependencies": [
+          "Type",
+          "Zone"
+        ]
+      },
+      "code": "Type CreateRange(double min, double max) {\n    return Type::Range(min, max, zone());\n  }"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "method",
+        "name": "zone",
+        "parent": "TypeCache",
+        "about": "Returns a pointer to the Zone used by the TypeCache.",
+        "logic": "Simple accessor to return the zone_ member.",
+        "parameters": [],
+        "return": {
+          "type": "Zone*",
+          "description": "A pointer to the Zone."
+        },
+        "dependencies": [
+          "Zone"
+        ]
+      },
+      "code": "Zone* zone() { return &zone_; }"
+    }
+  ],
+  "file_path": "/home/kathirks_gc/v8_go/archive/codebase/src/compiler/type-cache.h"
+}

@@ -1,0 +1,134 @@
+{
+  "metadata": {
+    "path": "/home/kathirks_gc/v8_go/archive/codebase/src/compiler/dead-code-elimination.h",
+    "file_name": "dead-code-elimination.h",
+    "language": "cpp",
+    "purpose": "Declares the DeadCodeElimination class, which propagates dead control and dead values through the graph to remove dead code in the V8 compiler."
+  },
+  "imports": {
+    "metadata": {
+      "language": "cpp",
+      "purpose": "Includes necessary header files for compiler-specific features, machine types, and graph reduction."
+    },
+    "code": "#include \"src/base/compiler-specific.h\"\n            #include \"src/codegen/machine-type.h\"\n            #include \"src/compiler/graph-reducer.h\""
+  },
+  "classes": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "DeadCodeElimination",
+        "extends": "AdvancedReducer",
+        "about": "Propagates Dead control and DeadValue values through the graph and thereby removes dead code.",
+        "attributes": [
+          {
+            "name": "graph_",
+            "type": "TFGraph*",
+            "access": "private",
+            "purpose": "Pointer to the graph being optimized."
+          },
+          {
+            "name": "common_",
+            "type": "CommonOperatorBuilder*",
+            "access": "private",
+            "purpose": "Pointer to the common operator builder."
+          },
+          {
+            "name": "dead_",
+            "type": "Node*",
+            "access": "private",
+            "purpose": "Represents a dead value in the graph."
+          },
+          {
+            "name": "zone_",
+            "type": "Zone*",
+            "access": "private",
+            "purpose": "Memory zone for temporary allocations."
+          }
+        ],
+        "dependencies": [
+          "AdvancedReducer",
+          "CommonOperatorBuilder",
+          "TFGraph",
+          "Zone",
+          "Node",
+          "MachineRepresentation"
+        ]
+      },
+      "code": "class V8_EXPORT_PRIVATE DeadCodeElimination final\n                : public NON_EXPORTED_BASE(AdvancedReducer) {\n            public:\n              DeadCodeElimination(Editor* editor, TFGraph* graph,\n                                  CommonOperatorBuilder* common, Zone* temp_zone);\n              ~DeadCodeElimination() final = default;\n              DeadCodeElimination(const DeadCodeElimination&) = delete;\n              DeadCodeElimination& operator=(const DeadCodeElimination&) = delete;\n\n              const char* reducer_name() const override { return \"DeadCodeElimination\"; }\n\n              Reduction Reduce(Node* node) final;\n\n             private:\n              Reduction ReduceEnd(Node* node);\n              Reduction ReduceLoopOrMerge(Node* node);\n              Reduction ReduceLoopExit(Node* node);\n              Reduction ReduceNode(Node* node);\n              Reduction ReducePhi(Node* node);\n              Reduction ReduceEffectPhi(Node* node);\n              Reduction ReducePureNode(Node* node);\n              Reduction ReduceUnreachableOrIfException(Node* node);\n              Reduction ReduceEffectNode(Node* node);\n              Reduction ReduceDeoptimizeOrReturnOrTerminateOrTailCall(Node* node);\n              Reduction ReduceBranchOrSwitch(Node* node);\n\n              Reduction RemoveLoopExit(Node* node);\n              Reduction PropagateDeadControl(Node* node);\n\n              void TrimMergeOrPhi(Node* node, int size);\n\n              Node* DeadValue(Node* none_node,\n                              MachineRepresentation rep = MachineRepresentation::kNone);\n\n              TFGraph* graph() const { return graph_; }\n              CommonOperatorBuilder* common() const { return common_; }\n              Node* dead() const { return dead_; }\n\n              TFGraph* const graph_;\n              CommonOperatorBuilder* const common_;\n              Node* const dead_;\n              Zone* zone_;\n            };"
+    }
+  ],
+  "dependencies": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "AdvancedReducer",
+        "about": "Base class for advanced reducers in the compiler pipeline."
+      },
+      "code": "class AdvancedReducer {\n                public:\n                    virtual ~AdvancedReducer() {}\n                    virtual Reduction Reduce(Node* node) = 0;\n                    virtual const char* reducer_name() const = 0;\n                };",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "CommonOperatorBuilder",
+        "about": "Provides a convenient way to build common operators."
+      },
+      "code": "class CommonOperatorBuilder {\n                public:\n                    CommonOperatorBuilder(Zone* zone);\n                    ~CommonOperatorBuilder();\n                };",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "TFGraph",
+        "about": "Represents the typed function graph."
+      },
+      "code": "class TFGraph {\n                public:\n                    TFGraph(Zone* zone);\n                    ~TFGraph();\n                };",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "Zone",
+        "about": "Memory allocation zone."
+      },
+      "code": "class Zone {\n                public:\n                    Zone(Isolate* isolate);\n                    ~Zone();\n                };",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "Node",
+        "about": "Represents a node in the graph."
+      },
+      "code": "class Node {\n                public:\n                    Node(const Operator* op, int input_count, Node** inputs,\n                         bool allow_unsafe_access = false);\n                    ~Node();\n                };",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "enum",
+        "name": "MachineRepresentation",
+        "about": "Enumerates the possible machine representations."
+      },
+      "code": "enum class MachineRepresentation {\n                  kNone,\n                  kBit,\n                  kWord8,\n                  kWord16,\n                  kWord32,\n                  kWord64,\n                  kFloat32,\n                  kFloat64,\n                  kSimd128,\n                  kTaggedSigned,\n                  kTaggedPointer,\n                  kTagged,\n                  kLast = kTagged\n                };",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "Editor",
+        "about": "Graph editing helper."
+      },
+      "code": "class Editor {\n                public:\n                  virtual ~Editor();\n                };",
+      "type": "class"
+    }
+  ],
+  "file_path": "/home/kathirks_gc/v8_go/archive/codebase/src/compiler/dead-code-elimination.h"
+}

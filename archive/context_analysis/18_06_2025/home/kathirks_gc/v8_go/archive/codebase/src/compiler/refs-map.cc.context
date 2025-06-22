@@ -1,0 +1,277 @@
+{
+  "metadata": {
+    "path": "/home/kathirks_gc/v8_go/archive/codebase/src/compiler/refs-map.cc",
+    "file_name": "refs-map.cc",
+    "language": "cpp",
+    "purpose": "Implements a map for storing references (addresses) and associated object data within the V8 compiler."
+  },
+  "imports": {
+    "metadata": {
+      "language": "cpp",
+      "purpose": "Includes the header file for the RefsMap class."
+    },
+    "code": "#include \"src/compiler/refs-map.h\""
+  },
+  "classes": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "RefsMap",
+        "about": "A map that stores addresses (references) as keys and pointers to ObjectData as values.",
+        "attributes": [],
+        "dependencies": [
+          "Address",
+          "ObjectData",
+          "base::TemplateHashMapImpl",
+          "AddressMatcher",
+          "ZoneAllocationPolicy",
+          "Zone"
+        ]
+      },
+      "code": "namespace v8 {\nnamespace internal {\nnamespace compiler {\n\nusing UnderlyingMap =\n    base::TemplateHashMapImpl<Address, ObjectData*, AddressMatcher,\n                              ZoneAllocationPolicy>;\n\nRefsMap::RefsMap(uint32_t capacity, AddressMatcher match, Zone* zone)\n    : UnderlyingMap(capacity, match, ZoneAllocationPolicy(zone)) {}\n\nRefsMap::RefsMap(const RefsMap* other, Zone* zone)\n    : UnderlyingMap(other, ZoneAllocationPolicy(zone)) {}\n\nRefsMap::Entry* RefsMap::Lookup(const Address& key) const {\n  return UnderlyingMap::Lookup(key, Hash(key));\n}\n\nRefsMap::Entry* RefsMap::LookupOrInsert(const Address& key) {\n  return UnderlyingMap::LookupOrInsert(key, RefsMap::Hash(key),\n                                       []() { return nullptr; });\n}\n\nObjectData* RefsMap::Remove(const Address& key) {\n  return UnderlyingMap::Remove(key, RefsMap::Hash(key));\n}\n\nuint32_t RefsMap::Hash(Address addr) { return static_cast<uint32_t>(addr); }\n\n}  // namespace compiler\n}  // namespace internal\n}  // namespace v8"
+    }
+  ],
+  "dependencies": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "Address",
+        "about": "Represents a memory address."
+      },
+      "code": "class Address {};",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "ObjectData",
+        "about": "Represents data associated with an object."
+      },
+      "code": "class ObjectData {};",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "AddressMatcher",
+        "about": "Used for matching addresses in the hash map."
+      },
+      "code": "class AddressMatcher {};",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "ZoneAllocationPolicy",
+        "about": "Memory allocation policy for the Zone."
+      },
+      "code": "class ZoneAllocationPolicy {\n                public:\n                  ZoneAllocationPolicy(Zone* zone) {}\n                };",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "Zone",
+        "about": "Memory management zone."
+      },
+      "code": "class Zone {};",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "base::TemplateHashMapImpl",
+        "about": "Underlying hash map implementation."
+      },
+      "code": "namespace base {\n                  template <typename K, typename V, typename M, typename A>\n                  class TemplateHashMapImpl {\n                    public:\n                      TemplateHashMapImpl(uint32_t capacity, M match, A alloc) {}\n                      TemplateHashMapImpl(const TemplateHashMapImpl* other, A alloc) {}\n                      Entry* Lookup(const K& key, uint32_t hash) const { return nullptr; }\n                      Entry* LookupOrInsert(const K& key, uint32_t hash, auto create_default) { return nullptr; }\n                      V Remove(const K& key, uint32_t hash) { return nullptr; }\n                  };\n                }",
+      "type": "class"
+    }
+  ],
+  "functions": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "function",
+        "name": "RefsMap::Hash",
+        "parent": "RefsMap",
+        "about": "Calculates a hash value for a given address.",
+        "logic": "Simply casts the address to a uint32_t and returns it.  This is a very simple hash function that may have collisions.",
+        "parameters": [
+          {
+            "name": "addr",
+            "type": "Address",
+            "purpose": "The address to hash."
+          }
+        ],
+        "return": {
+          "type": "uint32_t",
+          "description": "The hash value of the address."
+        },
+        "dependencies": [
+          "Address"
+        ]
+      },
+      "code": "uint32_t RefsMap::Hash(Address addr) { return static_cast<uint32_t>(addr); }"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "method",
+        "name": "RefsMap::Lookup",
+        "parent": "RefsMap",
+        "about": "Looks up an entry in the map based on the provided key (address).",
+        "logic": "Calls the underlying TemplateHashMapImpl::Lookup method with the key and its hash value.",
+        "parameters": [
+          {
+            "name": "key",
+            "type": "Address",
+            "purpose": "The address to look up."
+          }
+        ],
+        "return": {
+          "type": "RefsMap::Entry*",
+          "description": "A pointer to the entry if found, nullptr otherwise."
+        },
+        "dependencies": [
+          "Address",
+          "UnderlyingMap",
+          "RefsMap::Hash"
+        ]
+      },
+      "code": "RefsMap::Entry* RefsMap::Lookup(const Address& key) const {\n  return UnderlyingMap::Lookup(key, Hash(key));\n}"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "method",
+        "name": "RefsMap::LookupOrInsert",
+        "parent": "RefsMap",
+        "about": "Looks up an entry in the map, inserting a new entry if it doesn't exist.",
+        "logic": "Calls the underlying TemplateHashMapImpl::LookupOrInsert method with the key, its hash value, and a lambda to create a default value (nullptr in this case).",
+        "parameters": [
+          {
+            "name": "key",
+            "type": "Address",
+            "purpose": "The address to look up or insert."
+          }
+        ],
+        "return": {
+          "type": "RefsMap::Entry*",
+          "description": "A pointer to the entry, either existing or newly inserted."
+        },
+        "dependencies": [
+          "Address",
+          "UnderlyingMap",
+          "RefsMap::Hash"
+        ]
+      },
+      "code": "RefsMap::Entry* RefsMap::LookupOrInsert(const Address& key) {\n  return UnderlyingMap::LookupOrInsert(key, RefsMap::Hash(key),\n                                       []() { return nullptr; });\n}"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "method",
+        "name": "RefsMap::Remove",
+        "parent": "RefsMap",
+        "about": "Removes an entry from the map based on the provided key (address).",
+        "logic": "Calls the underlying TemplateHashMapImpl::Remove method with the key and its hash value.",
+        "parameters": [
+          {
+            "name": "key",
+            "type": "Address",
+            "purpose": "The address to remove."
+          }
+        ],
+        "return": {
+          "type": "ObjectData*",
+          "description": "The ObjectData* associated with the removed entry, or nullptr if the entry wasn't found."
+        },
+        "dependencies": [
+          "Address",
+          "UnderlyingMap",
+          "ObjectData",
+          "RefsMap::Hash"
+        ]
+      },
+      "code": "ObjectData* RefsMap::Remove(const Address& key) {\n  return UnderlyingMap::Remove(key, RefsMap::Hash(key));\n}"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "constructor",
+        "name": "RefsMap::RefsMap",
+        "parent": "RefsMap",
+        "about": "Constructs a RefsMap with a specified capacity, address matcher and zone.",
+        "logic": "Calls the constructor of the UnderlyingMap with the given capacity, address matcher, and a ZoneAllocationPolicy constructed from the provided Zone.",
+        "parameters": [
+          {
+            "name": "capacity",
+            "type": "uint32_t",
+            "purpose": "The initial capacity of the hash map."
+          },
+          {
+            "name": "match",
+            "type": "AddressMatcher",
+            "purpose": "The address matching object."
+          },
+          {
+            "name": "zone",
+            "type": "Zone*",
+            "purpose": "The memory zone to allocate from."
+          }
+        ],
+        "return": {
+          "type": "void",
+          "description": "N/A"
+        },
+        "dependencies": [
+          "UnderlyingMap",
+          "AddressMatcher",
+          "ZoneAllocationPolicy",
+          "Zone"
+        ]
+      },
+      "code": "RefsMap::RefsMap(uint32_t capacity, AddressMatcher match, Zone* zone)\n    : UnderlyingMap(capacity, match, ZoneAllocationPolicy(zone)) {}"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "constructor",
+        "name": "RefsMap::RefsMap",
+        "parent": "RefsMap",
+        "about": "Copy constructor for the RefsMap.",
+        "logic": "Constructs a new RefsMap as a copy of another RefsMap, using the specified Zone for allocation.",
+        "parameters": [
+          {
+            "name": "other",
+            "type": "const RefsMap*",
+            "purpose": "The RefsMap to copy."
+          },
+          {
+            "name": "zone",
+            "type": "Zone*",
+            "purpose": "The memory zone to allocate from."
+          }
+        ],
+        "return": {
+          "type": "void",
+          "description": "N/A"
+        },
+        "dependencies": [
+          "UnderlyingMap",
+          "ZoneAllocationPolicy",
+          "Zone"
+        ]
+      },
+      "code": "RefsMap::RefsMap(const RefsMap* other, Zone* zone)\n    : UnderlyingMap(other, ZoneAllocationPolicy(zone)) {}"
+    }
+  ],
+  "file_path": "/home/kathirks_gc/v8_go/archive/codebase/src/compiler/refs-map.cc"
+}

@@ -1,0 +1,309 @@
+{
+  "metadata": {
+    "path": "/home/kathirks_gc/v8_go/archive/codebase/src/compiler/type-narrowing-reducer.cc",
+    "file_name": "type-narrowing-reducer.cc",
+    "language": "cpp",
+    "purpose": "Implements the TypeNarrowingReducer, which refines the types of nodes in the graph based on type information and operation semantics."
+  },
+  "imports": {
+    "metadata": {
+      "language": "cpp",
+      "purpose": "Includes necessary headers for compiler functionality, such as the reducer framework, JS graph representation, and heap broker."
+    },
+    "code": "#include \"src/compiler/type-narrowing-reducer.h\"\n\n#include \"src/compiler/js-graph.h\"\n#include \"src/compiler/js-heap-broker.h\""
+  },
+  "classes": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "TypeNarrowingReducer",
+        "extends": "AdvancedReducer",
+        "about": "Refines node types based on type information and operation semantics.",
+        "attributes": [
+          {
+            "name": "jsgraph_",
+            "type": "JSGraph*",
+            "access": "private",
+            "purpose": "Pointer to the JSGraph, providing access to the graph structure."
+          },
+          {
+            "name": "op_typer_",
+            "type": "OperationTyper",
+            "access": "private",
+            "purpose": "An instance of OperationTyper to compute more precise output types based on input types."
+          }
+        ],
+        "dependencies": [
+          "AdvancedReducer",
+          "JSGraph",
+          "JSHeapBroker",
+          "OperationTyper",
+          "Type"
+        ]
+      },
+      "code": "class TypeNarrowingReducer : public AdvancedReducer {\n public:\n  TypeNarrowingReducer(Editor* editor, JSGraph* jsgraph,\n                       JSHeapBroker* broker);\n  ~TypeNarrowingReducer() override;\n\n  Reduction Reduce(Node* node) override;\n\n private:\n  TFGraph* graph() const;\n  Zone* zone() const;\n\n  JSGraph* jsgraph_;\n  OperationTyper op_typer_;\n};"
+    }
+  ],
+  "functions": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "function",
+        "name": "TypeNarrowingReducer",
+        "parent": "TypeNarrowingReducer",
+        "about": "Constructor for TypeNarrowingReducer.",
+        "logic": "Initializes the reducer with the editor, JSGraph, and JSHeapBroker.",
+        "parameters": [
+          {
+            "name": "editor",
+            "type": "Editor*",
+            "purpose": "The editor for modifying the graph."
+          },
+          {
+            "name": "jsgraph",
+            "type": "JSGraph*",
+            "purpose": "The JSGraph."
+          },
+          {
+            "name": "broker",
+            "type": "JSHeapBroker*",
+            "purpose": "The JSHeapBroker for accessing heap objects."
+          }
+        ],
+        "return": {
+          "type": "void",
+          "description": "No return value."
+        },
+        "dependencies": [
+          "AdvancedReducer",
+          "JSGraph",
+          "JSHeapBroker",
+          "OperationTyper"
+        ]
+      },
+      "code": "TypeNarrowingReducer::TypeNarrowingReducer(Editor* editor, JSGraph* jsgraph,\n                                          JSHeapBroker* broker)\n    : AdvancedReducer(editor),\n      jsgraph_(jsgraph),\n      op_typer_(broker, zone()) {}"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "function",
+        "name": "~TypeNarrowingReducer",
+        "parent": "TypeNarrowingReducer",
+        "about": "Destructor for TypeNarrowingReducer.",
+        "logic": "Default destructor.",
+        "parameters": [],
+        "return": {
+          "type": "void",
+          "description": "No return value."
+        },
+        "dependencies": []
+      },
+      "code": "TypeNarrowingReducer::~TypeNarrowingReducer() = default;"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "function",
+        "name": "Reduce",
+        "parent": "TypeNarrowingReducer",
+        "about": "Reduces a node by refining its type.",
+        "logic": "The core logic of the reducer. It examines the node's opcode and attempts to refine the node's type based on the types of its inputs and the semantics of the operation.  It uses the `OperationTyper` to perform type inference for various operations.",
+        "parameters": [
+          {
+            "name": "node",
+            "type": "Node*",
+            "purpose": "The node to reduce."
+          }
+        ],
+        "return": {
+          "type": "Reduction",
+          "description": "The result of the reduction (NoChange, Changed, Replace)."
+        },
+        "dependencies": [
+          "Node",
+          "Type",
+          "NodeProperties",
+          "OperationTyper",
+          "Type::Intersect"
+        ]
+      },
+      "code": "Reduction TypeNarrowingReducer::Reduce(Node* node) {\n  Type new_type = Type::Any();\n\n  switch (node->opcode()) {\n    case IrOpcode::kNumberLessThan: {\n      // TODO(turbofan) Reuse the logic from typer.cc (by integrating relational\n      // comparisons with the operation typer).\n      Type left_type = NodeProperties::GetType(node->InputAt(0));\n      Type right_type = NodeProperties::GetType(node->InputAt(1));\n      if (left_type.Is(Type::PlainNumber()) &&\n          right_type.Is(Type::PlainNumber())) {\n        if (left_type.Max() < right_type.Min()) {\n          new_type = op_typer_.singleton_true();\n        } else if (left_type.Min() >= right_type.Max()) {\n          new_type = op_typer_.singleton_false();\n        }\n      }\n      break;\n    }\n\n    case IrOpcode::kTypeGuard: {\n      new_type = op_typer_.TypeTypeGuard(\n          node->op(), NodeProperties::GetType(node->InputAt(0)));\n      break;\n    }\n\n#define DECLARE_CASE(Name)                                                \\\n  case IrOpcode::k##Name: {                                               \\\n    new_type = op_typer_.Name(NodeProperties::GetType(node->InputAt(0)),  \\\n                              NodeProperties::GetType(node->InputAt(1))); \\\n    break;                                                                \\\n  }\n      SIMPLIFIED_NUMBER_BINOP_LIST(DECLARE_CASE)\n      DECLARE_CASE(SameValue)\n#undef DECLARE_CASE\n\n#define DECLARE_CASE(Name)                                                \\\n  case IrOpcode::k##Name: {                                               \\\n    new_type = op_typer_.Name(NodeProperties::GetType(node->InputAt(0))); \\\n    break;                                                                \\\n  }\n      SIMPLIFIED_NUMBER_UNOP_LIST(DECLARE_CASE)\n      DECLARE_CASE(ToBoolean)\n#undef DECLARE_CASE\n\n    default:\n      return NoChange();\n  }\n\n  Type original_type = NodeProperties::GetType(node);\n  Type restricted = Type::Intersect(new_type, original_type, zone());\n  if (!original_type.Is(restricted)) {\n    NodeProperties::SetType(node, restricted);\n    return Changed(node);\n  }\n  return NoChange();\n}"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "function",
+        "name": "graph",
+        "parent": "TypeNarrowingReducer",
+        "about": "Returns the TFGraph.",
+        "logic": "Accessor method to get the underlying TFGraph from the JSGraph.",
+        "parameters": [],
+        "return": {
+          "type": "TFGraph*",
+          "description": "The TFGraph."
+        },
+        "dependencies": [
+          "TFGraph",
+          "JSGraph"
+        ]
+      },
+      "code": "TFGraph* TypeNarrowingReducer::graph() const { return jsgraph()->graph(); }"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "function",
+        "name": "zone",
+        "parent": "TypeNarrowingReducer",
+        "about": "Returns the zone.",
+        "logic": "Accessor method to get the Zone from the TFGraph.",
+        "parameters": [],
+        "return": {
+          "type": "Zone*",
+          "description": "The Zone."
+        },
+        "dependencies": [
+          "Zone",
+          "TFGraph"
+        ]
+      },
+      "code": "Zone* TypeNarrowingReducer::zone() const { return graph()->zone(); }"
+    }
+  ],
+  "dependencies": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "AdvancedReducer",
+        "about": "Base class for reducers.",
+        "dependencies": []
+      },
+      "code": "class AdvancedReducer {};",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "JSGraph",
+        "about": "Represents the JavaScript graph.",
+        "dependencies": []
+      },
+      "code": "class JSGraph {\n                    public:\n                        TFGraph* graph() const {return nullptr;}\n                };",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "JSHeapBroker",
+        "about": "Provides access to the JavaScript heap.",
+        "dependencies": []
+      },
+      "code": "class JSHeapBroker {};",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "TFGraph",
+        "about": "Represents the TurboFan graph.",
+        "dependencies": []
+      },
+      "code": "class TFGraph {\n                    public:\n                        Zone* zone() const {return nullptr;}\n                };",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "Zone",
+        "about": "Memory allocation zone.",
+        "dependencies": []
+      },
+      "code": "class Zone {};",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "Node",
+        "about": "Represents a node in the graph.",
+        "dependencies": []
+      },
+      "code": "class Node {\n                    public:\n                        IrOpcode::Value opcode() { return IrOpcode::kInvalid; };\n                };",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "Type",
+        "about": "Represents a type.",
+        "dependencies": []
+      },
+      "code": "class Type {\n                    public:\n                        static Type Any() { return Type(); };\n                        bool Is(Type other) { return false; };\n                        double Max() {return 0.0;};\n                        double Min() {return 0.0;};\n                        static Type Intersect(Type a, Type b, Zone* zone) { return Type(); };\n                        static Type PlainNumber() { return Type(); };\n                };",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "NodeProperties",
+        "about": "Utility class for accessing node properties.",
+        "dependencies": []
+      },
+      "code": "class NodeProperties {\n                    public:\n                        static Type GetType(Node* node) { return Type(); };\n                        static void SetType(Node* node, Type type) {};\n                };",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "OperationTyper",
+        "about": "Computes the output type of an operation.",
+        "dependencies": []
+      },
+      "code": "class OperationTyper {\n                    public:\n                        OperationTyper(JSHeapBroker* broker, Zone* zone) {};\n                        Type singleton_true() { return Type(); };\n                        Type singleton_false() { return Type(); };\n                        Type TypeTypeGuard(const Operator* op, Type type) { return Type(); };\n                        Type Name(Type a, Type b) { return Type(); };\n                        Type Name(Type a) { return Type(); };\n                };",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "Reduction",
+        "about": "Represents the result of a reduction.",
+        "dependencies": []
+      },
+      "code": "class Reduction {};",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "IrOpcode",
+        "about": "Enum class of opcodes.",
+        "dependencies": []
+      },
+      "code": "namespace IrOpcode {\n                    enum Value {\n                        kNumberLessThan,\n                        kTypeGuard,\n                        kSameValue,\n                        kToBoolean,\n                        kInvalid\n                    };\n                }",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "Operator",
+        "about": "Represents an operator.",
+        "dependencies": []
+      },
+      "code": "class Operator {};",
+      "type": "class"
+    }
+  ],
+  "file_path": "/home/kathirks_gc/v8_go/archive/codebase/src/compiler/type-narrowing-reducer.cc"
+}

@@ -1,0 +1,1012 @@
+{
+  "file_path": "/home/kathirks_gc/v8_go/codebase/src/compiler/backend/register-allocator.cc",
+  "imports": [
+    "src/compiler/backend/register-allocator.h",
+    "iomanip",
+    "optional",
+    "src/base/iterator.h",
+    "src/base/small-vector.h",
+    "src/base/vector.h",
+    "src/codegen/assembler-inl.h",
+    "src/codegen/register-configuration.h",
+    "src/codegen/tick-counter.h",
+    "src/compiler/backend/register-allocation.h",
+    "src/compiler/backend/spill-placer.h",
+    "src/compiler/linkage.h",
+    "src/strings/string-stream.h"
+  ],
+  "classes": [
+    {
+      "name": "UsePosition",
+      "properties": [
+        "operand_",
+        "hint_",
+        "pos_",
+        "flags_"
+      ],
+      "methods": [
+        {
+          "name": "UsePosition",
+          "parameters": [
+            "LifetimePosition pos",
+            "InstructionOperand* operand",
+            "void* hint",
+            "UsePositionHintType hint_type"
+          ],
+          "return_type": "void",
+          "logic": "Constructor for the UsePosition class, initializes its members, determines the type of use position based on the operand policy, and sets the initial flags."
+        },
+        {
+          "name": "HasHint",
+          "parameters": [],
+          "return_type": "bool",
+          "logic": "Checks if a hint register is available for the UsePosition"
+        },
+        {
+          "name": "HintRegister",
+          "parameters": [
+            "int* register_code"
+          ],
+          "return_type": "bool",
+          "logic": "Retrieves the register hint if one is available, otherwise returns false.  Handles different hint types (UsePos, Operand, Phi)."
+        },
+        {
+          "name": "HintTypeForOperand",
+          "parameters": [
+            "const InstructionOperand& op"
+          ],
+          "return_type": "UsePositionHintType",
+          "logic": "Determines the hint type for a given instruction operand."
+        },
+        {
+          "name": "SetHint",
+          "parameters": [
+            "UsePosition* use_pos"
+          ],
+          "return_type": "void",
+          "logic": "Sets the hint to another UsePosition"
+        },
+        {
+          "name": "ResolveHint",
+          "parameters": [
+            "UsePosition* use_pos"
+          ],
+          "return_type": "void",
+          "logic": "Resolves a pending hint by setting it to a valid UsePosition."
+        },
+        {
+          "name": "set_type",
+          "parameters": [
+            "UsePositionType type",
+            "bool register_beneficial"
+          ],
+          "return_type": "void",
+          "logic": "Sets the type of use position and whether register allocation is beneficial. Updates internal flags."
+        }
+      ]
+    },
+    {
+      "name": "LiveRange",
+      "properties": [
+        "relative_id_",
+        "bits_",
+        "intervals_",
+        "positions_span_",
+        "top_level_",
+        "next_",
+        "current_interval_"
+      ],
+      "methods": [
+        {
+          "name": "LiveRange",
+          "parameters": [
+            "int relative_id",
+            "MachineRepresentation rep",
+            "TopLevelLiveRange* top_level"
+          ],
+          "return_type": "N/A",
+          "logic": "Constructor for LiveRange. Initializes members including representation and assigned register."
+        },
+        {
+          "name": "set_assigned_register",
+          "parameters": [
+            "int reg"
+          ],
+          "return_type": "void",
+          "logic": "Sets the assigned register for this live range."
+        },
+        {
+          "name": "UnsetAssignedRegister",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Unsets the assigned register for this live range."
+        },
+        {
+          "name": "AttachToNext",
+          "parameters": [
+            "Zone* zone"
+          ],
+          "return_type": "void",
+          "logic": "Attaches this live range to the next live range, merging their intervals and positions."
+        },
+        {
+          "name": "Unspill",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Marks the live range as not spilled and resets the register assignment."
+        },
+        {
+          "name": "Spill",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Marks the live range as spilled and unsets the register assignment."
+        },
+        {
+          "name": "kind",
+          "parameters": [],
+          "return_type": "RegisterKind",
+          "logic": "Determines the register kind based on the representation."
+        },
+        {
+          "name": "RegisterFromFirstHint",
+          "parameters": [
+            "int* register_index"
+          ],
+          "return_type": "bool",
+          "logic": "Retrieves the register from the first use position hint."
+        },
+        {
+          "name": "NextUsePosition",
+          "parameters": [
+            "LifetimePosition start"
+          ],
+          "return_type": "UsePosition* const*",
+          "logic": "Finds the next use position after a given start position."
+        },
+        {
+          "name": "NextUsePositionRegisterIsBeneficial",
+          "parameters": [
+            "LifetimePosition start"
+          ],
+          "return_type": "UsePosition*",
+          "logic": "Finds the next use position after a given start position where using a register is beneficial."
+        },
+        {
+          "name": "NextLifetimePositionRegisterIsBeneficial",
+          "parameters": [
+            "const LifetimePosition& start"
+          ],
+          "return_type": "LifetimePosition",
+          "logic": "Returns the lifetime position of the next use position where a register is beneficial, or the end position if none exists."
+        },
+        {
+          "name": "NextUsePositionSpillDetrimental",
+          "parameters": [
+            "LifetimePosition start"
+          ],
+          "return_type": "UsePosition*",
+          "logic": "Finds the next use position where spilling would be detrimental."
+        },
+        {
+          "name": "NextRegisterPosition",
+          "parameters": [
+            "LifetimePosition start"
+          ],
+          "return_type": "UsePosition*",
+          "logic": "Finds the next use position that requires a register."
+        },
+        {
+          "name": "CanBeSpilled",
+          "parameters": [
+            "LifetimePosition pos"
+          ],
+          "return_type": "bool",
+          "logic": "Determines if the live range can be spilled at a given position."
+        },
+        {
+          "name": "IsTopLevel",
+          "parameters": [],
+          "return_type": "bool",
+          "logic": "Checks if this live range is the top-level live range."
+        },
+        {
+          "name": "GetAssignedOperand",
+          "parameters": [],
+          "return_type": "InstructionOperand",
+          "logic": "Returns the allocated operand for this live range, either a register or a spill slot."
+        },
+        {
+          "name": "FirstSearchIntervalForPosition",
+          "parameters": [
+            "LifetimePosition position"
+          ],
+          "return_type": "UseIntervalVector::iterator",
+          "logic": "Finds the first search interval for a given lifetime position."
+        },
+        {
+          "name": "AdvanceLastProcessedMarker",
+          "parameters": [
+            "UseIntervalVector::iterator to_start_of",
+            "LifetimePosition but_not_past"
+          ],
+          "return_type": "void",
+          "logic": "Advances the last processed marker for use intervals."
+        },
+        {
+          "name": "SplitAt",
+          "parameters": [
+            "LifetimePosition position",
+            "Zone* zone"
+          ],
+          "return_type": "LiveRange*",
+          "logic": "Splits the live range at a given position, creating a new live range."
+        },
+        {
+          "name": "ConvertUsesToOperand",
+          "parameters": [
+            "const InstructionOperand& op",
+            "const InstructionOperand& spill_op"
+          ],
+          "return_type": "void",
+          "logic": "Converts all use positions to use a specific operand (register or stack slot)."
+        },
+        {
+          "name": "ShouldBeAllocatedBefore",
+          "parameters": [
+            "const LiveRange* other"
+          ],
+          "return_type": "bool",
+          "logic": "Determines if this live range should be allocated before another based on start positions and first use."
+        },
+        {
+          "name": "SetUseHints",
+          "parameters": [
+            "int register_index"
+          ],
+          "return_type": "void",
+          "logic": "Sets register hints for all use positions within this live range."
+        },
+        {
+          "name": "CanCover",
+          "parameters": [
+            "LifetimePosition position"
+          ],
+          "return_type": "bool",
+          "logic": "Checks if the live range can possibly cover given position."
+        },
+        {
+          "name": "Covers",
+          "parameters": [
+            "LifetimePosition position"
+          ],
+          "return_type": "bool",
+          "logic": "Checks if the live range covers a specific position.  Uses an interval search."
+        },
+        {
+          "name": "NextEndAfter",
+          "parameters": [
+            "LifetimePosition position"
+          ],
+          "return_type": "LifetimePosition",
+          "logic": "Finds the next end position after a given position."
+        },
+        {
+          "name": "NextStartAfter",
+          "parameters": [
+            "LifetimePosition position"
+          ],
+          "return_type": "LifetimePosition",
+          "logic": "Finds the next start position after a given position."
+        },
+        {
+          "name": "FirstIntersection",
+          "parameters": [
+            "LiveRange* other"
+          ],
+          "return_type": "LifetimePosition",
+          "logic": "Finds the first intersection with another live range."
+        },
+        {
+          "name": "Print",
+          "parameters": [
+            "const RegisterConfiguration* config",
+            "bool with_children"
+          ],
+          "return_type": "void",
+          "logic": "Prints the live range information to the standard output stream."
+        },
+        {
+          "name": "Print",
+          "parameters": [
+            "bool with_children"
+          ],
+          "return_type": "void",
+          "logic": "Prints the live range information to the standard output stream using the default register configuration."
+        },
+        {
+          "name": "RegisterFromBundle",
+          "parameters": [
+            "int* hint"
+          ],
+          "return_type": "bool",
+          "logic": "Retrieves the register from the live range bundle hint."
+        },
+        {
+          "name": "UpdateBundleRegister",
+          "parameters": [
+            "int reg"
+          ],
+          "return_type": "void",
+          "logic": "Updates the bundle register if unassigned."
+        }
+      ]
+    },
+    {
+      "name": "TopLevelLiveRange",
+      "properties": [
+        "vreg_",
+        "last_child_id_",
+        "spill_operand_",
+        "spill_move_insertion_locations_",
+        "children_",
+        "spilled_in_deferred_blocks_",
+        "has_preassigned_slot_",
+        "spill_start_index_"
+      ],
+      "methods": [
+        {
+          "name": "TopLevelLiveRange",
+          "parameters": [
+            "int vreg",
+            "MachineRepresentation rep",
+            "Zone* zone"
+          ],
+          "return_type": "N/A",
+          "logic": "Constructor for TopLevelLiveRange, initializes base class and its own members."
+        },
+        {
+          "name": "RecordSpillLocation",
+          "parameters": [
+            "Zone* zone",
+            "int gap_index",
+            "InstructionOperand* operand"
+          ],
+          "return_type": "void",
+          "logic": "Records the location where a spill move should be inserted."
+        },
+        {
+          "name": "CommitSpillMoves",
+          "parameters": [
+            "RegisterAllocationData* data",
+            "const InstructionOperand& op"
+          ],
+          "return_type": "void",
+          "logic": "Commits spill moves to the instruction sequence."
+        },
+        {
+          "name": "FilterSpillMoves",
+          "parameters": [
+            "RegisterAllocationData* data",
+            "const InstructionOperand& op"
+          ],
+          "return_type": "void",
+          "logic": "Filters spill moves to avoid duplicates or moves to preassigned slots."
+        },
+        {
+          "name": "SetSpillOperand",
+          "parameters": [
+            "InstructionOperand* operand"
+          ],
+          "return_type": "void",
+          "logic": "Sets the spill operand for this top-level live range."
+        },
+        {
+          "name": "SetSpillRange",
+          "parameters": [
+            "SpillRange* spill_range"
+          ],
+          "return_type": "void",
+          "logic": "Sets the SpillRange object for the TopLevelLiveRange."
+        },
+        {
+          "name": "GetSpillRangeOperand",
+          "parameters": [],
+          "return_type": "AllocatedOperand",
+          "logic": "Returns the stack slot operand for the spill range."
+        },
+        {
+          "name": "GetChildCovers",
+          "parameters": [
+            "LifetimePosition pos"
+          ],
+          "return_type": "LiveRange*",
+          "logic": "Gets the child live range that covers a specific position."
+        },
+        {
+          "name": "ShortenTo",
+          "parameters": [
+            "LifetimePosition start"
+          ],
+          "return_type": "void",
+          "logic": "Shortens the live range to a given start position."
+        },
+        {
+          "name": "EnsureInterval",
+          "parameters": [
+            "LifetimePosition start",
+            "LifetimePosition end",
+            "Zone* zone"
+          ],
+          "return_type": "void",
+          "logic": "Ensures that the live range has an interval covering the provided start and end positions."
+        },
+        {
+          "name": "AddUseInterval",
+          "parameters": [
+            "LifetimePosition start",
+            "LifetimePosition end",
+            "Zone* zone"
+          ],
+          "return_type": "void",
+          "logic": "Adds a use interval to the live range. Handles coalescing directly adjacent intervals."
+        },
+        {
+          "name": "AddUsePosition",
+          "parameters": [
+            "UsePosition* use_pos",
+            "Zone* zone"
+          ],
+          "return_type": "void",
+          "logic": "Adds a use position to the live range."
+        }
+      ]
+    },
+    {
+      "name": "LinearScanAllocator",
+      "properties": [],
+      "methods": [
+        {
+          "name": "PrintRangeOverview",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Prints an overview of the live ranges, including block information and register/spill assignments."
+        }
+      ]
+    },
+    {
+      "name": "SpillRange",
+      "properties": [
+        "ranges_",
+        "intervals_",
+        "assigned_slot_",
+        "byte_width_"
+      ],
+      "methods": [
+        {
+          "name": "SpillRange",
+          "parameters": [
+            "TopLevelLiveRange* parent",
+            "Zone* zone"
+          ],
+          "return_type": "N/A",
+          "logic": "Constructor for SpillRange. Creates and initializes the spill range for a top level live range."
+        },
+        {
+          "name": "TryMerge",
+          "parameters": [
+            "SpillRange* other"
+          ],
+          "return_type": "bool",
+          "logic": "Tries to merge this spill range with another.  Fails if they intersect, have different byte widths, or one has an assigned slot."
+        },
+        {
+          "name": "Print",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Prints debug info about spill range."
+        }
+      ]
+    },
+    {
+      "name": "RegisterAllocationData",
+      "properties": [
+        "allocation_zone_",
+        "frame_",
+        "code_",
+        "debug_name_",
+        "config_",
+        "phi_map_",
+        "live_in_sets_",
+        "live_out_sets_",
+        "live_ranges_",
+        "fixed_live_ranges_",
+        "fixed_float_live_ranges_",
+        "fixed_double_live_ranges_",
+        "fixed_simd128_live_ranges_",
+        "delayed_references_",
+        "assigned_registers_",
+        "assigned_double_registers_",
+        "virtual_register_count_",
+        "preassigned_slot_ranges_",
+        "spill_state_",
+        "tick_counter_",
+        "slot_for_const_range_"
+      ],
+      "methods": [
+        {
+          "name": "RegisterAllocationData",
+          "parameters": [
+            "const RegisterConfiguration* config",
+            "Zone* zone",
+            "Frame* frame",
+            "InstructionSequence* code",
+            "TickCounter* tick_counter",
+            "const char* debug_name"
+          ],
+          "return_type": "N/A",
+          "logic": "Constructor for RegisterAllocationData, initializes all its members. Creates BitVectors to track assigned registers."
+        },
+        {
+          "name": "AddGapMove",
+          "parameters": [
+            "int index",
+            "Instruction::GapPosition position",
+            "const InstructionOperand& from",
+            "const InstructionOperand& to"
+          ],
+          "return_type": "MoveOperands*",
+          "logic": "Adds a move to a gap in an instruction."
+        },
+        {
+          "name": "RepresentationFor",
+          "parameters": [
+            "int virtual_register"
+          ],
+          "return_type": "MachineRepresentation",
+          "logic": "Gets the machine representation for a given virtual register."
+        },
+        {
+          "name": "GetLiveRangeFor",
+          "parameters": [
+            "int index"
+          ],
+          "return_type": "TopLevelLiveRange*",
+          "logic": "Gets the live range for a specific virtual register index."
+        },
+        {
+          "name": "NewLiveRange",
+          "parameters": [
+            "int index",
+            "MachineRepresentation rep"
+          ],
+          "return_type": "TopLevelLiveRange*",
+          "logic": "Allocates a new TopLevelLiveRange."
+        },
+        {
+          "name": "InitializePhiMap",
+          "parameters": [
+            "const InstructionBlock* block",
+            "PhiInstruction* phi"
+          ],
+          "return_type": "RegisterAllocationData::PhiMapValue*",
+          "logic": "Initializes a phi map entry for a phi instruction."
+        },
+        {
+          "name": "GetPhiMapValueFor",
+          "parameters": [
+            "int virtual_register"
+          ],
+          "return_type": "RegisterAllocationData::PhiMapValue*",
+          "logic": "Gets the phi map value for a given virtual register."
+        },
+        {
+          "name": "GetPhiMapValueFor",
+          "parameters": [
+            "TopLevelLiveRange* top_range"
+          ],
+          "return_type": "RegisterAllocationData::PhiMapValue*",
+          "logic": "Gets the phi map value for a given TopLevelLiveRange."
+        },
+        {
+          "name": "ExistsUseWithoutDefinition",
+          "parameters": [],
+          "return_type": "bool",
+          "logic": "Checks if there are any uses of virtual registers without a corresponding definition."
+        },
+        {
+          "name": "RangesDefinedInDeferredStayInDeferred",
+          "parameters": [],
+          "return_type": "bool",
+          "logic": "Checks if ranges defined in deferred blocks remain in deferred blocks. Enforces dominance property."
+        },
+        {
+          "name": "AssignSpillRangeToLiveRange",
+          "parameters": [
+            "TopLevelLiveRange* range",
+            "SpillMode spill_mode"
+          ],
+          "return_type": "SpillRange*",
+          "logic": "Assigns spill range to a liverange, either creating a new one or using the existing one."
+        },
+        {
+          "name": "MarkFixedUse",
+          "parameters": [
+            "MachineRepresentation rep",
+            "int index"
+          ],
+          "return_type": "void",
+          "logic": "Marks that a fixed register is used."
+        },
+        {
+          "name": "HasFixedUse",
+          "parameters": [
+            "MachineRepresentation rep",
+            "int index"
+          ],
+          "return_type": "bool",
+          "logic": "Checks if a fixed register is used."
+        },
+        {
+          "name": "MarkAllocated",
+          "parameters": [
+            "MachineRepresentation rep",
+            "int index"
+          ],
+          "return_type": "void",
+          "logic": "Marks a register as allocated."
+        },
+        {
+          "name": "IsBlockBoundary",
+          "parameters": [
+            "LifetimePosition pos"
+          ],
+          "return_type": "bool",
+          "logic": "Determines if a given lifetime position corresponds to a block boundary."
+        }
+      ]
+    },
+    {
+      "name": "ConstraintBuilder",
+      "properties": [
+        "data_"
+      ],
+      "methods": [
+        {
+          "name": "ConstraintBuilder",
+          "parameters": [
+            "RegisterAllocationData* data"
+          ],
+          "return_type": "N/A",
+          "logic": "Constructor for ConstraintBuilder, initializes its members."
+        },
+        {
+          "name": "AllocateFixed",
+          "parameters": [
+            "UnallocatedOperand* operand",
+            "int pos",
+            "bool is_tagged",
+            "bool is_input",
+            "bool is_output"
+          ],
+          "return_type": "InstructionOperand*",
+          "logic": "Allocates a fixed register or stack slot for an unallocated operand based on the fixed policy."
+        },
+        {
+          "name": "MeetRegisterConstraints",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Meets register constraints for all instruction blocks."
+        },
+        {
+          "name": "MeetRegisterConstraints",
+          "parameters": [
+            "const InstructionBlock* block"
+          ],
+          "return_type": "void",
+          "logic": "Meets register constraints for a specific instruction block."
+        },
+        {
+          "name": "MeetRegisterConstraintsForLastInstructionInBlock",
+          "parameters": [
+            "const InstructionBlock* block"
+          ],
+          "return_type": "void",
+          "logic": "Meet register constraints specifically for the last instruction of a block, especially regarding fixed registers in successor block moves"
+        },
+        {
+          "name": "MeetConstraintsAfter",
+          "parameters": [
+            "int instr_index"
+          ],
+          "return_type": "void",
+          "logic": "Meets constraints for after an instruction, primarily handling fixed temporaries and output operands."
+        },
+        {
+          "name": "MeetConstraintsBefore",
+          "parameters": [
+            "int instr_index"
+          ],
+          "return_type": "void",
+          "logic": "Meets constraints for before an instruction, handling fixed input operands and output-same-as-input policies."
+        },
+        {
+          "name": "ResolvePhis",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Resolves phi instructions, adding moves to the end of predecessor blocks and recording spill locations."
+        },
+        {
+          "name": "ResolvePhis",
+          "parameters": [
+            "const InstructionBlock* block"
+          ],
+          "return_type": "void",
+          "logic": "Resolves Phi instructions for a given block."
+        }
+      ]
+    },
+    {
+      "name": "LiveRangeBuilder",
+      "properties": [
+        "data_",
+        "phi_hints_"
+      ],
+      "methods": [
+        {
+          "name": "LiveRangeBuilder",
+          "parameters": [
+            "RegisterAllocationData* data",
+            "Zone* local_zone"
+          ],
+          "return_type": "N/A",
+          "logic": "Constructor for LiveRangeBuilder, initializes its members."
+        },
+        {
+          "name": "ComputeLiveOut",
+          "parameters": [
+            "const InstructionBlock* block",
+            "RegisterAllocationData* data"
+          ],
+          "return_type": "SparseBitVector*",
+          "logic": "Computes the live-out set for a given instruction block."
+        },
+        {
+          "name": "AddInitialIntervals",
+          "parameters": [
+            "const InstructionBlock* block",
+            "SparseBitVector* live_out"
+          ],
+          "return_type": "void",
+          "logic": "Adds initial intervals to live ranges based on the live-out set."
+        },
+        {
+          "name": "FixedFPLiveRangeID",
+          "parameters": [
+            "int index",
+            "MachineRepresentation rep"
+          ],
+          "return_type": "int",
+          "logic": "Calculates the ID of the Fixed FP LiveRange"
+        },
+        {
+          "name": "FixedLiveRangeFor",
+          "parameters": [
+            "int index",
+            "SpillMode spill_mode"
+          ],
+          "return_type": "TopLevelLiveRange*",
+          "logic": "Gets or creates a fixed live range for a given register index (general-purpose)."
+        },
+        {
+          "name": "FixedFPLiveRangeFor",
+          "parameters": [
+            "int index",
+            "MachineRepresentation rep",
+            "SpillMode spill_mode"
+          ],
+          "return_type": "TopLevelLiveRange*",
+          "logic": "Gets or creates a fixed live range for a given register index (floating-point)."
+        },
+        {
+          "name": "FixedSIMD128LiveRangeFor",
+          "parameters": [
+            "int index",
+            "SpillMode spill_mode"
+          ],
+          "return_type": "TopLevelLiveRange*",
+          "logic": "Gets or creates a fixed live range for a given register index (simd128)."
+        },
+        {
+          "name": "LiveRangeFor",
+          "parameters": [
+            "InstructionOperand* operand",
+            "SpillMode spill_mode"
+          ],
+          "return_type": "TopLevelLiveRange*",
+          "logic": "Gets the live range for a given instruction operand."
+        },
+        {
+          "name": "NewUsePosition",
+          "parameters": [
+            "LifetimePosition pos",
+            "InstructionOperand* operand",
+            "void* hint",
+            "UsePositionHintType hint_type"
+          ],
+          "return_type": "UsePosition*",
+          "logic": "Allocates a new UsePosition object."
+        },
+        {
+          "name": "Define",
+          "parameters": [
+            "LifetimePosition position",
+            "InstructionOperand* operand",
+            "void* hint",
+            "UsePositionHintType hint_type",
+            "SpillMode spill_mode"
+          ],
+          "return_type": "UsePosition*",
+          "logic": "Defines the end of a live range at a given position and returns the use position."
+        },
+        {
+          "name": "Define",
+          "parameters": [
+            "LifetimePosition position",
+            "InstructionOperand* operand",
+            "SpillMode spill_mode"
+          ],
+          "return_type": "UsePosition*",
+          "logic": "Defines the end of a live range at a given position and returns the use position. Overload without hint parameter"
+        },
+        {
+          "name": "Use",
+          "parameters": [
+            "LifetimePosition block_start",
+            "LifetimePosition position",
+            "InstructionOperand* operand",
+            "void* hint",
+            "UsePositionHintType hint_type",
+            "SpillMode spill_mode"
+          ],
+          "return_type": "UsePosition*",
+          "logic": "Adds a use position to a live range at a given position and returns the use position."
+        },
+        {
+          "name": "ProcessInstructions",
+          "parameters": [
+            "const InstructionBlock* block",
+            "SparseBitVector* live"
+          ],
+          "return_type": "void",
+          "logic": "Processes the instructions within a block to determine live ranges and use positions."
+        },
+        {
+          "name": "ProcessPhis",
+          "parameters": [
+            "const InstructionBlock* block",
+            "SparseBitVector* live"
+          ],
+          "return_type": "void",
+          "logic": "Processes phi instructions within a block to determine live ranges and use positions."
+        },
+        {
+          "name": "ProcessLoopHeader",
+          "parameters": [
+            "const InstructionBlock* block",
+            "SparseBitVector* live"
+          ],
+          "return_type": "void",
+          "logic": "Processes the loop header, ensuring lifetime for the live-in sets within the loop."
+        },
+        {
+          "name": "BuildLiveRanges",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Builds the live ranges for the entire instruction sequence, processing blocks in reverse order."
+        },
+        {
+          "name": "MapPhiHint",
+          "parameters": [
+            "InstructionOperand* operand",
+            "UsePosition* use_pos"
+          ],
+          "return_type": "void",
+          "logic": "Maps instruction operands to its UsePosition hint in a phi."
+        },
+        {
+          "name": "ResolvePhiHint",
+          "parameters": [
+            "InstructionOperand* operand",
+            "UsePosition* use_pos"
+          ],
+          "return_type": "void",
+          "logic": "Resolves a phi hint by associating an input operand of phi to a use position"
+        }
+      ]
+    },
+    {
+      "name": "RegisterAllocationData::PhiMapValue",
+      "properties": [
+        "phi_",
+        "block_",
+        "incoming_operands_",
+        "assigned_register_"
+      ],
+      "methods": [
+        {
+          "name": "RegisterAllocationData::PhiMapValue",
+          "parameters": [
+            "PhiInstruction* phi",
+            "const InstructionBlock* block",
+            "Zone* zone"
+          ],
+          "return_type": "N/A",
+          "logic": "Constructor for PhiMapValue. Initializes members related to Phi instruction such as block and operands"
+        },
+        {
+          "name": "AddOperand",
+          "parameters": [
+            "InstructionOperand* operand"
+          ],
+          "return_type": "void",
+          "logic": "Adds an operand for incoming instruction in PhiMapValue"
+        },
+        {
+          "name": "CommitAssignment",
+          "parameters": [
+            "const InstructionOperand& assigned"
+          ],
+          "return_type": "void",
+          "logic": "Commits an assignment replacing the PhiMapValue operands with passed assigned Operand"
+        }
+      ]
+    }
+  ],
+  "functions": [
+    {
+      "name": "GetContainingLoop",
+      "parameters": [
+        "const InstructionSequence* sequence",
+        "const InstructionBlock* block"
+      ],
+      "return_type": "const InstructionBlock*",
+      "logic": "Retrieves the containing loop for a given instruction block."
+    },
+    {
+      "name": "GetInstructionBlock",
+      "parameters": [
+        "const InstructionSequence* code",
+        "LifetimePosition pos"
+      ],
+      "return_type": "const InstructionBlock*",
+      "logic": "Retrieves the instruction block for a given lifetime position."
+    },
+    {
+      "name": "GetLastInstruction",
+      "parameters": [
+        "InstructionSequence* code",
+        "const InstructionBlock* block"
+      ],
+      "return_type": "Instruction*",
+      "logic": "Retrieves the last instruction in a given instruction block."
+    },
+    {
+      "name": "AreUseIntervalsIntersectingVector",
+      "parameters": [
+        "base::Vector<const UseInterval> a",
+        "base::Vector<const UseInterval> b"
+      ],
+      "return_type": "std::optional<std::pair<UseInterval, UseInterval>>",
+      "logic": "Checks if the UseIntervals intersect in vector containers and return intersecting use intervals, returns nullopt if no intersection found."
+    },
+    {
+      "name": "AreUseIntervalsIntersecting",
+      "parameters": [
+        "const ContainerA& a",
+        "const ContainerB& b"
+      ],
+      "return_type": "std::optional<std::pair<UseInterval, UseInterval>>",
+      "logic": "Checks if use intervals in container A and B intersect, returning the pair of intervals if they do or std::nullopt if not."
+    }
+  ]
+}

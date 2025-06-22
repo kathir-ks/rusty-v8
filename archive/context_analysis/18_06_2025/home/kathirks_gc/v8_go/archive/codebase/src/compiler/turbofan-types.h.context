@@ -1,0 +1,205 @@
+{
+  "metadata": {
+    "path": "/home/kathirks_gc/v8_go/archive/codebase/src/compiler/turbofan-types.h",
+    "file_name": "turbofan-types.h",
+    "language": "cpp",
+    "purpose": "Defines a type system for the Turbofan compiler in V8, based on union types, class types and singleton types."
+  },
+  "imports": {
+    "metadata": {
+      "language": "cpp",
+      "purpose": "Includes necessary header files for base functionalities, global definitions, heap references, handle management, number conversions, object representations, and output streams."
+    },
+    "code": "#include \"src/base/compiler-specific.h\"\n#include \"src/common/globals.h\"\n#include \"src/compiler/heap-refs.h\"\n#include \"src/handles/handles.h\"\n#include \"src/numbers/conversions.h\"\n#include \"src/objects/objects.h\"\n#include \"src/utils/ostreams.h\"\n\n#ifdef V8_ENABLE_WEBASSEMBLY\n#include \"src/wasm/value-type.h\"\n#endif"
+  },
+  "classes": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "JSHeapBroker",
+        "about": "Forward declaration for JSHeapBroker class, used in type system.",
+        "dependencies": []
+      },
+      "code": "class JSHeapBroker;"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "HeapConstantType",
+        "about": "Forward declaration for HeapConstantType class, used in type system.",
+        "dependencies": []
+      },
+      "code": "class HeapConstantType;"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "OtherNumberConstantType",
+        "about": "Forward declaration for OtherNumberConstantType class, used in type system.",
+        "dependencies": []
+      },
+      "code": "class OtherNumberConstantType;"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "TupleType",
+        "about": "Forward declaration for TupleType class, used in type system.",
+        "dependencies": []
+      },
+      "code": "class TupleType;"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "Type",
+        "about": "Forward declaration for Type class, used in type system.",
+        "dependencies": []
+      },
+      "code": "class Type;"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "UnionType",
+        "about": "Forward declaration for UnionType class, used in type system.",
+        "dependencies": []
+      },
+      "code": "class UnionType;"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "BitsetType",
+        "about": "Represents bitset types used internally.",
+        "attributes": [],
+        "dependencies": []
+      },
+      "code": "class V8_EXPORT_PRIVATE BitsetType {\n public:\n  using bitset = uint64_t;  // Internal\n\n  enum : bitset {\n#define DECLARE_TYPE(type, value) k##type = (value),\n    BITSET_TYPE_LIST(DECLARE_TYPE)\n#undef DECLARE_TYPE\n        kUnusedEOL = 0\n  };\n\n  static bitset SignedSmall();\n  static bitset UnsignedSmall();\n\n  static bool IsNone(bitset bits) { return bits == kNone; }\n\n  static bool Is(bitset bits1, bitset bits2) {\n    return (bits1 | bits2) == bits2;\n  }\n\n  static double Min(bitset);\n  static double Max(bitset);\n\n  static bitset Glb(double min, double max);\n  static bitset Lub(HeapObjectType const& type, JSHeapBroker* broker) {\n    return Lub<HeapObjectType>(type, broker);\n  }\n  static bitset Lub(MapRef map, JSHeapBroker* broker) {\n    return Lub<MapRef>(map, broker);\n  }\n  static bitset Lub(double value);\n  static bitset Lub(double min, double max);\n  static bitset ExpandInternals(bitset bits);\n\n  static const char* Name(bitset);\n  static void Print(std::ostream& os, bitset);\n#ifdef DEBUG\n  static void Print(bitset);\n#endif\n\n  static bitset NumberBits(bitset bits);\n\n private:\n  struct Boundary {\n    bitset internal;\n    bitset external;\n    double min;\n  };\n  static const Boundary BoundariesArray[];\n  static inline const Boundary* Boundaries();\n  static inline size_t BoundariesSize();\n\n  template <typename MapRefLike>\n  static bitset Lub(MapRefLike map, JSHeapBroker* broker);\n};"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "TypeBase",
+        "about": "Superclass for non-bitset types.",
+        "attributes": [],
+        "dependencies": []
+      },
+      "code": "class TypeBase {\n protected:\n  friend class Type;\n\n  enum Kind {\n    kHeapConstant,\n    kOtherNumberConstant,\n    kTuple,\n    kUnion,\n    kRange,\n    kWasm\n  };\n\n  Kind kind() const { return kind_; }\n  explicit TypeBase(Kind kind) : kind_(kind) {}\n\n  static bool IsKind(Type type, Kind kind);\n\n private:\n  Kind kind_;\n};"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "RangeType",
+        "about": "Represents a continuous integer interval type.",
+        "attributes": [],
+        "dependencies": []
+      },
+      "code": "class RangeType : public TypeBase {\n public:\n  struct Limits {\n    double min;\n    double max;\n    Limits(double min, double max) : min(min), max(max) {}\n    explicit Limits(const RangeType* range)\n        : min(range->Min()), max(range->Max()) {}\n    bool IsEmpty();\n    static Limits Empty() { return Limits(1, 0); }\n    static Limits Intersect(Limits lhs, Limits rhs);\n    static Limits Union(Limits lhs, Limits rhs);\n  };\n\n  double Min() const { return limits_.min; }\n  double Max() const { return limits_.max; }\n\n  static bool IsInteger(double x) {\n    return nearbyint(x) == x && !IsMinusZero(x);  // Allows for infinities.\n  }\n\n private:\n  friend class Type;\n  friend class BitsetType;\n  friend class UnionType;\n  friend Zone;\n\n  static RangeType* New(double min, double max, Zone* zone) {\n    return New(Limits(min, max), zone);\n  }\n\n  static RangeType* New(Limits lim, Zone* zone) {\n    DCHECK(IsInteger(lim.min) && IsInteger(lim.max));\n    DCHECK(lim.min <= lim.max);\n    BitsetType::bitset bits = BitsetType::Lub(lim.min, lim.max);\n\n    return zone->New<RangeType>(bits, lim);\n  }\n\n  RangeType(BitsetType::bitset bitset, Limits limits)\n      : TypeBase(kRange), bitset_(bitset), limits_(limits) {}\n\n  BitsetType::bitset Lub() const { return bitset_; }\n\n  BitsetType::bitset bitset_;\n  Limits limits_;\n};"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "WasmType",
+        "about": "Represents a WebAssembly value type.",
+        "attributes": [],
+        "dependencies": []
+      },
+      "code": "#ifdef V8_ENABLE_WEBASSEMBLY\nclass WasmType : public TypeBase {\n public:\n  static WasmType* New(wasm::ValueType value_type,\n                       const wasm::WasmModule* module, Zone* zone) {\n    return zone->New<WasmType>(value_type, module);\n  }\n  wasm::ValueType value_type() const { return value_type_; }\n  const wasm::WasmModule* module() const { return module_; }\n\n private:\n  friend class Type;\n  friend Zone;\n\n  explicit WasmType(wasm::ValueType value_type, const wasm::WasmModule* module)\n      : TypeBase(kWasm), value_type_(value_type), module_(module) {}\n\n  BitsetType::bitset Lub() const {\n    // TODO(manoskouk): Specify more concrete types.\n    return BitsetType::kAny;\n  }\n\n  wasm::ValueType value_type_;\n  const wasm::WasmModule* module_;\n};\n#endif  // V8_ENABLE_WEBASSEMBLY"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "Type",
+        "about": "Represents a type in the Turbofan type system.",
+        "attributes": [],
+        "dependencies": [
+          "BitsetType",
+          "JSHeapBroker",
+          "HeapConstantType",
+          "OtherNumberConstantType",
+          "TupleType",
+          "UnionType",
+          "RangeType"
+        ]
+      },
+      "code": "class V8_EXPORT_PRIVATE Type {\n public:\n  using bitset = BitsetType::bitset;  // Internal\n\n// Constructors.\n#define DEFINE_TYPE_CONSTRUCTOR(type, value) \\\n  static Type type() { return NewBitset(BitsetType::k##type); }\n  PROPER_BITSET_TYPE_LIST(DEFINE_TYPE_CONSTRUCTOR)\n#undef DEFINE_TYPE_CONSTRUCTOR\n\n  Type() : payload_(uint64_t{0}) {}\n\n  static Type SignedSmall() { return NewBitset(BitsetType::SignedSmall()); }\n  static Type UnsignedSmall() { return NewBitset(BitsetType::UnsignedSmall()); }\n\n  static Type Constant(JSHeapBroker* broker, Handle<i::Object> value,\n                       Zone* zone);\n  static Type Constant(JSHeapBroker* broker, ObjectRef value, Zone* zone);\n  static Type Constant(double value, Zone* zone);\n  static Type Range(double min, double max, Zone* zone);\n  static Type Tuple(Type first, Type second, Type third, Zone* zone);\n  static Type Tuple(Type first, Type second, Zone* zone);\n\n  static Type Union(Type type1, Type type2, Zone* zone);\n  static Type Intersect(Type type1, Type type2, Zone* zone);\n#ifdef V8_ENABLE_WEBASSEMBLY\n  static Type Wasm(wasm::ValueType value_type, const wasm::WasmModule* module,\n                   Zone* zone);\n  static Type Wasm(wasm::TypeInModule type_in_module, Zone* zone);\n#endif\n\n  static Type For(MapRef type, JSHeapBroker* broker) {\n    return NewBitset(\n        BitsetType::ExpandInternals(BitsetType::Lub(type, broker)));\n  }\n\n  // Predicates.\n  bool IsNone() const { return payload_ == None().payload_; }\n  bool IsInvalid() const { return payload_ == uint64_t{0}; }\n\n  bool Is(Type that) const {\n    return payload_ == that.payload_ || this->SlowIs(that);\n  }\n  bool Maybe(Type that) const;\n  bool Equals(Type that) const { return this->Is(that) && that.Is(*this); }\n\n  // Inspection.\n  bool IsBitset() const { return payload_ & uint64_t{1}; }\n  bool IsRange() const { return IsKind(TypeBase::kRange); }\n  bool IsHeapConstant() const { return IsKind(TypeBase::kHeapConstant); }\n  bool IsOtherNumberConstant() const {\n    return IsKind(TypeBase::kOtherNumberConstant);\n  }\n  bool IsTuple() const { return IsKind(TypeBase::kTuple); }\n#ifdef V8_ENABLE_WEBASSEMBLY\n  bool IsWasm() const { return IsKind(TypeBase::kWasm); }\n#endif\n\n  bool IsSingleton() const {\n    if (IsNone()) return false;\n    return Is(Type::Null()) || Is(Type::Undefined()) || Is(Type::MinusZero()) ||\n           Is(Type::NaN()) || IsHeapConstant() ||\n           (Is(Type::PlainNumber()) && Min() == Max());\n  }\n\n  bool CanBeAsserted() const { return Is(Type::NonInternal()); }\n  Handle<TurbofanType> AllocateOnHeap(Factory* factory);\n\n  const HeapConstantType* AsHeapConstant() const;\n  const OtherNumberConstantType* AsOtherNumberConstant() const;\n  const RangeType* AsRange() const;\n  const TupleType* AsTuple() const;\n#ifdef V8_ENABLE_WEBASSEMBLY\n  wasm::TypeInModule AsWasm() const;\n#endif\n\n  // Minimum and maximum of a numeric type.\n  // These functions do not distinguish between -0 and +0.  NaN is ignored.\n  // Only call them on subtypes of Number whose intersection with OrderedNumber\n  // is not empty.\n  double Min() const;\n  double Max() const;\n\n  // Extracts a range from the type: if the type is a range or a union\n  // containing a range, that range is returned; otherwise, nullptr is returned.\n  Type GetRange() const;\n\n  int NumConstants() const;\n\n  static Type Invalid() { return Type(); }\n\n  bool operator==(Type other) const { return payload_ == other.payload_; }\n  bool operator!=(Type other) const { return payload_ != other.payload_; }\n\n  // Printing.\n\n  void PrintTo(std::ostream& os) const;\n\n#ifdef DEBUG\n  void Print() const;\n#endif\n\n  // Helpers for testing.\n  bool IsUnionForTesting() { return IsUnion(); }\n  bitset AsBitsetForTesting() { return AsBitset(); }\n  const UnionType* AsUnionForTesting() { return AsUnion(); }\n  Type BitsetGlbForTesting() { return NewBitset(BitsetGlb()); }\n  Type BitsetLubForTesting() { return NewBitset(BitsetLub()); }\n\n private:\n  // Friends.\n  template <class>\n  friend class Iterator;\n  friend BitsetType;\n  friend UnionType;\n  friend size_t hash_value(Type type);\n\n  explicit Type(bitset bits) : payload_(bits | uint64_t{1}) {}\n\n  Type(TypeBase* type_base)  // NOLINT(runtime/explicit)\n      : payload_(reinterpret_cast<uint64_t>(type_base)) {}\n\n  // Internal inspection.\n  bool IsKind(TypeBase::Kind kind) const {\n    if (IsBitset()) return false;\n    const TypeBase* base = ToTypeBase();\n    return base->kind() == kind;\n  }\n\n  const TypeBase* ToTypeBase() const {\n    return reinterpret_cast<TypeBase*>(payload_);\n  }\n  static Type FromTypeBase(TypeBase* type) { return Type(type); }\n\n  bool IsAny() const { return payload_ == Any().payload_; }\n  bool IsUnion() const { return IsKind(TypeBase::kUnion); }\n\n  bitset AsBitset() const {\n    DCHECK(IsBitset());\n    return static_cast<bitset>(payload_) ^ uint64_t { 1 };\n  }\n\n  const UnionType* AsUnion() const;\n\n  bitset BitsetGlb() const;  // greatest lower bound that's a bitset\n  bitset BitsetLub() const;  // least upper bound that's a bitset\n\n  bool SlowIs(Type that) const;\n\n  static Type NewBitset(bitset bits) { return Type(bits); }\n\n  static Type Range(RangeType::Limits lims, Zone* zone);\n  static Type OtherNumberConstant(double value, Zone* zone);\n  static Type HeapConstant(HeapObjectRef value, JSHeapBroker* broker,\n                           Zone* zone);\n\n  static bool Overlap(const RangeType* lhs, const RangeType* rhs);\n  static bool Contains(const RangeType* lhs, const RangeType* rhs);\n\n  static int UpdateRange(Type type, UnionType* result, int size, Zone* zone);\n\n  static RangeType::Limits IntersectRangeAndBitset(Type range, Type bits,\n                                                   Zone* zone);\n  static RangeType::Limits ToLimits(bitset bits, Zone* zone);\n\n  bool SimplyEquals(Type that) const;\n\n  static int AddToUnion(Type type, UnionType* result, int size, Zone* zone);\n  static int IntersectAux(Type type, Type other, UnionType* result, int size,\n                          RangeType::Limits* limits, Zone* zone);\n  static Type NormalizeUnion(UnionType* unioned, int size, Zone* zone);\n  static Type NormalizeRangeAndBitset(Type range, bitset* bits, Zone* zone);\n\n  // If LSB is set, the payload is a bitset; if LSB is clear, the payload is\n  // a pointer to a subtype of the TypeBase class.\n  uint64_t payload_;\n};"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "OtherNumberConstantType",
+        "about": "Represents a constant number type.",
+        "attributes": [],
+        "dependencies": [
+          "BitsetType"
+        ]
+      },
+      "code": "class OtherNumberConstantType : public TypeBase {\n public:\n  double Value() const { return value_; }\n\n  static bool IsOtherNumberConstant(double value);\n\n private:\n  friend class Type;\n  friend class BitsetType;\n  friend Zone;\n\n  static OtherNumberConstantType* New(double value, Zone* zone) {\n    return zone->New<OtherNumberConstantType>(value);\n  }\n\n  explicit OtherNumberConstantType(double value)\n      : TypeBase(kOtherNumberConstant), value_(value) {\n    CHECK(IsOtherNumberConstant(value));\n  }\n\n  BitsetType::bitset Lub() const { return BitsetType::kOtherNumber; }\n\n  double value_;\n};"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "HeapConstantType",
+        "about": "Represents a constant heap object type.",
+        "attributes": [],
+        "dependencies": [
+          "BitsetType"
+        ]
+      },
+      "code": "class V8_EXPORT_PRIVATE HeapConstantType : public NON_EXPORTED_BASE(TypeBase) {\n public:\n  Handle<HeapObject> Value() const;\n  HeapObjectRef Ref() const { return heap_ref_; }\n\n private:\n  friend class Type;\n  friend class BitsetType;\n  friend Zone;\n\n  static HeapConstantType* New(HeapObjectRef heap_ref,\n                               BitsetType::bitset bitset, Zone* zone) {\n    return zone->New<HeapConstantType>(bitset, heap_ref);\n  }\n\n  HeapConstantType(BitsetType::bitset bitset, HeapObjectRef heap_ref);\n\n  BitsetType::bitset Lub() const { return bitset_; }\n\n  BitsetType::bitset bitset_;\n  HeapObjectRef heap_ref_;\n};"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "StructuralType",
+        "about": "Superclass for types with variable number of type fields.",
+        "attributes": [],
+        "dependencies": []
+      },
+      "code": "class StructuralType : public TypeBase {\n public:\n  int LengthForTesting() const { return Length(); }\n\n protected:\n  friend class Type;\n\n  int Length() const { return length_; }\n\n  Type Get(int i) const {\n    DCHECK(0 <= i && i < this->Length());\n    return elements_[i];\n  }\n\n  void Set(int i, Type type) {\n    DCHECK(0 <= i && i < this->Length());\n    elements_[i] = type;\n  }\n\n  void Shrink(int length) {\n    DCHECK(2 <= length && length <= this->Length());\n    length_ = length;\n  }\n\n  StructuralType(Kind kind, int length, Zone* zone)\n      : TypeBase(kind), length_(length) {\n    elements_ = zone->AllocateArray<Type>(length);\n  }\n\n private:\n  int length_;\n  Type* elements_;\n};"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "TupleType",
+        "about": "Represents a tuple type.",
+        "attributes": [],
+        "dependencies": [
+          "Type"
+        ]
+      },
+      "code": "class TupleType : public StructuralType {\n public:\n  int Arity() const { return this->Length(); }\n  Type Element(int i) const { return this->Get(i); }\n\n  void InitElement(int i, Type type) { this->Set(i, type); }\n\n private:\n  friend Type;\n  friend Zone;\n\n  TupleType(int length, Zone* zone) : StructuralType(kTuple, length, zone) {}\n\n  static TupleType* New(int length, Zone* zone) {\n    return zone->New<TupleType>(length, zone);\n  }\n};"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "UnionType",
+        "about": "Represents a union type.",
+        "attributes": [],
+        "dependencies": [
+          "Type",
+          "BitsetType"
+        ]
+      },
+      "code": "class UnionType : public StructuralType {\n private:\n  friend Type;\n  friend BitsetType;\n  friend Zone;\n\n  UnionType(int length, Zone* zone) : StructuralType(kUnion, length, zone) {}\n\n  static UnionType* New(int length, Zone* zone) {\n    return zone->New<UnionType>(length, zone);\n  }\n\n  bool Wellformed() const;\n};"
+    }
+  ],
+  "file_path": "/home/kathirks_gc/v8_go/archive/codebase/src/compiler/turbofan-types.h"
+}

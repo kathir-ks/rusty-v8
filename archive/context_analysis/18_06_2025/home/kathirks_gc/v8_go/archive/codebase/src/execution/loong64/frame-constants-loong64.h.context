@@ -1,0 +1,262 @@
+{
+  "metadata": {
+    "path": "/home/kathirks_gc/v8_go/archive/codebase/src/execution/loong64/frame-constants-loong64.h",
+    "file_name": "frame-constants-loong64.h",
+    "language": "cpp",
+    "purpose": "Defines constants related to stack frame layout for the LoongArch64 architecture in the V8 JavaScript engine."
+  },
+  "imports": {
+    "metadata": {
+      "language": "cpp",
+      "purpose": "Includes necessary headers for bit manipulation, macros, register definitions, and generic frame constants."
+    },
+    "code": "#include \"src/base/bits.h\"\n#include \"src/base/macros.h\"\n#include \"src/codegen/register.h\"\n#include \"src/execution/frame-constants.h\""
+  },
+  "classes": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "EntryFrameConstants",
+        "extends": "AllStatic",
+        "about": "Defines constants related to the entry frame, used when entering the V8 engine from external code (e.g., C++).",
+        "attributes": [
+          {
+            "name": "kNextExitFrameFPOffset",
+            "type": "int",
+            "access": "public",
+            "purpose": "Offset to the location where JSEntry pushes the current value of Isolate::c_entry_fp onto the stack."
+          },
+          {
+            "name": "kNextFastCallFrameFPOffset",
+            "type": "int",
+            "access": "public",
+            "purpose": "Offset for storing the frame pointer of fast API calls."
+          },
+          {
+            "name": "kNextFastCallFramePCOffset",
+            "type": "int",
+            "access": "public",
+            "purpose": "Offset for storing the program counter of fast API calls."
+          }
+        ],
+        "dependencies": [
+          "AllStatic",
+          "kSystemPointerSize"
+        ]
+      },
+      "code": "class EntryFrameConstants : public AllStatic {\n public:\n  // This is the offset to where JSEntry pushes the current value of\n  // Isolate::c_entry_fp onto the stack.\n  static constexpr int kNextExitFrameFPOffset = -3 * kSystemPointerSize;\n\n  // The offsets for storing the FP and PC of fast API calls.\n  static constexpr int kNextFastCallFrameFPOffset =\n      kNextExitFrameFPOffset - kSystemPointerSize;\n  static constexpr int kNextFastCallFramePCOffset =\n      kNextFastCallFrameFPOffset - kSystemPointerSize;\n};"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "WasmLiftoffSetupFrameConstants",
+        "extends": "TypedFrameConstants",
+        "about": "Defines constants related to the stack frame setup for the Liftoff compiler in WebAssembly.",
+        "attributes": [
+          {
+            "name": "kNumberOfSavedGpParamRegs",
+            "type": "int",
+            "access": "public",
+            "purpose": "Number of general-purpose registers saved for parameters (excluding the instance)."
+          },
+          {
+            "name": "kNumberOfSavedFpParamRegs",
+            "type": "int",
+            "access": "public",
+            "purpose": "Number of floating-point registers saved for parameters."
+          },
+          {
+            "name": "kNumberOfSavedAllParamRegs",
+            "type": "int",
+            "access": "public",
+            "purpose": "Total number of registers (GP and FP) saved for parameters."
+          },
+          {
+            "name": "kInstanceSpillOffset",
+            "type": "int",
+            "access": "public",
+            "purpose": "Offset of the WebAssembly instance pointer on the stack."
+          },
+          {
+            "name": "kParameterSpillsOffset",
+            "type": "int[]",
+            "access": "public",
+            "purpose": "Offsets for spilled general-purpose parameter registers on the stack."
+          },
+          {
+            "name": "kWasmInstanceDataOffset",
+            "type": "int",
+            "access": "public",
+            "purpose": "Offset of the Wasm instance data."
+          },
+          {
+            "name": "kDeclaredFunctionIndexOffset",
+            "type": "int",
+            "access": "public",
+            "purpose": "Offset of the declared function index."
+          },
+          {
+            "name": "kNativeModuleOffset",
+            "type": "int",
+            "access": "public",
+            "purpose": "Offset of the native module."
+          }
+        ],
+        "dependencies": [
+          "TypedFrameConstants",
+          "TYPED_FRAME_PUSHED_VALUE_OFFSET",
+          "kSystemPointerSize"
+        ]
+      },
+      "code": "class WasmLiftoffSetupFrameConstants : public TypedFrameConstants {\n public:\n  // Number of gp parameters, without the instance.\n  static constexpr int kNumberOfSavedGpParamRegs = 6;\n  static constexpr int kNumberOfSavedFpParamRegs = 8;\n  static constexpr int kNumberOfSavedAllParamRegs = 14;\n\n  // On loong64, spilled registers are implicitly sorted backwards by number.\n  // We spill:\n  //   a0, a2, a3, a4, a5, a6: param1, param2, ..., param6\n  // in the following FP-relative order: [a6, a5, a4, a3, a2, a0].\n  // The instance slot is in position '0', the first spill slot is at '1'.\n  // See wasm::kGpParamRegisters and Builtins::Generate_WasmCompileLazy.\n  static constexpr int kInstanceSpillOffset =\n      TYPED_FRAME_PUSHED_VALUE_OFFSET(0);\n\n  static constexpr int kParameterSpillsOffset[] = {\n      TYPED_FRAME_PUSHED_VALUE_OFFSET(6), TYPED_FRAME_PUSHED_VALUE_OFFSET(5),\n      TYPED_FRAME_PUSHED_VALUE_OFFSET(4), TYPED_FRAME_PUSHED_VALUE_OFFSET(3),\n      TYPED_FRAME_PUSHED_VALUE_OFFSET(2), TYPED_FRAME_PUSHED_VALUE_OFFSET(1)};\n\n  // SP-relative.\n  static constexpr int kWasmInstanceDataOffset = 2 * kSystemPointerSize;\n  static constexpr int kDeclaredFunctionIndexOffset = 1 * kSystemPointerSize;\n  static constexpr int kNativeModuleOffset = 0;\n};"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "WasmLiftoffFrameConstants",
+        "extends": "TypedFrameConstants",
+        "about": "Defines constants related to the stack frame used during the execution of WebAssembly code compiled by the Liftoff compiler.",
+        "attributes": [
+          {
+            "name": "kFeedbackVectorOffset",
+            "type": "int",
+            "access": "public",
+            "purpose": "Offset to the feedback vector in the stack frame."
+          },
+          {
+            "name": "kInstanceDataOffset",
+            "type": "int",
+            "access": "public",
+            "purpose": "Offset to the instance data in the stack frame."
+          }
+        ],
+        "dependencies": [
+          "TypedFrameConstants",
+          "kSystemPointerSize"
+        ]
+      },
+      "code": "class WasmLiftoffFrameConstants : public TypedFrameConstants {\n public:\n  static constexpr int kFeedbackVectorOffset = 3 * kSystemPointerSize;\n  static constexpr int kInstanceDataOffset = 2 * kSystemPointerSize;\n};"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "WasmDebugBreakFrameConstants",
+        "extends": "TypedFrameConstants",
+        "about": "Defines constants related to the stack frame used when a debug break occurs in WebAssembly code. This frame saves register state.",
+        "attributes": [
+          {
+            "name": "kPushedGpRegs",
+            "type": "RegList",
+            "access": "public",
+            "purpose": "List of general-purpose registers pushed onto the stack."
+          },
+          {
+            "name": "kPushedFpRegs",
+            "type": "DoubleRegList",
+            "access": "public",
+            "purpose": "List of floating-point registers pushed onto the stack."
+          },
+          {
+            "name": "kNumPushedGpRegisters",
+            "type": "int",
+            "access": "public",
+            "purpose": "Number of general-purpose registers pushed."
+          },
+          {
+            "name": "kNumPushedFpRegisters",
+            "type": "int",
+            "access": "public",
+            "purpose": "Number of floating-point registers pushed."
+          },
+          {
+            "name": "kLastPushedGpRegisterOffset",
+            "type": "int",
+            "access": "public",
+            "purpose": "Offset of the last pushed general-purpose register."
+          },
+          {
+            "name": "kLastPushedFpRegisterOffset",
+            "type": "int",
+            "access": "public",
+            "purpose": "Offset of the last pushed floating-point register."
+          }
+        ],
+        "dependencies": [
+          "TypedFrameConstants",
+          "RegList",
+          "DoubleRegList",
+          "kSystemPointerSize",
+          "kDoubleSize",
+          "base::bits",
+          "DCHECK_NE"
+        ]
+      },
+      "code": "class WasmDebugBreakFrameConstants : public TypedFrameConstants {\n public:\n  // {a0 ... a7, t0 ... t5, s0, s1, s2, s5, s7}\n  static constexpr RegList kPushedGpRegs = {a0, a1, a2, a3, a4, a5, a6,\n                                            a7, t0, t1, t2, t3, t4, t5,\n                                            s0, s1, s2, s5, s7};\n  // {f0, f1, f2, ... f27, f28}\n  static constexpr DoubleRegList kPushedFpRegs = {\n      f0,  f1,  f2,  f3,  f4,  f5,  f6,  f7,  f8,  f9,  f10, f11, f12, f13, f14,\n      f15, f16, f17, f18, f19, f20, f21, f22, f23, f24, f25, f26, f27, f28};\n\n  static constexpr int kNumPushedGpRegisters = kPushedGpRegs.Count();\n  static constexpr int kNumPushedFpRegisters = kPushedFpRegs.Count();\n\n  static constexpr int kLastPushedGpRegisterOffset =\n      -kFixedFrameSizeFromFp - kNumPushedGpRegisters * kSystemPointerSize;\n  static constexpr int kLastPushedFpRegisterOffset =\n      kLastPushedGpRegisterOffset - kNumPushedFpRegisters * kDoubleSize;\n\n  // Offsets are fp-relative.\n  static int GetPushedGpRegisterOffset(int reg_code) {\n    DCHECK_NE(0, kPushedGpRegs.bits() & (1 << reg_code));\n    uint32_t lower_regs =\n        kPushedGpRegs.bits() & ((uint32_t{1} << reg_code) - 1);\n    return kLastPushedGpRegisterOffset +\n           base::bits::CountPopulation(lower_regs) * kSystemPointerSize;\n  }\n\n  static int GetPushedFpRegisterOffset(int reg_code) {\n    DCHECK_NE(0, kPushedFpRegs.bits() & (1 << reg_code));\n    uint32_t lower_regs =\n        kPushedFpRegs.bits() & ((uint32_t{1} << reg_code) - 1);\n    return kLastPushedFpRegisterOffset +\n           base::bits::CountPopulation(lower_regs) * kDoubleSize;\n  }\n};"
+    }
+  ],
+  "functions": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "method",
+        "name": "GetPushedGpRegisterOffset",
+        "parent": "WasmDebugBreakFrameConstants",
+        "about": "Calculates the stack offset for a given general-purpose register that was pushed during a Wasm debug break.",
+        "logic": "It checks if the register is in the pushed register list, then counts the number of registers with a lower code than the input register and multiplies it by the system pointer size to get the offset.",
+        "parameters": [
+          {
+            "name": "reg_code",
+            "type": "int",
+            "purpose": "The register code for which to calculate the offset."
+          }
+        ],
+        "return": {
+          "type": "int",
+          "description": "The stack offset of the register relative to the frame pointer."
+        },
+        "dependencies": [
+          "DCHECK_NE",
+          "kPushedGpRegs",
+          "base::bits::CountPopulation",
+          "kLastPushedGpRegisterOffset",
+          "kSystemPointerSize"
+        ]
+      },
+      "code": "static int GetPushedGpRegisterOffset(int reg_code) {\n    DCHECK_NE(0, kPushedGpRegs.bits() & (1 << reg_code));\n    uint32_t lower_regs =\n        kPushedGpRegs.bits() & ((uint32_t{1} << reg_code) - 1);\n    return kLastPushedGpRegisterOffset +\n           base::bits::CountPopulation(lower_regs) * kSystemPointerSize;\n  }"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "method",
+        "name": "GetPushedFpRegisterOffset",
+        "parent": "WasmDebugBreakFrameConstants",
+        "about": "Calculates the stack offset for a given floating-point register that was pushed during a Wasm debug break.",
+        "logic": "Similar to GetPushedGpRegisterOffset, but for floating-point registers and using kDoubleSize.",
+        "parameters": [
+          {
+            "name": "reg_code",
+            "type": "int",
+            "purpose": "The register code for which to calculate the offset."
+          }
+        ],
+        "return": {
+          "type": "int",
+          "description": "The stack offset of the register relative to the frame pointer."
+        },
+        "dependencies": [
+          "DCHECK_NE",
+          "kPushedFpRegs",
+          "base::bits::CountPopulation",
+          "kLastPushedFpRegisterOffset",
+          "kDoubleSize"
+        ]
+      },
+      "code": "static int GetPushedFpRegisterOffset(int reg_code) {\n    DCHECK_NE(0, kPushedFpRegs.bits() & (1 << reg_code));\n    uint32_t lower_regs =\n        kPushedFpRegs.bits() & ((uint32_t{1} << reg_code) - 1);\n    return kLastPushedFpRegisterOffset +\n           base::bits::CountPopulation(lower_regs) * kDoubleSize;\n  }"
+    }
+  ],
+  "file_path": "/home/kathirks_gc/v8_go/archive/codebase/src/execution/loong64/frame-constants-loong64.h"
+}

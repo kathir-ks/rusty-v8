@@ -1,0 +1,213 @@
+{
+  "metadata": {
+    "path": "/home/kathirks_gc/v8_go/archive/codebase/src/init/icu_util.cc",
+    "file_name": "icu_util.cc",
+    "language": "cpp",
+    "purpose": "Provides utility functions for initializing the ICU library within V8."
+  },
+  "imports": {
+    "metadata": {
+      "language": "cpp",
+      "purpose": "Includes necessary headers for ICU initialization and platform-specific features."
+    },
+    "code": "#include \"src/init/icu_util.h\"\n\n#if defined(_WIN32)\n#include \"src/base/win32-headers.h\"\n#endif\n\n#if defined(V8_INTL_SUPPORT)\n#include <stdio.h>\n#include <stdlib.h>\n\n#include \"src/base/build_config.h\"\n#include \"src/base/file-utils.h\"\n#include \"src/base/platform/wrappers.h\"\n#include \"unicode/putil.h\"\n#include \"unicode/udata.h\"\n#endif"
+  },
+  "functions": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "function",
+        "name": "InitializeICUDefaultLocation",
+        "about": "Initializes the ICU library with the default location of the ICU data file, either specified by the user or determined relative to the executable path.",
+        "logic": "If V8_INTL_SUPPORT is defined, it checks if icu_data_file is provided. If not, it constructs a default path based on the executable path and endianness, then calls InitializeICU with the path.",
+        "parameters": [
+          {
+            "name": "exec_path",
+            "type": "const char*",
+            "purpose": "Path to the executable file, used to determine the default ICU data file location."
+          },
+          {
+            "name": "icu_data_file",
+            "type": "const char*",
+            "purpose": "Optional path to the ICU data file. If null, the default location is used."
+          }
+        ],
+        "return": {
+          "type": "bool",
+          "description": "True if ICU initialization was successful, false otherwise."
+        },
+        "dependencies": [
+          "InitializeICU",
+          "base::RelativePath"
+        ]
+      },
+      "code": "bool InitializeICUDefaultLocation(const char* exec_path,\n                                  const char* icu_data_file) {\n#if !defined(V8_INTL_SUPPORT)\n  return true;\n#elif ICU_UTIL_DATA_IMPL == ICU_UTIL_DATA_FILE\n  if (icu_data_file) {\n    return InitializeICU(icu_data_file);\n  }\n#if defined(V8_TARGET_LITTLE_ENDIAN)\n  std::unique_ptr<char[]> icu_data_file_default =\n      base::RelativePath(exec_path, \"icudtl.dat\");\n#elif defined(V8_TARGET_BIG_ENDIAN)\n  std::unique_ptr<char[]> icu_data_file_default =\n      base::RelativePath(exec_path, \"icudtb.dat\");\n#else\n#error Unknown byte ordering\n#endif\n  return InitializeICU(icu_data_file_default.get());\n#else\n  return InitializeICU(nullptr);\n#endif\n}"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "function",
+        "name": "InitializeICU",
+        "about": "Initializes the ICU library by loading the ICU data file into memory and setting it as the common data for ICU.",
+        "logic": "If V8_INTL_SUPPORT is defined and ICU_UTIL_DATA_IMPL is ICU_UTIL_DATA_FILE, it opens the specified ICU data file, reads its contents into memory, and sets it as the common data for ICU.  If ICU_UTIL_DATA_IMPL is ICU_UTIL_DATA_STATIC, it assumes data is statically linked.",
+        "parameters": [
+          {
+            "name": "icu_data_file",
+            "type": "const char*",
+            "purpose": "Path to the ICU data file."
+          }
+        ],
+        "return": {
+          "type": "bool",
+          "description": "True if ICU initialization was successful, false otherwise."
+        },
+        "dependencies": [
+          "base::Fopen",
+          "base::Fclose",
+          "udata_setCommonData",
+          "udata_setFileAccess",
+          "atexit",
+          "free_icu_data_ptr"
+        ]
+      },
+      "code": "bool InitializeICU(const char* icu_data_file) {\n#if !defined(V8_INTL_SUPPORT)\n  return true;\n#else\n#if ICU_UTIL_DATA_IMPL == ICU_UTIL_DATA_STATIC\n  // Use bundled ICU data.\n  return true;\n#elif ICU_UTIL_DATA_IMPL == ICU_UTIL_DATA_FILE\n  if (!icu_data_file) return false;\n\n  if (g_icu_data_ptr) return true;\n\n  FILE* inf = base::Fopen(icu_data_file, \"rb\");\n  if (!inf) return false;\n\n  fseek(inf, 0, SEEK_END);\n  size_t size = ftell(inf);\n  rewind(inf);\n\n  g_icu_data_ptr = new char[size];\n  if (fread(g_icu_data_ptr, 1, size, inf) != size) {\n    delete[] g_icu_data_ptr;\n    g_icu_data_ptr = nullptr;\n    base::Fclose(inf);\n    return false;\n  }\n  base::Fclose(inf);\n\n  atexit(free_icu_data_ptr);\n\n  UErrorCode err = U_ZERO_ERROR;\n  udata_setCommonData(reinterpret_cast<void*>(g_icu_data_ptr), &err);\n  // Never try to load ICU data from files.\n  udata_setFileAccess(UDATA_ONLY_PACKAGES, &err);\n  return err == U_ZERO_ERROR;\n#endif\n#endif\n}"
+    }
+  ],
+  "dependencies": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "function",
+        "name": "base::RelativePath",
+        "about": "Helper function to construct a relative path."
+      },
+      "code": "namespace base {\n                    std::unique_ptr<char[]> RelativePath(const char* exec_path, const char* filename);\n                }",
+      "type": "func"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "function",
+        "name": "base::Fopen",
+        "about": "Wrapper function to open a file.",
+        "parameters": [],
+        "return": {
+          "type": "FILE*",
+          "description": "A pointer to the opened file"
+        }
+      },
+      "code": "namespace base {\n                    FILE* Fopen(const char* filename, const char* mode);\n                }",
+      "type": "func"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "function",
+        "name": "base::Fclose",
+        "about": "Wrapper function to close a file.",
+        "parameters": [
+          {
+            "name": "file",
+            "type": "FILE*",
+            "purpose": "A pointer to the file to close"
+          }
+        ],
+        "return": {
+          "type": "int",
+          "description": "0 on success, EOF on error"
+        }
+      },
+      "code": "namespace base {\n                    int Fclose(FILE* file);\n                }",
+      "type": "func"
+    },
+    {
+      "metadata": {
+        "language": "c",
+        "type": "function",
+        "name": "atexit",
+        "about": "Registers a function to be called when the program terminates normally.",
+        "parameters": [
+          {
+            "name": "func",
+            "type": "void (*)(void)",
+            "purpose": "Function to be called at exit"
+          }
+        ],
+        "return": {
+          "type": "int",
+          "description": "Zero on success, non-zero on failure."
+        }
+      },
+      "code": "int atexit (void (*func)(void));",
+      "type": "func"
+    },
+    {
+      "metadata": {
+        "language": "c",
+        "type": "function",
+        "name": "free_icu_data_ptr",
+        "about": "Frees the memory allocated for ICU data.",
+        "parameters": [],
+        "return": {
+          "type": "void",
+          "description": "No return value."
+        }
+      },
+      "code": "void free_icu_data_ptr();",
+      "type": "func"
+    },
+    {
+      "metadata": {
+        "language": "c",
+        "type": "function",
+        "name": "udata_setCommonData",
+        "about": "Sets the common data for ICU.",
+        "parameters": [
+          {
+            "name": "data",
+            "type": "void*",
+            "purpose": "Pointer to the ICU data."
+          },
+          {
+            "name": "status",
+            "type": "UErrorCode*",
+            "purpose": "Pointer to ICU status code."
+          }
+        ],
+        "return": {
+          "type": "void",
+          "description": "No return value."
+        }
+      },
+      "code": "void udata_setCommonData(void* data, UErrorCode* status);",
+      "type": "func"
+    },
+    {
+      "metadata": {
+        "language": "c",
+        "type": "function",
+        "name": "udata_setFileAccess",
+        "about": "Sets the file access mode for ICU.",
+        "parameters": [
+          {
+            "name": "access",
+            "type": "UDataFileAccess",
+            "purpose": "Access mode for ICU data files."
+          },
+          {
+            "name": "status",
+            "type": "UErrorCode*",
+            "purpose": "Pointer to ICU status code."
+          }
+        ],
+        "return": {
+          "type": "void",
+          "description": "No return value."
+        }
+      },
+      "code": "void udata_setFileAccess(UDataFileAccess access, UErrorCode* status);",
+      "type": "func"
+    }
+  ],
+  "file_path": "/home/kathirks_gc/v8_go/archive/codebase/src/init/icu_util.cc"
+}

@@ -1,0 +1,30 @@
+// Module declarations for converted cppgc code
+
+pub mod cross-thread-persistent;
+pub mod persistent;
+pub mod liveness-broker;
+pub mod ephemeron-pair;
+pub mod allocation;
+pub mod object-size-trait;
+pub mod heap-consistency;
+pub mod prefinalizer;
+pub mod garbage-collected;
+pub mod name-provider;
+pub mod custom-space;
+pub mod heap-statistics;
+pub mod sentinel-pointer;
+pub mod heap-handle;
+pub mod member;
+pub mod common;
+pub mod visitor;
+pub mod heap;
+pub mod type-traits;
+pub mod heap-state;
+pub mod testing;
+pub mod source-location;
+pub mod process-heap-statistics;
+pub mod trace-trait;
+pub mod platform;
+pub mod default-platform;
+pub mod macros;
+pub mod explicit-management;

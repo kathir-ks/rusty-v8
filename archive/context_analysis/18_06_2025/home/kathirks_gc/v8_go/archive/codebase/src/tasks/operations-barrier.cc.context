@@ -1,0 +1,120 @@
+{
+  "metadata": {
+    "path": "/home/kathirks_gc/v8_go/archive/codebase/src/tasks/operations-barrier.cc",
+    "file_name": "operations-barrier.cc",
+    "language": "cpp",
+    "purpose": "Implements a barrier to synchronize operations, allowing cancellation and waiting for completion."
+  },
+  "imports": {
+    "metadata": {
+      "language": "cpp",
+      "purpose": "Includes the header file for the OperationsBarrier class, providing its declaration."
+    },
+    "code": "#include \"src/tasks/operations-barrier.h\""
+  },
+  "classes": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "OperationsBarrier",
+        "about": "A synchronization primitive that allows waiting for a set of operations to complete. Supports cancellation.",
+        "attributes": [
+          {
+            "name": "mutex_",
+            "type": "base::Mutex",
+            "access": "private",
+            "purpose": "Protects access to the shared state (operations_count_ and cancelled_)."
+          },
+          {
+            "name": "release_condition_",
+            "type": "base::ConditionVariable",
+            "access": "private",
+            "purpose": "Used to signal when all operations have completed and the barrier is cancelled."
+          },
+          {
+            "name": "operations_count_",
+            "type": "int",
+            "access": "private",
+            "purpose": "Counts the number of active operations using the barrier."
+          },
+          {
+            "name": "cancelled_",
+            "type": "bool",
+            "access": "private",
+            "purpose": "Indicates whether the barrier has been cancelled."
+          }
+        ],
+        "dependencies": [
+          "base::Mutex",
+          "base::MutexGuard",
+          "base::ConditionVariable"
+        ]
+      },
+      "code": "namespace v8 {\nnamespace internal {\n\nclass OperationsBarrier {\n public:\n  class Token {\n   public:\n    explicit Token(OperationsBarrier* barrier) : barrier_(barrier) {}\n    Token(const Token&) = delete;\n    Token& operator=(const Token&) = delete;\n    ~Token() {\n      if (barrier_) barrier_->Release();\n    }\n\n   private:\n    friend class OperationsBarrier;\n    OperationsBarrier* barrier_ = nullptr;\n  };\n\n  Token TryLock();\n  void CancelAndWait();\n  void Release();\n\n private:\n  base::Mutex mutex_;\n  base::ConditionVariable release_condition_;\n  int operations_count_ = 0;\n  bool cancelled_ = false;\n};\n\n}  // namespace internal\n}  // namespace v8"
+    }
+  ],
+  "functions": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "method",
+        "name": "TryLock",
+        "parent": "OperationsBarrier",
+        "about": "Attempts to acquire a lock on the barrier. If the barrier is not cancelled, it increments the operations count and returns a Token.",
+        "logic": "Acquires a mutex, checks if the barrier is cancelled. If not, increments the operations count and returns a Token which represents the acquired lock. The token's destructor releases the lock.",
+        "parameters": [],
+        "return": {
+          "type": "OperationsBarrier::Token",
+          "description": "A Token object if the lock was acquired successfully; an empty Token otherwise."
+        },
+        "dependencies": [
+          "base::MutexGuard",
+          "OperationsBarrier::Token"
+        ]
+      },
+      "code": "OperationsBarrier::Token OperationsBarrier::TryLock() {\n  base::MutexGuard guard(&mutex_);\n  if (cancelled_) return {};\n  ++operations_count_;\n  return Token(this);\n}"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "method",
+        "name": "CancelAndWait",
+        "parent": "OperationsBarrier",
+        "about": "Cancels the barrier and waits for all active operations to complete.",
+        "logic": "Acquires a mutex, sets the cancelled flag to true, and waits on a condition variable until the operations count becomes zero. Uses a while loop and condition variable to handle spurious wakeups.",
+        "parameters": [],
+        "return": {
+          "type": "void",
+          "description": "No return value."
+        },
+        "dependencies": [
+          "base::MutexGuard",
+          "base::ConditionVariable::Wait"
+        ]
+      },
+      "code": "void OperationsBarrier::CancelAndWait() {\n  base::MutexGuard guard(&mutex_);\n  DCHECK(!cancelled_);\n  cancelled_ = true;\n  while (operations_count_ > 0) {\n    release_condition_.Wait(&mutex_);\n  }\n}"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "method",
+        "name": "Release",
+        "parent": "OperationsBarrier",
+        "about": "Releases the lock on the barrier. Decrements the operations count and notifies the condition variable if the barrier is cancelled and the operations count reaches zero.",
+        "logic": "Acquires a mutex, decrements the operations count. If the count reaches zero and the barrier is cancelled, notifies the condition variable to wake up the waiting CancelAndWait method.",
+        "parameters": [],
+        "return": {
+          "type": "void",
+          "description": "No return value."
+        },
+        "dependencies": [
+          "base::MutexGuard",
+          "base::ConditionVariable::NotifyOne"
+        ]
+      },
+      "code": "void OperationsBarrier::Release() {\n  base::MutexGuard guard(&mutex_);\n  if (--operations_count_ == 0 && cancelled_) {\n    release_condition_.NotifyOne();\n  }\n}"
+    }
+  ],
+  "file_path": "/home/kathirks_gc/v8_go/archive/codebase/src/tasks/operations-barrier.cc"
+}

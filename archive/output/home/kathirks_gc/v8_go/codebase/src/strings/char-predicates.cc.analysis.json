@@ -1,0 +1,35 @@
+{
+  "file_path": "/home/kathirks_gc/v8_go/codebase/src/strings/char-predicates.cc",
+  "imports": [
+    "src/strings/char-predicates.h",
+    "unicode/uchar.h",
+    "unicode/urename.h"
+  ],
+  "classes": [],
+  "functions": [
+    {
+      "name": "IsIdentifierStartSlow",
+      "parameters": [
+        "base::uc32 c"
+      ],
+      "return_type": "bool",
+      "logic": "Checks if a given Unicode code point `c` can be the start of an identifier according to ECMAScript specification. It uses `u_hasBinaryProperty` with `UCHAR_ID_START` to check if the code point has the 'ID_Start' property.  It also explicitly checks for '$', '\\', and '_' if the code point is less than 0x60."
+    },
+    {
+      "name": "IsIdentifierPartSlow",
+      "parameters": [
+        "base::uc32 c"
+      ],
+      "return_type": "bool",
+      "logic": "Checks if a given Unicode code point `c` can be part of an identifier according to ECMAScript specification. It uses `u_hasBinaryProperty` with `UCHAR_ID_CONTINUE` to check if the code point has the 'ID_Continue' property. It also explicitly checks for '$', '\\', and '_' (if less than 0x60), as well as ZWJ (U+200C) and ZWNJ (U+200D) characters."
+    },
+    {
+      "name": "IsWhiteSpaceSlow",
+      "parameters": [
+        "base::uc32 c"
+      ],
+      "return_type": "bool",
+      "logic": "Checks if a given Unicode code point `c` is a whitespace character according to ECMAScript specification. It checks if the character type is `U_SPACE_SEPARATOR` using `u_charType`. It also explicitly checks for U+0009 (tab), U+000B (vertical tab), U+000C (form feed) and U+FEFF (zero-width no-break space)."
+    }
+  ]
+}

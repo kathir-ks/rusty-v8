@@ -1,0 +1,27 @@
+{
+  "file_path": "/home/kathirks_gc/v8_go/codebase/src/execution/clobber-registers.cc",
+  "imports": [
+    "src/execution/clobber-registers.h",
+    "src/base/build_config.h",
+    "src/codegen/arm/register-arm.h",
+    "src/codegen/arm64/register-arm64.h",
+    "src/codegen/ia32/register-ia32.h",
+    "src/codegen/x64/register-x64.h",
+    "src/codegen/loong64/register-loong64.h",
+    "src/codegen/mips64/register-mips64.h"
+  ],
+  "classes": [],
+  "functions": [
+    {
+      "name": "ClobberDoubleRegisters",
+      "parameters": [
+        "double x1",
+        "double x2",
+        "double x3",
+        "double x4"
+      ],
+      "return_type": "double",
+      "logic": "This function attempts to clobber (invalidate) all double-precision floating-point registers. It uses inline assembly to achieve this. The exact behavior depends on the architecture and compiler. If `CLOBBER_REGISTER` or `CLOBBER_USE_REGISTER` are defined (based on architecture and compiler), it uses macros with inline assembly to zero out the double registers. Otherwise, it performs a simple calculation to ensure that compilers which do not use all registers (e.g. older GCCs) are forced to utilize the passed in doubles in some computation. It returns 0.0 if the clobbering code is used; otherwise, it returns a value based on the input doubles. The intent is to prevent the compiler from optimizing away the usage of these registers, especially when entering or exiting runtime functions where the register state must be predictable."
+    }
+  ]
+}

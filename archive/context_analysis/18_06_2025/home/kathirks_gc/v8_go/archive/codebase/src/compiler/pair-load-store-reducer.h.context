@@ -1,0 +1,131 @@
+{
+  "metadata": {
+    "path": "/home/kathirks_gc/v8_go/archive/codebase/src/compiler/pair-load-store-reducer.h",
+    "file_name": "pair-load-store-reducer.h",
+    "language": "cpp",
+    "purpose": "Declares the PairLoadStoreReducer class which optimizes pairable store operations on supported platforms."
+  },
+  "imports": {
+    "metadata": {
+      "language": "cpp",
+      "purpose": "Includes necessary headers for compiler-specific definitions, global definitions, graph reduction, and machine operators."
+    },
+    "code": "#include \"src/base/compiler-specific.h\"\n#include \"src/common/globals.h\"\n#include \"src/compiler/graph-reducer.h\"\n#include \"src/compiler/machine-operator.h\""
+  },
+  "classes": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "PairLoadStoreReducer",
+        "extends": "AdvancedReducer",
+        "about": "Reduces store pairs into a single operation on platforms that support it (currently arm64).",
+        "attributes": [
+          {
+            "name": "mcgraph_",
+            "type": "MachineGraph*",
+            "access": "private",
+            "purpose": "Pointer to the MachineGraph object."
+          },
+          {
+            "name": "isolate_",
+            "type": "Isolate*",
+            "access": "private",
+            "purpose": "Pointer to the Isolate object."
+          }
+        ],
+        "dependencies": [
+          "AdvancedReducer",
+          "Editor",
+          "MachineGraph",
+          "Isolate",
+          "Node"
+        ]
+      },
+      "code": "class V8_EXPORT_PRIVATE PairLoadStoreReducer final\n    : public NON_EXPORTED_BASE(AdvancedReducer) {\n public:\n  PairLoadStoreReducer(Editor* editor, MachineGraph* mcgraph,\n                       Isolate* isolate_);\n\n  const char* reducer_name() const override { return \"PairLoadStoreReducer\"; }\n\n  Reduction Reduce(Node* node) override;\n\n private:\n  MachineGraph* mcgraph_;\n  Isolate* isolate_;\n};"
+    }
+  ],
+  "functions": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "method",
+        "name": "PairLoadStoreReducer",
+        "parent": "PairLoadStoreReducer",
+        "about": "Constructor for the PairLoadStoreReducer class.",
+        "logic": "Initializes the PairLoadStoreReducer with the editor, MachineGraph, and isolate.",
+        "parameters": [
+          {
+            "name": "editor",
+            "type": "Editor*",
+            "purpose": "The graph editor."
+          },
+          {
+            "name": "mcgraph",
+            "type": "MachineGraph*",
+            "purpose": "The machine graph."
+          },
+          {
+            "name": "isolate_",
+            "type": "Isolate*",
+            "purpose": "The isolate."
+          }
+        ],
+        "return": {
+          "type": "void",
+          "description": "No return value"
+        },
+        "dependencies": [
+          "Editor",
+          "MachineGraph",
+          "Isolate"
+        ]
+      },
+      "code": "PairLoadStoreReducer(Editor* editor, MachineGraph* mcgraph,\n                       Isolate* isolate_);"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "method",
+        "name": "reducer_name",
+        "parent": "PairLoadStoreReducer",
+        "about": "Returns the name of the reducer.",
+        "logic": "Overrides the base class method to return the name of this reducer.",
+        "parameters": [],
+        "return": {
+          "type": "const char*",
+          "description": "The name of the reducer."
+        },
+        "dependencies": []
+      },
+      "code": "const char* reducer_name() const override { return \"PairLoadStoreReducer\"; }"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "method",
+        "name": "Reduce",
+        "parent": "PairLoadStoreReducer",
+        "about": "Reduces a node in the graph.",
+        "logic": "Determines if the node is a pair of stores that can be combined. If so, combines them into a single store operation.",
+        "parameters": [
+          {
+            "name": "node",
+            "type": "Node*",
+            "purpose": "The node to reduce."
+          }
+        ],
+        "return": {
+          "type": "Reduction",
+          "description": "The result of the reduction."
+        },
+        "dependencies": [
+          "Node",
+          "Reduction"
+        ]
+      },
+      "code": "Reduction Reduce(Node* node) override;"
+    }
+  ],
+  "file_path": "/home/kathirks_gc/v8_go/archive/codebase/src/compiler/pair-load-store-reducer.h"
+}

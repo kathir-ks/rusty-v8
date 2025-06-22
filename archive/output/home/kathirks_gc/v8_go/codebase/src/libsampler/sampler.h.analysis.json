@@ -1,0 +1,195 @@
+{
+  "file_path": "/home/kathirks_gc/v8_go/codebase/src/libsampler/sampler.h",
+  "imports": [
+    "<atomic>",
+    "<memory>",
+    "<unordered_map>",
+    "<vector>",
+    "src/base/lazy-instance.h",
+    "src/base/macros.h"
+  ],
+  "classes": [
+    {
+      "name": "Sampler",
+      "properties": [
+        "kMaxFramesCountLog2",
+        "kMaxFramesCount",
+        "is_counting_samples_",
+        "js_sample_count_",
+        "external_sample_count_",
+        "isolate_",
+        "active_",
+        "record_sample_",
+        "data_"
+      ],
+      "methods": [
+        {
+          "name": "Sampler",
+          "parameters": [
+            "Isolate* isolate"
+          ],
+          "return_type": "constructor",
+          "logic": "Initializes a Sampler instance with the given Isolate."
+        },
+        {
+          "name": "~Sampler",
+          "parameters": [],
+          "return_type": "destructor",
+          "logic": "Virtual destructor for the Sampler class."
+        },
+        {
+          "name": "isolate",
+          "parameters": [],
+          "return_type": "Isolate*",
+          "logic": "Returns the Isolate associated with this sampler."
+        },
+        {
+          "name": "SampleStack",
+          "parameters": [
+            "const v8::RegisterState& regs"
+          ],
+          "return_type": "void",
+          "logic": "Abstract method to be implemented by derived classes.  Called to process a stack sample. Takes the register state as input."
+        },
+        {
+          "name": "Start",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Starts the sampler, setting the active flag."
+        },
+        {
+          "name": "Stop",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Stops the sampler, clearing the active flag."
+        },
+        {
+          "name": "IsActive",
+          "parameters": [],
+          "return_type": "bool",
+          "logic": "Returns whether the sampler is currently active."
+        },
+        {
+          "name": "ShouldRecordSample",
+          "parameters": [],
+          "return_type": "bool",
+          "logic": "Atomically checks and clears the record_sample_ flag, indicating if a sample should be recorded. Returns true if it should."
+        },
+        {
+          "name": "DoSample",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Performs a sampling operation (implementation not in header)."
+        },
+        {
+          "name": "js_sample_count",
+          "parameters": [],
+          "return_type": "unsigned",
+          "logic": "Returns the count of JS samples taken (used for testing)."
+        },
+        {
+          "name": "external_sample_count",
+          "parameters": [],
+          "return_type": "unsigned",
+          "logic": "Returns the count of external samples taken (used for testing)."
+        },
+        {
+          "name": "StartCountingSamples",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Resets the sample counts and enables counting samples for testing purposes."
+        },
+        {
+          "name": "platform_data",
+          "parameters": [],
+          "return_type": "PlatformData*",
+          "logic": "Returns the platform-specific data associated with this sampler."
+        },
+        {
+          "name": "SetActive",
+          "parameters": [
+            "bool value"
+          ],
+          "return_type": "void",
+          "logic": "Sets the active flag atomically."
+        },
+        {
+          "name": "SetShouldRecordSample",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Sets the record_sample_ flag atomically."
+        }
+      ]
+    },
+    {
+      "name": "AtomicGuard",
+      "properties": [
+        "atomic_",
+        "is_success_"
+      ],
+      "methods": [
+        {
+          "name": "AtomicGuard",
+          "parameters": [
+            "AtomicMutex* atomic",
+            "bool is_blocking"
+          ],
+          "return_type": "constructor",
+          "logic": "Attempts to acquire a lock on the given AtomicMutex.  Acquires the lock atomically, either blocking or non-blocking depending on the 'is_blocking' parameter."
+        },
+        {
+          "name": "~AtomicGuard",
+          "parameters": [],
+          "return_type": "destructor",
+          "logic": "Releases the lock held by the AtomicGuard, if it was successfully acquired in the constructor."
+        },
+        {
+          "name": "is_success",
+          "parameters": [],
+          "return_type": "bool",
+          "logic": "Returns whether the lock was successfully acquired in the constructor."
+        }
+      ]
+    },
+    {
+      "name": "SamplerManager",
+      "properties": [
+        "sampler_map_",
+        "samplers_access_counter_"
+      ],
+      "methods": [
+        {
+          "name": "AddSampler",
+          "parameters": [
+            "Sampler* sampler"
+          ],
+          "return_type": "void",
+          "logic": "Adds a sampler to the internal map, associating it with the current thread."
+        },
+        {
+          "name": "RemoveSampler",
+          "parameters": [
+            "Sampler* sampler"
+          ],
+          "return_type": "void",
+          "logic": "Removes a sampler from the internal map. If the sampler was the last one for its thread, the thread's sampler list is deleted."
+        },
+        {
+          "name": "DoSample",
+          "parameters": [
+            "const v8::RegisterState& state"
+          ],
+          "return_type": "void",
+          "logic": "Iterates through all samplers associated with the current thread and calls their DoSample method. Protects against concurrent modifications to the sampler list using an atomic mutex."
+        },
+        {
+          "name": "instance",
+          "parameters": [],
+          "return_type": "SamplerManager*",
+          "logic": "Returns the singleton instance of the SamplerManager, using a lazy initialization mechanism."
+        }
+      ]
+    }
+  ],
+  "functions": []
+}

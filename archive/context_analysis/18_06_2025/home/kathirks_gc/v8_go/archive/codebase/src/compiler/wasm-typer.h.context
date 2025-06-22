@@ -1,0 +1,49 @@
+{
+  "metadata": {
+    "path": "/home/kathirks_gc/v8_go/archive/codebase/src/compiler/wasm-typer.h",
+    "file_name": "wasm-typer.h",
+    "language": "cpp",
+    "purpose": "Declares the WasmTyper class, which recomputes WebAssembly garbage collection (wasm-gc) types along the graph to assign the narrowest possible type to each node."
+  },
+  "imports": {
+    "metadata": {
+      "language": "cpp",
+      "purpose": "Includes necessary headers for graph reduction and wasm graph assembly."
+    },
+    "code": "#include \"src/compiler/graph-reducer.h\"\n#include \"src/compiler/wasm-graph-assembler.h\""
+  },
+  "classes": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "WasmTyper",
+        "extends": "AdvancedReducer",
+        "about": "Recomputes wasm-gc types along the graph to assign the narrowest possible type to each node. Specifically, struct field accesses, array element accesses, phis, type casts, and type guards are retyped. Types in loops are computed to a fixed point.",
+        "attributes": [
+          {
+            "name": "function_index_",
+            "type": "uint32_t",
+            "access": "private",
+            "purpose": "Stores the index of the function being typed."
+          },
+          {
+            "name": "graph_zone_",
+            "type": "Zone*",
+            "access": "private",
+            "purpose": "Memory zone for allocating graph-related data."
+          }
+        ],
+        "dependencies": [
+          "AdvancedReducer",
+          "Editor",
+          "MachineGraph",
+          "Node",
+          "Zone"
+        ]
+      },
+      "code": "class WasmTyper final : public AdvancedReducer {\n public:\n  WasmTyper(Editor* editor, MachineGraph* mcgraph, uint32_t function_index);\n\n  const char* reducer_name() const override { return \"WasmTyper\"; }\n\n  Reduction Reduce(Node* node) final;\n\n private:\n  uint32_t function_index_;\n  Zone* graph_zone_;\n};"
+    }
+  ],
+  "file_path": "/home/kathirks_gc/v8_go/archive/codebase/src/compiler/wasm-typer.h"
+}

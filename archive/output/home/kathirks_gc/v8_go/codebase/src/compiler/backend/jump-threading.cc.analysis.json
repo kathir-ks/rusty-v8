@@ -1,0 +1,133 @@
+{
+  "file_path": "/home/kathirks_gc/v8_go/codebase/src/compiler/backend/jump-threading.cc",
+  "imports": [
+    "src/compiler/backend/jump-threading.h",
+    "src/compiler/backend/code-generator-impl.h"
+  ],
+  "classes": [
+    {
+      "name": "JumpThreadingState",
+      "properties": [
+        "forwarded",
+        "result",
+        "stack"
+      ],
+      "methods": [
+        {
+          "name": "Clear",
+          "parameters": [
+            "count"
+          ],
+          "return_type": "void",
+          "logic": "Assigns 'unvisited()' to all elements of the 'result' vector up to 'count'."
+        },
+        {
+          "name": "PushIfUnvisited",
+          "parameters": [
+            "num"
+          ],
+          "return_type": "void",
+          "logic": "Pushes the RpoNumber 'num' onto the 'stack' if it hasn't been visited yet, marking it as 'onstack' in the 'result' vector."
+        },
+        {
+          "name": "Forward",
+          "parameters": [
+            "to"
+          ],
+          "return_type": "void",
+          "logic": "Forwards the RpoNumber at the top of the 'stack' to the target RpoNumber 'to'. It handles different scenarios like cycles, recursion, and simple forwarding, updating the 'result' vector accordingly and setting the 'forwarded' flag if necessary."
+        },
+        {
+          "name": "unvisited",
+          "parameters": [],
+          "return_type": "RpoNumber",
+          "logic": "Returns an RpoNumber representing an unvisited state (-1)."
+        },
+        {
+          "name": "onstack",
+          "parameters": [],
+          "return_type": "RpoNumber",
+          "logic": "Returns an RpoNumber representing the onstack state (-2)."
+        }
+      ]
+    },
+    {
+      "name": "GapJumpRecord",
+      "properties": [
+        "zone_",
+        "gap_jump_records_"
+      ],
+      "methods": [
+        {
+          "name": "GapJumpRecord",
+          "parameters": [
+            "zone"
+          ],
+          "return_type": "explicit GapJumpRecord",
+          "logic": "Constructor for the GapJumpRecord struct. Initializes the zone_ and gap_jump_records_ members."
+        },
+        {
+          "name": "CanForwardGapJump",
+          "parameters": [
+            "instr",
+            "instr_block",
+            "target_block",
+            "forward_to"
+          ],
+          "return_type": "bool",
+          "logic": "Determines if a gap jump instruction can be forwarded to another block. It checks if there is an identical gap jump instruction previously recorded for the target block. If found, it updates 'forward_to' and returns true. If not, it records the current instruction and returns false."
+        }
+      ]
+    },
+    {
+      "name": "GapJumpRecord::Record",
+      "properties": [
+        "block",
+        "instr"
+      ],
+      "methods": []
+    },
+    {
+      "name": "GapJumpRecord::RpoNumberHash",
+      "properties": [],
+      "methods": [
+        {
+          "name": "operator()",
+          "parameters": [
+            "key"
+          ],
+          "return_type": "std::size_t",
+          "logic": "Hash function for RpoNumber, used by the unordered map."
+        }
+      ]
+    },
+    {
+      "name": "JumpThreading",
+      "properties": [],
+      "methods": [
+        {
+          "name": "ComputeForwarding",
+          "parameters": [
+            "Zone* local_zone",
+            "ZoneVector<RpoNumber>* result",
+            "InstructionSequence* code",
+            "bool frame_at_start"
+          ],
+          "return_type": "bool",
+          "logic": "Computes the forwarding targets for each instruction block, identifying blocks that can be merged to eliminate redundant jumps. Uses a depth-first search algorithm to traverse the control flow graph. Returns true if any forwarding occurred."
+        },
+        {
+          "name": "ApplyForwarding",
+          "parameters": [
+            "Zone* local_zone",
+            "ZoneVector<RpoNumber> const& result",
+            "InstructionSequence* code"
+          ],
+          "return_type": "void",
+          "logic": "Applies the forwarding computed in ComputeForwarding, replacing redundant jumps with nops and updating the RPO numbers of the remaining blocks. Also propagates handler and switch target information."
+        }
+      ]
+    }
+  ],
+  "functions": []
+}

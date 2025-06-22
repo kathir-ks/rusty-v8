@@ -1,0 +1,144 @@
+{
+  "metadata": {
+    "path": "/home/kathirks_gc/v8_go/archive/codebase/include/cppgc/internal/member-storage.h",
+    "file_name": "member-storage.h",
+    "language": "cpp",
+    "purpose": "Defines storage classes for members of garbage-collected objects.  Includes compressed and raw pointer options based on compilation flags."
+  },
+  "imports": {
+    "metadata": {
+      "language": "cpp",
+      "purpose": "Includes standard library headers and cppgc internal headers."
+    },
+    "code": "#include <atomic>\n            #include <cstddef>\n            #include <type_traits>\n\n            #include \"cppgc/internal/api-constants.h\"\n            #include \"cppgc/internal/caged-heap.h\"\n            #include \"cppgc/internal/logging.h\"\n            #include \"cppgc/sentinel-pointer.h\"\n            #include \"v8config.h\"  // NOLINT(build/include_directory)"
+  },
+  "classes": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "CageBaseGlobal",
+        "about": "Provides access to the base address of the caged heap when pointer compression is enabled.",
+        "attributes": [
+          {
+            "name": "g_base_",
+            "type": "Base",
+            "access": "private",
+            "purpose": "Stores the base address of the caged heap."
+          }
+        ],
+        "dependencies": [
+          "api_constants",
+          "CageBaseGlobalUpdater"
+        ]
+      },
+      "code": "class V8_EXPORT CageBaseGlobal final {\n            public:\n            V8_INLINE CPPGC_CONST static uintptr_t Get() {\n                CPPGC_DCHECK(IsBaseConsistent());\n                return g_base_.base;\n            }\n\n            V8_INLINE CPPGC_CONST static bool IsSet() {\n                CPPGC_DCHECK(IsBaseConsistent());\n                return (g_base_.base & ~kLowerHalfWordMask) != 0;\n            }\n\n            private:\n            // We keep the lower halfword as ones to speed up decompression.\n            static constexpr uintptr_t kLowerHalfWordMask =\n                (api_constants::kCagedHeapReservationAlignment - 1);\n\n            static union alignas(api_constants::kCachelineSize) Base {\n                uintptr_t base;\n                char cache_line[api_constants::kCachelineSize];\n            } g_base_ CPPGC_REQUIRE_CONSTANT_INIT;\n\n            CageBaseGlobal() = delete;\n\n            V8_INLINE static bool IsBaseConsistent() {\n                return kLowerHalfWordMask == (g_base_.base & kLowerHalfWordMask);\n            }\n\n            friend class CageBaseGlobalUpdater;\n            };"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "CompressedPointer",
+        "about": "Represents a compressed pointer to a garbage-collected object. Stores a 32-bit offset from the caged heap base.",
+        "attributes": [
+          {
+            "name": "value_",
+            "type": "IntegralType",
+            "access": "private",
+            "purpose": "Stores the compressed pointer value."
+          }
+        ],
+        "dependencies": [
+          "CageBaseGlobal",
+          "api_constants",
+          "SentinelPointer",
+          "WriteBarrierSlotType"
+        ]
+      },
+      "code": "class V8_TRIVIAL_ABI CompressedPointer final {\n            public:\n            struct AtomicInitializerTag {};\n\n            using IntegralType = uint32_t;\n            static constexpr auto kWriteBarrierSlotType =\n                WriteBarrierSlotType::kCompressed;\n\n            V8_INLINE CompressedPointer() : value_(0u) {}\n            V8_INLINE explicit CompressedPointer(const void* value,\n                                                AtomicInitializerTag) {\n                StoreAtomic(value);\n            }\n            V8_INLINE explicit CompressedPointer(const void* ptr)\n                : value_(Compress(ptr)) {}\n            V8_INLINE explicit CompressedPointer(std::nullptr_t) : value_(0u) {}\n            V8_INLINE explicit CompressedPointer(SentinelPointer)\n                : value_(kCompressedSentinel) {}\n\n            V8_INLINE const void* Load() const { return Decompress(value_); }\n            V8_INLINE const void* LoadAtomic() const {\n                return Decompress(\n                    reinterpret_cast<const std::atomic<IntegralType>&>(value_).load(\n                        std::memory_order_relaxed));\n            }\n\n            V8_INLINE void Store(const void* ptr) { value_ = Compress(ptr); }\n            V8_INLINE void StoreAtomic(const void* value) {\n                reinterpret_cast<std::atomic<IntegralType>&>(value_).store(\n                    Compress(value), std::memory_order_relaxed);\n            }\n\n            V8_INLINE void Clear() { value_ = 0u; }\n            V8_INLINE bool IsCleared() const { return !value_; }\n\n            V8_INLINE bool IsSentinel() const { return value_ == kCompressedSentinel; }\n\n            V8_INLINE uint32_t GetAsInteger() const { return value_; }\n\n            V8_INLINE friend bool operator==(CompressedPointer a, CompressedPointer b) {\n                return a.value_ == b.value_;\n            }\n            V8_INLINE friend bool operator!=(CompressedPointer a, CompressedPointer b) {\n                return a.value_ != b.value_;\n            }\n            V8_INLINE friend bool operator<(CompressedPointer a, CompressedPointer b) {\n                return a.value_ < b.value_;\n            }\n            V8_INLINE friend bool operator<=(CompressedPointer a, CompressedPointer b) {\n                return a.value_ <= b.value_;\n            }\n            V8_INLINE friend bool operator>(CompressedPointer a, CompressedPointer b) {\n                return a.value_ > b.value_;\n            }\n            V8_INLINE friend bool operator>=(CompressedPointer a, CompressedPointer b) {\n                return a.value_ >= b.value_;\n            }\n\n            static V8_INLINE IntegralType Compress(const void* ptr) {\n                static_assert(SentinelPointer::kSentinelValue ==\n                                1 << api_constants::kPointerCompressionShift,\n                            \"The compression scheme relies on the sentinel encoded as 1 \"\n                            \"<< kPointerCompressionShift\");\n                static constexpr size_t kGigaCageMask =\n                    ~(api_constants::kCagedHeapReservationAlignment - 1);\n                static constexpr size_t kPointerCompressionShiftMask =\n                    (1 << api_constants::kPointerCompressionShift) - 1;\n\n                CPPGC_DCHECK(CageBaseGlobal::IsSet());\n                const uintptr_t base = CageBaseGlobal::Get();\n                CPPGC_DCHECK(!ptr || ptr == kSentinelPointer ||\n                            (base & kGigaCageMask) ==\n                                (reinterpret_cast<uintptr_t>(ptr) & kGigaCageMask));\n                CPPGC_DCHECK(\n                    (reinterpret_cast<uintptr_t>(ptr) & kPointerCompressionShiftMask) == 0);\n\n                const auto uptr = reinterpret_cast<uintptr_t>(ptr);\n                // Shift the pointer and truncate.\n                auto compressed = static_cast<IntegralType>(\n                    uptr >> api_constants::kPointerCompressionShift);\n                // Normal compressed pointers must have the MSB set. This is guaranteed by\n                // the cage alignment.\n                CPPGC_DCHECK((!compressed || compressed == kCompressedSentinel) ||\n                            (compressed & (1 << 31)));\n                return compressed;\n            }\n\n            static V8_INLINE void* Decompress(IntegralType ptr) {\n                CPPGC_DCHECK(CageBaseGlobal::IsSet());\n                const uintptr_t base = CageBaseGlobal::Get();\n                return Decompress(ptr, base);\n            }\n\n            static V8_INLINE void* Decompress(IntegralType ptr, uintptr_t base) {\n                CPPGC_DCHECK(CageBaseGlobal::IsSet());\n                CPPGC_DCHECK(base == CageBaseGlobal::Get());\n                // Sign-extend compressed pointer to full width. This ensure that normal\n                // pointers have only 1s in the base part of the address. It's also\n                // important to shift the unsigned value, as otherwise it would result in\n                // undefined behavior.\n                const uint64_t mask = static_cast<uint64_t>(static_cast<int32_t>(ptr))\n                                    << api_constants::kPointerCompressionShift;\n                // Set the base part of the address for normal compressed pointers. Note\n                // that nullptr and the sentinel value do not have 1s in the base part and\n                // remain as-is in this operation.\n                return reinterpret_cast<void*>(mask & base);\n            }\n\n            // For a given memory `address`, this method iterates all possible pointers\n            // that can be reasonably recovered with the current compression scheme and\n            // passes them to `callback`.\n            template <typename Callback>\n            static V8_INLINE void VisitPossiblePointers(const void* address,\n                                                        Callback callback);\n\n            private:\n            static constexpr IntegralType kCompressedSentinel =\n                SentinelPointer::kSentinelValue >>\n                api_constants::kPointerCompressionShift;\n            // All constructors initialize `value_`. Do not add a default value here as it\n            // results in a non-atomic write on some builds, even when the atomic version\n            // of the constructor is used.\n            IntegralType value_;\n            };"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "RawPointer",
+        "about": "Represents a raw (uncompressed) pointer to a garbage-collected object.",
+        "attributes": [
+          {
+            "name": "ptr_",
+            "type": "const void*",
+            "access": "private",
+            "purpose": "Stores the raw pointer value."
+          }
+        ],
+        "dependencies": [
+          "SentinelPointer",
+          "WriteBarrierSlotType"
+        ]
+      },
+      "code": "class V8_TRIVIAL_ABI RawPointer final {\n            public:\n            struct AtomicInitializerTag {};\n\n            using IntegralType = uintptr_t;\n            static constexpr auto kWriteBarrierSlotType =\n                WriteBarrierSlotType::kUncompressed;\n\n            V8_INLINE RawPointer() : ptr_(nullptr) {}\n            V8_INLINE explicit RawPointer(const void* ptr, AtomicInitializerTag) {\n                StoreAtomic(ptr);\n            }\n            V8_INLINE explicit RawPointer(const void* ptr) : ptr_(ptr) {}\n\n            V8_INLINE const void* Load() const { return ptr_; }\n            V8_INLINE const void* LoadAtomic() const {\n                return reinterpret_cast<const std::atomic<const void*>&>(ptr_).load(\n                    std::memory_order_relaxed);\n            }\n\n            V8_INLINE void Store(const void* ptr) { ptr_ = ptr; }\n            V8_INLINE void StoreAtomic(const void* ptr) {\n                reinterpret_cast<std::atomic<const void*>&>(ptr_).store(\n                    ptr, std::memory_order_relaxed);\n            }\n\n            V8_INLINE void Clear() { ptr_ = nullptr; }\n            V8_INLINE bool IsCleared() const { return !ptr_; }\n\n            V8_INLINE bool IsSentinel() const { return ptr_ == kSentinelPointer; }\n\n            V8_INLINE uintptr_t GetAsInteger() const {\n                return reinterpret_cast<uintptr_t>(ptr_);\n            }\n\n            V8_INLINE friend bool operator==(RawPointer a, RawPointer b) {\n                return a.ptr_ == b.ptr_;\n            }\n            V8_INLINE friend bool operator!=(RawPointer a, RawPointer b) {\n                return a.ptr_ != b.ptr_;\n            }\n            V8_INLINE friend bool operator<(RawPointer a, RawPointer b) {\n                return a.ptr_ < b.ptr_;\n            }\n            V8_INLINE friend bool operator<=(RawPointer a, RawPointer b) {\n                return a.ptr_ <= b.ptr_;\n            }\n            V8_INLINE friend bool operator>(RawPointer a, RawPointer b) {\n                return a.ptr_ > b.ptr_;\n            }\n            V8_INLINE friend bool operator>=(RawPointer a, RawPointer b) {\n                return a.ptr_ >= b.ptr_;\n            }\n\n            template <typename Callback>\n            static V8_INLINE void VisitPossiblePointers(const void* address,\n                                                        Callback callback) {\n            // Pass along the full pointer.\n            return callback(const_cast<void*>(address));\n            }\n\n            private:\n            // All constructors initialize `ptr_`. Do not add a default value here as it\n            // results in a non-atomic write on some builds, even when the atomic version\n            // of the constructor is used.\n            const void* ptr_;\n            };"
+    }
+  ],
+  "functions": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "method",
+        "name": "VisitPossiblePointers",
+        "parent": "CompressedPointer",
+        "about": "Iterates possible pointers that can be recovered from a memory address using the current compression scheme and calls a callback for each.",
+        "logic": "Considers the address as a compressed pointer in both halfwords and recovers potential intermediate values from decompressing to properly determine a pointer. This accounts for random compressed pointers on the stack and sign extension.",
+        "parameters": [
+          {
+            "name": "address",
+            "type": "const void*",
+            "purpose": "The memory address to consider for pointer recovery."
+          },
+          {
+            "name": "callback",
+            "type": "Callback",
+            "purpose": "The callback function to call with each possible pointer."
+          }
+        ],
+        "return": {
+          "type": "void",
+          "description": "No return value"
+        },
+        "dependencies": [
+          "CageBaseGlobal",
+          "CompressedPointer"
+        ]
+      },
+      "code": "template <typename Callback>\n            // static\n            void CompressedPointer::VisitPossiblePointers(const void* address,\n                                                        Callback callback) {\n            const uintptr_t base = CageBaseGlobal::Get();\n            CPPGC_DCHECK(base);\n            // We may have random compressed pointers on stack (e.g. due to inlined\n            // collections). These could be present in both halfwords.\n            const uint32_t compressed_low =\n                static_cast<uint32_t>(reinterpret_cast<uintptr_t>(address));\n            callback(CompressedPointer::Decompress(compressed_low, base));\n            const uint32_t compressed_high = static_cast<uint32_t>(\n                reinterpret_cast<uintptr_t>(address) >> (sizeof(uint32_t) * CHAR_BIT));\n            callback(CompressedPointer::Decompress(compressed_high, base));\n            // Iterate possible intermediate values, see `Decompress()`. The intermediate\n            // value of decompressing is a 64-bit value where 35 bits are the offset. We\n            // don't assume sign extension is stored and recover that part.\n            //\n            // Note that this case conveniently also recovers the full pointer.\n            static constexpr uintptr_t kBitForIntermediateValue =\n                (sizeof(uint32_t) * CHAR_BIT) + api_constants::kPointerCompressionShift;\n            static constexpr uintptr_t kSignExtensionMask =\n                ~((uintptr_t{1} << kBitForIntermediateValue) - 1);\n            const uintptr_t intermediate_sign_extended =\n                reinterpret_cast<uintptr_t>(address) | kSignExtensionMask;\n            callback(reinterpret_cast<void*>(intermediate_sign_extended & base));\n            }"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "method",
+        "name": "VisitPossiblePointers",
+        "parent": "RawPointer",
+        "about": "Calls a callback with the provided memory address, treated as a raw pointer.",
+        "logic": "Simply casts away constness and passes the address as a potential pointer.",
+        "parameters": [
+          {
+            "name": "address",
+            "type": "const void*",
+            "purpose": "The memory address to treat as a raw pointer."
+          },
+          {
+            "name": "callback",
+            "type": "Callback",
+            "purpose": "The callback function to call with the raw pointer."
+          }
+        ],
+        "return": {
+          "type": "void",
+          "description": "No return value"
+        },
+        "dependencies": []
+      },
+      "code": "template <typename Callback>\n            static V8_INLINE void RawPointer::VisitPossiblePointers(const void* address,\n                                                        Callback callback) {\n            // Pass along the full pointer.\n            return callback(const_cast<void*>(address));\n            }"
+    }
+  ],
+  "file_path": "/home/kathirks_gc/v8_go/archive/codebase/include/cppgc/internal/member-storage.h"
+}

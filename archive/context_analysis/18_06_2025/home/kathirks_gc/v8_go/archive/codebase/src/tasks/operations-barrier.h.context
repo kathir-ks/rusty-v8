@@ -1,0 +1,148 @@
+{
+  "metadata": {
+    "path": "/home/kathirks_gc/v8_go/archive/codebase/src/tasks/operations-barrier.h",
+    "file_name": "operations-barrier.h",
+    "language": "cpp",
+    "purpose": "Defines a thread-safe barrier to manage the lifetime of multi-threaded operations, ensuring no new operations start after cancellation and waiting for existing operations to complete."
+  },
+  "imports": {
+    "metadata": {
+      "language": "cpp",
+      "purpose": "Includes standard library headers and V8 base headers for synchronization primitives and utility macros."
+    },
+    "code": "#include <cstdint>\n\n#include \"src/base/macros.h\"\n#include \"src/base/platform/condition-variable.h\"\n#include \"src/base/platform/mutex.h\""
+  },
+  "classes": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "OperationsBarrier",
+        "about": "A thread-safe barrier to manage the lifetime of multi-threaded operations.",
+        "attributes": [
+          {
+            "name": "mutex_",
+            "type": "base::Mutex",
+            "access": "private",
+            "purpose": "Mutex for protecting access to shared state."
+          },
+          {
+            "name": "release_condition_",
+            "type": "base::ConditionVariable",
+            "access": "private",
+            "purpose": "Condition variable for signaling when all operations are complete."
+          },
+          {
+            "name": "cancelled_",
+            "type": "bool",
+            "access": "private",
+            "purpose": "Flag indicating whether the barrier has been cancelled."
+          },
+          {
+            "name": "operations_count_",
+            "type": "size_t",
+            "access": "private",
+            "purpose": "Counter for the number of active operations."
+          }
+        ],
+        "dependencies": [
+          "base::Mutex",
+          "base::ConditionVariable"
+        ]
+      },
+      "code": "class V8_EXPORT_PRIVATE OperationsBarrier {\n public:\n  // The owner of a Token which evaluates to true can safely perform an\n  // operation while being certain it happens-before CancelAndWait(). Releasing\n  // this Token relinquishes this right.\n  //\n  // This class is thread-safe.\n  class Token {\n   public:\n    Token() = default;\n    ~Token() {\n      if (outer_) outer_->Release();\n    }\n    Token(const Token&) = delete;\n    Token(Token&& other) V8_NOEXCEPT : outer_(other.outer_) {\n      other.outer_ = nullptr;\n    }\n\n    Token& operator=(const Token&) = delete;\n    Token& operator=(Token&& other) V8_NOEXCEPT {\n      DCHECK_NE(this, &other);\n      if (outer_) outer_->Release();\n      outer_ = other.outer_;\n      other.outer_ = nullptr;\n      return *this;\n    }\n\n    operator bool() const { return !!outer_; }\n\n   private:\n    friend class OperationsBarrier;\n    explicit Token(OperationsBarrier* outer) : outer_(outer) {\n      DCHECK_NOT_NULL(outer_);\n    }\n    OperationsBarrier* outer_ = nullptr;\n  };\n\n  OperationsBarrier() = default;\n\n  // Users must call CancelAndWait() before destroying an instance of this\n  // class.\n  ~OperationsBarrier() { DCHECK(cancelled_); }\n\n  OperationsBarrier(const OperationsBarrier&) = delete;\n  OperationsBarrier& operator=(const OperationsBarrier&) = delete;\n\n  // Returns a RAII like object that implicitly converts to true if operations\n  // are allowed i.e. if this call happens-before CancelAndWait(), otherwise the\n  // object will convert to false. On successful return, this OperationsBarrier\n  // will keep track of the operation until the returned object goes out of\n  // scope.\n  Token TryLock();\n\n  // Prevents further calls to TryLock() from succeeding and waits for\n  // all the ongoing operations to complete.\n  //\n  // Attention: Can only be called once.\n  void CancelAndWait();\n\n  bool cancelled() const { return cancelled_; }\n\n private:\n  void Release();\n\n  // Mutex and condition variable enabling concurrent register and removing, as\n  // well as waiting for background tasks on {CancelAndWait}.\n  base::Mutex mutex_;\n  base::ConditionVariable release_condition_;\n  bool cancelled_ = false;\n  size_t operations_count_{0};\n};"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "Token",
+        "parent": "OperationsBarrier",
+        "about": "RAII class representing a lock on the OperationsBarrier, ensuring the operation is tracked until the token is destroyed.",
+        "attributes": [
+          {
+            "name": "outer_",
+            "type": "OperationsBarrier*",
+            "access": "private",
+            "purpose": "Pointer to the OperationsBarrier that owns this token."
+          }
+        ],
+        "dependencies": [
+          "OperationsBarrier"
+        ]
+      },
+      "code": "class Token {\n   public:\n    Token() = default;\n    ~Token() {\n      if (outer_) outer_->Release();\n    }\n    Token(const Token&) = delete;\n    Token(Token&& other) V8_NOEXCEPT : outer_(other.outer_) {\n      other.outer_ = nullptr;\n    }\n\n    Token& operator=(const Token&) = delete;\n    Token& operator=(Token&& other) V8_NOEXCEPT {\n      DCHECK_NE(this, &other);\n      if (outer_) outer_->Release();\n      outer_ = other.outer_;\n      other.outer_ = nullptr;\n      return *this;\n    }\n\n    operator bool() const { return !!outer_; }\n\n   private:\n    friend class OperationsBarrier;\n    explicit Token(OperationsBarrier* outer) : outer_(outer) {\n      DCHECK_NOT_NULL(outer_);\n    }\n    OperationsBarrier* outer_ = nullptr;\n  };"
+    }
+  ],
+  "functions": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "method",
+        "name": "TryLock",
+        "parent": "OperationsBarrier",
+        "about": "Attempts to acquire a lock on the OperationsBarrier. Returns a Token if successful, indicating an operation can proceed.",
+        "logic": "Atomically increments the operations count if the barrier has not been cancelled. Returns a Token if successful, otherwise returns an empty Token.",
+        "parameters": [],
+        "return": {
+          "type": "Token",
+          "description": "A Token object representing the lock. It evaluates to true if the lock was acquired, false otherwise."
+        },
+        "dependencies": []
+      },
+      "code": "Token TryLock();"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "method",
+        "name": "CancelAndWait",
+        "parent": "OperationsBarrier",
+        "about": "Prevents further calls to TryLock() from succeeding and waits for all ongoing operations to complete.",
+        "logic": "Sets the cancelled_ flag to true, preventing new operations. Waits for the operations_count_ to reach zero using a condition variable.",
+        "parameters": [],
+        "return": {
+          "type": "void",
+          "description": "No return value."
+        },
+        "dependencies": []
+      },
+      "code": "void CancelAndWait();"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "method",
+        "name": "cancelled",
+        "parent": "OperationsBarrier",
+        "about": "Returns whether CancelAndWait has been called.",
+        "logic": "Returns the value of the cancelled_ flag.",
+        "parameters": [],
+        "return": {
+          "type": "bool",
+          "description": "True if CancelAndWait has been called, false otherwise."
+        },
+        "dependencies": []
+      },
+      "code": "bool cancelled() const { return cancelled_; }"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "method",
+        "name": "Release",
+        "parent": "OperationsBarrier",
+        "about": "Releases a lock on the OperationsBarrier, decrementing the operations count and signaling the condition variable if all operations are complete.",
+        "logic": "Atomically decrements the operations count. If the count reaches zero and the barrier is cancelled, signals the condition variable.",
+        "parameters": [],
+        "return": {
+          "type": "void",
+          "description": "No return value."
+        },
+        "dependencies": []
+      },
+      "code": "private:\n  void Release();"
+    }
+  ],
+  "file_path": "/home/kathirks_gc/v8_go/archive/codebase/src/tasks/operations-barrier.h"
+}

@@ -1,0 +1,514 @@
+{
+  "file_path": "/home/kathirks_gc/v8_go/codebase/src/api/api.h",
+  "imports": [
+    "<memory>",
+    "include/v8-container.h",
+    "include/v8-external.h",
+    "include/v8-function-callback.h",
+    "include/v8-proxy.h",
+    "include/v8-typed-array.h",
+    "include/v8-wasm.h",
+    "src/base/contextual.h",
+    "src/execution/isolate.h",
+    "src/objects/bigint.h",
+    "src/objects/contexts.h",
+    "src/objects/js-array-buffer.h",
+    "src/objects/js-collection.h",
+    "src/objects/js-generator.h",
+    "src/objects/js-promise.h",
+    "src/objects/js-proxy.h",
+    "src/objects/objects.h",
+    "src/objects/shared-function-info.h",
+    "src/objects/source-text-module.h",
+    "src/objects/templates.h",
+    "src/utils/detachable-vector.h"
+  ],
+  "classes": [
+    {
+      "name": "ApiFunction",
+      "properties": [
+        "addr_"
+      ],
+      "methods": [
+        {
+          "name": "ApiFunction",
+          "parameters": [
+            "v8::internal::Address addr"
+          ],
+          "return_type": "void",
+          "logic": "Constructor that initializes the address."
+        },
+        {
+          "name": "address",
+          "parameters": [],
+          "return_type": "v8::internal::Address",
+          "logic": "Returns the internal address."
+        }
+      ]
+    },
+    {
+      "name": "RegisteredExtension",
+      "properties": [
+        "extension_",
+        "next_",
+        "first_extension_"
+      ],
+      "methods": [
+        {
+          "name": "Register",
+          "parameters": [
+            "std::unique_ptr<Extension>"
+          ],
+          "return_type": "void",
+          "logic": "Registers a new extension."
+        },
+        {
+          "name": "UnregisterAll",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Unregisters all registered extensions."
+        },
+        {
+          "name": "extension",
+          "parameters": [],
+          "return_type": "Extension*",
+          "logic": "Returns the extension object."
+        },
+        {
+          "name": "next",
+          "parameters": [],
+          "return_type": "RegisteredExtension*",
+          "logic": "Returns the next registered extension in the list."
+        },
+        {
+          "name": "first_extension",
+          "parameters": [],
+          "return_type": "RegisteredExtension*",
+          "logic": "Returns the first registered extension in the list."
+        },
+        {
+          "name": "RegisteredExtension",
+          "parameters": [
+            "Extension*"
+          ],
+          "return_type": "void",
+          "logic": "Constructor taking a raw Extension pointer"
+        },
+        {
+          "name": "RegisteredExtension",
+          "parameters": [
+            "std::unique_ptr<Extension>"
+          ],
+          "return_type": "void",
+          "logic": "Constructor taking a unique_ptr to Extension"
+        }
+      ]
+    },
+    {
+      "name": "Utils",
+      "properties": [],
+      "methods": [
+        {
+          "name": "ApiCheck",
+          "parameters": [
+            "bool condition",
+            "const char* location",
+            "const char* message"
+          ],
+          "return_type": "bool",
+          "logic": "Checks a condition and reports an API failure if the condition is false."
+        },
+        {
+          "name": "ReportOOMFailure",
+          "parameters": [
+            "v8::internal::Isolate* isolate",
+            "const char* location",
+            "const OOMDetails& details"
+          ],
+          "return_type": "void",
+          "logic": "Reports an out-of-memory failure."
+        },
+        {
+          "name": "Name",
+          "parameters": [
+            "HandleType<T> obj"
+          ],
+          "return_type": "auto",
+          "logic": "Converts a HandleType to a Local."
+        },
+        {
+          "name": "ToLocalTypeArray",
+          "parameters": [
+            "v8::internal::DirectHandle<v8::internal::JSTypedArray> obj"
+          ],
+          "return_type": "Local<v8::Type##Array>",
+          "logic": "Converts a DirectHandle to a Local<TypeArray>."
+        },
+        {
+          "name": "OpenHandle",
+          "parameters": [
+            "const From* that",
+            "bool allow_empty_handle"
+          ],
+          "return_type": "v8::internal::Handle<v8::internal::To>",
+          "logic": "Opens a handle to an internal object."
+        },
+        {
+          "name": "OpenDirectHandle",
+          "parameters": [
+            "const From* that",
+            "bool allow_empty_handle"
+          ],
+          "return_type": "v8::internal::DirectHandle<v8::internal::To>",
+          "logic": "Opens a direct handle to an internal object."
+        },
+        {
+          "name": "OpenIndirectHandle",
+          "parameters": [
+            "const From* that",
+            "bool allow_empty_handle"
+          ],
+          "return_type": "v8::internal::IndirectHandle<v8::internal::To>",
+          "logic": "Opens an indirect handle to an internal object."
+        },
+        {
+          "name": "Convert",
+          "parameters": [
+            "v8::internal::DirectHandle<From> obj"
+          ],
+          "return_type": "Local<To>",
+          "logic": "Converts a direct handle to a Local."
+        },
+        {
+          "name": "OpenPersistent",
+          "parameters": [
+            "const v8::PersistentBase<T>& persistent"
+          ],
+          "return_type": "v8::internal::Handle<v8::internal::Object>",
+          "logic": "Opens a handle to a persistent object."
+        },
+        {
+          "name": "OpenPersistent",
+          "parameters": [
+            "v8::Persistent<T>* persistent"
+          ],
+          "return_type": "v8::internal::DirectHandle<v8::internal::Object>",
+          "logic": "Opens a direct handle to a persistent object."
+        },
+        {
+          "name": "OpenHandle",
+          "parameters": [
+            "v8::Local<From> handle"
+          ],
+          "return_type": "v8::internal::Handle<To>",
+          "logic": "Opens a handle to an internal object from Local handle."
+        },
+        {
+          "name": "OpenDirectHandle",
+          "parameters": [
+            "v8::Local<From> handle"
+          ],
+          "return_type": "v8::internal::DirectHandle<To>",
+          "logic": "Opens a direct handle to an internal object from Local handle."
+        },
+        {
+          "name": "ReportApiFailure",
+          "parameters": [
+            "const char* location",
+            "const char* message"
+          ],
+          "return_type": "void",
+          "logic": "Reports an API failure."
+        },
+        {
+          "name": "Name_helper",
+          "parameters": [
+            "v8::internal::DirectHandle<v8::internal::From> obj"
+          ],
+          "return_type": "Local<v8::To>",
+          "logic": "Helper function for converting internal handles to Local handles."
+        }
+      ]
+    },
+    {
+      "name": "internal::HandleScopeImplementer",
+      "properties": [
+        "isolate_",
+        "blocks_",
+        "entered_contexts_",
+        "saved_contexts_",
+        "spare_",
+        "last_handle_before_persistent_block_",
+        "handle_scope_data_"
+      ],
+      "methods": [
+        {
+          "name": "HandleScopeImplementer",
+          "parameters": [
+            "Isolate* isolate"
+          ],
+          "return_type": "void",
+          "logic": "Constructor for HandleScopeImplementer."
+        },
+        {
+          "name": "~HandleScopeImplementer",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Destructor for HandleScopeImplementer."
+        },
+        {
+          "name": "ArchiveSpacePerThread",
+          "parameters": [],
+          "return_type": "static int",
+          "logic": "Returns the amount of space needed to archive the thread-local handle scope data."
+        },
+        {
+          "name": "RestoreThread",
+          "parameters": [
+            "char* from"
+          ],
+          "return_type": "char*",
+          "logic": "Restores the thread-local handle scope data from a buffer."
+        },
+        {
+          "name": "ArchiveThread",
+          "parameters": [
+            "char* to"
+          ],
+          "return_type": "char*",
+          "logic": "Archives the thread-local handle scope data to a buffer."
+        },
+        {
+          "name": "FreeThreadResources",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Frees the thread-local handle scope resources."
+        },
+        {
+          "name": "Iterate",
+          "parameters": [
+            "v8::internal::RootVisitor* v"
+          ],
+          "return_type": "V8_EXPORT_PRIVATE void",
+          "logic": "Iterates over the handles in the handle scope for garbage collection."
+        },
+        {
+          "name": "Iterate",
+          "parameters": [
+            "v8::internal::RootVisitor* v",
+            "char* data"
+          ],
+          "return_type": "V8_EXPORT_PRIVATE static char*",
+          "logic": "Static version to iterate over the handles for garbage collection."
+        },
+        {
+          "name": "GetSpareOrNewBlock",
+          "parameters": [],
+          "return_type": "inline internal::Address*",
+          "logic": "Gets a spare block or allocates a new block for handles."
+        },
+        {
+          "name": "DeleteExtensions",
+          "parameters": [
+            "internal::Address* prev_limit"
+          ],
+          "return_type": "inline void",
+          "logic": "Deletes the handle scope extensions."
+        },
+        {
+          "name": "EnterContext",
+          "parameters": [
+            "Tagged<NativeContext> context"
+          ],
+          "return_type": "inline void",
+          "logic": "Enters a new context."
+        },
+        {
+          "name": "LeaveContext",
+          "parameters": [],
+          "return_type": "inline void",
+          "logic": "Leaves the current context."
+        },
+        {
+          "name": "LastEnteredContextWas",
+          "parameters": [
+            "Tagged<NativeContext> context"
+          ],
+          "return_type": "inline bool",
+          "logic": "Checks if the last entered context was the given context."
+        },
+        {
+          "name": "EnteredContextCount",
+          "parameters": [],
+          "return_type": "inline size_t",
+          "logic": "Returns the number of entered contexts."
+        },
+        {
+          "name": "LastEnteredContext",
+          "parameters": [],
+          "return_type": "inline DirectHandle<NativeContext>",
+          "logic": "Returns the last entered context."
+        },
+        {
+          "name": "SaveContext",
+          "parameters": [
+            "Tagged<Context> context"
+          ],
+          "return_type": "inline void",
+          "logic": "Saves the current context."
+        },
+        {
+          "name": "RestoreContext",
+          "parameters": [],
+          "return_type": "inline Tagged<Context>",
+          "logic": "Restores a previously saved context."
+        },
+        {
+          "name": "HasSavedContexts",
+          "parameters": [],
+          "return_type": "inline bool",
+          "logic": "Checks if there are any saved contexts."
+        },
+        {
+          "name": "blocks",
+          "parameters": [],
+          "return_type": "inline DetachableVector<Address*>*",
+          "logic": "Returns a pointer to the blocks vector."
+        },
+        {
+          "name": "isolate",
+          "parameters": [],
+          "return_type": "Isolate* const",
+          "logic": "Returns a pointer to the Isolate."
+        },
+        {
+          "name": "ReturnBlock",
+          "parameters": [
+            "Address* block"
+          ],
+          "return_type": "void",
+          "logic": "Returns a block to the spare block."
+        },
+        {
+          "name": "Free",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Frees all resources used by HandleScopeImplementer."
+        }
+      ]
+    }
+  ],
+  "functions": [
+    {
+      "name": "ToCData",
+      "parameters": [
+        "i::Isolate* isolate",
+        "v8::internal::Tagged<v8::internal::Object> obj"
+      ],
+      "return_type": "T",
+      "logic": "Converts an internal object to C data."
+    },
+    {
+      "name": "ToCData",
+      "parameters": [
+        "v8::internal::Isolate* isolate",
+        "v8::internal::Tagged<v8::internal::Object> obj"
+      ],
+      "return_type": "v8::internal::Address",
+      "logic": "Converts an internal object to C data (address)."
+    },
+    {
+      "name": "FromCData",
+      "parameters": [
+        "v8::internal::Isolate* isolate",
+        "T obj"
+      ],
+      "return_type": "v8::internal::DirectHandle<v8::internal::UnionOf<v8::internal::Smi, v8::internal::Foreign>>",
+      "logic": "Creates an internal object from C data."
+    },
+    {
+      "name": "FromCData",
+      "parameters": [
+        "v8::internal::Isolate* isolate",
+        "v8::internal::Address obj"
+      ],
+      "return_type": "v8::internal::DirectHandle<v8::internal::UnionOf<v8::internal::Smi, v8::internal::Foreign>>",
+      "logic": "Creates an internal object from C data (address)."
+    },
+    {
+      "name": "ToApiHandle",
+      "parameters": [
+        "v8::internal::DirectHandle<v8::internal::Object> obj"
+      ],
+      "return_type": "v8::Local<T>",
+      "logic": "Converts an internal handle to an API handle."
+    },
+    {
+      "name": "ToLocal",
+      "parameters": [
+        "v8::internal::MaybeDirectHandle<v8::internal::Object> maybe",
+        "Local<T>* local"
+      ],
+      "return_type": "bool",
+      "logic": "Attempts to convert an internal handle to a Local<T>."
+    },
+    {
+      "name": "InvokeAccessorGetterCallback",
+      "parameters": [
+        "v8::Local<v8::Name> property",
+        "const v8::PropertyCallbackInfo<v8::Value>& info"
+      ],
+      "return_type": "void",
+      "logic": "Wrapper for accessor getter callback when profiling or side-effect checking is enabled."
+    },
+    {
+      "name": "InvokeFunctionCallbackGeneric",
+      "parameters": [
+        "const v8::FunctionCallbackInfo<v8::Value>& info"
+      ],
+      "return_type": "void",
+      "logic": "Wrapper for function callback when profiling or side-effect checking is enabled."
+    },
+    {
+      "name": "InvokeFunctionCallbackOptimized",
+      "parameters": [
+        "const v8::FunctionCallbackInfo<v8::Value>& info"
+      ],
+      "return_type": "void",
+      "logic": "Optimized wrapper for function callback when profiling or side-effect checking is enabled."
+    },
+    {
+      "name": "InvokeFinalizationRegistryCleanupFromTask",
+      "parameters": [
+        "DirectHandle<NativeContext> native_context",
+        "DirectHandle<JSFinalizationRegistry> finalization_registry"
+      ],
+      "return_type": "void",
+      "logic": "Invokes finalization registry cleanup from a task."
+    },
+    {
+      "name": "ConvertDouble",
+      "parameters": [
+        "double d"
+      ],
+      "return_type": "T",
+      "logic": "Converts a double to the specified type T."
+    },
+    {
+      "name": "ValidateCallbackInfo",
+      "parameters": [
+        "const FunctionCallbackInfo<T>& info"
+      ],
+      "return_type": "bool",
+      "logic": "Validates the FunctionCallbackInfo."
+    },
+    {
+      "name": "ValidateCallbackInfo",
+      "parameters": [
+        "const PropertyCallbackInfo<T>& info"
+      ],
+      "return_type": "bool",
+      "logic": "Validates the PropertyCallbackInfo."
+    }
+  ]
+}

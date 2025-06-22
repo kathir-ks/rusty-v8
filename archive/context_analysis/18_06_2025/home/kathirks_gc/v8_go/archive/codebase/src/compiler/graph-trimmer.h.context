@@ -1,0 +1,47 @@
+{
+  "metadata": {
+    "path": "/home/kathirks_gc/v8_go/archive/codebase/src/compiler/graph-trimmer.h",
+    "file_name": "graph-trimmer.h",
+    "language": "cpp",
+    "purpose": "Declares the GraphTrimmer class, which removes unreachable (dead) nodes from a TFGraph."
+  },
+  "imports": {
+    "metadata": {
+      "language": "cpp",
+      "purpose": "Includes the NodeMarker class definition."
+    },
+    "code": "#include \"src/compiler/node-marker.h\""
+  },
+  "classes": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "GraphTrimmer",
+        "about": "Trims dead nodes from the node graph.",
+        "attributes": [],
+        "dependencies": [
+          "TFGraph",
+          "Zone",
+          "Node",
+          "NodeMarker",
+          "NodeVector"
+        ]
+      },
+      "code": "class V8_EXPORT_PRIVATE GraphTrimmer final {\n public:\n  GraphTrimmer(Zone* zone, TFGraph* graph);\n  ~GraphTrimmer();\n  GraphTrimmer(const GraphTrimmer&) = delete;\n  GraphTrimmer& operator=(const GraphTrimmer&) = delete;\n\n  // Trim nodes in the {graph} that are not reachable from {graph->end()}.\n  void TrimGraph();\n\n  // Trim nodes in the {graph} that are not reachable from either {graph->end()}\n  // or any of the roots in the sequence [{begin},{end}[.\n  template <typename ForwardIterator>\n  void TrimGraph(ForwardIterator begin, ForwardIterator end) {\n    while (begin != end) {\n      Node* const node = *begin++;\n      if (!node->IsDead()) MarkAsLive(node);\n    }\n    TrimGraph();\n  }\n\n private:\n  V8_INLINE bool IsLive(Node* const node) { return is_live_.Get(node); }\n  V8_INLINE void MarkAsLive(Node* const node) {\n    DCHECK(!node->IsDead());\n    if (!IsLive(node)) {\n      is_live_.Set(node, true);\n      live_.push_back(node);\n    }\n  }\n\n  TFGraph* graph() const { return graph_; }\n\n  TFGraph* const graph_;\n  NodeMarker<bool> is_live_;\n  NodeVector live_;\n};"
+    }
+  ],
+  "dependencies": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "NodeVector",
+        "about": "Vector of nodes"
+      },
+      "code": "class NodeVector;",
+      "type": "class"
+    }
+  ],
+  "file_path": "/home/kathirks_gc/v8_go/archive/codebase/src/compiler/graph-trimmer.h"
+}

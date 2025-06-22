@@ -1,0 +1,294 @@
+{
+  "file_path": "/home/kathirks_gc/v8_go/codebase/src/compiler/backend/s390/code-generator-s390.cc",
+  "imports": [
+    "src/codegen/assembler-inl.h",
+    "src/codegen/callable.h",
+    "src/codegen/interface-descriptors-inl.h",
+    "src/codegen/macro-assembler.h",
+    "src/codegen/optimized-compilation-info.h",
+    "src/compiler/backend/code-generator-impl.h",
+    "src/compiler/backend/code-generator.h",
+    "src/compiler/backend/gap-resolver.h",
+    "src/compiler/node-matchers.h",
+    "src/compiler/osr.h",
+    "src/heap/mutable-page-metadata.h",
+    "src/wasm/wasm-linkage.h",
+    "src/wasm/wasm-objects.h"
+  ],
+  "classes": [
+    {
+      "name": "S390OperandConverter",
+      "properties": [],
+      "methods": [
+        {
+          "name": "S390OperandConverter",
+          "parameters": [
+            "CodeGenerator* gen",
+            "Instruction* instr"
+          ],
+          "return_type": "N/A (Constructor)",
+          "logic": "Constructor for S390OperandConverter, initializes the base class InstructionOperandConverter."
+        },
+        {
+          "name": "OutputCount",
+          "parameters": [],
+          "return_type": "size_t",
+          "logic": "Returns the number of outputs of the instruction."
+        },
+        {
+          "name": "Is64BitOperand",
+          "parameters": [
+            "int index"
+          ],
+          "return_type": "bool",
+          "logic": "Checks if the operand at the given index is a 64-bit operand."
+        },
+        {
+          "name": "Is32BitOperand",
+          "parameters": [
+            "int index"
+          ],
+          "return_type": "bool",
+          "logic": "Checks if the operand at the given index is a 32-bit operand."
+        },
+        {
+          "name": "CompareLogical",
+          "parameters": [],
+          "return_type": "bool",
+          "logic": "Checks if the instruction is a logical comparison (unsigned)."
+        },
+        {
+          "name": "InputImmediate",
+          "parameters": [
+            "size_t index"
+          ],
+          "return_type": "Operand",
+          "logic": "Converts the input at the given index to an Operand representing an immediate value."
+        },
+        {
+          "name": "MemoryOperand",
+          "parameters": [
+            "AddressingMode* mode",
+            "size_t* first_index"
+          ],
+          "return_type": "MemOperand",
+          "logic": "Creates a MemOperand based on the addressing mode and input operands. Updates the index."
+        },
+        {
+          "name": "MemoryOperand",
+          "parameters": [
+            "AddressingMode* mode",
+            "size_t first_index"
+          ],
+          "return_type": "MemOperand",
+          "logic": "Overloaded version of MemoryOperand that calls the other MemoryOperand with default first_index = 0."
+        },
+        {
+          "name": "ToMemOperand",
+          "parameters": [
+            "InstructionOperand* op"
+          ],
+          "return_type": "MemOperand",
+          "logic": "Converts an InstructionOperand (stack slot) to a MemOperand."
+        },
+        {
+          "name": "SlotToMemOperand",
+          "parameters": [
+            "int slot"
+          ],
+          "return_type": "MemOperand",
+          "logic": "Converts a stack slot to a MemOperand based on frame access state."
+        },
+        {
+          "name": "InputStackSlot",
+          "parameters": [
+            "size_t index"
+          ],
+          "return_type": "MemOperand",
+          "logic": "Retrieves a MemOperand representing an input stack slot."
+        },
+        {
+          "name": "InputStackSlot32",
+          "parameters": [
+            "size_t index"
+          ],
+          "return_type": "MemOperand",
+          "logic": "Retrieves a MemOperand representing an input stack slot, specifically for 32-bit values.  Handles endianness adjustment."
+        }
+      ]
+    },
+    {
+      "name": "OutOfLineRecordWrite",
+      "properties": [
+        "object_",
+        "operand_",
+        "value_",
+        "scratch0_",
+        "scratch1_",
+        "mode_",
+        "stub_mode_",
+        "must_save_lr_",
+        "unwinding_info_writer_",
+        "zone_"
+      ],
+      "methods": [
+        {
+          "name": "OutOfLineRecordWrite",
+          "parameters": [
+            "CodeGenerator* gen",
+            "Register object",
+            "MemOperand operand",
+            "Register value",
+            "Register scratch0",
+            "Register scratch1",
+            "RecordWriteMode mode",
+            "StubCallMode stub_mode",
+            "UnwindingInfoWriter* unwinding_info_writer"
+          ],
+          "return_type": "N/A (Constructor)",
+          "logic": "Constructor for OutOfLineRecordWrite, initializes members and performs alias checks."
+        },
+        {
+          "name": "Generate",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Generates the out-of-line code for a record write, including checks, calls to the write barrier, and potentially saving/restoring the link register."
+        }
+      ]
+    }
+  ],
+  "functions": [
+    {
+      "name": "HasRegisterOutput",
+      "parameters": [
+        "Instruction* instr",
+        "int index"
+      ],
+      "return_type": "bool",
+      "logic": "Checks if the instruction has a register output at the given index."
+    },
+    {
+      "name": "HasFPRegisterInput",
+      "parameters": [
+        "Instruction* instr",
+        "int index"
+      ],
+      "return_type": "bool",
+      "logic": "Checks if the instruction has a floating-point register input at the given index."
+    },
+    {
+      "name": "HasRegisterInput",
+      "parameters": [
+        "Instruction* instr",
+        "int index"
+      ],
+      "return_type": "bool",
+      "logic": "Checks if the instruction has a register input (general or floating-point) at the given index."
+    },
+    {
+      "name": "HasImmediateInput",
+      "parameters": [
+        "Instruction* instr",
+        "size_t index"
+      ],
+      "return_type": "bool",
+      "logic": "Checks if the instruction has an immediate input at the given index."
+    },
+    {
+      "name": "HasFPStackSlotInput",
+      "parameters": [
+        "Instruction* instr",
+        "size_t index"
+      ],
+      "return_type": "bool",
+      "logic": "Checks if the instruction has a floating-point stack slot input at the given index."
+    },
+    {
+      "name": "HasStackSlotInput",
+      "parameters": [
+        "Instruction* instr",
+        "size_t index"
+      ],
+      "return_type": "bool",
+      "logic": "Checks if the instruction has a stack slot input (general or floating-point) at the given index."
+    },
+    {
+      "name": "FlagsConditionToCondition",
+      "parameters": [
+        "FlagsCondition condition",
+        "ArchOpcode op"
+      ],
+      "return_type": "Condition",
+      "logic": "Converts a FlagsCondition to an assembler Condition, based on the instruction's opcode."
+    },
+    {
+      "name": "nullInstr",
+      "parameters": [],
+      "return_type": "int",
+      "logic": "This function should not be called, and UNREACHABLE() will cause a crash if it is."
+    },
+    {
+      "name": "AssembleOp",
+      "parameters": [
+        "Instruction* instr",
+        "RType r",
+        "MType m",
+        "IType i"
+      ],
+      "return_type": "int",
+      "logic": "Template function to assemble an instruction based on operand types (register, memory, immediate)."
+    },
+    {
+      "name": "AssembleBinOp",
+      "parameters": [
+        "Instruction* instr",
+        "_RR _rr",
+        "_RM _rm",
+        "_RI _ri"
+      ],
+      "return_type": "int",
+      "logic": "Template function to assemble a binary operation based on operand types (register, memory, immediate)."
+    },
+    {
+      "name": "AssembleUnaryOp",
+      "parameters": [
+        "Instruction* instr",
+        "_R _r",
+        "_M _m",
+        "_I _i"
+      ],
+      "return_type": "int",
+      "logic": "Template function to assemble a unary operation based on operand types (register, memory, immediate)."
+    },
+    {
+      "name": "is_wasm_on_be",
+      "parameters": [
+        "OptimizedCompilationInfo* info"
+      ],
+      "return_type": "bool",
+      "logic": "Checks if WASM is enabled and running on a big-endian architecture."
+    },
+    {
+      "name": "FlushPendingPushRegisters",
+      "parameters": [
+        "MacroAssembler* masm",
+        "FrameAccessState* frame_access_state",
+        "ZoneVector<Register>* pending_pushes"
+      ],
+      "return_type": "void",
+      "logic": "Pushes registers from a vector onto the stack and updates the stack pointer."
+    },
+    {
+      "name": "AdjustStackPointerForTailCall",
+      "parameters": [
+        "MacroAssembler* masm",
+        "FrameAccessState* state",
+        "int new_slot_above_sp",
+        "ZoneVector<Register>* pending_pushes",
+        "bool allow_shrinkage"
+      ],
+      "return_type": "void",
+      "logic": "Adjusts the stack pointer to the correct offset for a tail call, potentially pushing registers onto the stack first."
+    }
+  ]
+}

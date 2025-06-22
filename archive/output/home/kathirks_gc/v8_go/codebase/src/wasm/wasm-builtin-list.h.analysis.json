@@ -1,0 +1,69 @@
+{
+  "file_path": "/home/kathirks_gc/v8_go/codebase/src/wasm/wasm-builtin-list.h",
+  "imports": [
+    "src/base/macros.h",
+    "src/builtins/builtins.h",
+    "src/common/globals.h"
+  ],
+  "classes": [
+    {
+      "name": "BuiltinLookup",
+      "properties": [
+        "kBuiltinCount",
+        "kFarJumpTableIndexToBuiltin",
+        "kBuiltinToFarJumpTableIndex"
+      ],
+      "methods": [
+        {
+          "name": "JumptableIndexForBuiltin",
+          "parameters": [
+            "Builtin builtin"
+          ],
+          "return_type": "int",
+          "logic": "Returns the index in the far jump table corresponding to the given builtin. Performs a lookup and asserts consistency by cross-referencing with the reverse mapping."
+        },
+        {
+          "name": "BuiltinForJumptableIndex",
+          "parameters": [
+            "int index"
+          ],
+          "return_type": "Builtin",
+          "logic": "Returns the Builtin corresponding to the given index in the far jump table.  Performs a lookup and asserts consistency by cross-referencing with the reverse mapping."
+        },
+        {
+          "name": "BuiltinCount",
+          "parameters": [],
+          "return_type": "int",
+          "logic": "Returns the total number of WASM builtins that use the far jump table."
+        },
+        {
+          "name": "IsWasmBuiltinId",
+          "parameters": [
+            "Builtin id"
+          ],
+          "return_type": "bool",
+          "logic": "Checks if the given Builtin ID corresponds to a WebAssembly builtin."
+        }
+      ]
+    }
+  ],
+  "functions": [],
+  "namespace": [
+    "v8::internal::wasm",
+    "v8::internal::wasm::detail"
+  ],
+  "macros": [
+    "WASM_BUILTINS_WITH_JUMP_TABLE_SLOT",
+    "WASM_BUILTINS_WITHOUT_JUMP_TABLE_SLOT",
+    "WASM_BUILTIN_LIST"
+  ],
+  "constexpr_functions": [
+    {
+      "namespace": "v8::internal::wasm::detail",
+      "name": "InitBuiltinToFarJumpTableIndex",
+      "parameters": [],
+      "return_type": "std::array<uint8_t, static_cast<int>(Builtin::kFirstBytecodeHandler)>",
+      "logic": "Initializes a lookup table that maps Builtin to far jump table index. The table is an array of uint8_t, indexed by the Builtin enum value. The macro WASM_BUILTINS_WITH_JUMP_TABLE_SLOT is used to iterate over the list of builtins and populate the lookup table."
+    }
+  ]
+}

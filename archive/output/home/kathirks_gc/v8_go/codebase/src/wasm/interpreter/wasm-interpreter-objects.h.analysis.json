@@ -1,0 +1,121 @@
+{
+  "file_path": "/home/kathirks_gc/v8_go/codebase/src/wasm/interpreter/wasm-interpreter-objects.h",
+  "imports": [
+    "src/objects/struct.h",
+    "src/wasm/wasm-value.h"
+  ],
+  "classes": [
+    {
+      "name": "WasmInterpreterObject",
+      "properties": [],
+      "methods": [
+        {
+          "name": "get_wasm_instance",
+          "parameters": [
+            "Tagged<Tuple2> interpreter_object"
+          ],
+          "return_type": "Tagged<WasmInstanceObject>",
+          "logic": "Retrieves the WasmInstanceObject associated with the given interpreter object."
+        },
+        {
+          "name": "set_wasm_instance",
+          "parameters": [
+            "Tagged<Tuple2> interpreter_object",
+            "Tagged<WasmInstanceObject> wasm_instance"
+          ],
+          "return_type": "void",
+          "logic": "Sets the WasmInstanceObject associated with the given interpreter object."
+        },
+        {
+          "name": "get_interpreter_handle",
+          "parameters": [
+            "Tagged<Tuple2> interpreter_object"
+          ],
+          "return_type": "Tagged<Object>",
+          "logic": "Retrieves the interpreter handle associated with the given interpreter object."
+        },
+        {
+          "name": "set_interpreter_handle",
+          "parameters": [
+            "Tagged<Tuple2> interpreter_object",
+            "Tagged<Object> interpreter_handle"
+          ],
+          "return_type": "void",
+          "logic": "Sets the interpreter handle associated with the given interpreter object."
+        },
+        {
+          "name": "New",
+          "parameters": [
+            "DirectHandle<WasmInstanceObject>"
+          ],
+          "return_type": "DirectHandle<Tuple2>",
+          "logic": "Creates a new WasmInterpreterObject."
+        },
+        {
+          "name": "RunInterpreter",
+          "parameters": [
+            "Isolate* isolate",
+            "Address frame_pointer",
+            "DirectHandle<WasmInstanceObject> instance",
+            "int func_index",
+            "const std::vector<wasm::WasmValue>& argument_values",
+            "std::vector<wasm::WasmValue>& return_values"
+          ],
+          "return_type": "bool",
+          "logic": "Executes the specified function in the interpreter, reading arguments and writing return values. Returns true if execution exits regularly, false if a trap occurred."
+        },
+        {
+          "name": "RunInterpreter",
+          "parameters": [
+            "Isolate* isolate",
+            "Address frame_pointer",
+            "DirectHandle<WasmInstanceObject> instance",
+            "int func_index",
+            "uint8_t* interpreter_sp"
+          ],
+          "return_type": "bool",
+          "logic": "Executes the specified function in the interpreter, using interpreter stack pointer. Returns true if execution exits regularly, false if a trap occurred."
+        },
+        {
+          "name": "GetInterpretedStack",
+          "parameters": [
+            "Tagged<Tuple2> interpreter_object",
+            "Address frame_pointer"
+          ],
+          "return_type": "std::vector<WasmInterpreterStackEntry>",
+          "logic": "Gets the stack of the WebAssembly interpreter as pairs of {function index, byte offset}."
+        },
+        {
+          "name": "GetFunctionIndex",
+          "parameters": [
+            "Tagged<Tuple2> interpreter_object",
+            "Address frame_pointer",
+            "int index"
+          ],
+          "return_type": "int",
+          "logic": "Gets the function index for the index-th frame in the Activation identified by a given frame_pointer."
+        }
+      ]
+    }
+  ],
+  "functions": [
+    {
+      "name": "GetInterpreterHandle",
+      "parameters": [
+        "Isolate* isolate",
+        "DirectHandle<Tuple2> interpreter_object"
+      ],
+      "return_type": "wasm::InterpreterHandle*",
+      "logic": "Retrieves the InterpreterHandle associated with the given interpreter object."
+    },
+    {
+      "name": "GetOrCreateInterpreterHandle",
+      "parameters": [
+        "Isolate* isolate",
+        "DirectHandle<Tuple2> interpreter_object"
+      ],
+      "return_type": "wasm::InterpreterHandle*",
+      "logic": "Retrieves or creates the InterpreterHandle associated with the given interpreter object."
+    }
+  ]
+}

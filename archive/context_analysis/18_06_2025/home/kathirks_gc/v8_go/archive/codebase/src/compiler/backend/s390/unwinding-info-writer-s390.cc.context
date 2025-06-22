@@ -1,0 +1,252 @@
+{
+  "metadata": {
+    "path": "/home/kathirks_gc/v8_go/archive/codebase/src/compiler/backend/s390/unwinding-info-writer-s390.cc",
+    "file_name": "unwinding-info-writer-s390.cc",
+    "language": "cpp",
+    "purpose": "Implements the UnwindingInfoWriter class for the s390 architecture, which is responsible for generating the necessary information for stack unwinding during exception handling or debugging."
+  },
+  "imports": {
+    "metadata": {
+      "language": "cpp",
+      "purpose": "Includes necessary header files for UnwindingInfoWriterS390 functionality and instruction handling."
+    },
+    "code": "#include \"src/compiler/backend/s390/unwinding-info-writer-s390.h\"\n#include \"src/compiler/backend/instruction.h\""
+  },
+  "classes": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "UnwindingInfoWriter",
+        "extends": null,
+        "implements": [],
+        "about": "Writes unwinding information for s390 architecture to facilitate stack unwinding.",
+        "attributes": [],
+        "dependencies": [
+          "InstructionBlock",
+          "BlockInitialState",
+          "RpoNumber",
+          "EHFrameWriter",
+          "Zone"
+        ]
+      },
+      "code": "namespace v8 {\nnamespace internal {\nnamespace compiler {\nclass UnwindingInfoWriter {\n public:\n  void BeginInstructionBlock(int pc_offset,\n                                                const InstructionBlock* block);\n  void EndInstructionBlock(const InstructionBlock* block);\n  void MarkFrameConstructed(int at_pc);\n  void MarkFrameDeconstructed(int at_pc);\n  void MarkLinkRegisterOnTopOfStack(int pc_offset);\n  void MarkPopLinkRegisterFromTopOfStack(int pc_offset);\n private:\n  bool enabled() const { return eh_frame_writer_.enabled(); }\n  EHFrameWriter eh_frame_writer_;\n  Zone* zone_;\n  ZoneVector<const BlockInitialState*> block_initial_states_;\n  bool saved_lr_ = false;\n  bool block_will_exit_ = false;\n};"
+    }
+  ],
+  "functions": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "method",
+        "name": "BeginInstructionBlock",
+        "parent": "UnwindingInfoWriter",
+        "about": "Handles the beginning of an instruction block, recording initial state if necessary.",
+        "logic": "Checks if unwinding info writing is enabled and if the initial state of the block's link register (LR) differs from the current state. If so, it advances the location and records the LR's saved state to stack via EHFrameWriter. Sets saved_lr_ and block_will_exit_ flags.",
+        "parameters": [
+          {
+            "name": "pc_offset",
+            "type": "int",
+            "purpose": "The program counter offset."
+          },
+          {
+            "name": "block",
+            "type": "const InstructionBlock*",
+            "purpose": "The instruction block being processed."
+          }
+        ],
+        "return": {
+          "type": "void",
+          "description": "No return value."
+        },
+        "dependencies": [
+          "InstructionBlock",
+          "BlockInitialState",
+          "RpoNumber",
+          "EHFrameWriter"
+        ]
+      },
+      "code": "void UnwindingInfoWriter::BeginInstructionBlock(int pc_offset,\n                                                const InstructionBlock* block) {\n  if (!enabled()) return;\n\n  block_will_exit_ = false;\n\n  DCHECK_LT(block->rpo_number().ToInt(),\n            static_cast<int>(block_initial_states_.size()));\n  const BlockInitialState* initial_state =\n      block_initial_states_[block->rpo_number().ToInt()];\n  if (!initial_state) return;\n  if (initial_state->saved_lr_ != saved_lr_) {\n    eh_frame_writer_.AdvanceLocation(pc_offset);\n    if (initial_state->saved_lr_) {\n      eh_frame_writer_.RecordRegisterSavedToStack(r14, kSystemPointerSize);\n      eh_frame_writer_.RecordRegisterSavedToStack(fp, 0);\n    } else {\n      eh_frame_writer_.RecordRegisterFollowsInitialRule(r14);\n    }\n    saved_lr_ = initial_state->saved_lr_;\n  }\n}"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "method",
+        "name": "EndInstructionBlock",
+        "parent": "UnwindingInfoWriter",
+        "about": "Handles the ending of an instruction block, ensuring the successor blocks have the correct initial state recorded.",
+        "logic": "Iterates through the successors of the current block. For each successor, it checks if an initial state is already recorded. If yes, it verifies that the saved_lr_ value matches. If no, it creates a new BlockInitialState with the current saved_lr_ value and associates it with the successor block.",
+        "parameters": [
+          {
+            "name": "block",
+            "type": "const InstructionBlock*",
+            "purpose": "The instruction block being processed."
+          }
+        ],
+        "return": {
+          "type": "void",
+          "description": "No return value."
+        },
+        "dependencies": [
+          "InstructionBlock",
+          "BlockInitialState",
+          "RpoNumber",
+          "Zone"
+        ]
+      },
+      "code": "void UnwindingInfoWriter::EndInstructionBlock(const InstructionBlock* block) {\n  if (!enabled() || block_will_exit_) return;\n\n  for (const RpoNumber& successor : block->successors()) {\n    int successor_index = successor.ToInt();\n    DCHECK_LT(successor_index, static_cast<int>(block_initial_states_.size()));\n    const BlockInitialState* existing_state =\n        block_initial_states_[successor_index];\n\n    // If we already had an entry for this BB, check that the values are the\n    // same we are trying to insert.\n    if (existing_state) {\n      DCHECK_EQ(existing_state->saved_lr_, saved_lr_);\n    } else {\n      block_initial_states_[successor_index] =\n          zone_->New<BlockInitialState>(saved_lr_);\n    }\n  }\n}"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "method",
+        "name": "MarkFrameConstructed",
+        "parent": "UnwindingInfoWriter",
+        "about": "Marks the point where a stack frame has been fully constructed.",
+        "logic": "Advances the EHFrameWriter's location to the given program counter and records that the link register (r14) and frame pointer (fp) have been saved to the stack. Sets the saved_lr_ flag to true, indicating the LR is saved.",
+        "parameters": [
+          {
+            "name": "at_pc",
+            "type": "int",
+            "purpose": "The program counter value at the point of frame construction."
+          }
+        ],
+        "return": {
+          "type": "void",
+          "description": "No return value."
+        },
+        "dependencies": [
+          "EHFrameWriter"
+        ]
+      },
+      "code": "void UnwindingInfoWriter::MarkFrameConstructed(int at_pc) {\n  if (!enabled()) return;\n\n  // Regardless of the type of frame constructed, the relevant part of the\n  // layout is always the one in the diagram:\n  //\n  // |   ....   |         higher addresses\n  // +----------+               ^\n  // |    LR    |               |            |\n  // +----------+               |            |\n  // | saved FP |               |            |\n  // +----------+ <-- FP                     v\n  // |   ....   |                       stack growth\n  //\n  // The LR is pushed on the stack, and we can record this fact at the end of\n  // the construction, since the LR itself is not modified in the process.\n  eh_frame_writer_.AdvanceLocation(at_pc);\n  eh_frame_writer_.RecordRegisterSavedToStack(r14, kSystemPointerSize);\n  eh_frame_writer_.RecordRegisterSavedToStack(fp, 0);\n  saved_lr_ = true;\n}"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "method",
+        "name": "MarkFrameDeconstructed",
+        "parent": "UnwindingInfoWriter",
+        "about": "Marks the point where a stack frame has been deconstructed (e.g., during function exit).",
+        "logic": "Advances the EHFrameWriter's location to the given program counter and records that the link register (r14) now follows the initial rule (i.e., it's restored). Sets the saved_lr_ flag to false.",
+        "parameters": [
+          {
+            "name": "at_pc",
+            "type": "int",
+            "purpose": "The program counter value at the point of frame deconstruction."
+          }
+        ],
+        "return": {
+          "type": "void",
+          "description": "No return value."
+        },
+        "dependencies": [
+          "EHFrameWriter"
+        ]
+      },
+      "code": "void UnwindingInfoWriter::MarkFrameDeconstructed(int at_pc) {\n  if (!enabled()) return;\n\n  // The lr is restored by the last operation in LeaveFrame().\n  eh_frame_writer_.AdvanceLocation(at_pc);\n  eh_frame_writer_.RecordRegisterFollowsInitialRule(r14);\n  saved_lr_ = false;\n}"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "method",
+        "name": "MarkLinkRegisterOnTopOfStack",
+        "parent": "UnwindingInfoWriter",
+        "about": "Marks when the link register is pushed onto the top of the stack.",
+        "logic": "Advances the EHFrameWriter's location, sets the base address register and offset to the stack pointer (sp) with offset 0, and records the link register (r14) as saved to the stack at offset 0. This informs the unwinder that the LR is directly accessible on the stack.",
+        "parameters": [
+          {
+            "name": "pc_offset",
+            "type": "int",
+            "purpose": "The program counter offset where the link register is pushed."
+          }
+        ],
+        "return": {
+          "type": "void",
+          "description": "No return value."
+        },
+        "dependencies": [
+          "EHFrameWriter"
+        ]
+      },
+      "code": "void UnwindingInfoWriter::MarkLinkRegisterOnTopOfStack(int pc_offset) {\n  if (!enabled()) return;\n\n  eh_frame_writer_.AdvanceLocation(pc_offset);\n  eh_frame_writer_.SetBaseAddressRegisterAndOffset(sp, 0);\n  eh_frame_writer_.RecordRegisterSavedToStack(r14, 0);\n}"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "method",
+        "name": "MarkPopLinkRegisterFromTopOfStack",
+        "parent": "UnwindingInfoWriter",
+        "about": "Marks when the link register is popped from the top of the stack.",
+        "logic": "Advances the EHFrameWriter's location, sets the base address register and offset to the frame pointer (fp) with offset 0, and records the link register (r14) as following the initial rule, indicating that it's been restored from the stack.",
+        "parameters": [
+          {
+            "name": "pc_offset",
+            "type": "int",
+            "purpose": "The program counter offset where the link register is popped."
+          }
+        ],
+        "return": {
+          "type": "void",
+          "description": "No return value."
+        },
+        "dependencies": [
+          "EHFrameWriter"
+        ]
+      },
+      "code": "void UnwindingInfoWriter::MarkPopLinkRegisterFromTopOfStack(int pc_offset) {\n  if (!enabled()) return;\n\n  eh_frame_writer_.AdvanceLocation(pc_offset);\n  eh_frame_writer_.SetBaseAddressRegisterAndOffset(fp, 0);\n  eh_frame_writer_.RecordRegisterFollowsInitialRule(r14);\n}"
+    }
+  ],
+  "dependencies": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "InstructionBlock",
+        "about": "Represents a block of instructions in the control flow graph."
+      },
+      "code": "class InstructionBlock;",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "BlockInitialState",
+        "about": "Represents the initial state of a block, particularly the state of the link register."
+      },
+      "code": "class BlockInitialState;",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "RpoNumber",
+        "about": "Represents the reverse postorder number of a block."
+      },
+      "code": "class RpoNumber;",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "EHFrameWriter",
+        "about": "Writes exception handling frame information."
+      },
+      "code": "class EHFrameWriter;",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "Zone",
+        "about": "Memory allocation zone."
+      },
+      "code": "class Zone;",
+      "type": "class"
+    }
+  ],
+  "file_path": "/home/kathirks_gc/v8_go/archive/codebase/src/compiler/backend/s390/unwinding-info-writer-s390.cc"
+}

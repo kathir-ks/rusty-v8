@@ -1,0 +1,37 @@
+{
+  "metadata": {
+    "path": "/home/kathirks_gc/v8_go/archive/codebase/src/compiler/int64-lowering.h",
+    "file_name": "int64-lowering.h",
+    "language": "cpp",
+    "purpose": "Header file for the Int64Lowering class, which lowers 64-bit integer operations to 32-bit operations on 32-bit architectures within the V8 compiler."
+  },
+  "imports": {
+    "metadata": {
+      "language": "cpp",
+      "purpose": "Includes necessary headers for memory management, common operators, machine operators, simplified operators, turbofan graph, and zone containers."
+    },
+    "code": "#include <memory>\n\n#include \"src/compiler/common-operator.h\"\n#include \"src/compiler/machine-operator.h\"\n#include \"src/compiler/simplified-operator.h\"\n#include \"src/compiler/turbofan-graph.h\"\n#include \"src/zone/zone-containers.h\""
+  },
+  "classes": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "Int64Lowering",
+        "about": "This class is responsible for lowering 64-bit integer operations into equivalent 32-bit integer operations. This is primarily used on 32-bit architectures where native 64-bit support is absent.",
+        "attributes": [],
+        "dependencies": [
+          "TFGraph",
+          "MachineOperatorBuilder",
+          "CommonOperatorBuilder",
+          "SimplifiedOperatorBuilder",
+          "Zone",
+          "Signature",
+          "CallDescriptor"
+        ]
+      },
+      "code": "#if !V8_TARGET_ARCH_32_BIT\nclass Int64Lowering {\n public:\n  Int64Lowering(TFGraph* graph, MachineOperatorBuilder* machine,\n                CommonOperatorBuilder* common,\n                SimplifiedOperatorBuilder* simplified_, Zone* zone,\n                Signature<MachineRepresentation>* signature) {}\n\n  void LowerGraph() {}\n};\n#else\n\nclass V8_EXPORT_PRIVATE Int64Lowering {\n public:\n  Int64Lowering(TFGraph* graph, MachineOperatorBuilder* machine,\n                CommonOperatorBuilder* common,\n                SimplifiedOperatorBuilder* simplified_, Zone* zone,\n                Signature<MachineRepresentation>* signature);\n\n  void LowerGraph();\n\n private:\n  static int GetParameterCountAfterLowering(\n      Signature<MachineRepresentation>* signature);\n\n  enum class State : uint8_t { kUnvisited, kOnStack, kVisited };\n\n  struct Replacement {\n    Node* low;\n    Node* high;\n  };\n\n  Zone* zone() const { return zone_; }\n  TFGraph* graph() const { return graph_; }\n  MachineOperatorBuilder* machine() const { return machine_; }\n  CommonOperatorBuilder* common() const { return common_; }\n  SimplifiedOperatorBuilder* simplified() const { return simplified_; }\n  Signature<MachineRepresentation>* signature() const { return signature_; }\n\n  void PushNode(Node* node);\n  void LowerNode(Node* node);\n  bool DefaultLowering(Node* node, bool low_word_only = false);\n  void LowerComparison(Node* node, const Operator* signed_op,\n                       const Operator* unsigned_op);\n  void LowerWord64AtomicBinop(Node* node, const Operator* op);\n  void LowerWord64AtomicNarrowOp(Node* node, const Operator* op);\n  void LowerLoadOperator(Node* node, MachineRepresentation rep,\n                         const Operator* load_op);\n  void LowerStoreOperator(Node* node, MachineRepresentation rep,\n                          const Operator* store_op);\n\n  const CallDescriptor* LowerCallDescriptor(\n      const CallDescriptor* call_descriptor);\n\n  void ReplaceNode(Node* old, Node* new_low, Node* new_high);\n  bool HasReplacementLow(Node* node);\n  Node* GetReplacementLow(Node* node);\n  bool HasReplacementHigh(Node* node);\n  Node* GetReplacementHigh(Node* node);\n  void PreparePhiReplacement(Node* phi);\n  void GetIndexNodes(Node* index, Node** index_low, Node** index_high);\n  void ReplaceNodeWithProjections(Node* node);\n  void LowerMemoryBaseAndIndex(Node* node);\n\n  struct NodeState {\n    Node* node;\n    int input_index;\n  };\n\n  TFGraph* const graph_;\n  MachineOperatorBuilder* machine_;\n  CommonOperatorBuilder* common_;\n  SimplifiedOperatorBuilder* simplified_;\n  Zone* zone_;\n  Signature<MachineRepresentation>* signature_;\n  std::vector<State> state_;\n  ZoneDeque<NodeState> stack_;\n  Replacement* replacements_;\n  Node* placeholder_;\n};\n#endif  // V8_TARGET_ARCH_32_BIT"
+    }
+  ],
+  "file_path": "/home/kathirks_gc/v8_go/archive/codebase/src/compiler/int64-lowering.h"
+}

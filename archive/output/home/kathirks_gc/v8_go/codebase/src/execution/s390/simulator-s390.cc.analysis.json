@@ -1,0 +1,631 @@
+{
+  "file_path": "/home/kathirks_gc/v8_go/codebase/src/execution/s390/simulator-s390.cc",
+  "imports": [
+    "src/execution/s390/simulator-s390.h",
+    "<stdarg.h>",
+    "<stdlib.h>",
+    "<cmath>",
+    "src/base/bits.h",
+    "src/base/once.h",
+    "src/base/platform/memory.h",
+    "src/base/platform/platform.h",
+    "src/codegen/assembler.h",
+    "src/codegen/macro-assembler.h",
+    "src/codegen/register-configuration.h",
+    "src/codegen/s390/constants-s390.h",
+    "src/diagnostics/disasm.h",
+    "src/heap/base/stack.h",
+    "src/heap/combined-heap.h",
+    "src/heap/heap-inl.h",
+    "src/objects/objects-inl.h",
+    "src/runtime/runtime-utils.h",
+    "src/utils/ostreams.h"
+  ],
+  "classes": [
+    {
+      "name": "S390Debugger",
+      "properties": [
+        "sim_",
+        "kBreakpointInstr",
+        "kNopInstr"
+      ],
+      "methods": [
+        {
+          "name": "S390Debugger",
+          "parameters": [
+            "Simulator* sim"
+          ],
+          "return_type": "constructor",
+          "logic": "Constructor for the S390Debugger class, initializes the sim_ pointer."
+        },
+        {
+          "name": "Debug",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Provides an interactive debugging session for the simulator."
+        },
+        {
+          "name": "GetRegisterValue",
+          "parameters": [
+            "int regnum"
+          ],
+          "return_type": "intptr_t",
+          "logic": "Retrieves the value of a general-purpose register from the simulator."
+        },
+        {
+          "name": "GetRegisterPairDoubleValue",
+          "parameters": [
+            "int regnum"
+          ],
+          "return_type": "double",
+          "logic": "Retrieves a double value from a register pair in the simulator."
+        },
+        {
+          "name": "GetFPDoubleRegisterValue",
+          "parameters": [
+            "int regnum"
+          ],
+          "return_type": "double",
+          "logic": "Retrieves a double value from a floating-point register in the simulator."
+        },
+        {
+          "name": "GetFPFloatRegisterValue",
+          "parameters": [
+            "int regnum"
+          ],
+          "return_type": "float",
+          "logic": "Retrieves a float value from a floating-point register in the simulator."
+        },
+        {
+          "name": "GetValue",
+          "parameters": [
+            "const char* desc",
+            "intptr_t* value"
+          ],
+          "return_type": "bool",
+          "logic": "Parses a string description to get an integer value, which could be a register name or a hexadecimal/decimal number."
+        },
+        {
+          "name": "GetFPDoubleValue",
+          "parameters": [
+            "const char* desc",
+            "double* value"
+          ],
+          "return_type": "bool",
+          "logic": "Parses a string description to get a double value, which could be a floating-point register name."
+        },
+        {
+          "name": "SetBreakpoint",
+          "parameters": [
+            "Instruction* breakpc"
+          ],
+          "return_type": "bool",
+          "logic": "Sets a breakpoint at the specified instruction address in the simulator."
+        },
+        {
+          "name": "DeleteBreakpoint",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Deletes the currently set breakpoint."
+        },
+        {
+          "name": "UndoBreakpoint",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Removes the breakpoint instruction from the simulated code, restoring the original instruction."
+        },
+        {
+          "name": "RedoBreakpoint",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Reinstalls the breakpoint instruction in the simulated code."
+        }
+      ]
+    },
+    {
+      "name": "Simulator",
+      "properties": [
+        "isolate_",
+        "stack_",
+        "pc_modified_",
+        "icount_",
+        "break_pc_",
+        "break_instr_",
+        "registers_",
+        "condition_reg_",
+        "special_reg_pc_",
+        "last_debugger_input_",
+        "instruction_tracing_",
+        "watched_stops_",
+        "i_cache_"
+      ],
+      "methods": [
+        {
+          "name": "current",
+          "parameters": [
+            "Isolate* isolate"
+          ],
+          "return_type": "Simulator*",
+          "logic": "Gets the active Simulator for the current thread. Creates one if it doesn't exist."
+        },
+        {
+          "name": "set_register",
+          "parameters": [
+            "int reg",
+            "uint64_t value"
+          ],
+          "return_type": "void",
+          "logic": "Sets the value of a general-purpose register in the simulator's architecture state."
+        },
+        {
+          "name": "get_register",
+          "parameters": [
+            "int reg"
+          ],
+          "return_type": "const uint64_t&",
+          "logic": "Gets the value of a general-purpose register from the simulator's architecture state (const)."
+        },
+        {
+          "name": "get_register",
+          "parameters": [
+            "int reg"
+          ],
+          "return_type": "uint64_t&",
+          "logic": "Gets the value of a general-purpose register from the simulator's architecture state (non-const)."
+        },
+        {
+          "name": "get_low_register",
+          "parameters": [
+            "int reg"
+          ],
+          "return_type": "T",
+          "logic": "Gets the lower 32-bits of a general-purpose register (template function)."
+        },
+        {
+          "name": "get_high_register",
+          "parameters": [
+            "int reg"
+          ],
+          "return_type": "T",
+          "logic": "Gets the upper 32-bits of a general-purpose register (template function)."
+        },
+        {
+          "name": "set_low_register",
+          "parameters": [
+            "int reg",
+            "uint32_t value"
+          ],
+          "return_type": "void",
+          "logic": "Sets the lower 32-bits of a general-purpose register."
+        },
+        {
+          "name": "set_high_register",
+          "parameters": [
+            "int reg",
+            "uint32_t value"
+          ],
+          "return_type": "void",
+          "logic": "Sets the upper 32-bits of a general-purpose register."
+        },
+        {
+          "name": "get_double_from_register_pair",
+          "parameters": [
+            "int reg"
+          ],
+          "return_type": "double",
+          "logic": "Gets a double value from a register pair. Currently, it always returns 0.0"
+        },
+        {
+          "name": "set_pc",
+          "parameters": [
+            "intptr_t value"
+          ],
+          "return_type": "void",
+          "logic": "Sets the program counter (PC) to the specified value."
+        },
+        {
+          "name": "has_bad_pc",
+          "parameters": [],
+          "return_type": "bool",
+          "logic": "Checks if the program counter is invalid (bad_lr or end_sim_pc)."
+        },
+        {
+          "name": "get_pc",
+          "parameters": [],
+          "return_type": "intptr_t",
+          "logic": "Gets the program counter (PC) value."
+        },
+        {
+          "name": "GetFpArgs",
+          "parameters": [
+            "double* x",
+            "double* y",
+            "intptr_t* z"
+          ],
+          "return_type": "void",
+          "logic": "Retrieves floating-point and integer arguments from registers for runtime FP routines."
+        },
+        {
+          "name": "SetFpResult",
+          "parameters": [
+            "const double& result"
+          ],
+          "return_type": "void",
+          "logic": "Sets the floating-point result in the appropriate register."
+        },
+        {
+          "name": "TrashCallerSaveRegisters",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Intended to trash caller-save registers (but currently empty)."
+        },
+        {
+          "name": "ReadWU",
+          "parameters": [
+            "intptr_t addr"
+          ],
+          "return_type": "uint32_t",
+          "logic": "Reads an unsigned 32-bit word from memory at the given address."
+        },
+        {
+          "name": "ReadW64",
+          "parameters": [
+            "intptr_t addr"
+          ],
+          "return_type": "int64_t",
+          "logic": "Reads a 64 bit word from memory at the given address."
+        },
+        {
+          "name": "ReadW",
+          "parameters": [
+            "intptr_t addr"
+          ],
+          "return_type": "int32_t",
+          "logic": "Reads a signed 32-bit word from memory at the given address."
+        },
+        {
+          "name": "WriteW",
+          "parameters": [
+            "intptr_t addr",
+            "uint32_t value"
+          ],
+          "return_type": "void",
+          "logic": "Writes an unsigned 32-bit word to memory at the given address."
+        },
+        {
+          "name": "WriteW",
+          "parameters": [
+            "intptr_t addr",
+            "int32_t value"
+          ],
+          "return_type": "void",
+          "logic": "Writes a signed 32-bit word to memory at the given address."
+        },
+        {
+          "name": "ReadHU",
+          "parameters": [
+            "intptr_t addr"
+          ],
+          "return_type": "uint16_t",
+          "logic": "Reads an unsigned 16-bit half-word from memory at the given address."
+        },
+        {
+          "name": "ReadH",
+          "parameters": [
+            "intptr_t addr"
+          ],
+          "return_type": "int16_t",
+          "logic": "Reads a signed 16-bit half-word from memory at the given address."
+        },
+        {
+          "name": "WriteH",
+          "parameters": [
+            "intptr_t addr",
+            "uint16_t value"
+          ],
+          "return_type": "void",
+          "logic": "Writes an unsigned 16-bit half-word to memory at the given address."
+        },
+        {
+          "name": "WriteH",
+          "parameters": [
+            "intptr_t addr",
+            "int16_t value"
+          ],
+          "return_type": "void",
+          "logic": "Writes a signed 16-bit half-word to memory at the given address."
+        },
+        {
+          "name": "ReadBU",
+          "parameters": [
+            "intptr_t addr"
+          ],
+          "return_type": "uint8_t",
+          "logic": "Reads an unsigned 8-bit byte from memory at the given address."
+        },
+        {
+          "name": "ReadB",
+          "parameters": [
+            "intptr_t addr"
+          ],
+          "return_type": "int8_t",
+          "logic": "Reads a signed 8-bit byte from memory at the given address."
+        },
+        {
+          "name": "WriteB",
+          "parameters": [
+            "intptr_t addr",
+            "uint8_t value"
+          ],
+          "return_type": "void",
+          "logic": "Writes an unsigned 8-bit byte to memory at the given address."
+        },
+        {
+          "name": "WriteB",
+          "parameters": [
+            "intptr_t addr",
+            "int8_t value"
+          ],
+          "return_type": "void",
+          "logic": "Writes a signed 8-bit byte to memory at the given address."
+        },
+        {
+          "name": "ReadDW",
+          "parameters": [
+            "intptr_t addr"
+          ],
+          "return_type": "int64_t",
+          "logic": "Reads a 64-bit double word from memory at the given address."
+        },
+        {
+          "name": "WriteDW",
+          "parameters": [
+            "intptr_t addr",
+            "int64_t value"
+          ],
+          "return_type": "void",
+          "logic": "Writes a 64-bit double word to memory at the given address."
+        },
+        {
+          "name": "ReadDouble",
+          "parameters": [
+            "intptr_t addr"
+          ],
+          "return_type": "double",
+          "logic": "Reads a double-precision floating-point value from memory."
+        },
+        {
+          "name": "ReadFloat",
+          "parameters": [
+            "intptr_t addr"
+          ],
+          "return_type": "float",
+          "logic": "Reads a single-precision floating-point value from memory."
+        },
+        {
+          "name": "StackLimit",
+          "parameters": [
+            "uintptr_t c_limit"
+          ],
+          "return_type": "uintptr_t",
+          "logic": "Returns the stack limit based on the C stack and the simulator's JS stack."
+        },
+        {
+          "name": "StackBase",
+          "parameters": [],
+          "return_type": "uintptr_t",
+          "logic": "Returns the base address of the simulator's stack."
+        },
+        {
+          "name": "GetCentralStackView",
+          "parameters": [],
+          "return_type": "base::Vector<uint8_t>",
+          "logic": "Returns a view of the central stack."
+        },
+        {
+          "name": "IterateRegistersAndStack",
+          "parameters": [
+            "::heap::base::StackVisitor* visitor"
+          ],
+          "return_type": "void",
+          "logic": "Iterates through the registers and the stack, visiting each pointer with the provided stack visitor."
+        },
+        {
+          "name": "Format",
+          "parameters": [
+            "Instruction* instr",
+            "const char* format"
+          ],
+          "return_type": "void",
+          "logic": "Prints an error message and stops execution for unsupported instructions."
+        },
+        {
+          "name": "CarryFrom",
+          "parameters": [
+            "int32_t left",
+            "int32_t right",
+            "int32_t carry"
+          ],
+          "return_type": "bool",
+          "logic": "Calculates the carry flag for additions."
+        },
+        {
+          "name": "BorrowFrom",
+          "parameters": [
+            "int32_t left",
+            "int32_t right"
+          ],
+          "return_type": "bool",
+          "logic": "Calculates the borrow flag for subtractions."
+        },
+        {
+          "name": "OverflowFromSigned",
+          "parameters": [
+            "T1 alu_out",
+            "T1 left",
+            "T1 right",
+            "bool addition"
+          ],
+          "return_type": "bool",
+          "logic": "Calculates the overflow flag for signed additions and subtractions."
+        },
+        {
+          "name": "SoftwareInterrupt",
+          "parameters": [
+            "Instruction* instr"
+          ],
+          "return_type": "void",
+          "logic": "Handles software interrupt instructions (SVC) to call into the V8 runtime."
+        },
+        {
+          "name": "isStopInstruction",
+          "parameters": [
+            "Instruction* instr"
+          ],
+          "return_type": "bool",
+          "logic": "Determines whether the instruction is a stop instruction."
+        },
+        {
+          "name": "isWatchedStop",
+          "parameters": [
+            "uint32_t code"
+          ],
+          "return_type": "bool",
+          "logic": "Check if a stop code is being watched"
+        },
+        {
+          "name": "isEnabledStop",
+          "parameters": [
+            "uint32_t code"
+          ],
+          "return_type": "bool",
+          "logic": "Check if a particular stop is enabled"
+        },
+        {
+          "name": "EnableStop",
+          "parameters": [
+            "uint32_t code"
+          ],
+          "return_type": "void",
+          "logic": "Enable particular stop"
+        },
+        {
+          "name": "DisableStop",
+          "parameters": [
+            "uint32_t code"
+          ],
+          "return_type": "void",
+          "logic": "Disable particular stop"
+        },
+        {
+          "name": "IncreaseStopCounter",
+          "parameters": [
+            "uint32_t code"
+          ],
+          "return_type": "void",
+          "logic": "Increases the counter for hitting a particular stop code."
+        },
+        {
+          "name": "PrintStopInfo",
+          "parameters": [
+            "uint32_t code"
+          ],
+          "return_type": "void",
+          "logic": "Print information about particular stop."
+        },
+        {
+          "name": "InstructionTracingEnabled",
+          "parameters": [],
+          "return_type": "bool",
+          "logic": "Getter for instruction_tracing_."
+        },
+        {
+          "name": "ToggleInstructionTracing",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Toggles the instruction tracing flag."
+        },
+        {
+          "name": "ICacheMatch",
+          "parameters": [
+            "void* one",
+            "void* two"
+          ],
+          "return_type": "bool",
+          "logic": "Checks if two addresses belong to the same ICache page."
+        },
+        {
+          "name": "set_last_debugger_input",
+          "parameters": [
+            "char* input"
+          ],
+          "return_type": "void",
+          "logic": "Sets the last debugger input string, deallocating the previous one."
+        },
+        {
+          "name": "SetRedirectInstruction",
+          "parameters": [
+            "Instruction* instruction"
+          ],
+          "return_type": "void",
+          "logic": "Sets the instruction bits for a redirection instruction (TRAP4)."
+        },
+        {
+          "name": "FlushICache",
+          "parameters": [
+            "base::CustomMatcherHashMap* i_cache",
+            "void* start_addr",
+            "size_t size"
+          ],
+          "return_type": "void",
+          "logic": "Flushes the instruction cache for a given address range."
+        },
+        {
+          "name": "GetCachePage",
+          "parameters": [
+            "base::CustomMatcherHashMap* i_cache",
+            "void* page"
+          ],
+          "return_type": "CachePage*",
+          "logic": "Gets or creates a CachePage object for a given memory page."
+        },
+        {
+          "name": "FlushOnePage",
+          "parameters": [
+            "base::CustomMatcherHashMap* i_cache",
+            "intptr_t start",
+            "int size"
+          ],
+          "return_type": "void",
+          "logic": "Flushes one page of the instruction cache."
+        },
+        {
+          "name": "CheckICache",
+          "parameters": [
+            "base::CustomMatcherHashMap* i_cache",
+            "Instruction* instr"
+          ],
+          "return_type": "void",
+          "logic": "Checks the instruction cache for a given instruction and loads it if it's a miss."
+        }
+      ]
+    },
+    {
+      "name": "CachePage",
+      "properties": [],
+      "methods": []
+    }
+  ],
+  "functions": [
+    {
+      "name": "SetInstructionBitsInCodeSpace",
+      "parameters": [
+        "Instruction* instr",
+        "Instr value",
+        "Heap* heap"
+      ],
+      "return_type": "void",
+      "logic": "Sets the instruction bits of an instruction in the code space, allowing modification of code pages for debugging purposes."
+    }
+  ]
+}

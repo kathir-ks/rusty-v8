@@ -1,0 +1,121 @@
+{
+  "file_path": "/home/kathirks_gc/v8_go/codebase/src/execution/thread-local-top.h",
+  "imports": [
+    "include/v8-callbacks.h",
+    "include/v8-context.h",
+    "include/v8-exception.h",
+    "include/v8-unwinder.h",
+    "src/common/globals.h",
+    "src/execution/thread-id.h",
+    "src/objects/contexts.h",
+    "src/utils/utils.h"
+  ],
+  "classes": [
+    {
+      "name": "ThreadLocalTop",
+      "properties": [
+        "static constexpr uint32_t kSizeInBytes",
+        "Address c_entry_fp_",
+        "Address c_function_",
+        "Tagged<Context> context_",
+        "Tagged<Context> topmost_script_having_context_",
+        "Address last_api_entry_",
+        "Tagged<Object> exception_",
+        "Tagged<Context> pending_handler_context_",
+        "Address pending_handler_entrypoint_",
+        "Address pending_handler_constant_pool_",
+        "Address pending_handler_fp_",
+        "Address pending_handler_sp_",
+        "v8::TryCatch* try_catch_handler_",
+        "Isolate* isolate_",
+        "std::atomic<ThreadId> thread_id_",
+        "uintptr_t num_frames_above_pending_handler_",
+        "uint8_t is_on_central_stack_flag_",
+        "uint8_t rethrowing_message_",
+        "Tagged<Object> pending_message_",
+        "Address handler_",
+        "Simulator* simulator_",
+        "Address js_entry_sp_",
+        "ExternalCallbackScope* external_callback_scope_",
+        "StateTag current_vm_state_",
+        "EmbedderState* current_embedder_state_",
+        "const v8::Context::BackupIncumbentScope* top_backup_incumbent_scope_",
+        "v8::FailedAccessCheckCallback failed_access_check_callback_",
+        "Address thread_in_wasm_flag_address_",
+        "Address central_stack_sp_",
+        "Address central_stack_limit_",
+        "Address secondary_stack_sp_",
+        "Address secondary_stack_limit_"
+      ],
+      "methods": [
+        {
+          "name": "ThreadLocalTop",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Constructor. Does early low-level initialization that does not depend on the isolate being present. Calls Clear()."
+        },
+        {
+          "name": "Clear",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Clears the thread data. (Implementation not in header)"
+        },
+        {
+          "name": "Initialize",
+          "parameters": [
+            "Isolate*"
+          ],
+          "return_type": "void",
+          "logic": "Initializes the thread data. (Implementation not in header)"
+        },
+        {
+          "name": "try_catch_handler_address",
+          "parameters": [],
+          "return_type": "Address",
+          "logic": "Returns the address of the top C++ try catch handler, adjusted for simulator if necessary. Returns kNullAddress if none are registered."
+        },
+        {
+          "name": "IncrementCallDepth",
+          "parameters": [
+            "Scope* stack_allocated_scope"
+          ],
+          "return_type": "void",
+          "logic": "Increments the call depth (nested v8 api calls) by storing the stack height of the last API entry. Also, optionally clears the current exception."
+        },
+        {
+          "name": "StoreCurrentStackPosition",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Stores the current stack position. Only defined when using a simulator or Address Sanitizer."
+        },
+        {
+          "name": "DecrementCallDepth",
+          "parameters": [
+            "Scope* stack_allocated_scope"
+          ],
+          "return_type": "void",
+          "logic": "Decrements the call depth (nested v8 api calls) by restoring the stack height of the last API entry."
+        },
+        {
+          "name": "CallDepthIsZero",
+          "parameters": [],
+          "return_type": "bool",
+          "logic": "Checks if the call depth is zero (meaning no nested V8 API calls)."
+        },
+        {
+          "name": "Free",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Frees the thread data. (Implementation not in header)"
+        },
+        {
+          "name": "exception_offset",
+          "parameters": [],
+          "return_type": "int",
+          "logic": "Returns the offset of the exception_ field in the ThreadLocalTop class."
+        }
+      ]
+    }
+  ],
+  "functions": []
+}

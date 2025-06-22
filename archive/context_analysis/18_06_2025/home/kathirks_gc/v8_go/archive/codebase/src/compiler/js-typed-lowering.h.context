@@ -1,0 +1,218 @@
+{
+  "metadata": {
+    "path": "/home/kathirks_gc/v8_go/archive/codebase/src/compiler/js-typed-lowering.h",
+    "file_name": "js-typed-lowering.h",
+    "language": "cpp",
+    "purpose": "Declares the JSTypedLowering class, which lowers JS-level operators to simplified operators based on types in the V8 compiler."
+  },
+  "imports": {
+    "metadata": {
+      "language": "cpp",
+      "purpose": "Includes necessary header files for compiler-specific features and graph reduction."
+    },
+    "code": "#include \"src/base/compiler-specific.h\"\n#include \"src/compiler/graph-reducer.h\""
+  },
+  "classes": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "JSTypedLowering",
+        "extends": "AdvancedReducer",
+        "about": "Lowers JS-level operators to simplified operators based on types.",
+        "attributes": [
+          {
+            "name": "jsgraph_",
+            "type": "JSGraph*",
+            "access": "private",
+            "purpose": "Pointer to the JSGraph instance."
+          },
+          {
+            "name": "broker_",
+            "type": "JSHeapBroker*",
+            "access": "private",
+            "purpose": "Pointer to the JSHeapBroker instance."
+          },
+          {
+            "name": "empty_string_type_",
+            "type": "Type",
+            "access": "private",
+            "purpose": "Represents the type of an empty string."
+          },
+          {
+            "name": "pointer_comparable_type_",
+            "type": "Type",
+            "access": "private",
+            "purpose": "Represents the type of something that can have a pointer comparison performed on it."
+          },
+          {
+            "name": "type_cache_",
+            "type": "TypeCache const*",
+            "access": "private",
+            "purpose": "Cache to store type information."
+          }
+        ],
+        "dependencies": [
+          "AdvancedReducer",
+          "Editor",
+          "JSGraph",
+          "JSHeapBroker",
+          "Zone",
+          "CommonOperatorBuilder",
+          "CompilationDependencies",
+          "JSOperatorBuilder",
+          "SimplifiedOperatorBuilder",
+          "TypeCache",
+          "Type",
+          "Factory",
+          "Isolate",
+          "TFGraph"
+        ]
+      },
+      "code": "class V8_EXPORT_PRIVATE JSTypedLowering final\n    : public NON_EXPORTED_BASE(AdvancedReducer) {\n public:\n  JSTypedLowering(Editor* editor, JSGraph* jsgraph, JSHeapBroker* broker,\n                  Zone* zone);\n  ~JSTypedLowering() final = default;\n\n  const char* reducer_name() const override { return \"JSTypedLowering\"; }\n\n  Reduction Reduce(Node* node) final;\n\n private:\n  friend class JSBinopReduction;\n\n  Reduction ReduceJSAdd(Node* node);\n  Reduction ReduceJSBitwiseNot(Node* node);\n  Reduction ReduceJSDecrement(Node* node);\n  Reduction ReduceJSIncrement(Node* node);\n  Reduction ReduceJSNegate(Node* node);\n  Reduction ReduceJSComparison(Node* node);\n  Reduction ReduceJSLoadNamed(Node* node);\n  Reduction ReduceJSHasInPrototypeChain(Node* node);\n  Reduction ReduceJSOrdinaryHasInstance(Node* node);\n  Reduction ReduceJSHasContextExtension(Node* node);\n  Reduction ReduceJSLoadContext(Node* node);\n  Reduction ReduceJSLoadScriptContext(Node* node);\n  Reduction ReduceJSStoreContext(Node* node);\n  Reduction ReduceJSStoreScriptContext(Node* node);\n  Reduction ReduceJSLoadModule(Node* node);\n  Reduction ReduceJSStoreModule(Node* node);\n  Reduction ReduceJSEqual(Node* node);\n  Reduction ReduceJSStrictEqual(Node* node);\n  Reduction ReduceJSToLength(Node* node);\n  Reduction ReduceJSToName(Node* node);\n  Reduction ReduceJSToNumberInput(Node* input);\n  Reduction ReduceJSToNumber(Node* node);\n  Reduction ReduceJSToBigInt(Node* node);\n  Reduction ReduceJSToBigIntConvertNumber(Node* node);\n  Reduction ReduceJSToNumeric(Node* node);\n  Reduction ReduceJSToStringInput(Node* input);\n  Reduction ReduceJSToString(Node* node);\n  Reduction ReduceJSToObject(Node* node);\n  Reduction ReduceJSConstructForwardVarargs(Node* node);\n  Reduction ReduceJSConstruct(Node* node);\n  Reduction ReduceJSCallForwardVarargs(Node* node);\n  Reduction ReduceJSCall(Node* node);\n  Reduction ReduceJSForInNext(Node* node);\n  Reduction ReduceJSForInPrepare(Node* node);\n  Reduction ReduceJSLoadMessage(Node* node);\n  Reduction ReduceJSStoreMessage(Node* node);\n  Reduction ReduceJSGeneratorStore(Node* node);\n  Reduction ReduceJSGeneratorRestoreContinuation(Node* node);\n  Reduction ReduceJSGeneratorRestoreContext(Node* node);\n  Reduction ReduceJSGeneratorRestoreRegister(Node* node);\n  Reduction ReduceJSGeneratorRestoreInputOrDebugPos(Node* node);\n  Reduction ReduceNumberBinop(Node* node);\n  Reduction ReduceInt32Binop(Node* node);\n  Reduction ReduceUI32Shift(Node* node, Signedness signedness);\n  Reduction ReduceObjectIsArray(Node* node);\n  Reduction ReduceJSParseInt(Node* node);\n  Reduction ReduceJSResolvePromise(Node* node);\n\n  // Helper for ReduceJSLoadModule and ReduceJSStoreModule.\n  Node* BuildGetModuleCell(Node* node);\n\n  // Helpers for ReduceJSAdd.\n  Reduction GenerateStringAddition(Node* node, Node* left, Node* right,\n                                   Node* context, Node* frame_state,\n                                   Node** effect, Node** control,\n                                   bool should_create_cons_string);\n  Node* UnwrapStringWrapper(Node* string_or_wrapper, Node** effect,\n                            Node** control);\n\n  Factory* factory() const;\n  TFGraph* graph() const;\n  JSGraph* jsgraph() const { return jsgraph_; }\n  JSHeapBroker* broker() const { return broker_; }\n  CompilationDependencies* dependencies() const;\n  Isolate* isolate() const;\n  JSOperatorBuilder* javascript() const;\n  CommonOperatorBuilder* common() const;\n  SimplifiedOperatorBuilder* simplified() const;\n\n  JSGraph* jsgraph_;\n  JSHeapBroker* broker_;\n  Type empty_string_type_;\n  Type pointer_comparable_type_;\n  TypeCache const* type_cache_;\n};"
+    }
+  ],
+  "dependencies": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "AdvancedReducer",
+        "about": "Base class for advanced reducers in the compiler."
+      },
+      "code": "class AdvancedReducer {};",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "Editor",
+        "about": "Editor class used for graph manipulation."
+      },
+      "code": "class Editor {};",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "JSGraph",
+        "about": "Represents the JavaScript graph."
+      },
+      "code": "class JSGraph {};",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "JSHeapBroker",
+        "about": "Provides access to the JavaScript heap."
+      },
+      "code": "class JSHeapBroker {};",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "Zone",
+        "about": "Memory management zone."
+      },
+      "code": "class Zone {};",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "CommonOperatorBuilder",
+        "about": "Helper class for building common operators."
+      },
+      "code": "class CommonOperatorBuilder {};",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "CompilationDependencies",
+        "about": "Handles compilation dependencies."
+      },
+      "code": "class CompilationDependencies {};",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "JSOperatorBuilder",
+        "about": "Helper class for building JavaScript operators."
+      },
+      "code": "class JSOperatorBuilder {};",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "SimplifiedOperatorBuilder",
+        "about": "Helper class for building simplified operators."
+      },
+      "code": "class SimplifiedOperatorBuilder {};",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "TypeCache",
+        "about": "Cache for type information."
+      },
+      "code": "class TypeCache {};",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "Type",
+        "about": "Represents a type."
+      },
+      "code": "class Type {};",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "Factory",
+        "about": "Factory class for creating objects."
+      },
+      "code": "class Factory {};",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "Isolate",
+        "about": "Represents an isolated instance of the V8 JavaScript engine."
+      },
+      "code": "class Isolate {};",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "TFGraph",
+        "about": "Represents the TurboFan graph."
+      },
+      "code": "class TFGraph {};",
+      "type": "class"
+    }
+  ],
+  "file_path": "/home/kathirks_gc/v8_go/archive/codebase/src/compiler/js-typed-lowering.h"
+}

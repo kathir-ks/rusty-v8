@@ -1,0 +1,160 @@
+{
+  "file_path": "/home/kathirks_gc/v8_go/codebase/src/zone/compressed-zone-ptr.h",
+  "imports": [
+    "<type_traits>",
+    "src/base/logging.h",
+    "src/common/globals.h",
+    "src/zone/zone-compression.h"
+  ],
+  "classes": [
+    {
+      "name": "CompressedZonePtr",
+      "properties": [
+        "uint32_t compressed_value_"
+      ],
+      "methods": [
+        {
+          "name": "CompressedZonePtr",
+          "parameters": [],
+          "return_type": "CompressedZonePtr",
+          "logic": "Default constructor. Initializes with default value (compressed_value_ = 0)."
+        },
+        {
+          "name": "CompressedZonePtr",
+          "parameters": [
+            "std::nullptr_t"
+          ],
+          "return_type": "CompressedZonePtr",
+          "logic": "Constructor taking a nullptr. Delegates to the default constructor."
+        },
+        {
+          "name": "CompressedZonePtr",
+          "parameters": [
+            "T* value"
+          ],
+          "return_type": "CompressedZonePtr",
+          "logic": "Constructor taking a pointer to T. Compresses the pointer and assigns it to compressed_value_."
+        },
+        {
+          "name": "CompressedZonePtr",
+          "parameters": [
+            "const CompressedZonePtr& other"
+          ],
+          "return_type": "CompressedZonePtr",
+          "logic": "Deleted copy constructor."
+        },
+        {
+          "name": "CompressedZonePtr",
+          "parameters": [
+            "CompressedZonePtr&&"
+          ],
+          "return_type": "CompressedZonePtr",
+          "logic": "Deleted move constructor."
+        },
+        {
+          "name": "operator=",
+          "parameters": [
+            "const CompressedZonePtr& other"
+          ],
+          "return_type": "CompressedZonePtr&",
+          "logic": "Assignment operator from another CompressedZonePtr. Copies the compressed value from the other pointer. Includes a check to ensure both pointers belong to the same memory zone. "
+        },
+        {
+          "name": "operator=",
+          "parameters": [
+            "CompressedZonePtr&& other"
+          ],
+          "return_type": "CompressedZonePtr&",
+          "logic": "Deleted move assignment operator."
+        },
+        {
+          "name": "operator=",
+          "parameters": [
+            "T* value"
+          ],
+          "return_type": "CompressedZonePtr&",
+          "logic": "Assignment operator from a T* pointer. Compresses the pointer and stores the compressed value."
+        },
+        {
+          "name": "operator==",
+          "parameters": [
+            "std::nullptr_t"
+          ],
+          "return_type": "bool",
+          "logic": "Equality operator with nullptr. Checks if the compressed value is 0."
+        },
+        {
+          "name": "operator!=",
+          "parameters": [
+            "std::nullptr_t"
+          ],
+          "return_type": "bool",
+          "logic": "Inequality operator with nullptr. Checks if the compressed value is not 0."
+        },
+        {
+          "name": "operator==",
+          "parameters": [
+            "const CompressedZonePtr& other"
+          ],
+          "return_type": "bool",
+          "logic": "Equality operator with another CompressedZonePtr. Compares the compressed values."
+        },
+        {
+          "name": "operator!=",
+          "parameters": [
+            "const CompressedZonePtr& other"
+          ],
+          "return_type": "bool",
+          "logic": "Inequality operator with another CompressedZonePtr. Checks if the compressed values are different."
+        },
+        {
+          "name": "operator==",
+          "parameters": [
+            "T* other"
+          ],
+          "return_type": "bool",
+          "logic": "Equality operator with a T* pointer. Compresses the other pointer and compares the compressed values."
+        },
+        {
+          "name": "operator!=",
+          "parameters": [
+            "T* other"
+          ],
+          "return_type": "bool",
+          "logic": "Inequality operator with a T* pointer. Compresses the other pointer and checks if the compressed values are different."
+        },
+        {
+          "name": "operator*",
+          "parameters": [],
+          "return_type": "T&",
+          "logic": "Dereference operator. Decompresses the pointer and returns a reference to the pointed-to object."
+        },
+        {
+          "name": "operator->",
+          "parameters": [],
+          "return_type": "T*",
+          "logic": "Arrow operator. Decompresses the pointer and returns the raw pointer."
+        },
+        {
+          "name": "operator T*",
+          "parameters": [],
+          "return_type": "T*",
+          "logic": "Implicit conversion operator to T*. Decompresses the pointer and returns the raw pointer."
+        },
+        {
+          "name": "operator bool",
+          "parameters": [],
+          "return_type": "bool",
+          "logic": "Implicit conversion operator to bool. Returns true if the compressed value is not 0, false otherwise."
+        },
+        {
+          "name": "Decompress",
+          "parameters": [],
+          "return_type": "T*",
+          "logic": "Decompresses the compressed pointer using ZoneCompression::Decompress. Returns the raw pointer to T."
+        }
+      ]
+    }
+  ],
+  "functions": []
+}

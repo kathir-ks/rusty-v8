@@ -1,0 +1,101 @@
+{
+  "metadata": {
+    "path": "/home/kathirks_gc/v8_go/archive/codebase/src/snapshot/embedded/platform-embedded-file-writer-win.h",
+    "file_name": "platform-embedded-file-writer-win.h",
+    "language": "cpp",
+    "purpose": "Defines the PlatformEmbeddedFileWriterWin class, which is a platform-specific implementation for writing embedded snapshots on Windows. This class inherits from PlatformEmbeddedFileWriterBase and provides methods for handling data and code alignment, symbol declarations, and other file writing operations specific to the Windows platform and its executable format."
+  },
+  "imports": {
+    "metadata": {
+      "language": "cpp",
+      "purpose": "Includes necessary header files for macros and the base class definition."
+    },
+    "code": "#include \"src/base/macros.h\"\n#include \"src/snapshot/embedded/platform-embedded-file-writer-base.h\""
+  },
+  "classes": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "PlatformEmbeddedFileWriterWin",
+        "extends": "PlatformEmbeddedFileWriterBase",
+        "about": "Platform-specific file writer for Windows, used to generate embedded snapshots.",
+        "attributes": [
+          {
+            "name": "target_arch_",
+            "type": "const EmbeddedTargetArch",
+            "access": "private",
+            "purpose": "Stores the target architecture for which the snapshot is being created."
+          },
+          {
+            "name": "target_os_",
+            "type": "const EmbeddedTargetOs",
+            "access": "private",
+            "purpose": "Stores the target operating system (Windows in this case)."
+          }
+        ],
+        "dependencies": [
+          "PlatformEmbeddedFileWriterBase",
+          "EmbeddedTargetArch",
+          "EmbeddedTargetOs",
+          "DataDirective",
+          "EmbeddedData"
+        ]
+      },
+      "code": "class PlatformEmbeddedFileWriterWin : public PlatformEmbeddedFileWriterBase {\n public:\n  PlatformEmbeddedFileWriterWin(EmbeddedTargetArch target_arch,\n                                EmbeddedTargetOs target_os)\n      : target_arch_(target_arch), target_os_(target_os) {\n    USE(target_os_);\n    DCHECK_EQ(target_os_, EmbeddedTargetOs::kWin);\n  }\n\n  void SectionText() override;\n  void SectionRoData() override;\n\n  void AlignToCodeAlignment() override;\n  void AlignToDataAlignment() override;\n\n  void DeclareUint32(const char* name, uint32_t value) override;\n\n  void DeclareSymbolGlobal(const char* name) override;\n  void DeclareLabel(const char* name) override;\n\n  void SourceInfo(int fileid, const char* filename, int line) override;\n  void DeclareFunctionBegin(const char* name, uint32_t size) override;\n  void DeclareFunctionEnd(const char* name) override;\n\n  int HexLiteral(uint64_t value) override;\n\n  void Comment(const char* string) override;\n\n  void FilePrologue() override;\n  void DeclareExternalFilename(int fileid, const char* filename) override;\n  void FileEpilogue() override;\n\n  int IndentedDataDirective(DataDirective directive) override;\n\n  DataDirective ByteChunkDataDirective() const override;\n  int WriteByteChunk(const uint8_t* data) override;\n\n  void StartPdataSection();\n  void EndPdataSection();\n  void StartXdataSection();\n  void EndXdataSection();\n  void DeclareExternalFunction(const char* name);\n\n  // Emits an RVA (address relative to the module load address) specified as an\n  // offset from a given symbol.\n  void DeclareRvaToSymbol(const char* name, uint64_t offset = 0);\n\n  void MaybeEmitUnwindData(const char* unwind_info_symbol,\n                           const char* embedded_blob_data_symbol,\n                           const EmbeddedData* blob,\n                           const void* unwind_infos) override;\n\n private:\n  const char* DirectiveAsString(DataDirective directive);\n\n private:\n  const EmbeddedTargetArch target_arch_;\n  const EmbeddedTargetOs target_os_;\n};"
+    }
+  ],
+  "dependencies": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "PlatformEmbeddedFileWriterBase",
+        "about": "Abstract base class for platform-specific embedded file writers."
+      },
+      "code": "class PlatformEmbeddedFileWriterBase {};",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "enum",
+        "name": "EmbeddedTargetArch",
+        "about": "Enum representing the target architecture."
+      },
+      "code": "enum class EmbeddedTargetArch {};",
+      "type": "interface"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "enum",
+        "name": "EmbeddedTargetOs",
+        "about": "Enum representing the target operating system."
+      },
+      "code": "enum class EmbeddedTargetOs { kWin };",
+      "type": "interface"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "enum",
+        "name": "DataDirective",
+        "about": "Enum for data directives."
+      },
+      "code": "enum class DataDirective {};",
+      "type": "interface"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "EmbeddedData",
+        "about": "Represents embedded data."
+      },
+      "code": "class EmbeddedData {};",
+      "type": "class"
+    }
+  ],
+  "file_path": "/home/kathirks_gc/v8_go/archive/codebase/src/snapshot/embedded/platform-embedded-file-writer-win.h"
+}

@@ -1,0 +1,322 @@
+{
+  "file_path": "/home/kathirks_gc/v8_go/codebase/include/cppgc/visitor.h",
+  "imports": [
+    "<type_traits>",
+    "cppgc/custom-space.h",
+    "cppgc/ephemeron-pair.h",
+    "cppgc/garbage-collected.h",
+    "cppgc/internal/logging.h",
+    "cppgc/internal/member-storage.h",
+    "cppgc/internal/pointer-policies.h",
+    "cppgc/liveness-broker.h",
+    "cppgc/member.h",
+    "cppgc/sentinel-pointer.h",
+    "cppgc/source-location.h",
+    "cppgc/trace-trait.h",
+    "cppgc/type-traits.h"
+  ],
+  "classes": [
+    {
+      "name": "Visitor",
+      "properties": [],
+      "methods": [
+        {
+          "name": "Visitor",
+          "parameters": [
+            "Key"
+          ],
+          "return_type": "explicit",
+          "logic": "Constructor for the Visitor class. Takes a Key object to ensure controlled instantiation."
+        },
+        {
+          "name": "~Visitor",
+          "parameters": [],
+          "return_type": "virtual",
+          "logic": "Virtual destructor for the Visitor class."
+        },
+        {
+          "name": "Trace",
+          "parameters": [
+            "const Member<T>& member"
+          ],
+          "return_type": "void",
+          "logic": "Traces a Member object. It gets the raw pointer from the Member, checks if it's a sentinel, and then calls TraceImpl to perform the actual tracing."
+        },
+        {
+          "name": "Trace",
+          "parameters": [
+            "const WeakMember<T>& weak_member"
+          ],
+          "return_type": "void",
+          "logic": "Traces a WeakMember object. Gets the raw pointer, bails out if null, checks for a sentinel, and then calls VisitWeak to register the weak reference and a callback."
+        },
+        {
+          "name": "Trace",
+          "parameters": [
+            "const subtle::UncompressedMember<T>& member"
+          ],
+          "return_type": "void",
+          "logic": "Traces an UncompressedMember object. It gets the raw pointer from the Member, checks if it's a sentinel, and then calls TraceImpl to perform the actual tracing. Only available when CPPGC_POINTER_COMPRESSION is defined."
+        },
+        {
+          "name": "TraceMultiple",
+          "parameters": [
+            "const subtle::UncompressedMember<T>* start",
+            "size_t len"
+          ],
+          "return_type": "void",
+          "logic": "Traces multiple UncompressedMember objects. Calls VisitMultipleUncompressedMember with start, length, and a trace descriptor callback."
+        },
+        {
+          "name": "TraceMultiple",
+          "parameters": [
+            "const Member<T>* start",
+            "size_t len"
+          ],
+          "return_type": "void",
+          "logic": "Traces multiple Member objects, assuming they are CompressedMembers. Calls VisitMultipleCompressedMember with start, length, and a trace descriptor callback. Only active when CPPGC_POINTER_COMPRESSION is defined."
+        },
+        {
+          "name": "Trace",
+          "parameters": [
+            "const T& object"
+          ],
+          "return_type": "void",
+          "logic": "Traces an inlined object that is not itself allocated but has a Trace() method. Calls the Trace method of the object's TraceTrait."
+        },
+        {
+          "name": "TraceMultiple",
+          "parameters": [
+            "const T* start",
+            "size_t len"
+          ],
+          "return_type": "void",
+          "logic": "Traces multiple inlined objects. Iterates through the objects and calls the Trace method of each object's TraceTrait."
+        },
+        {
+          "name": "RegisterWeakCallbackMethod",
+          "parameters": [
+            "const T* object"
+          ],
+          "return_type": "void",
+          "logic": "Registers a weak callback method on the given object. Uses a WeakCallbackMethodDelegate to invoke the member method."
+        },
+        {
+          "name": "Trace",
+          "parameters": [
+            "const EphemeronPair<K, V>& ephemeron_pair"
+          ],
+          "return_type": "void",
+          "logic": "Traces an EphemeronPair. Traces the key and value using TraceEphemeron and registers a weak callback to clear the value if the key is dead."
+        },
+        {
+          "name": "TraceEphemeron",
+          "parameters": [
+            "const WeakMember<KeyType>& weak_member_key",
+            "const Member<ValueType>* member_value"
+          ],
+          "return_type": "void",
+          "logic": "Traces a single ephemeron with the key as a WeakMember and the value as a Member. Calls VisitEphemeron to handle the actual ephemeron tracing."
+        },
+        {
+          "name": "TraceEphemeron",
+          "parameters": [
+            "const WeakMember<KeyType>& weak_member_key",
+            "const ValueType* value"
+          ],
+          "return_type": "void",
+          "logic": "Traces a single ephemeron with the key as a WeakMember and the value as a raw pointer. The value type cannot be garbage collected. Calls VisitEphemeron to handle the actual ephemeron tracing."
+        },
+        {
+          "name": "TraceStrongly",
+          "parameters": [
+            "const WeakMember<T>& weak_member"
+          ],
+          "return_type": "void",
+          "logic": "Traces a WeakMember object strongly, effectively promoting it during this tracing phase."
+        },
+        {
+          "name": "TraceStrongContainer",
+          "parameters": [
+            "const T* object"
+          ],
+          "return_type": "void",
+          "logic": "Traces a container object strongly."
+        },
+        {
+          "name": "TraceWeakContainer",
+          "parameters": [
+            "const T* object",
+            "WeakCallback callback",
+            "const void* callback_data"
+          ],
+          "return_type": "void",
+          "logic": "Traces a container object weakly and registers a weak callback to be invoked when the object is collected."
+        },
+        {
+          "name": "RegisterMovableReference",
+          "parameters": [
+            "const T** slot"
+          ],
+          "return_type": "void",
+          "logic": "Registers a memory location (slot) containing a reference to an object on a compactable space, allowing the GC to update the reference during compaction."
+        },
+        {
+          "name": "RegisterWeakCallback",
+          "parameters": [
+            "WeakCallback callback",
+            "const void* data"
+          ],
+          "return_type": "virtual void",
+          "logic": "Registers a weak callback to be invoked during garbage collection. This is a virtual method, so derived classes can implement custom registration logic."
+        },
+        {
+          "name": "DeferTraceToMutatorThreadIfConcurrent",
+          "parameters": [
+            "const void* parameter",
+            "TraceCallback callback",
+            "size_t deferred_size"
+          ],
+          "return_type": "virtual V8_WARN_UNUSED_RESULT bool",
+          "logic": "Defers tracing of an object from a concurrent thread to the mutator thread, if it's currently being traced on a concurrent thread. Default implementation returns false."
+        },
+        {
+          "name": "Visit",
+          "parameters": [
+            "const void* self",
+            "TraceDescriptor"
+          ],
+          "return_type": "virtual void",
+          "logic": "Virtual method that performs the actual object visiting/tracing logic.  This method is intended to be overridden by derived classes."
+        },
+        {
+          "name": "VisitWeak",
+          "parameters": [
+            "const void* self",
+            "TraceDescriptor",
+            "WeakCallback",
+            "const void* weak_member"
+          ],
+          "return_type": "virtual void",
+          "logic": "Virtual method that handles visiting weak references.  This method is intended to be overridden by derived classes."
+        },
+        {
+          "name": "VisitEphemeron",
+          "parameters": [
+            "const void* key",
+            "const void* value",
+            "TraceDescriptor value_desc"
+          ],
+          "return_type": "virtual void",
+          "logic": "Virtual method to visit ephemeron objects. This method is intended to be overridden by derived classes."
+        },
+        {
+          "name": "VisitWeakContainer",
+          "parameters": [
+            "const void* self",
+            "TraceDescriptor strong_desc",
+            "TraceDescriptor weak_desc",
+            "WeakCallback callback",
+            "const void* data"
+          ],
+          "return_type": "virtual void",
+          "logic": "Virtual method to visit weak containers.  This method is intended to be overridden by derived classes."
+        },
+        {
+          "name": "HandleMovableReference",
+          "parameters": [
+            "const void**"
+          ],
+          "return_type": "virtual void",
+          "logic": "Virtual method that handles movable references. This method is intended to be overridden by derived classes."
+        },
+        {
+          "name": "VisitMultipleUncompressedMember",
+          "parameters": [
+            "const void* start",
+            "size_t len",
+            "TraceDescriptorCallback get_trace_descriptor"
+          ],
+          "return_type": "virtual void",
+          "logic": "Visits multiple uncompressed members, delegating to Visit() for each member."
+        },
+        {
+          "name": "VisitMultipleCompressedMember",
+          "parameters": [
+            "const void* start",
+            "size_t len",
+            "TraceDescriptorCallback get_trace_descriptor"
+          ],
+          "return_type": "virtual void",
+          "logic": "Visits multiple compressed members, delegating to Visit() for each member. Only available when CPPGC_POINTER_COMPRESSION is defined."
+        }
+      ]
+    },
+    {
+      "name": "RootVisitor",
+      "properties": [],
+      "methods": [
+        {
+          "name": "RootVisitor",
+          "parameters": [
+            "Visitor::Key"
+          ],
+          "return_type": "explicit",
+          "logic": "Constructor for the RootVisitor class.  Takes a Visitor::Key object to control instantiation."
+        },
+        {
+          "name": "~RootVisitor",
+          "parameters": [],
+          "return_type": "virtual",
+          "logic": "Virtual destructor for the RootVisitor class."
+        },
+        {
+          "name": "Trace",
+          "parameters": [
+            "const AnyStrongPersistentType& p"
+          ],
+          "return_type": "void",
+          "logic": "Traces a strong persistent object, calling VisitRoot to handle the actual tracing."
+        },
+        {
+          "name": "Trace",
+          "parameters": [
+            "const AnyWeakPersistentType& p"
+          ],
+          "return_type": "void",
+          "logic": "Traces a weak persistent object, calling VisitWeakRoot to handle the actual tracing."
+        },
+        {
+          "name": "VisitRoot",
+          "parameters": [
+            "const void*",
+            "TraceDescriptor",
+            "const SourceLocation&"
+          ],
+          "return_type": "virtual void",
+          "logic": "Virtual method to visit root objects. This method is intended to be overridden by derived classes."
+        },
+        {
+          "name": "VisitWeakRoot",
+          "parameters": [
+            "const void* self",
+            "TraceDescriptor",
+            "WeakCallback",
+            "const void* weak_root",
+            "const SourceLocation&"
+          ],
+          "return_type": "virtual void",
+          "logic": "Virtual method to visit weak root objects.  This method is intended to be overridden by derived classes."
+        }
+      ]
+    },
+    {
+      "name": "Visitor::Key",
+      "properties": [],
+      "methods": [],
+      "logic": "Private class to control the instantiation of the Visitor class."
+    }
+  ],
+  "functions": [],
+  "enums": []
+}

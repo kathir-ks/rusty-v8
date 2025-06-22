@@ -1,0 +1,177 @@
+{
+  "metadata": {
+    "path": "/home/kathirks_gc/v8_go/archive/codebase/src/torque/ls/torque-language-server.cc",
+    "file_name": "torque-language-server.cc",
+    "language": "cpp",
+    "purpose": "Main file for the Torque Language Server, responsible for initializing the server and handling messages."
+  },
+  "imports": {
+    "metadata": {
+      "language": "cpp",
+      "purpose": "Includes necessary headers for file operations, input/output, string manipulation, and Torque-specific components."
+    },
+    "code": "#include <fstream>\n#include <iostream>\n#include <sstream>\n\n#include \"src/torque/ls/globals.h\"\n#include \"src/torque/ls/message-handler.h\"\n#include \"src/torque/ls/message-pipe.h\"\n#include \"src/torque/server-data.h\"\n#include \"src/torque/source-positions.h\""
+  },
+  "functions": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "function",
+        "name": "WrappedMain",
+        "parent": "ls",
+        "about": "The main function of the language server, responsible for initializing global state and handling messages in a loop.",
+        "logic": "Initializes global Torque state using RAII scopes, parses command-line arguments for logging, and enters a loop to read and handle JSON messages.  It reads messages using ReadMessage, handles them using HandleMessage, and sends the response using WriteMessage. The loop runs indefinitely.",
+        "parameters": [
+          {
+            "name": "argc",
+            "type": "int",
+            "purpose": "The number of command-line arguments."
+          },
+          {
+            "name": "argv",
+            "type": "const char**",
+            "purpose": "An array of command-line arguments."
+          }
+        ],
+        "return": {
+          "type": "int",
+          "description": "Returns an integer status code."
+        },
+        "dependencies": [
+          "Logger",
+          "TorqueFileList",
+          "LanguageServerData",
+          "SourceFileMap",
+          "DiagnosticsFiles",
+          "ReadMessage",
+          "HandleMessage",
+          "WriteMessage",
+          "JsonValue"
+        ]
+      },
+      "code": "int WrappedMain(int argc, const char** argv) {\n  Logger::Scope log_scope;\n  TorqueFileList::Scope files_scope;\n  LanguageServerData::Scope server_data_scope;\n  SourceFileMap::Scope source_file_map_scope(\"\");\n  DiagnosticsFiles::Scope diagnostics_files_scope;\n\n  for (int i = 1; i < argc; ++i) {\n    if (!strcmp(\"-l\", argv[i])) {\n      Logger::Enable(argv[++i]);\n      break;\n    }\n  }\n\n  while (true) {\n    JsonValue message = ReadMessage();\n\n    // TODO(szuend): We should probably offload the actual message handling\n    //               (even the parsing) to a background thread, so we can\n    //               keep receiving messages. We might also receive\n    //               $/cancelRequests or contet updates, that require restarts.\n    HandleMessage(std::move(message), &WriteMessage);\n  }\n}"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "function",
+        "name": "main",
+        "about": "The entry point of the program, which calls the WrappedMain function within the v8::internal::torque::ls namespace.",
+        "logic": "Calls the WrappedMain function, passing command-line arguments.",
+        "parameters": [
+          {
+            "name": "argc",
+            "type": "int",
+            "purpose": "The number of command-line arguments."
+          },
+          {
+            "name": "argv",
+            "type": "const char**",
+            "purpose": "An array of command-line arguments."
+          }
+        ],
+        "return": {
+          "type": "int",
+          "description": "Returns the integer status code returned by WrappedMain."
+        },
+        "dependencies": [
+          "WrappedMain"
+        ]
+      },
+      "code": "int main(int argc, const char** argv) {\n  return v8::internal::torque::ls::WrappedMain(argc, argv);\n}"
+    }
+  ],
+  "dependencies": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "Logger",
+        "about": "Provides logging functionality for the language server."
+      },
+      "code": "class Logger {\n                public:\n                    class Scope {};\n                    static void Enable(const char* filename);\n                };",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "TorqueFileList",
+        "about": "Manages the list of Torque files being processed."
+      },
+      "code": "class TorqueFileList {\n                public:\n                    class Scope {};\n                };",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "LanguageServerData",
+        "about": "Stores data related to the language server's state."
+      },
+      "code": "class LanguageServerData {\n                public:\n                    class Scope {};\n                };",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "SourceFileMap",
+        "about": "Maps source file paths to their content."
+      },
+      "code": "class SourceFileMap {\n                public:\n                    class Scope {};\n                };",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "DiagnosticsFiles",
+        "about": "Manages diagnostic information for source files."
+      },
+      "code": "class DiagnosticsFiles {\n                public:\n                    class Scope {};\n                };",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "function",
+        "name": "ReadMessage",
+        "about": "Reads a JSON message from the input stream."
+      },
+      "code": "JsonValue ReadMessage();",
+      "type": "func"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "function",
+        "name": "HandleMessage",
+        "about": "Handles a JSON message and performs the appropriate action."
+      },
+      "code": "void HandleMessage(JsonValue message, void (*WriteMessage)(JsonValue));",
+      "type": "func"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "function",
+        "name": "WriteMessage",
+        "about": "Writes a JSON message to the output stream."
+      },
+      "code": "void WriteMessage(JsonValue message);",
+      "type": "func"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "JsonValue",
+        "about": "Represents a JSON value."
+      },
+      "code": "class JsonValue {};",
+      "type": "class"
+    }
+  ],
+  "file_path": "/home/kathirks_gc/v8_go/archive/codebase/src/torque/ls/torque-language-server.cc"
+}

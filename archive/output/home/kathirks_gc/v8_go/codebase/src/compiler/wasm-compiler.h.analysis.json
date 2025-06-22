@@ -1,0 +1,393 @@
+{
+  "file_path": "/home/kathirks_gc/v8_go/codebase/src/compiler/wasm-compiler.h",
+  "imports": [
+    "<memory>",
+    "<utility>",
+    "src/base/small-vector.h",
+    "src/codegen/compiler.h",
+    "src/compiler/wasm-compiler-definitions.h",
+    "src/runtime/runtime.h",
+    "src/wasm/function-body-decoder.h",
+    "src/wasm/function-compiler.h",
+    "src/wasm/module-instantiate.h",
+    "src/wasm/wasm-features.h",
+    "src/wasm/wasm-module.h",
+    "src/wasm/wasm-opcodes.h",
+    "src/wasm/wasm-result.h",
+    "src/zone/zone.h"
+  ],
+  "classes": [
+    {
+      "name": "WasmLoopInfo",
+      "properties": [
+        "header",
+        "nesting_depth",
+        "can_be_innermost"
+      ],
+      "methods": [
+        {
+          "name": "WasmLoopInfo",
+          "parameters": [
+            "Node* header",
+            "uint32_t nesting_depth",
+            "bool can_be_innermost"
+          ],
+          "return_type": "WasmLoopInfo",
+          "logic": "Constructor for the WasmLoopInfo struct. Initializes the header, nesting_depth, and can_be_innermost members."
+        }
+      ]
+    },
+    {
+      "name": "WasmCompilationData",
+      "properties": [
+        "func_body",
+        "wire_bytes_storage",
+        "node_origins",
+        "loop_infos",
+        "assumptions",
+        "source_positions",
+        "func_index"
+      ],
+      "methods": [
+        {
+          "name": "WasmCompilationData",
+          "parameters": [
+            "const wasm::FunctionBody& func_body"
+          ],
+          "return_type": "WasmCompilationData",
+          "logic": "Constructor for the WasmCompilationData struct.  Initializes the func_body member."
+        },
+        {
+          "name": "body_size",
+          "parameters": [],
+          "return_type": "size_t",
+          "logic": "Returns the size of the function body in bytes."
+        }
+      ]
+    },
+    {
+      "name": "WasmGraphBuilder",
+      "properties": [
+        "zone_",
+        "mcgraph_",
+        "env_",
+        "enabled_features_",
+        "parameters_",
+        "stack_check_code_node_",
+        "stack_check_call_operator_",
+        "has_simd_",
+        "needs_stack_check_",
+        "function_sig_",
+        "wrapper_sig_",
+        "decorator_",
+        "source_position_table_",
+        "inlining_id_",
+        "parameter_mode_",
+        "isolate_",
+        "instance_data_node_",
+        "null_check_strategy_",
+        "cached_memory_index_",
+        "gasm_"
+      ],
+      "methods": [
+        {
+          "name": "WasmGraphBuilder",
+          "parameters": [
+            "wasm::CompilationEnv* env",
+            "Zone* zone",
+            "MachineGraph* mcgraph",
+            "const wasm::FunctionSig* sig",
+            "compiler::SourcePositionTable* spt",
+            "ParameterMode parameter_mode",
+            "Isolate* isolate",
+            "wasm::WasmEnabledFeatures enabled_features",
+            "const wasm::CanonicalSig* wrapper_sig"
+          ],
+          "return_type": "WasmGraphBuilder",
+          "logic": "Constructor for the WasmGraphBuilder class. Initializes member variables for building the TurboFan graph."
+        },
+        {
+          "name": "~WasmGraphBuilder",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Destructor for the WasmGraphBuilder class."
+        },
+        {
+          "name": "TryWasmInlining",
+          "parameters": [
+            "int fct_index",
+            "wasm::NativeModule* native_module",
+            "int inlining_id"
+          ],
+          "return_type": "bool",
+          "logic": "Attempts to inline a Wasm function."
+        },
+        {
+          "name": "Start",
+          "parameters": [
+            "unsigned params"
+          ],
+          "return_type": "void",
+          "logic": "Initializes the Wasm graph building process. Sets up parameters for the function."
+        },
+        {
+          "name": "Param",
+          "parameters": [
+            "int index",
+            "const char* debug_name"
+          ],
+          "return_type": "Node*",
+          "logic": "Retrieves a parameter node from the graph."
+        },
+        {
+          "name": "TerminateThrow",
+          "parameters": [
+            "Node* effect",
+            "Node* control"
+          ],
+          "return_type": "void",
+          "logic": "Terminates a throw block in the graph."
+        },
+        {
+          "name": "Int32Constant",
+          "parameters": [
+            "int32_t value"
+          ],
+          "return_type": "Node*",
+          "logic": "Creates a constant node with an int32 value."
+        },
+        {
+          "name": "Return",
+          "parameters": [
+            "base::Vector<Node*> nodes"
+          ],
+          "return_type": "Node*",
+          "logic": "Creates a return node in the graph, representing the return of the function."
+        },
+        {
+          "name": "Return",
+          "parameters": [
+            "Node* fst",
+            "Nodes*... more"
+          ],
+          "return_type": "Node*",
+          "logic": "Variadic overload of Return to create the array and pass to the other return function."
+        },
+        {
+          "name": "effect",
+          "parameters": [],
+          "return_type": "Node*",
+          "logic": "Returns the current effect node."
+        },
+        {
+          "name": "control",
+          "parameters": [],
+          "return_type": "Node*",
+          "logic": "Returns the current control node."
+        },
+        {
+          "name": "SetEffect",
+          "parameters": [
+            "Node* node"
+          ],
+          "return_type": "Node*",
+          "logic": "Sets the current effect node."
+        },
+        {
+          "name": "SetControl",
+          "parameters": [
+            "Node* node"
+          ],
+          "return_type": "Node*",
+          "logic": "Sets the current control node."
+        },
+        {
+          "name": "SetEffectControl",
+          "parameters": [
+            "Node* effect",
+            "Node* control"
+          ],
+          "return_type": "void",
+          "logic": "Sets the current effect and control nodes."
+        },
+        {
+          "name": "SetEffectControl",
+          "parameters": [
+            "Node* effect_and_control"
+          ],
+          "return_type": "Node*",
+          "logic": "Sets both the effect and control nodes to the provided node."
+        },
+        {
+          "name": "SetType",
+          "parameters": [
+            "Node* node",
+            "wasm::ValueType type"
+          ],
+          "return_type": "Node*",
+          "logic": "Sets the type of a node."
+        },
+        {
+          "name": "LowerInt64",
+          "parameters": [
+            "Signature<MachineRepresentation>* sig"
+          ],
+          "return_type": "void",
+          "logic": "Lowers 64-bit integer operations using a given signature."
+        },
+        {
+          "name": "LowerInt64",
+          "parameters": [
+            "wasm::CallOrigin origin"
+          ],
+          "return_type": "void",
+          "logic": "Lowers 64-bit integer operations using call origin."
+        },
+        {
+          "name": "SetSourcePosition",
+          "parameters": [
+            "Node* node",
+            "wasm::WasmCodePosition position"
+          ],
+          "return_type": "void",
+          "logic": "Sets the source position for a given node."
+        },
+        {
+          "name": "IsNull",
+          "parameters": [
+            "Node* object",
+            "wasm::ValueType type"
+          ],
+          "return_type": "Node*",
+          "logic": "Checks if an object is null."
+        },
+        {
+          "name": "TypeGuard",
+          "parameters": [
+            "Node* value",
+            "wasm::ValueType type"
+          ],
+          "return_type": "Node*",
+          "logic": "Adds a type guard to a node to ensure it matches the expected type."
+        },
+        {
+          "name": "has_simd",
+          "parameters": [],
+          "return_type": "bool",
+          "logic": "Returns whether SIMD is enabled."
+        },
+        {
+          "name": "mcgraph",
+          "parameters": [],
+          "return_type": "MachineGraph*",
+          "logic": "Returns the machine graph being built."
+        },
+        {
+          "name": "graph",
+          "parameters": [],
+          "return_type": "TFGraph*",
+          "logic": "Returns the turbofan graph being built."
+        },
+        {
+          "name": "graph_zone",
+          "parameters": [],
+          "return_type": "Zone*",
+          "logic": "Returns the graph's zone."
+        }
+      ]
+    }
+  ],
+  "functions": [
+    {
+      "name": "CompileWasmImportCallWrapper",
+      "parameters": [
+        "wasm::ImportCallKind",
+        "const wasm::CanonicalSig*",
+        "bool source_positions",
+        "int expected_arity",
+        "wasm::Suspend"
+      ],
+      "return_type": "wasm::WasmCompilationResult",
+      "logic": "Compiles a wrapper function that allows Wasm code to call imported functions."
+    },
+    {
+      "name": "CompileWasmCapiCallWrapper",
+      "parameters": [
+        "const wasm::CanonicalSig*"
+      ],
+      "return_type": "wasm::WasmCompilationResult",
+      "logic": "Compiles a wrapper function that allows Wasm code to call C-API functions."
+    },
+    {
+      "name": "IsFastCallSupportedSignature",
+      "parameters": [
+        "const v8::CFunctionInfo*"
+      ],
+      "return_type": "bool",
+      "logic": "Checks if a signature is supported for fast calls."
+    },
+    {
+      "name": "CompileWasmJSFastCallWrapper",
+      "parameters": [
+        "const wasm::CanonicalSig*",
+        "DirectHandle<JSReceiver> callable"
+      ],
+      "return_type": "wasm::WasmCompilationResult",
+      "logic": "Compiles a wrapper to call a Fast API function from Wasm."
+    },
+    {
+      "name": "NewJSToWasmCompilationJob",
+      "parameters": [
+        "Isolate* isolate",
+        "const wasm::CanonicalSig* sig"
+      ],
+      "return_type": "std::unique_ptr<OptimizedCompilationJob>",
+      "logic": "Creates a new compilation job for compiling a JS-to-Wasm wrapper function."
+    },
+    {
+      "name": "CompileCWasmEntry",
+      "parameters": [
+        "Isolate*",
+        "const wasm::CanonicalSig*"
+      ],
+      "return_type": "Handle<Code>",
+      "logic": "Compiles a C++ entry point for Wasm, called from Execution::CallWasm."
+    },
+    {
+      "name": "BuildInlinedJSToWasmWrapper",
+      "parameters": [
+        "Zone* zone",
+        "MachineGraph* mcgraph",
+        "const wasm::CanonicalSig* signature",
+        "Isolate* isolate",
+        "compiler::SourcePositionTable* spt",
+        "Node* frame_state",
+        "bool set_in_wasm_flag"
+      ],
+      "return_type": "void",
+      "logic": "Builds an inlined JS to Wasm wrapper."
+    },
+    {
+      "name": "WasmAssemblerOptions",
+      "parameters": [],
+      "return_type": "AssemblerOptions",
+      "logic": "Returns the assembler options for Wasm code generation."
+    },
+    {
+      "name": "WasmStubAssemblerOptions",
+      "parameters": [],
+      "return_type": "AssemblerOptions",
+      "logic": "Returns the assembler options for Wasm stub code generation."
+    },
+    {
+      "name": "CreateMachineSignature",
+      "parameters": [
+        "Zone* zone",
+        "const Signature<T>* sig",
+        "wasm::CallOrigin origin"
+      ],
+      "return_type": "Signature<MachineRepresentation>*",
+      "logic": "Creates a machine signature from a generic signature."
+    }
+  ]
+}

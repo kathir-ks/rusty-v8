@@ -1,0 +1,456 @@
+{
+  "metadata": {
+    "path": "/home/kathirks_gc/v8_go/archive/codebase/src/bigint/vector-arithmetic.cc",
+    "file_name": "vector-arithmetic.cc",
+    "language": "cpp",
+    "purpose": "Implements arithmetic operations on digit vectors used for BigInts."
+  },
+  "imports": {
+    "metadata": {
+      "language": "cpp",
+      "purpose": "Includes necessary headers for BigInt arithmetic operations."
+    },
+    "code": "#include \"src/bigint/vector-arithmetic.h\"\n\n#include \"src/bigint/bigint-internal.h\"\n#include \"src/bigint/digit-arithmetic.h\""
+  },
+  "functions": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "function",
+        "name": "AddAndReturnOverflow",
+        "parent": "bigint",
+        "about": "Adds a digit vector X to another digit vector Z and returns the overflow.",
+        "logic": "Iterates through the digits of X and Z, adding them with carry.  Handles cases where X is shorter than Z. After adding X, propagates carry through remaining digits of Z. Normalizes X before processing.",
+        "parameters": [
+          {
+            "name": "Z",
+            "type": "RWDigits",
+            "purpose": "The digit vector to add to (modified in place)."
+          },
+          {
+            "name": "X",
+            "type": "Digits",
+            "purpose": "The digit vector to add."
+          }
+        ],
+        "return": {
+          "type": "digit_t",
+          "description": "The carry-out from the addition (0 or 1)."
+        },
+        "dependencies": [
+          "digit_add3",
+          "digit_add2",
+          "Digits::Normalize",
+          "Digits::len"
+        ]
+      },
+      "code": "digit_t AddAndReturnOverflow(RWDigits Z, Digits X) {\n  X.Normalize();\n  if (X.len() == 0) return 0;\n  digit_t carry = 0;\n  int i = 0;\n  for (; i < X.len(); i++) {\n    Z[i] = digit_add3(Z[i], X[i], carry, &carry);\n  }\n  for (; i < Z.len() && carry != 0; i++) {\n    Z[i] = digit_add2(Z[i], carry, &carry);\n  }\n  return carry;\n}"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "function",
+        "name": "SubAndReturnBorrow",
+        "parent": "bigint",
+        "about": "Subtracts a digit vector X from another digit vector Z and returns the borrow.",
+        "logic": "Iterates through the digits of X and Z, subtracting them with borrow. Handles cases where X is shorter than Z. After subtracting X, propagates borrow through remaining digits of Z. Normalizes X before processing.",
+        "parameters": [
+          {
+            "name": "Z",
+            "type": "RWDigits",
+            "purpose": "The digit vector to subtract from (modified in place)."
+          },
+          {
+            "name": "X",
+            "type": "Digits",
+            "purpose": "The digit vector to subtract."
+          }
+        ],
+        "return": {
+          "type": "digit_t",
+          "description": "The borrow-out from the subtraction (0 or 1)."
+        },
+        "dependencies": [
+          "digit_sub2",
+          "digit_sub",
+          "Digits::Normalize",
+          "Digits::len"
+        ]
+      },
+      "code": "digit_t SubAndReturnBorrow(RWDigits Z, Digits X) {\n  X.Normalize();\n  if (X.len() == 0) return 0;\n  digit_t borrow = 0;\n  int i = 0;\n  for (; i < X.len(); i++) {\n    Z[i] = digit_sub2(Z[i], X[i], borrow, &borrow);\n  }\n  for (; i < Z.len() && borrow != 0; i++) {\n    Z[i] = digit_sub(Z[i], borrow, &borrow);\n  }\n  return borrow;\n}"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "function",
+        "name": "Add",
+        "parent": "bigint",
+        "about": "Adds two digit vectors X and Y and stores the result in Z.",
+        "logic": "Adds the digits of X and Y with carry. Handles cases where X and Y have different lengths. If Z is longer than the sum of X and Y, the remaining digits of Z are set to the final carry value.",
+        "parameters": [
+          {
+            "name": "Z",
+            "type": "RWDigits",
+            "purpose": "The digit vector to store the result in (modified in place)."
+          },
+          {
+            "name": "X",
+            "type": "Digits",
+            "purpose": "The first digit vector to add."
+          },
+          {
+            "name": "Y",
+            "type": "Digits",
+            "purpose": "The second digit vector to add."
+          }
+        ],
+        "return": {
+          "type": "void",
+          "description": "No return value."
+        },
+        "dependencies": [
+          "digit_add3",
+          "digit_add2"
+        ]
+      },
+      "code": "void Add(RWDigits Z, Digits X, Digits Y) {\n  if (X.len() < Y.len()) {\n    return Add(Z, Y, X);\n  }\n  int i = 0;\n  digit_t carry = 0;\n  for (; i < Y.len(); i++) {\n    Z[i] = digit_add3(X[i], Y[i], carry, &carry);\n  }\n  for (; i < X.len(); i++) {\n    Z[i] = digit_add2(X[i], carry, &carry);\n  }\n  for (; i < Z.len(); i++) {\n    Z[i] = carry;\n    carry = 0;\n  }\n}"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "function",
+        "name": "Subtract",
+        "parent": "bigint",
+        "about": "Subtracts a digit vector Y from a digit vector X and stores the result in Z.",
+        "logic": "Subtracts the digits of Y from X with borrow. Assumes X is greater than or equal to Y. If Z is longer than X, the remaining digits of Z are set to zero.",
+        "parameters": [
+          {
+            "name": "Z",
+            "type": "RWDigits",
+            "purpose": "The digit vector to store the result in (modified in place)."
+          },
+          {
+            "name": "X",
+            "type": "Digits",
+            "purpose": "The digit vector to subtract from."
+          },
+          {
+            "name": "Y",
+            "type": "Digits",
+            "purpose": "The digit vector to subtract."
+          }
+        ],
+        "return": {
+          "type": "void",
+          "description": "No return value."
+        },
+        "dependencies": [
+          "digit_sub2",
+          "digit_sub",
+          "Digits::Normalize",
+          "DCHECK"
+        ]
+      },
+      "code": "void Subtract(RWDigits Z, Digits X, Digits Y) {\n  X.Normalize();\n  Y.Normalize();\n  DCHECK(X.len() >= Y.len());\n  int i = 0;\n  digit_t borrow = 0;\n  for (; i < Y.len(); i++) {\n    Z[i] = digit_sub2(X[i], Y[i], borrow, &borrow);\n  }\n  for (; i < X.len(); i++) {\n    Z[i] = digit_sub(X[i], borrow, &borrow);\n  }\n  DCHECK(borrow == 0);\n  for (; i < Z.len(); i++) Z[i] = 0;\n}"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "function",
+        "name": "AddAndReturnCarry",
+        "parent": "bigint",
+        "about": "Adds two digit vectors X and Y and returns the carry.",
+        "logic": "Adds the digits of X and Y with carry.  Calculates the carry but does not propagate it through the Z vector. Assumes Z, X are at least as long as Y.",
+        "parameters": [
+          {
+            "name": "Z",
+            "type": "RWDigits",
+            "purpose": "The digit vector to store the result in (modified in place)."
+          },
+          {
+            "name": "X",
+            "type": "Digits",
+            "purpose": "The first digit vector to add."
+          },
+          {
+            "name": "Y",
+            "type": "Digits",
+            "purpose": "The second digit vector to add."
+          }
+        ],
+        "return": {
+          "type": "digit_t",
+          "description": "The carry-out from the addition (0 or 1)."
+        },
+        "dependencies": [
+          "digit_add3",
+          "DCHECK"
+        ]
+      },
+      "code": "digit_t AddAndReturnCarry(RWDigits Z, Digits X, Digits Y) {\n  DCHECK(Z.len() >= Y.len() && X.len() >= Y.len());\n  digit_t carry = 0;\n  for (int i = 0; i < Y.len(); i++) {\n    Z[i] = digit_add3(X[i], Y[i], carry, &carry);\n  }\n  return carry;\n}"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "function",
+        "name": "SubtractAndReturnBorrow",
+        "parent": "bigint",
+        "about": "Subtracts a digit vector Y from a digit vector X and returns the borrow.",
+        "logic": "Subtracts the digits of Y from X with borrow. Calculates the borrow but does not propagate it. Assumes Z, X are at least as long as Y.",
+        "parameters": [
+          {
+            "name": "Z",
+            "type": "RWDigits",
+            "purpose": "The digit vector to store the result in (modified in place)."
+          },
+          {
+            "name": "X",
+            "type": "Digits",
+            "purpose": "The digit vector to subtract from."
+          },
+          {
+            "name": "Y",
+            "type": "Digits",
+            "purpose": "The digit vector to subtract."
+          }
+        ],
+        "return": {
+          "type": "digit_t",
+          "description": "The borrow-out from the subtraction (0 or 1)."
+        },
+        "dependencies": [
+          "digit_sub2",
+          "DCHECK"
+        ]
+      },
+      "code": "digit_t SubtractAndReturnBorrow(RWDigits Z, Digits X, Digits Y) {\n  DCHECK(Z.len() >= Y.len() && X.len() >= Y.len());\n  digit_t borrow = 0;\n  for (int i = 0; i < Y.len(); i++) {\n    Z[i] = digit_sub2(X[i], Y[i], borrow, &borrow);\n  }\n  return borrow;\n}"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "function",
+        "name": "AddSigned",
+        "parent": "bigint",
+        "about": "Adds two signed digit vectors X and Y and stores the result in Z.",
+        "logic": "If the signs are the same, adds the vectors. If the signs are different, subtracts the smaller vector from the larger vector. Returns the sign of the result.",
+        "parameters": [
+          {
+            "name": "Z",
+            "type": "RWDigits",
+            "purpose": "The digit vector to store the result in (modified in place)."
+          },
+          {
+            "name": "X",
+            "type": "Digits",
+            "purpose": "The first digit vector to add."
+          },
+          {
+            "name": "x_negative",
+            "type": "bool",
+            "purpose": "The sign of the first digit vector."
+          },
+          {
+            "name": "Y",
+            "type": "Digits",
+            "purpose": "The second digit vector to add."
+          },
+          {
+            "name": "y_negative",
+            "type": "bool",
+            "purpose": "The sign of the second digit vector."
+          }
+        ],
+        "return": {
+          "type": "bool",
+          "description": "The sign of the result."
+        },
+        "dependencies": [
+          "Add",
+          "Subtract",
+          "GreaterThanOrEqual"
+        ]
+      },
+      "code": "bool AddSigned(RWDigits Z, Digits X, bool x_negative, Digits Y,\n               bool y_negative) {\n  if (x_negative == y_negative) {\n    Add(Z, X, Y);\n    return x_negative;\n  }\n  if (GreaterThanOrEqual(X, Y)) {\n    Subtract(Z, X, Y);\n    return x_negative;\n  }\n  Subtract(Z, Y, X);\n  return !x_negative;\n}"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "function",
+        "name": "SubtractSigned",
+        "parent": "bigint",
+        "about": "Subtracts two signed digit vectors Y from X and stores the result in Z.",
+        "logic": "If the signs are different, adds the vectors. If the signs are the same, subtracts the smaller vector from the larger vector. Returns the sign of the result.",
+        "parameters": [
+          {
+            "name": "Z",
+            "type": "RWDigits",
+            "purpose": "The digit vector to store the result in (modified in place)."
+          },
+          {
+            "name": "X",
+            "type": "Digits",
+            "purpose": "The digit vector to subtract from."
+          },
+          {
+            "name": "x_negative",
+            "type": "bool",
+            "purpose": "The sign of the first digit vector."
+          },
+          {
+            "name": "Y",
+            "type": "Digits",
+            "purpose": "The digit vector to subtract."
+          },
+          {
+            "name": "y_negative",
+            "type": "bool",
+            "purpose": "The sign of the second digit vector."
+          }
+        ],
+        "return": {
+          "type": "bool",
+          "description": "The sign of the result."
+        },
+        "dependencies": [
+          "Add",
+          "Subtract",
+          "GreaterThanOrEqual"
+        ]
+      },
+      "code": "bool SubtractSigned(RWDigits Z, Digits X, bool x_negative, Digits Y,\n                    bool y_negative) {\n  if (x_negative != y_negative) {\n    Add(Z, X, Y);\n    return x_negative;\n  }\n  if (GreaterThanOrEqual(X, Y)) {\n    Subtract(Z, X, Y);\n    return x_negative;\n  }\n  Subtract(Z, Y, X);\n  return !x_negative;\n}"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "function",
+        "name": "AddOne",
+        "parent": "bigint",
+        "about": "Adds one to a digit vector X and stores the result in Z.",
+        "logic": "Iterates through the digits of X, adding 1 with carry. If there is a carry after adding all digits of X, the carry is added to the end of Z.",
+        "parameters": [
+          {
+            "name": "Z",
+            "type": "RWDigits",
+            "purpose": "The digit vector to store the result in (modified in place)."
+          },
+          {
+            "name": "X",
+            "type": "Digits",
+            "purpose": "The digit vector to add one to."
+          }
+        ],
+        "return": {
+          "type": "void",
+          "description": "No return value."
+        },
+        "dependencies": [
+          "digit_add2"
+        ]
+      },
+      "code": "void AddOne(RWDigits Z, Digits X) {\n  digit_t carry = 1;\n  int i = 0;\n  for (; carry > 0 && i < X.len(); i++) Z[i] = digit_add2(X[i], carry, &carry);\n  if (carry > 0) Z[i++] = carry;\n  for (; i < X.len(); i++) Z[i] = X[i];\n  for (; i < Z.len(); i++) Z[i] = 0;\n}"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "function",
+        "name": "SubtractOne",
+        "parent": "bigint",
+        "about": "Subtracts one from a digit vector X and stores the result in Z.",
+        "logic": "Iterates through the digits of X, subtracting 1 with borrow. If there is a borrow after subtracting from all digits of X, then the result is negative. If Z is longer than X, the remaining digits are set to 0.",
+        "parameters": [
+          {
+            "name": "Z",
+            "type": "RWDigits",
+            "purpose": "The digit vector to store the result in (modified in place)."
+          },
+          {
+            "name": "X",
+            "type": "Digits",
+            "purpose": "The digit vector to subtract one from."
+          }
+        ],
+        "return": {
+          "type": "void",
+          "description": "No return value."
+        },
+        "dependencies": [
+          "digit_sub"
+        ]
+      },
+      "code": "void SubtractOne(RWDigits Z, Digits X) {\n  digit_t borrow = 1;\n  int i = 0;\n  for (; borrow > 0; i++) Z[i] = digit_sub(X[i], borrow, &borrow);\n  for (; i < X.len(); i++) Z[i] = X[i];\n  for (; i < Z.len(); i++) Z[i] = 0;\n}"
+    }
+  ],
+  "dependencies": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "function",
+        "name": "digit_add3",
+        "about": "Adds three digits and returns the result and carry."
+      },
+      "code": "digit_t digit_add3(digit_t a, digit_t b, digit_t carry, digit_t* carry_out);",
+      "type": "func"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "function",
+        "name": "digit_add2",
+        "about": "Adds two digits and a carry and returns the result and carry."
+      },
+      "code": "digit_t digit_add2(digit_t a, digit_t carry, digit_t* carry_out);",
+      "type": "func"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "function",
+        "name": "digit_sub2",
+        "about": "Subtracts two digits with borrow."
+      },
+      "code": "digit_t digit_sub2(digit_t a, digit_t b, digit_t borrow, digit_t* borrow_out);",
+      "type": "func"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "function",
+        "name": "digit_sub",
+        "about": "Subtracts one digit with borrow."
+      },
+      "code": "digit_t digit_sub(digit_t a, digit_t borrow, digit_t* borrow_out);",
+      "type": "func"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "function",
+        "name": "GreaterThanOrEqual",
+        "about": "Compares two digit vectors and returns true if the first is greater than or equal to the second."
+      },
+      "code": "bool GreaterThanOrEqual(Digits X, Digits Y);",
+      "type": "func"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "Digits",
+        "about": "Represents a read-only sequence of digits."
+      },
+      "code": "class Digits {\n                public:\n                    int len() const;\n                    void Normalize();\n                };",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "RWDigits",
+        "about": "Represents a read-write sequence of digits."
+      },
+      "code": "class RWDigits {\n                public:\n                   digit_t operator[](int i);\n                   int len() const;\n                };",
+      "type": "class"
+    }
+  ],
+  "file_path": "/home/kathirks_gc/v8_go/archive/codebase/src/bigint/vector-arithmetic.cc"
+}

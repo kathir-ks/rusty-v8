@@ -1,0 +1,99 @@
+{
+  "file_path": "/home/kathirks_gc/v8_go/codebase/src/sandbox/isolate-inl.h",
+  "imports": [
+    "src/sandbox/isolate.h",
+    "src/execution/isolate-inl.h",
+    "src/heap/heap-layout-inl.h",
+    "src/objects/heap-object.h",
+    "src/sandbox/external-pointer-table-inl.h",
+    "src/sandbox/indirect-pointer-tag.h"
+  ],
+  "classes": [],
+  "functions": [
+    {
+      "name": "GetExternalPointerTableFor",
+      "parameters": [
+        "ExternalPointerTagRange tag_range"
+      ],
+      "return_type": "ExternalPointerTable&",
+      "logic": "Returns the ExternalPointerTable associated with the given tag range, based on whether the range is shared or not. Uses IsolateForPointerCompression to delegate to the underlying isolate."
+    },
+    {
+      "name": "GetExternalPointerTableSpaceFor",
+      "parameters": [
+        "ExternalPointerTagRange tag_range",
+        "Address host"
+      ],
+      "return_type": "ExternalPointerTable::Space*",
+      "logic": "Returns the ExternalPointerTable::Space associated with the given tag range and host address. Uses IsolateForPointerCompression to delegate to the underlying isolate."
+    },
+    {
+      "name": "GetCodePointerTableSpaceFor",
+      "parameters": [
+        "Address owning_slot"
+      ],
+      "return_type": "CodePointerTable::Space*",
+      "logic": "Returns the CodePointerTable::Space for the given owning slot.  Chooses the space based on whether the slot is in the read-only heap or the normal heap."
+    },
+    {
+      "name": "GetTrustedPointerTableFor",
+      "parameters": [
+        "IndirectPointerTag tag"
+      ],
+      "return_type": "TrustedPointerTable&",
+      "logic": "Returns the TrustedPointerTable associated with the given tag. Returns either the shared or the normal table depending on the tag type."
+    },
+    {
+      "name": "GetTrustedPointerTableSpaceFor",
+      "parameters": [
+        "IndirectPointerTag tag"
+      ],
+      "return_type": "TrustedPointerTable::Space*",
+      "logic": "Returns the TrustedPointerTable::Space associated with the given tag. Returns either the shared or the normal space depending on the tag type."
+    },
+    {
+      "name": "GetExternalPointerTableTagFor",
+      "parameters": [
+        "Tagged<HeapObject> witness",
+        "ExternalPointerHandle handle"
+      ],
+      "return_type": "ExternalPointerTag",
+      "logic": "Returns the ExternalPointerTag for the given handle. Uses the isolate's external pointer table."
+    },
+    {
+      "name": "GetCurrentIsolateForSandbox",
+      "parameters": [],
+      "return_type": "V8_INLINE IsolateForSandbox",
+      "logic": "Returns the current isolate for sandbox purposes."
+    },
+    {
+      "name": "GetExternalPointerTableFor",
+      "parameters": [
+        "ExternalPointerTagRange tag_range"
+      ],
+      "return_type": "ExternalPointerTable&",
+      "logic": "Returns the ExternalPointerTable associated with the given tag range, based on whether the range is shared or not. Uses the isolate's external pointer table or shared external pointer table."
+    },
+    {
+      "name": "GetExternalPointerTableSpaceFor",
+      "parameters": [
+        "ExternalPointerTagRange tag_range",
+        "Address host"
+      ],
+      "return_type": "ExternalPointerTable::Space*",
+      "logic": "Returns the ExternalPointerTable::Space associated with the given tag range and host address. Chooses the appropriate space based on whether the range is shared, maybe-read-only, in the young generation, or old generation."
+    },
+    {
+      "name": "GetCppHeapPointerTable",
+      "parameters": [],
+      "return_type": "CppHeapPointerTable&",
+      "logic": "Returns the CppHeapPointerTable associated with the isolate."
+    },
+    {
+      "name": "GetCppHeapPointerTableSpace",
+      "parameters": [],
+      "return_type": "CppHeapPointerTable::Space*",
+      "logic": "Returns the CppHeapPointerTable::Space associated with the isolate."
+    }
+  ]
+}

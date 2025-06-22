@@ -1,0 +1,99 @@
+{
+  "metadata": {
+    "path": "/home/kathirks_gc/v8_go/archive/codebase/src/compiler/zone-stats.cc",
+    "file_name": "zone-stats.cc",
+    "language": "cpp",
+    "purpose": "Tracks statistics about Zone allocations and deallocations for compiler debugging and profiling"
+  },
+  "imports": {
+    "metadata": {
+      "language": "cpp",
+      "purpose": "Includes the definition of the ZoneStats class"
+    },
+    "code": "#include \"src/compiler/zone-stats.h\""
+  },
+  "classes": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "ZoneStats::StatsScope",
+        "about": "A class for tracking zone statistics within a specific scope. Used to measure memory usage during a particular phase or operation.",
+        "attributes": [],
+        "dependencies": [
+          "ZoneStats",
+          "Zone"
+        ]
+      },
+      "code": "ZoneStats::StatsScope::StatsScope(ZoneStats* zone_stats)\n                : zone_stats_(zone_stats),\n                  total_allocated_bytes_at_start_(zone_stats->GetTotalAllocatedBytes()),\n                  max_allocated_bytes_(0) {\n              zone_stats_->stats_.push_back(this);\n              for (Zone* zone : zone_stats_->zones_) {\n                size_t size = static_cast<size_t>(zone->allocation_size());\n                std::pair<InitialValues::iterator, bool> res =\n                    initial_values_.insert(std::make_pair(zone, size));\n                USE(res);\n                DCHECK(res.second);\n              }\n            }\n\n            ZoneStats::StatsScope::~StatsScope() {\n              DCHECK_EQ(zone_stats_->stats_.back(), this);\n              zone_stats_->stats_.pop_back();\n            }\n\n            size_t ZoneStats::StatsScope::GetMaxAllocatedBytes() {\n              return std::max(max_allocated_bytes_, GetCurrentAllocatedBytes());\n            }\n\n            size_t ZoneStats::StatsScope::GetCurrentAllocatedBytes() {\n              size_t total = 0;\n              for (Zone* zone : zone_stats_->zones_) {\n                total += static_cast<size_t>(zone->allocation_size());\n                // Adjust for initial values.\n                InitialValues::iterator it = initial_values_.find(zone);\n                if (it != initial_values_.end()) {\n                  total -= it->second;\n                }\n              }\n              return total;\n            }\n\n            size_t ZoneStats::StatsScope::GetTotalAllocatedBytes() {\n              return zone_stats_->GetTotalAllocatedBytes() -\n                     total_allocated_bytes_at_start_;\n            }\n\n            void ZoneStats::StatsScope::ZoneReturned(Zone* zone) {\n              size_t current_total = GetCurrentAllocatedBytes();\n              // Update max.\n              max_allocated_bytes_ = std::max(max_allocated_bytes_, current_total);\n              // Drop zone from initial value map.\n              InitialValues::iterator it = initial_values_.find(zone);\n              if (it != initial_values_.end()) {\n                initial_values_.erase(it);\n              }\n            }"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "ZoneStats",
+        "about": "A class for tracking statistics related to Zone memory allocation and deallocation.  Used for debugging and profiling the V8 compiler's memory usage.",
+        "attributes": [
+          {
+            "name": "max_allocated_bytes_",
+            "type": "size_t",
+            "access": "private",
+            "purpose": "Stores the maximum number of bytes allocated across all zones at any point in time."
+          },
+          {
+            "name": "total_deleted_bytes_",
+            "type": "size_t",
+            "access": "private",
+            "purpose": "Tracks the total number of bytes deleted from zones."
+          },
+          {
+            "name": "allocator_",
+            "type": "AccountingAllocator*",
+            "access": "private",
+            "purpose": "A pointer to the allocator used for creating zones. Allows tracking allocations."
+          },
+          {
+            "name": "zones_",
+            "type": "Zones",
+            "access": "private",
+            "purpose": "A container holding pointers to all active zones being tracked."
+          },
+          {
+            "name": "stats_",
+            "type": "StatsScopes",
+            "access": "private",
+            "purpose": "A container for active StatsScope objects, which track memory usage within specific scopes."
+          }
+        ],
+        "dependencies": [
+          "AccountingAllocator",
+          "Zone"
+        ]
+      },
+      "code": "ZoneStats::ZoneStats(AccountingAllocator* allocator)\n                : max_allocated_bytes_(0), total_deleted_bytes_(0), allocator_(allocator) {}\n\n            ZoneStats::~ZoneStats() {\n              DCHECK(zones_.empty());\n              DCHECK(stats_.empty());\n            }\n\n            size_t ZoneStats::GetMaxAllocatedBytes() const {\n              return std::max(max_allocated_bytes_, GetCurrentAllocatedBytes());\n            }\n\n            size_t ZoneStats::GetCurrentAllocatedBytes() const {\n              size_t total = 0;\n              for (Zone* zone : zones_) {\n                total += static_cast<size_t>(zone->allocation_size());\n              }\n              return total;\n            }\n\n            size_t ZoneStats::GetTotalAllocatedBytes() const {\n              return total_deleted_bytes_ + GetCurrentAllocatedBytes();\n            }\n\n            Zone* ZoneStats::NewEmptyZone(const char* zone_name,\n                                          bool support_zone_compression) {\n              Zone* zone = new Zone(allocator_, zone_name, support_zone_compression);\n              zones_.push_back(zone);\n              return zone;\n            }\n\n            void ZoneStats::ReturnZone(Zone* zone) {\n              size_t current_total = GetCurrentAllocatedBytes();\n              // Update max.\n              max_allocated_bytes_ = std::max(max_allocated_bytes_, current_total);\n              // Update stats.\n              for (StatsScope* stat_scope : stats_) {\n                stat_scope->ZoneReturned(zone);\n              }\n              // Remove from used.\n              Zones::iterator it = std::find(zones_.begin(), zones_.end(), zone);\n              DCHECK(it != zones_.end());\n              zones_.erase(it);\n              total_deleted_bytes_ += static_cast<size_t>(zone->allocation_size());\n              delete zone;\n            }"
+    }
+  ],
+  "dependencies": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "AccountingAllocator",
+        "about": "An allocator that tracks the amount of memory allocated."
+      },
+      "code": "class AccountingAllocator {};",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "Zone",
+        "about": "A memory zone for allocating objects. Provides memory management within a specific scope."
+      },
+      "code": "class Zone {\n                public:\n                  Zone(AccountingAllocator* allocator, const char* zone_name, bool support_zone_compression);\n                  size_t allocation_size() const;\n                };",
+      "type": "class"
+    }
+  ],
+  "file_path": "/home/kathirks_gc/v8_go/archive/codebase/src/compiler/zone-stats.cc"
+}

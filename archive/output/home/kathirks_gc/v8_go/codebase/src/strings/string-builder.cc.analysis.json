@@ -1,0 +1,248 @@
+{
+  "file_path": "/home/kathirks_gc/v8_go/codebase/src/strings/string-builder.cc",
+  "imports": [
+    "src/base/strings.h",
+    "src/execution/isolate-inl.h",
+    "src/objects/fixed-array-inl.h",
+    "src/objects/js-array-inl.h",
+    "src/strings/string-builder-inl.h"
+  ],
+  "classes": [
+    {
+      "name": "FixedArrayBuilder",
+      "properties": [
+        "array_",
+        "length_",
+        "has_non_smi_elements_"
+      ],
+      "methods": [
+        {
+          "name": "FixedArrayBuilder",
+          "parameters": [
+            "Isolate* isolate",
+            "int initial_capacity"
+          ],
+          "return_type": "void",
+          "logic": "Constructor that initializes a FixedArrayBuilder with a specified initial capacity. Creates a new FixedArray with holes."
+        },
+        {
+          "name": "FixedArrayBuilder",
+          "parameters": [
+            "DirectHandle<FixedArray> backing_store"
+          ],
+          "return_type": "void",
+          "logic": "Constructor that initializes a FixedArrayBuilder with a given FixedArray as a backing store."
+        },
+        {
+          "name": "FixedArrayBuilder",
+          "parameters": [
+            "Isolate* isolate"
+          ],
+          "return_type": "void",
+          "logic": "Constructor that initializes a FixedArrayBuilder with an empty FixedArray."
+        },
+        {
+          "name": "Lazy",
+          "parameters": [
+            "Isolate* isolate"
+          ],
+          "return_type": "FixedArrayBuilder",
+          "logic": "Static method that creates a FixedArrayBuilder initialized with an empty FixedArray. Used for lazy initialization."
+        },
+        {
+          "name": "HasCapacity",
+          "parameters": [
+            "int elements"
+          ],
+          "return_type": "bool",
+          "logic": "Checks if the builder has enough capacity to add a specified number of elements."
+        },
+        {
+          "name": "EnsureCapacity",
+          "parameters": [
+            "Isolate* isolate",
+            "int elements"
+          ],
+          "return_type": "void",
+          "logic": "Ensures that the builder has enough capacity to add a specified number of elements, resizing the backing FixedArray if necessary."
+        },
+        {
+          "name": "Add",
+          "parameters": [
+            "Tagged<Object> value"
+          ],
+          "return_type": "void",
+          "logic": "Adds a non-Smi object to the FixedArrayBuilder."
+        },
+        {
+          "name": "Add",
+          "parameters": [
+            "Tagged<Smi> value"
+          ],
+          "return_type": "void",
+          "logic": "Adds a Smi object to the FixedArrayBuilder."
+        },
+        {
+          "name": "capacity",
+          "parameters": [],
+          "return_type": "int",
+          "logic": "Returns the current capacity of the FixedArrayBuilder (the length of the backing FixedArray)."
+        }
+      ]
+    },
+    {
+      "name": "ReplacementStringBuilder",
+      "properties": [
+        "heap_",
+        "array_builder_",
+        "subject_",
+        "character_count_",
+        "is_one_byte_"
+      ],
+      "methods": [
+        {
+          "name": "ReplacementStringBuilder",
+          "parameters": [
+            "Heap* heap",
+            "DirectHandle<String> subject",
+            "int estimated_part_count"
+          ],
+          "return_type": "void",
+          "logic": "Constructor that initializes a ReplacementStringBuilder with a subject string and an estimated part count."
+        },
+        {
+          "name": "EnsureCapacity",
+          "parameters": [
+            "int elements"
+          ],
+          "return_type": "void",
+          "logic": "Ensures that the FixedArrayBuilder has enough capacity for additional elements."
+        },
+        {
+          "name": "AddString",
+          "parameters": [
+            "DirectHandle<String> string"
+          ],
+          "return_type": "void",
+          "logic": "Adds a string to the builder, updating the one-byte status and character count."
+        },
+        {
+          "name": "ToString",
+          "parameters": [],
+          "return_type": "MaybeDirectHandle<String>",
+          "logic": "Converts the builder's content into a string. Chooses between one-byte and two-byte string representation based on the content."
+        },
+        {
+          "name": "AddElement",
+          "parameters": [
+            "DirectHandle<Object> element"
+          ],
+          "return_type": "void",
+          "logic": "Adds a string or smi element to the underlying FixedArrayBuilder."
+        }
+      ]
+    },
+    {
+      "name": "IncrementalStringBuilder",
+      "properties": [
+        "isolate_",
+        "encoding_",
+        "overflowed_",
+        "part_length_",
+        "current_index_",
+        "accumulator_",
+        "current_part_"
+      ],
+      "methods": [
+        {
+          "name": "IncrementalStringBuilder",
+          "parameters": [
+            "Isolate* isolate"
+          ],
+          "return_type": "void",
+          "logic": "Constructor. Initializes an IncrementalStringBuilder with an empty accumulator string and initial part."
+        },
+        {
+          "name": "Length",
+          "parameters": [],
+          "return_type": "int",
+          "logic": "Returns the total length of the string being built."
+        },
+        {
+          "name": "HasValidCurrentIndex",
+          "parameters": [],
+          "return_type": "bool",
+          "logic": "Checks if the current index is within the bounds of the current part."
+        },
+        {
+          "name": "Accumulate",
+          "parameters": [
+            "DirectHandle<String> new_part"
+          ],
+          "return_type": "void",
+          "logic": "Appends the new part to the accumulator, handling string length overflow."
+        },
+        {
+          "name": "Extend",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Accumulates the current part, allocates a new part with a grown size, and resets the current index."
+        },
+        {
+          "name": "Finish",
+          "parameters": [],
+          "return_type": "MaybeDirectHandle<String>",
+          "logic": "Finalizes the string building process, shrinks the current part, accumulates the result and returns the combined string.  Handles the case where the string length limit is reached."
+        },
+        {
+          "name": "CanAppendByCopy",
+          "parameters": [
+            "DirectHandle<String> string"
+          ],
+          "return_type": "bool",
+          "logic": "Determines whether a string can be appended by directly copying its contents to the current part."
+        },
+        {
+          "name": "AppendStringByCopy",
+          "parameters": [
+            "DirectHandle<String> string"
+          ],
+          "return_type": "void",
+          "logic": "Appends a string to the current part by directly copying its contents."
+        },
+        {
+          "name": "AppendString",
+          "parameters": [
+            "DirectHandle<String> string"
+          ],
+          "return_type": "void",
+          "logic": "Appends a string to the builder. If possible, appends by copying; otherwise, shrinks the current part and accumulates the provided string."
+        }
+      ]
+    }
+  ],
+  "functions": [
+    {
+      "name": "StringBuilderConcatHelper",
+      "parameters": [
+        "Tagged<String> special",
+        "sinkchar* sink",
+        "Tagged<FixedArray> fixed_array",
+        "int array_length"
+      ],
+      "return_type": "void",
+      "logic": "Helper function to concatenate strings from a FixedArray into a sink buffer. Handles both String objects and Smi-encoded substrings."
+    },
+    {
+      "name": "StringBuilderConcatLength",
+      "parameters": [
+        "int special_length",
+        "Tagged<FixedArray> fixed_array",
+        "int array_length",
+        "bool* one_byte"
+      ],
+      "return_type": "int",
+      "logic": "Calculates the total length of a string that would result from concatenating elements in a FixedArray. Also checks if the result can be represented as a one-byte string."
+    }
+  ]
+}

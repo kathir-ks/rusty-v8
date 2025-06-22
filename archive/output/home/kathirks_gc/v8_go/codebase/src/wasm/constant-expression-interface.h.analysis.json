@@ -1,0 +1,83 @@
+{
+  "file_path": "/home/kathirks_gc/v8_go/codebase/src/wasm/constant-expression-interface.h",
+  "imports": [
+    "src/wasm/decoder.h",
+    "src/wasm/function-body-decoder-impl.h",
+    "src/wasm/wasm-value.h"
+  ],
+  "classes": [
+    {
+      "name": "ConstantExpressionInterface",
+      "properties": [
+        "end_found_",
+        "computed_value_",
+        "error_",
+        "module_",
+        "outer_module_",
+        "isolate_",
+        "trusted_instance_data_",
+        "shared_trusted_instance_data_"
+      ],
+      "methods": [
+        {
+          "name": "ConstantExpressionInterface",
+          "parameters": [
+            "const WasmModule* module",
+            "Isolate* isolate",
+            "DirectHandle<WasmTrustedInstanceData> trusted_instance_data",
+            "DirectHandle<WasmTrustedInstanceData> shared_trusted_instance_data"
+          ],
+          "return_type": "void",
+          "logic": "Constructor for code generation mode. Initializes the interface with the module, isolate, and trusted instance data."
+        },
+        {
+          "name": "ConstantExpressionInterface",
+          "parameters": [
+            "WasmModule* outer_module"
+          ],
+          "return_type": "void",
+          "logic": "Constructor for validation mode. Initializes the interface with the outer module. isolate_ is null."
+        },
+        {
+          "name": "computed_value",
+          "parameters": [],
+          "return_type": "WasmValue",
+          "logic": "Returns the computed value of the constant expression. Asserts that the value is initialized (in code generation mode)."
+        },
+        {
+          "name": "end_found",
+          "parameters": [],
+          "return_type": "bool",
+          "logic": "Returns whether the end of the constant expression has been found."
+        },
+        {
+          "name": "has_error",
+          "parameters": [],
+          "return_type": "bool",
+          "logic": "Returns whether an error occurred during decoding the constant expression."
+        },
+        {
+          "name": "error",
+          "parameters": [],
+          "return_type": "MessageTemplate",
+          "logic": "Returns the error message template if an error occurred. Asserts that an error exists."
+        },
+        {
+          "name": "generate_value",
+          "parameters": [],
+          "return_type": "bool",
+          "logic": "Indicates whether the value should be generated. Returns true if isolate is not null and no error has occurred (code generation mode)."
+        },
+        {
+          "name": "GetTrustedInstanceDataForTypeIndex",
+          "parameters": [
+            "ModuleTypeIndex index"
+          ],
+          "return_type": "DirectHandle<WasmTrustedInstanceData>",
+          "logic": "Retrieves the trusted instance data for a given type index."
+        }
+      ]
+    }
+  ],
+  "functions": []
+}

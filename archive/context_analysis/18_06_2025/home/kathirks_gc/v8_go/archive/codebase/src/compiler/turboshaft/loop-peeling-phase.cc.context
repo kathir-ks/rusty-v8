@@ -1,0 +1,51 @@
+{
+  "metadata": {
+    "path": "/home/kathirks_gc/v8_go/archive/codebase/src/compiler/turboshaft/loop-peeling-phase.cc",
+    "file_name": "loop-peeling-phase.cc",
+    "language": "cpp",
+    "purpose": "Implements the loop peeling phase in the Turboshaft compiler pipeline."
+  },
+  "imports": {
+    "metadata": {
+      "language": "cpp",
+      "purpose": "Includes necessary headers for loop peeling and other compiler phases."
+    },
+    "code": "#include \"src/compiler/turboshaft/loop-peeling-phase.h\"\n\n#include \"src/compiler/turboshaft/copying-phase.h\"\n#include \"src/compiler/turboshaft/loop-peeling-reducer.h\"\n#include \"src/compiler/turboshaft/machine-optimization-reducer.h\"\n#include \"src/compiler/turboshaft/required-optimization-reducer.h\"\n#include \"src/compiler/turboshaft/value-numbering-reducer.h\"\n#include \"src/compiler/turboshaft/variable-reducer.h\"\n#include \"src/numbers/conversions-inl.h\""
+  },
+  "functions": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "method",
+        "name": "Run",
+        "parent": "LoopPeelingPhase",
+        "about": "Runs the loop peeling phase of the Turboshaft compiler.",
+        "logic": "Executes a copying phase that applies several reducers: LoopPeelingReducer, MachineOptimizationReducer, and ValueNumberingReducer. The MachineOptimizationReducer is important for wasm-gc and should be executed even if no loops are present.",
+        "parameters": [
+          {
+            "name": "data",
+            "type": "PipelineData*",
+            "purpose": "Pointer to the pipeline data structure."
+          },
+          {
+            "name": "temp_zone",
+            "type": "Zone*",
+            "purpose": "Pointer to a temporary zone for memory allocation."
+          }
+        ],
+        "return": {
+          "type": "void",
+          "description": "No return value."
+        },
+        "dependencies": [
+          "CopyingPhase",
+          "LoopPeelingReducer",
+          "MachineOptimizationReducer",
+          "ValueNumberingReducer"
+        ]
+      },
+      "code": "void LoopPeelingPhase::Run(PipelineData* data, Zone* temp_zone) {\n  // Note that for wasm-gc it is relevant that the MachineOptimizationReducer is\n  // run prior to other phases. Any attempt to skip the loop peeling phase (e.g.\n  // if no loops are present) should evaluate how to run the\n  // MachineOptimizationReducer then.\n  turboshaft::CopyingPhase<turboshaft::LoopPeelingReducer,\n                           turboshaft::MachineOptimizationReducer,\n                           turboshaft::ValueNumberingReducer>::Run(data,\n                                                                   temp_zone);\n}"
+    }
+  ],
+  "file_path": "/home/kathirks_gc/v8_go/archive/codebase/src/compiler/turboshaft/loop-peeling-phase.cc"
+}

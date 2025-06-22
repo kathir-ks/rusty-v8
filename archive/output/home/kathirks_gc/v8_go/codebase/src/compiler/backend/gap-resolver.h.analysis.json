@@ -1,0 +1,142 @@
+{
+  "file_path": "/home/kathirks_gc/v8_go/codebase/src/compiler/backend/gap-resolver.h",
+  "imports": [
+    "src/compiler/backend/instruction.h"
+  ],
+  "classes": [
+    {
+      "name": "GapResolver",
+      "properties": [
+        "assembler_ (Assembler* const)"
+      ],
+      "methods": [
+        {
+          "name": "GapResolver",
+          "parameters": [
+            "assembler (Assembler*)"
+          ],
+          "return_type": "void",
+          "logic": "Constructor for GapResolver, takes an Assembler pointer and initializes the assembler_ member."
+        },
+        {
+          "name": "Resolve",
+          "parameters": [
+            "parallel_move (ParallelMove*)"
+          ],
+          "return_type": "void",
+          "logic": "Resolves a set of parallel moves by emitting assembler instructions to perform these moves."
+        },
+        {
+          "name": "PerformCycle",
+          "parameters": [
+            "cycle (const std::vector<MoveOperands*>&)"
+          ],
+          "return_type": "void",
+          "logic": "Resolves a cycle of moves where each move blocks the next, using a temporary location to break the dependency."
+        },
+        {
+          "name": "PerformMove",
+          "parameters": [
+            "moves (ParallelMove*)",
+            "move (MoveOperands*)"
+          ],
+          "return_type": "void",
+          "logic": "Performs a single move, potentially performing other moves to unblock the destination operand."
+        },
+        {
+          "name": "PerformMoveHelper",
+          "parameters": [
+            "moves (ParallelMove*)",
+            "move (MoveOperands*)",
+            "cycle (std::vector<MoveOperands*>*)",
+            ""
+          ],
+          "return_type": "MoveOperands*",
+          "logic": "Helper function to perform a move and resolve dependencies, including simple cyclic dependencies. Returns a problematic move if a complex cycle is detected."
+        }
+      ]
+    },
+    {
+      "name": "GapResolver::Assembler",
+      "properties": [
+        "temp_slots_ (int)"
+      ],
+      "methods": [
+        {
+          "name": "~Assembler",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Virtual destructor."
+        },
+        {
+          "name": "AssembleMove",
+          "parameters": [
+            "source (InstructionOperand*)",
+            "destination (InstructionOperand*)"
+          ],
+          "return_type": "void",
+          "logic": "Assembles a move instruction from source to destination. (Abstract method)"
+        },
+        {
+          "name": "AssembleSwap",
+          "parameters": [
+            "source (InstructionOperand*)",
+            "destination (InstructionOperand*)"
+          ],
+          "return_type": "void",
+          "logic": "Assembles a swap instruction between source and destination. (Abstract method)"
+        },
+        {
+          "name": "Push",
+          "parameters": [
+            "src (InstructionOperand*)"
+          ],
+          "return_type": "AllocatedOperand",
+          "logic": "Pushes src onto the stack and returns an operand representing the new stack slot. (Abstract method)"
+        },
+        {
+          "name": "Pop",
+          "parameters": [
+            "dest (InstructionOperand*)",
+            "rep (MachineRepresentation)"
+          ],
+          "return_type": "void",
+          "logic": "Pops the topmost stack operand and moves it to dest. (Abstract method)"
+        },
+        {
+          "name": "PopTempStackSlots",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Pops all remaining unpopped temporary stack slots. (Abstract method)"
+        },
+        {
+          "name": "MoveToTempLocation",
+          "parameters": [
+            "src (InstructionOperand*)",
+            "rep (MachineRepresentation)"
+          ],
+          "return_type": "void",
+          "logic": "Moves an operand to a temporary location (register or stack slot). (Abstract method)"
+        },
+        {
+          "name": "MoveTempLocationTo",
+          "parameters": [
+            "dst (InstructionOperand*)",
+            "rep (MachineRepresentation)"
+          ],
+          "return_type": "void",
+          "logic": "Moves the temp location to the destination. (Abstract method)"
+        },
+        {
+          "name": "SetPendingMove",
+          "parameters": [
+            "move (MoveOperands*)"
+          ],
+          "return_type": "void",
+          "logic": "Reserves scratch registers needed to perform the moves in the cycle. (Abstract method)"
+        }
+      ]
+    }
+  ],
+  "functions": []
+}

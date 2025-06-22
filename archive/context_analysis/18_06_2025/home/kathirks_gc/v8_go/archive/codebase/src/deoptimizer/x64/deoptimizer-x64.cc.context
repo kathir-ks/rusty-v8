@@ -1,0 +1,242 @@
+{
+  "metadata": {
+    "path": "/home/kathirks_gc/v8_go/archive/codebase/src/deoptimizer/x64/deoptimizer-x64.cc",
+    "file_name": "deoptimizer-x64.cc",
+    "language": "cpp",
+    "purpose": "Provides x64-specific implementation details for the deoptimizer in V8."
+  },
+  "imports": {
+    "metadata": {
+      "language": "cpp",
+      "purpose": "Includes necessary headers for code generation, memory access, deoptimization, and isolate data."
+    },
+    "code": "#include \"src/codegen/flush-instruction-cache.h\"\n#include \"src/codegen/macro-assembler.h\"\n#include \"src/common/code-memory-access-inl.h\"\n#include \"src/deoptimizer/deoptimizer.h\"\n#include \"src/execution/isolate-data.h\""
+  },
+  "functions": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "function",
+        "name": "PatchToJump",
+        "parent": "Deoptimizer",
+        "about": "Patches a jump instruction at a given address to jump to a new address.",
+        "logic": "Replaces a NOP instruction (or verifies an existing JMP) with a relative jump to the new address.  Calculates the displacement between the current PC and the new PC, and uses a relative jump instruction.  Flushes the instruction cache after patching.",
+        "parameters": [
+          {
+            "name": "pc",
+            "type": "Address",
+            "purpose": "The address of the jump instruction to patch."
+          },
+          {
+            "name": "new_pc",
+            "type": "Address",
+            "purpose": "The address to jump to."
+          }
+        ],
+        "return": {
+          "type": "void",
+          "description": "No return value."
+        },
+        "dependencies": [
+          "Assembler",
+          "MacroAssembler",
+          "RwxMemoryWriteScope",
+          "FlushInstructionCache"
+        ]
+      },
+      "code": "void Deoptimizer::PatchToJump(Address pc, Address new_pc) {\n  if (!Assembler::IsNop(pc)) {\n    // The place holder could be already patched.\n    DCHECK(Assembler::IsJmpRel(pc));\n    return;\n  }\n\n  RwxMemoryWriteScope rwx_write_scope(\"Patch jump to deopt trampoline\");\n  intptr_t displacement =\n      new_pc - (pc + MacroAssembler::kIntraSegmentJmpInstrSize);\n  CHECK(is_int32(displacement));\n  // We'll overwrite only one instruction of 5-bytes. Give enough\n  // space not to try to grow the buffer.\n  constexpr int kSize = 32;\n  Assembler masm(\n      AssemblerOptions{},\n      ExternalAssemblerBuffer(reinterpret_cast<uint8_t*>(pc), kSize));\n  int offset = static_cast<int>(new_pc - pc);\n  masm.jmp_rel(offset);\n  FlushInstructionCache(pc, kSize);\n}"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "method",
+        "name": "GetFloatRegister",
+        "parent": "RegisterValues",
+        "about": "Retrieves the value of a float register.",
+        "logic": "Reads a Float32 value from the simd128_registers_ array at the specified index.",
+        "parameters": [
+          {
+            "name": "n",
+            "type": "unsigned",
+            "purpose": "The index of the register to retrieve."
+          }
+        ],
+        "return": {
+          "type": "Float32",
+          "description": "The value of the float register."
+        },
+        "dependencies": [
+          "base::ReadUnalignedValue"
+        ]
+      },
+      "code": "Float32 RegisterValues::GetFloatRegister(unsigned n) const {\n  return base::ReadUnalignedValue<Float32>(\n      reinterpret_cast<Address>(simd128_registers_ + n));\n}"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "method",
+        "name": "GetDoubleRegister",
+        "parent": "RegisterValues",
+        "about": "Retrieves the value of a double register.",
+        "logic": "Reads a Float64 value from the simd128_registers_ array at the specified index.",
+        "parameters": [
+          {
+            "name": "n",
+            "type": "unsigned",
+            "purpose": "The index of the register to retrieve."
+          }
+        ],
+        "return": {
+          "type": "Float64",
+          "description": "The value of the double register."
+        },
+        "dependencies": [
+          "base::ReadUnalignedValue"
+        ]
+      },
+      "code": "Float64 RegisterValues::GetDoubleRegister(unsigned n) const {\n  V8_ASSUME(n < arraysize(simd128_registers_));\n  return base::ReadUnalignedValue<Float64>(\n      reinterpret_cast<Address>(simd128_registers_ + n));\n}"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "method",
+        "name": "SetDoubleRegister",
+        "parent": "RegisterValues",
+        "about": "Sets the value of a double register.",
+        "logic": "Writes a Float64 value to the simd128_registers_ array at the specified index.",
+        "parameters": [
+          {
+            "name": "n",
+            "type": "unsigned",
+            "purpose": "The index of the register to set."
+          },
+          {
+            "name": "value",
+            "type": "Float64",
+            "purpose": "The value to set the register to."
+          }
+        ],
+        "return": {
+          "type": "void",
+          "description": "No return value."
+        },
+        "dependencies": [
+          "base::WriteUnalignedValue"
+        ]
+      },
+      "code": "void RegisterValues::SetDoubleRegister(unsigned n, Float64 value) {\n  base::WriteUnalignedValue<Float64>(\n      reinterpret_cast<Address>(simd128_registers_ + n), value);\n}"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "method",
+        "name": "SetCallerPc",
+        "parent": "FrameDescription",
+        "about": "Sets the caller's program counter (PC) in the frame description.",
+        "logic": "Sets the frame slot at the specified offset to the provided value and also updates the caller_pc_ member variable.",
+        "parameters": [
+          {
+            "name": "offset",
+            "type": "unsigned",
+            "purpose": "The offset in the frame to store the caller PC."
+          },
+          {
+            "name": "value",
+            "type": "intptr_t",
+            "purpose": "The value of the caller's PC."
+          }
+        ],
+        "return": {
+          "type": "void",
+          "description": "No return value."
+        },
+        "dependencies": [
+          "SetFrameSlot"
+        ]
+      },
+      "code": "void FrameDescription::SetCallerPc(unsigned offset, intptr_t value) {\n  SetFrameSlot(offset, value);\n  caller_pc_ = value;\n}"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "method",
+        "name": "SetCallerFp",
+        "parent": "FrameDescription",
+        "about": "Sets the caller's frame pointer (FP) in the frame description.",
+        "logic": "Sets the frame slot at the specified offset to the provided value.",
+        "parameters": [
+          {
+            "name": "offset",
+            "type": "unsigned",
+            "purpose": "The offset in the frame to store the caller FP."
+          },
+          {
+            "name": "value",
+            "type": "intptr_t",
+            "purpose": "The value of the caller's FP."
+          }
+        ],
+        "return": {
+          "type": "void",
+          "description": "No return value."
+        },
+        "dependencies": [
+          "SetFrameSlot"
+        ]
+      },
+      "code": "void FrameDescription::SetCallerFp(unsigned offset, intptr_t value) {\n  SetFrameSlot(offset, value);\n}"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "method",
+        "name": "SetCallerConstantPool",
+        "parent": "FrameDescription",
+        "about": "Sets the caller's constant pool pointer in the frame description.",
+        "logic": "This function is not implemented and will always cause the program to terminate.",
+        "parameters": [
+          {
+            "name": "offset",
+            "type": "unsigned",
+            "purpose": "The offset in the frame where the constant pool pointer would be stored."
+          },
+          {
+            "name": "value",
+            "type": "intptr_t",
+            "purpose": "The value of the caller's constant pool pointer."
+          }
+        ],
+        "return": {
+          "type": "void",
+          "description": "No return value."
+        },
+        "dependencies": []
+      },
+      "code": "void FrameDescription::SetCallerConstantPool(unsigned offset, intptr_t value) {\n  // No embedded constant pool support.\n  UNREACHABLE();\n}"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "method",
+        "name": "SetPc",
+        "parent": "FrameDescription",
+        "about": "Sets the program counter (PC) in the frame description.",
+        "logic": "Sets the pc_ member variable to the provided value.",
+        "parameters": [
+          {
+            "name": "pc",
+            "type": "intptr_t",
+            "purpose": "The value of the PC."
+          }
+        ],
+        "return": {
+          "type": "void",
+          "description": "No return value."
+        },
+        "dependencies": []
+      },
+      "code": "void FrameDescription::SetPc(intptr_t pc) { pc_ = pc; }"
+    }
+  ],
+  "file_path": "/home/kathirks_gc/v8_go/archive/codebase/src/deoptimizer/x64/deoptimizer-x64.cc"
+}

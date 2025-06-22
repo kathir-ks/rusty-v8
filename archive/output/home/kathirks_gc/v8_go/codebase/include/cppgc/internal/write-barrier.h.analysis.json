@@ -1,0 +1,214 @@
+{
+  "file_path": "/home/kathirks_gc/v8_go/codebase/include/cppgc/internal/write-barrier.h",
+  "imports": [
+    "cstddef",
+    "cstdint",
+    "cppgc/heap-handle.h",
+    "cppgc/heap-state.h",
+    "cppgc/internal/api-constants.h",
+    "cppgc/internal/atomic-entry-flag.h",
+    "cppgc/internal/base-page-handle.h",
+    "cppgc/internal/member-storage.h",
+    "cppgc/platform.h",
+    "cppgc/sentinel-pointer.h",
+    "cppgc/trace-trait.h",
+    "v8config.h",
+    "cppgc/internal/caged-heap-local-data.h",
+    "cppgc/internal/caged-heap.h"
+  ],
+  "classes": [
+    {
+      "name": "WriteBarrier",
+      "properties": [],
+      "methods": [
+        {
+          "name": "GetWriteBarrierType",
+          "parameters": [
+            "const void* slot",
+            "const void* value",
+            "Params& params"
+          ],
+          "return_type": "Type",
+          "logic": "Returns the required write barrier type for a given slot and value."
+        },
+        {
+          "name": "GetWriteBarrierType",
+          "parameters": [
+            "const void* slot",
+            "MemberStorage",
+            "Params& params"
+          ],
+          "return_type": "Type",
+          "logic": "Returns the required write barrier type for a given slot and value (using MemberStorage)."
+        },
+        {
+          "name": "GetWriteBarrierType",
+          "parameters": [
+            "const void* slot",
+            "Params& params",
+            "HeapHandleCallback callback"
+          ],
+          "return_type": "Type",
+          "logic": "Returns the required write barrier type for a given slot, using a HeapHandleCallback."
+        },
+        {
+          "name": "GetWriteBarrierType",
+          "parameters": [
+            "const void* value",
+            "Params& params"
+          ],
+          "return_type": "Type",
+          "logic": "Returns the required write barrier type for a given value."
+        },
+        {
+          "name": "CombinedWriteBarrierSlow",
+          "parameters": [
+            "const void* slot"
+          ],
+          "return_type": "void",
+          "logic": "A combined write barrier for generational and Dijkstra marking (slim write barrier)."
+        },
+        {
+          "name": "DijkstraMarkingBarrier",
+          "parameters": [
+            "const Params& params",
+            "const void* object"
+          ],
+          "return_type": "void",
+          "logic": "Applies the Dijkstra marking barrier to an object."
+        },
+        {
+          "name": "DijkstraMarkingBarrierRange",
+          "parameters": [
+            "const Params& params",
+            "const void* first_element",
+            "size_t element_size",
+            "size_t number_of_elements",
+            "TraceCallback trace_callback"
+          ],
+          "return_type": "void",
+          "logic": "Applies the Dijkstra marking barrier to a range of elements."
+        },
+        {
+          "name": "SteeleMarkingBarrier",
+          "parameters": [
+            "const Params& params",
+            "const void* object"
+          ],
+          "return_type": "void",
+          "logic": "Applies the Steele marking barrier to an object."
+        },
+        {
+          "name": "GenerationalBarrier",
+          "parameters": [
+            "const Params& params",
+            "const void* slot"
+          ],
+          "return_type": "void",
+          "logic": "Applies the generational barrier to a slot."
+        },
+        {
+          "name": "CheckParams",
+          "parameters": [
+            "Type expected_type",
+            "const Params& params"
+          ],
+          "return_type": "void",
+          "logic": "Checks that the parameters are correct for the expected barrier type. Only enabled in debug builds."
+        },
+        {
+          "name": "IsEnabled",
+          "parameters": [],
+          "return_type": "bool",
+          "logic": "Checks if the write barrier is enabled."
+        }
+      ]
+    },
+    {
+      "name": "WriteBarrierTypeForCagedHeapPolicy",
+      "properties": [],
+      "methods": [
+        {
+          "name": "Get",
+          "parameters": [
+            "const void* slot",
+            "const void* value",
+            "WriteBarrier::Params& params",
+            "HeapHandleCallback callback"
+          ],
+          "return_type": "WriteBarrier::Type",
+          "logic": "Determines and returns the write barrier type for a caged heap (with value)."
+        },
+        {
+          "name": "Get",
+          "parameters": [
+            "const void* slot",
+            "MemberStorage value",
+            "WriteBarrier::Params& params",
+            "HeapHandleCallback callback"
+          ],
+          "return_type": "WriteBarrier::Type",
+          "logic": "Determines and returns the write barrier type for a caged heap (with MemberStorage value)."
+        },
+        {
+          "name": "Get",
+          "parameters": [
+            "const void* value",
+            "WriteBarrier::Params& params",
+            "HeapHandleCallback callback"
+          ],
+          "return_type": "WriteBarrier::Type",
+          "logic": "Determines and returns the write barrier type for a caged heap (no slot)."
+        }
+      ]
+    },
+    {
+      "name": "WriteBarrierTypeForNonCagedHeapPolicy",
+      "properties": [],
+      "methods": [
+        {
+          "name": "Get",
+          "parameters": [
+            "const void* slot",
+            "const void* value",
+            "WriteBarrier::Params& params",
+            "HeapHandleCallback callback"
+          ],
+          "return_type": "WriteBarrier::Type",
+          "logic": "Determines and returns the write barrier type for a non-caged heap (with value)."
+        },
+        {
+          "name": "Get",
+          "parameters": [
+            "const void* slot",
+            "RawPointer value",
+            "WriteBarrier::Params& params",
+            "HeapHandleCallback callback"
+          ],
+          "return_type": "WriteBarrier::Type",
+          "logic": "Determines and returns the write barrier type for a non-caged heap (with RawPointer value)."
+        },
+        {
+          "name": "Get",
+          "parameters": [
+            "const void* value",
+            "WriteBarrier::Params& params",
+            "HeapHandleCallback callback"
+          ],
+          "return_type": "WriteBarrier::Type",
+          "logic": "Determines and returns the write barrier type for a non-caged heap (no slot)."
+        }
+      ]
+    }
+  ],
+  "functions": [
+    {
+      "name": "SetAndReturnType",
+      "parameters": [
+        "WriteBarrier::Params& params"
+      ],
+      "return_type": "WriteBarrier::Type",
+      "logic": "Sets the type in the params and returns it, or returns kNone if the type is kNone."
+    }
+  ]
+}

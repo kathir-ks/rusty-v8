@@ -1,0 +1,444 @@
+{
+  "file_path": "/home/kathirks_gc/v8_go/codebase/src/ic/keyed-store-generic.cc",
+  "imports": [
+    "src/ic/keyed-store-generic.h",
+    "<optional>",
+    "src/codegen/code-factory.h",
+    "src/codegen/code-stub-assembler-inl.h",
+    "src/codegen/interface-descriptors.h",
+    "src/common/globals.h",
+    "src/execution/isolate.h",
+    "src/ic/accessor-assembler.h",
+    "src/objects/contexts.h",
+    "src/objects/feedback-vector.h",
+    "src/objects/objects-inl.h"
+  ],
+  "classes": [
+    {
+      "name": "KeyedStoreGenericAssembler",
+      "properties": [
+        "mode_"
+      ],
+      "methods": [
+        {
+          "name": "KeyedStoreGenericAssembler",
+          "parameters": [
+            "compiler::CodeAssemblerState* state",
+            "StoreMode mode"
+          ],
+          "return_type": "void",
+          "logic": "Constructor for KeyedStoreGenericAssembler, initializes the AccessorAssembler and sets the store mode."
+        },
+        {
+          "name": "KeyedStoreGeneric",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Generates code for the generic keyed store operation."
+        },
+        {
+          "name": "KeyedStoreMegamorphic",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Generates code for the megamorphic keyed store operation."
+        },
+        {
+          "name": "StoreIC_NoFeedback",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Generates code for StoreIC with no feedback."
+        },
+        {
+          "name": "StoreProperty",
+          "parameters": [
+            "TNode<Context> context",
+            "TNode<JSReceiver> receiver",
+            "TNode<BoolT> is_simple_receiver",
+            "TNode<Name> unique_name",
+            "TNode<Object> value",
+            "LanguageMode language_mode"
+          ],
+          "return_type": "void",
+          "logic": "Generates code for [[Set]] or [[CreateDataProperty]] operation with a unique name."
+        },
+        {
+          "name": "StoreProperty",
+          "parameters": [
+            "TNode<Context> context",
+            "TNode<JSAny> receiver",
+            "TNode<Object> key",
+            "TNode<Object> value",
+            "LanguageMode language_mode"
+          ],
+          "return_type": "void",
+          "logic": "Generates code for [[Set]] or [[CreateDataProperty]] operation in a more generic way."
+        },
+        {
+          "name": "KeyedStoreGeneric",
+          "parameters": [
+            "TNode<Context> context",
+            "TNode<JSAny> receiver",
+            "TNode<Object> key",
+            "TNode<Object> value",
+            "Maybe<LanguageMode> language_mode",
+            "UseStubCache use_stub_cache",
+            "TNode<TaggedIndex> slot",
+            "TNode<HeapObject> maybe_vector"
+          ],
+          "return_type": "void",
+          "logic": "Helper function used by KeyedStoreGeneric and StoreProperty."
+        },
+        {
+          "name": "EmitGenericElementStore",
+          "parameters": [
+            "TNode<JSObject> receiver",
+            "TNode<Map> receiver_map",
+            "TNode<Uint16T> instance_type",
+            "TNode<IntPtrT> index",
+            "TNode<Object> value",
+            "TNode<Context> context",
+            "Label* slow"
+          ],
+          "return_type": "void",
+          "logic": "Emits code to store an element to a JSObject."
+        },
+        {
+          "name": "EmitGenericPropertyStore",
+          "parameters": [
+            "TNode<JSReceiver> receiver",
+            "TNode<Map> receiver_map",
+            "TNode<Uint16T> instance_type",
+            "const StoreICParameters* p",
+            "ExitPoint* exit_point",
+            "Label* slow",
+            "Maybe<LanguageMode> maybe_language_mode",
+            "UseStubCache use_stub_cache"
+          ],
+          "return_type": "void",
+          "logic": "Emits code to store a property on a JSReceiver."
+        },
+        {
+          "name": "EmitGenericPropertyStore",
+          "parameters": [
+            "TNode<JSReceiver> receiver",
+            "TNode<Map> receiver_map",
+            "TNode<Uint16T> instance_type",
+            "const StoreICParameters* p",
+            "Label* slow"
+          ],
+          "return_type": "void",
+          "logic": "Overloaded version of EmitGenericPropertyStore with fewer parameters."
+        },
+        {
+          "name": "BranchIfPrototypesMayHaveReadOnlyElements",
+          "parameters": [
+            "TNode<Map> receiver_map",
+            "Label* maybe_read_only_elements",
+            "Label* only_fast_writable_elements"
+          ],
+          "return_type": "void",
+          "logic": "Branches based on whether prototypes in the chain may have read-only elements."
+        },
+        {
+          "name": "TryRewriteElements",
+          "parameters": [
+            "TNode<JSObject> receiver",
+            "TNode<Map> receiver_map",
+            "TNode<FixedArrayBase> elements",
+            "TNode<NativeContext> native_context",
+            "ElementsKind from_kind",
+            "ElementsKind to_kind",
+            "Label* bailout"
+          ],
+          "return_type": "void",
+          "logic": "Tries to rewrite elements based on the given elements kind."
+        },
+        {
+          "name": "StoreSharedArrayElement",
+          "parameters": [
+            "TNode<Context> context",
+            "TNode<FixedArrayBase> elements",
+            "TNode<IntPtrT> index",
+            "TNode<Object> value"
+          ],
+          "return_type": "void",
+          "logic": "Stores an element to a SharedArray."
+        },
+        {
+          "name": "StoreElementWithCapacity",
+          "parameters": [
+            "TNode<JSObject> receiver",
+            "TNode<Map> receiver_map",
+            "TNode<FixedArrayBase> elements",
+            "TNode<Word32T> elements_kind",
+            "TNode<IntPtrT> index",
+            "TNode<Object> value",
+            "TNode<Context> context",
+            "Label* slow",
+            "UpdateLength update_length"
+          ],
+          "return_type": "void",
+          "logic": "Stores an element to a JSObject's elements array with capacity checks."
+        },
+        {
+          "name": "MaybeUpdateLengthAndReturn",
+          "parameters": [
+            "TNode<JSObject> receiver",
+            "TNode<IntPtrT> index",
+            "TNode<Object> value",
+            "UpdateLength update_length"
+          ],
+          "return_type": "void",
+          "logic": "Updates the length property of a JSObject and returns a value."
+        },
+        {
+          "name": "TryChangeToHoleyMapHelper",
+          "parameters": [
+            "TNode<JSObject> receiver",
+            "TNode<Map> receiver_map",
+            "TNode<NativeContext> native_context",
+            "ElementsKind packed_kind",
+            "ElementsKind holey_kind",
+            "Label* done",
+            "Label* map_mismatch",
+            "Label* bailout"
+          ],
+          "return_type": "void",
+          "logic": "Helper function to change a map to a holey map."
+        },
+        {
+          "name": "TryChangeToHoleyMap",
+          "parameters": [
+            "TNode<JSObject> receiver",
+            "TNode<Map> receiver_map",
+            "TNode<Word32T> current_elements_kind",
+            "TNode<Context> context",
+            "ElementsKind packed_kind",
+            "Label* bailout"
+          ],
+          "return_type": "void",
+          "logic": "Tries to change a JSObject's map to a holey map if necessary."
+        },
+        {
+          "name": "TryChangeToHoleyMapMulti",
+          "parameters": [
+            "TNode<JSObject> receiver",
+            "TNode<Map> receiver_map",
+            "TNode<Word32T> current_elements_kind",
+            "TNode<Context> context",
+            "ElementsKind packed_kind",
+            "ElementsKind packed_kind_2",
+            "Label* bailout"
+          ],
+          "return_type": "void",
+          "logic": "Tries to change a JSObject's map to one of two holey maps if needed."
+        },
+        {
+          "name": "LookupPropertyOnPrototypeChain",
+          "parameters": [
+            "TNode<Map> receiver_map",
+            "TNode<Name> name",
+            "Label* accessor",
+            "TVariable<Object>* var_accessor_pair",
+            "TVariable<HeapObject>* var_accessor_holder",
+            "Label* readonly",
+            "Label* bailout"
+          ],
+          "return_type": "void",
+          "logic": "Looks up a property on the prototype chain."
+        },
+        {
+          "name": "FindCandidateStoreICTransitionMapHandler",
+          "parameters": [
+            "TNode<Map> map",
+            "TNode<Name> name",
+            "Label* slow"
+          ],
+          "return_type": "TNode<Map>",
+          "logic": "Finds a candidate store IC transition map handler."
+        },
+        {
+          "name": "IsSet",
+          "parameters": [],
+          "return_type": "bool",
+          "logic": "Returns true if the store mode is kSet."
+        },
+        {
+          "name": "IsDefineKeyedOwnInLiteral",
+          "parameters": [],
+          "return_type": "bool",
+          "logic": "Returns true if the store mode is kDefineKeyedOwnInLiteral."
+        },
+        {
+          "name": "IsDefineNamedOwn",
+          "parameters": [],
+          "return_type": "bool",
+          "logic": "Returns true if the store mode is kDefineNamedOwn."
+        },
+        {
+          "name": "IsDefineKeyedOwn",
+          "parameters": [],
+          "return_type": "bool",
+          "logic": "Returns true if the store mode is kDefineKeyedOwn."
+        },
+        {
+          "name": "IsAnyDefineOwn",
+          "parameters": [],
+          "return_type": "bool",
+          "logic": "Returns true if the store mode is kDefineNamedOwn or kDefineKeyedOwn."
+        },
+        {
+          "name": "ShouldCheckPrototype",
+          "parameters": [],
+          "return_type": "bool",
+          "logic": "Returns true if prototype checks should be performed based on the store mode."
+        },
+        {
+          "name": "ShouldReconfigureExisting",
+          "parameters": [],
+          "return_type": "bool",
+          "logic": "Returns true if existing properties should be reconfigured based on the store mode."
+        },
+        {
+          "name": "ShouldCallSetter",
+          "parameters": [],
+          "return_type": "bool",
+          "logic": "Returns true if the setter should be called based on the store mode."
+        },
+        {
+          "name": "ShouldCheckPrototypeValidity",
+          "parameters": [],
+          "return_type": "bool",
+          "logic": "Returns true if the prototype validity should be checked based on the store mode."
+        }
+      ]
+    },
+    {
+      "name": "KeyedStoreMegamorphicGenerator",
+      "properties": [],
+      "methods": [
+        {
+          "name": "Generate",
+          "parameters": [
+            "compiler::CodeAssemblerState* state"
+          ],
+          "return_type": "void",
+          "logic": "Generates code for megamorphic keyed store."
+        }
+      ]
+    },
+    {
+      "name": "KeyedStoreGenericGenerator",
+      "properties": [],
+      "methods": [
+        {
+          "name": "Generate",
+          "parameters": [
+            "compiler::CodeAssemblerState* state"
+          ],
+          "return_type": "void",
+          "logic": "Generates generic keyed store code."
+        },
+        {
+          "name": "SetProperty",
+          "parameters": [
+            "compiler::CodeAssemblerState* state",
+            "TNode<Context> context",
+            "TNode<JSReceiver> receiver",
+            "TNode<BoolT> is_simple_receiver",
+            "TNode<Name> name",
+            "TNode<Object> value",
+            "LanguageMode language_mode"
+          ],
+          "return_type": "void",
+          "logic": "Sets a property on a JSReceiver."
+        },
+        {
+          "name": "SetProperty",
+          "parameters": [
+            "compiler::CodeAssemblerState* state",
+            "TNode<Context> context",
+            "TNode<JSAny> receiver",
+            "TNode<Object> key",
+            "TNode<Object> value",
+            "LanguageMode language_mode"
+          ],
+          "return_type": "void",
+          "logic": "Sets a property using a key."
+        },
+        {
+          "name": "CreateDataProperty",
+          "parameters": [
+            "compiler::CodeAssemblerState* state",
+            "TNode<Context> context",
+            "TNode<JSObject> receiver",
+            "TNode<Object> key",
+            "TNode<Object> value"
+          ],
+          "return_type": "void",
+          "logic": "Creates a data property on a JSObject."
+        }
+      ]
+    },
+    {
+      "name": "DefineKeyedOwnGenericGenerator",
+      "properties": [],
+      "methods": [
+        {
+          "name": "Generate",
+          "parameters": [
+            "compiler::CodeAssemblerState* state"
+          ],
+          "return_type": "void",
+          "logic": "Generates code for DefineKeyedOwn."
+        }
+      ]
+    },
+    {
+      "name": "StoreICNoFeedbackGenerator",
+      "properties": [],
+      "methods": [
+        {
+          "name": "Generate",
+          "parameters": [
+            "compiler::CodeAssemblerState* state"
+          ],
+          "return_type": "void",
+          "logic": "Generates code for StoreIC with no feedback."
+        }
+      ]
+    },
+    {
+      "name": "DefineNamedOwnICNoFeedbackGenerator",
+      "properties": [],
+      "methods": [
+        {
+          "name": "Generate",
+          "parameters": [
+            "compiler::CodeAssemblerState* state"
+          ],
+          "return_type": "void",
+          "logic": "Generates code for DefineNamedOwnIC with no feedback."
+        }
+      ]
+    }
+  ],
+  "functions": [],
+  "enums": [
+    {
+      "name": "StoreMode",
+      "values": [
+        "kSet",
+        "kDefineKeyedOwnInLiteral",
+        "kDefineNamedOwn",
+        "kDefineKeyedOwn"
+      ]
+    },
+    {
+      "name": "PrivateNameSemantics",
+      "values": [
+        "kUpdate",
+        "kDefine"
+      ]
+    }
+  ]
+}

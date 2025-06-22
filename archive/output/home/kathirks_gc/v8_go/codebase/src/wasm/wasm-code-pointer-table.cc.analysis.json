@@ -1,0 +1,83 @@
+{
+  "file_path": "/home/kathirks_gc/v8_go/codebase/src/wasm/wasm-code-pointer-table.cc",
+  "imports": [
+    "src/wasm/wasm-code-pointer-table.h",
+    "src/sandbox/external-entity-table-inl.h",
+    "src/wasm/wasm-code-pointer-table-inl.h"
+  ],
+  "classes": [
+    {
+      "name": "WasmCodePointerTable",
+      "properties": [],
+      "methods": [
+        {
+          "name": "Initialize",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Calls the base class's Initialize method.  Presumably to set up the table."
+        },
+        {
+          "name": "TearDown",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Frees native function handles, sweeps segments based on threshold, ensures freelist is empty, and calls base class TearDown to deallocate resources."
+        },
+        {
+          "name": "FreelistToVector",
+          "parameters": [
+            "WasmCodePointerTable::FreelistHead freelist"
+          ],
+          "return_type": "std::vector<uint32_t>",
+          "logic": "Converts a freelist (a linked list of free entries) into a vector of indices. This is useful for manipulating the freelist data."
+        },
+        {
+          "name": "VectorToFreelist",
+          "parameters": [
+            "std::vector<uint32_t> entries"
+          ],
+          "return_type": "WasmCodePointerTable::FreelistHead",
+          "logic": "Converts a vector of entry indices into a freelist (a linked list of free entries). This is the reverse of FreelistToVector, allowing manipulation of the free list in vector form."
+        },
+        {
+          "name": "SweepSegments",
+          "parameters": [
+            "size_t threshold"
+          ],
+          "return_type": "void",
+          "logic": "Sweeps the segments of the code pointer table, freeing empty segments and consolidating free entries. It checks if enough entries are free to form a full segment and unmaps those if possible. This helps prevent fragmentation."
+        },
+        {
+          "name": "GetOrCreateHandleForNativeFunction",
+          "parameters": [
+            "Address addr"
+          ],
+          "return_type": "WasmCodePointer",
+          "logic": "Retrieves or creates a WasmCodePointer handle for a given native function address. Uses a mutex to protect the native function map. If the address already exists, it returns the existing handle; otherwise, it allocates and initializes a new entry and adds it to the map."
+        },
+        {
+          "name": "EntrypointEqualTo",
+          "parameters": [
+            "WasmCodePointer index",
+            "Address address"
+          ],
+          "return_type": "bool",
+          "logic": "Checks if the entrypoint at the given WasmCodePointer index is equal to the provided address."
+        },
+        {
+          "name": "FreeNativeFunctionHandles",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Frees all WasmCodePointer handles associated with native functions.  Iterates through the native_function_map_, frees each entry, and then clears the map."
+        }
+      ]
+    }
+  ],
+  "functions": [
+    {
+      "name": "GetProcessWideWasmCodePointerTable",
+      "parameters": [],
+      "return_type": "WasmCodePointerTable*",
+      "logic": "A lazy leaky singleton getter for the WasmCodePointerTable.  Returns a pointer to the process-wide instance."
+    }
+  ]
+}

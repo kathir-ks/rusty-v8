@@ -1,0 +1,119 @@
+{
+  "file_path": "/home/kathirks_gc/v8_go/codebase/src/ic/keyed-store-generic.h",
+  "imports": [
+    "src/common/globals.h",
+    "src/compiler/code-assembler.h"
+  ],
+  "classes": [
+    {
+      "name": "KeyedStoreMegamorphicGenerator",
+      "properties": [],
+      "methods": [
+        {
+          "name": "Generate",
+          "parameters": [
+            "compiler::CodeAssemblerState* state"
+          ],
+          "return_type": "void",
+          "logic": "Generates code for the megamorphic keyed store case. This likely handles cases where the key type and/or object shape are highly variable."
+        }
+      ]
+    },
+    {
+      "name": "KeyedStoreGenericGenerator",
+      "properties": [],
+      "methods": [
+        {
+          "name": "Generate",
+          "parameters": [
+            "compiler::CodeAssemblerState* state"
+          ],
+          "return_type": "void",
+          "logic": "Generates generic code for keyed store operations. This likely handles the slow path or fallback cases when more specific optimizations are not applicable."
+        },
+        {
+          "name": "SetProperty",
+          "parameters": [
+            "compiler::CodeAssemblerState* state",
+            "TNode<Context> context",
+            "TNode<JSReceiver> receiver",
+            "TNode<BoolT> is_simple_receiver",
+            "TNode<Name> name",
+            "TNode<Object> value",
+            "LanguageMode language_mode"
+          ],
+          "return_type": "void",
+          "logic": "Sets a property on a JSReceiver (an object that can receive properties). `is_simple_receiver` likely indicates whether optimizations for simple receivers can be used. `name` is the property name, and `value` is the value to set. `LanguageMode` controls strictness semantics."
+        },
+        {
+          "name": "SetProperty",
+          "parameters": [
+            "compiler::CodeAssemblerState* state",
+            "TNode<Context> context",
+            "TNode<JSAny> receiver",
+            "TNode<Object> key",
+            "TNode<Object> value",
+            "LanguageMode language_mode"
+          ],
+          "return_type": "void",
+          "logic": "A more generic version of SetProperty that can handle any receiver and object key.  Essentially the same as KeyedStoreGeneric."
+        },
+        {
+          "name": "CreateDataProperty",
+          "parameters": [
+            "compiler::CodeAssemblerState* state",
+            "TNode<Context> context",
+            "TNode<JSObject> receiver",
+            "TNode<Object> key",
+            "TNode<Object> value"
+          ],
+          "return_type": "void",
+          "logic": "Creates a data property on a JSObject (an object with data properties). This likely handles the case where the property does not already exist."
+        }
+      ]
+    },
+    {
+      "name": "DefineKeyedOwnGenericGenerator",
+      "properties": [],
+      "methods": [
+        {
+          "name": "Generate",
+          "parameters": [
+            "compiler::CodeAssemblerState* state"
+          ],
+          "return_type": "void",
+          "logic": "Generates code for defining a keyed own property generically. This likely handles cases where the property needs to be created as an own property on the object."
+        }
+      ]
+    },
+    {
+      "name": "StoreICNoFeedbackGenerator",
+      "properties": [],
+      "methods": [
+        {
+          "name": "Generate",
+          "parameters": [
+            "compiler::CodeAssemblerState* state"
+          ],
+          "return_type": "void",
+          "logic": "Generates code for store operations without feedback. The IC (Inline Cache) typically tracks object shapes and key types to optimize property access. This generator is likely used in cases where such feedback is not available or desired."
+        }
+      ]
+    },
+    {
+      "name": "DefineNamedOwnICNoFeedbackGenerator",
+      "properties": [],
+      "methods": [
+        {
+          "name": "Generate",
+          "parameters": [
+            "compiler::CodeAssemblerState* state"
+          ],
+          "return_type": "void",
+          "logic": "Generates code for defining a named own property without IC feedback. This is similar to `StoreICNoFeedbackGenerator`, but specifically for named properties."
+        }
+      ]
+    }
+  ],
+  "functions": []
+}

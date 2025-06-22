@@ -1,0 +1,129 @@
+{
+  "metadata": {
+    "path": "/home/kathirks_gc/v8_go/archive/codebase/src/baseline/riscv/baseline-compiler-riscv-inl.h",
+    "file_name": "baseline-compiler-riscv-inl.h",
+    "language": "cpp",
+    "purpose": "Inline implementation details for the RISC-V baseline compiler in V8."
+  },
+  "imports": {
+    "metadata": {
+      "language": "cpp",
+      "purpose": "Includes the base class definition for the baseline compiler."
+    },
+    "code": "#include \"src/baseline/baseline-compiler.h\""
+  },
+  "functions": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "function",
+        "name": "Prologue",
+        "parent": "BaselineCompiler",
+        "about": "Generates the prologue code for a baseline function, setting up the stack frame.",
+        "logic": "1. Enters the baseline stack frame. 2. Calls the kBaselineOutOfLinePrologue builtin to perform initial setup. 3. Fills the register frame with undefined values.",
+        "parameters": [],
+        "return": {
+          "type": "void",
+          "description": "No return value"
+        },
+        "dependencies": [
+          "CallBuiltin",
+          "StackFrame",
+          "Builtin",
+          "kContextRegister",
+          "kJSFunctionRegister",
+          "kJavaScriptCallArgCountRegister",
+          "kJavaScriptCallNewTargetRegister"
+        ]
+      },
+      "code": "void BaselineCompiler::Prologue() {\n              ASM_CODE_COMMENT(&masm_);\n              // Enter the frame here, since CallBuiltin will override lr.\n              __ masm()->EnterFrame(StackFrame::BASELINE);\n              DCHECK_EQ(kJSFunctionRegister, kJavaScriptCallTargetRegister);\n              int max_frame_size = bytecode_->max_frame_size();\n              CallBuiltin<Builtin::kBaselineOutOfLinePrologue>(\n                  kContextRegister, kJSFunctionRegister, kJavaScriptCallArgCountRegister,\n                  max_frame_size, kJavaScriptCallNewTargetRegister, bytecode_);\n              PrologueFillFrame();\n            }"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "function",
+        "name": "PrologueFillFrame",
+        "parent": "BaselineCompiler",
+        "about": "Fills the register portion of the stack frame with undefined values.",
+        "logic": "Initializes registers with undefined values. It unrolls the loop for small frames or uses a loop for larger frames.",
+        "parameters": [],
+        "return": {
+          "type": "void",
+          "description": "No return value"
+        },
+        "dependencies": [
+          "LoadRoot",
+          "kInterpreterAccumulatorRegister",
+          "RootIndex",
+          "kUndefinedValue",
+          "Push",
+          "kJavaScriptCallNewTargetRegister"
+        ]
+      },
+      "code": "void BaselineCompiler::PrologueFillFrame() {\n              ASM_CODE_COMMENT(&masm_);\n              // Inlined register frame fill\n              interpreter::Register new_target_or_generator_register =\n                  bytecode_->incoming_new_target_or_generator_register();\n              __ LoadRoot(kInterpreterAccumulatorRegister, RootIndex::kUndefinedValue);\n              int register_count = bytecode_->register_count();\n              // Magic value\n              const int kLoopUnrollSize = 8;\n              const int new_target_index = new_target_or_generator_register.index();\n              const bool has_new_target = new_target_index != kMaxInt;\n              if (has_new_target) {\n                DCHECK_LE(new_target_index, register_count);\n                __ masm()->AddWord(sp, sp,\n                                   Operand(-(kSystemPointerSize * new_target_index)));\n                for (int i = 0; i < new_target_index; i++) {\n                  __ masm()->StoreWord(kInterpreterAccumulatorRegister,\n                                       MemOperand(sp, i * kSystemPointerSize));\n                }\n                // Push new_target_or_generator.\n                __ Push(kJavaScriptCallNewTargetRegister);\n                register_count -= new_target_index + 1;\n              }\n              if (register_count < 2 * kLoopUnrollSize) {\n                // If the frame is small enough, just unroll the frame fill completely.\n                __ masm()->AddWord(sp, sp, Operand(-(kSystemPointerSize * register_count)));\n                for (int i = 0; i < register_count; ++i) {\n                  __ masm()->StoreWord(kInterpreterAccumulatorRegister,\n                                       MemOperand(sp, i * kSystemPointerSize));\n                }\n              } else {\n                __ masm()->AddWord(sp, sp, Operand(-(kSystemPointerSize * register_count)));\n                for (int i = 0; i < register_count; ++i) {\n                  __ masm()->StoreWord(kInterpreterAccumulatorRegister,\n                                       MemOperand(sp, i * kSystemPointerSize));\n                }\n              }\n            }"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "function",
+        "name": "VerifyFrameSize",
+        "parent": "BaselineCompiler",
+        "about": "Verifies the frame size at runtime, ensuring the stack pointer is in the expected location.",
+        "logic": "Calculates the expected stack pointer location based on the frame size and asserts that it matches the frame pointer.",
+        "parameters": [],
+        "return": {
+          "type": "void",
+          "description": "No return value"
+        },
+        "dependencies": [
+          "AbortReason",
+          "kUnexpectedStackPointer"
+        ]
+      },
+      "code": "void BaselineCompiler::VerifyFrameSize() {\n              ASM_CODE_COMMENT(&masm_);\n              __ masm()->AddWord(t0, sp,\n                                 Operand(InterpreterFrameConstants::kFixedFrameSizeFromFp +\n                                         bytecode_->frame_size()));\n              __ masm()->Assert(eq, AbortReason::kUnexpectedStackPointer, t0, Operand(fp));\n            }"
+    }
+  ],
+  "dependencies": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "BaselineCompiler",
+        "about": "The base class for the baseline compiler."
+      },
+      "code": "class BaselineCompiler {\n                public:\n                    void Prologue();\n                    void PrologueFillFrame();\n                    void VerifyFrameSize();\n                };",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "enum",
+        "name": "BuiltinCallJumpMode",
+        "about": "Enum for builtin call jump modes."
+      },
+      "code": "enum class BuiltinCallJumpMode { kDirect, kIndirect };",
+      "type": "enum"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "enum",
+        "name": "Builtin",
+        "about": "Enum for Builtin functions"
+      },
+      "code": "enum class Builtin { kBaselineOutOfLinePrologue };",
+      "type": "enum"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "enum",
+        "name": "StackFrame",
+        "about": "Enum for stack frame types"
+      },
+      "code": "enum class StackFrame { BASELINE };",
+      "type": "enum"
+    }
+  ],
+  "file_path": "/home/kathirks_gc/v8_go/archive/codebase/src/baseline/riscv/baseline-compiler-riscv-inl.h"
+}

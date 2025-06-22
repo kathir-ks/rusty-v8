@@ -1,0 +1,53 @@
+{
+  "metadata": {
+    "path": "/home/kathirks_gc/v8_go/archive/codebase/src/compiler/state-values-utils.h",
+    "file_name": "state-values-utils.h",
+    "language": "cpp",
+    "purpose": "Defines utility classes for managing and accessing state values in the compiler."
+  },
+  "imports": {
+    "metadata": {
+      "language": "cpp",
+      "purpose": "Includes necessary standard library headers and V8 specific headers for compiler functionality."
+    },
+    "code": "#include <array>\n\n#include \"src/compiler/common-operator.h\"\n#include \"src/compiler/js-graph.h\"\n#include \"src/zone/zone-hashmap.h\""
+  },
+  "classes": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "StateValuesCache",
+        "about": "Caches state values nodes to avoid creating duplicates in the graph.",
+        "attributes": [],
+        "dependencies": [
+          "JSGraph",
+          "Node",
+          "BytecodeLivenessState",
+          "TFGraph",
+          "CommonOperatorBuilder",
+          "Zone",
+          "CustomMatcherZoneHashMap",
+          "ZoneVector",
+          "SparseInputMask"
+        ]
+      },
+      "code": "class V8_EXPORT_PRIVATE StateValuesCache {\n public:\n  explicit StateValuesCache(JSGraph* js_graph);\n\n  Node* GetNodeForValues(Node** values, size_t count,\n                         const BytecodeLivenessState* liveness = nullptr);\n\n private:\n  static const size_t kMaxInputCount = 8;\n  using WorkingBuffer = std::array<Node*, kMaxInputCount>;\n\n  struct NodeKey {\n    Node* node;\n\n    explicit NodeKey(Node* node) : node(node) {}\n  };\n\n  struct StateValuesKey : public NodeKey {\n    // ValueArray - array of nodes ({node} has to be nullptr).\n    size_t count;\n    SparseInputMask mask;\n    Node** values;\n\n    StateValuesKey(size_t count, SparseInputMask mask, Node** values)\n        : NodeKey(nullptr), count(count), mask(mask), values(values) {}\n  };\n\n  static bool AreKeysEqual(void* key1, void* key2);\n  static bool IsKeysEqualToNode(StateValuesKey* key, Node* node);\n  static bool AreValueKeysEqual(StateValuesKey* key1, StateValuesKey* key2);\n\n  // Fills {node_buffer}, starting from {node_count}, with {values}, starting\n  // at {values_idx}, sparsely encoding according to {liveness}. {node_count} is\n  // updated with the new number of inputs in {node_buffer}, and a bitmask of\n  // the sparse encoding is returned.\n  SparseInputMask::BitMaskType FillBufferWithValues(\n      WorkingBuffer* node_buffer, size_t* node_count, size_t* values_idx,\n      Node** values, size_t count, const BytecodeLivenessState* liveness);\n\n  Node* BuildTree(size_t* values_idx, Node** values, size_t count,\n                  const BytecodeLivenessState* liveness, size_t level);\n\n  WorkingBuffer* GetWorkingSpace(size_t level);\n  Node* GetEmptyStateValues();\n  Node* GetValuesNodeFromCache(Node** nodes, size_t count,\n                               SparseInputMask mask);\n\n  TFGraph* graph() { return js_graph_->graph(); }\n  CommonOperatorBuilder* common() { return js_graph_->common(); }\n\n  Zone* zone() { return graph()->zone(); }\n\n  JSGraph* js_graph_;\n  CustomMatcherZoneHashMap hash_map_;\n  ZoneVector<WorkingBuffer> working_space_;  // One working space per level.\n  Node* empty_state_values_;\n};"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "StateValuesAccess",
+        "about": "Provides an iterator-based interface to access the values stored in a state values node.",
+        "attributes": [],
+        "dependencies": [
+          "Node",
+          "MachineType"
+        ]
+      },
+      "code": "class V8_EXPORT_PRIVATE StateValuesAccess {\n public:\n  struct TypedNode {\n    Node* node;\n    MachineType type;\n    TypedNode(Node* node, MachineType type) : node(node), type(type) {}\n  };\n\n  class V8_EXPORT_PRIVATE iterator {\n   public:\n    bool operator!=(iterator const& other) const;\n    iterator& operator++();\n    TypedNode operator*();\n\n    Node* node();\n    bool done() const { return current_depth_ < 0; }\n\n    // Returns the number of empty nodes that were skipped over.\n    size_t AdvanceTillNotEmpty();\n\n   private:\n    friend class StateValuesAccess;\n\n    iterator() : current_depth_(-1) {}\n    explicit iterator(Node* node);\n\n    MachineType type();\n    void Advance();\n    void EnsureValid();\n\n    SparseInputMask::InputIterator* Top();\n    void Push(Node* node);\n    void Pop();\n\n    static const int kMaxInlineDepth = 8;\n    SparseInputMask::InputIterator stack_[kMaxInlineDepth];\n    int current_depth_;\n  };\n\n  explicit StateValuesAccess(Node* node) : node_(node) {}\n\n  size_t size() const;\n  iterator begin() const { return iterator(node_); }\n  iterator begin_without_receiver() const {\n    return ++begin();  // Skip the receiver.\n  }\n  iterator begin_without_receiver_and_skip(int n_skips) {\n    iterator it = begin_without_receiver();\n    while (n_skips > 0 && !it.done()) {\n      ++it;\n      --n_skips;\n    }\n    return it;\n  }\n  iterator end() const { return iterator(); }\n\n private:\n  Node* node_;\n};"
+    }
+  ],
+  "file_path": "/home/kathirks_gc/v8_go/archive/codebase/src/compiler/state-values-utils.h"
+}

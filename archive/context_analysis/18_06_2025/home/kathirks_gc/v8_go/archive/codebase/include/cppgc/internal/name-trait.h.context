@@ -1,0 +1,164 @@
+{
+  "metadata": {
+    "path": "/home/kathirks_gc/v8_go/archive/codebase/include/cppgc/internal/name-trait.h",
+    "file_name": "name-trait.h",
+    "language": "cpp",
+    "purpose": "Defines traits and utilities for retrieving object names for the garbage collector (cppgc).  Allows compile-time typename retrieval when supported."
+  },
+  "imports": {
+    "metadata": {
+      "language": "cpp",
+      "purpose": "Includes standard C++ headers and cppgc/v8 headers."
+    },
+    "code": "#include <cstddef>\n            #include <cstdint>\n            #include <type_traits>\n\n            #include \"cppgc/name-provider.h\"\n            #include \"v8config.h\"  // NOLINT(build/include_directory)"
+  },
+  "classes": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "struct",
+        "name": "NameBuffer",
+        "about": "Provides constexpr c-string storage for a name of fixed size.",
+        "attributes": [
+          {
+            "name": "name",
+            "type": "char[Size + 1]",
+            "access": "public",
+            "purpose": "Character array to store the name string.  Null-terminated."
+          }
+        ],
+        "dependencies": []
+      },
+      "code": "template <size_t Size>\n            struct NameBuffer {\n              char name[Size + 1]{};\n\n              static constexpr NameBuffer FromCString(const char* str) {\n                NameBuffer result;\n                for (size_t i = 0; i < Size; ++i) result.name[i] = str[i];\n                result.name[Size] = 0;\n                return result;\n              }\n            };"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "struct",
+        "name": "HeapObjectName",
+        "about": "A simple struct to hold a heap object's name and a flag indicating if the name was hidden.",
+        "attributes": [
+          {
+            "name": "value",
+            "type": "const char*",
+            "access": "public",
+            "purpose": "Pointer to the name string."
+          },
+          {
+            "name": "name_was_hidden",
+            "type": "bool",
+            "access": "public",
+            "purpose": "Flag indicating if the provided name was a hidden name."
+          }
+        ],
+        "dependencies": []
+      },
+      "code": "struct HeapObjectName {\n              const char* value;\n              bool name_was_hidden;\n            };"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "enum class",
+        "name": "HeapObjectNameForUnnamedObject",
+        "about": "An enum class to specify how to retrieve a name for an unnamed object.",
+        "attributes": [],
+        "dependencies": []
+      },
+      "code": "enum class HeapObjectNameForUnnamedObject : uint8_t {\n              kUseClassNameIfSupported,\n              kUseHiddenName,\n            };"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "NameTraitBase",
+        "about": "Base class for NameTrait to inherit common functionalities from.",
+        "attributes": [],
+        "dependencies": []
+      },
+      "code": "class V8_EXPORT NameTraitBase {\n             protected:\n              static HeapObjectName GetNameFromTypeSignature(const char*);\n            };"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "NameTrait",
+        "extends": "NameTraitBase",
+        "about": "Trait that specifies how the garbage collector retrieves the name for a given object.",
+        "attributes": [],
+        "dependencies": [
+          "NameTraitBase",
+          "NameProvider",
+          "HeapObjectName",
+          "HeapObjectNameForUnnamedObject"
+        ]
+      },
+      "code": "template <typename T>\n            class NameTrait final : public NameTraitBase {\n             public:\n              static constexpr bool HasNonHiddenName() {\n            #if CPPGC_SUPPORTS_COMPILE_TIME_TYPENAME\n                return true;\n            #elif CPPGC_SUPPORTS_OBJECT_NAMES\n                return true;\n            #else   // !CPPGC_SUPPORTS_OBJECT_NAMES\n                return std::is_base_of<NameProvider, T>::value;\n            #endif  // !CPPGC_SUPPORTS_OBJECT_NAMES\n              }\n\n              static HeapObjectName GetName(\n                  const void* obj, HeapObjectNameForUnnamedObject name_retrieval_mode) {\n                return GetNameFor(static_cast<const T*>(obj), name_retrieval_mode);\n              }\n\n             private:\n              static HeapObjectName GetNameFor(const NameProvider* name_provider,\n                                               HeapObjectNameForUnnamedObject) {\n                // Objects inheriting from `NameProvider` are not considered unnamed as\n                // users already provided a name for them.\n                return {name_provider->GetHumanReadableName(), false};\n              }\n\n              static HeapObjectName GetNameFor(\n                  const void*, HeapObjectNameForUnnamedObject name_retrieval_mode) {\n                if (name_retrieval_mode == HeapObjectNameForUnnamedObject::kUseHiddenName)\n                  return {NameProvider::kHiddenName, true};\n\n            #if CPPGC_SUPPORTS_COMPILE_TIME_TYPENAME\n                return {GetTypename<T>(), false};\n            #elif CPPGC_SUPPORTS_OBJECT_NAMES\n\n            #if defined(V8_CC_GNU)\n            #define PRETTY_FUNCTION_VALUE __PRETTY_FUNCTION__\n            #elif defined(V8_CC_MSVC)\n            #define PRETTY_FUNCTION_VALUE __FUNCSIG__\n            #else\n            #define PRETTY_FUNCTION_VALUE nullptr\n            #endif\n\n                static const HeapObjectName leaky_name =\n                    GetNameFromTypeSignature(PRETTY_FUNCTION_VALUE);\n                return leaky_name;\n\n            #undef PRETTY_FUNCTION_VALUE\n\n            #else   // !CPPGC_SUPPORTS_OBJECT_NAMES\n                // We wanted to use a class name but were unable to provide one due to\n                // compiler limitations or build configuration. As such, return the hidden\n                // name with name_was_hidden=false, which will cause this object to be\n                // visible in the snapshot.\n                return {NameProvider::kHiddenName, false};\n            #endif  // !CPPGC_SUPPORTS_OBJECT_NAMES\n              }\n            };"
+    }
+  ],
+  "functions": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "function",
+        "name": "GetTypename",
+        "about": "Retrieves the type name of a template type T at compile time using __PRETTY_FUNCTION__.",
+        "logic": "Uses compiler-specific features (clang's __PRETTY_FUNCTION__) to extract the typename.  The NameBuffer is used to create a constexpr string.",
+        "parameters": [],
+        "return": {
+          "type": "const char*",
+          "description": "A pointer to a static constexpr string containing the typename."
+        },
+        "dependencies": [
+          "NameBuffer"
+        ]
+      },
+      "code": "template <typename T>\n            const char* GetTypename() {\n              static constexpr char kSelfPrefix[] =\n                  \"const char *cppgc::internal::GetTypename() [T =\";\n              static_assert(__builtin_strncmp(__PRETTY_FUNCTION__, kSelfPrefix,\n                                              sizeof(kSelfPrefix) - 1) == 0,\n                            \"The prefix must match\");\n              static constexpr const char* kTypenameStart =\n                  __PRETTY_FUNCTION__ + sizeof(kSelfPrefix);\n              static constexpr size_t kTypenameSize =\n                  __builtin_strlen(__PRETTY_FUNCTION__) - sizeof(kSelfPrefix) - 1;\n              // NameBuffer is an indirection that is needed to make sure that only a\n              // substring of __PRETTY_FUNCTION__ gets materialized in the binary.\n              static constexpr auto buffer =\n                  NameBuffer<kTypenameSize>::FromCString(kTypenameStart);\n              return buffer.name;\n            }"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "typedef",
+        "name": "NameCallback",
+        "about": "A function pointer type for retrieving HeapObjectName.",
+        "logic": "Defines a function pointer type that takes a void* and a HeapObjectNameForUnnamedObject and returns a HeapObjectName.",
+        "parameters": [],
+        "return": {
+          "type": "N/A",
+          "description": "N/A"
+        },
+        "dependencies": [
+          "HeapObjectName",
+          "HeapObjectNameForUnnamedObject"
+        ]
+      },
+      "code": "using NameCallback = HeapObjectName (*)(const void*,\n                                                    HeapObjectNameForUnnamedObject);"
+    }
+  ],
+  "dependencies": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "struct",
+        "name": "HeapObjectName",
+        "about": "A simple struct to hold a heap object's name and a flag indicating if the name was hidden.",
+        "attributes": [],
+        "dependencies": []
+      },
+      "code": "struct HeapObjectName {\n                const char* value;\n                bool name_was_hidden;\n                };",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "enum class",
+        "name": "HeapObjectNameForUnnamedObject",
+        "about": "An enum class to specify how to retrieve a name for an unnamed object.",
+        "attributes": [],
+        "dependencies": []
+      },
+      "code": "enum class HeapObjectNameForUnnamedObject : uint8_t {\n                kUseClassNameIfSupported,\n                kUseHiddenName,\n                };",
+      "type": "class"
+    }
+  ],
+  "file_path": "/home/kathirks_gc/v8_go/archive/codebase/include/cppgc/internal/name-trait.h"
+}

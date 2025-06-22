@@ -1,0 +1,85 @@
+{
+  "metadata": {
+    "path": "/home/kathirks_gc/v8_go/archive/codebase/src/snapshot/snapshot-data.cc",
+    "file_name": "snapshot-data.cc",
+    "language": "cpp",
+    "purpose": "Provides the implementation for the SnapshotData class, which encapsulates serialized data for snapshots in the V8 JavaScript engine."
+  },
+  "imports": {
+    "metadata": {
+      "language": "cpp",
+      "purpose": "Includes necessary headers for snapshot data structures, assertions, and the serializer."
+    },
+    "code": "#include \"src/snapshot/snapshot-data.h\"\n\n#include \"src/common/assert-scope.h\"\n#include \"src/snapshot/serializer.h\""
+  },
+  "classes": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "SerializedData",
+        "about": "Base class for serialized data, providing allocation and access methods.",
+        "attributes": [
+          {
+            "name": "data_",
+            "type": "uint8_t*",
+            "access": "private",
+            "purpose": "Pointer to the allocated data buffer."
+          },
+          {
+            "name": "size_",
+            "type": "uint32_t",
+            "access": "private",
+            "purpose": "Size of the allocated data buffer."
+          },
+          {
+            "name": "owns_data_",
+            "type": "bool",
+            "access": "private",
+            "purpose": "Indicates whether this object owns the data buffer."
+          }
+        ],
+        "dependencies": []
+      },
+      "code": "namespace v8 {\nnamespace internal {\n\nvoid SerializedData::AllocateData(uint32_t size) {\n  DCHECK(!owns_data_);\n  data_ = NewArray<uint8_t>(size);\n  size_ = size;\n  owns_data_ = true;\n}\n\n// static\nconstexpr uint32_t SerializedData::kMagicNumber;"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "SnapshotData",
+        "extends": "SerializedData",
+        "about": "Represents the data of a snapshot, containing the serialized payload and header information.",
+        "attributes": [],
+        "dependencies": [
+          "Serializer"
+        ]
+      },
+      "code": "SnapshotData::SnapshotData(const Serializer* serializer) {\n  DisallowGarbageCollection no_gc;\n  const std::vector<uint8_t>* payload = serializer->Payload();\n\n  // Calculate sizes.\n  uint32_t size = kHeaderSize + static_cast<uint32_t>(payload->size());\n\n  // Allocate backing store and create result data.\n  AllocateData(size);\n\n  // Zero out pre-payload data. Part of that is only used for padding.\n  memset(data_, 0, kHeaderSize);\n\n  // Set header values.\n  SetMagicNumber();\n  SetHeaderValue(kPayloadLengthOffset, static_cast<int>(payload->size()));\n\n  // Copy serialized data.\n  CopyBytes(data_ + kHeaderSize, payload->data(),\n            static_cast<size_t>(payload->size()));\n}\n\nbase::Vector<const uint8_t> SnapshotData::Payload() const {\n  const uint8_t* payload = data_ + kHeaderSize;\n  uint32_t length = GetHeaderValue(kPayloadLengthOffset);\n  DCHECK_EQ(data_ + size_, payload + length);\n  return base::Vector<const uint8_t>(payload, length);\n}\n\n}  // namespace internal\n}  // namespace v8"
+    }
+  ],
+  "dependencies": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "Serializer",
+        "about": "Abstract class for serializing the V8 heap.",
+        "attributes": []
+      },
+      "code": "class Serializer {\n public:\n  const std::vector<uint8_t>* Payload() const { return nullptr; }\n};",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "DisallowGarbageCollection",
+        "about": "RAII class that prevents garbage collection during its lifetime."
+      },
+      "code": "class DisallowGarbageCollection {\n public:\n  DisallowGarbageCollection() {}\n};",
+      "type": "class"
+    }
+  ],
+  "file_path": "/home/kathirks_gc/v8_go/archive/codebase/src/snapshot/snapshot-data.cc"
+}

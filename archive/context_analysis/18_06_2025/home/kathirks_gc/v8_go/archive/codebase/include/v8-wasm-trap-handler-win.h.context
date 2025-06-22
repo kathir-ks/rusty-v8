@@ -1,0 +1,41 @@
+{
+  "metadata": {
+    "path": "/home/kathirks_gc/v8_go/archive/codebase/include/v8-wasm-trap-handler-win.h",
+    "file_name": "v8-wasm-trap-handler-win.h",
+    "language": "cpp",
+    "purpose": "Declares a function to handle WebAssembly trap exceptions on Windows."
+  },
+  "imports": {
+    "metadata": {
+      "language": "cpp",
+      "purpose": "Includes necessary Windows API definitions and V8 configuration."
+    },
+    "code": "#include <windows.h>\n            #include \"v8config.h\"  // NOLINT(build/include_directory)"
+  },
+  "functions": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "function",
+        "name": "TryHandleWebAssemblyTrapWindows",
+        "parent": "v8",
+        "about": "Determines if a memory access violation is a WebAssembly trap and handles it.",
+        "logic": "This function checks if a given exception (presumably a memory access violation) occurred due to an out-of-bounds access in WebAssembly. If so, it modifies the exception context to allow execution to continue after the trap is handled. It's Windows-specific and designed to be used within a vectored exception handler.",
+        "parameters": [
+          {
+            "name": "exception",
+            "type": "EXCEPTION_POINTERS*",
+            "purpose": "A pointer to an EXCEPTION_POINTERS structure, provided to the exception handler."
+          }
+        ],
+        "return": {
+          "type": "bool",
+          "description": "True if the exception was a WebAssembly trap and was handled; false otherwise."
+        },
+        "dependencies": []
+      },
+      "code": "V8_EXPORT bool TryHandleWebAssemblyTrapWindows(EXCEPTION_POINTERS* exception);"
+    }
+  ],
+  "file_path": "/home/kathirks_gc/v8_go/archive/codebase/include/v8-wasm-trap-handler-win.h"
+}

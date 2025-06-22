@@ -1,0 +1,78 @@
+{
+  "metadata": {
+    "path": "/home/kathirks_gc/v8_go/archive/codebase/include/cppgc/heap-handle.h",
+    "file_name": "heap-handle.h",
+    "language": "cpp",
+    "purpose": "Defines the HeapHandle class, an opaque handle for additional heap APIs in cppgc."
+  },
+  "imports": {
+    "metadata": {
+      "language": "cpp",
+      "purpose": "Includes v8 configuration definitions."
+    },
+    "code": "#include \"v8config.h\"  // NOLINT(build/include_directory)"
+  },
+  "classes": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "HeapHandle",
+        "about": "Opaque handle used for additional heap APIs.",
+        "attributes": [
+          {
+            "name": "is_incremental_marking_in_progress_",
+            "type": "bool",
+            "access": "private",
+            "purpose": "Indicates whether incremental marking is in progress."
+          },
+          {
+            "name": "is_young_generation_enabled_",
+            "type": "bool",
+            "access": "private",
+            "purpose": "Indicates whether the young generation is enabled."
+          }
+        ],
+        "dependencies": [
+          "internal::HeapBase",
+          "internal::WriteBarrierTypeForCagedHeapPolicy",
+          "internal::WriteBarrierTypeForNonCagedHeapPolicy"
+        ]
+      },
+      "code": "class HeapHandle {\n            public:\n                // Deleted copy ctor to avoid treating the type by value.\n                HeapHandle(const HeapHandle&) = delete;\n                HeapHandle& operator=(const HeapHandle&) = delete;\n\n            private:\n                HeapHandle() = default;\n\n                V8_INLINE bool is_incremental_marking_in_progress() const {\n                    return is_incremental_marking_in_progress_;\n                }\n\n                V8_INLINE bool is_young_generation_enabled() const {\n                    return is_young_generation_enabled_;\n                }\n\n                bool is_incremental_marking_in_progress_ = false;\n                bool is_young_generation_enabled_ = false;\n\n                friend class internal::HeapBase;\n                friend class internal::WriteBarrierTypeForCagedHeapPolicy;\n                friend class internal::WriteBarrierTypeForNonCagedHeapPolicy;\n            };"
+    }
+  ],
+  "dependencies": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "internal::HeapBase",
+        "about": "Forward declaration for HeapBase class"
+      },
+      "code": "class HeapBase;",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "internal::WriteBarrierTypeForCagedHeapPolicy",
+        "about": "Forward declaration for WriteBarrierTypeForCagedHeapPolicy class"
+      },
+      "code": "class WriteBarrierTypeForCagedHeapPolicy;",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "internal::WriteBarrierTypeForNonCagedHeapPolicy",
+        "about": "Forward declaration for WriteBarrierTypeForNonCagedHeapPolicy class"
+      },
+      "code": "class WriteBarrierTypeForNonCagedHeapPolicy;",
+      "type": "class"
+    }
+  ],
+  "file_path": "/home/kathirks_gc/v8_go/archive/codebase/include/cppgc/heap-handle.h"
+}

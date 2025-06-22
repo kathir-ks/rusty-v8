@@ -1,0 +1,109 @@
+{
+  "file_path": "/home/kathirks_gc/v8_go/codebase/src/deoptimizer/x64/deoptimizer-x64.cc",
+  "imports": [
+    "src/codegen/flush-instruction-cache.h",
+    "src/codegen/macro-assembler.h",
+    "src/common/code-memory-access-inl.h",
+    "src/deoptimizer/deoptimizer.h",
+    "src/execution/isolate-data.h"
+  ],
+  "classes": [
+    {
+      "name": "Deoptimizer",
+      "properties": [
+        "kEagerDeoptExitSize",
+        "kLazyDeoptExitSize",
+        "kAdaptShadowStackOffsetToSubtract"
+      ],
+      "methods": [
+        {
+          "name": "PatchToJump",
+          "parameters": [
+            "Address pc",
+            "Address new_pc"
+          ],
+          "return_type": "void",
+          "logic": "Patches the instruction at address 'pc' to jump to address 'new_pc'.  First checks if the instruction at 'pc' is a NOP or JMP already. It allocates a temporary assembler to emit a relative jump instruction to new_pc, and flushes the instruction cache."
+        }
+      ]
+    },
+    {
+      "name": "RegisterValues",
+      "properties": [
+        "simd128_registers_"
+      ],
+      "methods": [
+        {
+          "name": "GetFloatRegister",
+          "parameters": [
+            "unsigned n"
+          ],
+          "return_type": "Float32",
+          "logic": "Returns the value of the nth float register from the simd128_registers_ array."
+        },
+        {
+          "name": "GetDoubleRegister",
+          "parameters": [
+            "unsigned n"
+          ],
+          "return_type": "Float64",
+          "logic": "Returns the value of the nth double register from the simd128_registers_ array."
+        },
+        {
+          "name": "SetDoubleRegister",
+          "parameters": [
+            "unsigned n",
+            "Float64 value"
+          ],
+          "return_type": "void",
+          "logic": "Sets the value of the nth double register in the simd128_registers_ array to the provided value."
+        }
+      ]
+    },
+    {
+      "name": "FrameDescription",
+      "properties": [
+        "caller_pc_",
+        "pc_"
+      ],
+      "methods": [
+        {
+          "name": "SetCallerPc",
+          "parameters": [
+            "unsigned offset",
+            "intptr_t value"
+          ],
+          "return_type": "void",
+          "logic": "Sets the caller's program counter (PC) value at the specified offset in the frame and also sets the caller_pc_ member."
+        },
+        {
+          "name": "SetCallerFp",
+          "parameters": [
+            "unsigned offset",
+            "intptr_t value"
+          ],
+          "return_type": "void",
+          "logic": "Sets the caller's frame pointer (FP) value at the specified offset in the frame."
+        },
+        {
+          "name": "SetCallerConstantPool",
+          "parameters": [
+            "unsigned offset",
+            "intptr_t value"
+          ],
+          "return_type": "void",
+          "logic": "Indicates there is no constant pool support, and raises an error."
+        },
+        {
+          "name": "SetPc",
+          "parameters": [
+            "intptr_t pc"
+          ],
+          "return_type": "void",
+          "logic": "Sets the program counter (PC) value for the current frame."
+        }
+      ]
+    }
+  ],
+  "functions": []
+}

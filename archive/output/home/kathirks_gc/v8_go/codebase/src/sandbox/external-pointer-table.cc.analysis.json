@@ -1,0 +1,99 @@
+{
+  "file_path": "/home/kathirks_gc/v8_go/codebase/src/sandbox/external-pointer-table.cc",
+  "imports": [
+    "src/sandbox/external-pointer-table.h",
+    "src/execution/isolate.h",
+    "src/heap/read-only-spaces.h",
+    "src/logging/counters.h",
+    "src/sandbox/external-pointer-table-inl.h"
+  ],
+  "classes": [
+    {
+      "name": "SegmentsIterator",
+      "properties": [
+        "streams_"
+      ],
+      "methods": [
+        {
+          "name": "AddSegments",
+          "parameters": [
+            "const std::set<Segment>& segments",
+            "Data data"
+          ],
+          "return_type": "void",
+          "logic": "Adds a set of segments and associated data to the iterator's streams."
+        },
+        {
+          "name": "Next",
+          "parameters": [],
+          "return_type": "std::optional<std::pair<Segment, Data>>",
+          "logic": "Returns the next segment in highest to lowest address order, along with its associated data. Returns an empty optional if there are no more segments."
+        }
+      ]
+    },
+    {
+      "name": "ExternalPointerTable",
+      "properties": [],
+      "methods": [
+        {
+          "name": "SetUpFromReadOnlyArtifacts",
+          "parameters": [
+            "Space* read_only_space",
+            "const ReadOnlyArtifacts* artifacts"
+          ],
+          "return_type": "void",
+          "logic": "Sets up the external pointer table from read-only artifacts, allocating and initializing entries based on the registry entries in the artifacts."
+        },
+        {
+          "name": "EvacuateAndSweepAndCompact",
+          "parameters": [
+            "Space* space",
+            "Space* from_space",
+            "Counters* counters"
+          ],
+          "return_type": "uint32_t",
+          "logic": "Evacuates, sweeps, and compacts the external pointer table space. It merges segments from a 'from_space' (if provided), clears dead entries, rebuilds the freelist, and resolves evacuation entries. Returns the number of live entries."
+        },
+        {
+          "name": "SweepAndCompact",
+          "parameters": [
+            "Space* space",
+            "Counters* counters"
+          ],
+          "return_type": "uint32_t",
+          "logic": "Sweeps and compacts the specified space, without evacuation from another space.  Essentially a call to EvacuateAndSweepAndCompact with from_space = nullptr."
+        },
+        {
+          "name": "Sweep",
+          "parameters": [
+            "Space* space",
+            "Counters* counters"
+          ],
+          "return_type": "uint32_t",
+          "logic": "Performs a sweep of the table, same as SweepAndCompact."
+        },
+        {
+          "name": "ResolveEvacuationEntryDuringSweeping",
+          "parameters": [
+            "uint32_t new_index",
+            "ExternalPointerHandle* handle_location",
+            "uint32_t start_of_evacuation_area"
+          ],
+          "return_type": "void",
+          "logic": "Resolves an evacuation entry during sweeping. It copies the entry to its new location, updates the handle to point to the new entry, and updates managed resources if present."
+        },
+        {
+          "name": "UpdateAllEvacuationEntries",
+          "parameters": [
+            "Space* space",
+            "std::function<Address(Address)> function"
+          ],
+          "return_type": "void",
+          "logic": "Updates all evacuation entries in the specified space using a provided function to determine the new location."
+        }
+      ]
+    }
+  ],
+  "functions": [],
+  "V8_COMPRESS_POINTERS": "conditional compilation active"
+}

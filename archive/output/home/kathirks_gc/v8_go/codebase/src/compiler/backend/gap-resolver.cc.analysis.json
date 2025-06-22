@@ -1,0 +1,74 @@
+{
+  "file_path": "/home/kathirks_gc/v8_go/codebase/src/compiler/backend/gap-resolver.cc",
+  "imports": [
+    "src/compiler/backend/gap-resolver.h",
+    "algorithm",
+    "set",
+    "src/base/enum-set.h",
+    "src/codegen/register-configuration.h"
+  ],
+  "classes": [
+    {
+      "name": "GapResolver",
+      "properties": [
+        "assembler_"
+      ],
+      "methods": [
+        {
+          "name": "Resolve",
+          "parameters": [
+            "ParallelMove* moves"
+          ],
+          "return_type": "void",
+          "logic": "Resolves a ParallelMove, eliminating redundant moves and handling moves between registers, stack slots, and constants. It uses a fast path for non-conflicting moves and a more complex algorithm involving cycles and temporary locations for conflicting moves."
+        },
+        {
+          "name": "PerformCycle",
+          "parameters": [
+            "const std::vector<MoveOperands*>& cycle"
+          ],
+          "return_type": "void",
+          "logic": "Performs a cycle of moves, using a platform-specific temporary location to avoid conflicts.  It handles simple swaps as a special case and uses a generic move-cycle algorithm for other cases."
+        },
+        {
+          "name": "PerformMove",
+          "parameters": [
+            "ParallelMove* moves",
+            "MoveOperands* move"
+          ],
+          "return_type": "void",
+          "logic": "Performs a move, potentially breaking cycles by pushing operands to the stack and retrying. It uses PerformMoveHelper to handle most cases."
+        },
+        {
+          "name": "PerformMoveHelper",
+          "parameters": [
+            "ParallelMove* moves",
+            "MoveOperands* move",
+            "std::vector<MoveOperands*>* cycle"
+          ],
+          "return_type": "MoveOperands*",
+          "logic": "Recursively assembles moves in a dependency graph, detecting and handling cycles. Returns a pointer to a 'blocking_move' if a cycle is found that it cannot currently process, otherwise returns nullptr."
+        }
+      ]
+    }
+  ],
+  "functions": [
+    {
+      "name": "GetKind",
+      "parameters": [
+        "const InstructionOperand& move"
+      ],
+      "return_type": "MoveOperandKind",
+      "logic": "Determines the kind of a move operand (constant, general-purpose register, floating-point register, or stack)."
+    },
+    {
+      "name": "IsSwap",
+      "parameters": [
+        "MoveOperands* move1",
+        "MoveOperands* move2"
+      ],
+      "return_type": "bool",
+      "logic": "Checks if a 2-move cycle is a simple swap between two locations. This includes checking if the representations are equal, and the locations are the same registers, or stack slots with same index."
+    }
+  ]
+}

@@ -1,0 +1,187 @@
+{
+  "metadata": {
+    "path": "/home/kathirks_gc/v8_go/archive/codebase/src/compiler/add-type-assertions-reducer.cc",
+    "file_name": "add-type-assertions-reducer.cc",
+    "language": "cpp",
+    "purpose": "Adds type assertions to the graph to improve type safety and enable further optimizations."
+  },
+  "imports": {
+    "metadata": {
+      "language": "cpp",
+      "purpose": "Includes necessary headers for the AddTypeAssertionsReducer class and its dependencies."
+    },
+    "code": "#include \"src/compiler/add-type-assertions-reducer.h\"\n\n#include \"src/compiler/node-properties.h\"\n#include \"src/compiler/schedule.h\""
+  },
+  "classes": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "struct",
+        "name": "AddTypeAssertionsImpl",
+        "about": "Implements the logic for adding type assertions to the graph.",
+        "attributes": [
+          {
+            "name": "jsgraph",
+            "type": "JSGraph*",
+            "access": "public",
+            "purpose": "Pointer to the JSGraph instance."
+          },
+          {
+            "name": "schedule",
+            "type": "Schedule*",
+            "access": "public",
+            "purpose": "Pointer to the Schedule instance."
+          },
+          {
+            "name": "phase_zone",
+            "type": "Zone*",
+            "access": "public",
+            "purpose": "Pointer to the zone to allocate memory in."
+          },
+          {
+            "name": "simplified",
+            "type": "SimplifiedOperatorBuilder*",
+            "access": "public",
+            "purpose": "Pointer to the SimplifiedOperatorBuilder instance."
+          },
+          {
+            "name": "graph",
+            "type": "TFGraph*",
+            "access": "public",
+            "purpose": "Pointer to the TFGraph instance."
+          }
+        ],
+        "dependencies": [
+          "JSGraph",
+          "Schedule",
+          "Zone",
+          "SimplifiedOperatorBuilder",
+          "TFGraph"
+        ]
+      },
+      "code": "struct AddTypeAssertionsImpl {\n  JSGraph* jsgraph;\n  Schedule* schedule;\n  Zone* phase_zone;\n\n  SimplifiedOperatorBuilder* simplified = jsgraph->simplified();\n  TFGraph* graph = jsgraph->graph();\n\n  void Run();\n  void ProcessBlock(BasicBlock* block);\n  void InsertAssertion(Node* asserted, Node* effect_successor);\n};"
+    }
+  ],
+  "functions": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "method",
+        "name": "Run",
+        "parent": "AddTypeAssertionsImpl",
+        "about": "Executes the type assertion insertion process for all basic blocks in the schedule.",
+        "logic": "Iterates through each basic block in reverse postorder and calls ProcessBlock for each block.",
+        "parameters": [],
+        "return": {
+          "type": "void",
+          "description": "No return value"
+        },
+        "dependencies": [
+          "ProcessBlock",
+          "BasicBlock"
+        ]
+      },
+      "code": "void AddTypeAssertionsImpl::Run() {\n  for (BasicBlock* block : *(schedule->rpo_order())) {\n    ProcessBlock(block);\n  }\n}"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "method",
+        "name": "ProcessBlock",
+        "parent": "AddTypeAssertionsImpl",
+        "about": "Processes a single basic block to identify and insert type assertions.",
+        "logic": "Iterates through the nodes in the block.  It maintains a list of 'pending' nodes that are candidates for type assertions.  If a node has effect outputs, the pending nodes are asserted to have the correct type before the effectful node. Nodes like AssertType, Allocate, ObjectState, ObjectId, Phi, Unreachable, and nodes without types are skipped. Nodes inside BeginRegion/FinishRegion pairs are also skipped.",
+        "parameters": [
+          {
+            "name": "block",
+            "type": "BasicBlock*",
+            "purpose": "The basic block to process."
+          }
+        ],
+        "return": {
+          "type": "void",
+          "description": "No return value"
+        },
+        "dependencies": [
+          "Node",
+          "InsertAssertion",
+          "NodeProperties::IsTyped",
+          "NodeProperties::GetType",
+          "Type::CanBeAsserted",
+          "IrOpcode"
+        ]
+      },
+      "code": "void AddTypeAssertionsImpl::ProcessBlock(BasicBlock* block) {\n  // To keep things simple, this only inserts type assertions for nodes that are\n  // followed by an effectful operation in the same basic block. We could build\n  // a proper new effect chain like in the EffectControlLinearizer, but right\n  // now, this doesn't quite seem worth the effort.\n  std::vector<Node*> pending;\n  bool inside_of_region = false;\n  for (Node* node : *block) {\n    if (node->opcode() == IrOpcode::kBeginRegion) {\n      inside_of_region = true;\n    } else if (inside_of_region) {\n      if (node->opcode() == IrOpcode::kFinishRegion) {\n        inside_of_region = false;\n      }\n      continue;\n    }\n    if (node->op()->EffectOutputCount() == 1 &&\n        node->op()->EffectInputCount() == 1) {\n      for (Node* pending_node : pending) {\n        InsertAssertion(pending_node, node);\n      }\n      pending.clear();\n    }\n    if (node->opcode() == IrOpcode::kAssertType ||\n        node->opcode() == IrOpcode::kAllocate ||\n        node->opcode() == IrOpcode::kObjectState ||\n        node->opcode() == IrOpcode::kObjectId ||\n        node->opcode() == IrOpcode::kPhi || !NodeProperties::IsTyped(node) ||\n        node->opcode() == IrOpcode::kUnreachable) {\n      continue;\n    }\n    Type type = NodeProperties::GetType(node);\n    if (type.CanBeAsserted()) {\n      pending.push_back(node);\n    }\n  }\n}"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "method",
+        "name": "InsertAssertion",
+        "parent": "AddTypeAssertionsImpl",
+        "about": "Inserts a type assertion node into the graph.",
+        "logic": "Creates a new AssertType node, linking it to the asserted node and the effect successor.  It then replaces the effect input of the effect successor with the new assertion node.",
+        "parameters": [
+          {
+            "name": "asserted",
+            "type": "Node*",
+            "purpose": "The node whose type is being asserted."
+          },
+          {
+            "name": "effect_successor",
+            "type": "Node*",
+            "purpose": "The node that consumes the effect of the asserted node."
+          }
+        ],
+        "return": {
+          "type": "void",
+          "description": "No return value"
+        },
+        "dependencies": [
+          "Node",
+          "NodeProperties::GetType",
+          "NodeProperties::GetEffectInput",
+          "NodeProperties::ReplaceEffectInput",
+          "simplified->AssertType"
+        ]
+      },
+      "code": "void AddTypeAssertionsImpl::InsertAssertion(Node* asserted,\n                                            Node* effect_successor) {\n  Node* assertion = graph->NewNode(\n      simplified->AssertType(NodeProperties::GetType(asserted)), asserted,\n      NodeProperties::GetEffectInput(effect_successor));\n  NodeProperties::ReplaceEffectInput(effect_successor, assertion);\n}"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "function",
+        "name": "AddTypeAssertions",
+        "about": "Entry point for adding type assertions to the graph.",
+        "logic": "Creates an instance of AddTypeAssertionsImpl and calls its Run method.",
+        "parameters": [
+          {
+            "name": "jsgraph",
+            "type": "JSGraph*",
+            "purpose": "The JSGraph instance."
+          },
+          {
+            "name": "schedule",
+            "type": "Schedule*",
+            "purpose": "The Schedule instance."
+          },
+          {
+            "name": "phase_zone",
+            "type": "Zone*",
+            "purpose": "The zone to allocate memory in."
+          }
+        ],
+        "return": {
+          "type": "void",
+          "description": "No return value"
+        },
+        "dependencies": [
+          "AddTypeAssertionsImpl",
+          "AddTypeAssertionsImpl::Run"
+        ]
+      },
+      "code": "void AddTypeAssertions(JSGraph* jsgraph, Schedule* schedule, Zone* phase_zone) {\n  AddTypeAssertionsImpl{jsgraph, schedule, phase_zone}.Run();\n}"
+    }
+  ],
+  "file_path": "/home/kathirks_gc/v8_go/archive/codebase/src/compiler/add-type-assertions-reducer.cc"
+}

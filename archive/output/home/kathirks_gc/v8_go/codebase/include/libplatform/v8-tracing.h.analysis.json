@@ -1,0 +1,633 @@
+{
+  "file_path": "/home/kathirks_gc/v8_go/codebase/include/libplatform/v8-tracing.h",
+  "imports": [
+    "<atomic>",
+    "<fstream>",
+    "<memory>",
+    "<unordered_set>",
+    "<vector>",
+    "libplatform/libplatform-export.h",
+    "v8-platform.h"
+  ],
+  "classes": [
+    {
+      "name": "TraceObject",
+      "properties": [
+        "pid_",
+        "tid_",
+        "phase_",
+        "name_",
+        "scope_",
+        "category_enabled_flag_",
+        "id_",
+        "bind_id_",
+        "num_args_",
+        "arg_names_[kTraceMaxNumArgs]",
+        "arg_types_[kTraceMaxNumArgs]",
+        "arg_values_[kTraceMaxNumArgs]",
+        "arg_convertables_[kTraceMaxNumArgs]",
+        "parameter_copy_storage_",
+        "flags_",
+        "ts_",
+        "tts_",
+        "duration_",
+        "cpu_duration_"
+      ],
+      "methods": [
+        {
+          "name": "TraceObject",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Default constructor."
+        },
+        {
+          "name": "~TraceObject",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Destructor."
+        },
+        {
+          "name": "Initialize",
+          "parameters": [
+            "char phase",
+            "const uint8_t* category_enabled_flag",
+            "const char* name",
+            "const char* scope",
+            "uint64_t id",
+            "uint64_t bind_id",
+            "int num_args",
+            "const char** arg_names",
+            "const uint8_t* arg_types",
+            "const uint64_t* arg_values",
+            "std::unique_ptr<v8::ConvertableToTraceFormat>* arg_convertables",
+            "unsigned int flags",
+            "int64_t timestamp",
+            "int64_t cpu_timestamp"
+          ],
+          "return_type": "void",
+          "logic": "Initializes the TraceObject with tracing event information."
+        },
+        {
+          "name": "UpdateDuration",
+          "parameters": [
+            "int64_t timestamp",
+            "int64_t cpu_timestamp"
+          ],
+          "return_type": "void",
+          "logic": "Updates the duration of the trace event."
+        },
+        {
+          "name": "InitializeForTesting",
+          "parameters": [
+            "char phase",
+            "const uint8_t* category_enabled_flag",
+            "const char* name",
+            "const char* scope",
+            "uint64_t id",
+            "uint64_t bind_id",
+            "int num_args",
+            "const char** arg_names",
+            "const uint8_t* arg_types",
+            "const uint64_t* arg_values",
+            "std::unique_ptr<v8::ConvertableToTraceFormat>* arg_convertables",
+            "unsigned int flags",
+            "int pid",
+            "int tid",
+            "int64_t ts",
+            "int64_t tts",
+            "uint64_t duration",
+            "uint64_t cpu_duration"
+          ],
+          "return_type": "void",
+          "logic": "Initializes the TraceObject for testing purposes. Includes pid, tid, ts, tts, duration, and cpu_duration."
+        },
+        {
+          "name": "pid",
+          "parameters": [],
+          "return_type": "int",
+          "logic": "Returns the process ID."
+        },
+        {
+          "name": "tid",
+          "parameters": [],
+          "return_type": "int",
+          "logic": "Returns the thread ID."
+        },
+        {
+          "name": "phase",
+          "parameters": [],
+          "return_type": "char",
+          "logic": "Returns the trace event phase."
+        },
+        {
+          "name": "category_enabled_flag",
+          "parameters": [],
+          "return_type": "const uint8_t*",
+          "logic": "Returns the category enabled flag."
+        },
+        {
+          "name": "name",
+          "parameters": [],
+          "return_type": "const char*",
+          "logic": "Returns the trace event name."
+        },
+        {
+          "name": "scope",
+          "parameters": [],
+          "return_type": "const char*",
+          "logic": "Returns the trace event scope."
+        },
+        {
+          "name": "id",
+          "parameters": [],
+          "return_type": "uint64_t",
+          "logic": "Returns the trace event ID."
+        },
+        {
+          "name": "bind_id",
+          "parameters": [],
+          "return_type": "uint64_t",
+          "logic": "Returns the trace event bind ID."
+        },
+        {
+          "name": "num_args",
+          "parameters": [],
+          "return_type": "int",
+          "logic": "Returns the number of arguments."
+        },
+        {
+          "name": "arg_names",
+          "parameters": [],
+          "return_type": "const char**",
+          "logic": "Returns the argument names."
+        },
+        {
+          "name": "arg_types",
+          "parameters": [],
+          "return_type": "uint8_t*",
+          "logic": "Returns the argument types."
+        },
+        {
+          "name": "arg_values",
+          "parameters": [],
+          "return_type": "ArgValue*",
+          "logic": "Returns the argument values."
+        },
+        {
+          "name": "arg_convertables",
+          "parameters": [],
+          "return_type": "std::unique_ptr<v8::ConvertableToTraceFormat>*",
+          "logic": "Returns the argument convertables."
+        },
+        {
+          "name": "flags",
+          "parameters": [],
+          "return_type": "unsigned int",
+          "logic": "Returns the trace event flags."
+        },
+        {
+          "name": "ts",
+          "parameters": [],
+          "return_type": "int64_t",
+          "logic": "Returns the timestamp."
+        },
+        {
+          "name": "tts",
+          "parameters": [],
+          "return_type": "int64_t",
+          "logic": "Returns the cpu timestamp."
+        },
+        {
+          "name": "duration",
+          "parameters": [],
+          "return_type": "uint64_t",
+          "logic": "Returns the duration."
+        },
+        {
+          "name": "cpu_duration",
+          "parameters": [],
+          "return_type": "uint64_t",
+          "logic": "Returns the cpu duration."
+        }
+      ]
+    },
+    {
+      "name": "TraceWriter",
+      "properties": [],
+      "methods": [
+        {
+          "name": "TraceWriter",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Default constructor."
+        },
+        {
+          "name": "~TraceWriter",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Virtual destructor."
+        },
+        {
+          "name": "AppendTraceEvent",
+          "parameters": [
+            "TraceObject* trace_event"
+          ],
+          "return_type": "void",
+          "logic": "Appends a trace event to the writer.  Virtual function."
+        },
+        {
+          "name": "Flush",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Flushes the writer. Virtual function."
+        },
+        {
+          "name": "CreateJSONTraceWriter",
+          "parameters": [
+            "std::ostream& stream"
+          ],
+          "return_type": "TraceWriter*",
+          "logic": "Creates a JSON trace writer to write to a stream."
+        },
+        {
+          "name": "CreateJSONTraceWriter",
+          "parameters": [
+            "std::ostream& stream",
+            "const std::string& tag"
+          ],
+          "return_type": "TraceWriter*",
+          "logic": "Creates a JSON trace writer with a tag to write to a stream."
+        },
+        {
+          "name": "CreateSystemInstrumentationTraceWriter",
+          "parameters": [],
+          "return_type": "TraceWriter*",
+          "logic": "Creates a trace writer that writes to system instrumentation (e.g., ETW)."
+        }
+      ]
+    },
+    {
+      "name": "TraceBufferChunk",
+      "properties": [
+        "next_free_",
+        "chunk_[kChunkSize]",
+        "seq_"
+      ],
+      "methods": [
+        {
+          "name": "TraceBufferChunk",
+          "parameters": [
+            "uint32_t seq"
+          ],
+          "return_type": "explicit",
+          "logic": "Constructor that initializes with a sequence number."
+        },
+        {
+          "name": "Reset",
+          "parameters": [
+            "uint32_t new_seq"
+          ],
+          "return_type": "void",
+          "logic": "Resets the chunk with a new sequence number."
+        },
+        {
+          "name": "IsFull",
+          "parameters": [],
+          "return_type": "bool",
+          "logic": "Checks if the chunk is full."
+        },
+        {
+          "name": "AddTraceEvent",
+          "parameters": [
+            "size_t* event_index"
+          ],
+          "return_type": "TraceObject*",
+          "logic": "Adds a trace event to the chunk and returns a pointer to it. Returns event index via pointer parameter."
+        },
+        {
+          "name": "GetEventAt",
+          "parameters": [
+            "size_t index"
+          ],
+          "return_type": "TraceObject*",
+          "logic": "Gets a trace event at a specific index."
+        },
+        {
+          "name": "seq",
+          "parameters": [],
+          "return_type": "uint32_t",
+          "logic": "Returns the sequence number."
+        },
+        {
+          "name": "size",
+          "parameters": [],
+          "return_type": "size_t",
+          "logic": "Returns the current size (number of events) in the chunk."
+        }
+      ]
+    },
+    {
+      "name": "TraceBuffer",
+      "properties": [],
+      "methods": [
+        {
+          "name": "TraceBuffer",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Default constructor."
+        },
+        {
+          "name": "~TraceBuffer",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Virtual destructor."
+        },
+        {
+          "name": "AddTraceEvent",
+          "parameters": [
+            "uint64_t* handle"
+          ],
+          "return_type": "TraceObject*",
+          "logic": "Adds a trace event to the buffer.  Virtual function."
+        },
+        {
+          "name": "GetEventByHandle",
+          "parameters": [
+            "uint64_t handle"
+          ],
+          "return_type": "TraceObject*",
+          "logic": "Gets a trace event by its handle. Virtual function."
+        },
+        {
+          "name": "Flush",
+          "parameters": [],
+          "return_type": "bool",
+          "logic": "Flushes the buffer. Virtual function."
+        },
+        {
+          "name": "CreateTraceBufferRingBuffer",
+          "parameters": [
+            "size_t max_chunks",
+            "TraceWriter* trace_writer"
+          ],
+          "return_type": "TraceBuffer*",
+          "logic": "Creates a ring buffer implementation of TraceBuffer."
+        }
+      ]
+    },
+    {
+      "name": "TraceConfig",
+      "properties": [
+        "record_mode_",
+        "enable_systrace_",
+        "enable_argument_filter_",
+        "included_categories_"
+      ],
+      "methods": [
+        {
+          "name": "CreateDefaultTraceConfig",
+          "parameters": [],
+          "return_type": "TraceConfig*",
+          "logic": "Creates a default trace configuration."
+        },
+        {
+          "name": "TraceConfig",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Constructor. Initializes systrace and argument filter to false."
+        },
+        {
+          "name": "GetTraceRecordMode",
+          "parameters": [],
+          "return_type": "TraceRecordMode",
+          "logic": "Returns the trace record mode."
+        },
+        {
+          "name": "GetEnabledCategories",
+          "parameters": [],
+          "return_type": "const StringList&",
+          "logic": "Returns the list of enabled categories."
+        },
+        {
+          "name": "IsSystraceEnabled",
+          "parameters": [],
+          "return_type": "bool",
+          "logic": "Checks if systrace is enabled."
+        },
+        {
+          "name": "IsArgumentFilterEnabled",
+          "parameters": [],
+          "return_type": "bool",
+          "logic": "Checks if argument filtering is enabled."
+        },
+        {
+          "name": "SetTraceRecordMode",
+          "parameters": [
+            "TraceRecordMode mode"
+          ],
+          "return_type": "void",
+          "logic": "Sets the trace record mode."
+        },
+        {
+          "name": "EnableSystrace",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Enables systrace."
+        },
+        {
+          "name": "EnableArgumentFilter",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Enables argument filtering."
+        },
+        {
+          "name": "AddIncludedCategory",
+          "parameters": [
+            "const char* included_category"
+          ],
+          "return_type": "void",
+          "logic": "Adds a category to the list of included categories."
+        },
+        {
+          "name": "IsCategoryGroupEnabled",
+          "parameters": [
+            "const char* category_group"
+          ],
+          "return_type": "bool",
+          "logic": "Checks if a category group is enabled."
+        }
+      ]
+    },
+    {
+      "name": "TracingController",
+      "properties": [
+        "mutex_",
+        "trace_config_",
+        "recording_",
+        "output_stream_",
+        "trace_processor_",
+        "listener_for_testing_",
+        "tracing_session_",
+        "observers_",
+        "trace_buffer_"
+      ],
+      "methods": [
+        {
+          "name": "TracingController",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Constructor."
+        },
+        {
+          "name": "~TracingController",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Destructor."
+        },
+        {
+          "name": "InitializeForPerfetto",
+          "parameters": [
+            "std::ostream* output_stream"
+          ],
+          "return_type": "void",
+          "logic": "Initializes the controller to use Perfetto tracing. Takes an output stream for trace data."
+        },
+        {
+          "name": "SetTraceEventListenerForTesting",
+          "parameters": [
+            "TraceEventListener* listener"
+          ],
+          "return_type": "void",
+          "logic": "Sets a trace event listener for testing (Perfetto only)."
+        },
+        {
+          "name": "Initialize",
+          "parameters": [
+            "TraceBuffer* trace_buffer"
+          ],
+          "return_type": "void",
+          "logic": "Initializes the TracingController (non-Perfetto). Takes ownership of a trace buffer."
+        },
+        {
+          "name": "GetCategoryGroupEnabled",
+          "parameters": [
+            "const char* category_group"
+          ],
+          "return_type": "const uint8_t*",
+          "logic": "Gets the enabled flag for a category group (non-Perfetto)."
+        },
+        {
+          "name": "AddTraceEvent",
+          "parameters": [
+            "char phase",
+            "const uint8_t* category_enabled_flag",
+            "const char* name",
+            "const char* scope",
+            "uint64_t id",
+            "uint64_t bind_id",
+            "int32_t num_args",
+            "const char** arg_names",
+            "const uint8_t* arg_types",
+            "const uint64_t* arg_values",
+            "std::unique_ptr<v8::ConvertableToTraceFormat>* arg_convertables",
+            "unsigned int flags"
+          ],
+          "return_type": "uint64_t",
+          "logic": "Adds a trace event (non-Perfetto)."
+        },
+        {
+          "name": "AddTraceEventWithTimestamp",
+          "parameters": [
+            "char phase",
+            "const uint8_t* category_enabled_flag",
+            "const char* name",
+            "const char* scope",
+            "uint64_t id",
+            "uint64_t bind_id",
+            "int32_t num_args",
+            "const char** arg_names",
+            "const uint8_t* arg_types",
+            "const uint64_t* arg_values",
+            "std::unique_ptr<v8::ConvertableToTraceFormat>* arg_convertables",
+            "unsigned int flags",
+            "int64_t timestamp"
+          ],
+          "return_type": "uint64_t",
+          "logic": "Adds a trace event with a timestamp (non-Perfetto)."
+        },
+        {
+          "name": "UpdateTraceEventDuration",
+          "parameters": [
+            "const uint8_t* category_enabled_flag",
+            "const char* name",
+            "uint64_t handle"
+          ],
+          "return_type": "void",
+          "logic": "Updates the duration of a trace event (non-Perfetto)."
+        },
+        {
+          "name": "GetCategoryGroupName",
+          "parameters": [
+            "const uint8_t* category_enabled_flag"
+          ],
+          "return_type": "const char*",
+          "logic": "Gets the category group name (non-Perfetto)."
+        },
+        {
+          "name": "AddTraceStateObserver",
+          "parameters": [
+            "v8::TracingController::TraceStateObserver* observer"
+          ],
+          "return_type": "void",
+          "logic": "Adds a trace state observer (non-Perfetto)."
+        },
+        {
+          "name": "RemoveTraceStateObserver",
+          "parameters": [
+            "v8::TracingController::TraceStateObserver* observer"
+          ],
+          "return_type": "void",
+          "logic": "Removes a trace state observer (non-Perfetto)."
+        },
+        {
+          "name": "StartTracing",
+          "parameters": [
+            "TraceConfig* trace_config"
+          ],
+          "return_type": "void",
+          "logic": "Starts tracing with the provided configuration."
+        },
+        {
+          "name": "StopTracing",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Stops tracing."
+        },
+        {
+          "name": "CurrentTimestampMicroseconds",
+          "parameters": [],
+          "return_type": "int64_t",
+          "logic": "Returns the current timestamp in microseconds (non-Perfetto). Virtual function."
+        },
+        {
+          "name": "CurrentCpuTimestampMicroseconds",
+          "parameters": [],
+          "return_type": "int64_t",
+          "logic": "Returns the current CPU timestamp in microseconds (non-Perfetto). Virtual function."
+        }
+      ]
+    }
+  ],
+  "functions": [],
+  "enums": [
+    {
+      "name": "TraceRecordMode",
+      "values": [
+        "RECORD_UNTIL_FULL",
+        "RECORD_CONTINUOUSLY",
+        "RECORD_AS_MUCH_AS_POSSIBLE",
+        "ECHO_TO_CONSOLE"
+      ]
+    }
+  ]
+}

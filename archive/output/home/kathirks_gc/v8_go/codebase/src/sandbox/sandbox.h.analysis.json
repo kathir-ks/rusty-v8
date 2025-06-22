@@ -1,0 +1,308 @@
+{
+  "file_path": "/home/kathirks_gc/v8_go/codebase/src/sandbox/sandbox.h",
+  "imports": [
+    "include/v8-internal.h",
+    "include/v8-platform.h",
+    "include/v8config.h",
+    "src/base/bounds.h",
+    "src/common/globals.h",
+    "src/trap-handler/trap-handler.h",
+    "testing/gtest/include/gtest/gtest_prod.h"
+  ],
+  "classes": [
+    {
+      "name": "Sandbox",
+      "properties": [
+        "base_",
+        "end_",
+        "size_",
+        "reservation_base_",
+        "reservation_size_",
+        "initialized_",
+        "trap_handler_initialized_",
+        "address_space_",
+        "sandbox_page_allocator_",
+        "constants_",
+        "first_four_gb_of_address_space_are_reserved_"
+      ],
+      "methods": [
+        {
+          "name": "Sandbox",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Default constructor."
+        },
+        {
+          "name": "Sandbox",
+          "parameters": [
+            "const Sandbox&"
+          ],
+          "return_type": "Sandbox&",
+          "logic": "Deleted copy constructor."
+        },
+        {
+          "name": "operator=",
+          "parameters": [
+            "Sandbox&"
+          ],
+          "return_type": "Sandbox&",
+          "logic": "Deleted assignment operator."
+        },
+        {
+          "name": "Initialize",
+          "parameters": [
+            "v8::VirtualAddressSpace* vas"
+          ],
+          "return_type": "void",
+          "logic": "Initializes the sandbox, allocating a virtual address space. Falls back to a partially reserved sandbox if the full space can't be allocated."
+        },
+        {
+          "name": "TearDown",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Frees the virtual address space backing the sandbox."
+        },
+        {
+          "name": "is_initialized",
+          "parameters": [],
+          "return_type": "bool",
+          "logic": "Returns true if the sandbox has been initialized."
+        },
+        {
+          "name": "is_partially_reserved",
+          "parameters": [],
+          "return_type": "bool",
+          "logic": "Returns true if the sandbox is partially reserved (i.e., doesn't have full virtual address space coverage)."
+        },
+        {
+          "name": "smi_address_range_is_inaccessible",
+          "parameters": [],
+          "return_type": "bool",
+          "logic": "Returns true if the first four GB of the address space are inaccessible."
+        },
+        {
+          "name": "base",
+          "parameters": [],
+          "return_type": "Address",
+          "logic": "Returns the base address of the sandbox."
+        },
+        {
+          "name": "end",
+          "parameters": [],
+          "return_type": "Address",
+          "logic": "Returns the end address of the sandbox."
+        },
+        {
+          "name": "size",
+          "parameters": [],
+          "return_type": "size_t",
+          "logic": "Returns the size of the sandbox."
+        },
+        {
+          "name": "reservation_size",
+          "parameters": [],
+          "return_type": "size_t",
+          "logic": "Returns the size of the virtual address space reservation backing the sandbox."
+        },
+        {
+          "name": "address_space",
+          "parameters": [],
+          "return_type": "v8::VirtualAddressSpace*",
+          "logic": "Returns the virtual address subspace backing this sandbox."
+        },
+        {
+          "name": "page_allocator",
+          "parameters": [],
+          "return_type": "v8::PageAllocator*",
+          "logic": "Returns a PageAllocator instance that allocates pages inside the sandbox."
+        },
+        {
+          "name": "Contains",
+          "parameters": [
+            "Address addr"
+          ],
+          "return_type": "bool",
+          "logic": "Returns true if the given address lies within the sandbox address space."
+        },
+        {
+          "name": "Contains",
+          "parameters": [
+            "void* ptr"
+          ],
+          "return_type": "bool",
+          "logic": "Returns true if the given pointer points into the sandbox address space."
+        },
+        {
+          "name": "ReservationContains",
+          "parameters": [
+            "Address addr"
+          ],
+          "return_type": "bool",
+          "logic": "Returns true if the given address lies within the sandbox reservation."
+        },
+        {
+          "name": "constants",
+          "parameters": [],
+          "return_type": "const SandboxedPointerConstants&",
+          "logic": "Returns the SandboxedPointerConstants object."
+        },
+        {
+          "name": "base_address",
+          "parameters": [],
+          "return_type": "Address",
+          "logic": "Returns the address of the base_ member."
+        },
+        {
+          "name": "end_address",
+          "parameters": [],
+          "return_type": "Address",
+          "logic": "Returns the address of the end_ member."
+        },
+        {
+          "name": "size_address",
+          "parameters": [],
+          "return_type": "Address",
+          "logic": "Returns the address of the size_ member."
+        },
+        {
+          "name": "InitializeDefaultOncePerProcess",
+          "parameters": [
+            "v8::VirtualAddressSpace* vas"
+          ],
+          "return_type": "void",
+          "logic": "Initializes the default process-wide sandbox."
+        },
+        {
+          "name": "TearDownDefault",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Tears down the default process-wide sandbox."
+        },
+        {
+          "name": "New",
+          "parameters": [
+            "v8::VirtualAddressSpace* vas"
+          ],
+          "return_type": "Sandbox*",
+          "logic": "Creates a new sandbox, allocating a fresh pointer cage. Aborts if new sandboxes cannot be created."
+        },
+        {
+          "name": "current",
+          "parameters": [],
+          "return_type": "Sandbox*",
+          "logic": "Returns the current sandbox (thread-local or default)."
+        },
+        {
+          "name": "set_current",
+          "parameters": [
+            "Sandbox* sandbox"
+          ],
+          "return_type": "void",
+          "logic": "Sets the current sandbox (thread-local or default)."
+        },
+        {
+          "name": "GetDefault",
+          "parameters": [],
+          "return_type": "Sandbox*",
+          "logic": "Returns the default sandbox."
+        },
+        {
+          "name": "Initialize",
+          "parameters": [
+            "v8::VirtualAddressSpace* vas",
+            "size_t size",
+            "bool use_guard_regions"
+          ],
+          "return_type": "bool",
+          "logic": "Initializes the sandbox with specified size and guard regions."
+        },
+        {
+          "name": "InitializeAsPartiallyReservedSandbox",
+          "parameters": [
+            "v8::VirtualAddressSpace* vas",
+            "size_t size",
+            "size_t size_to_reserve"
+          ],
+          "return_type": "bool",
+          "logic": "Initializes the sandbox as a partially reserved one."
+        },
+        {
+          "name": "FinishInitialization",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Performs final initialization steps after the sandbox address space has been initialized."
+        },
+        {
+          "name": "InitializeConstants",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Initialize the constant objects for this sandbox."
+        },
+        {
+          "name": "current_non_inlined",
+          "parameters": [],
+          "return_type": "Sandbox*",
+          "logic": "Non-inlined accessor for the current_ field, used in component builds."
+        },
+        {
+          "name": "set_current_non_inlined",
+          "parameters": [
+            "Sandbox* sandbox"
+          ],
+          "return_type": "void",
+          "logic": "Non-inlined setter for the current_ field, used in component builds."
+        }
+      ]
+    },
+    {
+      "name": "SandboxedPointerConstants",
+      "properties": [
+        "empty_backing_store_buffer_"
+      ],
+      "methods": [
+        {
+          "name": "empty_backing_store_buffer",
+          "parameters": [],
+          "return_type": "Address",
+          "logic": "Returns the address of the empty backing store buffer."
+        },
+        {
+          "name": "empty_backing_store_buffer_address",
+          "parameters": [],
+          "return_type": "Address",
+          "logic": "Returns the address of the empty_backing_store_buffer_ member."
+        },
+        {
+          "name": "set_empty_backing_store_buffer",
+          "parameters": [
+            "Address value"
+          ],
+          "return_type": "void",
+          "logic": "Sets the value of the empty backing store buffer."
+        },
+        {
+          "name": "Reset",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Resets the value of the empty backing store buffer to 0."
+        }
+      ]
+    }
+  ],
+  "functions": [
+    {
+      "name": "InsideSandbox",
+      "parameters": [
+        "uintptr_t address"
+      ],
+      "return_type": "bool",
+      "logic": "Checks if a given address is located inside the sandbox. Returns false if the sandbox is disabled or partially reserved."
+    },
+    {
+      "name": "EmptyBackingStoreBuffer",
+      "parameters": [],
+      "return_type": "void*",
+      "logic": "Returns a pointer to the empty backing store buffer within the sandbox, or nullptr if sandboxing is disabled."
+    }
+  ]
+}

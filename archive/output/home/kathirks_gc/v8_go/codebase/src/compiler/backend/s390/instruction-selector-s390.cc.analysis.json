@@ -1,0 +1,481 @@
+{
+  "file_path": "/home/kathirks_gc/v8_go/codebase/src/compiler/backend/s390/instruction-selector-s390.cc",
+  "imports": [
+    "<optional>",
+    "src/base/logging.h",
+    "src/compiler/backend/instruction-selector-adapter.h",
+    "src/compiler/backend/instruction-selector-impl.h",
+    "src/compiler/turboshaft/operations.h",
+    "src/compiler/turboshaft/opmasks.h",
+    "src/execution/frame-constants.h"
+  ],
+  "classes": [
+    {
+      "name": "S390OperandGeneratorT",
+      "properties": [],
+      "methods": [
+        {
+          "name": "S390OperandGeneratorT",
+          "parameters": [
+            "InstructionSelectorT* selector"
+          ],
+          "return_type": "",
+          "logic": "Constructor for S390OperandGeneratorT, initializes the base class OperandGeneratorT with the given selector."
+        },
+        {
+          "name": "UseOperand",
+          "parameters": [
+            "OpIndex node",
+            "OperandModes mode"
+          ],
+          "return_type": "InstructionOperand",
+          "logic": "Selects whether to use an immediate or register operand based on whether the node can be represented as an immediate and the given mode. Returns the chosen instruction operand."
+        },
+        {
+          "name": "UseAnyExceptImmediate",
+          "parameters": [
+            "OpIndex node"
+          ],
+          "return_type": "InstructionOperand",
+          "logic": "Returns an instruction operand that is either a register or a memory operand, but never an immediate value. If the node matches a signed integral constant, it uses a register instead of immediate."
+        },
+        {
+          "name": "GetImmediate",
+          "parameters": [
+            "OpIndex node"
+          ],
+          "return_type": "int64_t",
+          "logic": "Retrieves the immediate value from a constant node. Handles Word32 and Word64 constants and returns the 64-bit integer value of the constant."
+        },
+        {
+          "name": "CanBeImmediate",
+          "parameters": [
+            "OpIndex node",
+            "OperandModes mode"
+          ],
+          "return_type": "bool",
+          "logic": "Checks whether a given node can be represented as an immediate value based on its value and the provided OperandModes."
+        },
+        {
+          "name": "CanBeImmediate",
+          "parameters": [
+            "int64_t value",
+            "OperandModes mode"
+          ],
+          "return_type": "bool",
+          "logic": "Checks if a given integer value can be used as an immediate operand based on the allowed operand modes (e.g. shift, int32, uint32, etc.)"
+        },
+        {
+          "name": "CanBeMemoryOperand",
+          "parameters": [
+            "InstructionCode opcode",
+            "OpIndex user",
+            "OpIndex input",
+            "int effect_level"
+          ],
+          "return_type": "bool",
+          "logic": "Checks if a given input node, corresponding to a load operation, can be combined into memory operand addressing modes based on representation, opcode, and effect level."
+        },
+        {
+          "name": "GenerateMemoryOperandInputs",
+          "parameters": [
+            "OptionalOpIndex index",
+            "OpIndex base",
+            "int64_t displacement",
+            "DisplacementMode displacement_mode",
+            "InstructionOperand inputs[]",
+            "size_t* input_count",
+            "RegisterUseKind reg_kind"
+          ],
+          "return_type": "AddressingMode",
+          "logic": "Generates the inputs for a memory operand based on base, index, and displacement, and returns the corresponding addressing mode."
+        },
+        {
+          "name": "GetEffectiveAddressMemoryOperand",
+          "parameters": [
+            "OpIndex operand",
+            "InstructionOperand inputs[]",
+            "size_t* input_count",
+            "OperandModes immediate_mode"
+          ],
+          "return_type": "AddressingMode",
+          "logic": "Attempts to match base, scaled index, and displacement from the operand, and generates appropriate memory operand inputs using the `TryMatchBaseWithScaledIndexAndDisplacement64` method. Selects the addressing mode."
+        },
+        {
+          "name": "CanBeBetterLeftOperand",
+          "parameters": [
+            "OpIndex node"
+          ],
+          "return_type": "bool",
+          "logic": "Determines whether a given node is a better candidate to be the left operand of an instruction based on its liveness."
+        }
+      ]
+    },
+    {
+      "name": "BaseWithScaledIndexAndDisplacementMatch",
+      "properties": [
+        "OpIndex base",
+        "OpIndex index",
+        "int scale",
+        "int64_t displacement",
+        "DisplacementMode displacement_mode"
+      ],
+      "methods": []
+    }
+  ],
+  "functions": [
+    {
+      "name": "TryMatchBaseWithScaledIndexAndDisplacement64",
+      "parameters": [
+        "InstructionSelectorT* selector",
+        "OpIndex node"
+      ],
+      "return_type": "std::optional<BaseWithScaledIndexAndDisplacementMatch>",
+      "logic": "Tries to match a base with a scaled index and displacement pattern in the IR graph, for use in addressing modes. Returns the matched components as a `BaseWithScaledIndexAndDisplacementMatch` if found, otherwise returns an empty optional."
+    },
+    {
+      "name": "S390OpcodeOnlySupport12BitDisp",
+      "parameters": [
+        "ArchOpcode opcode"
+      ],
+      "return_type": "bool",
+      "logic": "Checks if a specific S390 opcode only supports 12-bit displacements in its memory addressing modes."
+    },
+    {
+      "name": "S390OpcodeOnlySupport12BitDisp",
+      "parameters": [
+        "InstructionCode op"
+      ],
+      "return_type": "bool",
+      "logic": "Checks if a specific instruction code's S390 opcode only supports 12-bit displacements."
+    },
+    {
+      "name": "SelectLoadOpcode",
+      "parameters": [
+        "MemoryRepresentation loaded_rep",
+        "RegisterRepresentation result_rep"
+      ],
+      "return_type": "ArchOpcode",
+      "logic": "Selects the appropriate S390 load opcode based on the loaded memory representation and the desired register representation."
+    },
+    {
+      "name": "SelectLoadOpcode",
+      "parameters": [
+        "LoadRepresentation load_rep"
+      ],
+      "return_type": "ArchOpcode",
+      "logic": "Selects the appropriate S390 load opcode based on the provided load representation, encompassing both the memory representation and signedness."
+    },
+    {
+      "name": "ProduceWord32Result",
+      "parameters": [
+        "InstructionSelectorT* selector",
+        "OpIndex node"
+      ],
+      "return_type": "bool",
+      "logic": "Determines if a given operation node produces a Word32 result. It inspects the opcode and representation of the node to check if it represents a Word32 operation."
+    },
+    {
+      "name": "DoZeroExtForResult",
+      "parameters": [
+        "InstructionSelectorT* selector",
+        "OpIndex node"
+      ],
+      "return_type": "bool",
+      "logic": "Determines whether zero extension is required for the result of the given operation. Calls ProduceWord32Result."
+    },
+    {
+      "name": "VisitTryTruncateDouble",
+      "parameters": [
+        "InstructionSelectorT* selector",
+        "ArchOpcode opcode",
+        "OpIndex node"
+      ],
+      "return_type": "void",
+      "logic": "Handles the selection and emission of instructions for the TryTruncateDouble operation."
+    },
+    {
+      "name": "GenerateRightOperands",
+      "parameters": [
+        "InstructionSelectorT* selector",
+        "OpIndex node",
+        "OpIndex right",
+        "InstructionCode* opcode",
+        "OperandModes* operand_mode",
+        "InstructionOperand* inputs",
+        "size_t* input_count",
+        "CanCombineWithLoad canCombineWithLoad"
+      ],
+      "return_type": "void",
+      "logic": "Generates the appropriate instruction operand based on whether the right operand can be an immediate, a memory operand (load), or a register. It updates opcode and operand mode accordingly."
+    },
+    {
+      "name": "GenerateBinOpOperands",
+      "parameters": [
+        "InstructionSelectorT* selector",
+        "OpIndex node",
+        "OpIndex left",
+        "OpIndex right",
+        "InstructionCode* opcode",
+        "OperandModes* operand_mode",
+        "InstructionOperand* inputs",
+        "size_t* input_count",
+        "CanCombineWithLoad canCombineWithLoad"
+      ],
+      "return_type": "void",
+      "logic": "Generates the operands for a binary operation. The left operand is always a register. It then delegates the generation of the right operand to the `GenerateRightOperands` function."
+    },
+    {
+      "name": "VisitUnaryOp",
+      "parameters": [
+        "InstructionSelectorT* selector",
+        "OpIndex node",
+        "InstructionCode opcode",
+        "OperandModes operand_mode",
+        "FlagsContinuationT* cont",
+        "CanCombineWithLoad canCombineWithLoad"
+      ],
+      "return_type": "void",
+      "logic": "Visits unary operations, generating the necessary instruction operands and emitting the instruction with continuation. Takes care of zero extending, where needed."
+    },
+    {
+      "name": "VisitBinOp",
+      "parameters": [
+        "InstructionSelectorT* selector",
+        "OpIndex node",
+        "InstructionCode opcode",
+        "OperandModes operand_mode",
+        "FlagsContinuationT* cont",
+        "CanCombineWithLoad canCombineWithLoad"
+      ],
+      "return_type": "void",
+      "logic": "Visits binary operations, generating instruction operands, emitting the instruction with continuation, and taking care of commutative operands and zero extending."
+    },
+    {
+      "name": "IsContiguousMask64",
+      "parameters": [
+        "uint64_t value",
+        "int* mb",
+        "int* me"
+      ],
+      "return_type": "bool",
+      "logic": "Checks if a given 64-bit value represents a contiguous bitmask and returns the most significant bit (mb) and least significant bit (me) of the mask."
+    },
+    {
+      "name": "TryMatchSignExtInt16OrInt8FromWord32Sar",
+      "parameters": [
+        "InstructionSelectorT* selector",
+        "OpIndex node"
+      ],
+      "return_type": "bool",
+      "logic": "Attempts to match a sign extension pattern from a Word32Sar (shift right arithmetic) and a preceding Word32Shl (shift left). If pattern detected, generates the corresponding sign extension instruction"
+    },
+    {
+      "name": "TryMatchNegFromSub",
+      "parameters": [
+        "InstructionSelectorT* selector",
+        "OpIndex node"
+      ],
+      "return_type": "bool",
+      "logic": "Attempts to match Neg operation with Sub from zero. If pattern is detected, it generates the Neg instruction."
+    },
+    {
+      "name": "TryMatchShiftFromMul",
+      "parameters": [
+        "InstructionSelectorT* selector, OpIndex node"
+      ],
+      "return_type": "bool",
+      "logic": "Attempts to match multiplication operations against powers of two and turns them into left shift operations."
+    },
+    {
+      "name": "TryMatchInt32OpWithOverflow",
+      "parameters": [
+        "InstructionSelectorT* selector",
+        "OpIndex node",
+        "OperandModes mode"
+      ],
+      "return_type": "bool",
+      "logic": "Attempts to fuse an overflow output projection with a binop that can overflow. It sets overflow flags"
+    },
+    {
+      "name": "TryMatchInt32AddWithOverflow",
+      "parameters": [
+        "InstructionSelectorT* selector",
+        "OpIndex node"
+      ],
+      "return_type": "bool",
+      "logic": "Helper function to match int32 add with overflow"
+    },
+    {
+      "name": "TryMatchInt32SubWithOverflow",
+      "parameters": [
+        "InstructionSelectorT* selector",
+        "OpIndex node"
+      ],
+      "return_type": "bool",
+      "logic": "Helper function to match int32 sub with overflow"
+    },
+    {
+      "name": "TryMatchInt32MulWithOverflow",
+      "parameters": [
+        "InstructionSelectorT* selector",
+        "OpIndex node"
+      ],
+      "return_type": "bool",
+      "logic": "Helper function to match int32 mul with overflow. Attempts to shift if mul against power of 2."
+    },
+    {
+      "name": "TryMatchInt64OpWithOverflow",
+      "parameters": [
+        "InstructionSelectorT* selector",
+        "OpIndex node",
+        "OperandModes mode"
+      ],
+      "return_type": "bool",
+      "logic": "Attempts to fuse an overflow output projection with a binop that can overflow. It sets overflow flags."
+    },
+    {
+      "name": "TryMatchInt64AddWithOverflow",
+      "parameters": [
+        "InstructionSelectorT* selector",
+        "OpIndex node"
+      ],
+      "return_type": "bool",
+      "logic": "Helper function to match int64 add with overflow"
+    },
+    {
+      "name": "TryMatchInt64SubWithOverflow",
+      "parameters": [
+        "InstructionSelectorT* selector",
+        "OpIndex node"
+      ],
+      "return_type": "bool",
+      "logic": "Helper function to match int64 sub with overflow"
+    },
+    {
+      "name": "EmitInt64MulWithOverflow",
+      "parameters": [
+        "InstructionSelectorT* selector",
+        "OpIndex node",
+        "FlagsContinuationT* cont"
+      ],
+      "return_type": "void",
+      "logic": "Emits the instruction for a 64-bit multiplication with overflow, handling the optional overflow output by emitting a continuation."
+    },
+    {
+      "name": "TryMatchDoubleConstructFromInsert",
+      "parameters": [
+        "InstructionSelectorT* selector",
+        "OpIndex node"
+      ],
+      "return_type": "bool",
+      "logic": "Attempts to match double construction from insert of hi and low words."
+    },
+    {
+      "name": "CompareLogical",
+      "parameters": [
+        "FlagsContinuationT* cont"
+      ],
+      "return_type": "bool",
+      "logic": "Checks if the flags continuation specifies a logical (unsigned) comparison."
+    },
+    {
+      "name": "VisitCompare",
+      "parameters": [
+        "InstructionSelectorT* selector",
+        "InstructionCode opcode",
+        "InstructionOperand left",
+        "InstructionOperand right",
+        "FlagsContinuationT* cont"
+      ],
+      "return_type": "void",
+      "logic": "Emits a comparison instruction with the given operands and continuation."
+    },
+    {
+      "name": "VisitLoadAndTest",
+      "parameters": [
+        "InstructionSelectorT* selector",
+        "InstructionCode opcode",
+        "OpIndex node",
+        "OpIndex value",
+        "FlagsContinuationT* cont",
+        "bool discard_output"
+      ],
+      "return_type": "void",
+      "logic": "Visits LoadAndTest, generating the required code."
+    },
+    {
+      "name": "VisitWordCompare",
+      "parameters": [
+        "InstructionSelectorT* selector",
+        "OpIndex node",
+        "InstructionCode opcode",
+        "FlagsContinuationT* cont",
+        "OperandModes immediate_mode"
+      ],
+      "return_type": "void",
+      "logic": "Shared routine for multiple word compare operations."
+    },
+    {
+      "name": "VisitWord32Compare",
+      "parameters": [
+        "InstructionSelectorT* selector",
+        "OpIndex node",
+        "FlagsContinuationT* cont"
+      ],
+      "return_type": "void",
+      "logic": "Helper function to select operand modes for word32 comparison."
+    },
+    {
+      "name": "VisitWord64Compare",
+      "parameters": [
+        "InstructionSelectorT* selector",
+        "OpIndex node",
+        "FlagsContinuationT* cont"
+      ],
+      "return_type": "void",
+      "logic": "Helper function to select operand modes for word64 comparison."
+    },
+    {
+      "name": "VisitFloat32Compare",
+      "parameters": [
+        "InstructionSelectorT* selector",
+        "OpIndex node",
+        "FlagsContinuationT* cont"
+      ],
+      "return_type": "void",
+      "logic": "Visits a floating-point 32-bit comparison operation and generates the appropriate instructions."
+    },
+    {
+      "name": "VisitFloat64Compare",
+      "parameters": [
+        "InstructionSelectorT* selector",
+        "OpIndex node",
+        "FlagsContinuationT* cont"
+      ],
+      "return_type": "void",
+      "logic": "Visits a floating-point 64-bit comparison operation and generates the appropriate instructions."
+    },
+    {
+      "name": "VisitTestUnderMask",
+      "parameters": [
+        "InstructionSelectorT* selector",
+        "OpIndex node",
+        "FlagsContinuationT* cont"
+      ],
+      "return_type": "void",
+      "logic": "Performs a test under mask operation."
+    },
+    {
+      "name": "VisitWordCompareZero",
+      "parameters": [
+        "InstructionSelectorT* selector",
+        "OpIndex user",
+        "OpIndex value",
+        "FlagsContinuation* cont"
+      ],
+      "return_type": "void",
+      "logic": "Combines zero compares with known operations (sub, bitwiseAnd, etc) if possible. Falls back to load and test"
+    }
+  ]
+}

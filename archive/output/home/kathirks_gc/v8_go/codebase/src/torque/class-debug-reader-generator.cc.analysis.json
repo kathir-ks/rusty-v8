@@ -1,0 +1,221 @@
+{
+  "file_path": "/home/kathirks_gc/v8_go/codebase/src/torque/class-debug-reader-generator.cc",
+  "imports": [
+    "<optional>",
+    "src/flags/flags.h",
+    "src/torque/implementation-visitor.h",
+    "src/torque/type-oracle.h"
+  ],
+  "classes": [
+    {
+      "name": "ValueTypeFieldIterator",
+      "properties": [
+        "type_",
+        "index_"
+      ],
+      "methods": [
+        {
+          "name": "ValueTypeFieldIterator",
+          "parameters": [
+            "const Type* type",
+            "size_t index"
+          ],
+          "return_type": "void",
+          "logic": "Constructor for the ValueTypeFieldIterator class. Initializes the type_ and index_ members."
+        },
+        {
+          "name": "operator*",
+          "parameters": [],
+          "return_type": "const Result",
+          "logic": "Dereference operator. Returns the Result struct, which holds the name, type, source position, offset, number of bits, and shift bits of the field at the current index in the type. Handles different types like struct types, Smi-tagged types and bitfield structs."
+        },
+        {
+          "name": "operator++",
+          "parameters": [],
+          "return_type": "ValueTypeFieldIterator&",
+          "logic": "Pre-increment operator. Increments the index_ and returns a reference to the updated iterator."
+        },
+        {
+          "name": "operator==",
+          "parameters": [
+            "const ValueTypeFieldIterator& other"
+          ],
+          "return_type": "bool",
+          "logic": "Equality operator. Checks if two ValueTypeFieldIterators point to the same type and index."
+        },
+        {
+          "name": "operator!=",
+          "parameters": [
+            "const ValueTypeFieldIterator& other"
+          ],
+          "return_type": "bool",
+          "logic": "Inequality operator. Returns the opposite of the equality operator."
+        }
+      ]
+    },
+    {
+      "name": "ValueTypeFieldsRange",
+      "properties": [
+        "type_"
+      ],
+      "methods": [
+        {
+          "name": "ValueTypeFieldsRange",
+          "parameters": [
+            "const Type* type"
+          ],
+          "return_type": "void",
+          "logic": "Constructor. Initializes the type_ member."
+        },
+        {
+          "name": "begin",
+          "parameters": [],
+          "return_type": "ValueTypeFieldIterator",
+          "logic": "Returns a ValueTypeFieldIterator pointing to the beginning of the range (index 0)."
+        },
+        {
+          "name": "end",
+          "parameters": [],
+          "return_type": "ValueTypeFieldIterator",
+          "logic": "Returns a ValueTypeFieldIterator pointing to the end of the range. Calculates the end index based on the type (struct, bitfield struct, or other)."
+        }
+      ]
+    },
+    {
+      "name": "DebugFieldType",
+      "properties": [
+        "name_and_type_",
+        "pos_"
+      ],
+      "methods": [
+        {
+          "name": "DebugFieldType",
+          "parameters": [
+            "const Field& field"
+          ],
+          "return_type": "void",
+          "logic": "Constructor that initializes name_and_type_ and pos_ from a Field object."
+        },
+        {
+          "name": "DebugFieldType",
+          "parameters": [
+            "const NameAndType& name_and_type",
+            "const SourcePosition& pos"
+          ],
+          "return_type": "void",
+          "logic": "Constructor that initializes name_and_type_ and pos_."
+        },
+        {
+          "name": "IsTagged",
+          "parameters": [],
+          "return_type": "bool",
+          "logic": "Checks if the field's type is a subtype of TaggedType (meaning it's a tagged pointer)."
+        },
+        {
+          "name": "GetValueType",
+          "parameters": [
+            "TypeStorage storage"
+          ],
+          "return_type": "std::string",
+          "logic": "Returns the C++ type to be used for this field's value in the debug helper library. Simplifies tagged types to uintptr_t for the debug helper's compilation."
+        },
+        {
+          "name": "GetOriginalType",
+          "parameters": [
+            "TypeStorage storage"
+          ],
+          "return_type": "std::string",
+          "logic": "Returns the original C++ type of the field, resolveable with full V8 symbols. Returns empty string for struct types."
+        },
+        {
+          "name": "GetTypeString",
+          "parameters": [
+            "TypeStorage storage"
+          ],
+          "return_type": "std::string",
+          "logic": "Returns a C++ expression that evaluates to a string containing the name of the field's type. Wraps original types in string literals or uses CheckTypeName template for constexpr types."
+        },
+        {
+          "name": "GetSize",
+          "parameters": [],
+          "return_type": "size_t",
+          "logic": "Returns the size of the field's type in bytes."
+        },
+        {
+          "name": "GetAddressGetter",
+          "parameters": [],
+          "return_type": "std::string",
+          "logic": "Returns the name of the function that gets the address of the field."
+        }
+      ]
+    },
+    {
+      "name": "TqObjectVisitor",
+      "properties": [],
+      "methods": [
+        {
+          "name": "VisitObject",
+          "parameters": [
+            "const TqObject* object"
+          ],
+          "return_type": "virtual void",
+          "logic": "Virtual method to visit a TqObject."
+        }
+      ]
+    }
+  ],
+  "functions": [
+    {
+      "name": "GenerateFieldAddressAccessor",
+      "parameters": [
+        "const Field& field",
+        "const std::string& class_name",
+        "std::ostream& h_contents",
+        "std::ostream& cc_contents"
+      ],
+      "return_type": "void",
+      "logic": "Generates a function that returns the address of a field within a class.  The address is calculated based on a base address and an offset from the Field."
+    },
+    {
+      "name": "GenerateFieldValueAccessor",
+      "parameters": [
+        "const Field& field",
+        "const std::string& class_name",
+        "std::ostream& h_contents",
+        "std::ostream& cc_contents"
+      ],
+      "return_type": "void",
+      "logic": "Generates a function to get the value of a field (or an element in an array field) from memory, using a memory accessor function provided as a parameter."
+    },
+    {
+      "name": "GenerateGetPropsChunkForField",
+      "parameters": [
+        "const Field& field",
+        "std::ostream& get_props_impl",
+        "std::string class_name"
+      ],
+      "return_type": "void",
+      "logic": "Generates C++ code to be included in the GetProperties method, which adds information about the current field to the result vector. Handles structs/bitfields and indexed fields."
+    },
+    {
+      "name": "GenerateClassDebugReader",
+      "parameters": [
+        "const ClassType& type",
+        "std::ostream& h_contents",
+        "std::ostream& cc_contents",
+        "std::ostream& visitor",
+        "std::unordered_set<const ClassType*>* done"
+      ],
+      "return_type": "void",
+      "logic": "Generates a class TqFoo for a Torque-defined class Foo, enabling inspection of objects in a crash dump or time travel scenario. Creates a header file (.h) with the class definition and a source file (.cc) with member implementations. Updates the TqObjectVisitor with a VisitFoo method."
+    },
+    {
+      "name": "ImplementationVisitor::GenerateClassDebugReaders",
+      "parameters": [
+        "const std::string& output_directory"
+      ],
+      "return_type": "void",
+      "logic": "Generates the class debug readers for all Torque-defined classes and writes them to files in the specified output directory. This function is called on an `ImplementationVisitor` object."
+    }
+  ]
+}

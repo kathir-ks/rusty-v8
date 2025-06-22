@@ -1,0 +1,479 @@
+{
+  "metadata": {
+    "path": "/home/kathirks_gc/v8_go/archive/codebase/src/bigint/mul-karatsuba.cc",
+    "file_name": "mul-karatsuba.cc",
+    "language": "cpp",
+    "purpose": "Implements Karatsuba multiplication algorithm for big integers."
+  },
+  "imports": {
+    "metadata": {
+      "language": "cpp",
+      "purpose": "Includes standard library headers and project-specific headers for big integer operations."
+    },
+    "code": "#include <algorithm>\n            #include <utility>\n\n            #include \"src/bigint/bigint-internal.h\"\n            #include \"src/bigint/digit-arithmetic.h\"\n            #include \"src/bigint/util.h\"\n            #include \"src/bigint/vector-arithmetic.h\""
+  },
+  "classes": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "ProcessorImpl",
+        "about": "Class containing the Karatsuba multiplication implementation.",
+        "attributes": [],
+        "dependencies": [
+          "RWDigits",
+          "Digits",
+          "ScratchDigits"
+        ]
+      },
+      "code": "namespace v8 {\n            namespace bigint {\n            class ProcessorImpl {\n            public:\n                void MultiplyKaratsuba(RWDigits Z, Digits X, Digits Y);\n                void KaratsubaStart(RWDigits Z, Digits X, Digits Y,\n                                       RWDigits scratch, int k);\n                void KaratsubaChunk(RWDigits Z, Digits X, Digits Y,\n                                       RWDigits scratch);\n                void KaratsubaMain(RWDigits Z, Digits X, Digits Y,\n                                      RWDigits scratch, int n);\n            };\n            } // namespace bigint\n            } // namespace v8"
+    }
+  ],
+  "functions": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "function",
+        "name": "RoundUpLen",
+        "parent": "",
+        "about": "Rounds up the input length for Karatsuba algorithm to improve performance.",
+        "logic": "Applies heuristics to determine the amount to round up based on input length.",
+        "parameters": [
+          {
+            "name": "len",
+            "type": "int",
+            "purpose": "The input length."
+          }
+        ],
+        "return": {
+          "type": "int",
+          "description": "The rounded-up length."
+        },
+        "dependencies": [
+          "BitLength",
+          "RoundUp"
+        ]
+      },
+      "code": "namespace v8 {\n            namespace bigint {\n            namespace {\n            int RoundUpLen(int len) {\n              if (len <= 36) return RoundUp(len, 2);\n              // Keep the 4 or 5 most significant non-zero bits.\n              int shift = BitLength(len) - 5;\n              if ((len >> shift) >= 0x18) {\n                shift++;\n              }\n              // Round up, unless we're only just above the threshold. This smoothes\n              // the steps by which time goes up as input size increases.\n              int additive = ((1 << shift) - 1);\n              if (shift >= 2 && (len & additive) < (1 << (shift - 2))) {\n                return len;\n              }\n              return ((len + additive) >> shift) << shift;\n            }\n            } // namespace\n            } // namespace bigint\n            } // namespace v8"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "function",
+        "name": "KaratsubaLength",
+        "parent": "",
+        "about": "Calculates the appropriate length for Karatsuba multiplication based on input size and threshold.",
+        "logic": "Determines the actual length used for Karatsuba by repeatedly halving until below the threshold, then scaling back up.",
+        "parameters": [
+          {
+            "name": "n",
+            "type": "int",
+            "purpose": "The input size."
+          }
+        ],
+        "return": {
+          "type": "int",
+          "description": "The calculated Karatsuba length."
+        },
+        "dependencies": [
+          "RoundUpLen",
+          "kKaratsubaThreshold"
+        ]
+      },
+      "code": "namespace v8 {\n            namespace bigint {\n            namespace {\n            int KaratsubaLength(int n) {\n              n = RoundUpLen(n);\n              int i = 0;\n              while (n > kKaratsubaThreshold) {\n                n >>= 1;\n                i++;\n              }\n              return n << i;\n            }\n            } // namespace\n            } // namespace bigint\n            } // namespace v8"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "function",
+        "name": "KaratsubaSubtractionHelper",
+        "parent": "",
+        "about": "Helper function for the specific subtraction required in the Karatsuba algorithm.",
+        "logic": "Subtracts two digit arrays, handling borrows and swapping if necessary.",
+        "parameters": [
+          {
+            "name": "result",
+            "type": "RWDigits",
+            "purpose": "The resulting digits after subtraction."
+          },
+          {
+            "name": "X",
+            "type": "Digits",
+            "purpose": "The first operand (minuend)."
+          },
+          {
+            "name": "Y",
+            "type": "Digits",
+            "purpose": "The second operand (subtrahend)."
+          },
+          {
+            "name": "sign",
+            "type": "int*",
+            "purpose": "Pointer to the sign of the result. Modified if X and Y are swapped."
+          }
+        ],
+        "return": {
+          "type": "void",
+          "description": "No return value."
+        },
+        "dependencies": [
+          "GreaterThanOrEqual",
+          "digit_sub2",
+          "digit_sub"
+        ]
+      },
+      "code": "namespace v8 {\n            namespace bigint {\n            namespace {\n            void KaratsubaSubtractionHelper(RWDigits result, Digits X, Digits Y,\n                                        int* sign) {\n              X.Normalize();\n              Y.Normalize();\n              digit_t borrow = 0;\n              int i = 0;\n              if (!GreaterThanOrEqual(X, Y)) {\n                *sign = -(*sign);\n                std::swap(X, Y);\n              }\n              for (; i < Y.len(); i++) {\n                result[i] = digit_sub2(X[i], Y[i], borrow, &borrow);\n              }\n              for (; i < X.len(); i++) {\n                result[i] = digit_sub(X[i], borrow, &borrow);\n              }\n              DCHECK(borrow == 0);\n              for (; i < result.len(); i++) result[i] = 0;\n            }\n            } // namespace\n            } // namespace bigint\n            } // namespace v8"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "method",
+        "name": "MultiplyKaratsuba",
+        "parent": "ProcessorImpl",
+        "about": "Top-level Karatsuba multiplication method.",
+        "logic": "Calculates the Karatsuba length and calls the KaratsubaStart method.",
+        "parameters": [
+          {
+            "name": "Z",
+            "type": "RWDigits",
+            "purpose": "The result digits."
+          },
+          {
+            "name": "X",
+            "type": "Digits",
+            "purpose": "The first operand."
+          },
+          {
+            "name": "Y",
+            "type": "Digits",
+            "purpose": "The second operand."
+          }
+        ],
+        "return": {
+          "type": "void",
+          "description": "No return value."
+        },
+        "dependencies": [
+          "KaratsubaLength",
+          "KaratsubaStart"
+        ]
+      },
+      "code": "namespace v8 {\n            namespace bigint {\n            void ProcessorImpl::MultiplyKaratsuba(RWDigits Z, Digits X, Digits Y) {\n              DCHECK(X.len() >= Y.len());\n              DCHECK(Y.len() >= kKaratsubaThreshold);\n              DCHECK(Z.len() >= X.len() + Y.len());\n              int k = KaratsubaLength(Y.len());\n              int scratch_len = 4 * k;\n              ScratchDigits scratch(scratch_len);\n              KaratsubaStart(Z, X, Y, scratch, k);\n            }\n            } // namespace bigint\n            } // namespace v8"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "method",
+        "name": "KaratsubaStart",
+        "parent": "ProcessorImpl",
+        "about": "Entry point for Karatsuba-based multiplication, handles inputs of unequal lengths by breaking down into chunks.",
+        "logic": "Divides the larger input into chunks, recursively calls KaratsubaMain, and adds the results.",
+        "parameters": [
+          {
+            "name": "Z",
+            "type": "RWDigits",
+            "purpose": "The result digits."
+          },
+          {
+            "name": "X",
+            "type": "Digits",
+            "purpose": "The first operand."
+          },
+          {
+            "name": "Y",
+            "type": "Digits",
+            "purpose": "The second operand."
+          },
+          {
+            "name": "scratch",
+            "type": "RWDigits",
+            "purpose": "Scratch space for intermediate calculations."
+          },
+          {
+            "name": "k",
+            "type": "int",
+            "purpose": "The Karatsuba length."
+          }
+        ],
+        "return": {
+          "type": "void",
+          "description": "No return value."
+        },
+        "dependencies": [
+          "KaratsubaMain",
+          "MAYBE_TERMINATE",
+          "KaratsubaChunk",
+          "AddAndReturnOverflow"
+        ]
+      },
+      "code": "namespace v8 {\n            namespace bigint {\n            void ProcessorImpl::KaratsubaStart(RWDigits Z, Digits X, Digits Y,\n                                               RWDigits scratch, int k) {\n              KaratsubaMain(Z, X, Y, scratch, k);\n              MAYBE_TERMINATE\n              for (int i = 2 * k; i < Z.len(); i++) Z[i] = 0;\n              if (k < Y.len() || X.len() != Y.len()) {\n                ScratchDigits T(2 * k);\n                // Add X0 * Y1 * b.\n                Digits X0(X, 0, k);\n                Digits Y1 = Y + std::min(k, Y.len());\n                if (Y1.len() > 0) {\n                  KaratsubaChunk(T, X0, Y1, scratch);\n                  MAYBE_TERMINATE\n                  AddAndReturnOverflow(Z + k, T);  // Can't overflow.\n                }\n\n                // Add Xi * Y0 << i and Xi * Y1 * b << (i + k).\n                Digits Y0(Y, 0, k);\n                for (int i = k; i < X.len(); i += k) {\n                  Digits Xi(X, i, k);\n                  KaratsubaChunk(T, Xi, Y0, scratch);\n                  MAYBE_TERMINATE\n                  AddAndReturnOverflow(Z + i, T);  // Can't overflow.\n                  if (Y1.len() > 0) {\n                    KaratsubaChunk(T, Xi, Y1, scratch);\n                    MAYBE_TERMINATE\n                    AddAndReturnOverflow(Z + (i + k), T);  // Can't overflow.\n                  }\n                }\n              }\n            }\n            } // namespace bigint\n            } // namespace v8"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "method",
+        "name": "KaratsubaChunk",
+        "parent": "ProcessorImpl",
+        "about": "Entry point for chunk-wise multiplications, selects the appropriate algorithm based on input sizes.",
+        "logic": "Normalizes inputs, swaps them if needed, and selects between MultiplySingle, MultiplySchoolbook, or KaratsubaStart based on the lengths of the inputs.",
+        "parameters": [
+          {
+            "name": "Z",
+            "type": "RWDigits",
+            "purpose": "The result digits."
+          },
+          {
+            "name": "X",
+            "type": "Digits",
+            "purpose": "The first operand."
+          },
+          {
+            "name": "Y",
+            "type": "Digits",
+            "purpose": "The second operand."
+          },
+          {
+            "name": "scratch",
+            "type": "RWDigits",
+            "purpose": "Scratch space for intermediate calculations."
+          }
+        ],
+        "return": {
+          "type": "void",
+          "description": "No return value."
+        },
+        "dependencies": [
+          "MultiplySingle",
+          "MultiplySchoolbook",
+          "KaratsubaStart",
+          "kKaratsubaThreshold"
+        ]
+      },
+      "code": "namespace v8 {\n            namespace bigint {\n            void ProcessorImpl::KaratsubaChunk(RWDigits Z, Digits X, Digits Y,\n                                               RWDigits scratch) {\n              X.Normalize();\n              Y.Normalize();\n              if (X.len() == 0 || Y.len() == 0) return Z.Clear();\n              if (X.len() < Y.len()) std::swap(X, Y);\n              if (Y.len() == 1) return MultiplySingle(Z, X, Y[0]);\n              if (Y.len() < kKaratsubaThreshold) return MultiplySchoolbook(Z, X, Y);\n              int k = KaratsubaLength(Y.len());\n              DCHECK(scratch.len() >= 4 * k);\n              return KaratsubaStart(Z, X, Y, scratch, k);\n            }\n            } // namespace bigint\n            } // namespace v8"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "method",
+        "name": "KaratsubaMain",
+        "parent": "ProcessorImpl",
+        "about": "The main recursive Karatsuba method.",
+        "logic": "Recursively divides the inputs into smaller chunks, performs multiplications, and combines the results. Uses schoolbook multiplication for small chunks.",
+        "parameters": [
+          {
+            "name": "Z",
+            "type": "RWDigits",
+            "purpose": "The result digits."
+          },
+          {
+            "name": "X",
+            "type": "Digits",
+            "purpose": "The first operand."
+          },
+          {
+            "name": "Y",
+            "type": "Digits",
+            "purpose": "The second operand."
+          },
+          {
+            "name": "scratch",
+            "type": "RWDigits",
+            "purpose": "Scratch space for intermediate calculations."
+          },
+          {
+            "name": "n",
+            "type": "int",
+            "purpose": "The length of the inputs."
+          }
+        ],
+        "return": {
+          "type": "void",
+          "description": "No return value."
+        },
+        "dependencies": [
+          "MultiplySchoolbook",
+          "KaratsubaMain",
+          "MAYBE_TERMINATE",
+          "AddAndReturnOverflow",
+          "KaratsubaSubtractionHelper",
+          "SubAndReturnBorrow",
+          "kKaratsubaThreshold"
+        ]
+      },
+      "code": "namespace v8 {\n            namespace bigint {\n            void ProcessorImpl::KaratsubaMain(RWDigits Z, Digits X, Digits Y,\n                                              RWDigits scratch, int n) {\n              if (n < kKaratsubaThreshold) {\n                X.Normalize();\n                Y.Normalize();\n                if (X.len() >= Y.len()) {\n                  return MultiplySchoolbook(RWDigits(Z, 0, 2 * n), X, Y);\n                } else {\n                  return MultiplySchoolbook(RWDigits(Z, 0, 2 * n), Y, X);\n                }\n              }\n              DCHECK(scratch.len() >= 4 * n);\n              DCHECK((n & 1) == 0);\n              int n2 = n >> 1;\n              Digits X0(X, 0, n2);\n              Digits X1(X, n2, n2);\n              Digits Y0(Y, 0, n2);\n              Digits Y1(Y, n2, n2);\n              RWDigits scratch_for_recursion(scratch, 2 * n, 2 * n);\n              RWDigits P0(scratch, 0, n);\n              KaratsubaMain(P0, X0, Y0, scratch_for_recursion, n2);\n              MAYBE_TERMINATE\n              for (int i = 0; i < n; i++) Z[i] = P0[i];\n              RWDigits P2(scratch, n, n);\n              KaratsubaMain(P2, X1, Y1, scratch_for_recursion, n2);\n              MAYBE_TERMINATE\n              RWDigits Z2 = Z + n;\n              int end = std::min(Z2.len(), P2.len());\n              for (int i = 0; i < end; i++) Z2[i] = P2[i];\n              for (int i = end; i < n; i++) {\n                DCHECK(P2[i] == 0);\n              }\n              // The intermediate result can be one digit too large; the subtraction\n              // below will fix this.\n              digit_t overflow = AddAndReturnOverflow(Z + n2, P0);\n              overflow += AddAndReturnOverflow(Z + n2, P2);\n              RWDigits X_diff(scratch, 0, n2);\n              RWDigits Y_diff(scratch, n2, n2);\n              int sign = 1;\n              KaratsubaSubtractionHelper(X_diff, X1, X0, &sign);\n              KaratsubaSubtractionHelper(Y_diff, Y0, Y1, &sign);\n              RWDigits P1(scratch, n, n);\n              KaratsubaMain(P1, X_diff, Y_diff, scratch_for_recursion, n2);\n              if (sign > 0) {\n                overflow += AddAndReturnOverflow(Z + n2, P1);\n              } else {\n                overflow -= SubAndReturnBorrow(Z + n2, P1);\n              }\n              // The intermediate result may have been bigger, but the final result fits.\n              DCHECK(overflow == 0);\n              USE(overflow);\n            }\n            } // namespace bigint\n            } // namespace v8"
+    }
+  ],
+  "dependencies": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "RWDigits",
+        "about": "Represents read-write digits of a big integer"
+      },
+      "code": "class RWDigits {\n                public:\n                    RWDigits(digit_t* digits, int start, int len);\n                    digit_t operator[](int i);\n                    int len();\n                    void Clear();\n                };",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "Digits",
+        "about": "Represents read-only digits of a big integer"
+      },
+      "code": "class Digits {\n                public:\n                    Digits(const digit_t* digits, int start, int len);\n                    digit_t operator[](int i) const;\n                    int len() const;\n                    void Normalize();\n                };",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "ScratchDigits",
+        "about": "Represents scratch space for digits of a big integer"
+      },
+      "code": "class ScratchDigits {\n                public:\n                    ScratchDigits(int len);\n                    ~ScratchDigits();\n                    digit_t* data();\n                    int len() const;\n                };",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "function",
+        "name": "BitLength",
+        "about": "Calculates the bit length of an integer."
+      },
+      "code": "int BitLength(int x);",
+      "type": "func"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "function",
+        "name": "RoundUp",
+        "about": "Rounds up an integer to the nearest multiple of another integer."
+      },
+      "code": "int RoundUp(int x, int multiple);",
+      "type": "func"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "function",
+        "name": "GreaterThanOrEqual",
+        "about": "Compares two digit arrays for greater than or equal relationship."
+      },
+      "code": "bool GreaterThanOrEqual(Digits X, Digits Y);",
+      "type": "func"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "function",
+        "name": "digit_sub2",
+        "about": "Subtracts two digits with a borrow."
+      },
+      "code": "digit_t digit_sub2(digit_t a, digit_t b, digit_t borrow_in, digit_t* borrow_out);",
+      "type": "func"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "function",
+        "name": "digit_sub",
+        "about": "Subtracts a digit with a borrow."
+      },
+      "code": "digit_t digit_sub(digit_t a, digit_t borrow_in, digit_t* borrow_out);",
+      "type": "func"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "function",
+        "name": "MultiplySingle",
+        "about": "Multiplies a digit array by a single digit."
+      },
+      "code": "void MultiplySingle(RWDigits Z, Digits X, digit_t Y);",
+      "type": "func"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "function",
+        "name": "MultiplySchoolbook",
+        "about": "Multiplies two digit arrays using the schoolbook method."
+      },
+      "code": "void MultiplySchoolbook(RWDigits Z, Digits X, Digits Y);",
+      "type": "func"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "function",
+        "name": "AddAndReturnOverflow",
+        "about": "Adds two digit arrays and returns the overflow."
+      },
+      "code": "digit_t AddAndReturnOverflow(RWDigits Z, Digits X);",
+      "type": "func"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "function",
+        "name": "SubAndReturnBorrow",
+        "about": "Subtracts two digit arrays and returns the borrow."
+      },
+      "code": "digit_t SubAndReturnBorrow(RWDigits Z, Digits X);",
+      "type": "func"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "macro",
+        "name": "V8_ADVANCED_BIGINT_ALGORITHMS",
+        "about": "Conditional compilation flag for advanced bigint algorithms"
+      },
+      "code": "#define V8_ADVANCED_BIGINT_ALGORITHMS",
+      "type": "macro"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "macro",
+        "name": "MAYBE_TERMINATE",
+        "about": "Conditionally checks for termination requests based on V8_ADVANCED_BIGINT_ALGORITHMS."
+      },
+      "code": "#define MAYBE_TERMINATE \\\n                  if (should_terminate()) return;",
+      "type": "macro"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "variable",
+        "name": "kKaratsubaThreshold",
+        "about": "Threshold for switching to schoolbook multiplication"
+      },
+      "code": "int kKaratsubaThreshold",
+      "type": "variable"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "macro",
+        "name": "DCHECK",
+        "about": "Assertion macro"
+      },
+      "code": "#define DCHECK(condition)",
+      "type": "macro"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "macro",
+        "name": "USE",
+        "about": "Macro to silence unused variable warnings"
+      },
+      "code": "#define USE(x)",
+      "type": "macro"
+    }
+  ],
+  "file_path": "/home/kathirks_gc/v8_go/archive/codebase/src/bigint/mul-karatsuba.cc"
+}

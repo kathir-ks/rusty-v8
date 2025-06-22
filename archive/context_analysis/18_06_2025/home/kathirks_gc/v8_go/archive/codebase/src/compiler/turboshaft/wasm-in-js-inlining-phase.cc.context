@@ -1,0 +1,51 @@
+{
+  "metadata": {
+    "path": "/home/kathirks_gc/v8_go/archive/codebase/src/compiler/turboshaft/wasm-in-js-inlining-phase.cc",
+    "file_name": "wasm-in-js-inlining-phase.cc",
+    "language": "cpp",
+    "purpose": "Implements the Wasm-in-JS inlining phase in the Turboshaft compiler pipeline."
+  },
+  "imports": {
+    "metadata": {
+      "language": "cpp",
+      "purpose": "Includes necessary header files for the Wasm-in-JS inlining phase, copying phase, turboshaft phases, and reducers."
+    },
+    "code": "#include \"src/compiler/turboshaft/wasm-in-js-inlining-phase.h\"\n\n#include \"src/compiler/turboshaft/copying-phase.h\"\n#include \"src/compiler/turboshaft/phase.h\"\n#include \"src/compiler/turboshaft/wasm-in-js-inlining-reducer-inl.h\"\n#include \"src/compiler/turboshaft/wasm-lowering-reducer.h\""
+  },
+  "functions": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "method",
+        "name": "Run",
+        "parent": "WasmInJSInliningPhase",
+        "about": "Runs the Wasm-in-JS inlining phase.",
+        "logic": "This phase performs Wasm-in-JS inlining using the CopyingPhase framework, which also includes a WasmLoweringReducer.  It also handles unparking the scope if needed. A comment indicates future inclusion of Wasm GC typed optimizations.",
+        "parameters": [
+          {
+            "name": "data",
+            "type": "PipelineData*",
+            "purpose": "Pointer to the pipeline data containing the compilation information."
+          },
+          {
+            "name": "temp_zone",
+            "type": "Zone*",
+            "purpose": "Pointer to a temporary zone for memory allocation."
+          }
+        ],
+        "return": {
+          "type": "void",
+          "description": "No return value."
+        },
+        "dependencies": [
+          "UnparkedScopeIfNeeded",
+          "CopyingPhase",
+          "WasmInJSInliningReducer",
+          "WasmLoweringReducer"
+        ]
+      },
+      "code": "void WasmInJSInliningPhase::Run(PipelineData* data, Zone* temp_zone) {\n  UnparkedScopeIfNeeded scope(data->broker(), DEBUG_BOOL);\n\n  // We need the `WasmLoweringReducer` for lowering, e.g., `global.get` etc.\n  // TODO(dlehmann,353475584): Add Wasm GC (typed) optimizations also, see\n  // `WasmGCTypedOptimizationReducer`.\n  // This might need a separate phase due to the analysis in the input graph,\n  // which is expensive, which is why we should enable this only conditionally.\n  CopyingPhase<WasmInJSInliningReducer, WasmLoweringReducer>::Run(data,\n                                                                  temp_zone);\n}"
+    }
+  ],
+  "file_path": "/home/kathirks_gc/v8_go/archive/codebase/src/compiler/turboshaft/wasm-in-js-inlining-phase.cc"
+}

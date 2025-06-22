@@ -1,0 +1,176 @@
+{
+  "metadata": {
+    "path": "/home/kathirks_gc/v8_go/archive/codebase/src/compiler/js-intrinsic-lowering.h",
+    "file_name": "js-intrinsic-lowering.h",
+    "language": "cpp",
+    "purpose": "Declares the JSIntrinsicLowering class, which lowers certain JS-level runtime calls to simpler operations within the V8 compiler."
+  },
+  "imports": {
+    "metadata": {
+      "language": "cpp",
+      "purpose": "Includes necessary header files for base types, compiler operators, and graph reduction."
+    },
+    "code": "#include \"src/base/compiler-specific.h\"\n#include \"src/compiler/common-operator.h\"\n#include \"src/compiler/graph-reducer.h\""
+  },
+  "classes": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "JSIntrinsicLowering",
+        "extends": "AdvancedReducer",
+        "about": "Lowers certain JS-level runtime calls to simpler operations.",
+        "attributes": [
+          {
+            "name": "jsgraph_",
+            "type": "JSGraph*",
+            "access": "private",
+            "purpose": "Pointer to the JSGraph object."
+          },
+          {
+            "name": "broker_",
+            "type": "JSHeapBroker*",
+            "access": "private",
+            "purpose": "Pointer to the JSHeapBroker object."
+          }
+        ],
+        "dependencies": [
+          "AdvancedReducer",
+          "Editor",
+          "JSGraph",
+          "JSHeapBroker",
+          "Callable",
+          "CommonOperatorBuilder",
+          "JSOperatorBuilder",
+          "SimplifiedOperatorBuilder",
+          "Node",
+          "Operator"
+        ]
+      },
+      "code": "class V8_EXPORT_PRIVATE JSIntrinsicLowering final\n    : public NON_EXPORTED_BASE(AdvancedReducer) {\n public:\n  JSIntrinsicLowering(Editor* editor, JSGraph* jsgraph, JSHeapBroker* broker);\n  ~JSIntrinsicLowering() final = default;\n\n  const char* reducer_name() const override { return \"JSIntrinsicLowering\"; }\n\n  Reduction Reduce(Node* node) final;\n\n private:\n  Reduction ReduceCopyDataProperties(Node* node);\n  Reduction ReduceCopyDataPropertiesWithExcludedPropertiesOnStack(Node* node);\n  Reduction ReduceCreateIterResultObject(Node* node);\n  Reduction ReduceDeoptimizeNow(Node* node);\n  Reduction ReduceCreateJSGeneratorObject(Node* node);\n  Reduction ReduceGeneratorClose(Node* node);\n  Reduction ReduceAsyncFunctionAwait(Node* node);\n  Reduction ReduceAsyncFunctionEnter(Node* node);\n  Reduction ReduceAsyncFunctionReject(Node* node);\n  Reduction ReduceAsyncFunctionResolve(Node* node);\n  Reduction ReduceAsyncGeneratorAwait(Node* node);\n  Reduction ReduceAsyncGeneratorReject(Node* node);\n  Reduction ReduceAsyncGeneratorResolve(Node* node);\n  Reduction ReduceAsyncGeneratorYieldWithAwait(Node* node);\n  Reduction ReduceGeneratorGetResumeMode(Node* node);\n  Reduction ReduceIsInstanceType(Node* node, InstanceType instance_type);\n  Reduction ReduceIsJSReceiver(Node* node);\n  Reduction ReduceIsBeingInterpreted(Node* node);\n  Reduction ReduceTurbofanStaticAssert(Node* node);\n  Reduction ReduceVerifyType(Node* node);\n  Reduction ReduceCheckTurboshaftTypeOf(Node* node);\n  Reduction ReduceToLength(Node* node);\n  Reduction ReduceToObject(Node* node);\n  Reduction ReduceToString(Node* node);\n  Reduction ReduceCall(Node* node);\n  Reduction ReduceIncBlockCounter(Node* node);\n  Reduction ReduceGetImportMetaObject(Node* node);\n\n  Reduction Change(Node* node, const Operator* op);\n  Reduction Change(Node* node, const Operator* op, Node* a, Node* b);\n  Reduction Change(Node* node, const Operator* op, Node* a, Node* b, Node* c);\n  Reduction Change(Node* node, const Operator* op, Node* a, Node* b, Node* c,\n                   Node* d);\n\n  enum FrameStateFlag {\n    kNeedsFrameState,\n    kDoesNotNeedFrameState,\n  };\n  Reduction Change(Node* node, Callable const& callable,\n                   int stack_parameter_count,\n                   enum FrameStateFlag frame_state_flag = kNeedsFrameState);\n\n  TFGraph* graph() const;\n  JSGraph* jsgraph() const { return jsgraph_; }\n  JSHeapBroker* broker() const { return broker_; }\n  Isolate* isolate() const;\n  CommonOperatorBuilder* common() const;\n  JSOperatorBuilder* javascript() const;\n  SimplifiedOperatorBuilder* simplified() const;\n\n  JSGraph* const jsgraph_;\n  JSHeapBroker* const broker_;\n};"
+    }
+  ],
+  "dependencies": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "AdvancedReducer",
+        "about": "Abstract base class for advanced reducers in the V8 compiler pipeline."
+      },
+      "code": "class AdvancedReducer {\n                 public:\n                  virtual ~AdvancedReducer() {}\n                };",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "Editor",
+        "about": "Graph editor for making changes to the graph."
+      },
+      "code": "class Editor {};",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "JSGraph",
+        "about": "Represents the JavaScript graph."
+      },
+      "code": "class JSGraph {};",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "JSHeapBroker",
+        "about": "Provides access to the JS heap."
+      },
+      "code": "class JSHeapBroker {};",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "Callable",
+        "about": "Represents a callable object."
+      },
+      "code": "class Callable {};",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "CommonOperatorBuilder",
+        "about": "Builds common operators."
+      },
+      "code": "class CommonOperatorBuilder {};",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "JSOperatorBuilder",
+        "about": "Builds JavaScript operators."
+      },
+      "code": "class JSOperatorBuilder {};",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "SimplifiedOperatorBuilder",
+        "about": "Builds simplified operators."
+      },
+      "code": "class SimplifiedOperatorBuilder {};",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "Node",
+        "about": "Represents a node in the graph."
+      },
+      "code": "class Node {};",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "Operator",
+        "about": "Represents an operator in the graph."
+      },
+      "code": "class Operator {};",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "Isolate",
+        "about": "Represents an isolated instance of the V8 JavaScript engine."
+      },
+      "code": "class Isolate {};",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "TFGraph",
+        "about": "Typed Function Graph"
+      },
+      "code": "class TFGraph {};",
+      "type": "class"
+    }
+  ],
+  "file_path": "/home/kathirks_gc/v8_go/archive/codebase/src/compiler/js-intrinsic-lowering.h"
+}

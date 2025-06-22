@@ -1,0 +1,166 @@
+{
+  "metadata": {
+    "path": "/home/kathirks_gc/v8_go/archive/codebase/include/cppgc/internal/caged-heap.h",
+    "file_name": "caged-heap.h",
+    "language": "cpp",
+    "purpose": "Defines the CagedHeapBase class and related utility functions for managing a caged heap in cppgc."
+  },
+  "imports": {
+    "metadata": {
+      "language": "cpp",
+      "purpose": "Includes V8 configuration header."
+    },
+    "code": "#include \"v8config.h\"  // NOLINT(build/include_directory)"
+  },
+  "classes": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "CagedHeapBase",
+        "about": "Provides base functionalities for caged heap management, including offset calculation and cage boundary checks.",
+        "attributes": [
+          {
+            "name": "g_heap_base_",
+            "type": "uintptr_t",
+            "access": "private",
+            "purpose": "Stores the base address of the caged heap."
+          },
+          {
+            "name": "g_age_table_size_",
+            "type": "size_t",
+            "access": "private",
+            "purpose": "Stores the size of the age table."
+          }
+        ],
+        "dependencies": [
+          "api_constants"
+        ]
+      },
+      "code": "class V8_EXPORT CagedHeapBase {\n         public:\n          V8_INLINE static uintptr_t OffsetFromAddress(const void* address) {\n            return reinterpret_cast<uintptr_t>(address) &\n                   (api_constants::kCagedHeapReservationAlignment - 1);\n          }\n\n          V8_INLINE static bool IsWithinCage(const void* address) {\n            CPPGC_DCHECK(g_heap_base_);\n            return (reinterpret_cast<uintptr_t>(address) &\n                    ~(api_constants::kCagedHeapReservationAlignment - 1)) ==\n                   g_heap_base_;\n          }\n\n          V8_INLINE static bool AreWithinCage(const void* addr1, const void* addr2) {\n        #if defined(CPPGC_POINTER_COMPRESSION)\n            static constexpr size_t kHeapBaseShift =\n                31 + api_constants::kPointerCompressionShift;\n        #else   // !defined(CPPGC_POINTER_COMPRESSION)\n            static constexpr size_t kHeapBaseShift = sizeof(uint32_t) * CHAR_BIT;\n        #endif  // !defined(CPPGC_POINTER_COMPRESSION)\n            static_assert((static_cast<size_t>(1) << kHeapBaseShift) ==\n                          api_constants::kCagedHeapMaxReservationSize);\n            CPPGC_DCHECK(g_heap_base_);\n            return !(((reinterpret_cast<uintptr_t>(addr1) ^ g_heap_base_) |\n                      (reinterpret_cast<uintptr_t>(addr2) ^ g_heap_base_)) >>\n                     kHeapBaseShift);\n          }\n\n          V8_INLINE static uintptr_t GetBase() { return g_heap_base_; }\n          V8_INLINE static size_t GetAgeTableSize() { return g_age_table_size_; }\n\n         private:\n          friend class CagedHeap;\n\n          static uintptr_t g_heap_base_;\n          static size_t g_age_table_size_;\n        };"
+    }
+  ],
+  "functions": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "method",
+        "name": "OffsetFromAddress",
+        "parent": "CagedHeapBase",
+        "about": "Calculates the offset of an address within the caged heap's reservation alignment.",
+        "logic": "The function uses a bitwise AND operation to extract the offset from the address.",
+        "parameters": [
+          {
+            "name": "address",
+            "type": "const void*",
+            "purpose": "The address to calculate the offset from."
+          }
+        ],
+        "return": {
+          "type": "uintptr_t",
+          "description": "The offset of the address."
+        },
+        "dependencies": [
+          "api_constants"
+        ]
+      },
+      "code": "V8_INLINE static uintptr_t OffsetFromAddress(const void* address) {\n            return reinterpret_cast<uintptr_t>(address) &\n                   (api_constants::kCagedHeapReservationAlignment - 1);\n          }"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "method",
+        "name": "IsWithinCage",
+        "parent": "CagedHeapBase",
+        "about": "Checks if an address is within the caged heap.",
+        "logic": "The function checks if the address falls within the reserved region of the caged heap by comparing its base with the global `g_heap_base_`.",
+        "parameters": [
+          {
+            "name": "address",
+            "type": "const void*",
+            "purpose": "The address to check."
+          }
+        ],
+        "return": {
+          "type": "bool",
+          "description": "True if the address is within the cage, false otherwise."
+        },
+        "dependencies": [
+          "g_heap_base_",
+          "api_constants"
+        ]
+      },
+      "code": "V8_INLINE static bool IsWithinCage(const void* address) {\n            CPPGC_DCHECK(g_heap_base_);\n            return (reinterpret_cast<uintptr_t>(address) &\n                    ~(api_constants::kCagedHeapReservationAlignment - 1)) ==\n                   g_heap_base_;\n          }"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "method",
+        "name": "AreWithinCage",
+        "parent": "CagedHeapBase",
+        "about": "Checks if two addresses are within the caged heap.",
+        "logic": "This function leverages XOR and bitwise operations to efficiently determine if two addresses share the same base address within the caged heap, especially considering pointer compression scenarios.",
+        "parameters": [
+          {
+            "name": "addr1",
+            "type": "const void*",
+            "purpose": "The first address to check."
+          },
+          {
+            "name": "addr2",
+            "type": "const void*",
+            "purpose": "The second address to check."
+          }
+        ],
+        "return": {
+          "type": "bool",
+          "description": "True if both addresses are within the cage, false otherwise."
+        },
+        "dependencies": [
+          "g_heap_base_",
+          "api_constants"
+        ]
+      },
+      "code": "V8_INLINE static bool AreWithinCage(const void* addr1, const void* addr2) {\n        #if defined(CPPGC_POINTER_COMPRESSION)\n            static constexpr size_t kHeapBaseShift =\n                31 + api_constants::kPointerCompressionShift;\n        #else   // !defined(CPPGC_POINTER_COMPRESSION)\n            static constexpr size_t kHeapBaseShift = sizeof(uint32_t) * CHAR_BIT;\n        #endif  // !defined(CPPGC_POINTER_COMPRESSION)\n            static_assert((static_cast<size_t>(1) << kHeapBaseShift) ==\n                          api_constants::kCagedHeapMaxReservationSize);\n            CPPGC_DCHECK(g_heap_base_);\n            return !(((reinterpret_cast<uintptr_t>(addr1) ^ g_heap_base_) |\n                      (reinterpret_cast<uintptr_t>(addr2) ^ g_heap_base_)) >>\n                     kHeapBaseShift);\n          }"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "method",
+        "name": "GetBase",
+        "parent": "CagedHeapBase",
+        "about": "Returns the base address of the caged heap.",
+        "logic": "Simple getter for g_heap_base_.",
+        "parameters": [],
+        "return": {
+          "type": "uintptr_t",
+          "description": "The base address of the caged heap."
+        },
+        "dependencies": [
+          "g_heap_base_"
+        ]
+      },
+      "code": "V8_INLINE static uintptr_t GetBase() { return g_heap_base_; }"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "method",
+        "name": "GetAgeTableSize",
+        "parent": "CagedHeapBase",
+        "about": "Returns the size of the age table.",
+        "logic": "Simple getter for g_age_table_size_.",
+        "parameters": [],
+        "return": {
+          "type": "size_t",
+          "description": "The size of the age table."
+        },
+        "dependencies": [
+          "g_age_table_size_"
+        ]
+      },
+      "code": "V8_INLINE static size_t GetAgeTableSize() { return g_age_table_size_; }"
+    }
+  ],
+  "file_path": "/home/kathirks_gc/v8_go/archive/codebase/include/cppgc/internal/caged-heap.h"
+}

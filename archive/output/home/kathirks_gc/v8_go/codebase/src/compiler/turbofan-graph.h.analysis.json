@@ -1,0 +1,236 @@
+{
+  "file_path": "/home/kathirks_gc/v8_go/codebase/src/compiler/turbofan-graph.h",
+  "imports": [
+    "<array>",
+    "src/base/compiler-specific.h",
+    "src/zone/zone-containers.h",
+    "src/zone/zone.h"
+  ],
+  "classes": [
+    {
+      "name": "TFGraph",
+      "properties": [
+        "zone_",
+        "start_",
+        "end_",
+        "mark_max_",
+        "next_node_id_",
+        "decorators_",
+        "has_simd_",
+        "simd_stores_"
+      ],
+      "methods": [
+        {
+          "name": "TFGraph",
+          "parameters": [
+            "Zone* zone"
+          ],
+          "return_type": "explicit",
+          "logic": "Constructor for the TFGraph class, takes a Zone* as an argument, which is used for memory management."
+        },
+        {
+          "name": "SubgraphScope",
+          "parameters": [
+            "TFGraph* graph"
+          ],
+          "return_type": "explicit",
+          "logic": "Constructor for the SubgraphScope class. Saves the current start and end nodes of the graph."
+        },
+        {
+          "name": "~SubgraphScope",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Destructor for the SubgraphScope class. Resets the start and end nodes of the graph to their original values."
+        },
+        {
+          "name": "NewNodeUnchecked",
+          "parameters": [
+            "const Operator* op",
+            "int input_count",
+            "Node* const* inputs",
+            "bool incomplete"
+          ],
+          "return_type": "Node*",
+          "logic": "Base implementation to create a new node in the graph without input count checks."
+        },
+        {
+          "name": "NewNode",
+          "parameters": [
+            "const Operator* op",
+            "int input_count",
+            "Node* const* inputs",
+            "bool incomplete"
+          ],
+          "return_type": "Node*",
+          "logic": "Factory method to create a new node in the graph with input count checks."
+        },
+        {
+          "name": "NewNode",
+          "parameters": [
+            "const Operator* op",
+            "Nodes... nodes"
+          ],
+          "return_type": "Node*",
+          "logic": "Factory method template to create a new node in the graph with a static number of inputs."
+        },
+        {
+          "name": "CloneNode",
+          "parameters": [
+            "const Node* node"
+          ],
+          "return_type": "Node*",
+          "logic": "Clones an existing node in the graph and assigns a new node id."
+        },
+        {
+          "name": "zone",
+          "parameters": [],
+          "return_type": "Zone*",
+          "logic": "Returns the Zone associated with this graph."
+        },
+        {
+          "name": "start",
+          "parameters": [],
+          "return_type": "Node*",
+          "logic": "Returns the start node of the graph."
+        },
+        {
+          "name": "end",
+          "parameters": [],
+          "return_type": "Node*",
+          "logic": "Returns the end node of the graph."
+        },
+        {
+          "name": "SetStart",
+          "parameters": [
+            "Node* start"
+          ],
+          "return_type": "void",
+          "logic": "Sets the start node of the graph."
+        },
+        {
+          "name": "SetEnd",
+          "parameters": [
+            "Node* end"
+          ],
+          "return_type": "void",
+          "logic": "Sets the end node of the graph."
+        },
+        {
+          "name": "NodeCount",
+          "parameters": [],
+          "return_type": "size_t",
+          "logic": "Returns the total number of nodes in the graph."
+        },
+        {
+          "name": "Decorate",
+          "parameters": [
+            "Node* node"
+          ],
+          "return_type": "void",
+          "logic": "Applies decorators to the given node."
+        },
+        {
+          "name": "AddDecorator",
+          "parameters": [
+            "GraphDecorator* decorator"
+          ],
+          "return_type": "void",
+          "logic": "Adds a decorator to the graph."
+        },
+        {
+          "name": "RemoveDecorator",
+          "parameters": [
+            "GraphDecorator* decorator"
+          ],
+          "return_type": "void",
+          "logic": "Removes a decorator from the graph."
+        },
+        {
+          "name": "Print",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Prints the graph for debugging purposes."
+        },
+        {
+          "name": "HasSimd",
+          "parameters": [],
+          "return_type": "bool",
+          "logic": "Returns true if the graph has SIMD operations."
+        },
+        {
+          "name": "SetSimd",
+          "parameters": [
+            "bool has_simd"
+          ],
+          "return_type": "void",
+          "logic": "Sets whether the graph has SIMD operations."
+        },
+        {
+          "name": "RecordSimdStore",
+          "parameters": [
+            "Node* store"
+          ],
+          "return_type": "void",
+          "logic": "Records a SIMD store node."
+        },
+        {
+          "name": "GetSimdStoreNodes",
+          "parameters": [],
+          "return_type": "ZoneVector<Node*> const&",
+          "logic": "Returns a vector of SIMD store nodes."
+        },
+        {
+          "name": "NextNodeId",
+          "parameters": [],
+          "return_type": "NodeId",
+          "logic": "Generates the next available NodeId"
+        }
+      ]
+    },
+    {
+      "name": "SubgraphScope",
+      "properties": [
+        "graph_",
+        "start_",
+        "end_"
+      ],
+      "methods": [
+        {
+          "name": "SubgraphScope",
+          "parameters": [
+            "TFGraph* graph"
+          ],
+          "return_type": "explicit",
+          "logic": "Saves the initial start and end nodes of a graph to restore them later."
+        },
+        {
+          "name": "~SubgraphScope",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Restores the start and end nodes of the graph to their original state from when the scope was created."
+        }
+      ]
+    },
+    {
+      "name": "GraphDecorator",
+      "properties": [],
+      "methods": [
+        {
+          "name": "~GraphDecorator",
+          "parameters": [],
+          "return_type": "virtual",
+          "logic": "Virtual destructor for GraphDecorator."
+        },
+        {
+          "name": "Decorate",
+          "parameters": [
+            "Node* node"
+          ],
+          "return_type": "virtual void",
+          "logic": "Abstract method to decorate a node."
+        }
+      ]
+    }
+  ],
+  "functions": []
+}

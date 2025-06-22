@@ -1,0 +1,246 @@
+{
+  "file_path": "/home/kathirks_gc/v8_go/codebase/src/execution/tiering-manager.cc",
+  "imports": [
+    "src/execution/tiering-manager.h",
+    "optional",
+    "src/base/platform/platform.h",
+    "src/baseline/baseline.h",
+    "src/codegen/assembler.h",
+    "src/codegen/compilation-cache.h",
+    "src/codegen/compiler.h",
+    "src/codegen/pending-optimization-table.h",
+    "src/common/globals.h",
+    "src/diagnostics/code-tracer.h",
+    "src/execution/execution.h",
+    "src/execution/frames-inl.h",
+    "src/flags/flags.h",
+    "src/handles/global-handles.h",
+    "src/init/bootstrapper.h",
+    "src/interpreter/interpreter.h",
+    "src/objects/code-kind.h",
+    "src/objects/code.h",
+    "src/tracing/trace-event.h",
+    "src/baseline/baseline-batch-compiler.h"
+  ],
+  "classes": [
+    {
+      "name": "OptimizationDecision",
+      "properties": [
+        "optimization_reason",
+        "code_kind",
+        "concurrency_mode"
+      ],
+      "methods": [
+        {
+          "name": "Maglev",
+          "parameters": [],
+          "return_type": "OptimizationDecision",
+          "logic": "Returns an OptimizationDecision object for Maglev compilation."
+        },
+        {
+          "name": "TurbofanHotAndStable",
+          "parameters": [],
+          "return_type": "OptimizationDecision",
+          "logic": "Returns an OptimizationDecision object for Turbofan compilation (hot and stable)."
+        },
+        {
+          "name": "DoNotOptimize",
+          "parameters": [],
+          "return_type": "OptimizationDecision",
+          "logic": "Returns an OptimizationDecision object indicating that the function should not be optimized."
+        },
+        {
+          "name": "should_optimize",
+          "parameters": [],
+          "return_type": "bool",
+          "logic": "Returns true if the function should be optimized based on the optimization reason."
+        }
+      ]
+    },
+    {
+      "name": "TieringManager",
+      "properties": [
+        "isolate_"
+      ],
+      "methods": [
+        {
+          "name": "Optimize",
+          "parameters": [
+            "Tagged<JSFunction> function",
+            "OptimizationDecision d"
+          ],
+          "return_type": "void",
+          "logic": "Requests optimization of a JSFunction for the specified CodeKind and ConcurrencyMode."
+        },
+        {
+          "name": "MarkForTurboFanOptimization",
+          "parameters": [
+            "Tagged<JSFunction> function"
+          ],
+          "return_type": "void",
+          "logic": "Marks a JSFunction for TurboFan optimization with default parameters."
+        },
+        {
+          "name": "InterruptBudgetFor",
+          "parameters": [
+            "Isolate* isolate",
+            "Tagged<JSFunction> function",
+            "std::optional<CodeKind> override_active_tier"
+          ],
+          "return_type": "int",
+          "logic": "Calculates the interrupt budget for a JSFunction based on its bytecode length, tier and invocation count."
+        },
+        {
+          "name": "RequestOsrAtNextOpportunity",
+          "parameters": [
+            "Tagged<JSFunction> function"
+          ],
+          "return_type": "void",
+          "logic": "Requests On-Stack Replacement (OSR) optimization at the next possible opportunity."
+        },
+        {
+          "name": "MaybeOptimizeFrame",
+          "parameters": [
+            "Tagged<JSFunction> function",
+            "CodeKind current_code_kind"
+          ],
+          "return_type": "void",
+          "logic": "Determines if a JSFunction should be optimized based on heuristics and existing optimization requests."
+        },
+        {
+          "name": "ShouldOptimize",
+          "parameters": [
+            "Tagged<FeedbackVector> feedback_vector",
+            "CodeKind current_code_kind"
+          ],
+          "return_type": "OptimizationDecision",
+          "logic": "Determines whether a function should be optimized based on its FeedbackVector, SharedFunctionInfo and flag settings, choosing optimization level (Maglev or Turbofan)"
+        },
+        {
+          "name": "NotifyICChanged",
+          "parameters": [
+            "Tagged<FeedbackVector> vector"
+          ],
+          "return_type": "void",
+          "logic": "Notifies the TieringManager when inline caches (ICs) have changed. This potentially resets the interrupt budget if certain criteria are met."
+        },
+        {
+          "name": "OnInterruptTick",
+          "parameters": [
+            "DirectHandle<JSFunction> function",
+            "CodeKind code_kind"
+          ],
+          "return_type": "void",
+          "logic": "Called on an interrupt tick to potentially trigger tiering or baseline compilation for a given function."
+        }
+      ]
+    },
+    {
+      "name": "TieringManager::OnInterruptTickScope",
+      "properties": [],
+      "methods": []
+    }
+  ],
+  "functions": [
+    {
+      "name": "OptimizationReasonToString",
+      "parameters": [
+        "OptimizationReason reason"
+      ],
+      "return_type": "char const*",
+      "logic": "Converts an OptimizationReason enum value to its corresponding string representation."
+    },
+    {
+      "name": "operator<<",
+      "parameters": [
+        "std::ostream& os",
+        "OptimizationReason reason"
+      ],
+      "return_type": "std::ostream&",
+      "logic": "Overloads the << operator for OptimizationReason to allow printing it to an ostream."
+    },
+    {
+      "name": "TraceManualRecompile",
+      "parameters": [
+        "Tagged<JSFunction> function",
+        "CodeKind code_kind",
+        "ConcurrencyMode concurrency_mode"
+      ],
+      "return_type": "void",
+      "logic": "Prints a message to the trace log indicating that a function has been manually marked for optimization."
+    },
+    {
+      "name": "FirstTimeTierUpToSparkplug",
+      "parameters": [
+        "Isolate* isolate",
+        "Tagged<JSFunction> function"
+      ],
+      "return_type": "bool",
+      "logic": "Check if the JSFunction should be enqueued for sparkplug compilation for the first time."
+    },
+    {
+      "name": "TiersUpToMaglev",
+      "parameters": [
+        "CodeKind code_kind"
+      ],
+      "return_type": "bool",
+      "logic": "Checks if tiering up to Maglev is enabled based on the code kind."
+    },
+    {
+      "name": "TiersUpToMaglev",
+      "parameters": [
+        "std::optional<CodeKind> code_kind"
+      ],
+      "return_type": "bool",
+      "logic": "Checks if tiering up to Maglev is enabled based on the optional code kind."
+    },
+    {
+      "name": "InterruptBudgetFor",
+      "parameters": [
+        "Isolate* isolate",
+        "std::optional<CodeKind> code_kind",
+        "Tagged<JSFunction> function",
+        "CachedTieringDecision cached_tiering_decision",
+        "int bytecode_length"
+      ],
+      "return_type": "int",
+      "logic": "Calculates the interrupt budget based on bytecode length, the existing optimization request and tiering decision."
+    },
+    {
+      "name": "TrySetOsrUrgency",
+      "parameters": [
+        "Isolate* isolate",
+        "Tagged<JSFunction> function",
+        "int osr_urgency"
+      ],
+      "return_type": "void",
+      "logic": "Sets the OSR urgency of a function's FeedbackVector."
+    },
+    {
+      "name": "TryIncrementOsrUrgency",
+      "parameters": [
+        "Isolate* isolate",
+        "Tagged<JSFunction> function"
+      ],
+      "return_type": "void",
+      "logic": "Increments the OSR urgency of a function's FeedbackVector if it passes the checks."
+    },
+    {
+      "name": "TryRequestOsrAtNextOpportunity",
+      "parameters": [
+        "Isolate* isolate",
+        "Tagged<JSFunction> function"
+      ],
+      "return_type": "void",
+      "logic": "Set osr_urgency to max to Request On-Stack Replacement (OSR) optimization at the next possible opportunity."
+    },
+    {
+      "name": "ShouldResetInterruptBudgetByICChange",
+      "parameters": [
+        "CachedTieringDecision cached_tiering_decision"
+      ],
+      "return_type": "bool",
+      "logic": "Determines if interrupt budget should be reset when Inline Cache changes based on CachedTieringDecision."
+    }
+  ]
+}

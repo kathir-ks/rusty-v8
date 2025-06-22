@@ -1,0 +1,450 @@
+{
+  "file_path": "/home/kathirks_gc/v8_go/codebase/src/compiler/js-create-lowering.cc",
+  "imports": [
+    "src/compiler/js-create-lowering.h",
+    "<optional>",
+    "src/compiler/access-builder.h",
+    "src/compiler/allocation-builder-inl.h",
+    "src/compiler/common-operator.h",
+    "src/compiler/compilation-dependencies.h",
+    "src/compiler/js-graph.h",
+    "src/compiler/js-heap-broker-inl.h",
+    "src/compiler/js-operator.h",
+    "src/compiler/node-matchers.h",
+    "src/compiler/node-properties.h",
+    "src/compiler/node.h",
+    "src/compiler/simplified-operator.h",
+    "src/compiler/state-values-utils.h",
+    "src/execution/protectors.h",
+    "src/objects/arguments.h",
+    "src/objects/contexts.h",
+    "src/objects/hash-table-inl.h",
+    "src/objects/heap-number.h",
+    "src/objects/js-collection-iterator.h",
+    "src/objects/js-generator.h",
+    "src/objects/js-promise.h",
+    "src/objects/js-regexp-inl.h",
+    "src/objects/objects-inl.h"
+  ],
+  "classes": [
+    {
+      "name": "JSCreateLowering",
+      "properties": [],
+      "methods": [
+        {
+          "name": "Reduce",
+          "parameters": [
+            "Node* node"
+          ],
+          "return_type": "Reduction",
+          "logic": "The main entry point for the lowering process. It switches on the opcode of the input node and calls the appropriate Reduce method to handle that specific kind of JSCreate operation."
+        },
+        {
+          "name": "ReduceJSCreate",
+          "parameters": [
+            "Node* node"
+          ],
+          "return_type": "Reduction",
+          "logic": "Lowers a JSCreate node to allocation and initialization of a JSObject. It retrieves the initial map and allocates the object using AllocationBuilder."
+        },
+        {
+          "name": "ReduceJSCreateArguments",
+          "parameters": [
+            "Node* node"
+          ],
+          "return_type": "Reduction",
+          "logic": "Lowers a JSCreateArguments node to the allocation and initialization of an arguments object (either mapped or unmapped). It handles both outer (non-inlined) and inlined frames."
+        },
+        {
+          "name": "ReduceJSCreateGeneratorObject",
+          "parameters": [
+            "Node* node"
+          ],
+          "return_type": "Reduction",
+          "logic": "Lowers a JSCreateGeneratorObject node. Allocates a register file, then allocates and initializes the JSGeneratorObject."
+        },
+        {
+          "name": "ReduceNewArray",
+          "parameters": [
+            "Node* node",
+            "Node* length",
+            "MapRef initial_map",
+            "ElementsKind elements_kind",
+            "AllocationType allocation",
+            "const SlackTrackingPrediction& slack_tracking_prediction"
+          ],
+          "return_type": "Reduction",
+          "logic": "Constructs an array with a variable {length} when no upper bound is known for the capacity."
+        },
+        {
+          "name": "ReduceNewArray",
+          "parameters": [
+            "Node* node",
+            "Node* length",
+            "int capacity",
+            "MapRef initial_map",
+            "ElementsKind elements_kind",
+            "AllocationType allocation",
+            "const SlackTrackingPrediction& slack_tracking_prediction"
+          ],
+          "return_type": "Reduction",
+          "logic": "Constructs an array with a variable {length} when an actual upper bound is known for the {capacity}."
+        },
+        {
+          "name": "ReduceNewArray",
+          "parameters": [
+            "Node* node",
+            "std::vector<Node*> values",
+            "MapRef initial_map",
+            "ElementsKind elements_kind",
+            "AllocationType allocation",
+            "const SlackTrackingPrediction& slack_tracking_prediction"
+          ],
+          "return_type": "Reduction",
+          "logic": "Constructs an array from the values in provided vector."
+        },
+        {
+          "name": "ReduceJSCreateArray",
+          "parameters": [
+            "Node* node"
+          ],
+          "return_type": "Reduction",
+          "logic": "Lowers a JSCreateArray node to the creation of a JSArray object. It handles different arities of the array constructor and uses feedback to determine the elements kind and allocation type."
+        },
+        {
+          "name": "ReduceJSCreateArrayIterator",
+          "parameters": [
+            "Node* node"
+          ],
+          "return_type": "Reduction",
+          "logic": "Lowers a JSCreateArrayIterator node, allocating and initializing a JSArrayIterator object."
+        },
+        {
+          "name": "ReduceJSCreateAsyncFunctionObject",
+          "parameters": [
+            "Node* node"
+          ],
+          "return_type": "Reduction",
+          "logic": "Lowers a JSCreateAsyncFunctionObject node, creating a register file and then allocating and initializing the JSAsyncFunctionObject."
+        },
+        {
+          "name": "ReduceJSCreateCollectionIterator",
+          "parameters": [
+            "Node* node"
+          ],
+          "return_type": "Reduction",
+          "logic": "Lowers a JSCreateCollectionIterator node, allocating and initializing a JSCollectionIterator object."
+        },
+        {
+          "name": "ReduceJSCreateBoundFunction",
+          "parameters": [
+            "Node* node"
+          ],
+          "return_type": "Reduction",
+          "logic": "Lowers a JSCreateBoundFunction node, creating a JSBoundFunction object and its bound arguments."
+        },
+        {
+          "name": "ReduceJSCreateClosure",
+          "parameters": [
+            "Node* node"
+          ],
+          "return_type": "Reduction",
+          "logic": "Lowers a JSCreateClosure node by allocating and initializing a JSFunction object, inlining only when instantiation sites have seen multiple instantiations."
+        },
+        {
+          "name": "ReduceJSCreateIterResultObject",
+          "parameters": [
+            "Node* node"
+          ],
+          "return_type": "Reduction",
+          "logic": "Lowers a JSCreateIterResultObject node, allocating and initializing a JSIteratorResult object."
+        },
+        {
+          "name": "ReduceJSCreateStringIterator",
+          "parameters": [
+            "Node* node"
+          ],
+          "return_type": "Reduction",
+          "logic": "Lowers a JSCreateStringIterator node, allocating and initializing a JSStringIterator object."
+        },
+        {
+          "name": "ReduceJSCreateKeyValueArray",
+          "parameters": [
+            "Node* node"
+          ],
+          "return_type": "Reduction",
+          "logic": "Lowers a JSCreateKeyValueArray node, allocating a JSArray to hold a key-value pair."
+        },
+        {
+          "name": "ReduceJSCreatePromise",
+          "parameters": [
+            "Node* node"
+          ],
+          "return_type": "Reduction",
+          "logic": "Lowers a JSCreatePromise node, allocating and initializing a JSPromise object."
+        },
+        {
+          "name": "ReduceJSCreateLiteralArrayOrObject",
+          "parameters": [
+            "Node* node"
+          ],
+          "return_type": "Reduction",
+          "logic": "Lowers a JSCreateLiteralArray or JSCreateLiteralObject node using a pre-allocated boilerplate if available."
+        },
+        {
+          "name": "ReduceJSCreateEmptyLiteralArray",
+          "parameters": [
+            "Node* node"
+          ],
+          "return_type": "Reduction",
+          "logic": "Lowers a JSCreateEmptyLiteralArray node, essentially a zero-length array created from a literal."
+        },
+        {
+          "name": "ReduceJSCreateEmptyLiteralObject",
+          "parameters": [
+            "Node* node"
+          ],
+          "return_type": "Reduction",
+          "logic": "Lowers a JSCreateEmptyLiteralObject node by allocating and initializing a simple empty JSObject."
+        },
+        {
+          "name": "ReduceJSCreateLiteralRegExp",
+          "parameters": [
+            "Node* node"
+          ],
+          "return_type": "Reduction",
+          "logic": "Lowers a JSCreateLiteralRegExp node by allocating a new JSRegExp and initializing it based on a RegExpBoilerplateDescription."
+        },
+        {
+          "name": "ReduceJSGetTemplateObject",
+          "parameters": [
+            "Node* node"
+          ],
+          "return_type": "Reduction",
+          "logic": "Lowers a JSGetTemplateObject node, retrieving the cached template object."
+        },
+        {
+          "name": "ReduceJSCreateFunctionContext",
+          "parameters": [
+            "Node* node"
+          ],
+          "return_type": "Reduction",
+          "logic": "Lowers a JSCreateFunctionContext node, allocating a function context object."
+        },
+        {
+          "name": "ReduceJSCreateWithContext",
+          "parameters": [
+            "Node* node"
+          ],
+          "return_type": "Reduction",
+          "logic": "Lowers a JSCreateWithContext node, allocating a with context object."
+        },
+        {
+          "name": "ReduceJSCreateCatchContext",
+          "parameters": [
+            "Node* node"
+          ],
+          "return_type": "Reduction",
+          "logic": "Lowers a JSCreateCatchContext node, allocating a catch context object."
+        },
+        {
+          "name": "ReduceJSCreateBlockContext",
+          "parameters": [
+            "Node* node"
+          ],
+          "return_type": "Reduction",
+          "logic": "Lowers a JSCreateBlockContext node, allocating a block context object."
+        },
+        {
+          "name": "ReduceJSCreateObject",
+          "parameters": [
+            "Node* node"
+          ],
+          "return_type": "Reduction",
+          "logic": "Lowers a JSCreateObject node by allocating and initializing a JSObject."
+        },
+        {
+          "name": "ReduceJSCreateStringWrapper",
+          "parameters": [
+            "Node* node"
+          ],
+          "return_type": "Reduction",
+          "logic": "Lowers a JSCreateStringWrapper node by allocating and initializing a JSPrimitiveWrapper for a String."
+        },
+        {
+          "name": "TryAllocateArguments",
+          "parameters": [
+            "Node* effect",
+            "Node* control",
+            "FrameState frame_state"
+          ],
+          "return_type": "Node*",
+          "logic": "Helper that allocates a FixedArray holding argument values recorded in the given {frame_state}."
+        },
+        {
+          "name": "TryAllocateRestArguments",
+          "parameters": [
+            "Node* effect",
+            "Node* control",
+            "FrameState frame_state",
+            "int start_index"
+          ],
+          "return_type": "Node*",
+          "logic": "Helper that allocates a FixedArray holding rest argument values recorded in the given {frame_state}."
+        },
+        {
+          "name": "TryAllocateAliasedArguments",
+          "parameters": [
+            "Node* effect",
+            "Node* control",
+            "FrameState frame_state",
+            "Node* context",
+            "SharedFunctionInfoRef shared",
+            "bool* has_aliased_arguments"
+          ],
+          "return_type": "Node*",
+          "logic": "Helper that allocates a FixedArray serving as a parameter map for values recorded in the given {frame_state} where some elements map to slots within the given {context}."
+        },
+        {
+          "name": "TryAllocateAliasedArguments",
+          "parameters": [
+            "Node* effect",
+            "Node* control",
+            "Node* context",
+            "Node* arguments_length",
+            "SharedFunctionInfoRef shared",
+            "bool* has_aliased_arguments"
+          ],
+          "return_type": "Node*",
+          "logic": "Helper that allocates a FixedArray for aliased arguments when the number of arguments are not known statically."
+        },
+        {
+          "name": "AllocateElements",
+          "parameters": [
+            "Node* effect",
+            "Node* control",
+            "ElementsKind elements_kind",
+            "int capacity",
+            "AllocationType allocation"
+          ],
+          "return_type": "Node*",
+          "logic": "Allocates a FixedArray for elements of a certain elements_kind with a given capacity, initializing all elements to the hole."
+        },
+        {
+          "name": "AllocateElements",
+          "parameters": [
+            "Node* effect",
+            "Node* control",
+            "ElementsKind elements_kind",
+            "std::vector<Node*> const& values",
+            "AllocationType allocation"
+          ],
+          "return_type": "Node*",
+          "logic": "Allocates a FixedArray for elements of a certain elements_kind with the values in provided vector."
+        },
+        {
+          "name": "TryAllocateFastLiteral",
+          "parameters": [
+            "Node* effect",
+            "Node* control",
+            "JSObjectRef boilerplate",
+            "AllocationType allocation",
+            "int max_depth",
+            "int* max_properties"
+          ],
+          "return_type": "std::optional<Node*>",
+          "logic": "Tries to allocate a fast literal object, by allocating the object with the same values from the boilerplate. It handles in-object properties, elements, and checks for maximum depth to avoid infinite recursion."
+        },
+        {
+          "name": "TryAllocateFastLiteralElements",
+          "parameters": [
+            "Node* effect",
+            "Node* control",
+            "JSObjectRef boilerplate",
+            "AllocationType allocation",
+            "int max_depth",
+            "int* max_properties"
+          ],
+          "return_type": "std::optional<Node*>",
+          "logic": "Tries to allocate fast literal elements for an object, by allocating the elements with the same values from the boilerplate."
+        },
+        {
+          "name": "AllocateLiteralRegExp",
+          "parameters": [
+            "Node* effect",
+            "Node* control",
+            "RegExpBoilerplateDescriptionRef boilerplate"
+          ],
+          "return_type": "Node*",
+          "logic": "Helper function to allocate a literal RegExp object based on a boilerplate."
+        },
+        {
+          "name": "factory",
+          "parameters": [],
+          "return_type": "Factory*",
+          "logic": "Returns the Factory instance."
+        },
+        {
+          "name": "graph",
+          "parameters": [],
+          "return_type": "TFGraph*",
+          "logic": "Returns the TFGraph instance."
+        },
+        {
+          "name": "common",
+          "parameters": [],
+          "return_type": "CommonOperatorBuilder*",
+          "logic": "Returns the CommonOperatorBuilder instance."
+        },
+        {
+          "name": "dependencies",
+          "parameters": [],
+          "return_type": "CompilationDependencies*",
+          "logic": "Returns the CompilationDependencies instance."
+        },
+        {
+          "name": "simplified",
+          "parameters": [],
+          "return_type": "SimplifiedOperatorBuilder*",
+          "logic": "Returns the SimplifiedOperatorBuilder instance."
+        },
+        {
+          "name": "native_context",
+          "parameters": [],
+          "return_type": "NativeContextRef",
+          "logic": "Returns the NativeContextRef instance."
+        }
+      ]
+    }
+  ],
+  "functions": [
+    {
+      "name": "GetArgumentsFrameState",
+      "parameters": [
+        "FrameState frame_state"
+      ],
+      "return_type": "FrameState",
+      "logic": "Retrieves the frame state holding actual argument values. If there is an inlined extra arguments frame, it returns the outer frame state; otherwise, it returns the original frame state."
+    },
+    {
+      "name": "MapForCollectionIterationKind",
+      "parameters": [
+        "JSHeapBroker* broker",
+        "NativeContextRef native_context",
+        "CollectionKind collection_kind",
+        "IterationKind iteration_kind"
+      ],
+      "return_type": "MapRef",
+      "logic": "Returns map based on CollectionKind and IterationKind"
+    },
+    {
+      "name": "GetObjectCreateMap",
+      "parameters": [
+        "JSHeapBroker* broker",
+        "HeapObjectRef prototype"
+      ],
+      "return_type": "OptionalMapRef",
+      "logic": "Returns the initial map to be used for object creation using JSCreateObject operator based on the provided prototype."
+    }
+  ]
+}

@@ -1,0 +1,102 @@
+{
+  "metadata": {
+    "path": "/home/kathirks_gc/v8_go/archive/codebase/src/snapshot/code-serializer.h",
+    "file_name": "code-serializer.h",
+    "language": "cpp",
+    "purpose": "Defines the CodeSerializer class and related classes for serializing and deserializing compiled code for caching."
+  },
+  "imports": {
+    "metadata": {
+      "language": "cpp",
+      "purpose": "Includes necessary headers for macros, script details, serializer functionality, and snapshot data."
+    },
+    "code": "#include \"src/base/macros.h\"\n#include \"src/codegen/script-details.h\"\n#include \"src/snapshot/serializer.h\"\n#include \"src/snapshot/snapshot-data.h\""
+  },
+  "classes": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "AlignedCachedData",
+        "extends": null,
+        "implements": [],
+        "about": "Represents cached data that is aligned in memory. Manages ownership of the data.",
+        "attributes": [
+          {
+            "name": "owns_data_",
+            "type": "bool",
+            "access": "private",
+            "purpose": "Indicates whether the AlignedCachedData object owns the underlying data."
+          },
+          {
+            "name": "rejected_",
+            "type": "bool",
+            "access": "private",
+            "purpose": "Indicates whether the cached data has been rejected (e.g., due to sanity check failure)."
+          },
+          {
+            "name": "data_",
+            "type": "const uint8_t*",
+            "access": "private",
+            "purpose": "Pointer to the cached data."
+          },
+          {
+            "name": "length_",
+            "type": "int",
+            "access": "private",
+            "purpose": "Length of the cached data."
+          }
+        ],
+        "dependencies": []
+      },
+      "code": "class V8_EXPORT_PRIVATE AlignedCachedData {\n public:\n  AlignedCachedData(const uint8_t* data, int length);\n  ~AlignedCachedData() {\n    if (owns_data_) DeleteArray(data_);\n  }\n  AlignedCachedData(const AlignedCachedData&) = delete;\n  AlignedCachedData& operator=(const AlignedCachedData&) = delete;\n\n  const uint8_t* data() const { return data_; }\n  int length() const { return length_; }\n  bool rejected() const { return rejected_; }\n\n  void Reject() { rejected_ = true; }\n\n  bool HasDataOwnership() const { return owns_data_; }\n\n  void AcquireDataOwnership() {\n    DCHECK(!owns_data_);\n    owns_data_ = true;\n  }\n\n  void ReleaseDataOwnership() {\n    DCHECK(owns_data_);\n    owns_data_ = false;\n  }\n\n private:\n  bool owns_data_ : 1;\n  bool rejected_ : 1;\n  const uint8_t* data_;\n  int length_;\n};"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "CodeSerializer",
+        "extends": "Serializer",
+        "implements": [],
+        "about": "Serializes and deserializes compiled code (SharedFunctionInfo) for caching.",
+        "attributes": [
+          {
+            "name": "source_hash_",
+            "type": "uint32_t",
+            "access": "private",
+            "purpose": "Stores the hash of the source code being serialized."
+          }
+        ],
+        "dependencies": [
+          "AlignedCachedData",
+          "ScriptCompiler::CachedData",
+          "ScriptDetails",
+          "Serializer",
+          "PersistentHandles",
+          "BackgroundMergeTask"
+        ]
+      },
+      "code": "class CodeSerializer : public Serializer {\n public:\n  struct OffThreadDeserializeData {\n   public:\n    bool HasResult() const { return !maybe_result.is_null(); }\n    DirectHandle<Script> GetOnlyScript(LocalHeap* heap);\n\n   private:\n    friend class CodeSerializer;\n    MaybeIndirectHandle<SharedFunctionInfo> maybe_result;\n    std::vector<IndirectHandle<Script>> scripts;\n    std::unique_ptr<PersistentHandles> persistent_handles;\n    SerializedCodeSanityCheckResult sanity_check_result;\n  };\n\n  CodeSerializer(const CodeSerializer&) = delete;\n  CodeSerializer& operator=(const CodeSerializer&) = delete;\n  V8_EXPORT_PRIVATE static ScriptCompiler::CachedData* Serialize(\n      Isolate* isolate, Handle<SharedFunctionInfo> info);\n\n  AlignedCachedData* SerializeSharedFunctionInfo(\n      Handle<SharedFunctionInfo> info);\n\n  V8_WARN_UNUSED_RESULT static MaybeDirectHandle<SharedFunctionInfo>\n  Deserialize(Isolate* isolate, AlignedCachedData* cached_data,\n              DirectHandle<String> source, const ScriptDetails& script_details,\n              MaybeDirectHandle<Script> maybe_cached_script = {});\n\n  V8_WARN_UNUSED_RESULT static OffThreadDeserializeData\n  StartDeserializeOffThread(LocalIsolate* isolate,\n                            AlignedCachedData* cached_data);\n\n  V8_WARN_UNUSED_RESULT static MaybeDirectHandle<SharedFunctionInfo>\n  FinishOffThreadDeserialize(\n      Isolate* isolate, OffThreadDeserializeData&& data,\n      AlignedCachedData* cached_data, DirectHandle<String> source,\n      const ScriptDetails& script_details,\n      BackgroundMergeTask* background_merge_task = nullptr);\n\n  uint32_t source_hash() const { return source_hash_; }\n\n protected:\n  CodeSerializer(Isolate* isolate, uint32_t source_hash);\n  ~CodeSerializer() override { OutputStatistics(\"CodeSerializer\"); }\n\n  void SerializeGeneric(Handle<HeapObject> heap_object, SlotType slot_type);\n\n private:\n  void SerializeObjectImpl(Handle<HeapObject> o, SlotType slot_type) override;\n\n  DISALLOW_GARBAGE_COLLECTION(no_gc_)\n  uint32_t source_hash_;\n};"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "SerializedCodeData",
+        "extends": "SerializedData",
+        "implements": [],
+        "about": "Wrapper around ScriptData to provide code-serializer-specific functionality.  Manages the serialized code data with a header containing metadata such as version hash, source hash, and checksum.",
+        "attributes": [],
+        "dependencies": [
+          "AlignedCachedData",
+          "SerializedData",
+          "CodeSerializer",
+          "SerializedCodeSanityCheckResult",
+          "ScriptOriginOptions"
+        ]
+      },
+      "code": "// Wrapper around ScriptData to provide code-serializer-specific functionality.\nclass SerializedCodeData : public SerializedData {\n public:\n  // The data header consists of uint32_t-sized entries:\n  static const uint32_t kVersionHashOffset = kMagicNumberOffset + kUInt32Size;\n  static const uint32_t kSourceHashOffset = kVersionHashOffset + kUInt32Size;\n  static const uint32_t kFlagHashOffset = kSourceHashOffset + kUInt32Size;\n  static const uint32_t kReadOnlySnapshotChecksumOffset =\n      kFlagHashOffset + kUInt32Size;\n  static const uint32_t kPayloadLengthOffset =\n      kReadOnlySnapshotChecksumOffset + kUInt32Size;\n  static const uint32_t kChecksumOffset = kPayloadLengthOffset + kUInt32Size;\n  static const uint32_t kUnalignedHeaderSize = kChecksumOffset + kUInt32Size;\n  static const uint32_t kHeaderSize = POINTER_SIZE_ALIGN(kUnalignedHeaderSize);\n\n  // Used when consuming.\n  static SerializedCodeData FromCachedData(\n      Isolate* isolate, AlignedCachedData* cached_data,\n      uint32_t expected_source_hash,\n      SerializedCodeSanityCheckResult* rejection_result);\n  // For cached data which is consumed before the source is available (e.g.\n  // off-thread).\n  static SerializedCodeData FromCachedDataWithoutSource(\n      LocalIsolate* local_isolate, AlignedCachedData* cached_data,\n      SerializedCodeSanityCheckResult* rejection_result);\n  // For cached data which was previously already sanity checked by\n  // FromCachedDataWithoutSource. The rejection result from that call should be\n  // passed into this one.\n  static SerializedCodeData FromPartiallySanityCheckedCachedData(\n      AlignedCachedData* cached_data, uint32_t expected_source_hash,\n      SerializedCodeSanityCheckResult* rejection_result);\n\n  // Used when producing.\n  SerializedCodeData(const std::vector<uint8_t>* payload,\n                     const CodeSerializer* cs);\n\n  // Return ScriptData object and relinquish ownership over it to the caller.\n  AlignedCachedData* GetScriptData();\n\n  base::Vector<const uint8_t> Payload() const;\n\n  static uint32_t SourceHash(DirectHandle<String> source,\n                             DirectHandle<FixedArray> wrapped_arguments,\n                             ScriptOriginOptions origin_options);\n\n private:\n  explicit SerializedCodeData(AlignedCachedData* data);\n  SerializedCodeData(const uint8_t* data, int size)\n      : SerializedData(const_cast<uint8_t*>(data), size) {}\n\n  base::Vector<const uint8_t> ChecksummedContent() const {\n    return base::Vector<const uint8_t>(data_ + kHeaderSize,\n                                       size_ - kHeaderSize);\n  }\n\n  SerializedCodeSanityCheckResult SanityCheck(\n      uint32_t expected_ro_snapshot_checksum,\n      uint32_t expected_source_hash) const;\n  SerializedCodeSanityCheckResult SanityCheckJustSource(\n      uint32_t expected_source_hash) const;\n  SerializedCodeSanityCheckResult SanityCheckWithoutSource(\n      uint32_t expected_ro_snapshot_checksum) const;\n};"
+    }
+  ],
+  "file_path": "/home/kathirks_gc/v8_go/archive/codebase/src/snapshot/code-serializer.h"
+}

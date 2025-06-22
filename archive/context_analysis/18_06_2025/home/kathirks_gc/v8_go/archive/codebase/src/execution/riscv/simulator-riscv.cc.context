@@ -1,0 +1,197 @@
+{
+  "metadata": {
+    "path": "/home/kathirks_gc/v8_go/archive/codebase/src/execution/riscv/simulator-riscv.cc",
+    "file_name": "simulator-riscv.cc",
+    "language": "cpp",
+    "purpose": "Implements the RISC-V simulator for the V8 JavaScript engine, allowing execution of RISC-V code on non-RISC-V platforms."
+  },
+  "imports": {
+    "metadata": {
+      "language": "cpp",
+      "purpose": "Include V8 webassembly libraries."
+    },
+    "code": "#if V8_ENABLE_WEBASSEMBLY\n#include \"src/trap-handler/trap-handler-simulator.h\"\n#endif  // V8_ENABLE_WEBASSEMBLY"
+  },
+  "classes": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "RiscvDebugger",
+        "about": "The RiscvDebugger class is used by the simulator while debugging simulated code.",
+        "attributes": [
+          {
+            "name": "sim_",
+            "type": "Simulator*",
+            "access": "private",
+            "purpose": "Pointer to the simulator instance."
+          }
+        ],
+        "dependencies": [
+          "Simulator"
+        ]
+      },
+      "code": "class RiscvDebugger {\n public:\n  explicit RiscvDebugger(Simulator* sim) : sim_(sim) {}\n\n  void Debug();\n  // Print all registers with a nice formatting.\n  void PrintRegs(char name_prefix, int start_index, int end_index);\n  void PrintAllRegs();\n  void PrintAllRegsIncludingFPU();\n\n  static const Instr kNopInstr = 0x0;\n\n private:\n  Simulator* sim_;\n\n  sreg_t GetRegisterValue(int regnum);\n  int64_t GetFPURegisterValue(int regnum);\n  float GetFPURegisterValueFloat(int regnum);\n  double GetFPURegisterValueDouble(int regnum);\n#ifdef CAN_USE_RVV_INSTRUCTIONS\n  __int128_t GetVRegisterValue(int regnum);\n#endif\n  bool GetValue(const char* desc, sreg_t* value);\n};"
+    }
+  ],
+  "functions": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "method",
+        "name": "GetRegisterValue",
+        "parent": "RiscvDebugger",
+        "about": "Gets the value of a general-purpose register or the program counter.",
+        "logic": "If the register number is kNumSimuRegisters, returns the program counter (PC). Otherwise, returns the value of the specified register from the simulator.",
+        "parameters": [
+          {
+            "name": "regnum",
+            "type": "int",
+            "purpose": "The register number to retrieve the value from."
+          }
+        ],
+        "return": {
+          "type": "sreg_t",
+          "description": "The value of the register or the program counter."
+        },
+        "dependencies": [
+          "Simulator"
+        ]
+      },
+      "code": "sreg_t RiscvDebugger::GetRegisterValue(int regnum) {\n  if (regnum == kNumSimuRegisters) {\n    return sim_->get_pc();\n  } else {\n    return sim_->get_register(regnum);\n  }\n}"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "method",
+        "name": "GetFPURegisterValue",
+        "parent": "RiscvDebugger",
+        "about": "Gets the value of a floating-point register or the program counter.",
+        "logic": "If the register number is kNumFPURegisters, returns the program counter (PC). Otherwise, returns the value of the specified FPU register from the simulator.",
+        "parameters": [
+          {
+            "name": "regnum",
+            "type": "int",
+            "purpose": "The FPU register number to retrieve the value from."
+          }
+        ],
+        "return": {
+          "type": "int64_t",
+          "description": "The value of the FPU register or the program counter."
+        },
+        "dependencies": [
+          "Simulator"
+        ]
+      },
+      "code": "int64_t RiscvDebugger::GetFPURegisterValue(int regnum) {\n  if (regnum == kNumFPURegisters) {\n    return sim_->get_pc();\n  } else {\n    return sim_->get_fpu_register(regnum);\n  }\n}"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "method",
+        "name": "GetFPURegisterValueFloat",
+        "parent": "RiscvDebugger",
+        "about": "Gets the float value of a floating-point register or the program counter.",
+        "logic": "If the register number is kNumFPURegisters, returns the program counter (PC). Otherwise, returns the float value of the specified FPU register from the simulator.",
+        "parameters": [
+          {
+            "name": "regnum",
+            "type": "int",
+            "purpose": "The FPU register number to retrieve the value from."
+          }
+        ],
+        "return": {
+          "type": "float",
+          "description": "The float value of the FPU register or the program counter."
+        },
+        "dependencies": [
+          "Simulator"
+        ]
+      },
+      "code": "float RiscvDebugger::GetFPURegisterValueFloat(int regnum) {\n  if (regnum == kNumFPURegisters) {\n    return sim_->get_pc();\n  } else {\n    return sim_->get_fpu_register_float(regnum);\n  }\n}"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "method",
+        "name": "GetFPURegisterValueDouble",
+        "parent": "RiscvDebugger",
+        "about": "Gets the double value of a floating-point register or the program counter.",
+        "logic": "If the register number is kNumFPURegisters, returns the program counter (PC). Otherwise, returns the double value of the specified FPU register from the simulator.",
+        "parameters": [
+          {
+            "name": "regnum",
+            "type": "int",
+            "purpose": "The FPU register number to retrieve the value from."
+          }
+        ],
+        "return": {
+          "type": "double",
+          "description": "The double value of the FPU register or the program counter."
+        },
+        "dependencies": [
+          "Simulator"
+        ]
+      },
+      "code": "double RiscvDebugger::GetFPURegisterValueDouble(int regnum) {\n  if (regnum == kNumFPURegisters) {\n    return sim_->get_pc();\n  } else {\n    return sim_->get_fpu_register_double(regnum);\n  }\n}"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "method",
+        "name": "GetVRegisterValue",
+        "parent": "RiscvDebugger",
+        "about": "Gets the value of a vector register or the program counter.",
+        "logic": "If the register number is kNumVRegisters, returns the program counter (PC). Otherwise, returns the value of the specified vector register from the simulator.",
+        "parameters": [
+          {
+            "name": "regnum",
+            "type": "int",
+            "purpose": "The vector register number to retrieve the value from."
+          }
+        ],
+        "return": {
+          "type": "__int128_t",
+          "description": "The value of the vector register or the program counter."
+        },
+        "dependencies": [
+          "Simulator"
+        ]
+      },
+      "code": "#ifdef CAN_USE_RVV_INSTRUCTIONS\n__int128_t RiscvDebugger::GetVRegisterValue(int regnum) {\n  if (regnum == kNumVRegisters) {\n    return sim_->get_pc();\n  } else {\n    return sim_->get_vregister(regnum);\n  }\n}\n#endif"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "method",
+        "name": "GetValue",
+        "parent": "RiscvDebugger",
+        "about": "Parses a string to get the value of a register or an address.",
+        "logic": "Tries to interpret the input string as a register name (GPR or FPR), or as a hexadecimal or decimal number representing an address. Uses sscanf to parse numeric inputs.",
+        "parameters": [
+          {
+            "name": "desc",
+            "type": "const char*",
+            "purpose": "The string to parse."
+          },
+          {
+            "name": "value",
+            "type": "sreg_t*",
+            "purpose": "A pointer to store the parsed value."
+          }
+        ],
+        "return": {
+          "type": "bool",
+          "description": "True if the string was successfully parsed, false otherwise."
+        },
+        "dependencies": [
+          "Registers",
+          "FPURegisters",
+          "Simulator"
+        ]
+      },
+      "code": "bool RiscvDebugger::GetValue(const char* desc, sreg_t* value) {\n  int regnum = Registers::Number(desc);\n  int fpuregnum = FPURegisters::Number(desc);\n\n  if (regnum != kInvalidRegister) {\n    *value = GetRegisterValue(regnum);\n    return true;\n  } else if (fpuregnum != kInvalidFPURegister) {\n    *value = GetFPURegisterValue(fpuregnum);\n    return true;\n  } else if (strncmp(desc, \"0x\", 2) == 0) {\n#if V8_TARGET_ARCH_RISCV64\n    return SScanF(desc + 2, \"%\" SCNx64, reinterpret_cast<reg_t*>(value)) == 1;\n#elif V8_TARGET_ARCH_RISCV32\n    return SScanF(desc + 2, \"%\" SCNx32, reinterpret_cast<reg_t*>(value)) == 1;\n#endif\n  } else {\n#if V8_TARGET_ARCH_RISCV64\n    return SScanF(desc, \"%\" SCNu64, reinterpret_cast<reg_t*>(value)) == 1;\n#elif V8_TARGET_ARCH_RISCV32\n    return SScanF(desc, \"%\" SCNu32, reinterpret_cast<reg_t*>(value)) == 1;\n#endif\n  }\n}"
+    }
+  ],
+  "file_path": "/home/kathirks_gc/v8_go/archive/codebase/src/execution/riscv/simulator-riscv.cc"
+}

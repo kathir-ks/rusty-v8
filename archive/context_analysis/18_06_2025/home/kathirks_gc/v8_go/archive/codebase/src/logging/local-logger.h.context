@@ -1,0 +1,128 @@
+{
+  "metadata": {
+    "path": "/home/kathirks_gc/v8_go/archive/codebase/src/logging/local-logger.h",
+    "file_name": "local-logger.h",
+    "language": "cpp",
+    "purpose": "Defines the LocalLogger class for logging events within a single isolate in V8."
+  },
+  "imports": {
+    "metadata": {
+      "language": "cpp",
+      "purpose": "Includes necessary headers for logging and base functionalities."
+    },
+    "code": "#include \"src/base/logging.h\"\n            #include \"src/logging/log.h\""
+  },
+  "classes": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "LocalLogger",
+        "about": "Logs events within a single isolate.",
+        "attributes": [
+          {
+            "name": "v8_file_logger_",
+            "type": "V8FileLogger*",
+            "access": "private",
+            "purpose": "Pointer to the file logger."
+          },
+          {
+            "name": "is_logging_",
+            "type": "bool",
+            "access": "private",
+            "purpose": "Indicates whether logging is enabled."
+          },
+          {
+            "name": "is_listening_to_code_events_",
+            "type": "bool",
+            "access": "private",
+            "purpose": "Indicates whether the logger is listening to code events."
+          }
+        ],
+        "dependencies": [
+          "V8FileLogger",
+          "Isolate",
+          "Script",
+          "TrustedByteArray",
+          "Map",
+          "ScriptEventType",
+          "JitCodeEvent"
+        ]
+      },
+      "code": "class LocalLogger {\n            public:\n            explicit LocalLogger(Isolate* isolate);\n\n            bool is_logging() const { return is_logging_; }\n            bool is_listening_to_code_events() const {\n                return is_listening_to_code_events_;\n            }\n            void ScriptDetails(Tagged<Script> script);\n            void ScriptEvent(ScriptEventType type, int script_id);\n            void CodeLinePosInfoRecordEvent(\n                Address code_start, Tagged<TrustedByteArray> source_position_table,\n                JitCodeEvent::CodeType code_type);\n\n            void MapCreate(Tagged<Map> map);\n            void MapDetails(Tagged<Map> map);\n\n            private:\n            V8FileLogger* v8_file_logger_;\n            bool is_logging_;\n            bool is_listening_to_code_events_;\n            };"
+    }
+  ],
+  "dependencies": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "V8FileLogger",
+        "about": "Logger that writes to a file."
+      },
+      "code": "class V8FileLogger;",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "Isolate",
+        "about": "Represents an isolated instance of the V8 JavaScript engine."
+      },
+      "code": "class Isolate;",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "Script",
+        "about": "Represents a JavaScript script."
+      },
+      "code": "class Script;",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "TrustedByteArray",
+        "about": "Represents an array of bytes that can be trusted."
+      },
+      "code": "class TrustedByteArray;",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "Map",
+        "about": "Represents a Map object in JavaScript."
+      },
+      "code": "class Map;",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "enum",
+        "name": "ScriptEventType",
+        "about": "Represents types of script events."
+      },
+      "code": "enum ScriptEventType;",
+      "type": "enum"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "JitCodeEvent",
+        "about": "Represents events related to JIT-compiled code."
+      },
+      "code": "class JitCodeEvent {\n                    public:\n                    enum CodeType {};\n                };",
+      "type": "class"
+    }
+  ],
+  "file_path": "/home/kathirks_gc/v8_go/archive/codebase/src/logging/local-logger.h"
+}

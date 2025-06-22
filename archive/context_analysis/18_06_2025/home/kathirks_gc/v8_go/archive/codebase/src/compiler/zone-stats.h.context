@@ -1,0 +1,169 @@
+{
+  "metadata": {
+    "path": "/home/kathirks_gc/v8_go/archive/codebase/src/compiler/zone-stats.h",
+    "file_name": "zone-stats.h",
+    "language": "cpp",
+    "purpose": "Defines the ZoneStats class for tracking memory allocation statistics within Zones in the V8 compiler."
+  },
+  "imports": {
+    "metadata": {
+      "language": "cpp",
+      "purpose": "Includes standard library headers for map and vector containers, and the V8 Zone class."
+    },
+    "code": "#include <map>\n            #include <vector>\n\n            #include \"src/zone/zone.h\""
+  },
+  "classes": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "ZoneStats",
+        "about": "Collects statistics about Zone usage, such as allocated and deallocated memory.",
+        "attributes": [
+          {
+            "name": "zones_",
+            "type": "Zones",
+            "access": "private",
+            "purpose": "A vector of Zone pointers."
+          },
+          {
+            "name": "stats_",
+            "type": "Stats",
+            "access": "private",
+            "purpose": "A vector of StatsScope pointers."
+          },
+          {
+            "name": "max_allocated_bytes_",
+            "type": "size_t",
+            "access": "private",
+            "purpose": "The maximum number of bytes allocated across all Zones."
+          },
+          {
+            "name": "total_deleted_bytes_",
+            "type": "size_t",
+            "access": "private",
+            "purpose": "The total number of bytes deallocated across all Zones."
+          },
+          {
+            "name": "allocator_",
+            "type": "AccountingAllocator*",
+            "access": "private",
+            "purpose": "Pointer to the memory allocator used by the Zones."
+          }
+        ],
+        "dependencies": [
+          "Zone",
+          "AccountingAllocator",
+          "Scope",
+          "StatsScope"
+        ]
+      },
+      "code": "class V8_EXPORT_PRIVATE ZoneStats final {\n            public:\n                class V8_NODISCARD Scope final {\n                public:\n                    explicit Scope(ZoneStats* zone_stats, const char* zone_name,\n                                   bool support_zone_compression = false);\n                    ~Scope() { Destroy(); }\n\n                    Scope(const Scope&) = delete;\n                    Scope(Scope&& other) V8_NOEXCEPT;\n                    Scope& operator=(const Scope&) = delete;\n                    Scope& operator=(Scope&& other) V8_NOEXCEPT;\n\n                    Zone* zone() {\n                      if (zone_ == nullptr)\n                        zone_ =\n                            zone_stats_->NewEmptyZone(zone_name_, support_zone_compression_);\n                      return zone_;\n                    }\n                    void Destroy() {\n                      if (zone_ != nullptr) zone_stats_->ReturnZone(zone_);\n                      zone_ = nullptr;\n                    }\n\n                    ZoneStats* zone_stats() const { return zone_stats_; }\n\n                private:\n                    const char* zone_name_;\n                    ZoneStats* zone_stats_;\n                    Zone* zone_;\n                    bool support_zone_compression_;\n                };\n\n                class V8_EXPORT_PRIVATE V8_NODISCARD StatsScope final {\n                public:\n                    explicit StatsScope(ZoneStats* zone_stats);\n                    ~StatsScope();\n                    StatsScope(const StatsScope&) = delete;\n                    StatsScope& operator=(const StatsScope&) = delete;\n\n                    size_t GetMaxAllocatedBytes();\n                    size_t GetCurrentAllocatedBytes();\n                    size_t GetTotalAllocatedBytes();\n\n                private:\n                    friend class ZoneStats;\n                    void ZoneReturned(Zone* zone);\n\n                    using InitialValues = std::map<Zone*, size_t>;\n\n                    ZoneStats* const zone_stats_;\n                    InitialValues initial_values_;\n                    size_t total_allocated_bytes_at_start_;\n                    size_t max_allocated_bytes_;\n                };\n\n                explicit ZoneStats(AccountingAllocator* allocator);\n                ~ZoneStats();\n                ZoneStats(const ZoneStats&) = delete;\n                ZoneStats& operator=(const ZoneStats&) = delete;\n\n                size_t GetMaxAllocatedBytes() const;\n                size_t GetTotalAllocatedBytes() const;\n                size_t GetCurrentAllocatedBytes() const;\n\n             private:\n                Zone* NewEmptyZone(const char* zone_name, bool support_zone_compression);\n                void ReturnZone(Zone* zone);\n\n                static const size_t kMaxUnusedSize = 3;\n                using Zones = std::vector<Zone*>;\n                using Stats = std::vector<StatsScope*>;\n\n                Zones zones_;\n                Stats stats_;\n                size_t max_allocated_bytes_;\n                size_t total_deleted_bytes_;\n                AccountingAllocator* allocator_;\n            };"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "Scope",
+        "parent": "ZoneStats",
+        "about": "Manages the lifetime of a Zone and tracks its statistics. It uses RAII to ensure that the Zone is returned to the ZoneStats object when the Scope goes out of scope.",
+        "attributes": [
+          {
+            "name": "zone_name_",
+            "type": "const char*",
+            "access": "private",
+            "purpose": "The name of the Zone for debugging and tracking."
+          },
+          {
+            "name": "zone_stats_",
+            "type": "ZoneStats*",
+            "access": "private",
+            "purpose": "A pointer to the ZoneStats object that owns the Zone."
+          },
+          {
+            "name": "zone_",
+            "type": "Zone*",
+            "access": "private",
+            "purpose": "A pointer to the Zone being managed by this Scope."
+          },
+          {
+            "name": "support_zone_compression_",
+            "type": "bool",
+            "access": "private",
+            "purpose": "Indicates whether zone compression is supported."
+          }
+        ],
+        "dependencies": [
+          "ZoneStats",
+          "Zone"
+        ]
+      },
+      "code": "class V8_NODISCARD Scope final {\n            public:\n                explicit Scope(ZoneStats* zone_stats, const char* zone_name,\n                               bool support_zone_compression = false)\n                    : zone_name_(zone_name),\n                      zone_stats_(zone_stats),\n                      zone_(nullptr),\n                      support_zone_compression_(support_zone_compression) {}\n                ~Scope() { Destroy(); }\n\n                Scope(const Scope&) = delete;\n                Scope(Scope&& other) V8_NOEXCEPT\n                    : zone_name_(other.zone_name_),\n                      zone_stats_(other.zone_stats_),\n                      zone_(nullptr),\n                      support_zone_compression_(other.support_zone_compression_) {\n                  std::swap(zone_, other.zone_);\n                }\n                Scope& operator=(const Scope&) = delete;\n                Scope& operator=(Scope&& other) V8_NOEXCEPT {\n                  Destroy();\n                  zone_name_ = other.zone_name_;\n                  zone_stats_ = other.zone_stats_;\n                  support_zone_compression_ = other.support_zone_compression_;\n                  DCHECK_NULL(zone_);\n                  std::swap(zone_, other.zone_);\n                  return *this;\n                }\n\n                Zone* zone() {\n                  if (zone_ == nullptr)\n                    zone_ =\n                        zone_stats_->NewEmptyZone(zone_name_, support_zone_compression_);\n                  return zone_;\n                }\n                void Destroy() {\n                  if (zone_ != nullptr) zone_stats_->ReturnZone(zone_);\n                  zone_ = nullptr;\n                }\n\n                ZoneStats* zone_stats() const { return zone_stats_; }\n\n            private:\n                const char* zone_name_;\n                ZoneStats* zone_stats_;\n                Zone* zone_;\n                bool support_zone_compression_;\n            };"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "StatsScope",
+        "parent": "ZoneStats",
+        "about": "Collects statistics about Zone usage during a specific scope. Used to track allocated memory within a particular context.",
+        "attributes": [
+          {
+            "name": "zone_stats_",
+            "type": "ZoneStats* const",
+            "access": "private",
+            "purpose": "A pointer to the ZoneStats object that owns this scope."
+          },
+          {
+            "name": "initial_values_",
+            "type": "InitialValues",
+            "access": "private",
+            "purpose": "A map of Zone pointers to their initial allocated byte sizes at the start of the scope."
+          },
+          {
+            "name": "total_allocated_bytes_at_start_",
+            "type": "size_t",
+            "access": "private",
+            "purpose": "The total allocated bytes across all zones at the start of this scope."
+          },
+          {
+            "name": "max_allocated_bytes_",
+            "type": "size_t",
+            "access": "private",
+            "purpose": "The maximum bytes allocated across all zones seen during this scope."
+          }
+        ],
+        "dependencies": [
+          "ZoneStats",
+          "Zone"
+        ]
+      },
+      "code": "class V8_EXPORT_PRIVATE V8_NODISCARD StatsScope final {\n            public:\n                explicit StatsScope(ZoneStats* zone_stats);\n                ~StatsScope();\n                StatsScope(const StatsScope&) = delete;\n                StatsScope& operator=(const StatsScope&) = delete;\n\n                size_t GetMaxAllocatedBytes();\n                size_t GetCurrentAllocatedBytes();\n                size_t GetTotalAllocatedBytes();\n\n            private:\n                friend class ZoneStats;\n                void ZoneReturned(Zone* zone);\n\n                using InitialValues = std::map<Zone*, size_t>;\n\n                ZoneStats* const zone_stats_;\n                InitialValues initial_values_;\n                size_t total_allocated_bytes_at_start_;\n                size_t max_allocated_bytes_;\n            };"
+    }
+  ],
+  "dependencies": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "Zone",
+        "about": "A memory allocation area, used in V8 for managing the lifetime of allocated objects.",
+        "attributes": []
+      },
+      "code": "class Zone {};",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "AccountingAllocator",
+        "about": "An allocator that tracks memory usage.",
+        "attributes": []
+      },
+      "code": "class AccountingAllocator {};",
+      "type": "class"
+    }
+  ],
+  "file_path": "/home/kathirks_gc/v8_go/archive/codebase/src/compiler/zone-stats.h"
+}

@@ -1,0 +1,257 @@
+{
+  "file_path": "/home/kathirks_gc/v8_go/codebase/src/snapshot/snapshot-source-sink.h",
+  "imports": [
+    "<utility>",
+    "<vector>",
+    "src/base/atomicops.h",
+    "src/base/logging.h",
+    "src/common/globals.h",
+    "src/utils/utils.h"
+  ],
+  "classes": [
+    {
+      "name": "SnapshotByteSource",
+      "properties": [
+        "data_",
+        "length_",
+        "position_"
+      ],
+      "methods": [
+        {
+          "name": "SnapshotByteSource",
+          "parameters": [
+            "const char* data",
+            "int length"
+          ],
+          "return_type": "void",
+          "logic": "Constructor that initializes the source with a char array and its length.  Converts char* to uint8_t*."
+        },
+        {
+          "name": "SnapshotByteSource",
+          "parameters": [
+            "base::Vector<const uint8_t> payload"
+          ],
+          "return_type": "void",
+          "logic": "Constructor that initializes the source with a base::Vector of uint8_t."
+        },
+        {
+          "name": "~SnapshotByteSource",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Default destructor."
+        },
+        {
+          "name": "operator=",
+          "parameters": [
+            "const SnapshotByteSource&"
+          ],
+          "return_type": "SnapshotByteSource&",
+          "logic": "Deleted copy assignment operator to prevent copying."
+        },
+        {
+          "name": "SnapshotByteSource",
+          "parameters": [
+            "const SnapshotByteSource&"
+          ],
+          "return_type": "N/A",
+          "logic": "Deleted copy constructor."
+        },
+        {
+          "name": "HasMore",
+          "parameters": [],
+          "return_type": "bool",
+          "logic": "Checks if there are more bytes to read in the source."
+        },
+        {
+          "name": "Get",
+          "parameters": [],
+          "return_type": "uint8_t",
+          "logic": "Gets the next byte from the source and advances the position."
+        },
+        {
+          "name": "Peek",
+          "parameters": [],
+          "return_type": "uint8_t",
+          "logic": "Peeks at the next byte from the source without advancing the position."
+        },
+        {
+          "name": "Advance",
+          "parameters": [
+            "int by"
+          ],
+          "return_type": "void",
+          "logic": "Advances the position by a specified number of bytes."
+        },
+        {
+          "name": "CopyRaw",
+          "parameters": [
+            "void* to",
+            "int number_of_bytes"
+          ],
+          "return_type": "void",
+          "logic": "Copies a specified number of raw bytes from the source to a destination buffer and advances the position."
+        },
+        {
+          "name": "CopySlots",
+          "parameters": [
+            "Address* dest",
+            "int number_of_slots"
+          ],
+          "return_type": "void",
+          "logic": "Copies a specified number of Address slots from the source to a destination buffer using atomic operations to ensure thread safety."
+        },
+        {
+          "name": "CopySlots",
+          "parameters": [
+            "Tagged_t* dest",
+            "int number_of_slots"
+          ],
+          "return_type": "void",
+          "logic": "Copies a specified number of Tagged_t slots from the source to a destination buffer using atomic operations to ensure thread safety.  Used when V8_COMPRESS_POINTERS is defined."
+        },
+        {
+          "name": "GetUint30",
+          "parameters": [],
+          "return_type": "uint32_t",
+          "logic": "Decodes a uint30 value from the source, which was encoded with run-length encoding."
+        },
+        {
+          "name": "GetUint32",
+          "parameters": [],
+          "return_type": "uint32_t",
+          "logic": "Gets a uint32 value from the source."
+        },
+        {
+          "name": "GetBlob",
+          "parameters": [
+            "const uint8_t** data"
+          ],
+          "return_type": "int",
+          "logic": "Returns the length of a blob of data. (Implementation not provided in header.)"
+        },
+        {
+          "name": "position",
+          "parameters": [],
+          "return_type": "int",
+          "logic": "Returns the current position in the source."
+        },
+        {
+          "name": "set_position",
+          "parameters": [
+            "int position"
+          ],
+          "return_type": "void",
+          "logic": "Sets the current position in the source."
+        },
+        {
+          "name": "data",
+          "parameters": [],
+          "return_type": "const uint8_t*",
+          "logic": "Returns a pointer to the underlying data."
+        },
+        {
+          "name": "length",
+          "parameters": [],
+          "return_type": "int",
+          "logic": "Returns the length of the data."
+        }
+      ]
+    },
+    {
+      "name": "SnapshotByteSink",
+      "properties": [
+        "data_"
+      ],
+      "methods": [
+        {
+          "name": "SnapshotByteSink",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Default constructor."
+        },
+        {
+          "name": "SnapshotByteSink",
+          "parameters": [
+            "int initial_size"
+          ],
+          "return_type": "void",
+          "logic": "Constructor that initializes the sink with a specified initial size."
+        },
+        {
+          "name": "~SnapshotByteSink",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Default destructor."
+        },
+        {
+          "name": "Put",
+          "parameters": [
+            "uint8_t b",
+            "const char* description"
+          ],
+          "return_type": "void",
+          "logic": "Puts a single byte into the sink."
+        },
+        {
+          "name": "PutN",
+          "parameters": [
+            "int number_of_bytes",
+            "uint8_t v",
+            "const char* description"
+          ],
+          "return_type": "void",
+          "logic": "Puts a specified number of bytes with the same value into the sink. (Implementation not provided in header.)"
+        },
+        {
+          "name": "PutUint30",
+          "parameters": [
+            "uint32_t integer",
+            "const char* description"
+          ],
+          "return_type": "void",
+          "logic": "Encodes a uint30 value with run-length encoding and puts it into the sink. (Implementation not provided in header.)"
+        },
+        {
+          "name": "PutUint32",
+          "parameters": [
+            "uint32_t integer",
+            "const char* description"
+          ],
+          "return_type": "void",
+          "logic": "Puts a uint32 value into the sink."
+        },
+        {
+          "name": "PutRaw",
+          "parameters": [
+            "const uint8_t* data",
+            "int number_of_bytes",
+            "const char* description"
+          ],
+          "return_type": "void",
+          "logic": "Puts a specified number of raw bytes into the sink."
+        },
+        {
+          "name": "Append",
+          "parameters": [
+            "const SnapshotByteSink& other"
+          ],
+          "return_type": "void",
+          "logic": "Appends the data from another SnapshotByteSink to this sink. (Implementation not provided in header.)"
+        },
+        {
+          "name": "Position",
+          "parameters": [],
+          "return_type": "int",
+          "logic": "Returns the current position (size) of the data in the sink."
+        },
+        {
+          "name": "data",
+          "parameters": [],
+          "return_type": "const std::vector<uint8_t>*",
+          "logic": "Returns a pointer to the underlying data vector."
+        }
+      ]
+    }
+  ],
+  "functions": []
+}

@@ -1,0 +1,114 @@
+{
+  "file_path": "/home/kathirks_gc/v8_go/codebase/src/ic/ic-stats.cc",
+  "imports": [
+    "src/ic/ic-stats.h",
+    "src/init/v8.h",
+    "src/logging/counters.h",
+    "src/objects/objects-inl.h",
+    "src/tracing/trace-event.h",
+    "src/tracing/traced-value.h"
+  ],
+  "classes": [
+    {
+      "name": "ICStats",
+      "properties": [
+        "instance_",
+        "ic_infos_",
+        "pos_",
+        "enabled_",
+        "script_name_map_",
+        "function_name_map_"
+      ],
+      "methods": [
+        {
+          "name": "ICStats",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Constructor for ICStats. Initializes ic_infos_, pos_, and disabled statistics gathering initially."
+        },
+        {
+          "name": "Begin",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Starts the IC statistics gathering process. Checks if tracing for IC stats is enabled and sets the 'enabled_' flag to 1 if it is."
+        },
+        {
+          "name": "End",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Ends the IC statistics gathering process. Increments the position 'pos_' and dumps the statistics if the buffer 'ic_infos_' is full. Resets 'enabled_' flag to 0."
+        },
+        {
+          "name": "Reset",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Resets all ICInfo objects in 'ic_infos_' and sets 'pos_' to 0 to start recording from the beginning."
+        },
+        {
+          "name": "Dump",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Dumps the collected IC statistics to the tracing system. Creates a TracedValue, adds each ICInfo to it, and then triggers a TRACE_EVENT with the gathered data. Finally, it resets the statistics."
+        },
+        {
+          "name": "GetOrCacheScriptName",
+          "parameters": [
+            "Tagged<Script> script"
+          ],
+          "return_type": "const char*",
+          "logic": "Retrieves the script name for a given script, caching the result for future use.  If the script name is not already in the cache, it converts the String object to a C-style string and stores it in the cache."
+        },
+        {
+          "name": "GetOrCacheFunctionName",
+          "parameters": [
+            "IsolateForSandbox isolate",
+            "Tagged<JSFunction> function"
+          ],
+          "return_type": "const char*",
+          "logic": "Retrieves the function name for a given JSFunction, caching the result for future use.  If the function name is not already in the cache, it retrieves the function's debug name, and stores it in the cache. It also sets the `is_optimized` flag based on whether optimized code is attached to the function."
+        }
+      ]
+    },
+    {
+      "name": "ICInfo",
+      "properties": [
+        "type",
+        "function_name",
+        "script_offset",
+        "script_name",
+        "line_num",
+        "column_num",
+        "is_constructor",
+        "is_optimized",
+        "state",
+        "map",
+        "is_dictionary_map",
+        "number_of_own_descriptors",
+        "instance_type"
+      ],
+      "methods": [
+        {
+          "name": "ICInfo",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Constructor for ICInfo. Initializes the member variables to default/empty values."
+        },
+        {
+          "name": "Reset",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Resets all member variables of ICInfo to their default/empty values."
+        },
+        {
+          "name": "AppendToTracedValue",
+          "parameters": [
+            "v8::tracing::TracedValue* value"
+          ],
+          "return_type": "void",
+          "logic": "Appends the ICInfo's data as a dictionary to a TracedValue object, which can be used for tracing and debugging.  Converts the map (which is an address) to a string before adding it to the TracedValue."
+        }
+      ]
+    }
+  ],
+  "functions": []
+}

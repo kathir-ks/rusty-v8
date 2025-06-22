@@ -1,0 +1,300 @@
+{
+  "file_path": "/home/kathirks_gc/v8_go/codebase/src/wasm/baseline/liftoff-assembler-inl.h",
+  "imports": [
+    "src/wasm/baseline/liftoff-assembler.h",
+    "src/wasm/baseline/ia32/liftoff-assembler-ia32-inl.h",
+    "src/wasm/baseline/x64/liftoff-assembler-x64-inl.h",
+    "src/wasm/baseline/arm64/liftoff-assembler-arm64-inl.h",
+    "src/wasm/baseline/arm/liftoff-assembler-arm-inl.h",
+    "src/wasm/baseline/ppc/liftoff-assembler-ppc-inl.h",
+    "src/wasm/baseline/mips64/liftoff-assembler-mips64-inl.h",
+    "src/wasm/baseline/loong64/liftoff-assembler-loong64-inl.h",
+    "src/wasm/baseline/s390/liftoff-assembler-s390-inl.h",
+    "src/wasm/baseline/riscv/liftoff-assembler-riscv64-inl.h",
+    "src/wasm/baseline/riscv/liftoff-assembler-riscv32-inl.h"
+  ],
+  "classes": [
+    {
+      "name": "LiftoffAssembler",
+      "properties": [
+        "cache_state_",
+        "bailout_reason_",
+        "bailout_detail_"
+      ],
+      "methods": [
+        {
+          "name": "NextSpillOffset",
+          "parameters": [
+            "ValueKind kind",
+            "int top_spill_offset"
+          ],
+          "return_type": "int",
+          "logic": "Calculates the next available spill offset on the stack, considering the size and alignment requirements of the given value kind."
+        },
+        {
+          "name": "NextSpillOffset",
+          "parameters": [
+            "ValueKind kind"
+          ],
+          "return_type": "int",
+          "logic": "Calculates the next spill offset based on current TopSpillOffset and given value kind."
+        },
+        {
+          "name": "TopSpillOffset",
+          "parameters": [],
+          "return_type": "int",
+          "logic": "Returns the current top of the stack, either the static frame size if the stack is empty, or the offset of the last element on the stack."
+        },
+        {
+          "name": "PushRegister",
+          "parameters": [
+            "ValueKind kind",
+            "LiftoffRegister reg"
+          ],
+          "return_type": "void",
+          "logic": "Pushes the given register onto the stack, updating the cache state and stack state."
+        },
+        {
+          "name": "PushException",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Pushes an exception (assumed to be in kReturnRegister0) onto the stack."
+        },
+        {
+          "name": "PushConstant",
+          "parameters": [
+            "ValueKind kind",
+            "int32_t i32_const"
+          ],
+          "return_type": "void",
+          "logic": "Pushes a constant value onto the stack."
+        },
+        {
+          "name": "PushStack",
+          "parameters": [
+            "ValueKind kind"
+          ],
+          "return_type": "void",
+          "logic": "Pushes an empty slot of given ValueKind onto the stack."
+        },
+        {
+          "name": "LoadToFixedRegister",
+          "parameters": [
+            "VarState slot",
+            "LiftoffRegister reg"
+          ],
+          "return_type": "void",
+          "logic": "Loads a value from a stack slot or constant into a fixed register."
+        },
+        {
+          "name": "PopToFixedRegister",
+          "parameters": [
+            "LiftoffRegister reg"
+          ],
+          "return_type": "void",
+          "logic": "Pops a value from the stack into a fixed register, potentially moving or loading the value."
+        },
+        {
+          "name": "LoadFixedArrayLengthAsInt32",
+          "parameters": [
+            "LiftoffRegister dst",
+            "Register array",
+            "LiftoffRegList pinned"
+          ],
+          "return_type": "void",
+          "logic": "Loads the length of a FixedArray as an int32 into the destination register."
+        },
+        {
+          "name": "LoadSmiAsInt32",
+          "parameters": [
+            "LiftoffRegister dst",
+            "Register src_addr",
+            "int32_t offset"
+          ],
+          "return_type": "void",
+          "logic": "Loads a Smi value from memory into a destination register as an int32, handling Smi tagging differences."
+        },
+        {
+          "name": "LoadCodePointer",
+          "parameters": [
+            "Register dst",
+            "Register src_addr",
+            "int32_t offset_imm"
+          ],
+          "return_type": "void",
+          "logic": "Loads a code pointer from memory into a destination register."
+        },
+        {
+          "name": "emit_ptrsize_add",
+          "parameters": [
+            "Register dst",
+            "Register lhs",
+            "Register rhs"
+          ],
+          "return_type": "void",
+          "logic": "Emits an addition instruction that depends on pointer size (32 or 64 bit)."
+        },
+        {
+          "name": "emit_ptrsize_sub",
+          "parameters": [
+            "Register dst",
+            "Register lhs",
+            "Register rhs"
+          ],
+          "return_type": "void",
+          "logic": "Emits a subtraction instruction that depends on pointer size (32 or 64 bit)."
+        },
+        {
+          "name": "emit_ptrsize_and",
+          "parameters": [
+            "Register dst",
+            "Register lhs",
+            "Register rhs"
+          ],
+          "return_type": "void",
+          "logic": "Emits an AND instruction that depends on pointer size (32 or 64 bit)."
+        },
+        {
+          "name": "emit_ptrsize_shri",
+          "parameters": [
+            "Register dst",
+            "Register src",
+            "int amount"
+          ],
+          "return_type": "void",
+          "logic": "Emits a right shift logical immediate instruction that depends on pointer size (32 or 64 bit)."
+        },
+        {
+          "name": "emit_ptrsize_addi",
+          "parameters": [
+            "Register dst",
+            "Register lhs",
+            "intptr_t imm"
+          ],
+          "return_type": "void",
+          "logic": "Emits an add immediate instruction that depends on pointer size (32 or 64 bit)."
+        },
+        {
+          "name": "emit_ptrsize_muli",
+          "parameters": [
+            "Register dst",
+            "Register lhs",
+            "int32_t imm"
+          ],
+          "return_type": "void",
+          "logic": "Emits a multiply immediate instruction that depends on pointer size (32 or 64 bit)."
+        },
+        {
+          "name": "emit_ptrsize_set_cond",
+          "parameters": [
+            "Condition condition",
+            "Register dst",
+            "LiftoffRegister lhs",
+            "LiftoffRegister rhs"
+          ],
+          "return_type": "void",
+          "logic": "Emits a set condition instruction that depends on pointer size (32 or 64 bit)."
+        },
+        {
+          "name": "bailout",
+          "parameters": [
+            "LiftoffBailoutReason reason",
+            "const char* detail"
+          ],
+          "return_type": "void",
+          "logic": "Handles a bailout condition during compilation, recording the reason and detail, and aborting the compilation."
+        },
+        {
+          "name": "emit_ptrsize_cond_jumpi",
+          "parameters": [
+            "Condition cond",
+            "Label* label",
+            "Register lhs",
+            "int32_t imm",
+            "const FreezeCacheState& frozen"
+          ],
+          "return_type": "void",
+          "logic": "Emits a conditional jump immediate instruction that depends on pointer size (32 bit only)."
+        },
+        {
+          "name": "emit_i64_and",
+          "parameters": [
+            "LiftoffRegister dst",
+            "LiftoffRegister lhs",
+            "LiftoffRegister rhs"
+          ],
+          "return_type": "void",
+          "logic": "Emits an i64 AND instruction (32 bit arch only)."
+        },
+        {
+          "name": "emit_i64_andi",
+          "parameters": [
+            "LiftoffRegister dst",
+            "LiftoffRegister lhs",
+            "int32_t imm"
+          ],
+          "return_type": "void",
+          "logic": "Emits an i64 AND immediate instruction (32 bit arch only)."
+        },
+        {
+          "name": "emit_i64_or",
+          "parameters": [
+            "LiftoffRegister dst",
+            "LiftoffRegister lhs",
+            "LiftoffRegister rhs"
+          ],
+          "return_type": "void",
+          "logic": "Emits an i64 OR instruction (32 bit arch only)."
+        },
+        {
+          "name": "emit_i64_ori",
+          "parameters": [
+            "LiftoffRegister dst",
+            "LiftoffRegister lhs",
+            "int32_t imm"
+          ],
+          "return_type": "void",
+          "logic": "Emits an i64 OR immediate instruction (32 bit arch only)."
+        },
+        {
+          "name": "emit_i64_xor",
+          "parameters": [
+            "LiftoffRegister dst",
+            "LiftoffRegister lhs",
+            "LiftoffRegister rhs"
+          ],
+          "return_type": "void",
+          "logic": "Emits an i64 XOR instruction (32 bit arch only)."
+        },
+        {
+          "name": "emit_i64_xori",
+          "parameters": [
+            "LiftoffRegister dst",
+            "LiftoffRegister lhs",
+            "int32_t imm"
+          ],
+          "return_type": "void",
+          "logic": "Emits an i64 XOR immediate instruction (32 bit arch only)."
+        },
+        {
+          "name": "emit_u32_to_uintptr",
+          "parameters": [
+            "Register dst",
+            "Register src"
+          ],
+          "return_type": "void",
+          "logic": "Emits code to convert a u32 to uintptr. (32 bit arch only)"
+        },
+        {
+          "name": "clear_i32_upper_half",
+          "parameters": [
+            "Register dst"
+          ],
+          "return_type": "void",
+          "logic": "Clears the upper half of an i32 register. (32 bit arch only).  Currently unreachable"
+        }
+      ]
+    }
+  ],
+  "functions": []
+}

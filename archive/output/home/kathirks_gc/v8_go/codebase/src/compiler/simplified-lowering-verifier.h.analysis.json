@@ -1,0 +1,193 @@
+{
+  "file_path": "/home/kathirks_gc/v8_go/codebase/src/compiler/simplified-lowering-verifier.h",
+  "imports": [
+    "<optional>",
+    "src/base/container-utils.h",
+    "src/compiler/opcodes.h",
+    "src/compiler/representation-change.h"
+  ],
+  "classes": [
+    {
+      "name": "SimplifiedLoweringVerifier",
+      "properties": [
+        "hints_",
+        "machine_uses_of_constants_",
+        "data_",
+        "graph_",
+        "zone_"
+      ],
+      "methods": [
+        {
+          "name": "SimplifiedLoweringVerifier",
+          "parameters": [
+            "Zone* zone",
+            "TFGraph* graph"
+          ],
+          "return_type": "void",
+          "logic": "Constructor for the SimplifiedLoweringVerifier class. Initializes member variables with the provided zone and graph."
+        },
+        {
+          "name": "VisitNode",
+          "parameters": [
+            "Node* node",
+            "OperationTyper& op_typer"
+          ],
+          "return_type": "void",
+          "logic": "Visits a node in the graph, performing verification and potentially updating node type information."
+        },
+        {
+          "name": "RecordHint",
+          "parameters": [
+            "Node* node"
+          ],
+          "return_type": "void",
+          "logic": "Records a hint node for later use. This is used to track nodes related to SLVerifierHint operations."
+        },
+        {
+          "name": "inserted_hints",
+          "parameters": [],
+          "return_type": "const ZoneVector<Node*>&",
+          "logic": "Returns a const reference to the vector of inserted hint nodes."
+        },
+        {
+          "name": "RecordMachineUsesOfConstant",
+          "parameters": [
+            "Node* constant",
+            "Node::Uses uses"
+          ],
+          "return_type": "void",
+          "logic": "Records the machine uses of a constant node. This is used to track how constants are used in machine-specific operations."
+        },
+        {
+          "name": "machine_uses_of_constants",
+          "parameters": [],
+          "return_type": "const ZoneUnorderedMap<Node*, ZoneVector<Node*> >&",
+          "logic": "Returns a const reference to the map of machine uses of constant nodes."
+        },
+        {
+          "name": "GetType",
+          "parameters": [
+            "Node* node"
+          ],
+          "return_type": "std::optional<Type>",
+          "logic": "Retrieves the type of a node, either from its existing properties or from the verifier's internal data structures."
+        },
+        {
+          "name": "ResizeDataIfNecessary",
+          "parameters": [
+            "Node* node"
+          ],
+          "return_type": "void",
+          "logic": "Resizes the internal data vector if necessary to accommodate the given node's ID."
+        },
+        {
+          "name": "SetType",
+          "parameters": [
+            "Node* node",
+            "const Type& type"
+          ],
+          "return_type": "void",
+          "logic": "Sets the type of a node in the verifier's internal data structures."
+        },
+        {
+          "name": "InputType",
+          "parameters": [
+            "Node* node",
+            "int input_index"
+          ],
+          "return_type": "Type",
+          "logic": "Retrieves the type of a node's input at the given index."
+        },
+        {
+          "name": "SetTruncation",
+          "parameters": [
+            "Node* node",
+            "const Truncation& truncation"
+          ],
+          "return_type": "void",
+          "logic": "Sets the truncation information for a node."
+        },
+        {
+          "name": "InputTruncation",
+          "parameters": [
+            "Node* node",
+            "int input_index"
+          ],
+          "return_type": "Truncation",
+          "logic": "Retrieves the truncation information for a node's input at the given index."
+        },
+        {
+          "name": "CheckType",
+          "parameters": [
+            "Node* node",
+            "const Type& type"
+          ],
+          "return_type": "void",
+          "logic": "Checks the type of a node against an expected type. Declaration only, definition not provided."
+        },
+        {
+          "name": "CheckAndSet",
+          "parameters": [
+            "Node* node",
+            "const Type& type",
+            "const Truncation& trunc"
+          ],
+          "return_type": "void",
+          "logic": "Checks and sets the type and truncation of a node. Declaration only, definition not provided."
+        },
+        {
+          "name": "ReportInvalidTypeCombination",
+          "parameters": [
+            "Node* node",
+            "const std::vector<Type>& types"
+          ],
+          "return_type": "void",
+          "logic": "Reports an invalid type combination for a node. Declaration only, definition not provided."
+        },
+        {
+          "name": "GeneralizeTruncation",
+          "parameters": [
+            "const Truncation& truncation",
+            "const Type& type"
+          ],
+          "return_type": "Truncation",
+          "logic": "Generalizes a truncation based on the type, potentially making it less strict."
+        },
+        {
+          "name": "JoinTruncation",
+          "parameters": [
+            "const Truncation& t1",
+            "const Truncation& t2"
+          ],
+          "return_type": "Truncation",
+          "logic": "Joins two truncations, combining their effects."
+        },
+        {
+          "name": "JoinTruncation",
+          "parameters": [
+            "const Truncation& t1",
+            "const Truncation& t2",
+            "const Truncation& t3"
+          ],
+          "return_type": "Truncation",
+          "logic": "Joins three truncations, combining their effects."
+        },
+        {
+          "name": "graph_zone",
+          "parameters": [],
+          "return_type": "Zone*",
+          "logic": "Returns the zone associated with the graph."
+        }
+      ]
+    },
+    {
+      "name": "PerNodeData",
+      "properties": [
+        "type",
+        "truncation"
+      ],
+      "methods": []
+    }
+  ],
+  "functions": []
+}

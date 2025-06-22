@@ -1,0 +1,206 @@
+{
+  "metadata": {
+    "path": "/home/kathirks_gc/v8_go/archive/codebase/src/compiler/js-generic-lowering.h",
+    "file_name": "js-generic-lowering.h",
+    "language": "cpp",
+    "purpose": "Declares the JSGenericLowering class, which lowers JS-level operators to runtime and IC calls in the generic case within the V8 compiler."
+  },
+  "imports": {
+    "metadata": {
+      "language": "cpp",
+      "purpose": "Includes necessary header files for graph reduction, linkage, and opcodes."
+    },
+    "code": "#include \"src/compiler/graph-reducer.h\"\n#include \"src/compiler/linkage.h\"\n#include \"src/compiler/opcodes.h\""
+  },
+  "classes": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "JSGenericLowering",
+        "extends": "AdvancedReducer",
+        "about": "Lowers JS-level operators to runtime and IC calls in the \"generic\" case.",
+        "attributes": [
+          {
+            "name": "jsgraph_",
+            "type": "JSGraph*",
+            "access": "private",
+            "purpose": "Pointer to the JSGraph instance."
+          },
+          {
+            "name": "broker_",
+            "type": "JSHeapBroker*",
+            "access": "private",
+            "purpose": "Pointer to the JSHeapBroker instance."
+          }
+        ],
+        "dependencies": [
+          "AdvancedReducer",
+          "JSGraph",
+          "JSHeapBroker",
+          "CommonOperatorBuilder",
+          "MachineOperatorBuilder",
+          "Linkage",
+          "Builtin",
+          "Callable",
+          "CallDescriptor",
+          "Runtime"
+        ]
+      },
+      "code": "class JSGenericLowering final : public AdvancedReducer {\n public:\n  JSGenericLowering(JSGraph* jsgraph, Editor* editor, JSHeapBroker* broker);\n  ~JSGenericLowering() final;\n\n  const char* reducer_name() const override { return \"JSGenericLowering\"; }\n\n  Reduction Reduce(Node* node) final;\n\n protected:\n#define DECLARE_LOWER(x, ...) void Lower##x(Node* node);\n  // Dispatched depending on opcode.\n  JS_OP_LIST(DECLARE_LOWER)\n#undef DECLARE_LOWER\n\n  // Helpers to replace existing nodes with a generic call.\n  void ReplaceWithBuiltinCall(Node* node, Builtin builtin);\n  void ReplaceWithBuiltinCall(Node* node, Callable c,\n                              CallDescriptor::Flags flags);\n  void ReplaceWithBuiltinCall(Node* node, Callable c,\n                              CallDescriptor::Flags flags,\n                              Operator::Properties properties);\n  void ReplaceWithRuntimeCall(Node* node, Runtime::FunctionId f, int args = -1);\n\n  void ReplaceUnaryOpWithBuiltinCall(Node* node,\n                                     Builtin builtin_without_feedback,\n                                     Builtin builtin_with_feedback);\n  void ReplaceBinaryOpWithBuiltinCall(Node* node,\n                                      Builtin builtin_without_feedback,\n                                      Builtin builtin_with_feedback);\n\n  Zone* zone() const;\n  Isolate* isolate() const;\n  JSGraph* jsgraph() const { return jsgraph_; }\n  TFGraph* graph() const;\n  CommonOperatorBuilder* common() const;\n  MachineOperatorBuilder* machine() const;\n  JSHeapBroker* broker() const { return broker_; }\n\n private:\n  JSGraph* const jsgraph_;\n  JSHeapBroker* const broker_;\n};"
+    }
+  ],
+  "dependencies": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "AdvancedReducer",
+        "about": "Abstract base class for graph reducers"
+      },
+      "code": "class AdvancedReducer {\n                    public:\n                        virtual ~AdvancedReducer() {}\n                        virtual Reduction Reduce(Node* node) = 0;\n                };",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "JSGraph",
+        "about": "Represents the JavaScript graph"
+      },
+      "code": "class JSGraph {};",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "JSHeapBroker",
+        "about": "Provides access to the JavaScript heap."
+      },
+      "code": "class JSHeapBroker {};",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "CommonOperatorBuilder",
+        "about": "A builder for common operators."
+      },
+      "code": "class CommonOperatorBuilder {};",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "MachineOperatorBuilder",
+        "about": "A builder for machine-level operators."
+      },
+      "code": "class MachineOperatorBuilder {};",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "Linkage",
+        "about": "Provides information about function linkage."
+      },
+      "code": "class Linkage {};",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "Builtin",
+        "about": "Represents a built-in function."
+      },
+      "code": "class Builtin {};",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "Callable",
+        "about": "Represents a callable function."
+      },
+      "code": "class Callable {};",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "CallDescriptor",
+        "about": "Describes the calling convention."
+      },
+      "code": "class CallDescriptor {\n                  public:\n                   enum Flags {};\n                };",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "Runtime",
+        "about": "Provides access to runtime functions."
+      },
+      "code": "class Runtime {\n                  public:\n                    enum FunctionId {};\n                };",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "Zone",
+        "about": "Memory allocation zone."
+      },
+      "code": "class Zone {};",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "Isolate",
+        "about": "V8 Isolate."
+      },
+      "code": "class Isolate {};",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "TFGraph",
+        "about": "TurboFan Graph."
+      },
+      "code": "class TFGraph {};",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "Node",
+        "about": "Represents a node in the graph."
+      },
+      "code": "class Node { };",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "Editor",
+        "about": "Represents graph editor."
+      },
+      "code": "class Editor { };",
+      "type": "class"
+    }
+  ],
+  "file_path": "/home/kathirks_gc/v8_go/archive/codebase/src/compiler/js-generic-lowering.h"
+}

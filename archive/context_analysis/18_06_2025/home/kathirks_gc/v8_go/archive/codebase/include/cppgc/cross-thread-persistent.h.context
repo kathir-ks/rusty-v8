@@ -1,0 +1,172 @@
+{
+  "metadata": {
+    "path": "/home/kathirks_gc/v8_go/archive/codebase/include/cppgc/cross-thread-persistent.h",
+    "file_name": "cross-thread-persistent.h",
+    "language": "cpp",
+    "purpose": "Defines cross-thread persistent handles for cppgc, allowing objects to be retained across threads with certain caveats."
+  },
+  "imports": {
+    "metadata": {
+      "language": "cpp",
+      "purpose": "Includes necessary headers for atomic operations, persistent nodes, pointer policies, persistent handles, and visitor patterns."
+    },
+    "code": "#include <atomic>\n\n            #include \"cppgc/internal/persistent-node.h\"\n            #include \"cppgc/internal/pointer-policies.h\"\n            #include \"cppgc/persistent.h\"\n            #include \"cppgc/visitor.h\""
+  },
+  "classes": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "CrossThreadPersistentBase",
+        "extends": "PersistentBase",
+        "about": "Base class for cross-thread persistent handles, providing access to potentially poisoned memory when ASAN is enabled.",
+        "attributes": [
+          {
+            "name": "raw_",
+            "type": "void*",
+            "access": "protected",
+            "purpose": "Raw pointer to the managed object."
+          },
+          {
+            "name": "node_",
+            "type": "PersistentNode*",
+            "access": "protected",
+            "purpose": "Pointer to the persistent node managing the object's lifecycle."
+          }
+        ],
+        "dependencies": [
+          "PersistentBase",
+          "PersistentNode"
+        ]
+      },
+      "code": "class CrossThreadPersistentBase : public PersistentBase {\n            public:\n                CrossThreadPersistentBase() = default;\n                explicit CrossThreadPersistentBase(const void* raw) : PersistentBase(raw) {}\n\n                V8_CLANG_NO_SANITIZE(\"address\") const void* GetValueFromGC() const {\n                    return raw_;\n                }\n\n                V8_CLANG_NO_SANITIZE(\"address\")\n                PersistentNode* GetNodeFromGC() const { return node_; }\n\n                V8_CLANG_NO_SANITIZE(\"address\")\n                void ClearFromGC() const {\n                    raw_ = nullptr;\n                    SetNodeSafe(nullptr);\n                }\n\n                // GetNodeSafe() can be used for a thread-safe IsValid() check in a\n                // double-checked locking pattern. See ~BasicCrossThreadPersistent.\n                PersistentNode* GetNodeSafe() const {\n                    return reinterpret_cast<std::atomic<PersistentNode*>*>(&node_)->load(\n                        std::memory_order_acquire);\n                }\n\n                // The GC writes using SetNodeSafe() while holding the lock.\n                V8_CLANG_NO_SANITIZE(\"address\")\n                void SetNodeSafe(PersistentNode* value) const {\n            #if defined(__has_feature)\n            #if __has_feature(address_sanitizer)\n            #define V8_IS_ASAN 1\n            #endif\n            #endif\n\n            #ifdef V8_IS_ASAN\n                    __atomic_store(&node_, &value, __ATOMIC_RELEASE);\n            #else   // !V8_IS_ASAN\n                    // Non-ASAN builds can use atomics. This also covers MSVC which does not\n                    // have the __atomic_store intrinsic.\n                    reinterpret_cast<std::atomic<PersistentNode*>*>(&node_)->store(\n                        value, std::memory_order_release);\n            #endif  // !V8_IS_ASAN\n\n            #undef V8_IS_ASAN\n                }\n            };"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "BasicCrossThreadPersistent",
+        "about": "Template class for creating cross-thread persistent handles with configurable weakness, location, and checking policies.",
+        "attributes": [],
+        "dependencies": [
+          "CrossThreadPersistentBase",
+          "WeaknessPolicy",
+          "LocationPolicy",
+          "CheckingPolicy",
+          "PersistentRegionLock",
+          "CrossThreadPersistentRegion",
+          "BasicMember",
+          "SourceLocation",
+          "SentinelPointer",
+          "RootVisitor",
+          "internal::StrongCrossThreadPersistentPolicy",
+          "internal::WeakCrossThreadPersistentPolicy"
+        ]
+      },
+      "code": "template <typename T, typename WeaknessPolicy, typename LocationPolicy,\n                    typename CheckingPolicy>\n            class BasicCrossThreadPersistent final : public CrossThreadPersistentBase,\n                                                    public LocationPolicy,\n                                                    private WeaknessPolicy,\n                                                    private CheckingPolicy {\n            public:\n                using typename WeaknessPolicy::IsStrongPersistent;\n                using PointeeType = T;\n\n                ~BasicCrossThreadPersistent() {\n                    //  This implements fast path for destroying empty/sentinel.\n                    //\n                    // Simplified version of `AssignUnsafe()` to allow calling without a\n                    // complete type `T`. Uses double-checked locking with a simple thread-safe\n                    // check for a valid handle based on a node.\n                    if (GetNodeSafe()) {\n                        PersistentRegionLock guard;\n                        const void* old_value = GetValue();\n                        // The fast path check (GetNodeSafe()) does not acquire the lock. Recheck\n                        // validity while holding the lock to ensure the reference has not been\n                        // cleared.\n                        if (IsValid(old_value)) {\n                            CrossThreadPersistentRegion& region =\n                                this->GetPersistentRegion(old_value);\n                            region.FreeNode(GetNode());\n                            SetNode(nullptr);\n                        } else {\n                            CPPGC_DCHECK(!GetNode());\n                        }\n                    }\n                    // No need to call SetValue() as the handle is not used anymore. This can\n                    // leave behind stale sentinel values but will always destroy the underlying\n                    // node.\n                }\n\n                BasicCrossThreadPersistent(\n                    const SourceLocation& loc = SourceLocation::Current())\n                    : LocationPolicy(loc) {}\n\n                BasicCrossThreadPersistent(\n                    std::nullptr_t, const SourceLocation& loc = SourceLocation::Current())\n                    : LocationPolicy(loc) {}\n\n                BasicCrossThreadPersistent(\n                    SentinelPointer s, const SourceLocation& loc = SourceLocation::Current())\n                    : CrossThreadPersistentBase(s), LocationPolicy(loc) {}\n\n                BasicCrossThreadPersistent(\n                    T* raw, const SourceLocation& loc = SourceLocation::Current())\n                    : CrossThreadPersistentBase(raw), LocationPolicy(loc) {\n                    if (!IsValid(raw)) return;\n                    PersistentRegionLock guard;\n                    CrossThreadPersistentRegion& region = this->GetPersistentRegion(raw);\n                    SetNode(region.AllocateNode(this, &TraceAsRoot));\n                    this->CheckPointer(raw);\n                }\n\n                class UnsafeCtorTag {\n                private:\n                    UnsafeCtorTag() = default;\n                    template <typename U, typename OtherWeaknessPolicy,\n                            typename OtherLocationPolicy, typename OtherCheckingPolicy>\n                    friend class BasicCrossThreadPersistent;\n                };\n\n                BasicCrossThreadPersistent(\n                    UnsafeCtorTag, T* raw,\n                    const SourceLocation& loc = SourceLocation::Current())\n                    : CrossThreadPersistentBase(raw), LocationPolicy(loc) {\n                    if (!IsValid(raw)) return;\n                    CrossThreadPersistentRegion& region = this->GetPersistentRegion(raw);\n                    SetNode(region.AllocateNode(this, &TraceAsRoot));\n                    this->CheckPointer(raw);\n                }\n\n                BasicCrossThreadPersistent(\n                    T& raw, const SourceLocation& loc = SourceLocation::Current())\n                    : BasicCrossThreadPersistent(&raw, loc) {}\n\n                template <typename U, typename MemberBarrierPolicy,\n                            typename MemberWeaknessTag, typename MemberCheckingPolicy,\n                            typename MemberStorageType,\n                            typename = std::enable_if_t<std::is_base_of<T, U>::value>>\n                BasicCrossThreadPersistent(\n                    internal::BasicMember<U, MemberBarrierPolicy, MemberWeaknessTag,\n                                            MemberCheckingPolicy, MemberStorageType>\n                        member,\n                    const SourceLocation& loc = SourceLocation::Current())\n                    : BasicCrossThreadPersistent(member.Get(), loc) {}\n\n                BasicCrossThreadPersistent(\n                    const BasicCrossThreadPersistent& other,\n                    const SourceLocation& loc = SourceLocation::Current())\n                    : BasicCrossThreadPersistent(loc) {\n                    // Invoke operator=.\n                    *this = other;\n                }\n\n                // Heterogeneous ctor.\n                template <typename U, typename OtherWeaknessPolicy,\n                            typename OtherLocationPolicy, typename OtherCheckingPolicy,\n                            typename = std::enable_if_t<std::is_base_of<T, U>::value>>\n                BasicCrossThreadPersistent(\n                    const BasicCrossThreadPersistent<U, OtherWeaknessPolicy,\n                                                    OtherLocationPolicy,\n                                                    OtherCheckingPolicy>& other,\n                    const SourceLocation& loc = SourceLocation::Current())\n                    : BasicCrossThreadPersistent(loc) {\n                    *this = other;\n                }\n\n                BasicCrossThreadPersistent(\n                    BasicCrossThreadPersistent&& other,\n                    const SourceLocation& loc = SourceLocation::Current()) noexcept {\n                    // Invoke operator=.\n                    *this = std::move(other);\n                }\n\n                BasicCrossThreadPersistent& operator=(\n                    const BasicCrossThreadPersistent& other) {\n                    PersistentRegionLock guard;\n                    AssignSafe(guard, other.Get());\n                    return *this;\n                }\n\n                template <typename U, typename OtherWeaknessPolicy,\n                            typename OtherLocationPolicy, typename OtherCheckingPolicy,\n                            typename = std::enable_if_t<std::is_base_of<T, U>::value>>\n                BasicCrossThreadPersistent& operator=(\n                    const BasicCrossThreadPersistent<U, OtherWeaknessPolicy,\n                                                    OtherLocationPolicy,\n                                                    OtherCheckingPolicy>& other) {\n                    PersistentRegionLock guard;\n                    AssignSafe(guard, other.Get());\n                    return *this;\n                }\n\n                BasicCrossThreadPersistent& operator=(BasicCrossThreadPersistent&& other) {\n                    if (this == &other) return *this;\n                    Clear();\n                    PersistentRegionLock guard;\n                    PersistentBase::operator=(std::move(other));\n                    LocationPolicy::operator=(std::move(other));\n                    if (!IsValid(GetValue())) return *this;\n                    GetNode()->UpdateOwner(this);\n                    other.SetValue(nullptr);\n                    other.SetNode(nullptr);\n                    this->CheckPointer(Get());\n                    return *this;\n                }\n\n                /**\n                 * Assigns a raw pointer.\n                 *\n                 * Note: **Not thread-safe.**\n                 */\n                BasicCrossThreadPersistent& operator=(T* other) {\n                    AssignUnsafe(other);\n                    return *this;\n                }\n\n                // Assignment from member.\n                template <typename U, typename MemberBarrierPolicy,\n                            typename MemberWeaknessTag, typename MemberCheckingPolicy,\n                            typename MemberStorageType,\n                            typename = std::enable_if_t<std::is_base_of<T, U>::value>>\n                BasicCrossThreadPersistent& operator=(\n                    internal::BasicMember<U, MemberBarrierPolicy, MemberWeaknessTag,\n                                            MemberCheckingPolicy, MemberStorageType>\n                        member) {\n                    return operator=(member.Get());\n                }\n\n                /**\n                 * Assigns a nullptr.\n                 *\n                 * \\returns the handle.\n                 */\n                BasicCrossThreadPersistent& operator=(std::nullptr_t) {\n                    Clear();\n                    return *this;\n                }\n\n                /**\n                 * Assigns the sentinel pointer.\n                 *\n                 * \\returns the handle.\n                 */\n                BasicCrossThreadPersistent& operator=(SentinelPointer s) {\n                    PersistentRegionLock guard;\n                    AssignSafe(guard, s);\n                    return *this;\n                }\n\n                /**\n                 * Returns a pointer to the stored object.\n                 *\n                 * Note: **Not thread-safe.**\n                 *\n                 * \\returns a pointer to the stored object.\n                 */\n                // CFI cast exemption to allow passing SentinelPointer through T* and support\n                // heterogeneous assignments between different Member and Persistent handles\n                // based on their actual types.\n                V8_CLANG_NO_SANITIZE(\"cfi-unrelated-cast\") T* Get() const {\n                    return static_cast<T*>(const_cast<void*>(GetValue()));\n                }\n\n                /**\n                 * Clears the stored object.\n                 */\n                void Clear() {\n                    PersistentRegionLock guard;\n                    AssignSafe(guard, nullptr);\n                }\n\n                /**\n                 * Returns a pointer to the stored object and releases it.\n                 *\n                 * Note: **Not thread-safe.**\n                 *\n                 * \\returns a pointer to the stored object.\n                 */\n                T* Release() {\n                    T* result = Get();\n                    Clear();\n                    return result;\n                }\n\n                /**\n                 * Conversio to boolean.\n                 *\n                 * Note: **Not thread-safe.**\n                 *\n                 * \\returns true if an actual object has been stored and false otherwise.\n                 */\n                explicit operator bool() const { return Get(); }\n\n                /**\n                 * Conversion to object of type T.\n                 *\n                 * Note: **Not thread-safe.**\n                 *\n                 * \\returns the object.\n                 */\n                operator T*() const { return Get(); }\n\n                /**\n                 * Dereferences the stored object.\n                 *\n                 * Note: **Not thread-safe.**\n                 */\n                T* operator->() const { return Get(); }\n                T& operator*() const { return *Get(); }\n\n                template <typename U, typename OtherWeaknessPolicy = WeaknessPolicy,\n                            typename OtherLocationPolicy = LocationPolicy,\n                            typename OtherCheckingPolicy = CheckingPolicy>\n                BasicCrossThreadPersistent<U, OtherWeaknessPolicy, OtherLocationPolicy,\n                                            OtherCheckingPolicy>\n                To() const {\n                    using OtherBasicCrossThreadPersistent =\n                        BasicCrossThreadPersistent<U, OtherWeaknessPolicy, OtherLocationPolicy,\n                                                    OtherCheckingPolicy>;\n                    PersistentRegionLock guard;\n                    return OtherBasicCrossThreadPersistent(\n                        typename OtherBasicCrossThreadPersistent::UnsafeCtorTag(),\n                        static_cast<U*>(Get()));\n                }\n\n                template <typename U = T,\n                            typename = typename std::enable_if<!BasicCrossThreadPersistent<\n                                U, WeaknessPolicy>::IsStrongPersistent::value>::type>\n                BasicCrossThreadPersistent<U, internal::StrongCrossThreadPersistentPolicy>\n                Lock() const {\n                    return BasicCrossThreadPersistent<\n                        U, internal::StrongCrossThreadPersistentPolicy>(*this);\n                }\n\n            private:\n                static bool IsValid(const void* ptr) {\n                    return ptr && ptr != kSentinelPointer;\n                }\n\n                static void TraceAsRoot(RootVisitor& root_visitor, const void* ptr) {\n                    root_visitor.Trace(*static_cast<const BasicCrossThreadPersistent*>(ptr));\n                }\n\n                void AssignUnsafe(T* ptr) {\n                    const void* old_value = GetValue();\n                    if (IsValid(old_value)) {\n                        PersistentRegionLock guard;\n                        old_value = GetValue();\n                        // The fast path check (IsValid()) does not acquire the lock. Reload\n                        // the value to ensure the reference has not been cleared.\n                        if (IsValid(old_value)) {\n                            CrossThreadPersistentRegion& region =\n                                this->GetPersistentRegion(old_value);\n                            if (IsValid(ptr) && (&region == &this->GetPersistentRegion(ptr))) {\n                                SetValue(ptr);\n                                this->CheckPointer(ptr);\n                                return;\n                            }\n                            region.FreeNode(GetNode());\n                            SetNode(nullptr);\n                        } else {\n                            CPPGC_DCHECK(!GetNode());\n                        }\n                    }\n                    SetValue(ptr);\n                    if (!IsValid(ptr)) return;\n                    PersistentRegionLock guard;\n                    SetNode(this->GetPersistentRegion(ptr).AllocateNode(this, &TraceAsRoot));\n                    this->CheckPointer(ptr);\n                }\n\n                void AssignSafe(PersistentRegionLock&, T* ptr) {\n                    PersistentRegionLock::AssertLocked();\n                    const void* old_value = GetValue();\n                    if (IsValid(old_value)) {\n                        CrossThreadPersistentRegion& region =\n                            this->GetPersistentRegion(old_value);\n                        if (IsValid(ptr) && (&region == &this->GetPersistentRegion(ptr))) {\n                            SetValue(ptr);\n                            this->CheckPointer(ptr);\n                            return;\n                        }\n                        region.FreeNode(GetNode());\n                        SetNode(nullptr);\n                    }\n                    SetValue(ptr);\n                    if (!IsValid(ptr)) return;\n                    SetNode(this->GetPersistentRegion(ptr).AllocateNode(this, &TraceAsRoot));\n                    this->CheckPointer(ptr);\n                }\n\n                void ClearFromGC() const {\n                    if (IsValid(GetValueFromGC())) {\n                        WeaknessPolicy::GetPersistentRegion(GetValueFromGC())\n                            .FreeNode(GetNodeFromGC());\n                        CrossThreadPersistentBase::ClearFromGC();\n                    }\n                }\n\n                // See Get() for details.\n                V8_CLANG_NO_SANITIZE(\"cfi-unrelated-cast\")\n                T* GetFromGC() const {\n                    return static_cast<T*>(const_cast<void*>(GetValueFromGC()));\n                }\n\n                friend class internal::RootVisitor;\n            };"
+    }
+  ],
+  "dependencies": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "PersistentBase",
+        "about": "Base class for persistent handles in cppgc."
+      },
+      "code": "class PersistentBase {\n                protected:\n                    void* raw_;\n                    PersistentNode* node_;\n                };",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "PersistentNode",
+        "about": "Node representing a persistent object in the garbage collection system."
+      },
+      "code": "class PersistentNode {};",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "PersistentRegionLock",
+        "about": "A lock protecting a persistent region."
+      },
+      "code": "class PersistentRegionLock {\n                    public:\n                        void AssertLocked() {};\n                };",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "CrossThreadPersistentRegion",
+        "about": "Region managing cross-thread persistent objects."
+      },
+      "code": "class CrossThreadPersistentRegion {\n                    public:\n                        PersistentNode* AllocateNode(void* owner, void (*trace)(RootVisitor&, const void*)) { return nullptr; };\n                        void FreeNode(PersistentNode* node) {};\n                };",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "SourceLocation",
+        "about": "Represents the source code location where a handle is created."
+      },
+      "code": "class SourceLocation {\n                    public:\n                        static SourceLocation Current() { return SourceLocation(); };\n                };",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "SentinelPointer",
+        "about": "A special pointer value indicating an empty or invalid handle."
+      },
+      "code": "class SentinelPointer {};\n                extern SentinelPointer kSentinelPointer;",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "RootVisitor",
+        "about": "Visitor pattern interface for traversing the object graph during garbage collection."
+      },
+      "code": "class RootVisitor {\n                    public:\n                        void Trace(const void* ptr) {};\n                };",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "BasicMember",
+        "about": "Represents a member of a class that is managed by the garbage collector."
+      },
+      "code": "template <typename T, typename BarrierPolicy, typename WeaknessTag, typename CheckingPolicy, typename StorageType>\n                class BasicMember {\n                    public:\n                        T* Get() { return nullptr; };\n                };",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "internal::StrongCrossThreadPersistentPolicy",
+        "about": "Policy for strong cross-thread persistent handles."
+      },
+      "code": "namespace internal {\n                    class StrongCrossThreadPersistentPolicy {};\n                }",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "internal::WeakCrossThreadPersistentPolicy",
+        "about": "Policy for weak cross-thread persistent handles."
+      },
+      "code": "namespace internal {\n                    class WeakCrossThreadPersistentPolicy {\n                        public:\n                            static CrossThreadPersistentRegion& GetPersistentRegion(const void* ptr) {\n                                return CrossThreadPersistentRegion();\n                            }\n                    };\n                }",
+      "type": "class"
+    }
+  ],
+  "file_path": "/home/kathirks_gc/v8_go/archive/codebase/include/cppgc/cross-thread-persistent.h"
+}

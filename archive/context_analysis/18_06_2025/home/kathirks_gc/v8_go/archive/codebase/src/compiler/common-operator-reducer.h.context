@@ -1,0 +1,183 @@
+{
+  "metadata": {
+    "path": "/home/kathirks_gc/v8_go/archive/codebase/src/compiler/common-operator-reducer.h",
+    "file_name": "common-operator-reducer.h",
+    "language": "cpp",
+    "purpose": "Declares the CommonOperatorReducer class, which performs strength reduction on nodes with common operators in the V8 compiler's graph representation."
+  },
+  "imports": {
+    "metadata": {
+      "language": "cpp",
+      "purpose": "Includes necessary headers for base types, compiler operators, and graph reduction functionalities."
+    },
+    "code": "#include \"src/base/compiler-specific.h\"\n            #include \"src/compiler/common-operator.h\"\n            #include \"src/compiler/graph-reducer.h\""
+  },
+  "classes": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "CommonOperatorReducer",
+        "extends": "AdvancedReducer",
+        "about": "Performs strength reduction on nodes that have common operators.",
+        "attributes": [
+          {
+            "name": "graph_",
+            "type": "TFGraph*",
+            "access": "private",
+            "purpose": "Pointer to the graph being reduced."
+          },
+          {
+            "name": "broker_",
+            "type": "JSHeapBroker*",
+            "access": "private",
+            "purpose": "Pointer to the JSHeapBroker for accessing heap objects."
+          },
+          {
+            "name": "common_",
+            "type": "CommonOperatorBuilder*",
+            "access": "private",
+            "purpose": "Pointer to the CommonOperatorBuilder for creating common operators."
+          },
+          {
+            "name": "machine_",
+            "type": "MachineOperatorBuilder*",
+            "access": "private",
+            "purpose": "Pointer to the MachineOperatorBuilder for creating machine-specific operators."
+          },
+          {
+            "name": "dead_",
+            "type": "Node*",
+            "access": "private",
+            "purpose": "A dead node used for replacing eliminated nodes."
+          },
+          {
+            "name": "zone_",
+            "type": "Zone*",
+            "access": "private",
+            "purpose": "Memory zone for temporary allocations."
+          },
+          {
+            "name": "default_branch_semantics_",
+            "type": "BranchSemantics",
+            "access": "private",
+            "purpose": "Default branching semantics."
+          }
+        ],
+        "dependencies": [
+          "AdvancedReducer",
+          "TFGraph",
+          "JSHeapBroker",
+          "CommonOperatorBuilder",
+          "MachineOperatorBuilder",
+          "Operator",
+          "Node"
+        ]
+      },
+      "code": "class V8_EXPORT_PRIVATE CommonOperatorReducer final\n                : public NON_EXPORTED_BASE(AdvancedReducer) {\n            public:\n            CommonOperatorReducer(Editor* editor, TFGraph* graph, JSHeapBroker* broker,\n                                    CommonOperatorBuilder* common,\n                                    MachineOperatorBuilder* machine, Zone* temp_zone,\n                                    BranchSemantics default_branch_semantics);\n            ~CommonOperatorReducer() final = default;\n\n            const char* reducer_name() const override { return \"CommonOperatorReducer\"; }\n\n            Reduction Reduce(Node* node) final;\n\n            private:\n            Reduction ReduceBranch(Node* node);\n            Reduction ReduceDeoptimizeConditional(Node* node);\n            Reduction ReduceMerge(Node* node);\n            Reduction ReduceEffectPhi(Node* node);\n            Reduction ReducePhi(Node* node);\n            Reduction ReduceReturn(Node* node);\n            Reduction ReduceSelect(Node* node);\n            Reduction ReduceSwitch(Node* node);\n            Reduction ReduceStaticAssert(Node* node);\n            Reduction ReduceTrapConditional(Node* node);\n\n            Reduction Change(Node* node, Operator const* op, Node* a);\n            Reduction Change(Node* node, Operator const* op, Node* a, Node* b);\n\n            // Helper to determine if conditions are true or false.\n            Decision DecideCondition(Node* const cond, BranchSemantics branch_semantics);\n            BranchSemantics BranchSemanticsOf(const Node* branch) {\n                BranchSemantics bs = BranchParametersOf(branch->op()).semantics();\n                if (bs != BranchSemantics::kUnspecified) return bs;\n                return default_branch_semantics_;\n            }\n\n            TFGraph* graph() const { return graph_; }\n            JSHeapBroker* broker() const { return broker_; }\n            CommonOperatorBuilder* common() const { return common_; }\n            MachineOperatorBuilder* machine() const { return machine_; }\n            Node* dead() const { return dead_; }\n\n            TFGraph* const graph_;\n            JSHeapBroker* const broker_;\n            CommonOperatorBuilder* const common_;\n            MachineOperatorBuilder* const machine_;\n            Node* const dead_;\n            Zone* zone_;\n            BranchSemantics default_branch_semantics_;\n            };"
+    }
+  ],
+  "dependencies": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "AdvancedReducer",
+        "about": "Base class for advanced reducers in the compiler."
+      },
+      "code": "class AdvancedReducer {};",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "TFGraph",
+        "about": "Represents the typed function graph."
+      },
+      "code": "class TFGraph {};",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "JSHeapBroker",
+        "about": "Provides access to the JS heap."
+      },
+      "code": "class JSHeapBroker {};",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "CommonOperatorBuilder",
+        "about": "Builder for common operators."
+      },
+      "code": "class CommonOperatorBuilder {};",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "MachineOperatorBuilder",
+        "about": "Builder for machine-specific operators."
+      },
+      "code": "class MachineOperatorBuilder {};",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "Operator",
+        "about": "Represents an operator in the graph."
+      },
+      "code": "class Operator {};",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "Node",
+        "about": "Represents a node in the graph."
+      },
+      "code": "class Node {};",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "Zone",
+        "about": "Memory allocation zone."
+      },
+      "code": "class Zone {};",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "enum",
+        "name": "BranchSemantics",
+        "about": "Represents the semantics of a branch."
+      },
+      "code": "enum class BranchSemantics { kUnspecified };",
+      "type": "enum"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "Editor",
+        "about": "Provides editing capabilities for the graph."
+      },
+      "code": "class Editor {};",
+      "type": "class"
+    }
+  ],
+  "file_path": "/home/kathirks_gc/v8_go/archive/codebase/src/compiler/common-operator-reducer.h"
+}

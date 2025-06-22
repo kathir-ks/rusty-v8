@@ -1,0 +1,160 @@
+{
+  "metadata": {
+    "path": "/home/kathirks_gc/v8_go/archive/codebase/src/zone/zone-compression.h",
+    "file_name": "zone-compression.h",
+    "language": "cpp",
+    "purpose": "Defines the ZoneCompression struct for compressing pointers within zones, used in the V8 JavaScript engine."
+  },
+  "imports": {
+    "metadata": {
+      "language": "cpp",
+      "purpose": "Includes necessary headers for bit manipulation and global definitions."
+    },
+    "code": "#include \"src/base/bits.h\"\n            #include \"src/common/globals.h\""
+  },
+  "classes": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "struct",
+        "name": "ZoneCompression",
+        "about": "Provides an untyped implementation of a zone compression scheme, which relies on masking bits of pointers within a specific memory region (zone cage).",
+        "attributes": [
+          {
+            "name": "kReservationSize",
+            "type": "size_t",
+            "access": "public",
+            "purpose": "The total size of the reserved memory region (zone cage)."
+          },
+          {
+            "name": "kReservationAlignment",
+            "type": "size_t",
+            "access": "public",
+            "purpose": "The alignment requirement for the zone cage.  Determined by COMPRESS_ZONES_BOOL."
+          },
+          {
+            "name": "kOffsetMask",
+            "type": "size_t",
+            "access": "public",
+            "purpose": "A mask used to extract the offset of a pointer within the zone cage."
+          }
+        ],
+        "dependencies": [
+          "base::bits",
+          "COMPRESS_ZONES_BOOL"
+        ]
+      },
+      "code": "struct ZoneCompression {\n              static const size_t kReservationSize = size_t{2} * GB;\n              static const size_t kReservationAlignment =\n                  COMPRESS_ZONES_BOOL ? size_t{4} * GB : 1;\n\n              static_assert(base::bits::IsPowerOfTwo(kReservationAlignment),\n                            \"Bad zone alignment\");\n\n              static const size_t kOffsetMask = kReservationAlignment - 1;\n\n              inline static Address base_of(const void* zone_pointer) {\n                return reinterpret_cast<Address>(zone_pointer) & ~kOffsetMask;\n              }\n\n              inline static bool CheckSameBase(const void* p1, const void* p2) {\n                if (p1 == nullptr || p2 == nullptr) return true;\n                CHECK_EQ(base_of(p1), base_of(p2));\n                return true;\n              }\n\n              inline static uint32_t Compress(const void* value) {\n                Address raw_value = reinterpret_cast<Address>(value);\n                uint32_t compressed_value = static_cast<uint32_t>(raw_value & kOffsetMask);\n                DCHECK_IMPLIES(compressed_value == 0, value == nullptr);\n                DCHECK_LT(compressed_value, kReservationSize);\n                return compressed_value;\n              }\n\n              inline static Address Decompress(const void* zone_pointer,\n                                               uint32_t compressed_value) {\n                if (compressed_value == 0) return kNullAddress;\n                return base_of(zone_pointer) + compressed_value;\n              }\n            };"
+    }
+  ],
+  "functions": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "function",
+        "name": "base_of",
+        "parent": "ZoneCompression",
+        "about": "Calculates the base address of the zone cage given a pointer within that cage.",
+        "logic": "Performs a bitwise AND operation between the pointer's address and the inverse of the kOffsetMask.  This effectively clears the lower bits, aligning the address to the kReservationAlignment boundary.",
+        "parameters": [
+          {
+            "name": "zone_pointer",
+            "type": "const void*",
+            "purpose": "A pointer to an address within the zone cage."
+          }
+        ],
+        "return": {
+          "type": "Address",
+          "description": "The base address of the zone cage."
+        },
+        "dependencies": []
+      },
+      "code": "inline static Address base_of(const void* zone_pointer) {\n                return reinterpret_cast<Address>(zone_pointer) & ~kOffsetMask;\n            }"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "function",
+        "name": "CheckSameBase",
+        "parent": "ZoneCompression",
+        "about": "Checks if two pointers reside within the same zone cage.",
+        "logic": "If either pointer is null, returns true. Otherwise, checks if the base addresses of the two pointers (calculated using base_of) are equal. Uses a CHECK_EQ macro to assert equality in debug builds.",
+        "parameters": [
+          {
+            "name": "p1",
+            "type": "const void*",
+            "purpose": "The first pointer."
+          },
+          {
+            "name": "p2",
+            "type": "const void*",
+            "purpose": "The second pointer."
+          }
+        ],
+        "return": {
+          "type": "bool",
+          "description": "True if both pointers are null, or both are non-null and have the same base address; false otherwise."
+        },
+        "dependencies": [
+          "base_of"
+        ]
+      },
+      "code": "inline static bool CheckSameBase(const void* p1, const void* p2) {\n                if (p1 == nullptr || p2 == nullptr) return true;\n                CHECK_EQ(base_of(p1), base_of(p2));\n                return true;\n            }"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "function",
+        "name": "Compress",
+        "parent": "ZoneCompression",
+        "about": "Compresses a pointer by masking away the higher bits, retaining only the offset within the zone cage.",
+        "logic": "Casts the pointer to an Address (integer), performs a bitwise AND operation with kOffsetMask to get the offset, and then casts the result to a uint32_t. Includes DCHECKs to ensure nullptr is compressed to 0 and the compressed value is within the reservation size.",
+        "parameters": [
+          {
+            "name": "value",
+            "type": "const void*",
+            "purpose": "The pointer to compress."
+          }
+        ],
+        "return": {
+          "type": "uint32_t",
+          "description": "The compressed pointer value (offset within the zone cage)."
+        },
+        "dependencies": []
+      },
+      "code": "inline static uint32_t Compress(const void* value) {\n                Address raw_value = reinterpret_cast<Address>(value);\n                uint32_t compressed_value = static_cast<uint32_t>(raw_value & kOffsetMask);\n                DCHECK_IMPLIES(compressed_value == 0, value == nullptr);\n                DCHECK_LT(compressed_value, kReservationSize);\n                return compressed_value;\n            }"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "function",
+        "name": "Decompress",
+        "parent": "ZoneCompression",
+        "about": "Decompresses a previously compressed pointer, reconstructing the original address within the zone cage.",
+        "logic": "If the compressed value is 0, it returns kNullAddress. Otherwise, it calculates the original address by adding the compressed offset to the base address of the zone cage (obtained using base_of).",
+        "parameters": [
+          {
+            "name": "zone_pointer",
+            "type": "const void*",
+            "purpose": "A pointer to an address within the zone cage (used to derive the base address)."
+          },
+          {
+            "name": "compressed_value",
+            "type": "uint32_t",
+            "purpose": "The compressed pointer value (offset)."
+          }
+        ],
+        "return": {
+          "type": "Address",
+          "description": "The decompressed pointer address."
+        },
+        "dependencies": [
+          "base_of",
+          "kNullAddress"
+        ]
+      },
+      "code": "inline static Address Decompress(const void* zone_pointer,\n                                               uint32_t compressed_value) {\n                if (compressed_value == 0) return kNullAddress;\n                return base_of(zone_pointer) + compressed_value;\n            }"
+    }
+  ],
+  "file_path": "/home/kathirks_gc/v8_go/archive/codebase/src/zone/zone-compression.h"
+}

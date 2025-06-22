@@ -1,0 +1,92 @@
+{
+  "file_path": "/home/kathirks_gc/v8_go/codebase/src/compiler/node-marker.h",
+  "imports": [
+    "src/compiler/node.h"
+  ],
+  "classes": [
+    {
+      "name": "NodeMarkerBase",
+      "properties": [
+        "mark_min_",
+        "mark_max_"
+      ],
+      "methods": [
+        {
+          "name": "NodeMarkerBase",
+          "parameters": [
+            "TFGraph* graph",
+            "uint32_t num_states"
+          ],
+          "return_type": "void",
+          "logic": "Constructor for NodeMarkerBase, initializes mark_min_ and mark_max_ based on graph and num_states (implementation not visible but implied)."
+        },
+        {
+          "name": "NodeMarkerBase",
+          "parameters": [
+            "const NodeMarkerBase&"
+          ],
+          "return_type": "NodeMarkerBase&",
+          "logic": "Deleted copy constructor. Prevents copying of NodeMarkerBase objects."
+        },
+        {
+          "name": "operator=",
+          "parameters": [
+            "const NodeMarkerBase&"
+          ],
+          "return_type": "NodeMarkerBase&",
+          "logic": "Deleted assignment operator. Prevents assignment of NodeMarkerBase objects."
+        },
+        {
+          "name": "Get",
+          "parameters": [
+            "const Node* node"
+          ],
+          "return_type": "Mark",
+          "logic": "Retrieves the mark associated with a given node. It adjusts the raw mark from the node by subtracting mark_min_ to get a local state value. Returns 0 if the mark is below mark_min_."
+        },
+        {
+          "name": "Set",
+          "parameters": [
+            "Node* node",
+            "Mark mark"
+          ],
+          "return_type": "void",
+          "logic": "Sets the mark associated with a given node. It adjusts the local state value by adding mark_min_ before storing it in the node's mark field."
+        }
+      ]
+    },
+    {
+      "name": "NodeMarker",
+      "properties": [],
+      "methods": [
+        {
+          "name": "NodeMarker",
+          "parameters": [
+            "TFGraph* graph",
+            "uint32_t num_states"
+          ],
+          "return_type": "void",
+          "logic": "Constructor for NodeMarker, initializes the base class NodeMarkerBase."
+        },
+        {
+          "name": "Get",
+          "parameters": [
+            "const Node* node"
+          ],
+          "return_type": "State",
+          "logic": "Retrieves the state associated with a given node by calling the base class Get method and casting the result to the State type."
+        },
+        {
+          "name": "Set",
+          "parameters": [
+            "Node* node",
+            "State state"
+          ],
+          "return_type": "void",
+          "logic": "Sets the state associated with a given node by calling the base class Set method and casting the state to the Mark type."
+        }
+      ]
+    }
+  ],
+  "functions": []
+}

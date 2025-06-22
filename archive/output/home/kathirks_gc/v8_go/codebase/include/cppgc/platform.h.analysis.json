@@ -1,0 +1,90 @@
+{
+  "file_path": "/home/kathirks_gc/v8_go/codebase/include/cppgc/platform.h",
+  "imports": [
+    "<memory>",
+    "cppgc/source-location.h",
+    "v8-platform.h",
+    "v8config.h"
+  ],
+  "classes": [
+    {
+      "name": "Platform",
+      "properties": [],
+      "methods": [
+        {
+          "name": "~Platform",
+          "parameters": [],
+          "return_type": "virtual",
+          "logic": "Virtual destructor for the Platform class."
+        },
+        {
+          "name": "GetPageAllocator",
+          "parameters": [],
+          "return_type": "PageAllocator*",
+          "logic": "Abstract method to return the PageAllocator used by cppgc."
+        },
+        {
+          "name": "MonotonicallyIncreasingTime",
+          "parameters": [],
+          "return_type": "double",
+          "logic": "Abstract method to return monotonically increasing time in seconds."
+        },
+        {
+          "name": "GetForegroundTaskRunner",
+          "parameters": [],
+          "return_type": "std::shared_ptr<TaskRunner>",
+          "logic": "Returns a TaskRunner for foreground tasks with the default priority (kUserBlocking).  Calls the overloaded version with TaskPriority::kUserBlocking."
+        },
+        {
+          "name": "GetForegroundTaskRunner",
+          "parameters": [
+            "priority"
+          ],
+          "return_type": "std::shared_ptr<TaskRunner>",
+          "logic": "Returns a TaskRunner for foreground tasks with a specific priority. Returns `nullptr` by default."
+        },
+        {
+          "name": "PostJob",
+          "parameters": [
+            "priority",
+            "job_task"
+          ],
+          "return_type": "std::unique_ptr<JobHandle>",
+          "logic": "Posts a JobTask to run in parallel.  Returns a JobHandle associated with the Job. Returns `nullptr` by default."
+        },
+        {
+          "name": "GetTracingController",
+          "parameters": [],
+          "return_type": "TracingController*",
+          "logic": "Returns an instance of a TracingController. Default implementation returns an empty TracingController."
+        }
+      ]
+    }
+  ],
+  "functions": [
+    {
+      "name": "InitializeProcess",
+      "parameters": [
+        "page_allocator",
+        "desired_heap_size"
+      ],
+      "return_type": "void",
+      "logic": "Process-global initialization of the garbage collector. Must be called before creating a Heap. Can be called multiple times when paired with `ShutdownProcess()`."
+    },
+    {
+      "name": "ShutdownProcess",
+      "parameters": [],
+      "return_type": "void",
+      "logic": "Must be called after destroying the last used heap."
+    },
+    {
+      "name": "Fatal",
+      "parameters": [
+        "reason",
+        ""
+      ],
+      "return_type": "void",
+      "logic": "Terminates the process with an error message and location information."
+    }
+  ]
+}

@@ -1,0 +1,89 @@
+{
+  "metadata": {
+    "path": "/home/kathirks_gc/v8_go/archive/codebase/src/compiler/verifier.h",
+    "file_name": "verifier.h",
+    "language": "cpp",
+    "purpose": "Declares classes for verifying the correctness of compiler graphs and schedules in the V8 JavaScript engine."
+  },
+  "imports": {
+    "metadata": {
+      "language": "cpp",
+      "purpose": "Includes necessary macros from the V8 base library."
+    },
+    "code": "#include \"src/base/macros.h\""
+  },
+  "classes": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "Verifier",
+        "about": "Verifies properties of a graph, such as the well-formedness of inputs to each node.",
+        "attributes": [],
+        "dependencies": [
+          "TFGraph",
+          "Edge",
+          "Node",
+          "Schedule"
+        ]
+      },
+      "code": "class Verifier {\n            public:\n            enum Typing { TYPED, UNTYPED };\n            enum CheckInputs { kValuesOnly, kAll };\n            enum CodeType { kDefault, kWasm };\n\n            Verifier(const Verifier&) = delete;\n            Verifier& operator=(const Verifier&) = delete;\n\n            static void Run(TFGraph* graph, Typing typing = TYPED,\n                            CheckInputs check_inputs = kAll,\n                            CodeType code_type = kDefault);\n\n            #ifdef DEBUG\n            // Verifies consistency of node inputs and uses:\n            // - node inputs should agree with the input count computed from\n            //   the node's operator.\n            // - effect inputs should have effect outputs.\n            // - control inputs should have control outputs.\n            // - frame state inputs should be frame states.\n            // - if the node has control uses, it should produce control.\n            // - if the node has effect uses, it should produce effect.\n            // - if the node has frame state uses, it must be a frame state.\n            static void VerifyNode(Node* node);\n\n            // Verify that {replacement} has the required outputs\n            // (effect, control or frame state) to be used as an input for {edge}.\n            static void VerifyEdgeInputReplacement(const Edge& edge,\n                                                    const Node* replacement);\n            #else\n            static void VerifyNode(Node* node) {}\n            static void VerifyEdgeInputReplacement(const Edge& edge,\n                                                    const Node* replacement) {}\n            #endif  // DEBUG\n\n            private:\n            class Visitor;\n            };"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "ScheduleVerifier",
+        "about": "Verifies properties of a schedule, such as dominance, phi placement, etc.",
+        "attributes": [],
+        "dependencies": [
+          "Schedule"
+        ]
+      },
+      "code": "class V8_EXPORT_PRIVATE ScheduleVerifier {\n            public:\n            static void Run(Schedule* schedule);\n            };"
+    }
+  ],
+  "dependencies": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "TFGraph",
+        "about": "Represents the typed function graph."
+      },
+      "code": "class TFGraph {};",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "Edge",
+        "about": "Represents an edge in the graph."
+      },
+      "code": "class Edge {};",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "Node",
+        "about": "Represents a node in the graph."
+      },
+      "code": "class Node {};",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "Schedule",
+        "about": "Represents the schedule of the graph."
+      },
+      "code": "class Schedule {};",
+      "type": "class"
+    }
+  ],
+  "file_path": "/home/kathirks_gc/v8_go/archive/codebase/src/compiler/verifier.h"
+}

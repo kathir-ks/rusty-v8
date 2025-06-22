@@ -1,0 +1,320 @@
+{
+  "file_path": "/home/kathirks_gc/v8_go/codebase/src/bigint/mul-fft.cc",
+  "imports": [
+    "src/bigint/bigint-internal.h",
+    "src/bigint/digit-arithmetic.h",
+    "src/bigint/util.h"
+  ],
+  "classes": [
+    {
+      "name": "Parameters",
+      "properties": [
+        "m",
+        "K",
+        "n",
+        "s",
+        "r"
+      ],
+      "methods": []
+    },
+    {
+      "name": "FFTContainer",
+      "properties": [
+        "n_",
+        "K_",
+        "length_",
+        "processor_",
+        "storage_",
+        "part_",
+        "temp_"
+      ],
+      "methods": [
+        {
+          "name": "FFTContainer",
+          "parameters": [
+            "int n",
+            "int K",
+            "ProcessorImpl* processor"
+          ],
+          "return_type": "N/A (Constructor)",
+          "logic": "Constructor for the FFTContainer class. Allocates memory for storage, part pointers, and temporary storage, and initializes member variables."
+        },
+        {
+          "name": "~FFTContainer",
+          "parameters": [],
+          "return_type": "N/A (Destructor)",
+          "logic": "Destructor for the FFTContainer class. Deallocates memory allocated in the constructor."
+        },
+        {
+          "name": "Start_Default",
+          "parameters": [
+            "Digits X",
+            "int chunk_size",
+            "int theta",
+            "int omega"
+          ],
+          "return_type": "void",
+          "logic": "Reads the input digits X into the FFTContainer's internal storage, dividing it into chunks, multiplies by theta^i mod F_n, then performs the forward FFT. This is the default version."
+        },
+        {
+          "name": "Start",
+          "parameters": [
+            "Digits X",
+            "int chunk_size",
+            "int theta",
+            "int omega"
+          ],
+          "return_type": "void",
+          "logic": "Optimized version of Start when nearly half of the container will be filled with padding zeros. Chooses whether to call `Start_Default` based on input size."
+        },
+        {
+          "name": "NormalizeAndRecombine",
+          "parameters": [
+            "int omega",
+            "int m",
+            "RWDigits Z",
+            "int chunk_size"
+          ],
+          "return_type": "void",
+          "logic": "Recombines the result's parts into Z, after backward FFT. Applies a shift and performs the modulo operation."
+        },
+        {
+          "name": "CounterWeightAndRecombine",
+          "parameters": [
+            "int theta",
+            "int m",
+            "RWDigits Z",
+            "int chunk_size"
+          ],
+          "return_type": "void",
+          "logic": "Same as NormalizeAndRecombine, but for the recursive invocation of FFT multiplication. An additional counter-weighting step is required and the chunk size is s instead of the usual chunk_size"
+        },
+        {
+          "name": "FFT_ReturnShuffledThreadsafe",
+          "parameters": [
+            "int start",
+            "int len",
+            "int omega",
+            "digit_t* temp"
+          ],
+          "return_type": "void",
+          "logic": "Forward transformation (FFT). Uses the DIF (decimation in frequency) transform. This is the top level function for computing FFTs on the input data. Uses recursion by invoking `FFT_Recurse`."
+        },
+        {
+          "name": "FFT_Recurse",
+          "parameters": [
+            "int start",
+            "int half",
+            "int omega",
+            "digit_t* temp"
+          ],
+          "return_type": "void",
+          "logic": "Recursive step of the forward transformation (FFT)."
+        },
+        {
+          "name": "BackwardFFT",
+          "parameters": [
+            "int start",
+            "int len",
+            "int omega"
+          ],
+          "return_type": "void",
+          "logic": "Backward transformation (inverse FFT). Uses the DIT (decimation in time) transform."
+        },
+        {
+          "name": "BackwardFFT_Threadsafe",
+          "parameters": [
+            "int start",
+            "int len",
+            "int omega",
+            "digit_t* temp"
+          ],
+          "return_type": "void",
+          "logic": "Thread-safe version of the BackwardFFT transformation."
+        },
+        {
+          "name": "PointwiseMultiply",
+          "parameters": [
+            "const FFTContainer& other"
+          ],
+          "return_type": "void",
+          "logic": "Performs pointwise multiplication of two FFTContainers."
+        },
+        {
+          "name": "DoPointwiseMultiplication",
+          "parameters": [
+            "const FFTContainer& other",
+            "int start",
+            "int end",
+            "digit_t* temp"
+          ],
+          "return_type": "void",
+          "logic": "Actual implementation of pointwise multiplications."
+        },
+        {
+          "name": "length",
+          "parameters": [],
+          "return_type": "int",
+          "logic": "Returns the length of the FFTContainer's part."
+        }
+      ]
+    }
+  ],
+  "functions": [
+    {
+      "name": "ModFn_Helper",
+      "parameters": [
+        "digit_t* x",
+        "int len",
+        "signed_digit_t high"
+      ],
+      "return_type": "void",
+      "logic": "Helper function for ModFn. Implements the core logic for modular reduction. Adds or subtracts from x, depending on `high`."
+    },
+    {
+      "name": "ModFn",
+      "parameters": [
+        "digit_t* x",
+        "int len"
+      ],
+      "return_type": "void",
+      "logic": "Reduces x modulo F_n (2^K + 1). Assumes x is slightly larger than F_n."
+    },
+    {
+      "name": "ModFnDoubleWidth",
+      "parameters": [
+        "digit_t* dest",
+        "const digit_t* src",
+        "int len"
+      ],
+      "return_type": "void",
+      "logic": "Reduces src modulo F_n (2^K + 1). Assumes src is about twice as long as F_n. Stores result in dest."
+    },
+    {
+      "name": "SumDiff",
+      "parameters": [
+        "digit_t* sum",
+        "digit_t* diff",
+        "const digit_t* a",
+        "const digit_t* b",
+        "int len"
+      ],
+      "return_type": "void",
+      "logic": "Computes the sum and difference of two digit arrays a and b, modulo F_n."
+    },
+    {
+      "name": "ShiftModFn_Large",
+      "parameters": [
+        "digit_t* result",
+        "const digit_t* input",
+        "int digit_shift",
+        "int bits_shift",
+        "int K"
+      ],
+      "return_type": "void",
+      "logic": "Computes (input << shift) mod F_n, where shift >= K."
+    },
+    {
+      "name": "ShiftModFn",
+      "parameters": [
+        "digit_t* result",
+        "const digit_t* input",
+        "int power_of_two",
+        "int K",
+        "int zero_above"
+      ],
+      "return_type": "void",
+      "logic": "Computes (input * 2^{power_of_two}) mod (2^K + 1)."
+    },
+    {
+      "name": "ComputeParameters",
+      "parameters": [
+        "int N",
+        "int m",
+        "Parameters* params"
+      ],
+      "return_type": "void",
+      "logic": "Computes parameters for the FFT-based multiplication, given the bit length N and m."
+    },
+    {
+      "name": "ComputeParameters_Inner",
+      "parameters": [
+        "int N",
+        "Parameters* params"
+      ],
+      "return_type": "void",
+      "logic": "Computes parameters for recursive invocations (inner layer) of FFT-based multiplication."
+    },
+    {
+      "name": "PredictInnerK",
+      "parameters": [
+        "int N"
+      ],
+      "return_type": "int",
+      "logic": "Predicts the value of K for the inner FFT layer, given N."
+    },
+    {
+      "name": "ShouldDecrementM",
+      "parameters": [
+        "const Parameters& current",
+        "const Parameters& next",
+        "const Parameters& after_next"
+      ],
+      "return_type": "bool",
+      "logic": "Applies heuristics to decide whether m should be decremented, by looking at what would happen to K and s if m was decremented."
+    },
+    {
+      "name": "GetParameters",
+      "parameters": [
+        "int N",
+        "Parameters* params"
+      ],
+      "return_type": "int",
+      "logic": "Decides what parameters to use for a given input bit length N. Returns the chosen m."
+    },
+    {
+      "name": "CopyAndZeroExtend",
+      "parameters": [
+        "digit_t* dst",
+        "const digit_t* src",
+        "int digits_to_copy",
+        "size_t total_bytes"
+      ],
+      "return_type": "void",
+      "logic": "Copies digits from src to dst, and then zero-extends dst to fill the `total_bytes` bytes."
+    },
+    {
+      "name": "ShouldBeNegative",
+      "parameters": [
+        "const digit_t* x",
+        "int xlen",
+        "digit_t threshold",
+        "int s"
+      ],
+      "return_type": "bool",
+      "logic": "Determines if x represents a number that should be treated as negative, based on a comparison against a threshold."
+    },
+    {
+      "name": "MultiplyFFT_Inner",
+      "parameters": [
+        "RWDigits Z",
+        "Digits X",
+        "Digits Y",
+        "const Parameters& params",
+        "ProcessorImpl* processor"
+      ],
+      "return_type": "void",
+      "logic": "Main FFT function for recursive invocations (inner layer)."
+    },
+    {
+      "name": "ProcessorImpl::MultiplyFFT",
+      "parameters": [
+        "RWDigits Z",
+        "Digits X",
+        "Digits Y"
+      ],
+      "return_type": "void",
+      "logic": "Top-level function for FFT-based multiplication."
+    }
+  ]
+}

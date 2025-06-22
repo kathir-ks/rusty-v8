@@ -1,0 +1,243 @@
+{
+  "file_path": "/home/kathirks_gc/v8_go/codebase/src/compiler/property-access-builder.h",
+  "imports": [
+    "<optional>",
+    "src/codegen/machine-type.h",
+    "src/compiler/feedback-source.h",
+    "src/compiler/js-heap-broker.h",
+    "src/compiler/node.h",
+    "src/handles/handles.h",
+    "src/zone/zone-containers.h"
+  ],
+  "classes": [
+    {
+      "name": "PropertyAccessBuilder",
+      "properties": [
+        "jsgraph_",
+        "broker_"
+      ],
+      "methods": [
+        {
+          "name": "PropertyAccessBuilder",
+          "parameters": [
+            "JSGraph* jsgraph",
+            "JSHeapBroker* broker"
+          ],
+          "return_type": "void",
+          "logic": "Constructor that initializes the jsgraph_ and broker_ members."
+        },
+        {
+          "name": "TryBuildStringCheck",
+          "parameters": [
+            "JSHeapBroker* broker",
+            "ZoneVector<MapRef> const& maps",
+            "Node** receiver",
+            "Effect* effect",
+            "Control control"
+          ],
+          "return_type": "bool",
+          "logic": "Builds a string check if all maps are string maps.  Returns true if the check was built successfully, false otherwise."
+        },
+        {
+          "name": "TryBuildNumberCheck",
+          "parameters": [
+            "JSHeapBroker* broker",
+            "ZoneVector<MapRef> const& maps",
+            "Node** receiver",
+            "Effect* effect",
+            "Control control"
+          ],
+          "return_type": "bool",
+          "logic": "Builds a number check if all maps are number maps. Returns true if the check was built successfully, false otherwise."
+        },
+        {
+          "name": "BuildCheckMaps",
+          "parameters": [
+            "Node* object",
+            "Effect* effect",
+            "Control control",
+            "ZoneVector<MapRef> const& maps",
+            "bool has_deprecated_map_without_migration_target"
+          ],
+          "return_type": "void",
+          "logic": "Builds a check that the object has one of the given maps."
+        },
+        {
+          "name": "BuildCheckValue",
+          "parameters": [
+            "Node* receiver",
+            "Effect* effect",
+            "Control control",
+            "ObjectRef value"
+          ],
+          "return_type": "Node*",
+          "logic": "Builds a check that the receiver equals the given value."
+        },
+        {
+          "name": "BuildCheckSmi",
+          "parameters": [
+            "Node* value",
+            "Effect* effect",
+            "Control control",
+            "FeedbackSource feedback_source"
+          ],
+          "return_type": "Node*",
+          "logic": "Builds a check that the value is a Smi."
+        },
+        {
+          "name": "BuildCheckNumber",
+          "parameters": [
+            "Node* value",
+            "Effect* effect",
+            "Control control",
+            "FeedbackSource feedback_source"
+          ],
+          "return_type": "Node*",
+          "logic": "Builds a check that the value is a Number."
+        },
+        {
+          "name": "BuildCheckNumberFitsInt32",
+          "parameters": [
+            "Node* value",
+            "Effect* effect",
+            "Control control",
+            "FeedbackSource feedback_source"
+          ],
+          "return_type": "Node*",
+          "logic": "Builds a check that the value is a Number and fits in an Int32."
+        },
+        {
+          "name": "BuildLoadDataField",
+          "parameters": [
+            "NameRef name",
+            "PropertyAccessInfo const& access_info",
+            "Node* lookup_start_object",
+            "Node** effect",
+            "Node** control"
+          ],
+          "return_type": "Node*",
+          "logic": "Builds the actual load for data-field and data-constant-field properties (without heap-object or map checks)."
+        },
+        {
+          "name": "FoldLoadDictPrototypeConstant",
+          "parameters": [
+            "PropertyAccessInfo const& access_info"
+          ],
+          "return_type": "std::optional<Node*>",
+          "logic": "Tries to load a constant value from a prototype object in dictionary mode and constant-folds it."
+        },
+        {
+          "name": "ConvertRepresentation",
+          "parameters": [
+            "Representation representation"
+          ],
+          "return_type": "MachineRepresentation",
+          "logic": "Converts from Representation to MachineRepresentation."
+        },
+        {
+          "name": "jsgraph",
+          "parameters": [],
+          "return_type": "JSGraph*",
+          "logic": "Getter for the jsgraph_ member."
+        },
+        {
+          "name": "broker",
+          "parameters": [],
+          "return_type": "JSHeapBroker*",
+          "logic": "Getter for the broker_ member."
+        },
+        {
+          "name": "dependencies",
+          "parameters": [],
+          "return_type": "CompilationDependencies*",
+          "logic": "Getter for the broker_->dependencies() member."
+        },
+        {
+          "name": "graph",
+          "parameters": [],
+          "return_type": "TFGraph*",
+          "logic": "Getter for the TFGraph from jsgraph."
+        },
+        {
+          "name": "isolate",
+          "parameters": [],
+          "return_type": "Isolate*",
+          "logic": "Getter for the Isolate from jsgraph."
+        },
+        {
+          "name": "common",
+          "parameters": [],
+          "return_type": "CommonOperatorBuilder*",
+          "logic": "Getter for the CommonOperatorBuilder from jsgraph."
+        },
+        {
+          "name": "simplified",
+          "parameters": [],
+          "return_type": "SimplifiedOperatorBuilder*",
+          "logic": "Getter for the SimplifiedOperatorBuilder from jsgraph."
+        },
+        {
+          "name": "TryFoldLoadConstantDataField",
+          "parameters": [
+            "NameRef name",
+            "PropertyAccessInfo const& access_info",
+            "Node* lookup_start_object"
+          ],
+          "return_type": "Node*",
+          "logic": "Tries to fold a constant data field load."
+        },
+        {
+          "name": "ResolveHolder",
+          "parameters": [
+            "PropertyAccessInfo const& access_info",
+            "Node* lookup_start_object"
+          ],
+          "return_type": "Node*",
+          "logic": "Returns a node with the holder for the property access described by {access_info}."
+        },
+        {
+          "name": "BuildLoadDataField",
+          "parameters": [
+            "NameRef name",
+            "Node* holder",
+            "FieldAccess&& field_access",
+            "bool is_inobject",
+            "Node** effect",
+            "Node** control"
+          ],
+          "return_type": "Node*",
+          "logic": "Builds a load of a data field from the specified holder object."
+        }
+      ]
+    }
+  ],
+  "functions": [
+    {
+      "name": "HasOnlyStringMaps",
+      "parameters": [
+        "JSHeapBroker* broker",
+        "ZoneVector<MapRef> const& maps"
+      ],
+      "return_type": "bool",
+      "logic": "Checks if all maps in the vector are string maps."
+    },
+    {
+      "name": "HasOnlyStringWrapperMaps",
+      "parameters": [
+        "JSHeapBroker* broker",
+        "ZoneVector<MapRef> const& maps"
+      ],
+      "return_type": "bool",
+      "logic": "Checks if all maps in the vector are string wrapper maps."
+    },
+    {
+      "name": "HasOnlyNonResizableTypedArrayMaps",
+      "parameters": [
+        "JSHeapBroker* broker",
+        "ZoneVector<MapRef> const& maps"
+      ],
+      "return_type": "bool",
+      "logic": "Checks if all maps in the vector are non-resizable TypedArray maps."
+    }
+  ]
+}

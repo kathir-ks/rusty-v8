@@ -1,0 +1,166 @@
+{
+  "file_path": "/home/kathirks_gc/v8_go/codebase/src/api/api-macros.h",
+  "imports": [],
+  "classes": [],
+  "functions": [
+    {
+      "name": "API_RCS_SCOPE",
+      "parameters": [
+        "i_isolate",
+        "class_name",
+        "function_name"
+      ],
+      "return_type": "void",
+      "logic": "Defines a scope for Runtime Call Stats (RCS) tracking API calls. Uses RuntimeCallCounterId to identify the specific API call within a class and function."
+    },
+    {
+      "name": "ENTER_V8_BASIC",
+      "parameters": [
+        "i_isolate"
+      ],
+      "return_type": "void",
+      "logic": "Basic macro that checks if V8 is terminating and initializes a VMState object. Ensures V8 isn't entered after termination and marks the start of V8 execution context (other)."
+    },
+    {
+      "name": "ENTER_V8_HELPER_INTERNAL",
+      "parameters": [
+        "i_isolate",
+        "context",
+        "class_name",
+        "function_name",
+        "HandleScopeClass",
+        "do_callback"
+      ],
+      "return_type": "void",
+      "logic": "A helper macro for entering V8. It checks for termination, sets up a HandleScope, CallDepthScope for tracking recursion and profiling and RCS scope. Also sets a flag for exception tracking."
+    },
+    {
+      "name": "PREPARE_FOR_DEBUG_INTERFACE_EXECUTION_WITH_ISOLATE",
+      "parameters": [
+        "i_isolate",
+        "context",
+        "T"
+      ],
+      "return_type": "void",
+      "logic": "Prepares for the execution of a debug interface function. Similar to ENTER_V8 but uses InternalEscapableScope and a CallDepthScope with callback disabled. Checks for termination and sets a flag for exception tracking."
+    },
+    {
+      "name": "PREPARE_FOR_EXECUTION",
+      "parameters": [
+        "context",
+        "class_name",
+        "function_name"
+      ],
+      "return_type": "void",
+      "logic": "Retrieves the internal isolate from a context, clears the internal exception, and then calls `ENTER_V8_HELPER_INTERNAL` with `InternalEscapableScope` and no callback."
+    },
+    {
+      "name": "ENTER_V8",
+      "parameters": [
+        "i_isolate",
+        "context",
+        "class_name",
+        "function_name",
+        "HandleScopeClass"
+      ],
+      "return_type": "void",
+      "logic": "Macro to enter the V8 runtime. Calls `ENTER_V8_HELPER_INTERNAL` with a specified HandleScopeClass and enables callback."
+    },
+    {
+      "name": "ENTER_V8_NO_SCRIPT (DEBUG)",
+      "parameters": [
+        "i_isolate",
+        "context",
+        "class_name",
+        "function_name",
+        "HandleScopeClass"
+      ],
+      "return_type": "void",
+      "logic": "Enters V8 but disallows JavaScript execution using `DisallowJavascriptExecutionDebugOnly`. Calls `ENTER_V8_HELPER_INTERNAL` with a specified HandleScopeClass and disables callback. Only active in debug builds."
+    },
+    {
+      "name": "DCHECK_NO_SCRIPT_NO_EXCEPTION (DEBUG)",
+      "parameters": [
+        "i_isolate"
+      ],
+      "return_type": "void",
+      "logic": "Disallows JavaScript execution and exceptions using `DisallowJavascriptExecutionDebugOnly` and `DisallowExceptions`. Only active in debug builds."
+    },
+    {
+      "name": "ENTER_V8_NO_SCRIPT_NO_EXCEPTION (DEBUG)",
+      "parameters": [
+        "i_isolate"
+      ],
+      "return_type": "void",
+      "logic": "Enters V8 with no script execution and no exceptions allowed. Initializes a VMState and calls `DCHECK_NO_SCRIPT_NO_EXCEPTION`. Only active in debug builds."
+    },
+    {
+      "name": "ENTER_V8_FOR_NEW_CONTEXT (DEBUG)",
+      "parameters": [
+        "i_isolate"
+      ],
+      "return_type": "void",
+      "logic": "Enters V8 to create a new context. Checks for termination, initializes a VMState and disallows exceptions. Only active in debug builds."
+    },
+    {
+      "name": "ENTER_V8_NO_SCRIPT",
+      "parameters": [
+        "i_isolate",
+        "context",
+        "class_name",
+        "function_name",
+        "HandleScopeClass"
+      ],
+      "return_type": "void",
+      "logic": "Enters V8 but disallows JavaScript execution. Calls `ENTER_V8_HELPER_INTERNAL` with a specified HandleScopeClass and disables callback. Active in non-debug builds."
+    },
+    {
+      "name": "DCHECK_NO_SCRIPT_NO_EXCEPTION",
+      "parameters": [
+        "i_isolate"
+      ],
+      "return_type": "void",
+      "logic": "No operation in non-debug builds."
+    },
+    {
+      "name": "ENTER_V8_NO_SCRIPT_NO_EXCEPTION",
+      "parameters": [
+        "i_isolate"
+      ],
+      "return_type": "void",
+      "logic": "Enters V8 with no script execution and no exceptions allowed. Initializes a VMState. Active in non-debug builds."
+    },
+    {
+      "name": "ENTER_V8_FOR_NEW_CONTEXT",
+      "parameters": [
+        "i_isolate"
+      ],
+      "return_type": "void",
+      "logic": "Enters V8 to create a new context. Initializes a VMState. Active in non-debug builds."
+    },
+    {
+      "name": "RETURN_ON_FAILED_EXECUTION",
+      "parameters": [
+        "T"
+      ],
+      "return_type": "MaybeLocal<T>",
+      "logic": "Returns a MaybeLocal<T> if an exception occurred during execution."
+    },
+    {
+      "name": "RETURN_ON_FAILED_EXECUTION_PRIMITIVE",
+      "parameters": [
+        "T"
+      ],
+      "return_type": "Nothing<T>",
+      "logic": "Returns a Nothing<T> if an exception occurred during execution."
+    },
+    {
+      "name": "RETURN_ESCAPED",
+      "parameters": [
+        "value"
+      ],
+      "return_type": "T",
+      "logic": "Escapes a value from the handle scope and returns it."
+    }
+  ]
+}

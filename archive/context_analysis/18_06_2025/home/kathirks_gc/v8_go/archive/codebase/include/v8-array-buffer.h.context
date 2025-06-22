@@ -1,0 +1,102 @@
+{
+  "metadata": {
+    "path": "/home/kathirks_gc/v8_go/archive/codebase/include/v8-array-buffer.h",
+    "file_name": "v8-array-buffer.h",
+    "language": "cpp",
+    "purpose": "Declares the v8::ArrayBuffer, v8::SharedArrayBuffer, v8::BackingStore, v8::ArrayBufferView and v8::DataView classes for managing raw memory buffers in V8."
+  },
+  "imports": {
+    "metadata": {
+      "language": "cpp",
+      "purpose": "Includes V8-specific headers for local handles, memory spans, objects, platform integration, and configuration."
+    },
+    "code": "#include \"v8-local-handle.h\"  // NOLINT(build/include_directory)\n            #include \"v8-memory-span.h\"   // NOLINT(build/include_directory)\n            #include \"v8-object.h\"        // NOLINT(build/include_directory)\n            #include \"v8-platform.h\"      // NOLINT(build/include_directory)\n            #include \"v8config.h\"         // NOLINT(build/include_directory)"
+  },
+  "classes": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "BackingStore",
+        "extends": "v8::internal::BackingStoreBase",
+        "about": "Wrapper around the raw memory of an array buffer. Manages the lifetime of allocated memory for ArrayBuffers and SharedArrayBuffers.",
+        "attributes": [],
+        "dependencies": []
+      },
+      "code": "class V8_EXPORT BackingStore : public v8::internal::BackingStoreBase {\n            public:\n                ~BackingStore();\n\n                void* Data() const;\n                size_t ByteLength() const;\n                size_t MaxByteLength() const;\n                bool IsShared() const;\n                bool IsResizableByUserJavaScript() const;\n                void operator delete(void* ptr) { ::operator delete(ptr); }\n                using DeleterCallback = void (*)(void* data, size_t length,\n                                                   void* deleter_data);\n                static void EmptyDeleter(void* data, size_t length, void* deleter_data);\n            private:\n                BackingStore();\n            };"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "ArrayBuffer",
+        "extends": "Object",
+        "about": "Represents an ArrayBuffer in V8, providing methods for allocation, externalization, and detachment.",
+        "attributes": [],
+        "dependencies": [
+          "Allocator",
+          "BackingStore",
+          "TypedArray"
+        ]
+      },
+      "code": "class V8_EXPORT ArrayBuffer : public Object {\n            public:\n                class V8_EXPORT Allocator {\n                public:\n                    virtual ~Allocator() = default;\n                    virtual void* Allocate(size_t length) = 0;\n                    virtual void* AllocateUninitialized(size_t length) = 0;\n                    virtual void Free(void* data, size_t length) = 0;\n                    virtual size_t MaxAllocationSize() const { return kMaxByteLength; }\n                    enum class AllocationMode { kNormal, kReservation };\n                    virtual PageAllocator* GetPageAllocator() { return nullptr; }\n            #if defined(V8_COMPRESS_POINTERS) && \\\n                !defined(V8_COMPRESS_POINTERS_IN_SHARED_CAGE)\n                    static Allocator* NewDefaultAllocator(const IsolateGroup& group);\n            #endif  // defined(V8_COMPRESS_POINTERS) &&\n                    // !defined(V8_COMPRESS_POINTERS_IN_SHARED_CAGE)\n                    static Allocator* NewDefaultAllocator();\n                };\n\n                size_t ByteLength() const;\n                size_t MaxByteLength() const;\n                static MaybeLocal<ArrayBuffer> MaybeNew(\n                    Isolate* isolate, size_t byte_length,\n                    BackingStoreInitializationMode initialization_mode =\n                        BackingStoreInitializationMode::kZeroInitialized);\n                static Local<ArrayBuffer> New(\n                    Isolate* isolate, size_t byte_length,\n                    BackingStoreInitializationMode initialization_mode =\n                        BackingStoreInitializationMode::kZeroInitialized);\n                static Local<ArrayBuffer> New(Isolate* isolate,\n                                               std::shared_ptr<BackingStore> backing_store);\n                static std::unique_ptr<BackingStore> NewBackingStore(\n                    Isolate* isolate, size_t byte_length,\n                    BackingStoreInitializationMode initialization_mode =\n                        BackingStoreInitializationMode::kZeroInitialized,\n                    BackingStoreOnFailureMode on_failure =\n                        BackingStoreOnFailureMode::kOutOfMemory);\n                static std::unique_ptr<BackingStore> NewBackingStore(\n                    void* data, size_t byte_length, v8::BackingStore::DeleterCallback deleter,\n                    void* deleter_data);\n                static std::unique_ptr<BackingStore> NewResizableBackingStore(\n                    size_t byte_length, size_t max_byte_length);\n                bool IsDetachable() const;\n                bool WasDetached() const;\n                V8_DEPRECATED(\n                    \"Use the version which takes a key parameter (passing a null handle is \"\n                    \"ok).\")\n                void Detach();\n                V8_WARN_UNUSED_RESULT Maybe<bool> Detach(v8::Local<v8::Value> key);\n                void SetDetachKey(v8::Local<v8::Value> key);\n                std::shared_ptr<BackingStore> GetBackingStore();\n                bool IsResizableByUserJavaScript() const;\n                void* Data() const;\n                V8_INLINE static ArrayBuffer* Cast(Value* value) {\n            #ifdef V8_ENABLE_CHECKS\n                    CheckCast(value);\n            #endif\n                    return static_cast<ArrayBuffer*>(value);\n                }\n\n                static constexpr int kInternalFieldCount =\n                    V8_ARRAY_BUFFER_INTERNAL_FIELD_COUNT;\n                static constexpr int kEmbedderFieldCount = kInternalFieldCount;\n\n            #if V8_ENABLE_SANDBOX\n                static constexpr size_t kMaxByteLength =\n                    internal::kMaxSafeBufferSizeForSandbox;\n            #elif V8_HOST_ARCH_32_BIT\n                static constexpr size_t kMaxByteLength = std::numeric_limits<int>::max();\n            #else\n                // The maximum safe integer (2^53 - 1).\n                static constexpr size_t kMaxByteLength =\n                    static_cast<size_t>((uint64_t{1} << 53) - 1);\n            #endif\n\n            private:\n                ArrayBuffer();\n                static void CheckCast(Value* obj);\n                friend class TypedArray;\n            };"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "ArrayBufferView",
+        "extends": "Object",
+        "about": "Base class for views over ArrayBuffer, including TypedArrays and DataView.",
+        "attributes": [],
+        "dependencies": [
+          "ArrayBuffer",
+          "DataView"
+        ]
+      },
+      "code": "class V8_EXPORT ArrayBufferView : public Object {\n            public:\n                Local<ArrayBuffer> Buffer();\n                size_t ByteOffset();\n                size_t ByteLength();\n                size_t CopyContents(void* dest, size_t byte_length);\n                v8::MemorySpan<uint8_t> GetContents(v8::MemorySpan<uint8_t> storage);\n                bool HasBuffer() const;\n                V8_INLINE static ArrayBufferView* Cast(Value* value) {\n            #ifdef V8_ENABLE_CHECKS\n                    CheckCast(value);\n            #endif\n                    return static_cast<ArrayBufferView*>(value);\n                }\n\n                static constexpr int kInternalFieldCount =\n                    V8_ARRAY_BUFFER_VIEW_INTERNAL_FIELD_COUNT;\n                static const int kEmbedderFieldCount = kInternalFieldCount;\n\n            private:\n                ArrayBufferView();\n                static void CheckCast(Value* obj);\n            };"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "DataView",
+        "extends": "ArrayBufferView",
+        "about": "Represents a DataView in V8, allowing structured access to the underlying ArrayBuffer.",
+        "attributes": [],
+        "dependencies": [
+          "ArrayBuffer",
+          "SharedArrayBuffer"
+        ]
+      },
+      "code": "class V8_EXPORT DataView : public ArrayBufferView {\n            public:\n                static Local<DataView> New(Local<ArrayBuffer> array_buffer,\n                                             size_t byte_offset, size_t length);\n                static Local<DataView> New(Local<SharedArrayBuffer> shared_array_buffer,\n                                             size_t byte_offset, size_t length);\n                V8_INLINE static DataView* Cast(Value* value) {\n            #ifdef V8_ENABLE_CHECKS\n                    CheckCast(value);\n            #endif\n                    return static_cast<DataView*>(value);\n                }\n\n            private:\n                DataView();\n                static void CheckCast(Value* obj);\n            };"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "SharedArrayBuffer",
+        "extends": "Object",
+        "about": "Represents a SharedArrayBuffer in V8, allowing data sharing between threads.",
+        "attributes": [],
+        "dependencies": [
+          "BackingStore"
+        ]
+      },
+      "code": "class V8_EXPORT SharedArrayBuffer : public Object {\n            public:\n                size_t ByteLength() const;\n                size_t MaxByteLength() const;\n                static Local<SharedArrayBuffer> New(\n                    Isolate* isolate, size_t byte_length,\n                    BackingStoreInitializationMode initialization_mode =\n                        BackingStoreInitializationMode::kZeroInitialized);\n                static MaybeLocal<SharedArrayBuffer> MaybeNew(\n                    Isolate* isolate, size_t byte_length,\n                    BackingStoreInitializationMode initialization_mode =\n                        BackingStoreInitializationMode::kZeroInitialized);\n                static Local<SharedArrayBuffer> New(\n                    Isolate* isolate, std::shared_ptr<BackingStore> backing_store);\n                static std::unique_ptr<BackingStore> NewBackingStore(\n                    Isolate* isolate, size_t byte_length,\n                    BackingStoreInitializationMode initialization_mode =\n                        BackingStoreInitializationMode::kZeroInitialized,\n                    BackingStoreOnFailureMode on_failure =\n                        BackingStoreOnFailureMode::kOutOfMemory);\n                static std::unique_ptr<BackingStore> NewBackingStore(\n                    void* data, size_t byte_length, v8::BackingStore::DeleterCallback deleter,\n                    void* deleter_data);\n                std::shared_ptr<BackingStore> GetBackingStore();\n                void* Data() const;\n                V8_INLINE static SharedArrayBuffer* Cast(Value* value) {\n            #ifdef V8_ENABLE_CHECKS\n                    CheckCast(value);\n            #endif\n                    return static_cast<SharedArrayBuffer*>(value);\n                }\n\n                static constexpr int kInternalFieldCount =\n                    V8_ARRAY_BUFFER_INTERNAL_FIELD_COUNT;\n\n            private:\n                SharedArrayBuffer();\n                static void CheckCast(Value* obj);\n            };"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "Allocator",
+        "parent": "ArrayBuffer",
+        "about": "Nested class within ArrayBuffer.  Defines the abstract interface for allocating and freeing memory for ArrayBuffers.",
+        "attributes": [],
+        "dependencies": []
+      },
+      "code": "class V8_EXPORT Allocator {\n            public:\n                virtual ~Allocator() = default;\n                virtual void* Allocate(size_t length) = 0;\n                virtual void* AllocateUninitialized(size_t length) = 0;\n                virtual void Free(void* data, size_t length) = 0;\n                virtual size_t MaxAllocationSize() const { return kMaxByteLength; }\n                enum class AllocationMode { kNormal, kReservation };\n                virtual PageAllocator* GetPageAllocator() { return nullptr; }\n        #if defined(V8_COMPRESS_POINTERS) && \\\n            !defined(V8_COMPRESS_POINTERS_IN_SHARED_CAGE)\n                static Allocator* NewDefaultAllocator(const IsolateGroup& group);\n        #endif\n                static Allocator* NewDefaultAllocator();\n            };"
+    }
+  ],
+  "file_path": "/home/kathirks_gc/v8_go/archive/codebase/include/v8-array-buffer.h"
+}

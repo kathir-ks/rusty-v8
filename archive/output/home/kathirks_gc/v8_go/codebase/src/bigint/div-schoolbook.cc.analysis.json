@@ -1,0 +1,75 @@
+{
+  "file_path": "/home/kathirks_gc/v8_go/codebase/src/bigint/div-schoolbook.cc",
+  "imports": [
+    "<limits>",
+    "src/bigint/bigint-internal.h",
+    "src/bigint/digit-arithmetic.h",
+    "src/bigint/div-helpers.h",
+    "src/bigint/util.h",
+    "src/bigint/vector-arithmetic.h"
+  ],
+  "classes": [],
+  "functions": [
+    {
+      "name": "DivideSingle",
+      "parameters": [
+        "RWDigits Q",
+        "digit_t* remainder",
+        "Digits A",
+        "digit_t b"
+      ],
+      "return_type": "void",
+      "logic": "Computes quotient (Q) and remainder for A/b using single-digit division.  If Q.len == 0, only the remainder will be returned.  Q may be the same as A for an in-place division."
+    },
+    {
+      "name": "InplaceAdd",
+      "parameters": [
+        "RWDigits Z",
+        "Digits X"
+      ],
+      "return_type": "digit_t",
+      "logic": "Adds X to Z in-place (Z += X). Returns the carry (0 or 1) after adding all of X's digits."
+    },
+    {
+      "name": "InplaceSub",
+      "parameters": [
+        "RWDigits Z",
+        "Digits X"
+      ],
+      "return_type": "digit_t",
+      "logic": "Subtracts X from Z in-place (Z -= X). Returns the borrow (0 or 1) after subtracting all of X's digits."
+    },
+    {
+      "name": "ProductGreaterThan",
+      "parameters": [
+        "digit_t factor1",
+        "digit_t factor2",
+        "digit_t high",
+        "digit_t low"
+      ],
+      "return_type": "bool",
+      "logic": "Returns whether (factor1 * factor2) > (high << kDigitBits) + low.  Used to refine quotient estimates in division."
+    },
+    {
+      "name": "QLengthOK",
+      "parameters": [
+        "Digits Q",
+        "Digits A",
+        "Digits B"
+      ],
+      "return_type": "bool",
+      "logic": "Asserts that Q length is ok based on A and B. Used in DEBUG mode."
+    },
+    {
+      "name": "DivideSchoolbook",
+      "parameters": [
+        "RWDigits Q",
+        "RWDigits R",
+        "Digits A",
+        "Digits B"
+      ],
+      "return_type": "void",
+      "logic": "Computes quotient (Q) and remainder (R) for A/B using the schoolbook long division algorithm. Both Q and R are optional. Uses an approach derived from Knuth's algorithm D."
+    }
+  ]
+}

@@ -1,0 +1,116 @@
+{
+  "file_path": "/home/kathirks_gc/v8_go/codebase/src/maglev/maglev-regalloc-data.h",
+  "imports": [
+    "src/base/pointer-with-payload.h",
+    "src/codegen/register.h",
+    "src/compiler/backend/instruction.h",
+    "src/maglev/maglev-assembler.h"
+  ],
+  "classes": [
+    {
+      "name": "ValueNode",
+      "properties": [],
+      "methods": []
+    },
+    {
+      "name": "AllocatableRegisters<Register>",
+      "properties": [
+        "static constexpr RegList kRegisters"
+      ],
+      "methods": []
+    },
+    {
+      "name": "AllocatableRegisters<DoubleRegister>",
+      "properties": [
+        "static constexpr DoubleRegList kRegisters"
+      ],
+      "methods": []
+    },
+    {
+      "name": "RegisterStateFlags",
+      "properties": [
+        "static constexpr int kIsMergeShift",
+        "static constexpr int kIsInitializedShift",
+        "const bool is_initialized",
+        "const bool is_merge"
+      ],
+      "methods": [
+        {
+          "name": "operator uintptr_t",
+          "parameters": [],
+          "return_type": "uintptr_t",
+          "logic": "Converts the flags to a uintptr_t by shifting and combining the `is_initialized` and `is_merge` flags."
+        },
+        {
+          "name": "RegisterStateFlags",
+          "parameters": [
+            "uintptr_t state"
+          ],
+          "return_type": "RegisterStateFlags",
+          "logic": "Constructor: Initializes the flags from a uintptr_t representation."
+        },
+        {
+          "name": "RegisterStateFlags",
+          "parameters": [
+            "bool is_initialized",
+            "bool is_merge"
+          ],
+          "return_type": "RegisterStateFlags",
+          "logic": "Constructor: Initializes the flags with boolean values."
+        }
+      ]
+    },
+    {
+      "name": "RegisterMerge",
+      "properties": [
+        "ValueNode* node"
+      ],
+      "methods": [
+        {
+          "name": "operands",
+          "parameters": [],
+          "return_type": "compiler::InstructionOperand*",
+          "logic": "Returns a pointer to an array of InstructionOperands, allocated after the RegisterMerge object."
+        },
+        {
+          "name": "operand",
+          "parameters": [
+            "size_t i"
+          ],
+          "return_type": "compiler::InstructionOperand&",
+          "logic": "Returns a reference to the i-th InstructionOperand in the array."
+        }
+      ]
+    }
+  ],
+  "functions": [
+    {
+      "name": "operator==",
+      "parameters": [
+        "const RegisterStateFlags& left",
+        "const RegisterStateFlags& right"
+      ],
+      "return_type": "bool",
+      "logic": "Compares two RegisterStateFlags objects for equality."
+    },
+    {
+      "name": "LoadMergeState",
+      "parameters": [
+        "RegisterState state",
+        "RegisterMerge** merge"
+      ],
+      "return_type": "bool",
+      "logic": "Loads the RegisterMerge pointer from the RegisterState. If the state indicates a merge, sets `*merge` to the RegisterMerge object and returns true. Otherwise, sets `*merge` to nullptr and returns false."
+    },
+    {
+      "name": "LoadMergeState",
+      "parameters": [
+        "RegisterState state",
+        "ValueNode** node",
+        "RegisterMerge** merge"
+      ],
+      "return_type": "bool",
+      "logic": "Loads either a ValueNode or a RegisterMerge object pointer from a RegisterState. If the state indicates a merge, it retrieves the RegisterMerge and its associated ValueNode. Otherwise, it retrieves the ValueNode directly."
+    }
+  ]
+}

@@ -1,0 +1,155 @@
+{
+  "metadata": {
+    "path": "/home/kathirks_gc/v8_go/archive/codebase/include/cppgc/internal/gc-info.h",
+    "file_name": "gc-info.h",
+    "language": "cpp",
+    "purpose": "Provides GC information traits and utilities for the cppgc garbage collector."
+  },
+  "imports": {
+    "metadata": {
+      "language": "cpp",
+      "purpose": "Includes standard library headers and cppgc headers for GC information management."
+    },
+    "code": "#include <atomic>\n            #include <cstdint>\n            #include <type_traits>\n\n            #include \"cppgc/internal/finalizer-trait.h\"\n            #include \"cppgc/internal/logging.h\"\n            #include \"cppgc/internal/name-trait.h\"\n            #include \"cppgc/trace-trait.h\"\n            #include \"v8config.h\"  // NOLINT(build/include_directory)"
+  },
+  "classes": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "EnsureGCInfoIndexTrait",
+        "about": "Provides a mechanism to ensure a unique GCInfoIndex is assigned for each type.",
+        "attributes": [],
+        "dependencies": [
+          "GCInfoIndex",
+          "TraceCallback",
+          "FinalizationCallback",
+          "NameCallback",
+          "EnsureGCInfoIndexTraitDispatch"
+        ]
+      },
+      "code": "struct V8_EXPORT EnsureGCInfoIndexTrait final {\n              // Acquires a new GC info object and updates `registered_index` with the index\n              // that identifies that new info accordingly.\n              template <typename T>\n              V8_INLINE static GCInfoIndex EnsureIndex(\n                  std::atomic<GCInfoIndex>& registered_index) {\n                return EnsureGCInfoIndexTraitDispatch<T>{}(registered_index);\n              }\n\n             private:\n              template <typename T, bool = FinalizerTrait<T>::HasFinalizer(),\n                        bool = NameTrait<T>::HasNonHiddenName()>\n              struct EnsureGCInfoIndexTraitDispatch;\n\n              static GCInfoIndex V8_PRESERVE_MOST\n              EnsureGCInfoIndex(std::atomic<GCInfoIndex>&, TraceCallback,\n                                FinalizationCallback, NameCallback);\n              static GCInfoIndex V8_PRESERVE_MOST EnsureGCInfoIndex(\n                  std::atomic<GCInfoIndex>&, TraceCallback, FinalizationCallback);\n              static GCInfoIndex V8_PRESERVE_MOST\n              EnsureGCInfoIndex(std::atomic<GCInfoIndex>&, TraceCallback, NameCallback);\n              static GCInfoIndex V8_PRESERVE_MOST\n              EnsureGCInfoIndex(std::atomic<GCInfoIndex>&, TraceCallback);\n            };"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "EnsureGCInfoIndexTrait::EnsureGCInfoIndexTraitDispatch",
+        "about": "A helper struct to dispatch to the correct EnsureGCInfoIndex overload based on traits of the type T.",
+        "attributes": [],
+        "dependencies": [
+          "GCInfoIndex",
+          "TraceTrait",
+          "FinalizerTrait",
+          "NameTrait"
+        ]
+      },
+      "code": "template <typename T, bool = FinalizerTrait<T>::HasFinalizer(),\n                      bool = NameTrait<T>::HasNonHiddenName()>\n            struct EnsureGCInfoIndexTrait::EnsureGCInfoIndexTraitDispatch {\n              V8_INLINE GCInfoIndex\n              operator()(std::atomic<GCInfoIndex>& registered_index) {\n                return function;\n              }\n            };"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "GCInfoTrait",
+        "about": "Provides a static method to retrieve the GCInfoIndex for a given type.",
+        "attributes": [],
+        "dependencies": [
+          "GCInfoIndex",
+          "TraceTrait",
+          "FinalizerTrait",
+          "NameTrait",
+          "TraceCallback",
+          "FinalizationCallback",
+          "NameCallback"
+        ]
+      },
+      "code": "template <typename T>\n            struct GCInfoTrait final {\n              V8_INLINE static GCInfoIndex Index() {\n                static_assert(sizeof(T), \"T must be fully defined\");\n                static std::atomic<GCInfoIndex>\n                    registered_index;  // Uses zero initialization.\n                GCInfoIndex index = registered_index.load(std::memory_order_acquire);\n                if (V8_UNLIKELY(!index)) {\n                  index = EnsureGCInfoIndexTrait::EnsureIndex<T>(registered_index);\n                  CPPGC_DCHECK(index != 0);\n                  CPPGC_DCHECK(index == registered_index.load(std::memory_order_acquire));\n                }\n                return index;\n              }\n\n              static constexpr void CheckCallbacksAreDefined() {\n                // No USE() macro available.\n                (void)static_cast<TraceCallback>(TraceTrait<T>::Trace);\n                (void)static_cast<FinalizationCallback>(FinalizerTrait<T>::kCallback);\n                (void)static_cast<NameCallback>(NameTrait<T>::GetName);\n              }\n            };"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "GCInfoFolding",
+        "about": "A trait to potentially fold GCInfo registrations to the parent most garbage collected type based on certain conditions (e.g., finalizers, virtual destructors).",
+        "attributes": [],
+        "dependencies": [
+          "GCInfoTrait"
+        ]
+      },
+      "code": "template <typename T, typename ParentMostGarbageCollectedType>\n            struct GCInfoFolding final {\n              static constexpr bool kHasVirtualDestructorAtBase =\n                  std::has_virtual_destructor<ParentMostGarbageCollectedType>::value;\n              static constexpr bool kBothTypesAreTriviallyDestructible =\n                  std::is_trivially_destructible<ParentMostGarbageCollectedType>::value &&\n                  std::is_trivially_destructible<T>::value;\n              static constexpr bool kHasCustomFinalizerDispatchAtBase =\n                  internal::HasFinalizeGarbageCollectedObject<\n                      ParentMostGarbageCollectedType>::value;\n            #ifdef CPPGC_SUPPORTS_OBJECT_NAMES\n              static constexpr bool kWantsDetailedObjectNames = true;\n            #else   // !CPPGC_SUPPORTS_OBJECT_NAMES\n              static constexpr bool kWantsDetailedObjectNames = false;\n            #endif  // !CPPGC_SUPPORTS_OBJECT_NAMES\n\n              // Always true. Forces the compiler to resolve callbacks which ensures that\n              // both modes don't break without requiring compiling a separate\n              // configuration. Only a single GCInfo (for `ResultType` below) will actually\n              // be instantiated but existence (and well-formedness) of all callbacks is\n              // checked.\n              static constexpr bool WantToFold() {\n                if constexpr ((kHasVirtualDestructorAtBase ||\n                               kBothTypesAreTriviallyDestructible ||\n                               kHasCustomFinalizerDispatchAtBase) &&\n                              !kWantsDetailedObjectNames) {\n                  GCInfoTrait<T>::CheckCallbacksAreDefined();\n                  GCInfoTrait<ParentMostGarbageCollectedType>::CheckCallbacksAreDefined();\n                  return true;\n                }\n                return false;\n              }\n\n              // Folding would regress name resolution when deriving names from C++\n              // class names as it would just folds a name to the base class name.\n              using ResultType =\n                  std::conditional_t<WantToFold(), ParentMostGarbageCollectedType, T>;\n            };"
+    }
+  ],
+  "dependencies": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "interface",
+        "name": "TraceCallback",
+        "about": "Callback function type for tracing objects during garbage collection."
+      },
+      "code": "using TraceCallback = void (*)(void*, void*);",
+      "type": "interface"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "interface",
+        "name": "FinalizationCallback",
+        "about": "Callback function type for finalization of objects during garbage collection."
+      },
+      "code": "using FinalizationCallback = void (*)(void*);",
+      "type": "interface"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "interface",
+        "name": "NameCallback",
+        "about": "Callback function type for retrieving the name of an object during garbage collection."
+      },
+      "code": "using NameCallback = const char* (*)(void*);",
+      "type": "interface"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "TraceTrait",
+        "about": "Trait providing the Trace callback for a given type."
+      },
+      "code": "template <typename T>\n                struct TraceTrait {\n                  static TraceCallback Trace;\n                };",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "FinalizerTrait",
+        "about": "Trait providing finalizer related information for a given type."
+      },
+      "code": "template <typename T>\n                struct FinalizerTrait {\n                  static constexpr bool HasFinalizer() { return false; }\n                  static FinalizationCallback kCallback;\n                };",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "NameTrait",
+        "about": "Trait providing naming related information for a given type."
+      },
+      "code": "template <typename T>\n                struct NameTrait {\n                  static constexpr bool HasNonHiddenName() { return false; }\n                  static const char* GetName(void*);\n                };",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "HasFinalizeGarbageCollectedObject",
+        "about": "Trait checking if a class has custom finalizer dispatch"
+      },
+      "code": "template <typename T>\n                struct HasFinalizeGarbageCollectedObject {\n                  static constexpr bool value = false;\n                };",
+      "type": "class"
+    }
+  ],
+  "file_path": "/home/kathirks_gc/v8_go/archive/codebase/include/cppgc/internal/gc-info.h"
+}

@@ -1,0 +1,305 @@
+{
+  "metadata": {
+    "path": "/home/kathirks_gc/v8_go/archive/codebase/src/compiler/backend/riscv/code-generator-riscv.cc",
+    "file_name": "code-generator-riscv.cc",
+    "language": "cpp",
+    "purpose": "RISC-V-specific code generator implementation for the V8 compiler backend."
+  },
+  "imports": {
+    "metadata": {
+      "language": "cpp",
+      "purpose": "Includes necessary header files for code generation, assembler operations, and compiler data structures."
+    },
+    "code": "#include \"src/codegen/assembler-inl.h\"\n#include \"src/codegen/callable.h\"\n#include \"src/codegen/interface-descriptors-inl.h\"\n#include \"src/codegen/macro-assembler.h\"\n#include \"src/codegen/optimized-compilation-info.h\"\n#include \"src/codegen/riscv/constants-riscv.h\"\n#include \"src/compiler/backend/code-generator-impl.h\"\n#include \"src/compiler/backend/code-generator.h\"\n#include \"src/compiler/backend/gap-resolver.h\"\n#include \"src/compiler/node-matchers.h\"\n#include \"src/compiler/osr.h\"\n#include \"src/heap/mutable-page-metadata.h\"\n\n#if V8_ENABLE_WEBASSEMBLY\n#include \"src/wasm/wasm-linkage.h\"\n#include \"src/wasm/wasm-objects.h\"\n#endif  // V8_ENABLE_WEBASSEMBLY"
+  },
+  "classes": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "RiscvOperandConverter",
+        "extends": "InstructionOperandConverter",
+        "about": "Converts InstructionOperands to RISC-V specific register or immediate values.",
+        "attributes": [],
+        "dependencies": [
+          "CodeGenerator",
+          "InstructionOperand",
+          "FloatRegister",
+          "DoubleRegister",
+          "Register",
+          "Constant",
+          "Operand",
+          "MemOperand",
+          "RootIndex",
+          "AddressingModeField",
+          "FrameOffset",
+          "AllocatedOperand"
+        ]
+      },
+      "code": "class RiscvOperandConverter final : public InstructionOperandConverter {\n public:\n  RiscvOperandConverter(CodeGenerator* gen, Instruction* instr)\n      : InstructionOperandConverter(gen, instr) {}\n\n  FloatRegister OutputSingleRegister(size_t index = 0) {\n    return ToSingleRegister(instr_->OutputAt(index));\n  }\n\n  FloatRegister InputSingleRegister(size_t index) {\n    return ToSingleRegister(instr_->InputAt(index));\n  }\n\n  FloatRegister ToSingleRegister(InstructionOperand* op) {\n    // Single (Float) and Double register namespace is same on RISC-V,\n    // both are typedefs of FPURegister.\n    return ToDoubleRegister(op);\n  }\n\n  Register InputOrZeroRegister(size_t index) {\n    if (instr_->InputAt(index)->IsImmediate()) {\n      Constant constant = ToConstant(instr_->InputAt(index));\n      switch (constant.type()) {\n        case Constant::kInt32:\n        case Constant::kInt64:\n          DCHECK_EQ(0, InputInt32(index));\n          break;\n        case Constant::kFloat32:\n          DCHECK_EQ(0, base::bit_cast<int32_t>(InputFloat32(index)));\n          break;\n        case Constant::kFloat64:\n          DCHECK_EQ(0, base::bit_cast<int64_t>(InputDouble(index)));\n          break;\n        default:\n          UNREACHABLE();\n      }\n      return zero_reg;\n    }\n    return InputRegister(index);\n  }\n\n  DoubleRegister InputOrZeroDoubleRegister(size_t index) {\n    if (instr_->InputAt(index)->IsImmediate()) return kDoubleRegZero;\n\n    return InputDoubleRegister(index);\n  }\n\n  DoubleRegister InputOrZeroSingleRegister(size_t index) {\n    if (instr_->InputAt(index)->IsImmediate()) return kSingleRegZero;\n\n    return InputSingleRegister(index);\n  }\n\n  Operand InputImmediate(size_t index) {\n    Constant constant = ToConstant(instr_->InputAt(index));\n    switch (constant.type()) {\n      case Constant::kInt32:\n        return Operand(constant.ToInt32());\n      case Constant::kInt64:\n        return Operand(constant.ToInt64());\n      case Constant::kFloat32:\n        return Operand::EmbeddedNumber(constant.ToFloat32());\n      case Constant::kFloat64:\n        return Operand::EmbeddedNumber(constant.ToFloat64().value());\n      case Constant::kCompressedHeapObject: {\n        RootIndex root_index;\n        if (gen_->isolate()->roots_table().IsRootHandle(constant.ToHeapObject(),\n                                                        &root_index)) {\n          CHECK(COMPRESS_POINTERS_BOOL);\n          CHECK(V8_STATIC_ROOTS_BOOL || !gen_->isolate()->bootstrapper());\n          Tagged_t ptr =\n              MacroAssemblerBase::ReadOnlyRootPtr(root_index, gen_->isolate());\n          return Operand(ptr);\n        }\n        return Operand(constant.ToHeapObject());\n      }\n      case Constant::kExternalReference:\n      case Constant::kHeapObject:\n        // TODO(plind): Maybe we should handle ExtRef & HeapObj here?\n        //    maybe not done on arm due to const pool ??\n        break;\n      case Constant::kRpoNumber:\n        UNREACHABLE();  // TODO(titzer): RPO immediates\n    }\n    UNREACHABLE();\n  }\n\n  Operand InputOperand(size_t index) {\n    InstructionOperand* op = instr_->InputAt(index);\n    if (op->IsRegister()) {\n      return Operand(ToRegister(op));\n    }\n    return InputImmediate(index);\n  }\n\n  MemOperand MemoryOperand(size_t* first_index) {\n    const size_t index = *first_index;\n    switch (AddressingModeField::decode(instr_->opcode())) {\n      case kMode_None:\n        break;\n      case kMode_MRI:\n        *first_index += 2;\n        return MemOperand(InputRegister(index + 0), InputInt32(index + 1));\n      case kMode_Root:\n        return MemOperand(kRootRegister, InputInt32(index));\n      case kMode_MRR:\n        // TODO(plind): r6 address mode, to be implemented ...\n        UNREACHABLE();\n    }\n    UNREACHABLE();\n  }\n\n  MemOperand MemoryOperand(size_t index = 0) { return MemoryOperand(&index); }\n\n  MemOperand ToMemOperand(InstructionOperand* op) const {\n    DCHECK_NOT_NULL(op);\n    DCHECK(op->IsStackSlot() || op->IsFPStackSlot());\n    return SlotToMemOperand(AllocatedOperand::cast(op)->index());\n  }\n\n  MemOperand SlotToMemOperand(int slot) const {\n    FrameOffset offset = frame_access_state()->GetFrameOffset(slot);\n    return MemOperand(offset.from_stack_pointer() ? sp : fp, offset.offset());\n  }\n};"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "OutOfLineRecordWrite",
+        "extends": "OutOfLineCode",
+        "about": "Generates out-of-line code for record write operations with write barriers.",
+        "attributes": [],
+        "dependencies": [
+          "CodeGenerator",
+          "Register",
+          "Operand",
+          "RecordWriteMode",
+          "StubCallMode",
+          "IndirectPointerTag",
+          "MemoryChunk",
+          "SaveFPRegsMode"
+        ]
+      },
+      "code": "namespace {\n\nclass OutOfLineRecordWrite final : public OutOfLineCode {\n public:\n  OutOfLineRecordWrite(\n      CodeGenerator* gen, Register object, Operand offset, Register value,\n      RecordWriteMode mode, StubCallMode stub_mode,\n      IndirectPointerTag indirect_pointer_tag = kIndirectPointerNullTag)\n      : OutOfLineCode(gen),\n        object_(object),\n        offset_(offset),\n        value_(value),\n        mode_(mode),\n#if V8_ENABLE_WEBASSEMBLY\n        stub_mode_(stub_mode),\n#endif  // V8_ENABLE_WEBASSEMBLY\n        must_save_lr_(!gen->frame_access_state()->has_frame()),\n        zone_(gen->zone()),\n        indirect_pointer_tag_(indirect_pointer_tag) {\n  }\n\n  void Generate() final {\n#ifdef V8_TARGET_ARCH_RISCV64\n    // When storing an indirect pointer, the value will always be a\n    // full/decompressed pointer.\n    if (COMPRESS_POINTERS_BOOL &&\n        mode_ != RecordWriteMode::kValueIsIndirectPointer) {\n      __ DecompressTagged(value_, value_);\n    }\n#endif\n    __ CheckPageFlag(value_, MemoryChunk::kPointersToHereAreInterestingMask, eq,\n                     exit());\n\n    SaveFPRegsMode const save_fp_mode = frame()->DidAllocateDoubleRegisters()\n                                            ? SaveFPRegsMode::kSave\n                                            : SaveFPRegsMode::kIgnore;\n    if (must_save_lr_) {\n      // We need to save and restore ra if the frame was elided.\n      __ Push(ra);\n    }\n    if (mode_ == RecordWriteMode::kValueIsEphemeronKey) {\n      __ CallEphemeronKeyBarrier(object_, offset_, save_fp_mode);\n    } else if (mode_ == RecordWriteMode::kValueIsIndirectPointer) {\n      DCHECK(IsValidIndirectPointerTag(indirect_pointer_tag_));\n      __ CallIndirectPointerBarrier(object_, offset_, save_fp_mode,\n                                    indirect_pointer_tag_);\n#if V8_ENABLE_WEBASSEMBLY\n    } else if (stub_mode_ == StubCallMode::kCallWasmRuntimeStub) {\n      // A direct call to a wasm runtime stub defined in this module.\n      // Just encode the stub index. This will be patched when the code\n      // is added to the native module and copied into wasm code space.\n      __ CallRecordWriteStubSaveRegisters(object_, offset_, save_fp_mode,\n                                          StubCallMode::kCallWasmRuntimeStub);\n#endif  // V8_ENABLE_WEBASSEMBLY\n    } else {\n      __ CallRecordWriteStubSaveRegisters(object_, offset_, save_fp_mode);\n    }\n    if (must_save_lr_) {\n      __ Pop(ra);\n    }\n  }\n\n private:\n  Register const object_;\n  Operand const offset_;\n  Register const value_;\n  RecordWriteMode const mode_;\n#if V8_ENABLE_WEBASSEMBLY\n  StubCallMode const stub_mode_;\n#endif  // V8_ENABLE_WEBASSEMBLY\n  bool must_save_lr_;\n  Zone* zone_;\n  IndirectPointerTag indirect_pointer_tag_;\n};"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "WasmOutOfLineTrap",
+        "extends": "OutOfLineCode",
+        "about": "Generates out-of-line code for WebAssembly trap handling.",
+        "attributes": [],
+        "dependencies": [
+          "CodeGenerator",
+          "Instruction",
+          "TrapId",
+          "RiscvOperandConverter"
+        ]
+      },
+      "code": "#if V8_ENABLE_WEBASSEMBLY\nclass WasmOutOfLineTrap : public OutOfLineCode {\n public:\n  WasmOutOfLineTrap(CodeGenerator* gen, Instruction* instr)\n      : OutOfLineCode(gen), gen_(gen), instr_(instr) {}\n  void Generate() override {\n    RiscvOperandConverter i(gen_, instr_);\n    TrapId trap_id =\n        static_cast<TrapId>(i.InputInt32(instr_->InputCount() - 1));\n    GenerateCallToTrap(trap_id);\n  }\n\n protected:\n  CodeGenerator* gen_;\n\n  void GenerateWithTrapId(TrapId trap_id) { GenerateCallToTrap(trap_id); }\n\n private:\n  void GenerateCallToTrap(TrapId trap_id) {\n    gen_->AssembleSourcePosition(instr_);\n    // A direct call to a wasm runtime stub defined in this module.\n    // Just encode the stub index. This will be patched when the code\n    // is added to the native module and copied into wasm code space.\n    __ Call(static_cast<Address>(trap_id), RelocInfo::WASM_STUB_CALL);\n    ReferenceMap* reference_map = gen_->zone()->New<ReferenceMap>(gen_->zone());\n    gen_->RecordSafepoint(reference_map);\n    __ AssertUnreachable(AbortReason::kUnexpectedReturnFromWasmTrap);\n  }\n\n  Instruction* instr_;\n};"
+    }
+  ],
+  "functions": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "function",
+        "name": "HasRegisterInput",
+        "about": "Checks if the given instruction input at the specified index is a register.",
+        "logic": "Returns true if the instruction's input at the specified index is a register, otherwise false.",
+        "parameters": [
+          {
+            "name": "instr",
+            "type": "Instruction*",
+            "purpose": "The instruction to check."
+          },
+          {
+            "name": "index",
+            "type": "size_t",
+            "purpose": "The index of the input operand to check."
+          }
+        ],
+        "return": {
+          "type": "bool",
+          "description": "True if the input is a register, false otherwise."
+        },
+        "dependencies": [
+          "Instruction"
+        ]
+      },
+      "code": "static inline bool HasRegisterInput(Instruction* instr, size_t index) {\n  return instr->InputAt(index)->IsRegister();\n}"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "function",
+        "name": "FlagsConditionToConditionCmp",
+        "about": "Converts a FlagsCondition to a Condition for comparison operations.",
+        "logic": "Maps FlagsCondition enums (e.g., kEqual, kNotEqual) to Condition enums used in assembler instructions for comparison operations.",
+        "parameters": [
+          {
+            "name": "condition",
+            "type": "FlagsCondition",
+            "purpose": "The FlagsCondition to convert."
+          }
+        ],
+        "return": {
+          "type": "Condition",
+          "description": "The corresponding Condition enum for comparison operations."
+        },
+        "dependencies": [
+          "FlagsCondition",
+          "Condition"
+        ]
+      },
+      "code": "Condition FlagsConditionToConditionCmp(FlagsCondition condition) {\n  switch (condition) {\n    case kEqual:\n      return eq;\n    case kNotEqual:\n      return ne;\n    case kSignedLessThan:\n      return lt;\n    case kSignedGreaterThanOrEqual:\n      return ge;\n    case kSignedLessThanOrEqual:\n      return le;\n    case kSignedGreaterThan:\n      return gt;\n    case kUnsignedLessThan:\n      return Uless;\n    case kUnsignedGreaterThanOrEqual:\n      return Ugreater_equal;\n    case kUnsignedLessThanOrEqual:\n      return Uless_equal;\n    case kUnsignedGreaterThan:\n      return Ugreater;\n    case kUnorderedEqual:\n    case kUnorderedNotEqual:\n      break;\n    default:\n      break;\n  }\n  UNREACHABLE();\n}"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "function",
+        "name": "FlagsConditionToConditionTst",
+        "about": "Converts a FlagsCondition to a Condition for test operations.",
+        "logic": "Maps FlagsCondition enums (e.g., kNotEqual, kEqual) to Condition enums used in assembler instructions for test operations.",
+        "parameters": [
+          {
+            "name": "condition",
+            "type": "FlagsCondition",
+            "purpose": "The FlagsCondition to convert."
+          }
+        ],
+        "return": {
+          "type": "Condition",
+          "description": "The corresponding Condition enum for test operations."
+        },
+        "dependencies": [
+          "FlagsCondition",
+          "Condition"
+        ]
+      },
+      "code": "Condition FlagsConditionToConditionTst(FlagsCondition condition) {\n  switch (condition) {\n    case kNotEqual:\n      return ne;\n    case kEqual:\n      return eq;\n    default:\n      break;\n  }\n  UNREACHABLE();\n}"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "function",
+        "name": "FlagsConditionToConditionOvf",
+        "about": "Converts a FlagsCondition to a Condition for overflow operations.",
+        "logic": "Maps FlagsCondition enums (e.g., kOverflow, kNotOverflow) to Condition enums used in assembler instructions for overflow operations.",
+        "parameters": [
+          {
+            "name": "condition",
+            "type": "FlagsCondition",
+            "purpose": "The FlagsCondition to convert."
+          }
+        ],
+        "return": {
+          "type": "Condition",
+          "description": "The corresponding Condition enum for overflow operations."
+        },
+        "dependencies": [
+          "FlagsCondition",
+          "Condition"
+        ]
+      },
+      "code": "#if V8_TARGET_ARCH_RISCV64\nCondition FlagsConditionToConditionOvf(FlagsCondition condition) {\n  switch (condition) {\n    case kOverflow:\n      return ne;\n    case kNotOverflow:\n      return eq;\n    default:\n      break;\n  }\n  UNREACHABLE();\n}\n#endif"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "function",
+        "name": "FlagsConditionToConditionCmpFPU",
+        "about": "Converts a FlagsCondition to a FPUCondition for floating-point comparison operations.",
+        "logic": "Maps FlagsCondition enums (e.g., kEqual, kNotEqual, kFloatLessThan) to FPUCondition enums used in assembler instructions for floating-point comparison operations. Includes handling for unordered comparisons.",
+        "parameters": [
+          {
+            "name": "predicate",
+            "type": "bool*",
+            "purpose": "A pointer to a boolean that will be set to true or false based on the FlagsCondition."
+          },
+          {
+            "name": "condition",
+            "type": "FlagsCondition",
+            "purpose": "The FlagsCondition to convert."
+          }
+        ],
+        "return": {
+          "type": "FPUCondition",
+          "description": "The corresponding FPUCondition enum for floating-point comparison operations."
+        },
+        "dependencies": [
+          "FlagsCondition",
+          "FPUCondition"
+        ]
+      },
+      "code": "FPUCondition FlagsConditionToConditionCmpFPU(bool* predicate,\n                                             FlagsCondition condition) {\n  switch (condition) {\n    case kEqual:\n      *predicate = true;\n      return EQ;\n    case kNotEqual:\n      *predicate = false;\n      return EQ;\n    case kUnsignedLessThan:\n    case kFloatLessThan:\n      *predicate = true;\n      return LT;\n    case kUnsignedGreaterThanOrEqual:\n      *predicate = false;\n      return LT;\n    case kUnsignedLessThanOrEqual:\n    case kFloatLessThanOrEqual:\n      *predicate = true;\n      return LE;\n    case kUnsignedGreaterThan:\n      *predicate = false;\n      return LE;\n    case kUnorderedEqual:\n    case kUnorderedNotEqual:\n      *predicate = true;\n      break;\n    case kFloatGreaterThan:\n      *predicate = true;\n      return GT;\n    case kFloatGreaterThanOrEqual:\n      *predicate = true;\n      return GE;\n    case kFloatLessThanOrUnordered:\n      *predicate = true;\n      return LT;\n    case kFloatGreaterThanOrUnordered:\n      *predicate = false;\n      return LE;\n    case kFloatGreaterThanOrEqualOrUnordered:\n      *predicate = false;\n      return LT;\n    case kFloatLessThanOrEqualOrUnordered:\n      *predicate = true;\n      return LE;\n    default:\n      *predicate = true;\n      break;\n  }\n  UNREACHABLE();\n}"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "function",
+        "name": "RecordTrapInfoIfNeeded",
+        "about": "Records trap information for protected memory access.",
+        "logic": "Records information about protected instructions for debugging or security purposes.  Only active when WebAssembly is enabled.",
+        "parameters": [
+          {
+            "name": "zone",
+            "type": "Zone*",
+            "purpose": "The memory zone."
+          },
+          {
+            "name": "codegen",
+            "type": "CodeGenerator*",
+            "purpose": "The code generator instance."
+          },
+          {
+            "name": "opcode",
+            "type": "InstructionCode",
+            "purpose": "The instruction's opcode."
+          },
+          {
+            "name": "instr",
+            "type": "Instruction*",
+            "purpose": "The instruction being processed."
+          },
+          {
+            "name": "pc",
+            "type": "int",
+            "purpose": "The program counter (PC) value."
+          }
+        ],
+        "return": {
+          "type": "void",
+          "description": "None"
+        },
+        "dependencies": [
+          "Zone",
+          "CodeGenerator",
+          "InstructionCode",
+          "Instruction",
+          "MemoryAccessMode"
+        ]
+      },
+      "code": "void RecordTrapInfoIfNeeded(Zone* zone, CodeGenerator* codegen,\n                            InstructionCode opcode, Instruction* instr,\n                            int pc) {\n  const MemoryAccessMode access_mode = AccessModeField::decode(opcode);\n  if (access_mode == kMemoryAccessProtectedMemOutOfBounds ||\n      access_mode == kMemoryAccessProtectedNullDereference) {\n    codegen->RecordProtectedInstruction(pc);\n  }\n}"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "function",
+        "name": "AdjustStackPointerForTailCall",
+        "about": "Adjust the stack pointer for tail calls.",
+        "logic": "Adjusts the stack pointer (SP) to ensure proper stack alignment before performing a tail call. Takes into account existing frame access state and desired stack slot offset. Either shrinks or grows stack as needed.",
+        "parameters": [
+          {
+            "name": "masm",
+            "type": "MacroAssembler*",
+            "purpose": "The macro assembler to use for emitting code."
+          },
+          {
+            "name": "state",
+            "type": "FrameAccessState*",
+            "purpose": "The current frame access state."
+          },
+          {
+            "name": "new_slot_above_sp",
+            "type": "int",
+            "purpose": "The desired slot above the stack pointer."
+          },
+          {
+            "name": "allow_shrinkage",
+            "type": "bool",
+            "purpose": "Whether to allow shrinking the stack."
+          }
+        ],
+        "return": {
+          "type": "void",
+          "description": "None"
+        },
+        "dependencies": [
+          "MacroAssembler",
+          "FrameAccessState"
+        ]
+      },
+      "code": "namespace {\n\nvoid AdjustStackPointerForTailCall(MacroAssembler* masm,\n                                   FrameAccessState* state,\n                                   int new_slot_above_sp,\n                                   bool allow_shrinkage = true) {\n  int current_sp_offset = state->GetSPToFPSlotCount() +\n                          StandardFrameConstants::kFixedSlotCountAboveFp;\n  int stack_slot_delta = new_slot_above_sp - current_sp_offset;\n  if (stack_slot_delta > 0) {\n    masm->SubWord(sp, sp, stack_slot_delta * kSystemPointerSize);\n    state->IncreaseSPDelta(stack_slot_delta);\n  } else if (allow_shrinkage && stack_slot_delta < 0) {\n    masm->AddWord(sp, sp, -stack_slot_delta * kSystemPointerSize);\n    state->IncreaseSPDelta(stack_slot_delta);\n  }\n}\n\n}  // namespace"
+    }
+  ],
+  "file_path": "/home/kathirks_gc/v8_go/archive/codebase/src/compiler/backend/riscv/code-generator-riscv.cc"
+}

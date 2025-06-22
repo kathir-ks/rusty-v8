@@ -1,0 +1,49 @@
+{
+  "file_path": "/home/kathirks_gc/v8_go/codebase/src/compiler/turboshaft/builtin-compiler.h",
+  "imports": [
+    "src/builtins/builtins.h",
+    "src/interpreter/bytecodes.h",
+    "src/objects/code-kind.h"
+  ],
+  "classes": [
+    {
+      "name": "BytecodeHandlerData",
+      "properties": [
+        "bytecode",
+        "operand_scale",
+        "implicit_register_use",
+        "made_call",
+        "reloaded_frame_ptr",
+        "bytecode_array_valid"
+      ],
+      "methods": [
+        {
+          "name": "BytecodeHandlerData",
+          "parameters": [
+            "interpreter::Bytecode bytecode",
+            "interpreter::OperandScale operand_scale"
+          ],
+          "return_type": "void",
+          "logic": "Constructor for the BytecodeHandlerData struct. Initializes the bytecode and operand_scale members. It also initializes implicit_register_use to kNone, made_call to false, reloaded_frame_ptr to false, and bytecode_array_valid to true."
+        }
+      ]
+    }
+  ],
+  "functions": [
+    {
+      "name": "BuildWithTurboshaftAssemblerImpl",
+      "parameters": [
+        "Isolate* isolate",
+        "Builtin builtin",
+        "TurboshaftAssemblerGenerator generator",
+        "std::function<compiler::CallDescriptor*(Zone*)> call_descriptor_builder",
+        "const char* name",
+        "const AssemblerOptions& options",
+        "CodeKind code_kind",
+        "std::optional<BytecodeHandlerData> bytecode_handler_data"
+      ],
+      "return_type": "DirectHandle<Code>",
+      "logic": "Builds a Code object using the Turboshaft assembler. Takes a generator function that produces the assembler code, a function to build the CallDescriptor, and other metadata like name and options.  It creates a compiled code object and returns a handle to it. The optional `bytecode_handler_data` allows attaching bytecode specific information when generating a bytecode handler."
+    }
+  ]
+}

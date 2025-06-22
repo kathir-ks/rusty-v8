@@ -1,0 +1,724 @@
+{
+  "file_path": "/home/kathirks_gc/v8_go/codebase/src/baseline/x64/baseline-assembler-x64-inl.h",
+  "imports": [
+    "src/base/macros.h",
+    "src/baseline/baseline-assembler.h",
+    "src/codegen/x64/register-x64.h",
+    "src/objects/feedback-vector.h",
+    "src/objects/literal-objects-inl.h"
+  ],
+  "classes": [
+    {
+      "name": "BaselineAssembler::ScratchRegisterScope",
+      "properties": [
+        "assembler_",
+        "prev_scope_",
+        "registers_used_"
+      ],
+      "methods": [
+        {
+          "name": "ScratchRegisterScope",
+          "parameters": [
+            "BaselineAssembler* assembler"
+          ],
+          "return_type": "void",
+          "logic": "Constructor. Initializes the scope and sets the assembler's scratch register scope to this object."
+        },
+        {
+          "name": "~ScratchRegisterScope",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Destructor. Resets the assembler's scratch register scope to the previous scope."
+        },
+        {
+          "name": "AcquireScratch",
+          "parameters": [],
+          "return_type": "Register",
+          "logic": "Acquires a scratch register from the pool.  Ensures not all scratch registers are in use."
+        }
+      ]
+    }
+  ],
+  "functions": [
+    {
+      "name": "Clobbers",
+      "parameters": [
+        "Register target",
+        "MemOperand op"
+      ],
+      "return_type": "bool",
+      "logic": "Debugging function to check if a register is used by a memory operand address. Only compiled in debug builds."
+    },
+    {
+      "name": "BaselineAssembler::RegisterFrameOperand",
+      "parameters": [
+        "interpreter::Register interpreter_register"
+      ],
+      "return_type": "MemOperand",
+      "logic": "Calculates the MemOperand for an interpreter register on the stack frame."
+    },
+    {
+      "name": "BaselineAssembler::RegisterFrameAddress",
+      "parameters": [
+        "interpreter::Register interpreter_register",
+        "Register rscratch"
+      ],
+      "return_type": "void",
+      "logic": "Loads the address of an interpreter register on the stack frame into a register."
+    },
+    {
+      "name": "BaselineAssembler::FeedbackVectorOperand",
+      "parameters": [],
+      "return_type": "MemOperand",
+      "logic": "Returns a MemOperand for the feedback vector stored on the stack frame."
+    },
+    {
+      "name": "BaselineAssembler::FeedbackCellOperand",
+      "parameters": [],
+      "return_type": "MemOperand",
+      "logic": "Returns a MemOperand for the feedback cell stored on the stack frame."
+    },
+    {
+      "name": "BaselineAssembler::Bind",
+      "parameters": [
+        "Label* label"
+      ],
+      "return_type": "void",
+      "logic": "Binds a label to the current position in the code."
+    },
+    {
+      "name": "BaselineAssembler::JumpTarget",
+      "parameters": [],
+      "return_type": "void",
+      "logic": "Emits an instruction indicating the beginning of a jump target, mitigates against Spectre v2. "
+    },
+    {
+      "name": "BaselineAssembler::Jump",
+      "parameters": [
+        "Label* target",
+        "Label::Distance distance"
+      ],
+      "return_type": "void",
+      "logic": "Unconditional jump to a label."
+    },
+    {
+      "name": "BaselineAssembler::JumpIfRoot",
+      "parameters": [
+        "Register value",
+        "RootIndex index",
+        "Label* target",
+        "Label::Distance distance"
+      ],
+      "return_type": "void",
+      "logic": "Jumps to a target if the given register contains a specific root value."
+    },
+    {
+      "name": "BaselineAssembler::JumpIfNotRoot",
+      "parameters": [
+        "Register value",
+        "RootIndex index",
+        "Label* target",
+        "Label::Distance distance"
+      ],
+      "return_type": "void",
+      "logic": "Jumps to a target if the given register does not contain a specific root value."
+    },
+    {
+      "name": "BaselineAssembler::JumpIfSmi",
+      "parameters": [
+        "Register value",
+        "Label* target",
+        "Label::Distance distance"
+      ],
+      "return_type": "void",
+      "logic": "Jumps to a target if the given register contains a SMI (small integer)."
+    },
+    {
+      "name": "BaselineAssembler::JumpIfNotSmi",
+      "parameters": [
+        "Register value",
+        "Label* target",
+        "Label::Distance distance"
+      ],
+      "return_type": "void",
+      "logic": "Jumps to a target if the given register does not contain a SMI (small integer)."
+    },
+    {
+      "name": "BaselineAssembler::TestAndBranch",
+      "parameters": [
+        "Register value",
+        "int mask",
+        "Condition cc",
+        "Label* target",
+        "Label::Distance distance"
+      ],
+      "return_type": "void",
+      "logic": "Performs a bitwise AND with a mask and jumps to a target based on the result and condition code."
+    },
+    {
+      "name": "BaselineAssembler::JumpIf",
+      "parameters": [
+        "Condition cc",
+        "Register lhs",
+        "const Operand& rhs",
+        "Label* target",
+        "Label::Distance distance"
+      ],
+      "return_type": "void",
+      "logic": "Compares a register with an operand and jumps to a target based on the result and condition code."
+    },
+    {
+      "name": "BaselineAssembler::JumpIfJSAnyIsPrimitive",
+      "parameters": [
+        "Register heap_object",
+        "Label* target",
+        "Label::Distance distance"
+      ],
+      "return_type": "void",
+      "logic": "Jumps to a target if the heap object is primitive using a scratch register."
+    },
+    {
+      "name": "BaselineAssembler::JumpIfObjectTypeFast",
+      "parameters": [
+        "Condition cc",
+        "Register object",
+        "InstanceType instance_type",
+        "Label* target",
+        "Label::Distance distance"
+      ],
+      "return_type": "void",
+      "logic": "Jumps to a target if the object type matches the specified InstanceType.  Uses a scratch register."
+    },
+    {
+      "name": "BaselineAssembler::JumpIfObjectType",
+      "parameters": [
+        "Condition cc",
+        "Register object",
+        "InstanceType instance_type",
+        "Register map",
+        "Label* target",
+        "Label::Distance distance"
+      ],
+      "return_type": "void",
+      "logic": "Jumps to a target if the object type matches the specified InstanceType, comparing against a register that holds the map."
+    },
+    {
+      "name": "BaselineAssembler::JumpIfInstanceType",
+      "parameters": [
+        "Condition cc",
+        "Register map",
+        "InstanceType instance_type",
+        "Label* target",
+        "Label::Distance distance"
+      ],
+      "return_type": "void",
+      "logic": "Jumps to a target if the instance type in the map register matches the specified InstanceType."
+    },
+    {
+      "name": "BaselineAssembler::JumpIfPointer",
+      "parameters": [
+        "Condition cc",
+        "Register value",
+        "MemOperand operand",
+        "Label* target",
+        "Label::Distance distance"
+      ],
+      "return_type": "void",
+      "logic": "Compares a register with a memory operand and jumps to a target based on the result and condition code."
+    },
+    {
+      "name": "BaselineAssembler::JumpIfSmi",
+      "parameters": [
+        "Condition cc",
+        "Register lhs",
+        "Tagged<Smi> smi",
+        "Label* target",
+        "Label::Distance distance"
+      ],
+      "return_type": "void",
+      "logic": "Compares a register with a Smi and jumps to a target based on the result and condition code."
+    },
+    {
+      "name": "BaselineAssembler::JumpIfSmi",
+      "parameters": [
+        "Condition cc",
+        "Register lhs",
+        "Register rhs",
+        "Label* target",
+        "Label::Distance distance"
+      ],
+      "return_type": "void",
+      "logic": "Compares two registers (assumed to be Smis) and jumps to a target based on the result and condition code."
+    },
+    {
+      "name": "BaselineAssembler::JumpIfImmediate",
+      "parameters": [
+        "Condition cc",
+        "Register left",
+        "int right",
+        "Label* target",
+        "Label::Distance distance"
+      ],
+      "return_type": "void",
+      "logic": "Compares a register with an immediate value and jumps to a target based on the result and condition code."
+    },
+    {
+      "name": "BaselineAssembler::JumpIfTagged",
+      "parameters": [
+        "Condition cc",
+        "Register value",
+        "MemOperand operand",
+        "Label* target",
+        "Label::Distance distance"
+      ],
+      "return_type": "void",
+      "logic": "Compares a register with a tagged value in memory and jumps based on the condition."
+    },
+    {
+      "name": "BaselineAssembler::JumpIfTagged",
+      "parameters": [
+        "Condition cc",
+        "MemOperand operand",
+        "Register value",
+        "Label* target",
+        "Label::Distance distance"
+      ],
+      "return_type": "void",
+      "logic": "Compares a tagged value in memory with a register and jumps based on the condition."
+    },
+    {
+      "name": "BaselineAssembler::JumpIfByte",
+      "parameters": [
+        "Condition cc",
+        "Register value",
+        "int32_t byte",
+        "Label* target",
+        "Label::Distance distance"
+      ],
+      "return_type": "void",
+      "logic": "Compares the lower byte of a register with a byte value and jumps based on the condition."
+    },
+    {
+      "name": "BaselineAssembler::Move",
+      "parameters": [
+        "interpreter::Register output",
+        "Register source"
+      ],
+      "return_type": "void",
+      "logic": "Moves the value from a register to an interpreter register on the stack frame."
+    },
+    {
+      "name": "BaselineAssembler::Move",
+      "parameters": [
+        "Register output",
+        "Tagged<TaggedIndex> value"
+      ],
+      "return_type": "void",
+      "logic": "Moves a TaggedIndex value into a register (uses the MacroAssembler Move function)."
+    },
+    {
+      "name": "BaselineAssembler::Move",
+      "parameters": [
+        "MemOperand output",
+        "Register source"
+      ],
+      "return_type": "void",
+      "logic": "Moves the value from a register to a memory location."
+    },
+    {
+      "name": "BaselineAssembler::Move",
+      "parameters": [
+        "Register output",
+        "ExternalReference reference"
+      ],
+      "return_type": "void",
+      "logic": "Moves an ExternalReference to a register (uses the MacroAssembler Move function)."
+    },
+    {
+      "name": "BaselineAssembler::Move",
+      "parameters": [
+        "Register output",
+        "Handle<HeapObject> value"
+      ],
+      "return_type": "void",
+      "logic": "Moves a HeapObject handle to a register (uses the MacroAssembler Move function)."
+    },
+    {
+      "name": "BaselineAssembler::Move",
+      "parameters": [
+        "Register output",
+        "int32_t value"
+      ],
+      "return_type": "void",
+      "logic": "Moves an integer value to a register (uses the MacroAssembler Move function)."
+    },
+    {
+      "name": "BaselineAssembler::MoveMaybeSmi",
+      "parameters": [
+        "Register output",
+        "Register source"
+      ],
+      "return_type": "void",
+      "logic": "Moves a tagged value from one register to another."
+    },
+    {
+      "name": "BaselineAssembler::MoveSmi",
+      "parameters": [
+        "Register output",
+        "Register source"
+      ],
+      "return_type": "void",
+      "logic": "Moves a tagged SMI value from one register to another."
+    },
+    {
+      "name": "PushSingle",
+      "parameters": [
+        "MacroAssembler* masm",
+        "RootIndex source"
+      ],
+      "return_type": "void",
+      "logic": "Pushes a root value onto the stack."
+    },
+    {
+      "name": "PushSingle",
+      "parameters": [
+        "MacroAssembler* masm",
+        "Register reg"
+      ],
+      "return_type": "void",
+      "logic": "Pushes a register onto the stack."
+    },
+    {
+      "name": "PushSingle",
+      "parameters": [
+        "MacroAssembler* masm",
+        "Tagged<TaggedIndex> value"
+      ],
+      "return_type": "void",
+      "logic": "Pushes a TaggedIndex value onto the stack."
+    },
+    {
+      "name": "PushSingle",
+      "parameters": [
+        "MacroAssembler* masm",
+        "Tagged<Smi> value"
+      ],
+      "return_type": "void",
+      "logic": "Pushes a Tagged SMI value onto the stack."
+    },
+    {
+      "name": "PushSingle",
+      "parameters": [
+        "MacroAssembler* masm",
+        "Handle<HeapObject> object"
+      ],
+      "return_type": "void",
+      "logic": "Pushes a HeapObject Handle onto the stack."
+    },
+    {
+      "name": "PushSingle",
+      "parameters": [
+        "MacroAssembler* masm",
+        "int32_t immediate"
+      ],
+      "return_type": "void",
+      "logic": "Pushes an immediate value onto the stack."
+    },
+    {
+      "name": "PushSingle",
+      "parameters": [
+        "MacroAssembler* masm",
+        "MemOperand operand"
+      ],
+      "return_type": "void",
+      "logic": "Pushes a memory operand onto the stack."
+    },
+    {
+      "name": "PushSingle",
+      "parameters": [
+        "MacroAssembler* masm",
+        "interpreter::Register source"
+      ],
+      "return_type": "void",
+      "logic": "Pushes the contents of an interpreter register (located on the stack) onto the stack."
+    },
+    {
+      "name": "BaselineAssembler::Push",
+      "parameters": [
+        "T... vals"
+      ],
+      "return_type": "int",
+      "logic": "Pushes multiple values onto the stack."
+    },
+    {
+      "name": "BaselineAssembler::PushReverse",
+      "parameters": [
+        "T... vals"
+      ],
+      "return_type": "void",
+      "logic": "Pushes multiple values onto the stack in reverse order."
+    },
+    {
+      "name": "BaselineAssembler::Pop",
+      "parameters": [
+        "T... registers"
+      ],
+      "return_type": "void",
+      "logic": "Pops multiple values from the stack into registers."
+    },
+    {
+      "name": "BaselineAssembler::LoadTaggedField",
+      "parameters": [
+        "Register output",
+        "Register source",
+        "int offset"
+      ],
+      "return_type": "void",
+      "logic": "Loads a tagged field from a heap object into a register."
+    },
+    {
+      "name": "BaselineAssembler::LoadTaggedSignedField",
+      "parameters": [
+        "Register output",
+        "Register source",
+        "int offset"
+      ],
+      "return_type": "void",
+      "logic": "Loads a tagged signed field from a heap object into a register."
+    },
+    {
+      "name": "BaselineAssembler::LoadTaggedSignedFieldAndUntag",
+      "parameters": [
+        "Register output",
+        "Register source",
+        "int offset"
+      ],
+      "return_type": "void",
+      "logic": "Loads a tagged signed field from a heap object, untags it (removes Smi tag), and stores the result into a register."
+    },
+    {
+      "name": "BaselineAssembler::LoadWord16FieldZeroExtend",
+      "parameters": [
+        "Register output",
+        "Register source",
+        "int offset"
+      ],
+      "return_type": "void",
+      "logic": "Loads a 16-bit word from a field and zero-extends it to fill a register."
+    },
+    {
+      "name": "BaselineAssembler::LoadWord8Field",
+      "parameters": [
+        "Register output",
+        "Register source",
+        "int offset"
+      ],
+      "return_type": "void",
+      "logic": "Loads an 8-bit word from a field."
+    },
+    {
+      "name": "BaselineAssembler::StoreTaggedSignedField",
+      "parameters": [
+        "Register target",
+        "int offset",
+        "Tagged<Smi> value"
+      ],
+      "return_type": "void",
+      "logic": "Stores a Tagged Smi value into a field in a heap object."
+    },
+    {
+      "name": "BaselineAssembler::StoreTaggedFieldWithWriteBarrier",
+      "parameters": [
+        "Register target",
+        "int offset",
+        "Register value"
+      ],
+      "return_type": "void",
+      "logic": "Stores a tagged field in a heap object with a write barrier to ensure garbage collector consistency."
+    },
+    {
+      "name": "BaselineAssembler::StoreTaggedFieldNoWriteBarrier",
+      "parameters": [
+        "Register target",
+        "int offset",
+        "Register value"
+      ],
+      "return_type": "void",
+      "logic": "Stores a tagged field in a heap object without a write barrier (used when write barrier is not required)."
+    },
+    {
+      "name": "BaselineAssembler::LoadTaggedField",
+      "parameters": [
+        "TaggedRegister output",
+        "Register source",
+        "int offset"
+      ],
+      "return_type": "void",
+      "logic": "Loads a tagged field from a heap object into a tagged register."
+    },
+    {
+      "name": "BaselineAssembler::LoadTaggedField",
+      "parameters": [
+        "TaggedRegister output",
+        "TaggedRegister source",
+        "int offset"
+      ],
+      "return_type": "void",
+      "logic": "Loads a tagged field from a heap object in a tagged register into another tagged register."
+    },
+    {
+      "name": "BaselineAssembler::LoadTaggedField",
+      "parameters": [
+        "Register output",
+        "TaggedRegister source",
+        "int offset"
+      ],
+      "return_type": "void",
+      "logic": "Loads a tagged field from a heap object in a tagged register into a regular register."
+    },
+    {
+      "name": "BaselineAssembler::LoadFixedArrayElement",
+      "parameters": [
+        "Register output",
+        "TaggedRegister array",
+        "int32_t index"
+      ],
+      "return_type": "void",
+      "logic": "Loads an element from a FixedArray into a register."
+    },
+    {
+      "name": "BaselineAssembler::LoadFixedArrayElement",
+      "parameters": [
+        "TaggedRegister output",
+        "TaggedRegister array",
+        "int32_t index"
+      ],
+      "return_type": "void",
+      "logic": "Loads an element from a FixedArray into a tagged register."
+    },
+    {
+      "name": "BaselineAssembler::TryLoadOptimizedOsrCode",
+      "parameters": [
+        "Register scratch_and_result",
+        "Register feedback_vector",
+        "FeedbackSlot slot",
+        "Label* on_result",
+        "Label::Distance distance"
+      ],
+      "return_type": "void",
+      "logic": "Attempts to load optimized OSR (On-Stack Replacement) code from a feedback vector."
+    },
+    {
+      "name": "BaselineAssembler::AddToInterruptBudgetAndJumpIfNotExceeded",
+      "parameters": [
+        "int32_t weight",
+        "Label* skip_interrupt_label"
+      ],
+      "return_type": "void",
+      "logic": "Adds a weight to the interrupt budget in the feedback cell and jumps to a label if the budget is not exceeded.  The `weight` parameter is expected to be a negative value."
+    },
+    {
+      "name": "BaselineAssembler::AddToInterruptBudgetAndJumpIfNotExceeded",
+      "parameters": [
+        "Register weight",
+        "Label* skip_interrupt_label"
+      ],
+      "return_type": "void",
+      "logic": "Adds a weight to the interrupt budget in the feedback cell and jumps to a label if the budget is not exceeded."
+    },
+    {
+      "name": "BaselineAssembler::LdaContextSlot",
+      "parameters": [
+        "Register context",
+        "uint32_t index",
+        "uint32_t depth",
+        "CompressionMode compression_mode"
+      ],
+      "return_type": "void",
+      "logic": "Loads a value from a context slot into the interpreter accumulator, traversing context chains if necessary."
+    },
+    {
+      "name": "BaselineAssembler::StaContextSlot",
+      "parameters": [
+        "Register context",
+        "Register value",
+        "uint32_t index",
+        "uint32_t depth"
+      ],
+      "return_type": "void",
+      "logic": "Stores a value into a context slot, traversing context chains if necessary."
+    },
+    {
+      "name": "BaselineAssembler::LdaModuleVariable",
+      "parameters": [
+        "Register context",
+        "int cell_index",
+        "uint32_t depth"
+      ],
+      "return_type": "void",
+      "logic": "Loads a module variable from a context slot into the interpreter accumulator, traversing context chains if necessary."
+    },
+    {
+      "name": "BaselineAssembler::StaModuleVariable",
+      "parameters": [
+        "Register context",
+        "Register value",
+        "int cell_index",
+        "uint32_t depth"
+      ],
+      "return_type": "void",
+      "logic": "Stores a value into a module variable in a context slot, traversing context chains if necessary."
+    },
+    {
+      "name": "BaselineAssembler::IncrementSmi",
+      "parameters": [
+        "MemOperand lhs"
+      ],
+      "return_type": "void",
+      "logic": "Increments a Smi in memory."
+    },
+    {
+      "name": "BaselineAssembler::Word32And",
+      "parameters": [
+        "Register output",
+        "Register lhs",
+        "int rhs"
+      ],
+      "return_type": "void",
+      "logic": "Performs a bitwise AND operation between a register and an immediate value."
+    },
+    {
+      "name": "BaselineAssembler::Switch",
+      "parameters": [
+        "Register reg",
+        "int case_value_base",
+        "Label** labels",
+        "int num_labels"
+      ],
+      "return_type": "void",
+      "logic": "Emits a switch statement, jumping to different labels based on the value of the register."
+    },
+    {
+      "name": "BaselineAssembler::MaybeEmitPlaceHolderForDeopt",
+      "parameters": [],
+      "return_type": "void",
+      "logic": "Emits a placeholder for deoptimization if CET (Control-flow Enforcement Technology) is enabled."
+    },
+    {
+      "name": "BaselineAssembler::EmitReturn",
+      "parameters": [
+        "MacroAssembler* masm"
+      ],
+      "return_type": "void",
+      "logic": "Emits code for a function return, including updating the interrupt budget, leaving the frame, dropping arguments and returning."
+    },
+    {
+      "name": "EnsureAccumulatorPreservedScope::AssertEqualToAccumulator",
+      "parameters": [
+        "Register reg"
+      ],
+      "return_type": "void",
+      "logic": "Asserts that the given register is equal to the interpreter accumulator register."
+    }
+  ]
+}

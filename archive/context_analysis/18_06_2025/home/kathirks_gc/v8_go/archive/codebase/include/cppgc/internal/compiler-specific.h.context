@@ -1,0 +1,27 @@
+{
+  "metadata": {
+    "path": "/home/kathirks_gc/v8_go/archive/codebase/include/cppgc/internal/compiler-specific.h",
+    "file_name": "compiler-specific.h",
+    "language": "cpp",
+    "purpose": "Defines compiler-specific macros and attributes for the cppgc library in V8.  It provides a consistent interface across different compilers by using preprocessor directives to check for compiler features and define macros accordingly."
+  },
+  "imports": {
+    "metadata": {
+      "language": "cpp",
+      "purpose": "Includes the v8config.h header file, which contains configuration settings for the V8 JavaScript engine build."
+    },
+    "code": "#include \"v8config.h\"  // NOLINT(build/include_directory)"
+  },
+  "classes": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "namespace",
+        "name": "cppgc",
+        "about": "Namespace for the cppgc library."
+      },
+      "code": "namespace cppgc {\n\n            #if defined(__has_attribute)\n            #define CPPGC_HAS_ATTRIBUTE(FEATURE) __has_attribute(FEATURE)\n            #else\n            #define CPPGC_HAS_ATTRIBUTE(FEATURE) 0\n            #endif\n\n            #if defined(__has_cpp_attribute)\n            #define CPPGC_HAS_CPP_ATTRIBUTE(FEATURE) __has_cpp_attribute(FEATURE)\n            #else\n            #define CPPGC_HAS_CPP_ATTRIBUTE(FEATURE) 0\n            #endif\n\n            // [[no_unique_address]] comes in C++20 but supported in clang with -std >=\n            // c++11.\n            #if defined(V8_CC_MSVC) && CPPGC_HAS_CPP_ATTRIBUTE(msvc::no_unique_address)\n            // Unfortunately MSVC ignores [[no_unique_address]] (see\n            // https://devblogs.microsoft.com/cppblog/msvc-cpp20-and-the-std-cpp20-switch/#msvc-extensions-and-abi),\n            // and clang-cl matches it for ABI compatibility reasons. We need to prefer\n            // [[msvc::no_unique_address]] when available if we actually want any effect.\n            #define CPPGC_NO_UNIQUE_ADDRESS [[msvc::no_unique_address]]\n            #elif CPPGC_HAS_CPP_ATTRIBUTE(no_unique_address)\n            #define CPPGC_NO_UNIQUE_ADDRESS [[no_unique_address]]\n            #else\n            #define CPPGC_NO_UNIQUE_ADDRESS\n            #endif\n\n            #if CPPGC_HAS_ATTRIBUTE(unused)\n            #define CPPGC_UNUSED __attribute__((unused))\n            #else\n            #define CPPGC_UNUSED\n            #endif\n\n            }  // namespace cppgc"
+    }
+  ],
+  "file_path": "/home/kathirks_gc/v8_go/archive/codebase/include/cppgc/internal/compiler-specific.h"
+}

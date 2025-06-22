@@ -1,0 +1,87 @@
+{
+  "metadata": {
+    "path": "/home/kathirks_gc/v8_go/archive/codebase/include/v8-proxy.h",
+    "file_name": "v8-proxy.h",
+    "language": "cpp",
+    "purpose": "Defines the v8::Proxy class, which represents a JavaScript Proxy object."
+  },
+  "imports": {
+    "metadata": {
+      "language": "cpp",
+      "purpose": "Includes necessary V8 headers for context, local handles, objects, and configuration."
+    },
+    "code": "#include \"v8-context.h\"       // NOLINT(build/include_directory)\n            #include \"v8-local-handle.h\"  // NOLINT(build/include_directory)\n            #include \"v8-object.h\"        // NOLINT(build/include_directory)\n            #include \"v8config.h\"         // NOLINT(build/include_directory)"
+  },
+  "classes": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "Proxy",
+        "extends": "Object",
+        "about": "Represents a JavaScript Proxy object.",
+        "attributes": [],
+        "dependencies": [
+          "Context",
+          "Object",
+          "Local",
+          "Value"
+        ]
+      },
+      "code": "class V8_EXPORT Proxy : public Object {\n             public:\n              Local<Value> GetTarget();\n              Local<Value> GetHandler();\n              bool IsRevoked() const;\n              void Revoke();\n\n              /**\n               * Creates a new Proxy for the target object.\n               */\n              static MaybeLocal<Proxy> New(Local<Context> context,\n                                           Local<Object> local_target,\n                                           Local<Object> local_handler);\n\n              V8_INLINE static Proxy* Cast(Value* value) {\n            #ifdef V8_ENABLE_CHECKS\n                CheckCast(value);\n            #endif\n                return static_cast<Proxy*>(value);\n              }\n\n             private:\n              Proxy();\n              static void CheckCast(Value* obj);\n            };"
+    }
+  ],
+  "dependencies": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "Context",
+        "about": "Represents a JavaScript execution context."
+      },
+      "code": "class Context;",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "Object",
+        "about": "Base class for JavaScript objects."
+      },
+      "code": "class Object {};",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "template",
+        "name": "Local",
+        "about": "Represents a local handle to a V8 object, managed by the garbage collector."
+      },
+      "code": "template <typename T> class Local {};",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "Value",
+        "about": "Base class for all JavaScript values."
+      },
+      "code": "class Value {};",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "template",
+        "name": "MaybeLocal",
+        "about": "Represents a potentially empty local handle."
+      },
+      "code": "template <typename T> class MaybeLocal {};",
+      "type": "class"
+    }
+  ],
+  "file_path": "/home/kathirks_gc/v8_go/archive/codebase/include/v8-proxy.h"
+}

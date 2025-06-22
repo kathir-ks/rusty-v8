@@ -1,0 +1,485 @@
+{
+  "file_path": "/home/kathirks_gc/v8_go/codebase/src/compiler/turboshaft/wasm-load-elimination-reducer.h",
+  "imports": [
+    "<optional>",
+    "src/base/doubly-threaded-list.h",
+    "src/compiler/turboshaft/analyzer-iterator.h",
+    "src/compiler/turboshaft/assembler.h",
+    "src/compiler/turboshaft/graph.h",
+    "src/compiler/turboshaft/loop-finder.h",
+    "src/compiler/turboshaft/phase.h",
+    "src/compiler/turboshaft/snapshot-table-opindex.h",
+    "src/compiler/turboshaft/utils.h",
+    "src/wasm/wasm-subtyping.h",
+    "src/zone/zone.h",
+    "src/compiler/turboshaft/define-assembler-macros.inc",
+    "src/compiler/turboshaft/undef-assembler-macros.inc"
+  ],
+  "classes": [
+    {
+      "name": "wle::WasmMemoryContentTable",
+      "properties": [
+        "non_aliasing_objects_",
+        "replacements_",
+        "data_",
+        "graph_",
+        "module_",
+        "all_keys_",
+        "base_keys_",
+        "offset_keys_"
+      ],
+      "methods": [
+        {
+          "name": "WasmMemoryContentTable",
+          "parameters": [
+            "PipelineData* data",
+            "Zone* zone",
+            "SparseOpIndexSnapshotTable<bool>& non_aliasing_objects",
+            "FixedOpIndexSidetable<OpIndex>& replacements",
+            "Graph& graph"
+          ],
+          "return_type": "void",
+          "logic": "Constructor for the WasmMemoryContentTable. Initializes member variables."
+        },
+        {
+          "name": "OnNewKey",
+          "parameters": [
+            "Key key",
+            "OpIndex value"
+          ],
+          "return_type": "void",
+          "logic": "Called when a new key is added to the table. Adds the key to base/offset maps if the value is valid."
+        },
+        {
+          "name": "OnValueChange",
+          "parameters": [
+            "Key key",
+            "OpIndex old_value",
+            "OpIndex new_value"
+          ],
+          "return_type": "void",
+          "logic": "Called when the value associated with a key changes. Updates the base/offset maps accordingly."
+        },
+        {
+          "name": "TypesUnrelated",
+          "parameters": [
+            "wasm::ModuleTypeIndex type1",
+            "wasm::ModuleTypeIndex type2"
+          ],
+          "return_type": "bool",
+          "logic": "Checks if two Wasm types are unrelated using wasm::HeapTypesUnrelated."
+        },
+        {
+          "name": "Invalidate",
+          "parameters": [
+            "const StructSetOp& set"
+          ],
+          "return_type": "void",
+          "logic": "Invalidates entries in the table based on a StructSetOp, removing keys with unrelated types."
+        },
+        {
+          "name": "InvalidateMaybeAliasing",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Invalidates all keys in the table that might be aliasing (i.e., are not known to be non-aliasing)."
+        },
+        {
+          "name": "field_offset",
+          "parameters": [
+            "const wasm::StructType* type",
+            "int field_index"
+          ],
+          "return_type": "int",
+          "logic": "Calculates the offset of a field within a Wasm struct."
+        },
+        {
+          "name": "Find",
+          "parameters": [
+            "const StructGetOp& get"
+          ],
+          "return_type": "OpIndex",
+          "logic": "Finds an entry in the table based on a StructGetOp."
+        },
+        {
+          "name": "HasValueWithIncorrectMutability",
+          "parameters": [
+            "const StructSetOp& set"
+          ],
+          "return_type": "bool",
+          "logic": "Checks if there's a value with the incorrect mutability for struct set operation."
+        },
+        {
+          "name": "FindLoadLike",
+          "parameters": [
+            "OpIndex op_idx",
+            "int offset_sentinel"
+          ],
+          "return_type": "OpIndex",
+          "logic": "Finds a 'load-like' entry in the table based on an OpIndex and offset sentinel."
+        },
+        {
+          "name": "FindImpl",
+          "parameters": [
+            "OpIndex object",
+            "int offset",
+            "wasm::ModuleTypeIndex type_index",
+            "uint8_t size",
+            "bool mutability",
+            "OptionalOpIndex index"
+          ],
+          "return_type": "OpIndex",
+          "logic": "Implementation for finding an entry in the table based on various memory access parameters."
+        },
+        {
+          "name": "Insert",
+          "parameters": [
+            "const StructSetOp& set"
+          ],
+          "return_type": "void",
+          "logic": "Inserts an entry into the table based on a StructSetOp."
+        },
+        {
+          "name": "Insert",
+          "parameters": [
+            "const StructGetOp& get",
+            "OpIndex get_idx"
+          ],
+          "return_type": "void",
+          "logic": "Inserts an entry into the table based on a StructGetOp and its index."
+        },
+        {
+          "name": "InsertLoadLike",
+          "parameters": [
+            "OpIndex base_idx",
+            "int offset_sentinel",
+            "OpIndex value_idx"
+          ],
+          "return_type": "void",
+          "logic": "Inserts a 'load-like' entry into the table."
+        },
+        {
+          "name": "ResolveBase",
+          "parameters": [
+            "OpIndex base"
+          ],
+          "return_type": "OpIndex",
+          "logic": "Resolves the base OpIndex by following replacements and AssertNotNull/WasmTypeCast operations."
+        },
+        {
+          "name": "AddKeyInBaseOffsetMaps",
+          "parameters": [
+            "Key key"
+          ],
+          "return_type": "void",
+          "logic": "Adds a key to the base and offset maps."
+        },
+        {
+          "name": "RemoveKeyFromBaseOffsetMaps",
+          "parameters": [
+            "Key key"
+          ],
+          "return_type": "void",
+          "logic": "Removes a key from both the base and offset maps."
+        }
+      ]
+    },
+    {
+      "name": "WasmLoadEliminationAnalyzer",
+      "properties": [
+        "graph_",
+        "phase_zone_",
+        "replacements_",
+        "non_aliasing_objects_",
+        "memory_",
+        "block_to_snapshot_mapping_",
+        "predecessor_alias_snapshots_",
+        "predecessor_memory_snapshots_"
+      ],
+      "methods": [
+        {
+          "name": "WasmLoadEliminationAnalyzer",
+          "parameters": [
+            "PipelineData* data",
+            "Graph& graph",
+            "Zone* phase_zone"
+          ],
+          "return_type": "void",
+          "logic": "Constructor for the WasmLoadEliminationAnalyzer. Initializes member variables."
+        },
+        {
+          "name": "Run",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Runs the load elimination analysis."
+        },
+        {
+          "name": "Replacement",
+          "parameters": [
+            "OpIndex index"
+          ],
+          "return_type": "OpIndex",
+          "logic": "Returns the replacement OpIndex for a given index."
+        },
+        {
+          "name": "ProcessBlock",
+          "parameters": [
+            "const Block& block",
+            "bool compute_start_snapshot"
+          ],
+          "return_type": "void",
+          "logic": "Processes a block of code, analyzing and applying load elimination."
+        },
+        {
+          "name": "ProcessStructGet",
+          "parameters": [
+            "OpIndex op_idx",
+            "const StructGetOp& op"
+          ],
+          "return_type": "void",
+          "logic": "Handles struct get operations for load elimination."
+        },
+        {
+          "name": "ProcessStructSet",
+          "parameters": [
+            "OpIndex op_idx",
+            "const StructSetOp& op"
+          ],
+          "return_type": "void",
+          "logic": "Handles struct set operations, invalidating appropriate memory locations."
+        },
+        {
+          "name": "ProcessArrayLength",
+          "parameters": [
+            "OpIndex op_idx",
+            "const ArrayLengthOp& op"
+          ],
+          "return_type": "void",
+          "logic": "Handles array length operations for load elimination."
+        },
+        {
+          "name": "ProcessWasmAllocateArray",
+          "parameters": [
+            "OpIndex op_idx",
+            "const WasmAllocateArrayOp& op"
+          ],
+          "return_type": "void",
+          "logic": "Handles Wasm array allocation and inserts array length in memory content table."
+        },
+        {
+          "name": "ProcessStringAsWtf16",
+          "parameters": [
+            "OpIndex op_idx",
+            "const StringAsWtf16Op& op"
+          ],
+          "return_type": "void",
+          "logic": "Handles StringAsWtf16 operation for load elimination."
+        },
+        {
+          "name": "ProcessStringPrepareForGetCodeUnit",
+          "parameters": [
+            "OpIndex op_idx",
+            "const StringPrepareForGetCodeUnitOp& op"
+          ],
+          "return_type": "void",
+          "logic": "Handles StringPrepareForGetCodeUnit operation for load elimination."
+        },
+        {
+          "name": "ProcessAnyConvertExtern",
+          "parameters": [
+            "OpIndex op_idx",
+            "const AnyConvertExternOp& op"
+          ],
+          "return_type": "void",
+          "logic": "Handles AnyConvertExtern operation for load elimination."
+        },
+        {
+          "name": "ProcessAssertNotNull",
+          "parameters": [
+            "OpIndex op_idx",
+            "const AssertNotNullOp& op"
+          ],
+          "return_type": "void",
+          "logic": "Handles AssertNotNull operation for load elimination."
+        },
+        {
+          "name": "ProcessAllocate",
+          "parameters": [
+            "OpIndex op_idx",
+            "const AllocateOp& op"
+          ],
+          "return_type": "void",
+          "logic": "Process AllocateOp, mark as non-aliasing."
+        },
+        {
+          "name": "ProcessCall",
+          "parameters": [
+            "OpIndex op_idx",
+            "const CallOp& op"
+          ],
+          "return_type": "void",
+          "logic": "Handles Call operations, invalidating state based on the call's effects."
+        },
+        {
+          "name": "ProcessPhi",
+          "parameters": [
+            "OpIndex op_idx",
+            "const PhiOp& op"
+          ],
+          "return_type": "void",
+          "logic": "Handles Phi operations for alias invalidation and simple phi reduction."
+        },
+        {
+          "name": "DcheckWordBinop",
+          "parameters": [
+            "OpIndex op_idx",
+            "const WordBinopOp& binop"
+          ],
+          "return_type": "void",
+          "logic": "Debug check for WordBinop to make sure non-aliasing only used for Smi check."
+        },
+        {
+          "name": "BeginBlock",
+          "parameters": [
+            "const Block* block"
+          ],
+          "return_type": "bool",
+          "logic": "Initializes the various SnapshotTables for the block and returns if it is a loop that needs revisiting."
+        },
+        {
+          "name": "FinishBlock",
+          "parameters": [
+            "const Block* block"
+          ],
+          "return_type": "void",
+          "logic": "Finishes processing a block, storing the current snapshot."
+        },
+        {
+          "name": "SealAndDiscard",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Seals the snapshots and discards it."
+        },
+        {
+          "name": "StoreLoopSnapshotInForwardPredecessor",
+          "parameters": [
+            "const Block& loop_header"
+          ],
+          "return_type": "void",
+          "logic": "Stores the loop snapshot into the forward predecessor to make inner-outer loops convergence faster."
+        },
+        {
+          "name": "BackedgeHasSnapshot",
+          "parameters": [
+            "const Block& loop_header"
+          ],
+          "return_type": "bool",
+          "logic": "Returns whether the backedge has a snapshot."
+        },
+        {
+          "name": "InvalidateAllNonAliasingInputs",
+          "parameters": [
+            "const Operation& op"
+          ],
+          "return_type": "void",
+          "logic": "Invalidates the non-aliasing status of inputs to an operation."
+        },
+        {
+          "name": "InvalidateIfAlias",
+          "parameters": [
+            "OpIndex op_idx"
+          ],
+          "return_type": "void",
+          "logic": "Invalidates the no-alias status if object with index is known to be no-alias."
+        }
+      ]
+    },
+    {
+      "name": "WasmLoadEliminationReducer",
+      "properties": [
+        "analyzer_"
+      ],
+      "methods": [
+        {
+          "name": "Analyze",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Performs the load elimination analysis and calls the next analysis."
+        },
+        {
+          "name": "REDUCE_INPUT_GRAPH StructGet",
+          "parameters": [
+            "OpIndex ig_index",
+            "const StructGetOp& op"
+          ],
+          "return_type": "OpIndex",
+          "logic": "Reduces StructGet operations by replacing them with known values if available."
+        },
+        {
+          "name": "REDUCE_INPUT_GRAPH ArrayLength",
+          "parameters": [
+            "OpIndex ig_index",
+            "const ArrayLengthOp& op"
+          ],
+          "return_type": "OpIndex",
+          "logic": "Reduces ArrayLength operations by replacing them with known values if available."
+        },
+        {
+          "name": "REDUCE_INPUT_GRAPH StringAsWtf16",
+          "parameters": [
+            "OpIndex ig_index",
+            "const StringAsWtf16Op& op"
+          ],
+          "return_type": "OpIndex",
+          "logic": "Reduces StringAsWtf16 operations by replacing them with known values if available."
+        },
+        {
+          "name": "REDUCE_INPUT_GRAPH StringPrepareForGetCodeUnit",
+          "parameters": [
+            "OpIndex ig_index",
+            "const StringPrepareForGetCodeUnitOp& op"
+          ],
+          "return_type": "OpIndex",
+          "logic": "Reduces StringPrepareForGetCodeUnit operations by replacing them with known values if available."
+        },
+        {
+          "name": "REDUCE_INPUT_GRAPH AnyConvertExtern",
+          "parameters": [
+            "OpIndex ig_index",
+            "const AnyConvertExternOp& op"
+          ],
+          "return_type": "OpIndex",
+          "logic": "Reduces AnyConvertExtern operations by replacing them with known values if available."
+        },
+        {
+          "name": "REDUCE_INPUT_GRAPH StructSet",
+          "parameters": [
+            "OpIndex ig_index",
+            "const StructSetOp& op"
+          ],
+          "return_type": "OpIndex",
+          "logic": "Reduces StructSet operations by replacing them with unreachable if needed."
+        }
+      ]
+    }
+  ],
+  "functions": [
+    {
+      "name": "hash_value",
+      "parameters": [
+        "WasmMemoryAddress const& mem"
+      ],
+      "return_type": "size_t",
+      "logic": "Calculates a hash value for a WasmMemoryAddress."
+    },
+    {
+      "name": "RepIsCompatible",
+      "parameters": [
+        "RegisterRepresentation actual",
+        "RegisterRepresentation expected_reg_repr",
+        "uint8_t in_memory_size"
+      ],
+      "return_type": "bool",
+      "logic": "Determines if two register representations are compatible. Also ensure that the sizes are same to avoid truncation."
+    }
+  ]
+}

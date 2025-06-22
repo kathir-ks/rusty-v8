@@ -1,0 +1,423 @@
+{
+  "metadata": {
+    "path": "/home/kathirks_gc/v8_go/archive/codebase/src/snapshot/embedded/platform-embedded-file-writer-generic.cc",
+    "file_name": "platform-embedded-file-writer-generic.cc",
+    "language": "cpp",
+    "purpose": "Provides a generic platform-specific implementation for writing embedded snapshot files, generating assembly code."
+  },
+  "imports": {
+    "metadata": {
+      "language": "cpp",
+      "purpose": "Include necessary headers for functionality."
+    },
+    "code": "#include \"src/snapshot/embedded/platform-embedded-file-writer-generic.h\"\n\n#include <algorithm>\n#include <cinttypes>\n\n#include \"src/objects/instruction-stream.h\""
+  },
+  "functions": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "function",
+        "name": "DirectiveAsString",
+        "parent": null,
+        "about": "Converts a DataDirective enum value to its corresponding string representation.",
+        "logic": "Uses a switch statement to map DataDirective enum values to their assembly directive string equivalents (e.g., kByte to '.byte').  If the directive is not recognized, it triggers a `UNREACHABLE()` macro, indicating an unexpected state.",
+        "parameters": [
+          {
+            "name": "directive",
+            "type": "DataDirective",
+            "purpose": "The DataDirective enum value to convert."
+          }
+        ],
+        "return": {
+          "type": "const char*",
+          "description": "A pointer to a constant character array representing the assembly directive string."
+        },
+        "dependencies": []
+      },
+      "code": "namespace {\n\nconst char* DirectiveAsString(DataDirective directive) {\n  switch (directive) {\n    case kByte:\n      return \".byte\";\n    case kLong:\n      return \".long\";\n    case kQuad:\n      return \".quad\";\n    case kOcta:\n      return \".octa\";\n  }\n  UNREACHABLE();\n}\n\n}  // namespace"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "method",
+        "name": "SectionText",
+        "parent": "PlatformEmbeddedFileWriterGeneric",
+        "about": "Writes the assembly directive to switch to the text section.",
+        "logic": "If the target OS is Chrome OS, it switches to the '.section .text.hot.embedded' section; otherwise, it switches to the standard '.section .text' section.",
+        "parameters": [],
+        "return": {
+          "type": "void",
+          "description": "No return value."
+        },
+        "dependencies": []
+      },
+      "code": "void PlatformEmbeddedFileWriterGeneric::SectionText() {\n  if (target_os_ == EmbeddedTargetOs::kChromeOS) {\n    fprintf(fp_, \".section .text.hot.embedded\\n\");\n  } else {\n    fprintf(fp_, \".section .text\\n\");\n  }\n}"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "method",
+        "name": "SectionRoData",
+        "parent": "PlatformEmbeddedFileWriterGeneric",
+        "about": "Writes the assembly directive to switch to the read-only data section.",
+        "logic": "Writes the '.section .rodata' directive to the output file.",
+        "parameters": [],
+        "return": {
+          "type": "void",
+          "description": "No return value."
+        },
+        "dependencies": []
+      },
+      "code": "void PlatformEmbeddedFileWriterGeneric::SectionRoData() {\n  fprintf(fp_, \".section .rodata\\n\");\n}"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "method",
+        "name": "DeclareUint32",
+        "parent": "PlatformEmbeddedFileWriterGeneric",
+        "about": "Declares a global symbol and defines it as a 32-bit unsigned integer with the given value.",
+        "logic": "First declares the symbol as global and defines a label with the given name. Then, it emits a data directive ('.long') followed by the integer value.",
+        "parameters": [
+          {
+            "name": "name",
+            "type": "const char*",
+            "purpose": "The name of the symbol to declare."
+          },
+          {
+            "name": "value",
+            "type": "uint32_t",
+            "purpose": "The 32-bit unsigned integer value to assign to the symbol."
+          }
+        ],
+        "return": {
+          "type": "void",
+          "description": "No return value."
+        },
+        "dependencies": [
+          "DeclareSymbolGlobal",
+          "DeclareLabel",
+          "IndentedDataDirective"
+        ]
+      },
+      "code": "void PlatformEmbeddedFileWriterGeneric::DeclareUint32(const char* name,\n                                                      uint32_t value) {\n  DeclareSymbolGlobal(name);\n  DeclareLabel(name);\n  IndentedDataDirective(kLong);\n  fprintf(fp_, \"%d\", value);\n  Newline();\n}"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "method",
+        "name": "DeclareSymbolGlobal",
+        "parent": "PlatformEmbeddedFileWriterGeneric",
+        "about": "Declares a symbol as global and hidden.",
+        "logic": "Writes assembly directives to declare the symbol as global and hidden. The `SYMBOL_PREFIX` macro is prepended to the symbol name.",
+        "parameters": [
+          {
+            "name": "name",
+            "type": "const char*",
+            "purpose": "The name of the symbol to declare."
+          }
+        ],
+        "return": {
+          "type": "void",
+          "description": "No return value."
+        },
+        "dependencies": []
+      },
+      "code": "void PlatformEmbeddedFileWriterGeneric::DeclareSymbolGlobal(const char* name) {\n  fprintf(fp_, \".global %s%s\\n\", SYMBOL_PREFIX, name);\n  // These symbols are not visible outside of the final binary, this allows for\n  // reduced binary size, and less work for the dynamic linker.\n  fprintf(fp_, \".hidden %s\\n\", name);\n}"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "method",
+        "name": "AlignToCodeAlignment",
+        "parent": "PlatformEmbeddedFileWriterGeneric",
+        "about": "Aligns the current position in the output file to a code alignment boundary.",
+        "logic": "Emits a `.balign` directive with different alignment values depending on the target architecture and operating system.  It uses preprocessor directives to determine the correct alignment. On Android/Linux x64/ARM64, it aligns to 4096 (page boundary). On x64 and PPC64 it aligns to 64 bytes. Otherwise aligns to 32 bytes. static_assert ensures kCodeAlignment is less than alignment value.",
+        "parameters": [],
+        "return": {
+          "type": "void",
+          "description": "No return value."
+        },
+        "dependencies": []
+      },
+      "code": "void PlatformEmbeddedFileWriterGeneric::AlignToCodeAlignment() {\n#if (V8_OS_ANDROID || V8_OS_LINUX) && \\\n    (V8_TARGET_ARCH_X64 || V8_TARGET_ARCH_ARM64)\n  // On these architectures and platforms, we remap the builtins, so need these\n  // to be aligned on a page boundary.\n  fprintf(fp_, \".balign 4096\\n\");\n#elif V8_TARGET_ARCH_X64\n  // On x64 use 64-bytes code alignment to allow 64-bytes loop header alignment.\n  static_assert(64 >= kCodeAlignment);\n  fprintf(fp_, \".balign 64\\n\");\n#elif V8_TARGET_ARCH_PPC64\n  // 64 byte alignment is needed on ppc64 to make sure p10 prefixed instructions\n  // don't cross 64-byte boundaries.\n  static_assert(64 >= kCodeAlignment);\n  fprintf(fp_, \".balign 64\\n\");\n#else\n  static_assert(32 >= kCodeAlignment);\n  fprintf(fp_, \".balign 32\\n\");\n#endif\n}"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "method",
+        "name": "AlignToPageSizeIfNeeded",
+        "parent": "PlatformEmbeddedFileWriterGeneric",
+        "about": "Aligns to page size if it is android or linux on x64 or arm64",
+        "logic": "If the target OS is Android or Linux, and the architecture is x64 or ARM64, emits a `.balign 4096` directive to align to a page boundary.",
+        "parameters": [],
+        "return": {
+          "type": "void",
+          "description": "No return value."
+        },
+        "dependencies": []
+      },
+      "code": "void PlatformEmbeddedFileWriterGeneric::AlignToPageSizeIfNeeded() {\n#if (V8_OS_ANDROID || V8_OS_LINUX) && \\\n    (V8_TARGET_ARCH_X64 || V8_TARGET_ARCH_ARM64)\n  // Since the builtins are remapped, need to pad until the next page boundary.\n  fprintf(fp_, \".balign 4096\\n\");\n#endif\n}"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "method",
+        "name": "AlignToDataAlignment",
+        "parent": "PlatformEmbeddedFileWriterGeneric",
+        "about": "Aligns the current position in the output file to a data alignment boundary.",
+        "logic": "Emits a `.balign 8` directive to align to 8 bytes. The assertion ensures InstructionStream::kMetadataAlignment is not greater than 8.",
+        "parameters": [],
+        "return": {
+          "type": "void",
+          "description": "No return value."
+        },
+        "dependencies": [
+          "InstructionStream::kMetadataAlignment"
+        ]
+      },
+      "code": "void PlatformEmbeddedFileWriterGeneric::AlignToDataAlignment() {\n  // On Windows ARM64, s390, PPC and possibly more platforms, aligned load\n  // instructions are used to retrieve v8_Default_embedded_blob_ and/or\n  // v8_Default_embedded_blob_size_. The generated instructions require the\n  // load target to be aligned at 8 bytes (2^3).\n  static_assert(8 >= InstructionStream::kMetadataAlignment);\n  fprintf(fp_, \".balign 8\\n\");\n}"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "method",
+        "name": "Comment",
+        "parent": "PlatformEmbeddedFileWriterGeneric",
+        "about": "Writes a comment to the output file.",
+        "logic": "Writes a comment to the output file, prepending '// ' to the input string.",
+        "parameters": [
+          {
+            "name": "string",
+            "type": "const char*",
+            "purpose": "The comment string to write."
+          }
+        ],
+        "return": {
+          "type": "void",
+          "description": "No return value."
+        },
+        "dependencies": []
+      },
+      "code": "void PlatformEmbeddedFileWriterGeneric::Comment(const char* string) {\n  fprintf(fp_, \"// %s\\n\", string);\n}"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "method",
+        "name": "DeclareLabel",
+        "parent": "PlatformEmbeddedFileWriterGeneric",
+        "about": "Declares a label in the assembly output.",
+        "logic": "Writes a label declaration to the output file, prepending the `SYMBOL_PREFIX` to the label name and appending a colon.",
+        "parameters": [
+          {
+            "name": "name",
+            "type": "const char*",
+            "purpose": "The name of the label to declare."
+          }
+        ],
+        "return": {
+          "type": "void",
+          "description": "No return value."
+        },
+        "dependencies": []
+      },
+      "code": "void PlatformEmbeddedFileWriterGeneric::DeclareLabel(const char* name) {\n  fprintf(fp_, \"%s%s:\\n\", SYMBOL_PREFIX, name);\n}"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "method",
+        "name": "SourceInfo",
+        "parent": "PlatformEmbeddedFileWriterGeneric",
+        "about": "Writes source code location information to the output file.",
+        "logic": "Emits a `.loc` directive with the file ID and line number.",
+        "parameters": [
+          {
+            "name": "fileid",
+            "type": "int",
+            "purpose": "The file ID."
+          },
+          {
+            "name": "filename",
+            "type": "const char*",
+            "purpose": "The name of the source file."
+          },
+          {
+            "name": "line",
+            "type": "int",
+            "purpose": "The line number."
+          }
+        ],
+        "return": {
+          "type": "void",
+          "description": "No return value."
+        },
+        "dependencies": []
+      },
+      "code": "void PlatformEmbeddedFileWriterGeneric::SourceInfo(int fileid,\n                                                   const char* filename,\n                                                   int line) {\n  fprintf(fp_, \".loc %d %d\\n\", fileid, line);\n}"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "method",
+        "name": "DeclareFunctionBegin",
+        "parent": "PlatformEmbeddedFileWriterGeneric",
+        "about": "Declares the beginning of a function in the assembly output.",
+        "logic": "Declares the label, then emits a '.type' directive to specify the function type, and a '.size' directive to specify the function size.  On ARM/ARM64, it uses '%function', otherwise it uses '@function'.",
+        "parameters": [
+          {
+            "name": "name",
+            "type": "const char*",
+            "purpose": "The name of the function."
+          },
+          {
+            "name": "size",
+            "type": "uint32_t",
+            "purpose": "The size of the function in bytes."
+          }
+        ],
+        "return": {
+          "type": "void",
+          "description": "No return value."
+        },
+        "dependencies": [
+          "DeclareSymbolGlobal",
+          "DeclareLabel",
+          "IsDrumBrakeInstructionHandler"
+        ]
+      },
+      "code": "void PlatformEmbeddedFileWriterGeneric::DeclareFunctionBegin(const char* name,\n                                                             uint32_t size) {\n#if V8_ENABLE_DRUMBRAKE\n  if (IsDrumBrakeInstructionHandler(name)) {\n    DeclareSymbolGlobal(name);\n  }\n#endif  // V8_ENABLE_DRUMBRAKE\n\n  DeclareLabel(name);\n\n  if (target_arch_ == EmbeddedTargetArch::kArm ||\n      target_arch_ == EmbeddedTargetArch::kArm64) {\n    // ELF format binaries on ARM use \".type <function name>, %function\"\n    // to create a DWARF subprogram entry.\n    fprintf(fp_, \".type %s, %%function\\n\", name);\n  } else {\n    // Other ELF Format binaries use \".type <function name>, @function\"\n    // to create a DWARF subprogram entry.\n    fprintf(fp_, \".type %s, @function\\n\", name);\n  }\n  fprintf(fp_, \".size %s, %u\\n\", name, size);\n}"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "method",
+        "name": "DeclareFunctionEnd",
+        "parent": "PlatformEmbeddedFileWriterGeneric",
+        "about": "Declares the end of a function (currently does nothing).",
+        "logic": "This function is currently empty.",
+        "parameters": [
+          {
+            "name": "name",
+            "type": "const char*",
+            "purpose": "The name of the function."
+          }
+        ],
+        "return": {
+          "type": "void",
+          "description": "No return value."
+        },
+        "dependencies": []
+      },
+      "code": "void PlatformEmbeddedFileWriterGeneric::DeclareFunctionEnd(const char* name) {}"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "method",
+        "name": "FilePrologue",
+        "parent": "PlatformEmbeddedFileWriterGeneric",
+        "about": "Writes file prologue (currently does nothing).",
+        "logic": "This function is currently empty.",
+        "parameters": [],
+        "return": {
+          "type": "void",
+          "description": "No return value."
+        },
+        "dependencies": []
+      },
+      "code": "void PlatformEmbeddedFileWriterGeneric::FilePrologue() {}"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "method",
+        "name": "DeclareExternalFilename",
+        "parent": "PlatformEmbeddedFileWriterGeneric",
+        "about": "Declares an external filename in the assembly output for debugging purposes.",
+        "logic": "Replaces backslashes in the filename with forward slashes, then emits a `.file` directive with the file ID and the fixed filename.",
+        "parameters": [
+          {
+            "name": "fileid",
+            "type": "int",
+            "purpose": "The file ID."
+          },
+          {
+            "name": "filename",
+            "type": "const char*",
+            "purpose": "The name of the external file."
+          }
+        ],
+        "return": {
+          "type": "void",
+          "description": "No return value."
+        },
+        "dependencies": []
+      },
+      "code": "void PlatformEmbeddedFileWriterGeneric::DeclareExternalFilename(\n    int fileid, const char* filename) {\n  // Replace any Windows style paths (backslashes) with forward\n  // slashes.\n  std::string fixed_filename(filename);\n  std::replace(fixed_filename.begin(), fixed_filename.end(), '\\\\', '/');\n  fprintf(fp_, \".file %d \\\"%s\\\"\\n\", fileid, fixed_filename.c_str());\n}"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "method",
+        "name": "FileEpilogue",
+        "parent": "PlatformEmbeddedFileWriterGeneric",
+        "about": "Writes the file epilogue, specifically the .note.GNU-stack section.",
+        "logic": "Emits the '.section .note.GNU-stack,\"\",%%progbits' directive, which is required to prevent the stack from being marked as executable.",
+        "parameters": [],
+        "return": {
+          "type": "void",
+          "description": "No return value."
+        },
+        "dependencies": []
+      },
+      "code": "void PlatformEmbeddedFileWriterGeneric::FileEpilogue() {\n  // Omitting this section can imply an executable stack, which is usually\n  // a linker warning/error. C++ compilers add these automatically, but\n  // compiling assembly requires the .note.GNU-stack section to be inserted\n  // manually.\n  // Additional documentation:\n  // https://wiki.gentoo.org/wiki/Hardened/GNU_stack_quickstart\n  fprintf(fp_, \".section .note.GNU-stack,\\\"\\\",%%progbits\\n\");\n}"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "method",
+        "name": "IndentedDataDirective",
+        "parent": "PlatformEmbeddedFileWriterGeneric",
+        "about": "Writes a data directive with indentation.",
+        "logic": "Writes a data directive (e.g., '.byte', '.long') with a two-space indentation.  It calls `DirectiveAsString` to convert the `DataDirective` enum value to its string representation.",
+        "parameters": [
+          {
+            "name": "directive",
+            "type": "DataDirective",
+            "purpose": "The data directive to write."
+          }
+        ],
+        "return": {
+          "type": "int",
+          "description": "The return value of fprintf."
+        },
+        "dependencies": [
+          "DirectiveAsString"
+        ]
+      },
+      "code": "int PlatformEmbeddedFileWriterGeneric::IndentedDataDirective(\n    DataDirective directive) {\n  return fprintf(fp_, \"  %s \", DirectiveAsString(directive));\n}"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "method",
+        "name": "ByteChunkDataDirective",
+        "parent": "PlatformEmbeddedFileWriterGeneric",
+        "about": "Determines the appropriate data directive to use for byte chunks based on the target architecture.",
+        "logic": "On MIPS64 and LOONG64, it returns `kLong` because they use a fixed 4-byte instruction set. Otherwise, it calls the base class's implementation.",
+        "parameters": [],
+        "return": {
+          "type": "DataDirective",
+          "description": "The data directive to use."
+        },
+        "dependencies": [
+          "PlatformEmbeddedFileWriterBase::ByteChunkDataDirective"
+        ]
+      },
+      "code": "DataDirective PlatformEmbeddedFileWriterGeneric::ByteChunkDataDirective()\n    const {\n#if defined(V8_TARGET_ARCH_MIPS64) || defined(V8_TARGET_ARCH_LOONG64)\n  // MIPS and LOONG64 uses a fixed 4 byte instruction set, using .long\n  // to prevent any unnecessary padding.\n  return kLong;\n#else\n  // Other ISAs just listen to the base\n  return PlatformEmbeddedFileWriterBase::ByteChunkDataDirective();\n#endif\n}"
+    }
+  ],
+  "file_path": "/home/kathirks_gc/v8_go/archive/codebase/src/snapshot/embedded/platform-embedded-file-writer-generic.cc"
+}

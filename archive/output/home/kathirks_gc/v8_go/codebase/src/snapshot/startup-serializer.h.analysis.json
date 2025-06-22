@@ -1,0 +1,144 @@
+{
+  "file_path": "/home/kathirks_gc/v8_go/codebase/src/snapshot/startup-serializer.h",
+  "imports": [
+    "<unordered_set>",
+    "src/handles/global-handles.h",
+    "src/snapshot/roots-serializer.h"
+  ],
+  "classes": [
+    {
+      "name": "StartupSerializer",
+      "properties": [
+        "shared_heap_serializer_",
+        "accessor_infos_",
+        "function_template_infos_"
+      ],
+      "methods": [
+        {
+          "name": "StartupSerializer",
+          "parameters": [
+            "Isolate* isolate",
+            "Snapshot::SerializerFlags flags",
+            "SharedHeapSerializer* shared_heap_serializer"
+          ],
+          "return_type": "void",
+          "logic": "Constructor for the StartupSerializer class. Initializes the serializer with the isolate, flags, and shared heap serializer."
+        },
+        {
+          "name": "~StartupSerializer",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Destructor for the StartupSerializer class."
+        },
+        {
+          "name": "operator=",
+          "parameters": [
+            "const StartupSerializer&"
+          ],
+          "return_type": "StartupSerializer&",
+          "logic": "Deleted copy assignment operator."
+        },
+        {
+          "name": "StartupSerializer",
+          "parameters": [
+            "const StartupSerializer&"
+          ],
+          "return_type": "n/a",
+          "logic": "Deleted copy constructor."
+        },
+        {
+          "name": "SerializeStrongReferences",
+          "parameters": [
+            "const DisallowGarbageCollection& no_gc"
+          ],
+          "return_type": "void",
+          "logic": "Serializes strong references in the heap, including roots, builtins, bytecode handlers, and the startup object cache."
+        },
+        {
+          "name": "SerializeWeakReferencesAndDeferred",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Serializes weak references (e.g., the string table) and deferred objects."
+        },
+        {
+          "name": "SerializeUsingSharedHeapObjectCache",
+          "parameters": [
+            "SnapshotByteSink* sink",
+            "Handle<HeapObject> obj"
+          ],
+          "return_type": "bool",
+          "logic": "Serializes an object using the shared heap object cache, if possible.  Adds the object to the cache if it's not already present and emits a SharedHeapObjectCache bytecode."
+        },
+        {
+          "name": "SerializeUsingStartupObjectCache",
+          "parameters": [
+            "SnapshotByteSink* sink",
+            "Handle<HeapObject> obj"
+          ],
+          "return_type": "void",
+          "logic": "Serializes an object using the startup object cache. Adds the object to the cache if it's not already present and emits a StartupObjectCache bytecode."
+        },
+        {
+          "name": "CheckNoDirtyFinalizationRegistries",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Checks that no JSFinalizationRegistries are used during startup."
+        },
+        {
+          "name": "SerializeObjectImpl",
+          "parameters": [
+            "Handle<HeapObject> o",
+            "SlotType slot_type"
+          ],
+          "return_type": "void",
+          "logic": "Implementation of the object serialization logic."
+        }
+      ]
+    },
+    {
+      "name": "SerializedHandleChecker",
+      "properties": [
+        "isolate_",
+        "serialized_",
+        "ok_"
+      ],
+      "methods": [
+        {
+          "name": "SerializedHandleChecker",
+          "parameters": [
+            "Isolate* isolate",
+            "std::vector<Tagged<Context>>* contexts"
+          ],
+          "return_type": "n/a",
+          "logic": "Constructor for the SerializedHandleChecker class. Initializes the checker with the isolate and contexts."
+        },
+        {
+          "name": "VisitRootPointers",
+          "parameters": [
+            "Root root",
+            "const char* description",
+            "FullObjectSlot start",
+            "FullObjectSlot end"
+          ],
+          "return_type": "void",
+          "logic": "Visits root pointers in the heap."
+        },
+        {
+          "name": "CheckGlobalAndEternalHandles",
+          "parameters": [],
+          "return_type": "bool",
+          "logic": "Checks the global and eternal handles for consistency."
+        },
+        {
+          "name": "AddToSet",
+          "parameters": [
+            "Tagged<FixedArray> serialized"
+          ],
+          "return_type": "void",
+          "logic": "Adds the given FixedArray to the set of serialized objects."
+        }
+      ]
+    }
+  ],
+  "functions": []
+}

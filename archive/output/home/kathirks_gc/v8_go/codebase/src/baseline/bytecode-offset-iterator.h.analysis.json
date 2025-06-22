@@ -1,0 +1,127 @@
+{
+  "file_path": "/home/kathirks_gc/v8_go/codebase/src/baseline/bytecode-offset-iterator.h",
+  "imports": [
+    "<optional>",
+    "src/base/vlq.h",
+    "src/common/globals.h",
+    "src/interpreter/bytecode-array-iterator.h",
+    "src/objects/bytecode-array.h"
+  ],
+  "classes": [
+    {
+      "name": "BytecodeOffsetIterator",
+      "properties": [
+        "mapping_table_",
+        "data_start_address_",
+        "data_length_",
+        "current_index_",
+        "current_pc_start_offset_",
+        "current_pc_end_offset_",
+        "current_bytecode_offset_",
+        "bytecode_handle_storage_",
+        "bytecode_iterator_",
+        "local_heap_",
+        "no_gc_"
+      ],
+      "methods": [
+        {
+          "name": "BytecodeOffsetIterator",
+          "parameters": [
+            "Handle<TrustedByteArray> mapping_table",
+            "Handle<BytecodeArray> bytecodes"
+          ],
+          "return_type": "void",
+          "logic": "Constructor for the iterator, taking handles to the mapping table and bytecode array as input. It initializes the iterator state."
+        },
+        {
+          "name": "BytecodeOffsetIterator",
+          "parameters": [
+            "Tagged<TrustedByteArray> mapping_table",
+            "Tagged<BytecodeArray> bytecodes"
+          ],
+          "return_type": "void",
+          "logic": "Constructor for the iterator, taking tagged pointers to the mapping table and bytecode array as input. This constructor is used when GC is disallowed."
+        },
+        {
+          "name": "~BytecodeOffsetIterator",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Destructor for the iterator.  Likely handles cleanup, but the provided code doesn't specify its exact behavior."
+        },
+        {
+          "name": "Advance",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Advances the iterator to the next bytecode offset, updating the current program counter (PC) start and end offsets. Reads the position from the mapping table."
+        },
+        {
+          "name": "AdvanceToBytecodeOffset",
+          "parameters": [
+            "int bytecode_offset"
+          ],
+          "return_type": "void",
+          "logic": "Advances the iterator until the current bytecode offset matches the target offset."
+        },
+        {
+          "name": "AdvanceToPCOffset",
+          "parameters": [
+            "Address pc_offset"
+          ],
+          "return_type": "void",
+          "logic": "Advances the iterator until the current PC end offset is greater than or equal to the target PC offset."
+        },
+        {
+          "name": "done",
+          "parameters": [],
+          "return_type": "bool",
+          "logic": "Checks if the iterator has reached the end of the mapping table data."
+        },
+        {
+          "name": "current_pc_start_offset",
+          "parameters": [],
+          "return_type": "Address",
+          "logic": "Returns the current PC start offset."
+        },
+        {
+          "name": "current_pc_end_offset",
+          "parameters": [],
+          "return_type": "Address",
+          "logic": "Returns the current PC end offset."
+        },
+        {
+          "name": "current_bytecode_offset",
+          "parameters": [],
+          "return_type": "int",
+          "logic": "Returns the current bytecode offset."
+        },
+        {
+          "name": "UpdatePointersCallback",
+          "parameters": [
+            "void* iterator"
+          ],
+          "return_type": "void",
+          "logic": "A static callback function to update pointers of the iterator. This function is used by the garbage collector to update the iterator's pointers after a GC cycle."
+        },
+        {
+          "name": "UpdatePointers",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Updates the internal pointers after a garbage collection cycle.  Used to ensure the iterator remains valid."
+        },
+        {
+          "name": "Initialize",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Initializes the iterator. The implementation is not given but will include setting up the initial state of the iterator based on the provided mapping table and bytecode array."
+        },
+        {
+          "name": "ReadPosition",
+          "parameters": [],
+          "return_type": "int",
+          "logic": "Reads the next position increment from the mapping table using Variable Length Quantity (VLQ) decoding."
+        }
+      ]
+    }
+  ],
+  "functions": []
+}

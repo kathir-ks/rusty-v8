@@ -1,0 +1,109 @@
+{
+  "file_path": "/home/kathirks_gc/v8_go/codebase/src/debug/wasm/gdb-server/gdb-remote-util.h",
+  "imports": [
+    "<string>",
+    "<vector>",
+    "src/utils/utils.h"
+  ],
+  "classes": [
+    {
+      "name": "wasm_addr_t",
+      "properties": [
+        "module_id_",
+        "offset_"
+      ],
+      "methods": [
+        {
+          "name": "wasm_addr_t",
+          "parameters": [
+            "uint32_t module_id",
+            "uint32_t offset"
+          ],
+          "return_type": "void",
+          "logic": "Constructor that initializes the module_id_ and offset_ members."
+        },
+        {
+          "name": "wasm_addr_t",
+          "parameters": [
+            "uint64_t address"
+          ],
+          "return_type": "void",
+          "logic": "Constructor that takes a 64-bit address, splits it into module_id_ (top 32 bits) and offset_ (bottom 32 bits)."
+        },
+        {
+          "name": "ModuleId",
+          "parameters": [],
+          "return_type": "uint32_t",
+          "logic": "Returns the module_id_."
+        },
+        {
+          "name": "Offset",
+          "parameters": [],
+          "return_type": "uint32_t",
+          "logic": "Returns the offset_."
+        },
+        {
+          "name": "operator uint64_t",
+          "parameters": [],
+          "return_type": "uint64_t",
+          "logic": "Conversion operator to uint64_t. Combines module_id_ and offset_ into a 64-bit address."
+        }
+      ]
+    }
+  ],
+  "functions": [
+    {
+      "name": "UInt8ToHex",
+      "parameters": [
+        "uint8_t byte",
+        "char chars[2]"
+      ],
+      "return_type": "void",
+      "logic": "Converts a uint8_t (0-255) to a pair of hexadecimal characters (0-9, a-f)."
+    },
+    {
+      "name": "HexToUInt8",
+      "parameters": [
+        "const char chars[2]",
+        "uint8_t* byte"
+      ],
+      "return_type": "bool",
+      "logic": "Converts a pair of hexadecimal characters to a uint8_t. Returns false if either character is invalid."
+    },
+    {
+      "name": "NibbleToUInt8",
+      "parameters": [
+        "char ch",
+        "uint8_t* byte"
+      ],
+      "return_type": "bool",
+      "logic": "Converts a single hexadecimal character to its 4-bit unsigned integer representation. Returns false if the character is invalid."
+    },
+    {
+      "name": "StringSplit",
+      "parameters": [
+        "const std::string& instr",
+        "const char* delim"
+      ],
+      "return_type": "std::vector<std::string>",
+      "logic": "Splits a string into a vector of strings based on a delimiter."
+    },
+    {
+      "name": "Mem2Hex",
+      "parameters": [
+        "const uint8_t* mem",
+        "size_t count"
+      ],
+      "return_type": "std::string",
+      "logic": "Converts a block of memory (represented as a uint8_t array) into a hexadecimal string in GDB-remote format."
+    },
+    {
+      "name": "Mem2Hex",
+      "parameters": [
+        "const std::string& str"
+      ],
+      "return_type": "std::string",
+      "logic": "Converts a string into a hexadecimal string in GDB-remote format."
+    }
+  ]
+}

@@ -1,0 +1,328 @@
+{
+  "metadata": {
+    "path": "/home/kathirks_gc/v8_go/archive/codebase/src/sandbox/external-pointer-inl.h",
+    "file_name": "external-pointer-inl.h",
+    "language": "cpp",
+    "purpose": "Defines inline functions for managing external pointers within the V8 sandbox. This includes initialization, loading, and storing external pointer values, with different implementations based on whether the sandbox is enabled."
+  },
+  "imports": {
+    "metadata": {
+      "language": "cpp",
+      "purpose": "Includes necessary V8 internal headers and standard library headers for external pointer management."
+    },
+    "code": "#include \"include/v8-internal.h\"\n#include \"src/base/atomic-utils.h\"\n#include \"src/objects/slots-inl.h\"\n#include \"src/sandbox/external-pointer-table-inl.h\"\n#include \"src/sandbox/external-pointer.h\"\n#include \"src/sandbox/isolate-inl.h\"\n#include \"src/sandbox/isolate.h\""
+  },
+  "classes": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "ExternalPointerMember",
+        "about": "A template class representing a member that holds an external pointer.  It provides methods to initialize, load, and store the external pointer value.",
+        "attributes": [
+          {
+            "name": "storage_",
+            "type": "ExternalPointer_t",
+            "access": "private",
+            "purpose": "Storage for the external pointer, encoded."
+          }
+        ],
+        "dependencies": [
+          "IsolateForSandbox",
+          "ExternalPointerTag",
+          "Address",
+          "ExternalPointer_t"
+        ]
+      },
+      "code": "template <ExternalPointerTag tag>\nclass ExternalPointerMember {\n private:\n  ExternalPointer_t storage_;\n\n public:\n  void Init(Address host_address, IsolateForSandbox isolate, Address value);\n  Address load(const IsolateForSandbox isolate) const;\n  void store(IsolateForSandbox isolate, Address value);\n  ExternalPointer_t load_encoded() const;\n  void store_encoded(ExternalPointer_t value);\n};"
+    }
+  ],
+  "functions": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "method",
+        "name": "Init",
+        "parent": "ExternalPointerMember",
+        "about": "Initializes the ExternalPointerMember by allocating an entry in the ExternalPointerTable and storing the handle in the member's storage.  If the sandbox is disabled, it directly writes the value to the storage.",
+        "logic": "When the sandbox is enabled, it uses the ExternalPointerTable to manage external pointers, ensuring that they are accessed safely within the sandbox. Otherwise, it writes the raw address to the field.",
+        "parameters": [
+          {
+            "name": "host_address",
+            "type": "Address",
+            "purpose": "The address of the object containing the external pointer."
+          },
+          {
+            "name": "isolate",
+            "type": "IsolateForSandbox",
+            "purpose": "The isolate associated with the sandbox."
+          },
+          {
+            "name": "value",
+            "type": "Address",
+            "purpose": "The value of the external pointer."
+          }
+        ],
+        "return": {
+          "type": "void",
+          "description": "No return value."
+        },
+        "dependencies": [
+          "IsolateForSandbox",
+          "ExternalPointerTable",
+          "ExternalPointerHandle",
+          "InitExternalPointerField",
+          "ExternalPointerTag",
+          "Address"
+        ]
+      },
+      "code": "template <ExternalPointerTag tag>\ninline void ExternalPointerMember<tag>::Init(Address host_address,\n                                             IsolateForSandbox isolate,\n                                             Address value) {\n  InitExternalPointerField<tag>(\n      host_address, reinterpret_cast<Address>(storage_), isolate, value);\n}"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "method",
+        "name": "load",
+        "parent": "ExternalPointerMember",
+        "about": "Loads the external pointer value from the ExternalPointerTable using the handle stored in the member's storage. If the sandbox is disabled, it reads the value directly from the storage.",
+        "logic": "When the sandbox is enabled, it uses the ExternalPointerTable to retrieve the external pointer value associated with the stored handle. Otherwise, it reads the raw address from the field.",
+        "parameters": [
+          {
+            "name": "isolate",
+            "type": "IsolateForSandbox",
+            "purpose": "The isolate associated with the sandbox."
+          }
+        ],
+        "return": {
+          "type": "Address",
+          "description": "The external pointer value."
+        },
+        "dependencies": [
+          "IsolateForSandbox",
+          "ExternalPointerTable",
+          "ExternalPointerHandle",
+          "ReadExternalPointerField",
+          "ExternalPointerTag",
+          "Address"
+        ]
+      },
+      "code": "template <ExternalPointerTag tag>\ninline Address ExternalPointerMember<tag>::load(\n    const IsolateForSandbox isolate) const {\n  return ReadExternalPointerField<tag>(reinterpret_cast<Address>(storage_),\n                                       isolate);\n}"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "method",
+        "name": "store",
+        "parent": "ExternalPointerMember",
+        "about": "Stores a new value for the external pointer in the ExternalPointerTable using the handle stored in the member's storage.  If the sandbox is disabled, it directly writes the value to the storage.",
+        "logic": "When the sandbox is enabled, it updates the external pointer value in the ExternalPointerTable associated with the stored handle. Otherwise, it writes the raw address to the field.",
+        "parameters": [
+          {
+            "name": "isolate",
+            "type": "IsolateForSandbox",
+            "purpose": "The isolate associated with the sandbox."
+          },
+          {
+            "name": "value",
+            "type": "Address",
+            "purpose": "The new value for the external pointer."
+          }
+        ],
+        "return": {
+          "type": "void",
+          "description": "No return value."
+        },
+        "dependencies": [
+          "IsolateForSandbox",
+          "ExternalPointerTable",
+          "ExternalPointerHandle",
+          "WriteExternalPointerField",
+          "ExternalPointerTag",
+          "Address"
+        ]
+      },
+      "code": "template <ExternalPointerTag tag>\ninline void ExternalPointerMember<tag>::store(IsolateForSandbox isolate,\n                                              Address value) {\n  WriteExternalPointerField<tag>(reinterpret_cast<Address>(storage_), isolate,\n                                 value);\n}"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "method",
+        "name": "load_encoded",
+        "parent": "ExternalPointerMember",
+        "about": "Loads the encoded external pointer value directly from the storage.",
+        "parameters": [],
+        "return": {
+          "type": "ExternalPointer_t",
+          "description": "The encoded external pointer value."
+        },
+        "dependencies": [
+          "ExternalPointer_t"
+        ]
+      },
+      "code": "template <ExternalPointerTag tag>\ninline ExternalPointer_t ExternalPointerMember<tag>::load_encoded() const {\n  return base::bit_cast<ExternalPointer_t>(storage_);\n}"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "method",
+        "name": "store_encoded",
+        "parent": "ExternalPointerMember",
+        "about": "Stores the encoded external pointer value directly into the storage.",
+        "parameters": [
+          {
+            "name": "value",
+            "type": "ExternalPointer_t",
+            "purpose": "The encoded external pointer value."
+          }
+        ],
+        "return": {
+          "type": "void",
+          "description": "No return value."
+        },
+        "dependencies": [
+          "ExternalPointer_t"
+        ]
+      },
+      "code": "template <ExternalPointerTag tag>\ninline void ExternalPointerMember<tag>::store_encoded(ExternalPointer_t value) {\n  memcpy(storage_, &value, sizeof(ExternalPointer_t));\n}"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "function",
+        "name": "InitExternalPointerField",
+        "about": "Initializes an external pointer field by allocating an entry in the ExternalPointerTable and storing the handle in the field. If the sandbox is disabled, it directly writes the value to the field.",
+        "logic": "When the sandbox is enabled, it allocates a new entry in the ExternalPointerTable, stores the provided value there, and then writes the handle of the allocated entry into the given memory location.  When the sandbox is disabled, it calls `WriteExternalPointerField` to directly write the value into memory.",
+        "parameters": [
+          {
+            "name": "host_address",
+            "type": "Address",
+            "purpose": "The address of the object containing the external pointer."
+          },
+          {
+            "name": "field_address",
+            "type": "Address",
+            "purpose": "The memory address of the field to initialize."
+          },
+          {
+            "name": "isolate",
+            "type": "IsolateForSandbox",
+            "purpose": "The isolate associated with the sandbox."
+          },
+          {
+            "name": "value",
+            "type": "Address",
+            "purpose": "The value of the external pointer."
+          }
+        ],
+        "return": {
+          "type": "void",
+          "description": "No return value."
+        },
+        "dependencies": [
+          "IsolateForSandbox",
+          "ExternalPointerTable",
+          "ExternalPointerHandle",
+          "WriteExternalPointerField",
+          "ExternalPointerTag",
+          "Address"
+        ]
+      },
+      "code": "template <ExternalPointerTag tag>\nV8_INLINE void InitExternalPointerField(Address host_address,\n                                        Address field_address,\n                                        IsolateForSandbox isolate,\n                                        Address value) {\n#ifdef V8_ENABLE_SANDBOX\n  static_assert(tag != kExternalPointerNullTag);\n  ExternalPointerTable& table = isolate.GetExternalPointerTableFor(tag);\n  ExternalPointerHandle handle = table.AllocateAndInitializeEntry(\n      isolate.GetExternalPointerTableSpaceFor(tag, host_address), value, tag);\n  // Use a Release_Store to ensure that the store of the pointer into the\n  // table is not reordered after the store of the handle. Otherwise, other\n  // threads may access an uninitialized table entry and crash.\n  auto location = reinterpret_cast<ExternalPointerHandle*>(field_address);\n  base::AsAtomic32::Release_Store(location, handle);\n#else\n  WriteExternalPointerField<tag>(field_address, isolate, value);\n#endif  // V8_ENABLE_SANDBOX\n}"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "function",
+        "name": "ReadExternalPointerField",
+        "about": "Reads an external pointer field, retrieving the value from the ExternalPointerTable if the sandbox is enabled, or directly from memory if not.",
+        "logic": "When the sandbox is enabled, it reads the handle from the given memory location, then uses the handle to retrieve the actual pointer from the ExternalPointerTable. When the sandbox is disabled, it reads the pointer directly from the provided memory address.",
+        "parameters": [
+          {
+            "name": "field_address",
+            "type": "Address",
+            "purpose": "The memory address of the field to read."
+          },
+          {
+            "name": "isolate",
+            "type": "IsolateForSandbox",
+            "purpose": "The isolate associated with the sandbox."
+          }
+        ],
+        "return": {
+          "type": "Address",
+          "description": "The value of the external pointer."
+        },
+        "dependencies": [
+          "IsolateForSandbox",
+          "ExternalPointerTable",
+          "ExternalPointerHandle",
+          "ReadMaybeUnalignedValue",
+          "ExternalPointerTagRange",
+          "Address"
+        ]
+      },
+      "code": "template <ExternalPointerTagRange tag_range>\nV8_INLINE Address ReadExternalPointerField(Address field_address,\n                                           IsolateForSandbox isolate) {\n#ifdef V8_ENABLE_SANDBOX\n  // static_assert(tag != kExternalPointerNullTag); // TODO\n  //  Handles may be written to objects from other threads so the handle needs\n  //  to be loaded atomically. We assume that the load from the table cannot\n  //  be reordered before the load of the handle due to the data dependency\n  //  between the two loads and therefore use relaxed memory ordering, but\n  //  technically we should use memory_order_consume here.\n  auto location = reinterpret_cast<ExternalPointerHandle*>(field_address);\n  ExternalPointerHandle handle = base::AsAtomic32::Relaxed_Load(location);\n  return isolate.GetExternalPointerTableFor(tag_range).Get(handle, tag_range);\n#else\n  return ReadMaybeUnalignedValue<Address>(field_address);\n#endif  // V8_ENABLE_SANDBOX\n}"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "function",
+        "name": "WriteExternalPointerField",
+        "about": "Writes an external pointer field, updating the value in the ExternalPointerTable if the sandbox is enabled, or directly to memory if not.",
+        "logic": "When the sandbox is enabled, it reads the handle from the given memory location, then uses the handle to update the corresponding entry in the ExternalPointerTable with the new value. When the sandbox is disabled, it writes the pointer directly to the provided memory address.",
+        "parameters": [
+          {
+            "name": "field_address",
+            "type": "Address",
+            "purpose": "The memory address of the field to write."
+          },
+          {
+            "name": "isolate",
+            "type": "IsolateForSandbox",
+            "purpose": "The isolate associated with the sandbox."
+          },
+          {
+            "name": "value",
+            "type": "Address",
+            "purpose": "The new value of the external pointer."
+          }
+        ],
+        "return": {
+          "type": "void",
+          "description": "No return value."
+        },
+        "dependencies": [
+          "IsolateForSandbox",
+          "ExternalPointerTable",
+          "ExternalPointerHandle",
+          "WriteMaybeUnalignedValue",
+          "ExternalPointerTag",
+          "Address"
+        ]
+      },
+      "code": "template <ExternalPointerTag tag>\nV8_INLINE void WriteExternalPointerField(Address field_address,\n                                         IsolateForSandbox isolate,\n                                         Address value) {\n#ifdef V8_ENABLE_SANDBOX\n  static_assert(tag != kExternalPointerNullTag);\n  // See comment above for why this is a Relaxed_Load.\n  auto location = reinterpret_cast<ExternalPointerHandle*>(field_address);\n  ExternalPointerHandle handle = base::AsAtomic32::Relaxed_Load(location);\n  isolate.GetExternalPointerTableFor(tag).Set(handle, value, tag);\n#else\n  WriteMaybeUnalignedValue<Address>(field_address, value);\n#endif  // V8_ENABLE_SANDBOX\n}"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "function",
+        "name": "SetupLazilyInitializedExternalPointerField",
+        "about": "This function is a no-op in the provided code. It seems intended to handle lazy initialization of external pointer fields, but currently does nothing.",
+        "parameters": [
+          {
+            "name": "field_address",
+            "type": "Address",
+            "purpose": "The memory address of the field to initialize."
+          }
+        ],
+        "return": {
+          "type": "void",
+          "description": "No return value."
+        },
+        "dependencies": []
+      },
+      "code": "V8_INLINE void SetupLazilyInitializedExternalPointerField(\n    Address field_address) {\n}"
+    }
+  ],
+  "file_path": "/home/kathirks_gc/v8_go/archive/codebase/src/sandbox/external-pointer-inl.h"
+}

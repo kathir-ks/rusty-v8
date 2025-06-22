@@ -1,0 +1,88 @@
+{
+  "metadata": {
+    "path": "/home/kathirks_gc/v8_go/archive/codebase/src/execution/arm64/frame-constants-arm64.h",
+    "file_name": "frame-constants-arm64.h",
+    "language": "cpp",
+    "purpose": "Defines constants related to stack frame layouts for the ARM64 architecture in the V8 JavaScript engine, including entry frames, Wasm Liftoff frames and Wasm Debug Break frames."
+  },
+  "imports": {
+    "metadata": {
+      "language": "cpp",
+      "purpose": "Include necessary header files for bit manipulation, macros, register definitions, register lists, global settings, and generic frame constants."
+    },
+    "code": "#include \"src/base/bits.h\"\n            #include \"src/base/macros.h\"\n            #include \"src/codegen/register.h\"\n            #include \"src/codegen/reglist.h\"\n            #include \"src/common/globals.h\"\n            #include \"src/execution/frame-constants.h\""
+  },
+  "classes": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "EntryFrameConstants",
+        "extends": "AllStatic",
+        "about": "Defines constants related to the layout of an EntryFrame on the stack.",
+        "attributes": [],
+        "dependencies": []
+      },
+      "code": "class EntryFrameConstants : public AllStatic {\n            public:\n              // This is the offset to where JSEntry pushes the current value of\n              // Isolate::c_entry_fp onto the stack.\n              static constexpr int kNextExitFrameFPOffset = -3 * kSystemPointerSize;\n              // The offsets for storing the FP and PC of fast API calls.\n              static constexpr int kNextFastCallFrameFPOffset = -5 * kSystemPointerSize;\n              static constexpr int kNextFastCallFramePCOffset = -6 * kSystemPointerSize;\n\n              static constexpr int kFixedFrameSize = 6 * kSystemPointerSize;\n\n              // The following constants are defined so we can static-assert their values\n              // near the relevant JSEntry assembly code, not because they're actually very\n              // useful.\n              static constexpr int kCalleeSavedRegisterBytesPushedBeforeFpLrPair =\n                  18 * kSystemPointerSize;\n              static constexpr int kCalleeSavedRegisterBytesPushedAfterFpLrPair = 0;\n              static constexpr int kOffsetToCalleeSavedRegisters = 0;\n\n              // These offsets refer to the immediate caller (a native frame), not to the\n              // previous JS exit frame like kCallerFPOffset above.\n              static constexpr int kDirectCallerFPOffset =\n                  kCalleeSavedRegisterBytesPushedAfterFpLrPair +\n                  kOffsetToCalleeSavedRegisters;\n              static constexpr int kDirectCallerPCOffset =\n                  kDirectCallerFPOffset + 1 * kSystemPointerSize;\n              static constexpr int kDirectCallerSPOffset =\n                  kDirectCallerPCOffset + 1 * kSystemPointerSize +\n                  kCalleeSavedRegisterBytesPushedBeforeFpLrPair;\n            };"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "WasmLiftoffSetupFrameConstants",
+        "extends": "TypedFrameConstants",
+        "about": "Defines constants related to the layout of a Wasm Liftoff setup frame.",
+        "attributes": [],
+        "dependencies": []
+      },
+      "code": "class WasmLiftoffSetupFrameConstants : public TypedFrameConstants {\n            public:\n              // Number of gp parameters, without the instance.\n              static constexpr int kNumberOfSavedGpParamRegs = 6;\n              static constexpr int kNumberOfSavedFpParamRegs = 8;\n\n              // On arm, spilled registers are implicitly sorted backwards by number.\n              // We spill:\n              //   x0, x2, x3, x4, x5, x6: param1, param2, ..., param6\n              // in the following FP-relative order: [x6, x5, x4, x3, x2, x0].\n              // The instance slot is in position '0', the first spill slot is at '1'.\n              static constexpr int kInstanceSpillOffset =\n                  TYPED_FRAME_PUSHED_VALUE_OFFSET(0);\n\n              static constexpr int kParameterSpillsOffset[] = {\n                  TYPED_FRAME_PUSHED_VALUE_OFFSET(6), TYPED_FRAME_PUSHED_VALUE_OFFSET(5),\n                  TYPED_FRAME_PUSHED_VALUE_OFFSET(4), TYPED_FRAME_PUSHED_VALUE_OFFSET(3),\n                  TYPED_FRAME_PUSHED_VALUE_OFFSET(2), TYPED_FRAME_PUSHED_VALUE_OFFSET(1)};\n\n              // SP-relative.\n              static constexpr int kWasmInstanceDataOffset = 2 * kSystemPointerSize;\n              static constexpr int kDeclaredFunctionIndexOffset = 1 * kSystemPointerSize;\n              static constexpr int kNativeModuleOffset = 0;\n            };"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "WasmLiftoffFrameConstants",
+        "extends": "TypedFrameConstants",
+        "about": "Defines constants related to the layout of a Wasm Liftoff frame.",
+        "attributes": [],
+        "dependencies": []
+      },
+      "code": "class WasmLiftoffFrameConstants : public TypedFrameConstants {\n            public:\n              static constexpr int kFeedbackVectorOffset = 3 * kSystemPointerSize;\n              static constexpr int kInstanceDataOffset = 2 * kSystemPointerSize;\n            };"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "WasmDebugBreakFrameConstants",
+        "extends": "TypedFrameConstants",
+        "about": "Defines constants related to the layout of a Wasm Debug Break frame, constructed by the WasmDebugBreak builtin.",
+        "attributes": [],
+        "dependencies": []
+      },
+      "code": "class WasmDebugBreakFrameConstants : public TypedFrameConstants {\n            public:\n              // x16: ip0, x17: ip1, x18: platform register, x26: root, x28: base, x29: fp,\n              // x30: lr, x31: xzr.\n              static constexpr RegList kPushedGpRegs = {\n                  x0,  x1,  x2,  x3,  x4,  x5,  x6,  x7,  x8,  x9,  x10, x11,\n                  x12, x13, x14, x15, x19, x20, x21, x22, x23, x24, x25, x27};\n\n              // We push FpRegs as 128-bit SIMD registers, so 16-byte frame alignment\n              // is guaranteed regardless of register count.\n              static constexpr DoubleRegList kPushedFpRegs = {\n                  d0,  d1,  d2,  d3,  d4,  d5,  d6,  d7,  d8,  d9,  d10, d11, d12, d13,\n                  d14, d16, d17, d18, d19, d20, d21, d22, d23, d24, d25, d26, d27};\n\n              static constexpr int kNumPushedGpRegisters = kPushedGpRegs.Count();\n              static_assert(kNumPushedGpRegisters % 2 == 0,\n                            \"stack frames need to be 16-byte aligned\");\n\n              static constexpr int kNumPushedFpRegisters = kPushedFpRegs.Count();\n\n              static constexpr int kLastPushedGpRegisterOffset =\n                  // Header is padded to 16 byte (see {MacroAssembler::EnterFrame}).\n                  -RoundUp<16>(TypedFrameConstants::kFixedFrameSizeFromFp) -\n                  kSystemPointerSize * kNumPushedGpRegisters;\n              static constexpr int kLastPushedFpRegisterOffset =\n                  kLastPushedGpRegisterOffset - kSimd128Size * kNumPushedFpRegisters;\n\n              // Offsets are fp-relative.\n              static int GetPushedGpRegisterOffset(int reg_code) {\n                DCHECK_NE(0, kPushedGpRegs.bits() & (1 << reg_code));\n                uint32_t lower_regs =\n                    kPushedGpRegs.bits() & ((uint32_t{1} << reg_code) - 1);\n                return kLastPushedGpRegisterOffset +\n                       base::bits::CountPopulation(lower_regs) * kSystemPointerSize;\n              }\n\n              static int GetPushedFpRegisterOffset(int reg_code) {\n                DCHECK_NE(0, kPushedFpRegs.bits() & (1 << reg_code));\n                uint32_t lower_regs =\n                    kPushedFpRegs.bits() & ((uint32_t{1} << reg_code) - 1);\n                return kLastPushedFpRegisterOffset +\n                       base::bits::CountPopulation(lower_regs) * kSimd128Size;\n              }\n            };"
+    }
+  ],
+  "dependencies": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "AllStatic",
+        "about": "Base class that prevents instantiation."
+      },
+      "code": "class AllStatic {};",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "TypedFrameConstants",
+        "about": "Base class for frame constants."
+      },
+      "code": "class TypedFrameConstants {};",
+      "type": "class"
+    }
+  ],
+  "file_path": "/home/kathirks_gc/v8_go/archive/codebase/src/execution/arm64/frame-constants-arm64.h"
+}

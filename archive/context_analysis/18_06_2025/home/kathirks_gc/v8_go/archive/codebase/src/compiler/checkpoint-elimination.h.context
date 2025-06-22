@@ -1,0 +1,147 @@
+{
+  "metadata": {
+    "path": "/home/kathirks_gc/v8_go/archive/codebase/src/compiler/checkpoint-elimination.h",
+    "file_name": "checkpoint-elimination.h",
+    "language": "cpp",
+    "purpose": "Declares the CheckpointElimination class, which performs elimination of redundant checkpoints within the compiler graph."
+  },
+  "imports": {
+    "metadata": {
+      "language": "cpp",
+      "purpose": "Includes necessary headers for compiler-specific features and graph reduction."
+    },
+    "code": "#include \"src/base/compiler-specific.h\"\n#include \"src/compiler/graph-reducer.h\""
+  },
+  "classes": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "CheckpointElimination",
+        "extends": "AdvancedReducer",
+        "about": "Performs elimination of redundant checkpoints within the graph.",
+        "attributes": [],
+        "dependencies": [
+          "AdvancedReducer",
+          "Editor",
+          "Node"
+        ]
+      },
+      "code": "class V8_EXPORT_PRIVATE CheckpointElimination final\n    : public NON_EXPORTED_BASE(AdvancedReducer) {\n public:\n  explicit CheckpointElimination(Editor* editor);\n  ~CheckpointElimination() final = default;\n\n  const char* reducer_name() const override { return \"CheckpointElimination\"; }\n\n  Reduction Reduce(Node* node) final;\n\n private:\n  Reduction ReduceCheckpoint(Node* node);\n};"
+    }
+  ],
+  "functions": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "method",
+        "name": "CheckpointElimination",
+        "parent": "CheckpointElimination",
+        "about": "Constructor for the CheckpointElimination class.",
+        "logic": "Initializes the CheckpointElimination object with a reference to an Editor object.",
+        "parameters": [
+          {
+            "name": "editor",
+            "type": "Editor*",
+            "purpose": "A pointer to the Editor object used for graph manipulation."
+          }
+        ],
+        "return": {
+          "type": "void",
+          "description": "No return value."
+        },
+        "dependencies": [
+          "Editor"
+        ]
+      },
+      "code": "explicit CheckpointElimination(Editor* editor);"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "method",
+        "name": "~CheckpointElimination",
+        "parent": "CheckpointElimination",
+        "about": "Destructor for the CheckpointElimination class.",
+        "logic": "Default destructor.",
+        "parameters": [],
+        "return": {
+          "type": "void",
+          "description": "No return value."
+        },
+        "dependencies": []
+      },
+      "code": "~CheckpointElimination() final = default;"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "method",
+        "name": "reducer_name",
+        "parent": "CheckpointElimination",
+        "about": "Returns the name of the reducer.",
+        "logic": "Overrides the reducer_name method to return the string \"CheckpointElimination\".",
+        "parameters": [],
+        "return": {
+          "type": "const char*",
+          "description": "The name of the reducer."
+        },
+        "dependencies": []
+      },
+      "code": "const char* reducer_name() const override { return \"CheckpointElimination\"; }"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "method",
+        "name": "Reduce",
+        "parent": "CheckpointElimination",
+        "about": "Reduces the given node.",
+        "logic": "Overrides the Reduce method to perform checkpoint elimination on the given node.",
+        "parameters": [
+          {
+            "name": "node",
+            "type": "Node*",
+            "purpose": "A pointer to the node to reduce."
+          }
+        ],
+        "return": {
+          "type": "Reduction",
+          "description": "The result of the reduction."
+        },
+        "dependencies": [
+          "Node",
+          "Reduction"
+        ]
+      },
+      "code": "Reduction Reduce(Node* node) final;"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "method",
+        "name": "ReduceCheckpoint",
+        "parent": "CheckpointElimination",
+        "about": "Reduces a checkpoint node.",
+        "logic": "Performs checkpoint elimination on the given checkpoint node.",
+        "parameters": [
+          {
+            "name": "node",
+            "type": "Node*",
+            "purpose": "A pointer to the checkpoint node to reduce."
+          }
+        ],
+        "return": {
+          "type": "Reduction",
+          "description": "The result of the reduction."
+        },
+        "dependencies": [
+          "Node",
+          "Reduction"
+        ]
+      },
+      "code": "private:\n  Reduction ReduceCheckpoint(Node* node);"
+    }
+  ],
+  "file_path": "/home/kathirks_gc/v8_go/archive/codebase/src/compiler/checkpoint-elimination.h"
+}

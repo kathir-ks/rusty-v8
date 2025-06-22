@@ -1,0 +1,289 @@
+{
+  "file_path": "/home/kathirks_gc/v8_go/codebase/src/sandbox/external-pointer-table-inl.h",
+  "imports": [
+    "src/sandbox/compactible-external-entity-table-inl.h",
+    "src/sandbox/external-pointer-table.h",
+    "src/sandbox/external-pointer.h"
+  ],
+  "classes": [
+    {
+      "name": "ExternalPointerTableEntry",
+      "properties": [
+        "payload_",
+        "raw_pointer_for_lsan_"
+      ],
+      "methods": [
+        {
+          "name": "MakeExternalPointerEntry",
+          "parameters": [
+            "Address value",
+            "ExternalPointerTag tag",
+            "bool mark_as_alive"
+          ],
+          "return_type": "void",
+          "logic": "Creates an entry for an external pointer, storing the address and tag in the payload. Optionally marks the entry as alive during allocation (for GC marking)."
+        },
+        {
+          "name": "GetExternalPointer",
+          "parameters": [
+            "ExternalPointerTagRange tag_range"
+          ],
+          "return_type": "Address",
+          "logic": "Retrieves the external pointer address from the payload, checking if the entry contains a pointer. Returns the untagged address."
+        },
+        {
+          "name": "SetExternalPointer",
+          "parameters": [
+            "Address value",
+            "ExternalPointerTag tag"
+          ],
+          "return_type": "void",
+          "logic": "Sets the external pointer address and tag in the payload and marks it as alive.  Similar to MakeExternalPointerEntry, but assumes that an entry is already initialized."
+        },
+        {
+          "name": "HasExternalPointer",
+          "parameters": [
+            "ExternalPointerTagRange tag_range"
+          ],
+          "return_type": "bool",
+          "logic": "Checks if the entry contains an external pointer and if its tag is within the specified tag range."
+        },
+        {
+          "name": "ExchangeExternalPointer",
+          "parameters": [
+            "Address value",
+            "ExternalPointerTag tag"
+          ],
+          "return_type": "Address",
+          "logic": "Atomically exchanges the current external pointer in the entry with a new one. Returns the old address."
+        },
+        {
+          "name": "GetExternalPointerTag",
+          "parameters": [],
+          "return_type": "ExternalPointerTag",
+          "logic": "Retrieves the tag associated with the external pointer in the entry."
+        },
+        {
+          "name": "ExtractManagedResourceOrNull",
+          "parameters": [],
+          "return_type": "Address",
+          "logic": "If the external pointer tag represents a managed resource, extracts and returns the resource's address; otherwise, returns kNullAddress."
+        },
+        {
+          "name": "MakeZappedEntry",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Marks the entry as zapped, indicating it's no longer valid and should not be used."
+        },
+        {
+          "name": "MakeFreelistEntry",
+          "parameters": [
+            "uint32_t next_entry_index"
+          ],
+          "return_type": "void",
+          "logic": "Marks the entry as free, adding it to a freelist. Stores the index of the next free entry in the payload."
+        },
+        {
+          "name": "GetNextFreelistEntryIndex",
+          "parameters": [],
+          "return_type": "uint32_t",
+          "logic": "Retrieves the index of the next free entry from a freelist entry."
+        },
+        {
+          "name": "Mark",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Sets the mark bit of the entry.  Used during garbage collection to indicate that the entry is live."
+        },
+        {
+          "name": "MakeEvacuationEntry",
+          "parameters": [
+            "Address handle_location"
+          ],
+          "return_type": "void",
+          "logic": "Creates an evacuation entry, storing the location of the handle, during garbage collection compaction."
+        },
+        {
+          "name": "HasEvacuationEntry",
+          "parameters": [],
+          "return_type": "bool",
+          "logic": "Checks if the entry is an evacuation entry."
+        },
+        {
+          "name": "Evacuate",
+          "parameters": [
+            "ExternalPointerTableEntry& dest",
+            "EvacuateMarkMode mode"
+          ],
+          "return_type": "void",
+          "logic": "Copies the contents of the current entry to a destination entry during garbage collection compaction, and zaps the original entry. The mode controls how the mark bit is handled during evacuation."
+        }
+      ]
+    },
+    {
+      "name": "ExternalPointerTable",
+      "properties": [],
+      "methods": [
+        {
+          "name": "Get",
+          "parameters": [
+            "ExternalPointerHandle handle",
+            "ExternalPointerTagRange tag_range"
+          ],
+          "return_type": "Address",
+          "logic": "Retrieves an external pointer given its handle and tag range."
+        },
+        {
+          "name": "Set",
+          "parameters": [
+            "ExternalPointerHandle handle",
+            "Address value",
+            "ExternalPointerTag tag"
+          ],
+          "return_type": "void",
+          "logic": "Sets an external pointer given its handle, address, and tag.  Handles ownership transfer if the new pointer is a managed resource."
+        },
+        {
+          "name": "Exchange",
+          "parameters": [
+            "ExternalPointerHandle handle",
+            "Address value",
+            "ExternalPointerTag tag"
+          ],
+          "return_type": "Address",
+          "logic": "Exchanges the address of the external pointer with a new address, given its handle and tag."
+        },
+        {
+          "name": "GetTag",
+          "parameters": [
+            "ExternalPointerHandle handle"
+          ],
+          "return_type": "ExternalPointerTag",
+          "logic": "Retrieves the tag of an external pointer given its handle."
+        },
+        {
+          "name": "Zap",
+          "parameters": [
+            "ExternalPointerHandle handle"
+          ],
+          "return_type": "void",
+          "logic": "Zaps the entry associated with the given handle."
+        },
+        {
+          "name": "AllocateAndInitializeEntry",
+          "parameters": [
+            "Space* space",
+            "Address initial_value",
+            "ExternalPointerTag tag"
+          ],
+          "return_type": "ExternalPointerHandle",
+          "logic": "Allocates a new entry in the table and initializes it with the given address and tag.  Handles ownership transfer if the new pointer is a managed resource."
+        },
+        {
+          "name": "Mark",
+          "parameters": [
+            "Space* space",
+            "ExternalPointerHandle handle",
+            "Address handle_location"
+          ],
+          "return_type": "void",
+          "logic": "Marks the entry associated with the given handle.  Handles evacuation during garbage collection compaction."
+        },
+        {
+          "name": "Evacuate",
+          "parameters": [
+            "Space* from_space",
+            "Space* to_space",
+            "ExternalPointerHandle handle",
+            "Address handle_location",
+            "EvacuateMarkMode mode"
+          ],
+          "return_type": "void",
+          "logic": "Evacuates the entry associated with the given handle from one space to another during garbage collection compaction."
+        },
+        {
+          "name": "IsValidHandle",
+          "parameters": [
+            "ExternalPointerHandle handle"
+          ],
+          "return_type": "bool",
+          "logic": "Checks if the provided ExternalPointerHandle is a valid handle."
+        },
+        {
+          "name": "HandleToIndex",
+          "parameters": [
+            "ExternalPointerHandle handle"
+          ],
+          "return_type": "uint32_t",
+          "logic": "Converts an ExternalPointerHandle to an index."
+        },
+        {
+          "name": "IndexToHandle",
+          "parameters": [
+            "uint32_t index"
+          ],
+          "return_type": "ExternalPointerHandle",
+          "logic": "Converts an index to an ExternalPointerHandle."
+        },
+        {
+          "name": "Contains",
+          "parameters": [
+            "Space* space",
+            "ExternalPointerHandle handle"
+          ],
+          "return_type": "bool",
+          "logic": "Checks if the entry for a given handle exists in the space."
+        },
+        {
+          "name": "TakeOwnershipOfManagedResourceIfNecessary",
+          "parameters": [
+            "Address value",
+            "ExternalPointerHandle handle",
+            "ExternalPointerTag tag"
+          ],
+          "return_type": "void",
+          "logic": "If the given value is a ManagedResource and its ept_entry_ is not set, takes ownership of it and set its ept_entry_ to the given handle. It helps track the external pointer table entry for managed resource."
+        },
+        {
+          "name": "FreeManagedResourceIfPresent",
+          "parameters": [
+            "uint32_t entry_index"
+          ],
+          "return_type": "void",
+          "logic": "If the given entry contains a managed resource, clears the managed resource's ExternalPointerHandle. This is done when the external pointer entry is being reused to avoid double-freeing the managed resource."
+        }
+      ]
+    },
+    {
+      "name": "ExternalPointerTable::Space",
+      "properties": [],
+      "methods": [
+        {
+          "name": "NotifyExternalPointerFieldInvalidated",
+          "parameters": [
+            "Address field_address",
+            "ExternalPointerTagRange tag_range"
+          ],
+          "return_type": "void",
+          "logic": "Adds an invalidated field to the list.  Currently, only supports unmanaged pointers."
+        }
+      ]
+    },
+    {
+      "name": "ExternalPointerTable::ManagedResource",
+      "properties": [
+        "owning_table_",
+        "ept_entry_"
+      ],
+      "methods": [
+        {
+          "name": "ZapExternalPointerTableEntry",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Zaps the entry in the external pointer table associated with this managed resource."
+        }
+      ]
+    }
+  ],
+  "functions": []
+}

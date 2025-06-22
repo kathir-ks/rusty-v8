@@ -1,0 +1,34 @@
+// Module declarations for converted riscv code
+
+pub mod constant-riscv-a;
+pub mod extension-riscv-zicsr;
+pub mod base-constants-riscv;
+pub mod extension-riscv-a;
+pub mod constant-riscv-zifencei;
+pub mod extension-riscv-f;
+pub mod macro-assembler-riscv;
+pub mod constant-riscv-zicond;
+pub mod constant-riscv-m;
+pub mod constant-riscv-zicsr;
+pub mod assembler-riscv;
+pub mod extension-riscv-zifencei;
+pub mod register-riscv;
+pub mod extension-riscv-zicond;
+pub mod constants-riscv;
+pub mod reglist-riscv;
+pub mod base-riscv-i;
+pub mod extension-riscv-d;
+pub mod constant-riscv-c;
+pub mod constant-riscv-i;
+pub mod extension-riscv-c;
+pub mod assembler-riscv-inl;
+pub mod base-assembler-riscv;
+pub mod cpu-riscv;
+pub mod constant-riscv-b;
+pub mod extension-riscv-m;
+pub mod interface-descriptors-riscv-inl;
+pub mod constant-riscv-f;
+pub mod extension-riscv-v;
+pub mod extension-riscv-b;
+pub mod constant-riscv-v;
+pub mod constant-riscv-d;

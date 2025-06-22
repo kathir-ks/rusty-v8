@@ -1,0 +1,573 @@
+{
+  "metadata": {
+    "path": "/home/kathirks_gc/v8_go/archive/codebase/src/bigint/bigint-internal.cc",
+    "file_name": "bigint-internal.cc",
+    "language": "cpp",
+    "purpose": "Implementation of internal BigInt functionality, including arithmetic operations and processor management."
+  },
+  "imports": {
+    "metadata": {
+      "language": "cpp",
+      "purpose": "Includes the internal BigInt header file which declares the classes and functions implemented in this file."
+    },
+    "code": "#include \"src/bigint/bigint-internal.h\""
+  },
+  "classes": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "ProcessorImpl",
+        "extends": "",
+        "implements": [],
+        "about": "Implementation class for the Processor interface, managing BigInt arithmetic operations.",
+        "attributes": [
+          {
+            "name": "platform_",
+            "type": "Platform*",
+            "access": "private",
+            "purpose": "Pointer to the platform-specific implementation (e.g., memory allocation)."
+          },
+          {
+            "name": "status_",
+            "type": "Status",
+            "access": "private",
+            "purpose": "Stores the status of the last operation performed by the processor."
+          }
+        ],
+        "dependencies": [
+          "Platform",
+          "Status",
+          "Digits",
+          "RWDigits"
+        ]
+      },
+      "code": "namespace v8 {\n            namespace bigint {\n\n            class ProcessorImpl : public Processor {\n            public:\n                ProcessorImpl(Platform* platform);\n                ~ProcessorImpl() override;\n\n                Status get_and_clear_status();\n\n                void Multiply(RWDigits Z, Digits X, Digits Y);\n                void Divide(RWDigits Q, Digits A, Digits B);\n                void Modulo(RWDigits R, Digits A, Digits B);\n\n            private:\n                Platform* platform_;\n                Status status_ = Status::kOk;\n            };"
+    }
+  ],
+  "functions": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "method",
+        "name": "ProcessorImpl",
+        "parent": "ProcessorImpl",
+        "about": "Constructor for the ProcessorImpl class.",
+        "logic": "Initializes the platform pointer.",
+        "parameters": [
+          {
+            "name": "platform",
+            "type": "Platform*",
+            "purpose": "Pointer to the platform-specific implementation."
+          }
+        ],
+        "return": {
+          "type": "void",
+          "description": "No return value."
+        },
+        "dependencies": [
+          "Platform"
+        ]
+      },
+      "code": "ProcessorImpl::ProcessorImpl(Platform* platform) : platform_(platform) {}"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "method",
+        "name": "~ProcessorImpl",
+        "parent": "ProcessorImpl",
+        "about": "Destructor for the ProcessorImpl class.",
+        "logic": "Deallocates the platform object.",
+        "parameters": [],
+        "return": {
+          "type": "void",
+          "description": "No return value."
+        },
+        "dependencies": [
+          "Platform"
+        ]
+      },
+      "code": "ProcessorImpl::~ProcessorImpl() { delete platform_; }"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "method",
+        "name": "get_and_clear_status",
+        "parent": "ProcessorImpl",
+        "about": "Gets the current status and clears it.",
+        "logic": "Returns the current status and resets it to kOk.",
+        "parameters": [],
+        "return": {
+          "type": "Status",
+          "description": "The current status."
+        },
+        "dependencies": [
+          "Status"
+        ]
+      },
+      "code": "Status ProcessorImpl::get_and_clear_status() {\n            Status result = status_;\n            status_ = Status::kOk;\n            return result;\n            }"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "function",
+        "name": "New",
+        "parent": "Processor",
+        "about": "Creates a new Processor instance.",
+        "logic": "Creates a new ProcessorImpl instance and returns it as a Processor.",
+        "parameters": [
+          {
+            "name": "platform",
+            "type": "Platform*",
+            "purpose": "Pointer to the platform-specific implementation."
+          }
+        ],
+        "return": {
+          "type": "Processor*",
+          "description": "A pointer to the newly created Processor instance."
+        },
+        "dependencies": [
+          "Platform",
+          "Processor",
+          "ProcessorImpl"
+        ]
+      },
+      "code": "Processor* Processor::New(Platform* platform) {\n            ProcessorImpl* impl = new ProcessorImpl(platform);\n            return static_cast<Processor*>(impl);\n            }"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "method",
+        "name": "Destroy",
+        "parent": "Processor",
+        "about": "Destroys a Processor instance.",
+        "logic": "Deallocates the ProcessorImpl instance.",
+        "parameters": [],
+        "return": {
+          "type": "void",
+          "description": "No return value."
+        },
+        "dependencies": [
+          "Processor",
+          "ProcessorImpl"
+        ]
+      },
+      "code": "void Processor::Destroy() { delete static_cast<ProcessorImpl*>(this); }"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "method",
+        "name": "Multiply",
+        "parent": "ProcessorImpl",
+        "about": "Multiplies two BigInts.",
+        "logic": "Chooses the multiplication algorithm based on the lengths of the input digits. Uses schoolbook, Karatsuba, Toom-Cook, or FFT multiplication.",
+        "parameters": [
+          {
+            "name": "Z",
+            "type": "RWDigits",
+            "purpose": "The result of the multiplication."
+          },
+          {
+            "name": "X",
+            "type": "Digits",
+            "purpose": "The first BigInt to multiply."
+          },
+          {
+            "name": "Y",
+            "type": "Digits",
+            "purpose": "The second BigInt to multiply."
+          }
+        ],
+        "return": {
+          "type": "void",
+          "description": "No return value."
+        },
+        "dependencies": [
+          "RWDigits",
+          "Digits",
+          "MultiplySingle",
+          "MultiplySchoolbook",
+          "MultiplyKaratsuba",
+          "MultiplyToomCook",
+          "MultiplyFFT"
+        ]
+      },
+      "code": "void ProcessorImpl::Multiply(RWDigits Z, Digits X, Digits Y) {\n            X.Normalize();\n            Y.Normalize();\n            if (X.len() == 0 || Y.len() == 0) return Z.Clear();\n            if (X.len() < Y.len()) std::swap(X, Y);\n            if (Y.len() == 1) return MultiplySingle(Z, X, Y[0]);\n            if (Y.len() < kKaratsubaThreshold) return MultiplySchoolbook(Z, X, Y);\n            #if !V8_ADVANCED_BIGINT_ALGORITHMS\n            return MultiplyKaratsuba(Z, X, Y);\n            #else\n            if (Y.len() < kToomThreshold) return MultiplyKaratsuba(Z, X, Y);\n            if (Y.len() < kFftThreshold) return MultiplyToomCook(Z, X, Y);\n            return MultiplyFFT(Z, X, Y);\n            #endif\n            }"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "method",
+        "name": "Divide",
+        "parent": "ProcessorImpl",
+        "about": "Divides two BigInts.",
+        "logic": "Chooses the division algorithm based on the lengths of the input digits. Uses schoolbook, Burnikel-Ziegler, or Barrett division.",
+        "parameters": [
+          {
+            "name": "Q",
+            "type": "RWDigits",
+            "purpose": "The quotient of the division."
+          },
+          {
+            "name": "A",
+            "type": "Digits",
+            "purpose": "The dividend."
+          },
+          {
+            "name": "B",
+            "type": "Digits",
+            "purpose": "The divisor."
+          }
+        ],
+        "return": {
+          "type": "void",
+          "description": "No return value."
+        },
+        "dependencies": [
+          "RWDigits",
+          "Digits",
+          "Compare",
+          "DivideSingle",
+          "DivideSchoolbook",
+          "DivideBurnikelZiegler",
+          "DivideBarrett",
+          "ScratchDigits"
+        ]
+      },
+      "code": "void ProcessorImpl::Divide(RWDigits Q, Digits A, Digits B) {\n            A.Normalize();\n            B.Normalize();\n            // While callers are not required to normalize inputs, they must not\n            // provide divisors that normalize to zero.\n            // This must be a Release-mode CHECK because it is load bearing for\n            // security fuzzing: subsequent operations would perform illegal memory\n            // accesses if they attempted to work with zero divisors.\n            CHECK(B.len() > 0);\n            int cmp = Compare(A, B);\n            if (cmp < 0) return Q.Clear();\n            if (cmp == 0) {\n            Q[0] = 1;\n            for (int i = 1; i < Q.len(); i++) Q[i] = 0;\n            return;\n            }\n            if (B.len() == 1) {\n            digit_t remainder;\n            return DivideSingle(Q, &remainder, A, B[0]);\n            }\n            if (B.len() < kBurnikelThreshold) {\n            return DivideSchoolbook(Q, RWDigits(nullptr, 0), A, B);\n            }\n            #if !V8_ADVANCED_BIGINT_ALGORITHMS\n            return DivideBurnikelZiegler(Q, RWDigits(nullptr, 0), A, B);\n            #else\n            if (B.len() < kBarrettThreshold || A.len() == B.len()) {\n            DivideBurnikelZiegler(Q, RWDigits(nullptr, 0), A, B);\n            } else {\n            ScratchDigits R(B.len());\n            DivideBarrett(Q, R, A, B);\n            }\n            #endif\n            }"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "method",
+        "name": "Modulo",
+        "parent": "ProcessorImpl",
+        "about": "Calculates the modulo of two BigInts.",
+        "logic": "Chooses the division algorithm based on the lengths of the input digits. Uses schoolbook, Burnikel-Ziegler, or Barrett division. Calculates remainder after division.",
+        "parameters": [
+          {
+            "name": "R",
+            "type": "RWDigits",
+            "purpose": "The remainder of the modulo operation."
+          },
+          {
+            "name": "A",
+            "type": "Digits",
+            "purpose": "The dividend."
+          },
+          {
+            "name": "B",
+            "type": "Digits",
+            "purpose": "The divisor."
+          }
+        ],
+        "return": {
+          "type": "void",
+          "description": "No return value."
+        },
+        "dependencies": [
+          "RWDigits",
+          "Digits",
+          "Compare",
+          "DivideSingle",
+          "DivideSchoolbook",
+          "DivideBurnikelZiegler",
+          "DivideBarrett",
+          "ScratchDigits",
+          "DivideResultLength"
+        ]
+      },
+      "code": "void ProcessorImpl::Modulo(RWDigits R, Digits A, Digits B) {\n            A.Normalize();\n            B.Normalize();\n            // While callers are not required to normalize inputs, they must not\n            // provide divisors that normalize to zero.\n            // This must be a Release-mode CHECK because it is load bearing for\n            // security fuzzing: subsequent operations would perform illegal memory\n            // accesses if they attempted to work with zero divisors.\n            CHECK(B.len() > 0);\n            int cmp = Compare(A, B);\n            if (cmp < 0) {\n            for (int i = 0; i < B.len(); i++) R[i] = B[i];\n            for (int i = B.len(); i < R.len(); i++) R[i] = 0;\n            return;\n            }\n            if (cmp == 0) return R.Clear();\n            if (B.len() == 1) {\n            digit_t remainder;\n            DivideSingle(RWDigits(nullptr, 0), &remainder, A, B[0]);\n            R[0] = remainder;\n            for (int i = 1; i < R.len(); i++) R[i] = 0;\n            return;\n            }\n            if (B.len() < kBurnikelThreshold) {\n            return DivideSchoolbook(RWDigits(nullptr, 0), R, A, B);\n            }\n            int q_len = DivideResultLength(A, B);\n            ScratchDigits Q(q_len);\n            #if !V8_ADVANCED_BIGINT_ALGORITHMS\n            return DivideBurnikelZiegler(Q, R, A, B);\n            #else\n            if (B.len() < kBarrettThreshold || A.len() == B.len()) {\n            DivideBurnikelZiegler(Q, R, A, B);\n            } else {\n            DivideBarrett(Q, R, A, B);\n            }\n            #endif\n            }"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "method",
+        "name": "Multiply",
+        "parent": "Processor",
+        "about": "Multiplies two BigInts (public interface).",
+        "logic": "Calls the internal Multiply method and returns the status.",
+        "parameters": [
+          {
+            "name": "Z",
+            "type": "RWDigits",
+            "purpose": "The result of the multiplication."
+          },
+          {
+            "name": "X",
+            "type": "Digits",
+            "purpose": "The first BigInt to multiply."
+          },
+          {
+            "name": "Y",
+            "type": "Digits",
+            "purpose": "The second BigInt to multiply."
+          }
+        ],
+        "return": {
+          "type": "Status",
+          "description": "The status of the operation."
+        },
+        "dependencies": [
+          "RWDigits",
+          "Digits",
+          "ProcessorImpl",
+          "Status"
+        ]
+      },
+      "code": "Status Processor::Multiply(RWDigits Z, Digits X, Digits Y) {\n            ProcessorImpl* impl = static_cast<ProcessorImpl*>(this);\n            impl->Multiply(Z, X, Y);\n            return impl->get_and_clear_status();\n            }"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "method",
+        "name": "Divide",
+        "parent": "Processor",
+        "about": "Divides two BigInts (public interface).",
+        "logic": "Calls the internal Divide method and returns the status.",
+        "parameters": [
+          {
+            "name": "Q",
+            "type": "RWDigits",
+            "purpose": "The quotient of the division."
+          },
+          {
+            "name": "A",
+            "type": "Digits",
+            "purpose": "The dividend."
+          },
+          {
+            "name": "B",
+            "type": "Digits",
+            "purpose": "The divisor."
+          }
+        ],
+        "return": {
+          "type": "Status",
+          "description": "The status of the operation."
+        },
+        "dependencies": [
+          "RWDigits",
+          "Digits",
+          "ProcessorImpl",
+          "Status"
+        ]
+      },
+      "code": "Status Processor::Divide(RWDigits Q, Digits A, Digits B) {\n            ProcessorImpl* impl = static_cast<ProcessorImpl*>(this);\n            impl->Divide(Q, A, B);\n            return impl->get_and_clear_status();\n            }"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "method",
+        "name": "Modulo",
+        "parent": "Processor",
+        "about": "Calculates the modulo of two BigInts (public interface).",
+        "logic": "Calls the internal Modulo method and returns the status.",
+        "parameters": [
+          {
+            "name": "R",
+            "type": "RWDigits",
+            "purpose": "The remainder of the modulo operation."
+          },
+          {
+            "name": "A",
+            "type": "Digits",
+            "purpose": "The dividend."
+          },
+          {
+            "name": "B",
+            "type": "Digits",
+            "purpose": "The divisor."
+          }
+        ],
+        "return": {
+          "type": "Status",
+          "description": "The status of the operation."
+        },
+        "dependencies": [
+          "RWDigits",
+          "Digits",
+          "ProcessorImpl",
+          "Status"
+        ]
+      },
+      "code": "Status Processor::Modulo(RWDigits R, Digits A, Digits B) {\n            ProcessorImpl* impl = static_cast<ProcessorImpl*>(this);\n            impl->Modulo(R, A, B);\n            return impl->get_and_clear_status();\n            }"
+    }
+  ],
+  "dependencies": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "Platform",
+        "about": "Abstract base class for platform-specific implementations (e.g., memory allocation)."
+      },
+      "code": "class Platform {};",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "Processor",
+        "about": "Abstract base class for BigInt processors."
+      },
+      "code": "class Processor {\n                public:\n                    static Processor* New(Platform* platform);\n                    virtual void Destroy() = 0;\n                    virtual Status Multiply(RWDigits Z, Digits X, Digits Y) = 0;\n                    virtual Status Divide(RWDigits Q, Digits A, Digits B) = 0;\n                    virtual Status Modulo(RWDigits R, Digits A, Digits B) = 0;\n                };",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "Digits",
+        "about": "Represents a read-only sequence of digits in a BigInt."
+      },
+      "code": "class Digits {\n                public:\n                    void Normalize();\n                    int len() const;\n                    digit_t operator[](int i) const;\n                };",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "RWDigits",
+        "about": "Represents a read-write sequence of digits in a BigInt."
+      },
+      "code": "class RWDigits {\n                public:\n                    RWDigits(digit_t* data, int len);\n                    void Clear();\n                    digit_t& operator[](int i);\n                    int len() const;\n                };",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "ScratchDigits",
+        "about": "Represents temporary, scratch space for digits in BigInt operations."
+      },
+      "code": "class ScratchDigits {\n                public:\n                  ScratchDigits(int len);\n                };",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "enum",
+        "name": "Status",
+        "about": "Represents the status of a BigInt operation."
+      },
+      "code": "enum class Status {\n                  kOk\n                };",
+      "type": "enum"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "function",
+        "name": "MultiplySingle",
+        "about": "Multiplies a BigInt by a single digit."
+      },
+      "code": "void MultiplySingle(RWDigits Z, Digits X, digit_t Y);",
+      "type": "func"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "function",
+        "name": "MultiplySchoolbook",
+        "about": "Multiplies two BigInts using the schoolbook algorithm."
+      },
+      "code": "void MultiplySchoolbook(RWDigits Z, Digits X, Digits Y);",
+      "type": "func"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "function",
+        "name": "MultiplyKaratsuba",
+        "about": "Multiplies two BigInts using the Karatsuba algorithm."
+      },
+      "code": "void MultiplyKaratsuba(RWDigits Z, Digits X, Digits Y);",
+      "type": "func"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "function",
+        "name": "MultiplyToomCook",
+        "about": "Multiplies two BigInts using the Toom-Cook algorithm."
+      },
+      "code": "void MultiplyToomCook(RWDigits Z, Digits X, Digits Y);",
+      "type": "func"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "function",
+        "name": "MultiplyFFT",
+        "about": "Multiplies two BigInts using the Fast Fourier Transform (FFT) algorithm."
+      },
+      "code": "void MultiplyFFT(RWDigits Z, Digits X, Digits Y);",
+      "type": "func"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "function",
+        "name": "DivideSingle",
+        "about": "Divides a BigInt by a single digit."
+      },
+      "code": "void DivideSingle(RWDigits Q, digit_t* remainder, Digits A, digit_t B);",
+      "type": "func"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "function",
+        "name": "DivideSchoolbook",
+        "about": "Divides two BigInts using the schoolbook algorithm."
+      },
+      "code": "void DivideSchoolbook(RWDigits Q, RWDigits R, Digits A, Digits B);",
+      "type": "func"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "function",
+        "name": "DivideBurnikelZiegler",
+        "about": "Divides two BigInts using the Burnikel-Ziegler algorithm."
+      },
+      "code": "void DivideBurnikelZiegler(RWDigits Q, RWDigits R, Digits A, Digits B);",
+      "type": "func"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "function",
+        "name": "DivideBarrett",
+        "about": "Divides two BigInts using the Barrett reduction algorithm."
+      },
+      "code": "void DivideBarrett(RWDigits Q, RWDigits R, Digits A, Digits B);",
+      "type": "func"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "function",
+        "name": "Compare",
+        "about": "Compares two BigInts."
+      },
+      "code": "int Compare(Digits A, Digits B);",
+      "type": "func"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "function",
+        "name": "DivideResultLength",
+        "about": "Calculates the length of the result of a division."
+      },
+      "code": "int DivideResultLength(Digits A, Digits B);",
+      "type": "func"
+    }
+  ],
+  "file_path": "/home/kathirks_gc/v8_go/archive/codebase/src/bigint/bigint-internal.cc"
+}

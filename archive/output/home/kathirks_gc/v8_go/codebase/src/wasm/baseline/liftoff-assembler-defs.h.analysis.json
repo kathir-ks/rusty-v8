@@ -1,0 +1,91 @@
+{
+  "file_path": "/home/kathirks_gc/v8_go/codebase/src/wasm/baseline/liftoff-assembler-defs.h",
+  "imports": [
+    "src/codegen/assembler-arch.h",
+    "src/codegen/reglist.h"
+  ],
+  "classes": [],
+  "functions": [],
+  "constants": [
+    {
+      "name": "kLiftoffAssemblerGpCacheRegs",
+      "type": "RegList",
+      "description": "A list of general-purpose registers that Liftoff can use as a cache. The specific registers in the list depend on the target architecture. Certain registers are omitted because they are reserved for other purposes like root register, scratch registers, or pointer compression cage base."
+    },
+    {
+      "name": "kLiftoffAssemblerFpCacheRegs",
+      "type": "DoubleRegList",
+      "description": "A list of floating-point registers that Liftoff can use as a cache. The specific registers depend on the target architecture. Certain registers are omitted because they are reserved for scratch registers."
+    },
+    {
+      "name": "kLiftoffFrameSetupFunctionReg",
+      "type": "Register",
+      "description": "A register used to pass the function pointer to the \"WasmLiftoffFrameSetup\" builtin. The specific register depends on the target architecture."
+    }
+  ],
+  "namespace": [
+    "v8",
+    "internal",
+    "wasm"
+  ],
+  "assertions": [
+    {
+      "condition": "kLiftoffFrameSetupFunctionReg != kWasmImplicitArgRegister",
+      "description": "Ensures that the register used for the WasmLiftoffFrameSetup builtin is not the same as the implicit argument register."
+    },
+    {
+      "condition": "kLiftoffFrameSetupFunctionReg != kRootRegister",
+      "description": "Ensures that the register used for the WasmLiftoffFrameSetup builtin is not the same as the root register."
+    },
+    {
+      "condition": "kLiftoffFrameSetupFunctionReg != kPtrComprCageBaseRegister",
+      "description": "Ensures that the register used for the WasmLiftoffFrameSetup builtin is not the same as the pointer compression cage base register (only when pointer compression is enabled)."
+    }
+  ],
+  "conditionals": [
+    {
+      "condition": "V8_TARGET_ARCH_IA32",
+      "description": "Defines register lists for the IA32 architecture."
+    },
+    {
+      "condition": "V8_TARGET_ARCH_X64",
+      "description": "Defines register lists for the X64 architecture."
+    },
+    {
+      "condition": "V8_TARGET_ARCH_MIPS",
+      "description": "Defines register lists for the MIPS architecture."
+    },
+    {
+      "condition": "V8_TARGET_ARCH_MIPS64",
+      "description": "Defines register lists for the MIPS64 architecture."
+    },
+    {
+      "condition": "V8_TARGET_ARCH_LOONG64",
+      "description": "Defines register lists for the LOONG64 architecture."
+    },
+    {
+      "condition": "V8_TARGET_ARCH_ARM",
+      "description": "Defines register lists for the ARM architecture."
+    },
+    {
+      "condition": "V8_TARGET_ARCH_ARM64",
+      "description": "Defines register lists for the ARM64 architecture."
+    },
+    {
+      "condition": "V8_TARGET_ARCH_S390X",
+      "description": "Defines register lists for the S390X architecture."
+    },
+    {
+      "condition": "V8_TARGET_ARCH_PPC64",
+      "description": "Defines register lists for the PPC64 architecture."
+    },
+    {
+      "condition": "V8_TARGET_ARCH_RISCV32 || V8_TARGET_ARCH_RISCV64",
+      "description": "Defines register lists for the RISCV architecture. 32 and 64 bit are supported"
+    },
+    {
+      "condition": "else",
+      "description": "Defines default register lists if no specific architecture is defined."
+    }
+  ]
+}

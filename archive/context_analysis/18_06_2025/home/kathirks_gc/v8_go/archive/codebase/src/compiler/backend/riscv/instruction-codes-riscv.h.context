@@ -1,0 +1,250 @@
+{
+  "metadata": {
+    "path": "/home/kathirks_gc/v8_go/archive/codebase/src/compiler/backend/riscv/instruction-codes-riscv.h",
+    "file_name": "instruction-codes-riscv.h",
+    "language": "cpp",
+    "purpose": "Defines RISC-V specific opcodes and addressing modes for the V8 compiler backend."
+  },
+  "imports": {
+    "metadata": {
+      "language": "cpp",
+      "purpose": "No explicit imports in this header file, but it relies on V8 internal namespaces and preprocessor definitions."
+    },
+    "code": "// No explicit includes, relies on V8's internal build system and namespace."
+  },
+  "classes": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "namespace",
+        "name": "v8::internal::compiler",
+        "about": "Namespace containing compiler-related code for the V8 JavaScript engine.",
+        "dependencies": []
+      },
+      "code": "namespace v8 {\n            namespace internal {\n            namespace compiler {\n            }  // namespace compiler\n            }  // namespace internal\n            }  // namespace v8"
+    }
+  ],
+  "functions": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "macro",
+        "name": "TARGET_ARCH_OPCODE_WITH_MEMORY_ACCESS_MODE_LIST",
+        "about": "Macro defining opcodes that support a MemoryAccessMode. Used for RISCV64 architecture.",
+        "parameters": [
+          {
+            "name": "V",
+            "type": "macro",
+            "purpose": "A macro to apply to each opcode in the list."
+          }
+        ],
+        "return": {
+          "type": "void",
+          "description": "Expands to a list of macro invocations."
+        },
+        "dependencies": []
+      },
+      "code": "#define TARGET_ARCH_OPCODE_WITH_MEMORY_ACCESS_MODE_LIST(V) \\\n              V(RiscvLd)                                               \\\n              V(RiscvSd)                                               \\\n              V(RiscvLwu)                                              \\\n              V(RiscvWord64AtomicLoadUint64)                           \\\n              V(RiscvWord64AtomicStoreWord64)                          \\\n              V(RiscvLb)                                               \\\n              V(RiscvLbu)                                              \\\n              V(RiscvSb)                                               \\\n              V(RiscvLh)                                               \\\n              V(RiscvLhu)                                              \\\n              V(RiscvSh)                                               \\\n              V(RiscvLw)                                               \\\n              V(RiscvSw)                                               \\\n              V(RiscvLoadDouble)                                       \\\n              V(RiscvStoreDouble)                                      \\\n              V(RiscvStoreFloat)                                       \\\n              V(RiscvLoadFloat)                                        \\\n              V(RiscvStoreCompressTagged)                              \\\n              V(RiscvLoadDecompressTaggedSigned)                       \\\n              V(RiscvLoadDecompressTagged)                             \\\n              V(RiscvS128LoadSplat)                                    \\\n              V(RiscvS128Load64ExtendS)                                \\\n              V(RiscvS128Load64ExtendU)                                \\\n              V(RiscvS128Load64Zero)                                   \\\n              V(RiscvS128Load32Zero)                                   \\\n              V(RiscvS128LoadLane)                                     \\\n              V(RiscvS128StoreLane)                                    \\\n              V(RiscvRvvLd)                                            \\\n              V(RiscvRvvSt)"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "macro",
+        "name": "TARGET_ARCH_OPCODE_LIST_SPECAIL",
+        "about": "Macro defining a list of special RISC-V opcodes, including memory access and other operations. Conditional compilation based on V8_TARGET_ARCH_RISCV64 or V8_TARGET_ARCH_RISCV32.",
+        "parameters": [
+          {
+            "name": "V",
+            "type": "macro",
+            "purpose": "A macro to apply to each opcode in the list."
+          }
+        ],
+        "return": {
+          "type": "void",
+          "description": "Expands to a list of macro invocations."
+        },
+        "dependencies": [
+          "TARGET_ARCH_OPCODE_WITH_MEMORY_ACCESS_MODE_LIST"
+        ]
+      },
+      "code": "#define TARGET_ARCH_OPCODE_LIST_SPECAIL(V)           \\\n              TARGET_ARCH_OPCODE_WITH_MEMORY_ACCESS_MODE_LIST(V) \\\n              V(RiscvAdd64)                                      \\\n              V(RiscvAddOvf64)                                   \\\n              V(RiscvSub64)                                      \\\n              V(RiscvSubOvf64)                                   \\\n              V(RiscvMulHigh64)                                  \\\n              V(RiscvMulHighU64)                                 \\\n              V(RiscvMul64)                                      \\\n              V(RiscvMulOvf64)                                   \\\n              V(RiscvDiv64)                                      \\\n              V(RiscvDivU64)                                     \\\n              V(RiscvMod64)                                      \\\n              V(RiscvModU64)                                     \\\n              V(RiscvZeroExtendWord)                             \\\n              V(RiscvSignExtendWord)                             \\\n              V(RiscvClz64)                                      \\\n              V(RiscvCtz64)                                      \\\n              V(RiscvPopcnt64)                                   \\\n              V(RiscvShl64)                                      \\\n              V(RiscvShr64)                                      \\\n              V(RiscvSar64)                                      \\\n              V(RiscvRor64)                                      \\\n              V(RiscvFloat64RoundDown)                           \\\n              V(RiscvFloat64RoundTruncate)                       \\\n              V(RiscvFloat64RoundUp)                             \\\n              V(RiscvFloat64RoundTiesEven)                       \\\n              V(RiscvTruncLS)                                    \\\n              V(RiscvTruncLD)                                    \\\n              V(RiscvTruncUlS)                                   \\\n              V(RiscvTruncUlD)                                   \\\n              V(RiscvCvtSL)                                      \\\n              V(RiscvCvtSUl)                                     \\\n              V(RiscvCvtDL)                                      \\\n              V(RiscvCvtDUl)                                     \\\n              V(RiscvUsd)                                        \\\n              V(RiscvUlwu)                                       \\\n              V(RiscvBitcastDL)                                  \\\n              V(RiscvBitcastLD)                                  \\\n              V(RiscvByteSwap64)                                 \\\n              V(RiscvWord64AtomicAddUint64)                      \\\n              V(RiscvWord64AtomicSubUint64)                      \\\n              V(RiscvWord64AtomicAndUint64)                      \\\n              V(RiscvWord64AtomicOrUint64)                       \\\n              V(RiscvWord64AtomicXorUint64)                      \\\n              V(RiscvWord64AtomicExchangeUint64)                 \\\n              V(RiscvLoadDecodeSandboxedPointer)                 \\\n              V(RiscvStoreEncodeSandboxedPointer)                \\\n              V(RiscvStoreIndirectPointer)                       \\\n              V(RiscvAtomicLoadDecompressTaggedSigned)           \\\n              V(RiscvAtomicLoadDecompressTagged)                 \\\n              V(RiscvLoadDecompressProtected)                    \\\n              V(RiscvAtomicStoreCompressTagged)                  \\\n              V(RiscvWord64AtomicCompareExchangeUint64)          \\\n              V(RiscvCmp32)                                      \\\n              V(RiscvCmpZero32)                                  \\\n              V(RiscvTst64)"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "macro",
+        "name": "TARGET_ARCH_OPCODE_LIST_COMMON",
+        "about": "Macro defining a list of common RISC-V opcodes, independent of the architecture (32/64 bit).",
+        "parameters": [
+          {
+            "name": "V",
+            "type": "macro",
+            "purpose": "A macro to apply to each opcode in the list."
+          }
+        ],
+        "return": {
+          "type": "void",
+          "description": "Expands to a list of macro invocations."
+        },
+        "dependencies": []
+      },
+      "code": "#define TARGET_ARCH_OPCODE_LIST_COMMON(V) \\\n              V(RiscvAdd32)                           \\\n              V(RiscvSub32)                           \\\n              V(RiscvMul32)                           \\\n              V(RiscvMulOvf32)                        \\\n              V(RiscvMulHigh32)                       \\\n              V(RiscvMulHighU32)                      \\\n              V(RiscvDiv32)                           \\\n              V(RiscvDivU32)                          \\\n              V(RiscvMod32)                           \\\n              V(RiscvModU32)                          \\\n              V(RiscvAnd)                             \\\n              V(RiscvAnd32)                           \\\n              V(RiscvOr)                              \\\n              V(RiscvOr32)                            \\\n              V(RiscvXor)                             \\\n              V(RiscvXor32)                           \\\n              V(RiscvClz32)                           \\\n              V(RiscvShl32)                           \\\n              V(RiscvShr32)                           \\\n              V(RiscvSar32)                           \\\n              V(RiscvCtz32)                           \\\n              V(RiscvPopcnt32)                        \\\n              V(RiscvRor32)                           \\\n              V(RiscvMov)                             \\\n              V(RiscvTst32)                           \\\n              V(RiscvCmp)                             \\\n              V(RiscvCmpZero)                         \\\n              V(RiscvCmpS)                            \\\n              V(RiscvAddS)                            \\\n              V(RiscvSubS)                            \\\n              V(RiscvMulS)                            \\\n              V(RiscvDivS)                            \\\n              V(RiscvModS)                            \\\n              V(RiscvAbsS)                            \\\n              V(RiscvNegS)                            \\\n              V(RiscvSqrtS)                           \\\n              V(RiscvMaxS)                            \\\n              V(RiscvMinS)                            \\\n              V(RiscvCmpD)                            \\\n              V(RiscvAddD)                            \\\n              V(RiscvSubD)                            \\\n              V(RiscvMulD)                            \\\n              V(RiscvDivD)                            \\\n              V(RiscvModD)                            \\\n              V(RiscvAbsD)                            \\\n              V(RiscvNegD)                            \\\n              V(RiscvSqrtD)                           \\\n              V(RiscvMaxD)                            \\\n              V(RiscvMinD)                            \\\n              V(RiscvFloat32RoundDown)                \\\n              V(RiscvFloat32RoundTruncate)            \\\n              V(RiscvFloat32RoundUp)                  \\\n              V(RiscvFloat32RoundTiesEven)            \\\n              V(RiscvCvtSD)                           \\\n              V(RiscvCvtDS)                           \\\n              V(RiscvTruncWD)                         \\\n              V(RiscvRoundWD)                         \\\n              V(RiscvFloorWD)                         \\\n              V(RiscvCeilWD)                          \\\n              V(RiscvTruncWS)                         \\\n              V(RiscvRoundWS)                         \\\n              V(RiscvFloorWS)                         \\\n              V(RiscvCeilWS)                          \\\n              V(RiscvTruncUwD)                        \\\n              V(RiscvTruncUwS)                        \\\n              V(RiscvCvtDW)                           \\\n              V(RiscvCvtSW)                           \\\n              V(RiscvCvtSUw)                          \\\n              V(RiscvCvtDUw)                          \\\n              V(RiscvUlh)                             \\\n              V(RiscvUlhu)                            \\\n              V(RiscvUsh)                             \\\n              V(RiscvUld)                             \\\n              V(RiscvUlw)                             \\\n              V(RiscvUsw)                             \\\n              V(RiscvUStoreFloat)                     \\\n              V(RiscvULoadFloat)                      \\\n              V(RiscvULoadDouble)                     \\\n              V(RiscvUStoreDouble)                    \\\n              V(RiscvEnableDebugTrace)                \\\n              V(RiscvDisableDebugTrace)               \\\n              V(RiscvBitcastInt32ToFloat32)           \\\n              V(RiscvBitcastFloat32ToInt32)           \\\n              V(RiscvFloat64ExtractLowWord32)         \\\n              V(RiscvFloat64ExtractHighWord32)        \\\n              V(RiscvFloat64InsertLowWord32)          \\\n              V(RiscvFloat64InsertHighWord32)         \\\n              V(RiscvFloat32Max)                      \\\n              V(RiscvFloat64Max)                      \\\n              V(RiscvFloat32Min)                      \\\n              V(RiscvFloat64Min)                      \\\n              V(RiscvFloat64SilenceNaN)               \\\n              V(RiscvPush)                            \\\n              V(RiscvPeek)                            \\\n              V(RiscvByteSwap32)                      \\\n              V(RiscvStoreToStackSlot)                \\\n              V(RiscvStackClaim)                      \\\n              V(RiscvSignExtendByte)                  \\\n              V(RiscvSignExtendShort)                 \\\n              V(RiscvSync)                            \\\n              V(RiscvAssertEqual)                     \\\n              V(RiscvS128Const)                       \\\n              V(RiscvS128Zero)                        \\\n              V(RiscvS128AllOnes)                     \\\n              V(RiscvI32x4ExtractLane)                \\\n              V(RiscvI32x4ReplaceLane)                \\\n              V(RiscvF64x2Abs)                        \\\n              V(RiscvF32x4ExtractLane)                \\\n              V(RiscvF32x4ReplaceLane)                \\\n              V(RiscvF32x4SConvertI32x4)              \\\n              V(RiscvF32x4UConvertI32x4)              \\\n              V(RiscvI64x2SConvertI32x4Low)           \\\n              V(RiscvI64x2SConvertI32x4High)          \\\n              V(RiscvI64x2UConvertI32x4Low)           \\\n              V(RiscvI64x2UConvertI32x4High)          \\\n              V(RiscvI32x4Shl)                        \\\n              V(RiscvI32x4ShrS)                       \\\n              V(RiscvI32x4ShrU)                       \\\n              V(RiscvF64x2Sqrt)                       \\\n              V(RiscvF64x2ConvertLowI32x4S)           \\\n              V(RiscvF64x2ConvertLowI32x4U)           \\\n              V(RiscvF64x2PromoteLowF32x4)            \\\n              V(RiscvF64x2ExtractLane)                \\\n              V(RiscvF64x2ReplaceLane)                \\\n              V(RiscvF64x2Pmin)                       \\\n              V(RiscvF64x2Pmax)                       \\\n              V(RiscvF64x2Ceil)                       \\\n              V(RiscvF64x2Floor)                      \\\n              V(RiscvF64x2Trunc)                      \\\n              V(RiscvF64x2NearestInt)                 \\\n              V(RiscvI64x2SplatI32Pair)               \\\n              V(RiscvI64x2ExtractLane)                \\\n              V(RiscvI64x2ReplaceLane)                \\\n              V(RiscvI64x2ReplaceLaneI32Pair)         \\\n              V(RiscvI64x2Shl)                        \\\n              V(RiscvI64x2ShrS)                       \\\n              V(RiscvI64x2ShrU)                       \\\n              V(RiscvF32x4Abs)                        \\\n              V(RiscvF32x4Sqrt)                       \\\n              V(RiscvF32x4Qfma)                       \\\n              V(RiscvF32x4Qfms)                       \\\n              V(RiscvF64x2Qfma)                       \\\n              V(RiscvF64x2Qfms)                       \\\n              V(RiscvF32x4Pmin)                       \\\n              V(RiscvF32x4Pmax)                       \\\n              V(RiscvF32x4DemoteF64x2Zero)            \\\n              V(RiscvF32x4Ceil)                       \\\n              V(RiscvF32x4Floor)                      \\\n              V(RiscvF32x4Trunc)                      \\\n              V(RiscvF32x4NearestInt)                 \\\n              V(RiscvI32x4SConvertF32x4)              \\\n              V(RiscvI32x4UConvertF32x4)              \\\n              V(RiscvI32x4TruncSatF64x2SZero)         \\\n              V(RiscvI32x4TruncSatF64x2UZero)         \\\n              V(RiscvI16x8ExtractLaneU)               \\\n              V(RiscvI16x8ExtractLaneS)               \\\n              V(RiscvI16x8ReplaceLane)                \\\n              V(RiscvI16x8Shl)                        \\\n              V(RiscvI16x8ShrS)                       \\\n              V(RiscvI16x8ShrU)                       \\\n              V(RiscvI8x16ExtractLaneU)               \\\n              V(RiscvI8x16ExtractLaneS)               \\\n              V(RiscvI8x16ReplaceLane)                \\\n              V(RiscvI8x16Shl)                        \\\n              V(RiscvI8x16ShrS)                       \\\n              V(RiscvI8x16ShrU)                       \\\n              V(RiscvI8x16RoundingAverageU)           \\\n              V(RiscvI8x16Popcnt)                     \\\n              V(RiscvVnot)                            \\\n              V(RiscvS128Select)                      \\\n              V(RiscvV128AnyTrue)                     \\\n              V(RiscvI8x16Shuffle)                    \\\n              V(RiscvVmv)                             \\\n              V(RiscvVandVv)                          \\\n              V(RiscvVnotVv)                          \\\n              V(RiscvVorVv)                           \\\n              V(RiscvVxorVv)                          \\\n              V(RiscvVwmul)                           \\\n              V(RiscvVwmulu)                          \\\n              V(RiscvVmvSx)                           \\\n              V(RiscvVmvXs)                           \\\n              V(RiscvVcompress)                       \\\n              V(RiscvVaddVv)                          \\\n              V(RiscvVsubVv)                          \\\n              V(RiscvVwaddVv)                         \\\n              V(RiscvVwadduVv)                        \\\n              V(RiscvVwadduWx)                        \\\n              V(RiscvVrgather)                        \\\n              V(RiscvVslidedown)                      \\\n              V(RiscvVAbs)                            \\\n              V(RiscvVsll)                            \\\n              V(RiscvVfmvVf)                          \\\n              V(RiscvVnegVv)                          \\\n              V(RiscvVfnegVv)                         \\\n              V(RiscvVmaxuVv)                         \\\n              V(RiscvVmax)                            \\\n              V(RiscvVminuVv)                         \\\n              V(RiscvVminsVv)                         \\\n              V(RiscvVmulVv)                          \\\n              V(RiscvVdivu)                           \\\n              V(RiscvVmslt)                           \\\n              V(RiscvVgtsVv)                          \\\n              V(RiscvVgesVv)                          \\\n              V(RiscvVgeuVv)                          \\\n              V(RiscvVgtuVv)                          \\\n              V(RiscvVeqVv)                           \\\n              V(RiscvVneVv)                           \\\n              V(RiscvVaddSatSVv)                      \\\n              V(RiscvVaddSatUVv)                      \\\n              V(RiscvVsubSatSVv)                      \\\n              V(RiscvVsubSatUVv)                      \\\n              V(RiscvVmfeqVv)                         \\\n              V(RiscvVmfneVv)                         \\\n              V(RiscvVmfleVv)                         \\\n              V(RiscvVmfltVv)                         \\\n              V(RiscvVfaddVv)                         \\\n              V(RiscvVfsubVv)                         \\\n              V(RiscvVfmulVv)                         \\\n              V(RiscvVfdivVv)                         \\\n              V(RiscvVfminVv)                         \\\n              V(RiscvVfmaxVv)                         \\\n              V(RiscvVmergeVx)                        \\\n              V(RiscvVsmulVv)                         \\\n              V(RiscvVnclipu)                         \\\n              V(RiscvVnclip)                          \\\n              V(RiscvVredminuVs)                      \\\n              V(RiscvVAllTrue)                        \\\n              V(RiscvVzextVf2)                        \\\n              V(RiscvVsextVf2)"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "macro",
+        "name": "TARGET_ARCH_OPCODE_LIST_ZBB",
+        "about": "Macro defining ZBB extension opcodes.",
+        "parameters": [
+          {
+            "name": "V",
+            "type": "macro",
+            "purpose": "A macro to apply to each opcode in the list."
+          }
+        ],
+        "return": {
+          "type": "void",
+          "description": "Expands to a list of macro invocations."
+        },
+        "dependencies": []
+      },
+      "code": "#define TARGET_ARCH_OPCODE_LIST_ZBB(V) \\\n              V(RiscvAndn)                         \\\n              V(RiscvOrn)                          \\\n              V(RiscvXnor)                         \\\n              V(RiscvClz)                          \\\n              V(RiscvCtz)                          \\\n              V(RiscvCpop)                         \\\n              V(RiscvMax)                          \\\n              V(RiscvMaxu)                         \\\n              V(RiscvMin)                          \\\n              V(RiscvMinu)                         \\\n              V(RiscvSextb)                        \\\n              V(RiscvSexth)                        \\\n              V(RiscvZexth)                        \\\n              V(RiscvRev8)"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "macro",
+        "name": "TARGET_ARCH_OPCODE_LIST_ZBB_32",
+        "about": "Macro defining ZBB extension opcodes 32 bit.",
+        "parameters": [
+          {
+            "name": "V",
+            "type": "macro",
+            "purpose": "A macro to apply to each opcode in the list."
+          }
+        ],
+        "return": {
+          "type": "void",
+          "description": "Expands to a list of macro invocations."
+        },
+        "dependencies": []
+      },
+      "code": "#ifdef V8_TARGET_ARCH_RISCV64\n            #define TARGET_ARCH_OPCODE_LIST_ZBB_32(V) \\\n              V(RiscvClzw)                            \\\n              V(RiscvCtzw)                            \\\n              V(RiscvCpopw)\n            #else\n            #define TARGET_ARCH_OPCODE_LIST_ZBB_32(V)\n            #endif"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "macro",
+        "name": "TARGET_ARCH_OPCODE_LIST_ZBA",
+        "about": "Macro defining ZBA extension opcodes.",
+        "parameters": [
+          {
+            "name": "V",
+            "type": "macro",
+            "purpose": "A macro to apply to each opcode in the list."
+          }
+        ],
+        "return": {
+          "type": "void",
+          "description": "Expands to a list of macro invocations."
+        },
+        "dependencies": []
+      },
+      "code": "#define TARGET_ARCH_OPCODE_LIST_ZBA(V) \\\n          V(RiscvSh1add)                       \\\n          V(RiscvSh2add)                       \\\n          V(RiscvSh3add)"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "macro",
+        "name": "TARGET_ARCH_OPCODE_LIST_ZBA_32",
+        "about": "Macro defining ZBA extension opcodes 32 bit.",
+        "parameters": [
+          {
+            "name": "V",
+            "type": "macro",
+            "purpose": "A macro to apply to each opcode in the list."
+          }
+        ],
+        "return": {
+          "type": "void",
+          "description": "Expands to a list of macro invocations."
+        },
+        "dependencies": []
+      },
+      "code": "#ifdef V8_TARGET_ARCH_RISCV64\n          #define TARGET_ARCH_OPCODE_LIST_ZBA_32(V) \\\n            V(RiscvAdduw)                           \\\n            V(RiscvSh1adduw)                        \\\n            V(RiscvSh2adduw)                        \\\n            V(RiscvSh3adduw)                        \\\n            V(RiscvSlliuw)\n          #else\n          #define TARGET_ARCH_OPCODE_LIST_ZBA_32(V)\n          #endif"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "macro",
+        "name": "TARGET_ARCH_OPCODE_LIST_ZBS",
+        "about": "Macro defining ZBS extension opcodes.",
+        "parameters": [
+          {
+            "name": "V",
+            "type": "macro",
+            "purpose": "A macro to apply to each opcode in the list."
+          }
+        ],
+        "return": {
+          "type": "void",
+          "description": "Expands to a list of macro invocations."
+        },
+        "dependencies": []
+      },
+      "code": "#define TARGET_ARCH_OPCODE_LIST_ZBS(V) \\\n              V(RiscvBclr)                         \\\n              V(RiscvBclri)                        \\\n              V(RiscvBext)                         \\\n              V(RiscvBexti)                        \\\n              V(RiscvBinv)                         \\\n              V(RiscvBinvi)                        \\\n              V(RiscvBset)                         \\\n              V(RiscvBseti)"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "macro",
+        "name": "TARGET_ARCH_OPCODE_LIST",
+        "about": "Main macro that combines all opcode lists, conditionally defining them based on target architecture.",
+        "parameters": [
+          {
+            "name": "V",
+            "type": "macro",
+            "purpose": "A macro to apply to all opcodes in the combined list."
+          }
+        ],
+        "return": {
+          "type": "void",
+          "description": "Expands to a list of macro invocations."
+        },
+        "dependencies": [
+          "TARGET_ARCH_OPCODE_LIST_COMMON",
+          "TARGET_ARCH_OPCODE_LIST_SPECAIL",
+          "TARGET_ARCH_OPCODE_LIST_ZBB",
+          "TARGET_ARCH_OPCODE_LIST_ZBS",
+          "TARGET_ARCH_OPCODE_LIST_ZBA",
+          "TARGET_ARCH_OPCODE_LIST_ZBA_32",
+          "TARGET_ARCH_OPCODE_LIST_ZBB_32"
+        ]
+      },
+      "code": "#define TARGET_ARCH_OPCODE_LIST(V)   \\\n              TARGET_ARCH_OPCODE_LIST_COMMON(V)  \\\n              TARGET_ARCH_OPCODE_LIST_SPECAIL(V) \\\n              TARGET_ARCH_OPCODE_LIST_ZBB(V)     \\\n              TARGET_ARCH_OPCODE_LIST_ZBS(V)     \\\n              TARGET_ARCH_OPCODE_LIST_ZBA(V)     \\\n              TARGET_ARCH_OPCODE_LIST_ZBA_32(V)  \\\n              TARGET_ARCH_OPCODE_LIST_ZBB_32(V)"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "macro",
+        "name": "TARGET_ADDRESSING_MODE_LIST",
+        "about": "Macro defining the list of addressing modes supported by RISC-V instructions.",
+        "parameters": [
+          {
+            "name": "V",
+            "type": "macro",
+            "purpose": "A macro to apply to each addressing mode in the list."
+          }
+        ],
+        "return": {
+          "type": "void",
+          "description": "Expands to a list of macro invocations."
+        },
+        "dependencies": []
+      },
+      "code": "#define TARGET_ADDRESSING_MODE_LIST(V) \\\n              V(MRI)  /* [%r0 + K] */              \\\n              V(MRR)  /* [%r0 + %r1] */            \\\n              V(Root) /* [root + k] */"
+    }
+  ],
+  "file_path": "/home/kathirks_gc/v8_go/archive/codebase/src/compiler/backend/riscv/instruction-codes-riscv.h"
+}

@@ -1,0 +1,58 @@
+{
+  "file_path": "/home/kathirks_gc/v8_go/codebase/include/cppgc/liveness-broker.h",
+  "imports": [
+    "cppgc/heap.h",
+    "cppgc/member.h",
+    "cppgc/sentinel-pointer.h",
+    "cppgc/trace-trait.h",
+    "v8config.h"
+  ],
+  "classes": [
+    {
+      "name": "LivenessBroker",
+      "properties": [],
+      "methods": [
+        {
+          "name": "IsHeapObjectAlive",
+          "parameters": [
+            "const T* object"
+          ],
+          "return_type": "bool",
+          "logic": "Checks if a heap object is alive. Considers nullptr and sentinel pointers as alive. Delegates to IsHeapObjectAliveImpl after obtaining the base object payload using TraceTrait."
+        },
+        {
+          "name": "IsHeapObjectAlive",
+          "parameters": [
+            "const WeakMember<T>& weak_member"
+          ],
+          "return_type": "bool",
+          "logic": "Checks if a heap object pointed to by a WeakMember is alive by calling IsHeapObjectAlive with the result of weak_member.Get()."
+        },
+        {
+          "name": "IsHeapObjectAlive",
+          "parameters": [
+            "const UntracedMember<T>& untraced_member"
+          ],
+          "return_type": "bool",
+          "logic": "Checks if a heap object pointed to by an UntracedMember is alive by calling IsHeapObjectAlive with the result of untraced_member.Get()."
+        },
+        {
+          "name": "LivenessBroker",
+          "parameters": [],
+          "return_type": "",
+          "logic": "Private default constructor.  Only LivenessBrokerFactory can create instances."
+        }
+      ]
+    }
+  ],
+  "functions": [
+    {
+      "name": "IsHeapObjectAliveImpl",
+      "parameters": [
+        "const void*"
+      ],
+      "return_type": "bool",
+      "logic": "Implementation detail for checking if a heap object is alive. Defined elsewhere (likely in a .cc file)."
+    }
+  ]
+}

@@ -1,0 +1,52 @@
+{
+  "file_path": "/home/kathirks_gc/v8_go/codebase/src/logging/runtime-call-stats-scope.h",
+  "imports": [
+    "<memory>",
+    "src/execution/isolate.h",
+    "src/execution/local-isolate.h",
+    "src/logging/counters.h",
+    "src/logging/runtime-call-stats.h",
+    "src/logging/tracing-flags.h"
+  ],
+  "classes": [
+    {
+      "name": "RuntimeCallTimerScope",
+      "properties": [
+        "stats_",
+        "timer_"
+      ],
+      "methods": [
+        {
+          "name": "RuntimeCallTimerScope",
+          "parameters": [
+            "Isolate* isolate",
+            "RuntimeCallCounterId counter_id"
+          ],
+          "return_type": "void",
+          "logic": "Constructor for when an Isolate* is provided. Checks if runtime stats are enabled. If so, gets the RuntimeCallStats from the isolate's counters and calls Enter on the stats_ with a new timer and the counter_id."
+        },
+        {
+          "name": "RuntimeCallTimerScope",
+          "parameters": [
+            "LocalIsolate* isolate",
+            "RuntimeCallCounterId counter_id",
+            "RuntimeCallStats::CounterMode mode"
+          ],
+          "return_type": "void",
+          "logic": "Constructor for when a LocalIsolate* is provided. Checks if runtime stats are enabled. If so, gets the RuntimeCallStats from the isolate. If the mode is thread-specific, update the counter_id to the thread specific version. Calls Enter on the stats_ with a new timer and the counter_id."
+        }
+      ]
+    }
+  ],
+  "functions": [],
+  "macros": [
+    {
+      "name": "RCS_SCOPE",
+      "parameters": [
+        "..."
+      ],
+      "definition": "v8::internal::RuntimeCallTimerScope CONCAT(rcs_timer_scope, __LINE__)(__VA_ARGS__)",
+      "logic": "A macro that creates a RuntimeCallTimerScope object with a unique name based on the line number. This simplifies the creation of timer scopes for runtime call statistics."
+    }
+  ]
+}

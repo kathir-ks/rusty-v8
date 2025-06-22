@@ -1,0 +1,55 @@
+{
+  "file_path": "/home/kathirks_gc/v8_go/codebase/src/compiler/turboshaft/debug-feature-lowering-reducer.h",
+  "imports": [
+    "src/compiler/js-heap-broker.h",
+    "src/compiler/turboshaft/assembler.h",
+    "src/compiler/turboshaft/builtin-call-descriptors.h",
+    "src/compiler/turboshaft/index.h",
+    "src/compiler/turboshaft/operations.h",
+    "src/compiler/turboshaft/phase.h",
+    "src/compiler/turboshaft/representations.h",
+    "src/compiler/turboshaft/define-assembler-macros.inc",
+    "src/compiler/turboshaft/undef-assembler-macros.inc"
+  ],
+  "classes": [
+    {
+      "name": "DebugFeatureLoweringReducer",
+      "properties": [
+        "isolate_",
+        "broker_"
+      ],
+      "methods": [
+        {
+          "name": "REDUCE(DebugPrint)",
+          "parameters": [
+            "OpIndex input",
+            "RegisterRepresentation rep"
+          ],
+          "return_type": "OpIndex",
+          "logic": "Lowers the `DebugPrint` operation by calling appropriate builtins or runtime functions depending on the register representation. It handles `WordPtr`, `Float64`, and `Tagged` representations. For WebAssembly, it calls builtins through jumptables. If the isolate is null, assumes WASM execution."
+        },
+        {
+          "name": "REDUCE(StaticAssert)",
+          "parameters": [
+            "V<Word32> condition",
+            "const char* source"
+          ],
+          "return_type": "V<None>",
+          "logic": "This method is intended to remove static asserts after they are statically asserted. If it encounters a non-true input, it fatally errors, indicating a problem with the Turbofan static assert."
+        },
+        {
+          "name": "REDUCE(CheckTurboshaftTypeOf)",
+          "parameters": [
+            "OpIndex input",
+            "RegisterRepresentation rep",
+            "Type type",
+            "bool successful"
+          ],
+          "return_type": "OpIndex",
+          "logic": "Performs a type check on a Turboshaft operation. If the check is successful, it returns the input. If the check fails, it fatally errors, providing information about the expected type and the failing operation."
+        }
+      ]
+    }
+  ],
+  "functions": []
+}

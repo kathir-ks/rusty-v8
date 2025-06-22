@@ -1,0 +1,68 @@
+{
+  "metadata": {
+    "path": "/home/kathirks_gc/v8_go/archive/codebase/src/execution/protectors.h",
+    "file_name": "protectors.h",
+    "language": "cpp",
+    "purpose": "Defines the Protectors class, which provides a mechanism to invalidate certain optimizations based on the state of the JavaScript environment."
+  },
+  "imports": {
+    "metadata": {
+      "language": "cpp",
+      "purpose": "Includes the handles.h header file, which defines the Handle and HandleScope classes used for managing garbage-collected objects."
+    },
+    "code": "#include \"src/handles/handles.h\""
+  },
+  "classes": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "Protectors",
+        "extends": "AllStatic",
+        "about": "Provides static methods to check and invalidate protectors. Protectors are used to guard against changes to built-in objects or their prototypes, allowing the engine to perform optimizations safely.",
+        "attributes": [
+          {
+            "name": "kProtectorValid",
+            "type": "const int",
+            "access": "public",
+            "purpose": "Represents a valid protector state."
+          },
+          {
+            "name": "kProtectorInvalid",
+            "type": "const int",
+            "access": "public",
+            "purpose": "Represents an invalid protector state."
+          }
+        ],
+        "dependencies": [
+          "AllStatic",
+          "Isolate"
+        ]
+      },
+      "code": "class Protectors : public AllStatic {\n            public:\n                static const int kProtectorValid = 1;\n                static const int kProtectorInvalid = 0;\n\n                #define DECLARED_PROTECTORS_ON_ISOLATE(V)                                     \\\n                V(ArrayBufferDetaching, ArrayBufferDetachingProtector,                      \\\n                array_buffer_detaching_protector)                                         \\\n                V(ArrayConstructor, ArrayConstructorProtector, array_constructor_protector) \\\n                V(ArrayIteratorLookupChain, ArrayIteratorProtector,                         \\\n                array_iterator_protector)                                                 \\\n                V(ArraySpeciesLookupChain, ArraySpeciesProtector, array_species_protector)  \\\n                V(IsConcatSpreadableLookupChain, IsConcatSpreadableProtector,               \\\n                is_concat_spreadable_protector)                                           \\\n                V(NoElements, NoElementsProtector, no_elements_protector)                   \\\n                                                                                                \\\n                V(MegaDOM, MegaDOMProtector, mega_dom_protector)                            \\\n                V(NoProfiling, NoProfilingProtector, no_profiling_protector)                \\\n                V(NoUndetectableObjects, NoUndetectableObjectsProtector,                    \\\n                no_undetectable_objects_protector)                                        \\\n                                                                                                \\\n                /* The MapIterator protector protects the original iteration behaviors   */ \\\n                /* of Map.prototype.keys(), Map.prototype.values(), and                  */ \\\n                /* Set.prototype.entries(). It does not protect the original iteration   */ \\\n                /* behavior of Map.prototype[Symbol.iterator]().                         */ \\\n                /* The protector is invalidated when:                                    */ \\\n                /* * The 'next' property is set on an object where the property holder   */ \\\n                /*   is the %MapIteratorPrototype% (e.g. because the object is that very */ \\\n                /*   prototype).                                                         */ \\\n                /* * The 'Symbol.iterator' property is set on an object where the        */ \\\n                /*   property holder is the %IteratorPrototype%. Note that this also     */ \\\n                /*   invalidates the SetIterator protector (see below).                  */ \\\n                V(MapIteratorLookupChain, MapIteratorProtector, map_iterator_protector)     \\\n                /* String.prototype.{matchAll|replace|split} looks up                    */ \\\n                /* Symbol.{matchAll|replace|split} (aka @@matchAll, @@replace @split) on */ \\\n                /* the search term to check if it is regexp-like.                        */ \\\n                /* This protector ensures the prototype chain of String.prototype and    */ \\\n                /* Number.prototype does not contain Symbol.{matchAll|replace|split}.    */ \\\n                /* It enables a fast-path for String.prototype.{matchAll|replace|split}  */ \\\n                /* by ensuring that                                                      */ \\\n                /* the implicit wrapper object for strings and numbers do not contain    */ \\\n                /* the property Symbol.{matchAll|replace|split}.                         */ \\\n                V(NumberStringNotRegexpLike, NumberStringNotRegexpLikeProtector,            \\\n                number_string_not_regexp_like_protector)                                  \\\n                V(RegExpSpeciesLookupChain, RegExpSpeciesProtector,                         \\\n                regexp_species_protector)                                                 \\\n                V(PromiseHook, PromiseHookProtector, promise_hook_protector)                \\\n                V(PromiseThenLookupChain, PromiseThenProtector, promise_then_protector)     \\\n                V(PromiseResolveLookupChain, PromiseResolveProtector,                       \\\n                promise_resolve_protector)                                                \\\n                V(PromiseSpeciesLookupChain, PromiseSpeciesProtector,                       \\\n                promise_species_protector)                                                \\\n                                                                                                \\\n                /* The SetIterator protector protects the original iteration behavior of */ \\\n                /* Set.prototype.keys(), Set.prototype.values(),                         */ \\\n                /* Set.prototype.entries(), and Set.prototype[Symbol.iterator](). The    */ \\\n                /* protector is invalidated when:                                        */ \\\n                /* * The 'next' property is set on an object where the property holder   */ \\\n                /*   is the %SetIteratorPrototype% (e.g. because the object is that very */ \\\n                /*   prototype).                                                         */ \\\n                /* * The 'Symbol.iterator' property is set on an object where the        */ \\\n                /*   property holder is the %SetPrototype% OR %IteratorPrototype%. This  */ \\\n                /*   means that setting Symbol.iterator on a MapIterator object can also */ \\\n                /*   invalidate the SetIterator protector, and vice versa, setting       */ \\\n                /*   Symbol.iterator on a SetIterator object can also invalidate the     */ \\\n                /*   MapIterator. This is an over-approximation for the sake of          */ \\\n                /*   simplicity.                                                         */ \\\n                V(SetIteratorLookupChain, SetIteratorProtector, set_iterator_protector)     \\\n                                                                                                \\\n                /* The StringIteratorProtector protects the original string iteration    */ \\\n                /* behavior for primitive strings. As long as the                        */ \\\n                /* StringIteratorProtector is valid, iterating over a primitive string   */ \\\n                /* is guaranteed to be unobservable from user code and can thus be cut   */ \\\n                /* short. More specifically, the protector gets invalidated as soon as   */ \\\n                /* either String.prototype[Symbol.iterator] or                           */ \\\n                /* String.prototype[Symbol.iterator]().next is modified. This guarantee  */ \\\n                /* does not apply to string objects (as opposed to primitives), since    */ \\\n                /* they could define their own Symbol.iterator.                          */ \\\n                /* String.prototype itself does not need to be protected, since it is    */ \\\n                /* non-configurable and non-writable.                                    */ \\\n                V(StringIteratorLookupChain, StringIteratorProtector,                       \\\n                string_iterator_protector)                                                \\\n                V(StringLengthOverflowLookupChain, StringLengthProtector,                   \\\n                string_length_protector)                                                  \\\n                /* This protects the ToPrimitive conversion of string wrappers (with the */ \\\n                /* default type hint NUMBER). */                                            \\\n                V(StringWrapperToPrimitive, StringWrapperToPrimitiveProtector,              \\\n                string_wrapper_to_primitive_protector)                                    \\\n                V(TypedArrayLengthLookupChain, TypedArrayLengthProtector,                   \\\n                typed_array_length_protector)                                             \\\n                V(TypedArraySpeciesLookupChain, TypedArraySpeciesProtector,                 \\\n                typed_array_species_protector)\n\n                #define DECLARE_PROTECTOR_ON_ISOLATE(name, unused_root_index, unused_cell) \\\n                V8_EXPORT_PRIVATE static inline bool Is##name##Intact(Isolate* isolate); \\\n                V8_EXPORT_PRIVATE static void Invalidate##name(Isolate* isolate);\n                DECLARED_PROTECTORS_ON_ISOLATE(DECLARE_PROTECTOR_ON_ISOLATE)\n                #undef DECLARE_PROTECTOR_ON_ISOLATE\n            };"
+    }
+  ],
+  "dependencies": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "AllStatic",
+        "about": "Base class that prevents instantiation."
+      },
+      "code": "class AllStatic {};",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "Isolate",
+        "about": "Represents an isolated instance of the V8 JavaScript engine."
+      },
+      "code": "class Isolate {};",
+      "type": "class"
+    }
+  ],
+  "file_path": "/home/kathirks_gc/v8_go/archive/codebase/src/execution/protectors.h"
+}

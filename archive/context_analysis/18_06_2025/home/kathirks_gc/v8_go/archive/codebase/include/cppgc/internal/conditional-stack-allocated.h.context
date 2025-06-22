@@ -1,0 +1,117 @@
+{
+  "metadata": {
+    "path": "/home/kathirks_gc/v8_go/archive/codebase/include/cppgc/internal/conditional-stack-allocated.h",
+    "file_name": "conditional-stack-allocated.h",
+    "language": "cpp",
+    "purpose": "Defines a base class that conditionally marks a type as stack allocated based on whether the template parameter is a stack allocated type, a traceable type, or a garbage collected or mixin type."
+  },
+  "imports": {
+    "metadata": {
+      "language": "cpp",
+      "purpose": "Provides cppgc type traits like IsStackAllocatedType."
+    },
+    "code": "#include \"cppgc/type-traits.h\"  // NOLINT(build/include_directory)"
+  },
+  "classes": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "ConditionalStackAllocatedBase",
+        "about": "Base class that is marked as stack allocated if T is either marked as stack allocated or a traceable type.",
+        "dependencies": [
+          "IsStackAllocatedType",
+          "IsTraceableV",
+          "IsGarbageCollectedOrMixinTypeV",
+          "RequiresStackAllocated"
+        ]
+      },
+      "code": "template <typename T>\n            class ConditionalStackAllocatedBase;"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "ConditionalStackAllocatedBase",
+        "about": "Specialization of ConditionalStackAllocatedBase for types that require stack allocation.",
+        "dependencies": [
+          "RequiresStackAllocated",
+          "CPPGC_STACK_ALLOCATED"
+        ]
+      },
+      "code": "template <typename T>\n              requires(RequiresStackAllocated<T>)\n            class ConditionalStackAllocatedBase<T> {\n             public:\n              CPPGC_STACK_ALLOCATED();\n            };"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "ConditionalStackAllocatedBase",
+        "about": "Specialization of ConditionalStackAllocatedBase for types that do not require stack allocation.",
+        "dependencies": [
+          "RequiresStackAllocated"
+        ]
+      },
+      "code": "template <typename T>\n              requires(!RequiresStackAllocated<T>)\n            class ConditionalStackAllocatedBase<T> {};"
+    }
+  ],
+  "interfaces": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "concept",
+        "name": "RequiresStackAllocated",
+        "about": "Concept that checks if a type T should be stack allocated based on various criteria.",
+        "dependencies": [
+          "std::is_void_v",
+          "cppgc::IsStackAllocatedType",
+          "cppgc::internal::IsTraceableV",
+          "cppgc::IsGarbageCollectedOrMixinTypeV"
+        ]
+      },
+      "code": "template <typename T>\n            concept RequiresStackAllocated =\n                !std::is_void_v<T> &&\n                (cppgc::IsStackAllocatedType<T> || cppgc::internal::IsTraceableV<T> ||\n                 cppgc::IsGarbageCollectedOrMixinTypeV<T>);"
+    }
+  ],
+  "dependencies": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "concept",
+        "name": "IsStackAllocatedType",
+        "about": "Type trait to check if a type is stack allocated."
+      },
+      "code": "template <typename T>\n                concept IsStackAllocatedType = requires(T t) { /* ... */ };",
+      "type": "interface"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "concept",
+        "name": "IsTraceableV",
+        "about": "Type trait to check if a type is traceable."
+      },
+      "code": "template <typename T>\n                concept IsTraceableV = requires(T t) { /* ... */ };",
+      "type": "interface"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "concept",
+        "name": "IsGarbageCollectedOrMixinTypeV",
+        "about": "Type trait to check if a type is garbage collected or a mixin type."
+      },
+      "code": "template <typename T>\n                concept IsGarbageCollectedOrMixinTypeV = requires(T t) { /* ... */ };",
+      "type": "interface"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "macro",
+        "name": "CPPGC_STACK_ALLOCATED",
+        "about": "Macro to mark a class as stack allocated."
+      },
+      "code": "#define CPPGC_STACK_ALLOCATED() /* ... */",
+      "type": "func"
+    }
+  ],
+  "file_path": "/home/kathirks_gc/v8_go/archive/codebase/include/cppgc/internal/conditional-stack-allocated.h"
+}

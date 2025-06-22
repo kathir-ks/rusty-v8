@@ -1,0 +1,222 @@
+{
+  "metadata": {
+    "path": "/home/kathirks_gc/v8_go/archive/codebase/src/compiler/operator-properties.h",
+    "file_name": "operator-properties.h",
+    "language": "cpp",
+    "purpose": "Defines the OperatorProperties class, which provides static methods for querying properties of Operators in the V8 compiler."
+  },
+  "imports": {
+    "metadata": {
+      "language": "cpp",
+      "purpose": "Includes macros for portability and other utilities."
+    },
+    "code": "#include \"src/base/macros.h\""
+  },
+  "classes": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "OperatorProperties",
+        "about": "Provides static methods for querying properties of Operators.",
+        "attributes": [],
+        "dependencies": [
+          "Operator"
+        ]
+      },
+      "code": "class V8_EXPORT_PRIVATE OperatorProperties final {\n public:\n  OperatorProperties(const OperatorProperties&) = delete;\n  OperatorProperties& operator=(const OperatorProperties&) = delete;\n\n  static bool HasContextInput(const Operator* op);\n  static int GetContextInputCount(const Operator* op) {\n    return HasContextInput(op) ? 1 : 0;\n  }\n\n  static bool NeedsExactContext(const Operator* op);\n\n  static bool HasFrameStateInput(const Operator* op);\n  static int GetFrameStateInputCount(const Operator* op) {\n    return HasFrameStateInput(op) ? 1 : 0;\n  }\n\n  static int GetTotalInputCount(const Operator* op);\n\n  static bool IsBasicBlockBegin(const Operator* op);\n};"
+    }
+  ],
+  "functions": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "function",
+        "name": "HasContextInput",
+        "parent": "OperatorProperties",
+        "about": "Checks if the given operator has a context input.",
+        "logic": "Abstract method. Implementation is elsewhere.",
+        "parameters": [
+          {
+            "name": "op",
+            "type": "const Operator*",
+            "purpose": "The operator to check."
+          }
+        ],
+        "return": {
+          "type": "bool",
+          "description": "True if the operator has a context input, false otherwise."
+        },
+        "dependencies": [
+          "Operator"
+        ]
+      },
+      "code": "static bool HasContextInput(const Operator* op);"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "function",
+        "name": "GetContextInputCount",
+        "parent": "OperatorProperties",
+        "about": "Gets the context input count of the given operator.",
+        "logic": "Returns 1 if the operator has a context input, 0 otherwise.",
+        "parameters": [
+          {
+            "name": "op",
+            "type": "const Operator*",
+            "purpose": "The operator to check."
+          }
+        ],
+        "return": {
+          "type": "int",
+          "description": "1 if the operator has a context input, 0 otherwise."
+        },
+        "dependencies": [
+          "Operator",
+          "HasContextInput"
+        ]
+      },
+      "code": "static int GetContextInputCount(const Operator* op) {\n    return HasContextInput(op) ? 1 : 0;\n  }"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "function",
+        "name": "NeedsExactContext",
+        "parent": "OperatorProperties",
+        "about": "Checks if the given operator needs an exact context.",
+        "logic": "Abstract method. Implementation is elsewhere.",
+        "parameters": [
+          {
+            "name": "op",
+            "type": "const Operator*",
+            "purpose": "The operator to check."
+          }
+        ],
+        "return": {
+          "type": "bool",
+          "description": "True if the operator needs an exact context, false otherwise."
+        },
+        "dependencies": [
+          "Operator"
+        ]
+      },
+      "code": "static bool NeedsExactContext(const Operator* op);"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "function",
+        "name": "HasFrameStateInput",
+        "parent": "OperatorProperties",
+        "about": "Checks if the given operator has a frame state input.",
+        "logic": "Abstract method. Implementation is elsewhere.",
+        "parameters": [
+          {
+            "name": "op",
+            "type": "const Operator*",
+            "purpose": "The operator to check."
+          }
+        ],
+        "return": {
+          "type": "bool",
+          "description": "True if the operator has a frame state input, false otherwise."
+        },
+        "dependencies": [
+          "Operator"
+        ]
+      },
+      "code": "static bool HasFrameStateInput(const Operator* op);"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "function",
+        "name": "GetFrameStateInputCount",
+        "parent": "OperatorProperties",
+        "about": "Gets the frame state input count of the given operator.",
+        "logic": "Returns 1 if the operator has a frame state input, 0 otherwise.",
+        "parameters": [
+          {
+            "name": "op",
+            "type": "const Operator*",
+            "purpose": "The operator to check."
+          }
+        ],
+        "return": {
+          "type": "int",
+          "description": "1 if the operator has a frame state input, 0 otherwise."
+        },
+        "dependencies": [
+          "Operator",
+          "HasFrameStateInput"
+        ]
+      },
+      "code": "static int GetFrameStateInputCount(const Operator* op) {\n    return HasFrameStateInput(op) ? 1 : 0;\n  }"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "function",
+        "name": "GetTotalInputCount",
+        "parent": "OperatorProperties",
+        "about": "Gets the total input count of the given operator.",
+        "logic": "Abstract method. Implementation is elsewhere.",
+        "parameters": [
+          {
+            "name": "op",
+            "type": "const Operator*",
+            "purpose": "The operator to check."
+          }
+        ],
+        "return": {
+          "type": "int",
+          "description": "The total input count."
+        },
+        "dependencies": [
+          "Operator"
+        ]
+      },
+      "code": "static int GetTotalInputCount(const Operator* op);"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "function",
+        "name": "IsBasicBlockBegin",
+        "parent": "OperatorProperties",
+        "about": "Checks if the given operator is a basic block begin.",
+        "logic": "Abstract method. Implementation is elsewhere.",
+        "parameters": [
+          {
+            "name": "op",
+            "type": "const Operator*",
+            "purpose": "The operator to check."
+          }
+        ],
+        "return": {
+          "type": "bool",
+          "description": "True if the operator is a basic block begin, false otherwise."
+        },
+        "dependencies": [
+          "Operator"
+        ]
+      },
+      "code": "static bool IsBasicBlockBegin(const Operator* op);"
+    }
+  ],
+  "dependencies": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "Operator",
+        "about": "Represents an operator in the compiler's intermediate representation."
+      },
+      "code": "class Operator;",
+      "type": "class"
+    }
+  ],
+  "file_path": "/home/kathirks_gc/v8_go/archive/codebase/src/compiler/operator-properties.h"
+}

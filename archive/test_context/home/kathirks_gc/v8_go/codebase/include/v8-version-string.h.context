@@ -1,0 +1,159 @@
+{
+  "metadata": {
+    "path": "/home/kathirks_gc/v8_go/codebase/include/v8-version-string.h",
+    "file_name": "v8-version-string.h",
+    "language": "cpp",
+    "purpose": "Defines the V8 version string macro."
+  },
+  "imports": {
+    "metadata": {
+      "language": "cpp",
+      "purpose": "Includes the base V8 version definitions."
+    },
+    "code": "#include \"v8-version.h\"  // NOLINT(build/include_directory)"
+  },
+  "dependencies": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "macro",
+        "name": "V8_MAJOR_VERSION",
+        "about": "The major version number of V8."
+      },
+      "code": "#define V8_MAJOR_VERSION",
+      "type": "func"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "macro",
+        "name": "V8_MINOR_VERSION",
+        "about": "The minor version number of V8."
+      },
+      "code": "#define V8_MINOR_VERSION",
+      "type": "func"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "macro",
+        "name": "V8_BUILD_NUMBER",
+        "about": "The build number of V8."
+      },
+      "code": "#define V8_BUILD_NUMBER",
+      "type": "func"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "macro",
+        "name": "V8_PATCH_LEVEL",
+        "about": "The patch level of V8."
+      },
+      "code": "#define V8_PATCH_LEVEL",
+      "type": "func"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "macro",
+        "name": "V8_EMBEDDER_STRING",
+        "about": "An optional string provided by the embedder."
+      },
+      "code": "#define V8_EMBEDDER_STRING",
+      "type": "func"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "macro",
+        "name": "V8_IS_CANDIDATE_VERSION",
+        "about": "Indicates whether the version is a candidate version."
+      },
+      "code": "#define V8_IS_CANDIDATE_VERSION",
+      "type": "func"
+    }
+  ],
+  "functions": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "macro",
+        "name": "V8_CANDIDATE_STRING",
+        "about": "Defines a string to indicate candidate version status",
+        "logic": "If V8_IS_CANDIDATE_VERSION is defined, it sets the string to ' (candidate)', otherwise it is an empty string.",
+        "dependencies": [
+          "V8_IS_CANDIDATE_VERSION"
+        ]
+      },
+      "code": "#if V8_IS_CANDIDATE_VERSION\n#define V8_CANDIDATE_STRING \" (candidate)\"\n#else\n#define V8_CANDIDATE_STRING \"\"\n#endif"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "macro",
+        "name": "V8_EMBEDDER_STRING",
+        "about": "Defines a placeholder for an embedder-specific string.",
+        "logic": "If V8_EMBEDDER_STRING is not already defined, it defaults to an empty string."
+      },
+      "code": "#ifndef V8_EMBEDDER_STRING\n#define V8_EMBEDDER_STRING \"\"\n#endif"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "macro",
+        "name": "V8_SX",
+        "about": "Stringification macro helper",
+        "logic": "Stringifies a macro argument.",
+        "parameters": [
+          {
+            "name": "x",
+            "type": "any",
+            "purpose": "The macro to stringify."
+          }
+        ]
+      },
+      "code": "#define V8_SX(x) #x"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "macro",
+        "name": "V8_S",
+        "about": "Stringification macro",
+        "logic": "Expands a macro argument and then stringifies it.",
+        "parameters": [
+          {
+            "name": "x",
+            "type": "any",
+            "purpose": "The macro to expand and stringify."
+          }
+        ],
+        "dependencies": [
+          "V8_SX"
+        ]
+      },
+      "code": "#define V8_S(x) V8_SX(x)"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "macro",
+        "name": "V8_VERSION_STRING",
+        "about": "Defines the complete V8 version string.",
+        "logic": "Constructs the V8 version string by concatenating major, minor, build, and patch numbers, along with embedder and candidate strings. The macro expands to different concatenation depending on whether the V8_PATCH_LEVEL is greater than 0.",
+        "dependencies": [
+          "V8_S",
+          "V8_MAJOR_VERSION",
+          "V8_MINOR_VERSION",
+          "V8_BUILD_NUMBER",
+          "V8_PATCH_LEVEL",
+          "V8_EMBEDDER_STRING",
+          "V8_CANDIDATE_STRING"
+        ]
+      },
+      "code": "#if V8_PATCH_LEVEL > 0\n#define V8_VERSION_STRING                                        \\\n  V8_S(V8_MAJOR_VERSION)                                         \\\n  \".\" V8_S(V8_MINOR_VERSION) \".\" V8_S(V8_BUILD_NUMBER) \".\" V8_S( \\\n      V8_PATCH_LEVEL) V8_EMBEDDER_STRING V8_CANDIDATE_STRING\n#else\n#define V8_VERSION_STRING                              \\\n  V8_S(V8_MAJOR_VERSION)                               \\\n  \".\" V8_S(V8_MINOR_VERSION) \".\" V8_S(V8_BUILD_NUMBER) \\\n      V8_EMBEDDER_STRING V8_CANDIDATE_STRING\n#endif"
+    }
+  ],
+  "file_path": "/home/kathirks_gc/v8_go/codebase/include/v8-version-string.h"
+}

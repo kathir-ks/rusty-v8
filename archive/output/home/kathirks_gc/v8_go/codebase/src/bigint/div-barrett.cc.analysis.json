@@ -1,0 +1,77 @@
+{
+  "file_path": "/home/kathirks_gc/v8_go/codebase/src/bigint/div-barrett.cc",
+  "imports": [
+    "algorithm",
+    "src/bigint/bigint-internal.h",
+    "src/bigint/digit-arithmetic.h",
+    "src/bigint/div-helpers.h",
+    "src/bigint/vector-arithmetic.h"
+  ],
+  "classes": [],
+  "functions": [
+    {
+      "name": "DcheckIntegerPartRange",
+      "parameters": [
+        "Digits X",
+        "digit_t min",
+        "digit_t max"
+      ],
+      "return_type": "void",
+      "logic": "Performs a debug check to ensure an integer part of a Digits object is within a given range.  Only active in debug builds."
+    },
+    {
+      "name": "ProcessorImpl::InvertBasecase",
+      "parameters": [
+        "RWDigits Z",
+        "Digits V",
+        "RWDigits scratch"
+      ],
+      "return_type": "void",
+      "logic": "Computes the fractional part of 1/V using naive division (schoolbook or Burnikel-Ziegler, depending on size).  Used as the base case for Newton inversion.  Writes the result to Z."
+    },
+    {
+      "name": "ProcessorImpl::InvertNewton",
+      "parameters": [
+        "RWDigits Z",
+        "Digits V",
+        "RWDigits scratch"
+      ],
+      "return_type": "void",
+      "logic": "Computes the inverse of V (shifted) using Newton's method.  Writes the result to Z, accurate to V.len+1 digits, plus implicit leading digit. This implements Algorithm 4.2 from the paper referenced in the header."
+    },
+    {
+      "name": "ProcessorImpl::Invert",
+      "parameters": [
+        "RWDigits Z",
+        "Digits V",
+        "RWDigits scratch"
+      ],
+      "return_type": "void",
+      "logic": "Computes the inverse of V (shifted) using either Newton's method (if V is large enough) or a basecase implementation.  Writes the result to Z.  This function provides a high-level interface for inverting a BigInt's digits."
+    },
+    {
+      "name": "ProcessorImpl::DivideBarrett",
+      "parameters": [
+        "RWDigits Q",
+        "RWDigits R",
+        "Digits A",
+        "Digits B",
+        "Digits I",
+        "RWDigits scratch"
+      ],
+      "return_type": "void",
+      "logic": "Computes the quotient (Q) and remainder (R) of A/B using Barrett division, given a precomputed approximation I of 1/B. This is algorithm 3.5 from the paper. Assumes A.len <= 2 * B.len."
+    },
+    {
+      "name": "ProcessorImpl::DivideBarrett",
+      "parameters": [
+        "RWDigits Q",
+        "RWDigits R",
+        "Digits A",
+        "Digits B"
+      ],
+      "return_type": "void",
+      "logic": "Computes the quotient (Q) and remainder (R) of A/B using Barrett division. Handles the general case where A.len may be larger than 2*B.len by breaking it into chunks and calls the other DivideBarrett. Normalizes input B and shifts A by the same amount prior to calculation."
+    }
+  ]
+}

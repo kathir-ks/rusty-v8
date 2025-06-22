@@ -1,0 +1,290 @@
+{
+  "file_path": "/home/kathirks_gc/v8_go/codebase/src/torque/csa-generator.cc",
+  "imports": [
+    "src/torque/csa-generator.h",
+    "<optional>",
+    "src/common/globals.h",
+    "src/torque/global-context.h",
+    "src/torque/type-oracle.h",
+    "src/torque/types.h",
+    "src/torque/utils.h"
+  ],
+  "classes": [
+    {
+      "name": "CSAGenerator",
+      "properties": [
+        "cfg_",
+        "out_",
+        "decls_",
+        "linkage_",
+        "previous_position_"
+      ],
+      "methods": [
+        {
+          "name": "EmitGraph",
+          "parameters": [
+            "Stack<std::string> parameters"
+          ],
+          "return_type": "std::optional<Stack<std::string>>",
+          "logic": "Emits the control flow graph (CFG) as CodeStubAssembler (CSA) code. This function iterates through the blocks in the CFG, defines labels for each block, and emits code for each instruction within each block.  It handles parameters and block bindings, and returns a stack of strings or std::nullopt if there's no end block."
+        },
+        {
+          "name": "EmitBlock",
+          "parameters": [
+            "const Block* block"
+          ],
+          "return_type": "Stack<std::string>",
+          "logic": "Emits the CSA code for a specific block. It sets up the stack and phi-node bindings for the block's inputs and iterates through the instructions in the block, emitting CSA code for each one."
+        },
+        {
+          "name": "EmitSourcePosition",
+          "parameters": [
+            "SourcePosition pos",
+            "bool always_emit"
+          ],
+          "return_type": "void",
+          "logic": "Emits CSA code to set the source position for debugging purposes. It avoids emitting redundant source position changes."
+        },
+        {
+          "name": "EmitInstruction",
+          "parameters": [
+            "const PushUninitializedInstruction& instruction",
+            "Stack<std::string>* stack"
+          ],
+          "return_type": "void",
+          "logic": "Emits CSA code to push an uninitialized value onto the stack."
+        },
+        {
+          "name": "EmitInstruction",
+          "parameters": [
+            "const PushBuiltinPointerInstruction& instruction",
+            "Stack<std::string>* stack"
+          ],
+          "return_type": "void",
+          "logic": "Emits CSA code to push a pointer to a builtin function onto the stack."
+        },
+        {
+          "name": "EmitInstruction",
+          "parameters": [
+            "const NamespaceConstantInstruction& instruction",
+            "Stack<std::string>* stack"
+          ],
+          "return_type": "void",
+          "logic": "Emits CSA code to push a namespace constant onto the stack."
+        },
+        {
+          "name": "ProcessArgumentsCommon",
+          "parameters": [
+            "const TypeVector& parameter_types",
+            "std::vector<std::string> constexpr_arguments",
+            "Stack<std::string>* stack"
+          ],
+          "return_type": "std::vector<std::string>",
+          "logic": "Processes arguments for CSA calls, handling both constexpr and stack-based arguments."
+        },
+        {
+          "name": "EmitInstruction",
+          "parameters": [
+            "const CallIntrinsicInstruction& instruction",
+            "Stack<std::string>* stack"
+          ],
+          "return_type": "void",
+          "logic": "Emits CSA code for calling an intrinsic function."
+        },
+        {
+          "name": "EmitInstruction",
+          "parameters": [
+            "const CallCsaMacroInstruction& instruction",
+            "Stack<std::string>* stack"
+          ],
+          "return_type": "void",
+          "logic": "Emits CSA code for calling a CSA macro."
+        },
+        {
+          "name": "EmitInstruction",
+          "parameters": [
+            "const CallCsaMacroAndBranchInstruction& instruction",
+            "Stack<std::string>* stack"
+          ],
+          "return_type": "void",
+          "logic": "Emits CSA code for calling a CSA macro that can branch to different labels."
+        },
+        {
+          "name": "EmitInstruction",
+          "parameters": [
+            "const MakeLazyNodeInstruction& instruction",
+            "Stack<std::string>* stack"
+          ],
+          "return_type": "void",
+          "logic": "Emits CSA code to create a lazy node (std::function) that captures arguments and executes the given macro later."
+        },
+        {
+          "name": "EmitInstruction",
+          "parameters": [
+            "const CallBuiltinInstruction& instruction",
+            "Stack<std::string>* stack"
+          ],
+          "return_type": "void",
+          "logic": "Emits CSA code for calling a builtin function."
+        },
+        {
+          "name": "EmitInstruction",
+          "parameters": [
+            "const CallBuiltinPointerInstruction& instruction",
+            "Stack<std::string>* stack"
+          ],
+          "return_type": "void",
+          "logic": "Emits CSA code for calling a builtin function via a pointer."
+        },
+        {
+          "name": "PreCallableExceptionPreparation",
+          "parameters": [
+            "std::optional<Block*> catch_block"
+          ],
+          "return_type": "std::string",
+          "logic": "Prepares exception handling for CSA calls by setting up an exception handler label."
+        },
+        {
+          "name": "PostCallableExceptionPreparation",
+          "parameters": [
+            "const std::string& catch_name",
+            "const Type* return_type",
+            "std::optional<Block*> catch_block",
+            "Stack<std::string>* stack",
+            "const std::optional<DefinitionLocation>& exception_object_definition"
+          ],
+          "return_type": "void",
+          "logic": "Completes the exception handling setup after a CSA call by binding the exception handler label and handling the exception object."
+        },
+        {
+          "name": "EmitInstruction",
+          "parameters": [
+            "const CallRuntimeInstruction& instruction",
+            "Stack<std::string>* stack"
+          ],
+          "return_type": "void",
+          "logic": "Emits CSA code for calling a runtime function."
+        },
+        {
+          "name": "EmitInstruction",
+          "parameters": [
+            "const BranchInstruction& instruction",
+            "Stack<std::string>* stack"
+          ],
+          "return_type": "void",
+          "logic": "Emits CSA code for a conditional branch instruction."
+        },
+        {
+          "name": "EmitInstruction",
+          "parameters": [
+            "const ConstexprBranchInstruction& instruction",
+            "Stack<std::string>* stack"
+          ],
+          "return_type": "void",
+          "logic": "Emits CSA code for a conditional branch instruction based on a constexpr condition."
+        },
+        {
+          "name": "EmitInstruction",
+          "parameters": [
+            "const GotoInstruction& instruction",
+            "Stack<std::string>* stack"
+          ],
+          "return_type": "void",
+          "logic": "Emits CSA code for an unconditional goto instruction."
+        },
+        {
+          "name": "EmitInstruction",
+          "parameters": [
+            "const GotoExternalInstruction& instruction",
+            "Stack<std::string>* stack"
+          ],
+          "return_type": "void",
+          "logic": "Emits CSA code for an unconditional goto to an external destination."
+        },
+        {
+          "name": "EmitInstruction",
+          "parameters": [
+            "const ReturnInstruction& instruction",
+            "Stack<std::string>* stack"
+          ],
+          "return_type": "void",
+          "logic": "Emits CSA code for a return instruction."
+        },
+        {
+          "name": "EmitInstruction",
+          "parameters": [
+            "const PrintErrorInstruction& instruction",
+            "Stack<std::string>* stack"
+          ],
+          "return_type": "void",
+          "logic": "Emits CSA code to print an error message."
+        },
+        {
+          "name": "EmitInstruction",
+          "parameters": [
+            "const AbortInstruction& instruction",
+            "Stack<std::string>* stack"
+          ],
+          "return_type": "void",
+          "logic": "Emits CSA code for an abort instruction (unreachable, debug break, or assertion failure)."
+        },
+        {
+          "name": "EmitInstruction",
+          "parameters": [
+            "const UnsafeCastInstruction& instruction",
+            "Stack<std::string>* stack"
+          ],
+          "return_type": "void",
+          "logic": "Emits CSA code for an unsafe cast instruction."
+        },
+        {
+          "name": "EmitInstruction",
+          "parameters": [
+            "const LoadReferenceInstruction& instruction",
+            "Stack<std::string>* stack"
+          ],
+          "return_type": "void",
+          "logic": "Emits CSA code for loading a value from a reference."
+        },
+        {
+          "name": "EmitInstruction",
+          "parameters": [
+            "const StoreReferenceInstruction& instruction",
+            "Stack<std::string>* stack"
+          ],
+          "return_type": "void",
+          "logic": "Emits CSA code for storing a value to a reference."
+        },
+        {
+          "name": "EmitInstruction",
+          "parameters": [
+            "const LoadBitFieldInstruction& instruction",
+            "Stack<std::string>* stack"
+          ],
+          "return_type": "void",
+          "logic": "Emits CSA code for loading a value from a bitfield."
+        },
+        {
+          "name": "EmitInstruction",
+          "parameters": [
+            "const StoreBitFieldInstruction& instruction",
+            "Stack<std::string>* stack"
+          ],
+          "return_type": "void",
+          "logic": "Emits CSA code for storing a value to a bitfield."
+        },
+        {
+          "name": "EmitCSAValue",
+          "parameters": [
+            "VisitResult result",
+            "const Stack<std::string>& values",
+            "std::ostream& out"
+          ],
+          "return_type": "void",
+          "logic": "Emits the CSA representation of a value, handling constexpr values, struct types, and stack values."
+        }
+      ]
+    }
+  ],
+  "functions": []
+}

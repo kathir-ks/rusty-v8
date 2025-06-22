@@ -1,0 +1,72 @@
+{
+  "metadata": {
+    "path": "/home/kathirks_gc/v8_go/archive/codebase/src/compiler/js-create-lowering.h",
+    "file_name": "js-create-lowering.h",
+    "language": "cpp",
+    "purpose": "Declares the JSCreateLowering class, which lowers JSCreate-level operators to fast (inline) allocations in the V8 compiler."
+  },
+  "imports": {
+    "metadata": {
+      "language": "cpp",
+      "purpose": "Includes standard library and V8-specific headers providing necessary data structures and functions."
+    },
+    "code": "#include <optional>\n\n#include \"src/base/compiler-specific.h\"\n#include \"src/common/globals.h\"\n#include \"src/compiler/graph-reducer.h\""
+  },
+  "classes": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "JSCreateLowering",
+        "extends": "AdvancedReducer",
+        "about": "Lowers JSCreate-level operators to fast (inline) allocations.",
+        "attributes": [
+          {
+            "name": "jsgraph_",
+            "type": "JSGraph*",
+            "access": "private",
+            "purpose": "Pointer to the JSGraph, representing the graph being compiled."
+          },
+          {
+            "name": "broker_",
+            "type": "JSHeapBroker*",
+            "access": "private",
+            "purpose": "Pointer to the JSHeapBroker, providing access to heap objects."
+          },
+          {
+            "name": "zone_",
+            "type": "Zone*",
+            "access": "private",
+            "purpose": "Pointer to the Zone, used for memory allocation."
+          }
+        ],
+        "dependencies": [
+          "AdvancedReducer",
+          "Editor",
+          "JSGraph",
+          "JSHeapBroker",
+          "Zone",
+          "Node",
+          "Reduction",
+          "FrameState",
+          "JSObjectRef",
+          "MapRef",
+          "ElementsKind",
+          "AllocationType",
+          "SlackTrackingPrediction",
+          "RegExpBoilerplateDescriptionRef",
+          "SharedFunctionInfoRef",
+          "Factory",
+          "TFGraph",
+          "NativeContextRef",
+          "CommonOperatorBuilder",
+          "SimplifiedOperatorBuilder",
+          "CompilationDependencies",
+          "JSOperatorBuilder"
+        ]
+      },
+      "code": "class V8_EXPORT_PRIVATE JSCreateLowering final\n    : public NON_EXPORTED_BASE(AdvancedReducer) {\n public:\n  JSCreateLowering(Editor* editor, JSGraph* jsgraph, JSHeapBroker* broker,\n                   Zone* zone)\n      : AdvancedReducer(editor),\n        jsgraph_(jsgraph),\n        broker_(broker),\n        zone_(zone) {}\n  ~JSCreateLowering() final = default;\n\n  const char* reducer_name() const override { return \"JSCreateLowering\"; }\n\n  Reduction Reduce(Node* node) final;\n\n private:\n  Reduction ReduceJSCreate(Node* node);\n  Reduction ReduceJSCreateArguments(Node* node);\n  Reduction ReduceJSCreateArray(Node* node);\n  Reduction ReduceJSCreateArrayIterator(Node* node);\n  Reduction ReduceJSCreateAsyncFunctionObject(Node* node);\n  Reduction ReduceJSCreateCollectionIterator(Node* node);\n  Reduction ReduceJSCreateBoundFunction(Node* node);\n  Reduction ReduceJSCreateClosure(Node* node);\n  Reduction ReduceJSCreateIterResultObject(Node* node);\n  Reduction ReduceJSCreateStringIterator(Node* node);\n  Reduction ReduceJSCreateKeyValueArray(Node* node);\n  Reduction ReduceJSCreatePromise(Node* node);\n  Reduction ReduceJSCreateLiteralArrayOrObject(Node* node);\n  Reduction ReduceJSCreateEmptyLiteralObject(Node* node);\n  Reduction ReduceJSCreateEmptyLiteralArray(Node* node);\n  Reduction ReduceJSCreateLiteralRegExp(Node* node);\n  Reduction ReduceJSCreateFunctionContext(Node* node);\n  Reduction ReduceJSCreateWithContext(Node* node);\n  Reduction ReduceJSCreateCatchContext(Node* node);\n  Reduction ReduceJSCreateBlockContext(Node* node);\n  Reduction ReduceJSCreateGeneratorObject(Node* node);\n  Reduction ReduceJSGetTemplateObject(Node* node);\n  Reduction ReduceNewArray(\n      Node* node, Node* length, MapRef initial_map, ElementsKind elements_kind,\n      AllocationType allocation,\n      const SlackTrackingPrediction& slack_tracking_prediction);\n  Reduction ReduceNewArray(\n      Node* node, Node* length, int capacity, MapRef initial_map,\n      ElementsKind elements_kind, AllocationType allocation,\n      const SlackTrackingPrediction& slack_tracking_prediction);\n  Reduction ReduceNewArray(\n      Node* node, std::vector<Node*> values, MapRef initial_map,\n      ElementsKind elements_kind, AllocationType allocation,\n      const SlackTrackingPrediction& slack_tracking_prediction);\n  Reduction ReduceJSCreateObject(Node* node);\n  Reduction ReduceJSCreateStringWrapper(Node* node);\n\n  // The following functions all return nullptr iff there are too many arguments\n  // for inline allocation.\n  Node* TryAllocateArguments(Node* effect, Node* control,\n                             FrameState frame_state);\n  Node* TryAllocateRestArguments(Node* effect, Node* control,\n                                 FrameState frame_state, int start_index);\n  Node* TryAllocateAliasedArguments(Node* effect, Node* control,\n                                    FrameState frame_state, Node* context,\n                                    SharedFunctionInfoRef shared,\n                                    bool* has_aliased_arguments);\n  Node* TryAllocateAliasedArguments(Node* effect, Node* control, Node* context,\n                                    Node* arguments_length,\n                                    SharedFunctionInfoRef shared,\n                                    bool* has_aliased_arguments);\n  std::optional<Node*> TryAllocateFastLiteral(Node* effect, Node* control,\n                                              JSObjectRef boilerplate,\n                                              AllocationType allocation,\n                                              int max_depth,\n                                              int* max_properties);\n  std::optional<Node*> TryAllocateFastLiteralElements(\n      Node* effect, Node* control, JSObjectRef boilerplate,\n      AllocationType allocation, int max_depth, int* max_properties);\n\n  Node* AllocateElements(Node* effect, Node* control,\n                         ElementsKind elements_kind, int capacity,\n                         AllocationType allocation);\n  Node* AllocateElements(Node* effect, Node* control,\n                         ElementsKind elements_kind, Node* capacity_and_length);\n  Node* AllocateElements(Node* effect, Node* control,\n                         ElementsKind elements_kind,\n                         std::vector<Node*> const& values,\n                         AllocationType allocation);\n  Node* AllocateLiteralRegExp(Node* effect, Node* control,\n                              RegExpBoilerplateDescriptionRef boilerplate);\n\n  Factory* factory() const;\n  TFGraph* graph() const;\n  JSGraph* jsgraph() const { return jsgraph_; }\n  NativeContextRef native_context() const;\n  CommonOperatorBuilder* common() const;\n  SimplifiedOperatorBuilder* simplified() const;\n  CompilationDependencies* dependencies() const;\n  JSHeapBroker* broker() const { return broker_; }\n  Zone* zone() const { return zone_; }\n\n  JSGraph* const jsgraph_;\n  JSHeapBroker* const broker_;\n  Zone* const zone_;\n};"
+    }
+  ],
+  "file_path": "/home/kathirks_gc/v8_go/archive/codebase/src/compiler/js-create-lowering.h"
+}

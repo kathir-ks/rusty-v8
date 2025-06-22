@@ -1,0 +1,55 @@
+{
+  "metadata": {
+    "path": "/home/kathirks_gc/v8_go/archive/codebase/include/v8-external.h",
+    "file_name": "v8-external.h",
+    "language": "cpp",
+    "purpose": "Defines the External class, which allows wrapping C++ void* pointers within JavaScript values."
+  },
+  "imports": {
+    "metadata": {
+      "language": "cpp",
+      "purpose": "Includes necessary V8 headers for value representation and configuration."
+    },
+    "code": "#include \"v8-value.h\"  // NOLINT(build/include_directory)\n            #include \"v8config.h\"  // NOLINT(build/include_directory)"
+  },
+  "classes": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "External",
+        "extends": "Value",
+        "about": "Wraps a C++ void* pointer for use in JavaScript.  Allows associating C++ data with JavaScript objects.",
+        "attributes": [],
+        "dependencies": [
+          "Value",
+          "Isolate"
+        ]
+      },
+      "code": "class V8_EXPORT External : public Value {\n            public:\n              static Local<External> New(Isolate* isolate, void* value);\n              V8_INLINE static External* Cast(Value* value) {\n            #ifdef V8_ENABLE_CHECKS\n                CheckCast(value);\n            #endif\n                return static_cast<External*>(value);\n              }\n\n              void* Value() const;\n\n            private:\n              static void CheckCast(v8::Value* obj);\n            };"
+    }
+  ],
+  "dependencies": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "Value",
+        "about": "Base class for JavaScript values in V8"
+      },
+      "code": "class Value {};",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "Isolate",
+        "about": "Represents an isolated instance of the V8 JavaScript engine."
+      },
+      "code": "class Isolate {};",
+      "type": "class"
+    }
+  ],
+  "file_path": "/home/kathirks_gc/v8_go/archive/codebase/include/v8-external.h"
+}

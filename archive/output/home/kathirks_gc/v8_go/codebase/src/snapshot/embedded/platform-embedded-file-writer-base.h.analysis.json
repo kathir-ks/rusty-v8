@@ -1,0 +1,244 @@
+{
+  "file_path": "/home/kathirks_gc/v8_go/codebase/src/snapshot/embedded/platform-embedded-file-writer-base.h",
+  "imports": [
+    "<cinttypes>",
+    "<cstdio>",
+    "<memory>",
+    "<string>"
+  ],
+  "classes": [
+    {
+      "name": "PlatformEmbeddedFileWriterBase",
+      "properties": [
+        "FILE* fp_"
+      ],
+      "methods": [
+        {
+          "name": "~PlatformEmbeddedFileWriterBase",
+          "parameters": [],
+          "return_type": "virtual",
+          "logic": "Virtual destructor for the base class. Ensures proper cleanup of derived classes."
+        },
+        {
+          "name": "SetFile",
+          "parameters": [
+            "FILE* fp"
+          ],
+          "return_type": "void",
+          "logic": "Sets the file pointer (fp_) to the provided file pointer."
+        },
+        {
+          "name": "fp",
+          "parameters": [],
+          "return_type": "FILE*",
+          "logic": "Returns the current file pointer (fp_)."
+        },
+        {
+          "name": "SectionText",
+          "parameters": [],
+          "return_type": "virtual void",
+          "logic": "Pure virtual function to emit assembly code for the text section."
+        },
+        {
+          "name": "SectionRoData",
+          "parameters": [],
+          "return_type": "virtual void",
+          "logic": "Pure virtual function to emit assembly code for the read-only data section."
+        },
+        {
+          "name": "AlignToCodeAlignment",
+          "parameters": [],
+          "return_type": "virtual void",
+          "logic": "Pure virtual function to align to code alignment boundary."
+        },
+        {
+          "name": "AlignToPageSizeIfNeeded",
+          "parameters": [],
+          "return_type": "virtual void",
+          "logic": "Virtual function to align to page size boundary, if needed.  Has an empty default implementation."
+        },
+        {
+          "name": "AlignToDataAlignment",
+          "parameters": [],
+          "return_type": "virtual void",
+          "logic": "Pure virtual function to align to data alignment boundary."
+        },
+        {
+          "name": "DeclareUint32",
+          "parameters": [
+            "const char* name",
+            "uint32_t value"
+          ],
+          "return_type": "virtual void",
+          "logic": "Pure virtual function to declare a 32-bit unsigned integer constant in the output."
+        },
+        {
+          "name": "DeclareSymbolGlobal",
+          "parameters": [
+            "const char* name"
+          ],
+          "return_type": "virtual void",
+          "logic": "Pure virtual function to declare a symbol as global in the output assembly."
+        },
+        {
+          "name": "DeclareLabel",
+          "parameters": [
+            "const char* name"
+          ],
+          "return_type": "virtual void",
+          "logic": "Pure virtual function to declare a label in the output assembly."
+        },
+        {
+          "name": "DeclareLabelProlog",
+          "parameters": [
+            "const char* name"
+          ],
+          "return_type": "virtual void",
+          "logic": "Virtual function to declare a label for function prolog.  Has an empty default implementation."
+        },
+        {
+          "name": "DeclareLabelEpilogue",
+          "parameters": [],
+          "return_type": "virtual void",
+          "logic": "Virtual function to declare a label for function epilogue. Has an empty default implementation."
+        },
+        {
+          "name": "SourceInfo",
+          "parameters": [
+            "int fileid",
+            "const char* filename",
+            "int line"
+          ],
+          "return_type": "virtual void",
+          "logic": "Pure virtual function to output source code location information (file and line number)."
+        },
+        {
+          "name": "DeclareFunctionBegin",
+          "parameters": [
+            "const char* name",
+            "uint32_t size"
+          ],
+          "return_type": "virtual void",
+          "logic": "Pure virtual function to mark the beginning of a function in the assembly."
+        },
+        {
+          "name": "DeclareFunctionEnd",
+          "parameters": [
+            "const char* name"
+          ],
+          "return_type": "virtual void",
+          "logic": "Pure virtual function to mark the end of a function in the assembly."
+        },
+        {
+          "name": "HexLiteral",
+          "parameters": [
+            "uint64_t value"
+          ],
+          "return_type": "virtual int",
+          "logic": "Virtual function to print a hexadecimal literal of a given value. Returns the number of printed characters."
+        },
+        {
+          "name": "Comment",
+          "parameters": [
+            "const char* string"
+          ],
+          "return_type": "virtual void",
+          "logic": "Pure virtual function to add a comment to the output assembly."
+        },
+        {
+          "name": "Newline",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Prints a newline character to the output file."
+        },
+        {
+          "name": "FilePrologue",
+          "parameters": [],
+          "return_type": "virtual void",
+          "logic": "Pure virtual function to write the prologue of the output file."
+        },
+        {
+          "name": "DeclareExternalFilename",
+          "parameters": [
+            "int fileid",
+            "const char* filename"
+          ],
+          "return_type": "virtual void",
+          "logic": "Pure virtual function to declare external file name (usually for debug info)."
+        },
+        {
+          "name": "FileEpilogue",
+          "parameters": [],
+          "return_type": "virtual void",
+          "logic": "Pure virtual function to write the epilogue of the output file."
+        },
+        {
+          "name": "IndentedDataDirective",
+          "parameters": [
+            "DataDirective directive"
+          ],
+          "return_type": "virtual int",
+          "logic": "Pure virtual function to emit a data directive with proper indentation. Returns number of printed characters."
+        },
+        {
+          "name": "ByteChunkDataDirective",
+          "parameters": [],
+          "return_type": "virtual DataDirective",
+          "logic": "Virtual function to returns the data directive to be used for byte chunks.  Returns kOcta by default."
+        },
+        {
+          "name": "WriteByteChunk",
+          "parameters": [
+            "const uint8_t* data"
+          ],
+          "return_type": "virtual int",
+          "logic": "Virtual function to write a chunk of bytes to the output. Returns number of printed characters."
+        },
+        {
+          "name": "MaybeEmitUnwindData",
+          "parameters": [
+            "const char* unwind_info_symbol",
+            "const char* embedded_blob_data_symbol",
+            "const EmbeddedData* blob",
+            "const void* unwind_infos"
+          ],
+          "return_type": "virtual void",
+          "logic": "Virtual function to conditionally emit unwind data (e.g. for x64 Windows). Does nothing in the default implementation."
+        }
+      ]
+    }
+  ],
+  "functions": [
+    {
+      "name": "PointerSizeDirective",
+      "parameters": [],
+      "return_type": "DataDirective",
+      "logic": "Returns the DataDirective corresponding to the pointer size of the current platform."
+    },
+    {
+      "name": "DataDirectiveSize",
+      "parameters": [
+        "DataDirective directive"
+      ],
+      "return_type": "int",
+      "logic": "Returns the size (in bytes) corresponding to a given DataDirective."
+    },
+    {
+      "name": "NewPlatformEmbeddedFileWriter",
+      "parameters": [
+        "const char* target_arch",
+        "const char* target_os"
+      ],
+      "return_type": "std::unique_ptr<PlatformEmbeddedFileWriterBase>",
+      "logic": "Factory function that creates and returns the appropriate platform-specific instance of PlatformEmbeddedFileWriterBase based on the target architecture and OS."
+    },
+    {
+      "name": "IsDrumBrakeInstructionHandler",
+      "parameters": [
+        "const char* name"
+      ],
+      "return_type": "bool",
+      "logic": "Determines if a given builtin name corresponds to a DrumBrake instruction handler.  This is specific to the DrumBrake (Reduced Size Code) feature."
+    }
+  ]
+}

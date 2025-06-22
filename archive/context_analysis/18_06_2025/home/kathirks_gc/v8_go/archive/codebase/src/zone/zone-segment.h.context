@@ -1,0 +1,84 @@
+{
+  "metadata": {
+    "path": "/home/kathirks_gc/v8_go/archive/codebase/src/zone/zone-segment.h",
+    "file_name": "zone-segment.h",
+    "language": "cpp",
+    "purpose": "Defines the Segment class for managing memory chunks within a Zone."
+  },
+  "imports": {
+    "metadata": {
+      "language": "cpp",
+      "purpose": "Includes the v8 initialization definitions."
+    },
+    "code": "#include \"src/init/v8.h\""
+  },
+  "classes": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "Segment",
+        "about": "Represents a chunk of memory within a Zone.  Segments are chained together in a LIFO structure.",
+        "attributes": [
+          {
+            "name": "zone_",
+            "type": "Zone*",
+            "access": "private",
+            "purpose": "Pointer to the Zone this segment belongs to."
+          },
+          {
+            "name": "next_",
+            "type": "Segment*",
+            "access": "private",
+            "purpose": "Pointer to the next Segment in the LIFO chain."
+          },
+          {
+            "name": "size_",
+            "type": "size_t",
+            "access": "private",
+            "purpose": "The total size of the allocated segment, including the Segment header."
+          }
+        ],
+        "dependencies": [
+          "Zone",
+          "AccountingAllocator",
+          "Address"
+        ]
+      },
+      "code": "class Segment {\n public:\n  Zone* zone() const { return zone_; }\n  void set_zone(Zone* const zone) { zone_ = zone; }\n\n  Segment* next() const { return next_; }\n  void set_next(Segment* const next) { next_ = next; }\n\n  // {total_size} returns the allocated size including the bookkeeping bytes of\n  // the {Segment}.\n  size_t total_size() const { return size_; }\n\n  // {capacity} returns the number of storage bytes in this {Segment}, i.e.\n  // {end() - start()}.\n  size_t capacity() const { return size_ - sizeof(Segment); }\n\n  Address start() const { return address(sizeof(Segment)); }\n  Address end() const { return address(size_); }\n\n  // Zap the contents of the segment (but not the header).\n  void ZapContents();\n  // Zaps the header and makes the segment unusable this way.\n  void ZapHeader();\n\n private:\n  // Segments are only created by the AccountingAllocator.\n  friend class AccountingAllocator;\n\n  explicit Segment(size_t size) : size_(size) {}\n\n#ifdef DEBUG\n  // Constant byte value used for zapping dead memory in debug mode.\n  static const unsigned char kZapDeadByte = 0xcd;\n#endif\n\n  // Computes the address of the nth byte in this segment.\n  Address address(size_t n) const {\n    return reinterpret_cast<Address>(this) + n;\n  }\n\n  Zone* zone_ = nullptr;\n  Segment* next_ = nullptr;\n  const size_t size_;\n};"
+    }
+  ],
+  "dependencies": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "Zone",
+        "about": "Memory allocation arena"
+      },
+      "code": "class Zone;",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "AccountingAllocator",
+        "about": "Allocator that keeps track of memory usage."
+      },
+      "code": "class AccountingAllocator;",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "typedef",
+        "name": "Address",
+        "about": "Raw memory address"
+      },
+      "code": "typedef uintptr_t Address;",
+      "type": "class"
+    }
+  ],
+  "file_path": "/home/kathirks_gc/v8_go/archive/codebase/src/zone/zone-segment.h"
+}

@@ -1,0 +1,222 @@
+{
+  "metadata": {
+    "path": "/home/kathirks_gc/v8_go/archive/codebase/src/compiler/js-type-hint-lowering.h",
+    "file_name": "js-type-hint-lowering.h",
+    "language": "cpp",
+    "purpose": "Declares the JSTypeHintLowering class, which consumes feedback about high-level operations to emit speculative simplified operators instead of generic JavaScript operators."
+  },
+  "imports": {
+    "metadata": {
+      "language": "cpp",
+      "purpose": "Includes necessary headers for flags, graph reduction, and deoptimization reasons."
+    },
+    "code": "#include \"src/base/flags.h\"\n#include \"src/compiler/graph-reducer.h\"\n#include \"src/deoptimizer/deoptimize-reason.h\""
+  },
+  "classes": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "JSTypeHintLowering",
+        "extends": null,
+        "implements": [],
+        "about": "Consumes feedback about high-level operations to potentially emit nodes using speculative simplified operators in favor of the generic JavaScript operators.",
+        "attributes": [
+          {
+            "name": "broker_",
+            "type": "JSHeapBroker*",
+            "access": "private",
+            "purpose": "Pointer to the JSHeapBroker."
+          },
+          {
+            "name": "jsgraph_",
+            "type": "JSGraph*",
+            "access": "private",
+            "purpose": "Pointer to the JSGraph."
+          },
+          {
+            "name": "flags_",
+            "type": "Flags",
+            "access": "private",
+            "purpose": "Flags controlling the mode of operation."
+          },
+          {
+            "name": "feedback_vector_",
+            "type": "FeedbackVectorRef",
+            "access": "private",
+            "purpose": "Reference to the feedback vector."
+          }
+        ],
+        "dependencies": [
+          "JSHeapBroker",
+          "JSGraph",
+          "FeedbackVectorRef",
+          "FeedbackSlot",
+          "Node",
+          "Operator",
+          "LoweringResult",
+          "Flags",
+          "BinaryOperationHint",
+          "CompareOperationHint",
+          "DeoptimizeReason",
+          "Isolate",
+          "JSSpeculativeBinopBuilder"
+        ]
+      },
+      "code": "class JSTypeHintLowering {\n public:\n  // Flags that control the mode of operation.\n  enum Flag { kNoFlags = 0u, kBailoutOnUninitialized = 1u << 1 };\n  using Flags = base::Flags<Flag>;\n\n  JSTypeHintLowering(JSHeapBroker* broker, JSGraph* jsgraph,\n                     FeedbackVectorRef feedback_vector, Flags flags);\n  JSTypeHintLowering(const JSTypeHintLowering&) = delete;\n  JSTypeHintLowering& operator=(const JSTypeHintLowering&) = delete;\n\n  // {LoweringResult} describes the result of lowering. The following outcomes\n  // are possible:\n  //\n  // - operation was lowered to a side-effect-free operation, the resulting\n  //   value, effect and control can be obtained by the {value}, {effect} and\n  //   {control} methods.\n  //\n  // - operation was lowered to a graph exit (deoptimization). The caller\n  //   should connect {effect} and {control} nodes to the end.\n  //\n  // - no lowering happened. The caller needs to create the generic version\n  //   of the operation.\n  class LoweringResult {\n   public:\n    Node* value() const { return value_; }\n    Node* effect() const { return effect_; }\n    Node* control() const { return control_; }\n\n    bool Changed() const { return kind_ != LoweringResultKind::kNoChange; }\n    bool IsExit() const { return kind_ == LoweringResultKind::kExit; }\n    bool IsSideEffectFree() const {\n      return kind_ == LoweringResultKind::kSideEffectFree;\n    }\n\n    static LoweringResult SideEffectFree(Node* value, Node* effect,\n                                         Node* control) {\n      DCHECK_NOT_NULL(effect);\n      DCHECK_NOT_NULL(control);\n      DCHECK(value->op()->HasProperty(Operator::kNoThrow));\n      return LoweringResult(LoweringResultKind::kSideEffectFree, value, effect,\n                            control);\n    }\n\n    static LoweringResult NoChange() {\n      return LoweringResult(LoweringResultKind::kNoChange, nullptr, nullptr,\n                            nullptr);\n    }\n\n    static LoweringResult Exit(Node* control) {\n      return LoweringResult(LoweringResultKind::kExit, nullptr, nullptr,\n                            control);\n    }\n\n   private:\n    enum class LoweringResultKind { kNoChange, kSideEffectFree, kExit };\n\n    LoweringResult(LoweringResultKind kind, Node* value, Node* effect,\n                   Node* control)\n        : kind_(kind), value_(value), effect_(effect), control_(control) {}\n\n    LoweringResultKind kind_;\n    Node* value_;\n    Node* effect_;\n    Node* control_;\n  };\n\n  // Potential reduction of unary operations (e.g. negation).\n  LoweringResult ReduceUnaryOperation(const Operator* op, Node* operand,\n                                      Node* effect, Node* control,\n                                      FeedbackSlot slot) const;\n\n  // Potential reduction of binary (arithmetic, logical, shift and relational\n  // comparison) operations.\n  LoweringResult ReduceBinaryOperation(const Operator* op, Node* left,\n                                       Node* right, Node* effect, Node* control,\n                                       FeedbackSlot slot) const;\n\n  // Potential reduction to for..in operations\n  LoweringResult ReduceForInNextOperation(Node* receiver, Node* cache_array,\n                                          Node* cache_type, Node* index,\n                                          Node* effect, Node* control,\n                                          FeedbackSlot slot) const;\n  LoweringResult ReduceForInPrepareOperation(Node* enumerator, Node* effect,\n                                             Node* control,\n                                             FeedbackSlot slot) const;\n\n  // Potential reduction to ToNumber operations\n  LoweringResult ReduceToNumberOperation(Node* value, Node* effect,\n                                         Node* control,\n                                         FeedbackSlot slot) const;\n\n  // Potential reduction of call operations.\n  LoweringResult ReduceCallOperation(const Operator* op, Node* const* args,\n                                     int arg_count, Node* effect, Node* control,\n                                     FeedbackSlot slot) const;\n\n  // Potential reduction of construct operations.\n  LoweringResult ReduceConstructOperation(const Operator* op, Node* const* args,\n                                          int arg_count, Node* effect,\n                                          Node* control,\n                                          FeedbackSlot slot) const;\n\n  // Potential reduction of property access and call operations.\n  LoweringResult ReduceGetIteratorOperation(const Operator* op, Node* obj,\n                                            Node* effect, Node* control,\n                                            FeedbackSlot load_slot,\n                                            FeedbackSlot call_slot) const;\n\n  // Potential reduction of property access operations.\n  LoweringResult ReduceLoadNamedOperation(const Operator* op, Node* effect,\n                                          Node* control,\n                                          FeedbackSlot slot) const;\n  LoweringResult ReduceLoadKeyedOperation(const Operator* op, Node* obj,\n                                          Node* key, Node* effect,\n                                          Node* control,\n                                          FeedbackSlot slot) const;\n  LoweringResult ReduceStoreNamedOperation(const Operator* op, Node* obj,\n                                           Node* val, Node* effect,\n                                           Node* control,\n                                           FeedbackSlot slot) const;\n  LoweringResult ReduceStoreKeyedOperation(const Operator* op, Node* obj,\n                                           Node* key, Node* val, Node* effect,\n                                           Node* control,\n                                           FeedbackSlot slot) const;\n\n private:\n  friend class JSSpeculativeBinopBuilder;\n\n  BinaryOperationHint GetBinaryOperationHint(FeedbackSlot slot) const;\n  CompareOperationHint GetCompareOperationHint(FeedbackSlot slot) const;\n  Node* BuildDeoptIfFeedbackIsInsufficient(FeedbackSlot slot, Node* effect,\n                                           Node* control,\n                                           DeoptimizeReason reson) const;\n\n  JSHeapBroker* broker() const { return broker_; }\n  JSGraph* jsgraph() const { return jsgraph_; }\n  Isolate* isolate() const;\n  Flags flags() const { return flags_; }\n  FeedbackVectorRef feedback_vector() const { return feedback_vector_; }\n\n  JSHeapBroker* const broker_;\n  JSGraph* const jsgraph_;\n  Flags const flags_;\n  FeedbackVectorRef const feedback_vector_;\n};"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "LoweringResult",
+        "parent": null,
+        "about": "Describes the result of lowering. Encapsulates possible outcomes: side-effect-free operation, graph exit (deoptimization), or no lowering happened.",
+        "attributes": [
+          {
+            "name": "kind_",
+            "type": "LoweringResultKind",
+            "access": "private",
+            "purpose": "The kind of lowering result."
+          },
+          {
+            "name": "value_",
+            "type": "Node*",
+            "access": "private",
+            "purpose": "The resulting value node."
+          },
+          {
+            "name": "effect_",
+            "type": "Node*",
+            "access": "private",
+            "purpose": "The resulting effect node."
+          },
+          {
+            "name": "control_",
+            "type": "Node*",
+            "access": "private",
+            "purpose": "The resulting control node."
+          }
+        ],
+        "dependencies": [
+          "Node",
+          "Operator"
+        ]
+      },
+      "code": "class LoweringResult {\n   public:\n    Node* value() const { return value_; }\n    Node* effect() const { return effect_; }\n    Node* control() const { return control_; }\n\n    bool Changed() const { return kind_ != LoweringResultKind::kNoChange; }\n    bool IsExit() const { return kind_ == LoweringResultKind::kExit; }\n    bool IsSideEffectFree() const {\n      return kind_ == LoweringResultKind::kSideEffectFree;\n    }\n\n    static LoweringResult SideEffectFree(Node* value, Node* effect,\n                                         Node* control) {\n      DCHECK_NOT_NULL(effect);\n      DCHECK_NOT_NULL(control);\n      DCHECK(value->op()->HasProperty(Operator::kNoThrow));\n      return LoweringResult(LoweringResultKind::kSideEffectFree, value, effect,\n                            control);\n    }\n\n    static LoweringResult NoChange() {\n      return LoweringResult(LoweringResultKind::kNoChange, nullptr, nullptr,\n                            nullptr);\n    }\n\n    static LoweringResult Exit(Node* control) {\n      return LoweringResult(LoweringResultKind::kExit, nullptr, nullptr,\n                            control);\n    }\n\n   private:\n    enum class LoweringResultKind { kNoChange, kSideEffectFree, kExit };\n\n    LoweringResult(LoweringResultKind kind, Node* value, Node* effect,\n                   Node* control)\n        : kind_(kind), value_(value), effect_(effect), control_(control) {}\n\n    LoweringResultKind kind_;\n    Node* value_;\n    Node* effect_;\n    Node* control_;\n  };"
+    }
+  ],
+  "dependencies": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "JSHeapBroker",
+        "about": "Provides access to the JavaScript heap."
+      },
+      "code": "class JSHeapBroker {};",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "JSGraph",
+        "about": "Represents the JavaScript graph."
+      },
+      "code": "class JSGraph {};",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "FeedbackVectorRef",
+        "about": "Reference to a feedback vector."
+      },
+      "code": "class FeedbackVectorRef {};",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "Node",
+        "about": "Represents a node in the graph."
+      },
+      "code": "class Node {\n                public:\n                    Operator* op() const;\n                };",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "Operator",
+        "about": "Represents an operator in the graph."
+      },
+      "code": "class Operator {\n                public:\n                    bool HasProperty(int property) const;\n                };",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "FeedbackSlot",
+        "about": "Represents a feedback slot."
+      },
+      "code": "class FeedbackSlot {};",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "Isolate",
+        "about": "Represents an isolate."
+      },
+      "code": "class Isolate {};",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "JSSpeculativeBinopBuilder",
+        "about": "Builds speculative binary operations."
+      },
+      "code": "class JSSpeculativeBinopBuilder {};",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "enum",
+        "name": "DeoptimizeReason",
+        "about": "Reasons for deoptimization."
+      },
+      "code": "enum class DeoptimizeReason {};",
+      "type": "enum"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "type",
+        "name": "BinaryOperationHint",
+        "about": "Hint for binary operations."
+      },
+      "code": "typedef int BinaryOperationHint;",
+      "type": "type"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "type",
+        "name": "CompareOperationHint",
+        "about": "Hint for compare operations."
+      },
+      "code": "typedef int CompareOperationHint;",
+      "type": "type"
+    }
+  ],
+  "file_path": "/home/kathirks_gc/v8_go/archive/codebase/src/compiler/js-type-hint-lowering.h"
+}

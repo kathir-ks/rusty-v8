@@ -1,0 +1,679 @@
+{
+  "file_path": "/home/kathirks_gc/v8_go/codebase/src/maglev/maglev-graph-builder.h",
+  "imports": [
+    "<cmath>",
+    "<iomanip>",
+    "<map>",
+    "<optional>",
+    "<type_traits>",
+    "<utility>",
+    "src/base/hashing.h",
+    "src/base/logging.h",
+    "src/base/vector.h",
+    "src/codegen/external-reference.h",
+    "src/codegen/source-position-table.h",
+    "src/common/globals.h",
+    "src/compiler-dispatcher/optimizing-compile-dispatcher.h",
+    "src/compiler/bytecode-analysis.h",
+    "src/compiler/bytecode-liveness-map.h",
+    "src/compiler/feedback-source.h",
+    "src/compiler/heap-refs.h",
+    "src/compiler/js-heap-broker.h",
+    "src/compiler/processed-feedback.h",
+    "src/deoptimizer/deoptimize-reason.h",
+    "src/flags/flags.h",
+    "src/interpreter/bytecode-array-iterator.h",
+    "src/interpreter/bytecode-decoder.h",
+    "src/interpreter/bytecode-register.h",
+    "src/interpreter/bytecodes.h",
+    "src/interpreter/interpreter-intrinsics.h",
+    "src/maglev/maglev-compilation-unit.h",
+    "src/maglev/maglev-graph-labeller.h",
+    "src/maglev/maglev-graph-printer.h",
+    "src/maglev/maglev-graph.h",
+    "src/maglev/maglev-interpreter-frame-state.h",
+    "src/maglev/maglev-ir.h",
+    "src/objects/arguments.h",
+    "src/objects/bytecode-array.h",
+    "src/objects/elements-kind.h",
+    "src/objects/string.h",
+    "src/utils/memcopy.h"
+  ],
+  "classes": [
+    {
+      "name": "MaybeReduceResult",
+      "properties": [
+        "payload_"
+      ],
+      "methods": [
+        {
+          "name": "MaybeReduceResult",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Default constructor, initializes payload_ to kFail."
+        },
+        {
+          "name": "MaybeReduceResult",
+          "parameters": [
+            "value"
+          ],
+          "return_type": "void",
+          "logic": "Constructor, initializes payload_ with a ValueNode*."
+        },
+        {
+          "name": "Fail",
+          "parameters": [],
+          "return_type": "MaybeReduceResult",
+          "logic": "Static method, returns a MaybeReduceResult representing a failure."
+        },
+        {
+          "name": "MaybeReduceResult",
+          "parameters": [
+            "const MaybeReduceResult&"
+          ],
+          "return_type": "void",
+          "logic": "Copy constructor (default)."
+        },
+        {
+          "name": "operator=",
+          "parameters": [
+            "const MaybeReduceResult&"
+          ],
+          "return_type": "MaybeReduceResult&",
+          "logic": "Copy assignment operator (default)."
+        },
+        {
+          "name": "value",
+          "parameters": [],
+          "return_type": "ValueNode*",
+          "logic": "Returns the ValueNode* held by the result."
+        },
+        {
+          "name": "HasValue",
+          "parameters": [],
+          "return_type": "bool",
+          "logic": "Returns true if the result holds a ValueNode*."
+        },
+        {
+          "name": "IsDone",
+          "parameters": [],
+          "return_type": "bool",
+          "logic": "Returns true if the result is not a failure (i.e., is DoneWithValue, DoneWithoutValue, or DoneWithAbort)."
+        },
+        {
+          "name": "IsFail",
+          "parameters": [],
+          "return_type": "bool",
+          "logic": "Returns true if the result represents a failure."
+        },
+        {
+          "name": "IsDoneWithValue",
+          "parameters": [],
+          "return_type": "bool",
+          "logic": "Returns true if the result is done with a ValueNode."
+        },
+        {
+          "name": "IsDoneWithoutValue",
+          "parameters": [],
+          "return_type": "bool",
+          "logic": "Returns true if the result is done without producing a ValueNode."
+        },
+        {
+          "name": "IsDoneWithAbort",
+          "parameters": [],
+          "return_type": "bool",
+          "logic": "Returns true if the result is done with an abort."
+        },
+        {
+          "name": "kind",
+          "parameters": [],
+          "return_type": "Kind",
+          "logic": "Returns the kind of the result."
+        },
+        {
+          "name": "Checked",
+          "parameters": [],
+          "return_type": "ReduceResult",
+          "logic": "Converts the MaybeReduceResult to a ReduceResult, checking that it's not a failure."
+        },
+        {
+          "name": "GetPayload",
+          "parameters": [],
+          "return_type": "base::PointerWithPayload<ValueNode*, Kind, 3>",
+          "logic": "Returns the underlying payload."
+        },
+        {
+          "name": "MaybeReduceResult",
+          "parameters": [
+            "Kind"
+          ],
+          "return_type": "void",
+          "logic": "Constructor, initializes payload_ with a Kind."
+        },
+        {
+          "name": "MaybeReduceResult",
+          "parameters": [
+            "base::PointerWithPayload<ValueNode*, Kind, 3>"
+          ],
+          "return_type": "void",
+          "logic": "Constructor, initializes payload_ with a PointerWithPayload."
+        }
+      ]
+    },
+    {
+      "name": "ReduceResult",
+      "properties": [],
+      "methods": [
+        {
+          "name": "ReduceResult",
+          "parameters": [
+            "ValueNode*"
+          ],
+          "return_type": "void",
+          "logic": "Constructor, initializes with a ValueNode*."
+        },
+        {
+          "name": "ReduceResult",
+          "parameters": [
+            "const MaybeReduceResult&"
+          ],
+          "return_type": "void",
+          "logic": "Constructor, initializes from a MaybeReduceResult, checking for failure."
+        },
+        {
+          "name": "Done",
+          "parameters": [
+            "ValueNode*"
+          ],
+          "return_type": "ReduceResult",
+          "logic": "Static method, returns a ReduceResult representing a success with a ValueNode*."
+        },
+        {
+          "name": "Done",
+          "parameters": [],
+          "return_type": "ReduceResult",
+          "logic": "Static method, returns a ReduceResult representing a success without a ValueNode*."
+        },
+        {
+          "name": "DoneWithAbort",
+          "parameters": [],
+          "return_type": "ReduceResult",
+          "logic": "Static method, returns a ReduceResult representing an abort."
+        },
+        {
+          "name": "IsFail",
+          "parameters": [],
+          "return_type": "bool",
+          "logic": "Returns false, as ReduceResult cannot be a failure."
+        },
+        {
+          "name": "Checked",
+          "parameters": [],
+          "return_type": "ReduceResult",
+          "logic": "Returns *this."
+        },
+        {
+          "name": "ReduceResult",
+          "parameters": [
+            "Kind"
+          ],
+          "return_type": "void",
+          "logic": "Constructor, initializes with a Kind."
+        }
+      ]
+    },
+    {
+      "name": "CatchBlockDetails",
+      "properties": [
+        "ref",
+        "exception_handler_was_used",
+        "deopt_frame_distance"
+      ],
+      "methods": []
+    },
+    {
+      "name": "MaglevCallerDetails",
+      "properties": [
+        "arguments",
+        "deopt_frame",
+        "known_node_aspects",
+        "loop_effects",
+        "unobserved_context_slot_stores",
+        "catch_block",
+        "is_inside_loop",
+        "is_eager_inline",
+        "call_frequency"
+      ],
+      "methods": []
+    },
+    {
+      "name": "MaglevCallSiteInfo",
+      "properties": [
+        "caller_details",
+        "generic_call_node",
+        "feedback_cell"
+      ],
+      "methods": []
+    },
+    {
+      "name": "MaglevGraphBuilder",
+      "properties": [
+        "graph_",
+        "compilation_unit_",
+        "current_interpreter_frame_",
+        "caller_details_",
+        "current_deopt_scope_",
+        "broker_",
+        "local_isolate_",
+        "inlining_id_",
+        "current_source_position_",
+        "iterator_",
+        "source_position_iterator_",
+        "entrypoint_",
+        "loop_headers_to_peel_",
+        "in_prologue_",
+        "current_allocation_block_",
+        "merge_states_",
+        "jump_targets_",
+        "unobserved_context_slot_stores_",
+        "current_speculation_feedback_",
+        "latest_checkpointed_frame_",
+        "catch_block_stack_",
+        "next_handler_table_index_",
+        "current_for_in_state",
+        "loop_effects_stack_",
+        "is_turbolev_",
+        "in_peeled_iteration_",
+        "optimistic_peeling_count_",
+        "new_nodes_"
+      ],
+      "methods": [
+        {
+          "name": "MaglevGraphBuilder",
+          "parameters": [
+            "LocalIsolate* local_isolate",
+            "MaglevCompilationUnit* compilation_unit",
+            "Graph* graph",
+            "MaglevCallerDetails* caller_details = nullptr"
+          ],
+          "return_type": "void",
+          "logic": "Constructor for the MaglevGraphBuilder class. Initializes the member variables."
+        },
+        {
+          "name": "Build",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Builds the Maglev graph by iterating through the bytecode array and visiting each bytecode instruction."
+        },
+        {
+          "name": "BuildInlineFunction",
+          "parameters": [
+            "SourcePosition call_site_position",
+            "ValueNode* context",
+            "ValueNode* function",
+            "ValueNode* new_target"
+          ],
+          "return_type": "ReduceResult",
+          "logic": "Builds the Maglev graph for an inlined function."
+        },
+        {
+          "name": "StartPrologue",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Starts the prologue of the function by building the basic blocks."
+        },
+        {
+          "name": "SetArgument",
+          "parameters": [
+            "int i",
+            "ValueNode* value"
+          ],
+          "return_type": "void",
+          "logic": "Sets the argument to the specified value."
+        },
+        {
+          "name": "InitializeRegister",
+          "parameters": [
+            "interpreter::Register reg",
+            "ValueNode* value"
+          ],
+          "return_type": "void",
+          "logic": "Initializes the register to the specified value."
+        },
+        {
+          "name": "GetArgument",
+          "parameters": [
+            "int i"
+          ],
+          "return_type": "ValueNode*",
+          "logic": "Gets the argument at the specified index."
+        },
+        {
+          "name": "GetInlinedArgument",
+          "parameters": [
+            "int i"
+          ],
+          "return_type": "ValueNode*",
+          "logic": "Gets the inlined argument at the specified index."
+        },
+        {
+          "name": "BuildRegisterFrameInitialization",
+          "parameters": [
+            "ValueNode* context = nullptr",
+            "ValueNode* closure = nullptr",
+            "ValueNode* new_target = nullptr"
+          ],
+          "return_type": "void",
+          "logic": "Builds the register frame initialization."
+        },
+        {
+          "name": "BuildMergeStates",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Builds the merge states."
+        },
+        {
+          "name": "EndPrologue",
+          "parameters": [],
+          "return_type": "BasicBlock*",
+          "logic": "Ends the prologue."
+        },
+        {
+          "name": "PeelLoop",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Peels the loop."
+        },
+        {
+          "name": "BuildLoopForPeeling",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Builds the loop for peeling."
+        },
+        {
+          "name": "OsrAnalyzePrequel",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Analyses the OSR prequel."
+        },
+        {
+          "name": "BuildBody",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Builds the body of the function by iterating through the bytecode array and visiting each bytecode instruction."
+        },
+        {
+          "name": "GetSmiConstant",
+          "parameters": [
+            "int constant"
+          ],
+          "return_type": "SmiConstant*",
+          "logic": "Returns a SmiConstant node for the given constant."
+        },
+        {
+          "name": "GetTaggedIndexConstant",
+          "parameters": [
+            "int constant"
+          ],
+          "return_type": "TaggedIndexConstant*",
+          "logic": "Returns a TaggedIndexConstant node for the given constant."
+        },
+        {
+          "name": "GetInt32Constant",
+          "parameters": [
+            "int32_t constant"
+          ],
+          "return_type": "Int32Constant*",
+          "logic": "Returns a Int32Constant node for the given constant."
+        },
+        {
+          "name": "GetUint32Constant",
+          "parameters": [
+            "int constant"
+          ],
+          "return_type": "Uint32Constant*",
+          "logic": "Returns a Uint32Constant node for the given constant."
+        },
+        {
+          "name": "GetFloat64Constant",
+          "parameters": [
+            "double constant"
+          ],
+          "return_type": "Float64Constant*",
+          "logic": "Returns a Float64Constant node for the given constant."
+        },
+        {
+          "name": "GetFloat64Constant",
+          "parameters": [
+            "Float64 constant"
+          ],
+          "return_type": "Float64Constant*",
+          "logic": "Returns a Float64Constant node for the given constant."
+        },
+        {
+          "name": "GetNumberConstant",
+          "parameters": [
+            "double constant"
+          ],
+          "return_type": "ValueNode*",
+          "logic": "Returns a NumberConstant node for the given constant."
+        },
+        {
+          "name": "TryGetConstant",
+          "parameters": [
+            "compiler::JSHeapBroker* broker",
+            "LocalIsolate* isolate",
+            "ValueNode* node"
+          ],
+          "return_type": "compiler::OptionalHeapObjectRef",
+          "logic": "Tries to get a constant value from the given node."
+        },
+        {
+          "name": "graph",
+          "parameters": [],
+          "return_type": "Graph*",
+          "logic": "Returns the graph being built."
+        },
+        {
+          "name": "zone",
+          "parameters": [],
+          "return_type": "Zone*",
+          "logic": "Returns the zone being used for allocation."
+        },
+        {
+          "name": "compilation_unit",
+          "parameters": [],
+          "return_type": "MaglevCompilationUnit*",
+          "logic": "Returns the compilation unit being built."
+        },
+        {
+          "name": "current_interpreter_frame",
+          "parameters": [],
+          "return_type": "const InterpreterFrameState&",
+          "logic": "Returns the current interpreter frame state."
+        },
+        {
+          "name": "caller_details",
+          "parameters": [],
+          "return_type": "MaglevCallerDetails*",
+          "logic": "Returns the caller details, if this is an inlined function."
+        },
+        {
+          "name": "current_deopt_scope",
+          "parameters": [],
+          "return_type": "const DeoptFrameScope*",
+          "logic": "Returns the current deopt frame scope."
+        },
+        {
+          "name": "broker",
+          "parameters": [],
+          "return_type": "compiler::JSHeapBroker*",
+          "logic": "Returns the JSHeapBroker."
+        },
+        {
+          "name": "local_isolate",
+          "parameters": [],
+          "return_type": "LocalIsolate*",
+          "logic": "Returns the LocalIsolate."
+        },
+        {
+          "name": "has_graph_labeller",
+          "parameters": [],
+          "return_type": "bool",
+          "logic": "Returns true if graph labeller is present"
+        },
+        {
+          "name": "graph_labeller",
+          "parameters": [],
+          "return_type": "MaglevGraphLabeller*",
+          "logic": "Returns a graph labeller."
+        },
+        {
+          "name": "is_inline",
+          "parameters": [],
+          "return_type": "bool",
+          "logic": "Returns true if this graph builder is building an inlined function."
+        },
+        {
+          "name": "inlining_depth",
+          "parameters": [],
+          "return_type": "int",
+          "logic": "Returns the inlining depth."
+        },
+        {
+          "name": "is_eager_inline",
+          "parameters": [],
+          "return_type": "bool",
+          "logic": "Returns true if it's an eager inlining."
+        },
+        {
+          "name": "GetLatestCheckpointedFrame",
+          "parameters": [],
+          "return_type": "DeoptFrame",
+          "logic": "Returns the latest checkpointed deoptimization frame."
+        },
+        {
+          "name": "need_checkpointed_loop_entry",
+          "parameters": [],
+          "return_type": "bool",
+          "logic": "Returns true if a checkpointed loop entry is needed based on flags."
+        },
+        {
+          "name": "TopLevelFunctionPassMaglevPrintFilter",
+          "parameters": [],
+          "return_type": "bool",
+          "logic": "Checks if the top-level function passes the maglev print filter."
+        },
+        {
+          "name": "RecordUseReprHint",
+          "parameters": [
+            "Phi* phi",
+            "UseRepresentationSet reprs"
+          ],
+          "return_type": "void",
+          "logic": "Records a representation hint for the specified phi."
+        },
+        {
+          "name": "RecordUseReprHint",
+          "parameters": [
+            "Phi* phi",
+            "UseRepresentation repr"
+          ],
+          "return_type": "void",
+          "logic": "Records a representation hint for the specified phi."
+        },
+        {
+          "name": "RecordUseReprHintIfPhi",
+          "parameters": [
+            "ValueNode* node",
+            "UseRepresentation repr"
+          ],
+          "return_type": "void",
+          "logic": "Records representation hint if it is a phi."
+        },
+        {
+          "name": "set_current_block",
+          "parameters": [
+            "BasicBlock* block"
+          ],
+          "return_type": "void",
+          "logic": "Sets the current block being built."
+        },
+        {
+          "name": "FinishInlinedBlockForCaller",
+          "parameters": [
+            "ControlNode* control_node",
+            "ZoneVector<Node*> rem_nodes_in_call_block"
+          ],
+          "return_type": "BasicBlock*",
+          "logic": "Finishes an inlined block."
+        },
+        {
+          "name": "node_buffer",
+          "parameters": [],
+          "return_type": "ZoneVector<Node*>&",
+          "logic": "Returns the node buffer."
+        },
+        {
+          "name": "NewObjectId",
+          "parameters": [],
+          "return_type": "uint32_t",
+          "logic": "Generates a new unique object ID."
+        },
+        {
+          "name": "is_turbolev",
+          "parameters": [],
+          "return_type": "bool",
+          "logic": "Returns the turbolev flag."
+        },
+        {
+          "name": "max_inlined_bytecode_size",
+          "parameters": [],
+          "return_type": "int",
+          "logic": "Returns the maximum size of the inlined bytecode."
+        },
+        {
+          "name": "max_inlined_bytecode_size_small",
+          "parameters": [],
+          "return_type": "int",
+          "logic": "Returns the maximum size of the inlined bytecode for small functions."
+        },
+        {
+          "name": "min_inlining_frequency",
+          "parameters": [],
+          "return_type": "float",
+          "logic": "Returns the minimum inlining frequency."
+        },
+        {
+          "name": "max_inlined_bytecode_size_cumulative",
+          "parameters": [],
+          "return_type": "int",
+          "logic": "Returns the max size of inlined bytecode in cumulative."
+        },
+        {
+          "name": "AddInlinedArgumentsToDeoptFrame",
+          "parameters": [
+            "DeoptFrame* deopt_frame",
+            "const MaglevCompilationUnit* unit",
+            "ValueNode* closure",
+            "base::Vector<ValueNode*> args"
+          ],
+          "return_type": "DeoptFrame*",
+          "logic": "Adds inlined arguments to deopt frame."
+        }
+      ]
+    }
+  ],
+  "functions": [
+    {
+      "name": "StaticTypeForNode",
+      "parameters": [
+        "compiler::JSHeapBroker* broker",
+        "LocalIsolate* isolate",
+        "ValueNode* node"
+      ],
+      "return_type": "NodeType",
+      "logic": "Determines the static type for a given node."
+    }
+  ]
+}

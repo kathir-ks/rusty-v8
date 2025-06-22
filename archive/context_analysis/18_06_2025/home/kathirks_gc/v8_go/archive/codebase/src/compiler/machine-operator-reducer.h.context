@@ -1,0 +1,123 @@
+{
+  "metadata": {
+    "path": "/home/kathirks_gc/v8_go/archive/codebase/src/compiler/machine-operator-reducer.h",
+    "file_name": "machine-operator-reducer.h",
+    "language": "cpp",
+    "purpose": "Defines the MachineOperatorReducer class, which performs constant folding and strength reduction on nodes with machine operators in the V8 compiler."
+  },
+  "imports": {
+    "metadata": {
+      "language": "cpp",
+      "purpose": "Includes necessary headers for standard library, compiler-specific features, global definitions, graph reduction, and machine operators."
+    },
+    "code": "#include <optional>\n\n#include \"src/base/compiler-specific.h\"\n#include \"src/common/globals.h\"\n#include \"src/compiler/graph-reducer.h\"\n#include \"src/compiler/machine-operator.h\""
+  },
+  "classes": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "MachineOperatorReducer",
+        "extends": "AdvancedReducer",
+        "about": "Performs constant folding and strength reduction on nodes that have machine operators.",
+        "attributes": [
+          {
+            "name": "mcgraph_",
+            "type": "MachineGraph*",
+            "access": "private",
+            "purpose": "Pointer to the MachineGraph being reduced."
+          },
+          {
+            "name": "signalling_nan_propagation_",
+            "type": "SignallingNanPropagation",
+            "access": "private",
+            "purpose": "Indicates how signalling NaN values should be propagated."
+          }
+        ],
+        "dependencies": [
+          "AdvancedReducer",
+          "MachineGraph",
+          "CommonOperatorBuilder",
+          "MachineOperatorBuilder",
+          "TFGraph",
+          "Word32Adapter",
+          "Word64Adapter"
+        ]
+      },
+      "code": "class V8_EXPORT_PRIVATE MachineOperatorReducer final\n    : public NON_EXPORTED_BASE(AdvancedReducer) {\n public:\n  enum SignallingNanPropagation {\n    kSilenceSignallingNan,\n    kPropagateSignallingNan\n  };\n\n  explicit MachineOperatorReducer(\n      Editor* editor, MachineGraph* mcgraph,\n      SignallingNanPropagation signalling_nan_propagation);\n  ~MachineOperatorReducer() override;\n\n  const char* reducer_name() const override { return \"MachineOperatorReducer\"; }\n\n  Reduction Reduce(Node* node) override;\n\n private:\n  friend class Word32Adapter;\n  friend class Word64Adapter;\n\n  Node* Float32Constant(float value);\n  Node* Float64Constant(double value);\n  Node* Int32Constant(int32_t value);\n  Node* Int64Constant(int64_t value);\n  Node* Uint32Constant(uint32_t value) {\n    return Int32Constant(base::bit_cast<int32_t>(value));\n  }\n  Node* Uint64Constant(uint64_t value) {\n    return Int64Constant(base::bit_cast<int64_t>(value));\n  }\n  Node* Float64Mul(Node* lhs, Node* rhs);\n  Node* Float64PowHalf(Node* value);\n  Node* Word32And(Node* lhs, Node* rhs);\n  Node* Word32And(Node* lhs, uint32_t rhs) {\n    return Word32And(lhs, Uint32Constant(rhs));\n  }\n  Node* Word32Sar(Node* lhs, uint32_t rhs);\n  Node* Word64Sar(Node* lhs, uint32_t rhs);\n  Node* Word32Shr(Node* lhs, uint32_t rhs);\n  Node* Word64Shr(Node* lhs, uint32_t rhs);\n  Node* Word32Equal(Node* lhs, Node* rhs);\n  Node* Word64Equal(Node* lhs, Node* rhs);\n  Node* Word64And(Node* lhs, Node* rhs);\n  Node* Word64And(Node* lhs, uint64_t rhs) {\n    return Word64And(lhs, Uint64Constant(rhs));\n  }\n  Node* Int32Add(Node* lhs, Node* rhs);\n  Node* Int64Add(Node* lhs, Node* rhs);\n  Node* Int32Sub(Node* lhs, Node* rhs);\n  Node* Int64Sub(Node* lhs, Node* rhs);\n  Node* Int32Mul(Node* lhs, Node* rhs);\n  Node* Int64Mul(Node* lhs, Node* rhs);\n  Node* Int32Div(Node* dividend, int32_t divisor);\n  Node* Int64Div(Node* dividend, int64_t divisor);\n  Node* Uint32Div(Node* dividend, uint32_t divisor);\n  Node* Uint64Div(Node* dividend, uint64_t divisor);\n  Node* TruncateInt64ToInt32(Node* value);\n  Node* ChangeInt32ToInt64(Node* value);\n\n  Reduction ReplaceBool(bool value) { return ReplaceInt32(value ? 1 : 0); }\n  Reduction ReplaceFloat32(float value) {\n    return Replace(Float32Constant(value));\n  }\n  Reduction ReplaceFloat64(double value) {\n    return Replace(Float64Constant(value));\n  }\n  Reduction ReplaceInt32(int32_t value) {\n    return Replace(Int32Constant(value));\n  }\n  Reduction ReplaceUint32(uint32_t value) {\n    return Replace(Uint32Constant(value));\n  }\n  Reduction ReplaceInt64(int64_t value) {\n    return Replace(Int64Constant(value));\n  }\n  Reduction ReplaceUint64(uint64_t value) {\n    return Replace(Uint64Constant(value));\n  }\n\n  Reduction ReduceInt32Add(Node* node);\n  Reduction ReduceInt64Add(Node* node);\n  Reduction ReduceInt32Sub(Node* node);\n  Reduction ReduceInt64Sub(Node* node);\n  Reduction ReduceInt64Mul(Node* node);\n  Reduction ReduceInt32Div(Node* node);\n  Reduction ReduceInt64Div(Node* node);\n  Reduction ReduceUint32Div(Node* node);\n  Reduction ReduceUint64Div(Node* node);\n  Reduction ReduceInt32Mod(Node* node);\n  Reduction ReduceInt64Mod(Node* node);\n  Reduction ReduceUint32Mod(Node* node);\n  Reduction ReduceUint64Mod(Node* node);\n  Reduction ReduceStore(Node* node);\n  Reduction ReduceProjection(size_t index, Node* node);\n  const Operator* Map64To32Comparison(const Operator* op, bool sign_extended);\n  Reduction ReduceWord32Comparisons(Node* node);\n  Reduction ReduceWord64Comparisons(Node* node);\n  Reduction ReduceWord32Shifts(Node* node);\n  Reduction ReduceWord32Shl(Node* node);\n  Reduction ReduceWord64Shl(Node* node);\n  Reduction ReduceWord32Shr(Node* node);\n  Reduction ReduceWord64Shr(Node* node);\n  Reduction ReduceWord32Sar(Node* node);\n  Reduction ReduceWord64Sar(Node* node);\n  Reduction ReduceWord32And(Node* node);\n  Reduction ReduceWord64And(Node* node);\n  Reduction TryMatchWord32Ror(Node* node);\n  Reduction ReduceWord32Or(Node* node);\n  Reduction ReduceWord64Or(Node* node);\n  Reduction ReduceWord32Xor(Node* node);\n  Reduction ReduceWord64Xor(Node* node);\n  Reduction ReduceWord32Equal(Node* node);\n  Reduction ReduceWord64Equal(Node* node);\n  Reduction ReduceFloat64InsertLowWord32(Node* node);\n  Reduction ReduceFloat64InsertHighWord32(Node* node);\n  Reduction ReduceFloat64Compare(Node* node);\n  Reduction ReduceFloat64RoundDown(Node* node);\n  Reduction ReduceTruncateInt64ToInt32(Node* node);\n  Reduction ReduceConditional(Node* node);\n\n  TFGraph* graph() const;\n  MachineGraph* mcgraph() const { return mcgraph_; }\n  CommonOperatorBuilder* common() const;\n  MachineOperatorBuilder* machine() const;\n\n  // These reductions can be applied to operations of different word sizes.\n  // Use Word32Adapter or Word64Adapter to specialize for a particular one.\n  template <typename WordNAdapter>\n  Reduction ReduceWordNAnd(Node* node);\n  template <typename WordNAdapter>\n  Reduction ReduceWordNOr(Node* node);\n  template <typename WordNAdapter>\n  Reduction ReduceWordNXor(Node* node);\n  template <typename WordNAdapter>\n  Reduction ReduceUintNLessThanOrEqual(Node* node);\n\n  // Tries to simplify \"if(x == 0)\" by removing the \"== 0\" and inverting\n  // branches.\n  Reduction SimplifyBranch(Node* node);\n  // Helper for SimplifyBranch; swaps the if/else of a branch.\n  void SwapBranches(Node* node);\n\n  // Helper for ReduceConditional. Does not perform the actual reduction; just\n  // returns a new Node that could be used as the input to the condition.\n  template <typename WordNAdapter>\n  std::optional<Node*> ReduceConditionalN(Node* node);\n\n  // Helper for finding a reduced equality condition. Does not perform the\n  // actual reduction; just returns a new pair that could be compared for the\n  // same outcome. uintN_t corresponds to the size of the Equal operator, and\n  // thus the size of rhs. While the size of the WordNAdaptor corresponds to the\n  // size of lhs, with the sizes being different for\n  // Word32Equal(TruncateInt64ToInt32(lhs), rhs).\n  template <typename WordNAdapter, typename uintN_t,\n            typename intN_t = typename std::make_signed<uintN_t>::type>\n  std::optional<std::pair<Node*, uintN_t>> ReduceWordEqualForConstantRhs(\n      Node* lhs, uintN_t rhs);\n\n  MachineGraph* mcgraph_;\n  SignallingNanPropagation signalling_nan_propagation_;\n};"
+    }
+  ],
+  "dependencies": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "AdvancedReducer",
+        "about": "Base class for advanced graph reducers in the V8 compiler."
+      },
+      "code": "class AdvancedReducer {\n                  public:\n                    virtual ~AdvancedReducer() {}\n                };",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "MachineGraph",
+        "about": "Represents the machine-level graph being compiled."
+      },
+      "code": "class MachineGraph {};",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "CommonOperatorBuilder",
+        "about": "Builds common operators used in the graph."
+      },
+      "code": "class CommonOperatorBuilder {};",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "MachineOperatorBuilder",
+        "about": "Builds machine-specific operators."
+      },
+      "code": "class MachineOperatorBuilder {};",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "TFGraph",
+        "about": "Represents the typed function graph."
+      },
+      "code": "class TFGraph {};",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "Word32Adapter",
+        "about": "Adapter for 32-bit word operations."
+      },
+      "code": "class Word32Adapter {};",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "Word64Adapter",
+        "about": "Adapter for 64-bit word operations."
+      },
+      "code": "class Word64Adapter {};",
+      "type": "class"
+    }
+  ],
+  "file_path": "/home/kathirks_gc/v8_go/archive/codebase/src/compiler/machine-operator-reducer.h"
+}

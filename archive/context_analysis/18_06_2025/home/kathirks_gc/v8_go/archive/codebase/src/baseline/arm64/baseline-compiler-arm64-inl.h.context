@@ -1,0 +1,85 @@
+{
+  "metadata": {
+    "path": "/home/kathirks_gc/v8_go/archive/codebase/src/baseline/arm64/baseline-compiler-arm64-inl.h",
+    "file_name": "baseline-compiler-arm64-inl.h",
+    "language": "cpp",
+    "purpose": "Inline implementations for the ARM64 baseline compiler in V8."
+  },
+  "imports": {
+    "metadata": {
+      "language": "cpp",
+      "purpose": "Includes interpreter constants header file, providing necessary definitions for frame sizes."
+    },
+    "code": "#include \"src/interpreter/interpreter-frame-constants.h\""
+  },
+  "functions": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "method",
+        "name": "Prologue",
+        "parent": "BaselineCompiler",
+        "about": "Generates the prologue code for a baseline-compiled function on ARM64.",
+        "logic": "Enters the frame, calls the out-of-line prologue builtin, and fills the frame with the undefined value.",
+        "parameters": [],
+        "return": {
+          "type": "void",
+          "description": "No return value"
+        },
+        "dependencies": [
+          "CallBuiltin",
+          "StackFrame",
+          "Builtin",
+          "kContextRegister",
+          "kJSFunctionRegister",
+          "kJavaScriptCallArgCountRegister",
+          "kJavaScriptCallNewTargetRegister"
+        ]
+      },
+      "code": "void BaselineCompiler::Prologue() {\n              ASM_CODE_COMMENT(&masm_);\n              // Enter the frame here, since CallBuiltin will override lr.\n              __ masm()->EnterFrame(StackFrame::BASELINE);\n              DCHECK_EQ(kJSFunctionRegister, kJavaScriptCallTargetRegister);\n              int max_frame_size = bytecode_->max_frame_size();\n              CallBuiltin<Builtin::kBaselineOutOfLinePrologue>(\n                  kContextRegister, kJSFunctionRegister, kJavaScriptCallArgCountRegister,\n                  max_frame_size, kJavaScriptCallNewTargetRegister, bytecode_);\n\n              __ masm()->AssertSpAligned();\n              PrologueFillFrame();\n              __ masm()->AssertSpAligned();\n            }"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "method",
+        "name": "PrologueFillFrame",
+        "parent": "BaselineCompiler",
+        "about": "Fills the register portion of the baseline frame with the undefined value.",
+        "logic": "Iterates through the registers, pushing the undefined value (stored in kInterpreterAccumulatorRegister) onto the stack.  Optimizes for larger frames by using a loop.",
+        "parameters": [],
+        "return": {
+          "type": "void",
+          "description": "No return value"
+        },
+        "dependencies": [
+          "bytecode_",
+          "kInterpreterAccumulatorRegister",
+          "kJavaScriptCallNewTargetRegister"
+        ]
+      },
+      "code": "void BaselineCompiler::PrologueFillFrame() {\n              ASM_CODE_COMMENT(&masm_);\n              // Inlined register frame fill\n              interpreter::Register new_target_or_generator_register =\n                  bytecode_->incoming_new_target_or_generator_register();\n              if (v8_flags.debug_code) {\n                __ masm()->CompareRoot(kInterpreterAccumulatorRegister,\n                                       RootIndex::kUndefinedValue);\n                __ masm()->Assert(eq, AbortReason::kUnexpectedValue);\n              }\n              int register_count = bytecode_->register_count();\n              // Magic value\n              const int kLoopUnrollSize = 8;\n              const int new_target_index = new_target_or_generator_register.index();\n              const bool has_new_target = new_target_index != kMaxInt;\n              if (has_new_target) {\n                  DCHECK_LE(new_target_index, register_count);\n                  int before_new_target_count = 0;\n                  for (; before_new_target_count + 2 <= new_target_index;\n                       before_new_target_count += 2) {\n                    __ masm()->Push(kInterpreterAccumulatorRegister,\n                                    kInterpreterAccumulatorRegister);\n                  }\n                  if (before_new_target_count == new_target_index) {\n                    __ masm()->Push(kJavaScriptCallNewTargetRegister,\n                                    kInterpreterAccumulatorRegister);\n                  } else {\n                    DCHECK_EQ(before_new_target_count + 1, new_target_index);\n                    __ masm()->Push(kInterpreterAccumulatorRegister,\n                                    kJavaScriptCallNewTargetRegister);\n                  }\n                  // We pushed before_new_target_count registers, plus the two registers\n                  // that included new_target.\n                  register_count -= (before_new_target_count + 2);\n              }\n              if (register_count < 2 * kLoopUnrollSize) {\n                // If the frame is small enough, just unroll the frame fill completely.\n                for (int i = 0; i < register_count; i += 2) {\n                  __ masm()->Push(kInterpreterAccumulatorRegister,\n                                  kInterpreterAccumulatorRegister);\n                }\n              } else {\n                BaselineAssembler::ScratchRegisterScope temps(&basm_);\n                Register scratch = temps.AcquireScratch();\n\n                // Extract the first few registers to round to the unroll size.\n                int first_registers = register_count % kLoopUnrollSize;\n                for (int i = 0; i < first_registers; i += 2) {\n                  __ masm()->Push(kInterpreterAccumulatorRegister,\n                                  kInterpreterAccumulatorRegister);\n                }\n                __ Move(scratch, register_count / kLoopUnrollSize);\n                // We enter the loop unconditionally, so make sure we need to loop at least\n                // once.\n                DCHECK_GT(register_count / kLoopUnrollSize, 0);\n                Label loop;\n                __ Bind(&loop);\n                for (int i = 0; i < kLoopUnrollSize; i += 2) {\n                  __ masm()->Push(kInterpreterAccumulatorRegister,\n                                  kInterpreterAccumulatorRegister);\n                }\n                __ masm()->Subs(scratch, scratch, 1);\n                __ masm()->B(gt, &loop);\n              }\n            }"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "method",
+        "name": "VerifyFrameSize",
+        "parent": "BaselineCompiler",
+        "about": "Verifies that the current stack frame size matches the expected size.",
+        "logic": "Calculates the expected stack pointer value based on the frame size and compares it to the frame pointer.  Aborts if there is a mismatch.",
+        "parameters": [],
+        "return": {
+          "type": "void",
+          "description": "No return value"
+        },
+        "dependencies": [
+          "bytecode_",
+          "InterpreterFrameConstants",
+          "kSystemPointerSize"
+        ]
+      },
+      "code": "void BaselineCompiler::VerifyFrameSize() {\n              ASM_CODE_COMMENT(&masm_);\n              __ masm()->Add(x15, sp,\n                             RoundUp(InterpreterFrameConstants::kFixedFrameSizeFromFp +\n                                         bytecode_->frame_size(),\n                                     2 * kSystemPointerSize));\n              __ masm()->Cmp(x15, fp);\n              __ masm()->Assert(eq, AbortReason::kUnexpectedStackPointer);\n            }"
+    }
+  ],
+  "file_path": "/home/kathirks_gc/v8_go/archive/codebase/src/baseline/arm64/baseline-compiler-arm64-inl.h"
+}

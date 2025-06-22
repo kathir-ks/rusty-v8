@@ -1,0 +1,62 @@
+{
+  "metadata": {
+    "path": "/home/kathirks_gc/v8_go/archive/codebase/src/execution/encoded-c-signature.h",
+    "file_name": "encoded-c-signature.h",
+    "language": "cpp",
+    "purpose": "Defines the EncodedCSignature struct for representing the signature of C functions, indicating whether parameters are passed in general purpose or floating point registers."
+  },
+  "imports": {
+    "metadata": {
+      "language": "cpp",
+      "purpose": "Provides standard integer types."
+    },
+    "code": "#include <stdint.h>"
+  },
+  "classes": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "EncodedCSignature",
+        "about": "Represents the signature of a C function, specifying how parameters are passed (general purpose or FP registers).",
+        "attributes": [
+          {
+            "name": "bitfield_",
+            "type": "uint32_t",
+            "access": "private",
+            "purpose": "A bitfield where each bit represents whether a corresponding parameter is passed in a floating-point register. Bit 31 represents return value"
+          },
+          {
+            "name": "return_type_is_float64_",
+            "type": "bool",
+            "access": "private",
+            "purpose": "Only for RISCV64 architecture, indicates whether the return type is float64 (otherwise it is float32)"
+          },
+          {
+            "name": "parameter_count_",
+            "type": "int",
+            "access": "private",
+            "purpose": "The number of parameters in the function signature. kInvalidParamCount represents an invalid signature."
+          }
+        ],
+        "dependencies": [
+          "CFunctionInfo"
+        ]
+      },
+      "code": "struct EncodedCSignature {\n            public:\n            EncodedCSignature() = default;\n            EncodedCSignature(uint32_t bitfield, int parameter_count)\n                : bitfield_(bitfield), parameter_count_(parameter_count) {}\n            explicit EncodedCSignature(int parameter_count)\n                : parameter_count_(parameter_count) {}\n            explicit EncodedCSignature(const CFunctionInfo* signature);\n\n            bool IsFloat(int index) const {\n                return (bitfield_ & (static_cast<uint32_t>(1) << index)) != 0;\n            }\n            bool IsReturnFloat() const { return IsFloat(kReturnIndex); }\n#ifdef V8_TARGET_ARCH_RISCV64\n            bool IsReturnFloat64() const {\n                return IsFloat(kReturnIndex) && return_type_is_float64_;\n            }\n#endif\n            void SetFloat(int index) { bitfield_ |= (static_cast<uint32_t>(1) << index); }\n\n            void SetReturnFloat64() {\n                SetFloat(kReturnIndex);\n#ifdef V8_TARGET_ARCH_RISCV64\n                return_type_is_float64_ = true;\n#endif\n            }\n            void SetReturnFloat32() {\n                SetFloat(kReturnIndex);\n#ifdef V8_TARGET_ARCH_RISCV64\n                return_type_is_float64_ = false;\n#endif\n            }\n\n            bool IsValid() const { return parameter_count_ < kInvalidParamCount; }\n\n            int ParameterCount() const { return parameter_count_; }\n            int FPParameterCount() const;\n\n            static const EncodedCSignature& Invalid() {\n                static EncodedCSignature kInvalid = {0, kInvalidParamCount};\n                return kInvalid;\n            }\n\n            static const int kReturnIndex = 31;\n            static const int kInvalidParamCount = kReturnIndex + 1;\n\n            private:\n            // Bit i is set if floating point, unset if not.\n            uint32_t bitfield_ = 0;\n#ifdef V8_TARGET_ARCH_RISCV64\n            // Indicates whether the return type for functions is float64,\n            // RISC-V need NaNboxing float32 return value in simulator.\n            bool return_type_is_float64_ = false;\n#endif  // V8_TARGET_ARCH_RISCV64\n            int parameter_count_ = kInvalidParamCount;\n            };"
+    }
+  ],
+  "dependencies": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "CFunctionInfo",
+        "about": "Represents information about a C function."
+      },
+      "code": "class CFunctionInfo;",
+      "type": "class"
+    }
+  ],
+  "file_path": "/home/kathirks_gc/v8_go/archive/codebase/src/execution/encoded-c-signature.h"
+}

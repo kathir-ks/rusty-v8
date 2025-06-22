@@ -1,0 +1,182 @@
+{
+  "file_path": "/home/kathirks_gc/v8_go/codebase/src/compiler/dead-code-elimination.cc",
+  "imports": [
+    "src/compiler/dead-code-elimination.h",
+    "src/compiler/common-operator.h",
+    "src/compiler/node-properties.h",
+    "src/compiler/operator-properties.h",
+    "src/compiler/turbofan-graph.h"
+  ],
+  "classes": [
+    {
+      "name": "DeadCodeElimination",
+      "properties": [
+        "graph_",
+        "common_",
+        "dead_",
+        "zone_"
+      ],
+      "methods": [
+        {
+          "name": "DeadCodeElimination",
+          "parameters": [
+            "Editor* editor",
+            "TFGraph* graph",
+            "CommonOperatorBuilder* common",
+            "Zone* temp_zone"
+          ],
+          "return_type": "void",
+          "logic": "Constructor. Initializes the reducer, graph, common operator builder, dead node, and zone."
+        },
+        {
+          "name": "Reduce",
+          "parameters": [
+            "Node* node"
+          ],
+          "return_type": "Reduction",
+          "logic": "The main entry point for the dead code elimination. It determines the opcode of the node and calls the appropriate ReduceXXX function to handle it."
+        },
+        {
+          "name": "PropagateDeadControl",
+          "parameters": [
+            "Node* node"
+          ],
+          "return_type": "Reduction",
+          "logic": "Propagates dead control flow from a control input to the node.  If the control input is dead, the node is replaced by the dead node."
+        },
+        {
+          "name": "ReduceEnd",
+          "parameters": [
+            "Node* node"
+          ],
+          "return_type": "Reduction",
+          "logic": "Reduces an End node. Removes dead inputs, trims the input count, and replaces the node with the dead node if all inputs are dead."
+        },
+        {
+          "name": "ReduceLoopOrMerge",
+          "parameters": [
+            "Node* node"
+          ],
+          "return_type": "Reduction",
+          "logic": "Reduces a Loop or Merge node. Removes dead inputs, compacts live inputs, updates associated Phi nodes, and replaces the node with the dead node if all inputs are dead. Handles loop exits and terminates when appropriate."
+        },
+        {
+          "name": "RemoveLoopExit",
+          "parameters": [
+            "Node* node"
+          ],
+          "return_type": "Reduction",
+          "logic": "Removes a LoopExit node by replacing it with its control input and propagating the change to LoopExitValue and LoopExitEffect uses."
+        },
+        {
+          "name": "ReduceNode",
+          "parameters": [
+            "Node* node"
+          ],
+          "return_type": "Reduction",
+          "logic": "Reduces a generic node that's not a graph terminator.  Propagates dead control and handles pure and effect nodes."
+        },
+        {
+          "name": "ReducePhi",
+          "parameters": [
+            "Node* node"
+          ],
+          "return_type": "Reduction",
+          "logic": "Reduces a Phi node. Propagates dead control and replaces inputs with dead values when necessary."
+        },
+        {
+          "name": "ReduceEffectPhi",
+          "parameters": [
+            "Node* node"
+          ],
+          "return_type": "Reduction",
+          "logic": "Reduces an EffectPhi node. Propagates dead control. If Unreachable hits an effect phi, it reconnects the effect chain to the graph end and deletes the corresponding inputs from the merge and phi nodes."
+        },
+        {
+          "name": "ReducePureNode",
+          "parameters": [
+            "Node* node"
+          ],
+          "return_type": "Reduction",
+          "logic": "Reduces a pure node (no effects). If any input is dead, the node is replaced with a dead value."
+        },
+        {
+          "name": "ReduceUnreachableOrIfException",
+          "parameters": [
+            "Node* node"
+          ],
+          "return_type": "Reduction",
+          "logic": "Reduces an Unreachable or IfException node. Propagates dead control and replaces the node with the effect input if it's dead or unreachable."
+        },
+        {
+          "name": "ReduceEffectNode",
+          "parameters": [
+            "Node* node"
+          ],
+          "return_type": "Reduction",
+          "logic": "Reduces an effect node. If the effect input is dead, the node is replaced with the dead effect. If a value input is dead, the node can be replaced with a dead value and Unreachable effect."
+        },
+        {
+          "name": "ReduceDeoptimizeOrReturnOrTerminateOrTailCall",
+          "parameters": [
+            "Node* node"
+          ],
+          "return_type": "Reduction",
+          "logic": "Reduces Deoptimize, Return, Terminate, or TailCall nodes. Propagates dead control.  If a value input is dead, replaces with a Throw node that will cause a trap when it is reached at runtime."
+        },
+        {
+          "name": "ReduceLoopExit",
+          "parameters": [
+            "Node* node"
+          ],
+          "return_type": "Reduction",
+          "logic": "Reduces a LoopExit node. If the control or loop input is dead, calls RemoveLoopExit."
+        },
+        {
+          "name": "ReduceBranchOrSwitch",
+          "parameters": [
+            "Node* node"
+          ],
+          "return_type": "Reduction",
+          "logic": "Reduces a Branch or Switch node. Propagates dead control.  If the condition is a DeadValue then redirect control flow to the first projection."
+        },
+        {
+          "name": "TrimMergeOrPhi",
+          "parameters": [
+            "Node* node",
+            "int size"
+          ],
+          "return_type": "void",
+          "logic": "Trims the input count of a Merge or Phi node to the given size."
+        },
+        {
+          "name": "DeadValue",
+          "parameters": [
+            "Node* node",
+            "MachineRepresentation rep"
+          ],
+          "return_type": "Node*",
+          "logic": "Returns a DeadValue node with the given representation. Creates a new DeadValue node if one doesn't exist with the requested representation for the input node."
+        }
+      ]
+    }
+  ],
+  "functions": [
+    {
+      "name": "NoReturn",
+      "parameters": [
+        "Node* node"
+      ],
+      "return_type": "bool",
+      "logic": "Checks if the node will never produce a value or effect, based on its opcode or type."
+    },
+    {
+      "name": "FindDeadInput",
+      "parameters": [
+        "Node* node"
+      ],
+      "return_type": "Node*",
+      "logic": "Finds a dead input node among the inputs of the given node. Returns the dead input node if found, otherwise returns nullptr."
+    }
+  ]
+}

@@ -1,0 +1,195 @@
+{
+  "file_path": "/home/kathirks_gc/v8_go/codebase/src/wasm/baseline/liftoff-varstate.h",
+  "imports": [
+    "src/wasm/baseline/liftoff-register.h",
+    "src/wasm/wasm-value.h"
+  ],
+  "classes": [
+    {
+      "name": "LiftoffVarState",
+      "properties": [
+        "loc_",
+        "kind_",
+        "reg_",
+        "i32_const_",
+        "spill_offset_"
+      ],
+      "methods": [
+        {
+          "name": "LiftoffVarState",
+          "parameters": [
+            "ValueKind kind",
+            "int offset"
+          ],
+          "return_type": "LiftoffVarState",
+          "logic": "Constructor for stack location. Initializes a LiftoffVarState representing a variable stored on the stack with the given value kind and stack offset."
+        },
+        {
+          "name": "LiftoffVarState",
+          "parameters": [
+            "ValueKind kind",
+            "LiftoffRegister r",
+            "int offset"
+          ],
+          "return_type": "LiftoffVarState",
+          "logic": "Constructor for register location. Initializes a LiftoffVarState representing a variable stored in a register with the given value kind, register, and stack offset."
+        },
+        {
+          "name": "LiftoffVarState",
+          "parameters": [
+            "ValueKind kind",
+            "int32_t i32_const",
+            "int offset"
+          ],
+          "return_type": "LiftoffVarState",
+          "logic": "Constructor for integer constant. Initializes a LiftoffVarState representing a variable holding an integer constant with the given value kind (I32 or I64), the integer constant value, and a stack offset."
+        },
+        {
+          "name": "is_stack",
+          "parameters": [],
+          "return_type": "bool",
+          "logic": "Checks if the variable is stored on the stack."
+        },
+        {
+          "name": "is_gp_reg",
+          "parameters": [],
+          "return_type": "bool",
+          "logic": "Checks if the variable is stored in a general-purpose register."
+        },
+        {
+          "name": "is_fp_reg",
+          "parameters": [],
+          "return_type": "bool",
+          "logic": "Checks if the variable is stored in a floating-point register."
+        },
+        {
+          "name": "is_gp_reg_pair",
+          "parameters": [],
+          "return_type": "bool",
+          "logic": "Checks if the variable is stored in a general-purpose register pair."
+        },
+        {
+          "name": "is_fp_reg_pair",
+          "parameters": [],
+          "return_type": "bool",
+          "logic": "Checks if the variable is stored in a floating-point register pair."
+        },
+        {
+          "name": "is_reg",
+          "parameters": [],
+          "return_type": "bool",
+          "logic": "Checks if the variable is stored in a register (either general-purpose or floating-point)."
+        },
+        {
+          "name": "is_const",
+          "parameters": [],
+          "return_type": "bool",
+          "logic": "Checks if the variable holds an integer constant."
+        },
+        {
+          "name": "kind",
+          "parameters": [],
+          "return_type": "ValueKind",
+          "logic": "Returns the ValueKind of the variable."
+        },
+        {
+          "name": "loc",
+          "parameters": [],
+          "return_type": "Location",
+          "logic": "Returns the location of the variable (stack, register, or constant)."
+        },
+        {
+          "name": "i32_const",
+          "parameters": [],
+          "return_type": "int32_t",
+          "logic": "Returns the integer constant value (as 32-bit). Asserts that the location is kIntConst."
+        },
+        {
+          "name": "constant",
+          "parameters": [],
+          "return_type": "WasmValue",
+          "logic": "Returns the constant WasmValue. If kind is I32, it returns WasmValue(i32_const_); if I64, it returns WasmValue(int64_t{i32_const_}). Asserts that the location is kIntConst and kind is kI32 or kI64."
+        },
+        {
+          "name": "offset",
+          "parameters": [],
+          "return_type": "int",
+          "logic": "Returns the stack offset of the variable."
+        },
+        {
+          "name": "set_offset",
+          "parameters": [
+            "int offset"
+          ],
+          "return_type": "void",
+          "logic": "Sets the stack offset of the variable."
+        },
+        {
+          "name": "gp_reg",
+          "parameters": [],
+          "return_type": "Register",
+          "logic": "Returns the general-purpose register. Asserts that location is kRegister."
+        },
+        {
+          "name": "fp_reg",
+          "parameters": [],
+          "return_type": "DoubleRegister",
+          "logic": "Returns the floating-point register. Asserts that location is kRegister."
+        },
+        {
+          "name": "reg",
+          "parameters": [],
+          "return_type": "LiftoffRegister",
+          "logic": "Returns the LiftoffRegister. Asserts that the location is kRegister."
+        },
+        {
+          "name": "reg_class",
+          "parameters": [],
+          "return_type": "RegClass",
+          "logic": "Returns the register class of the variable (GP or FP). Asserts that the location is kRegister."
+        },
+        {
+          "name": "MakeStack",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Marks the variable as being stored on the stack."
+        },
+        {
+          "name": "MakeRegister",
+          "parameters": [
+            "LiftoffRegister r"
+          ],
+          "return_type": "void",
+          "logic": "Marks the variable as being stored in the given register."
+        },
+        {
+          "name": "MakeConstant",
+          "parameters": [
+            "int32_t i32_const"
+          ],
+          "return_type": "void",
+          "logic": "Marks the variable as holding the given integer constant."
+        },
+        {
+          "name": "Copy",
+          "parameters": [
+            "LiftoffVarState src"
+          ],
+          "return_type": "void",
+          "logic": "Copies the location, kind, register, and i32_const_ from the source LiftoffVarState. Does not copy the offset."
+        }
+      ]
+    }
+  ],
+  "functions": [
+    {
+      "name": "operator<<",
+      "parameters": [
+        "std::ostream& os",
+        "LiftoffVarState"
+      ],
+      "return_type": "std::ostream&",
+      "logic": "Output stream operator for LiftoffVarState (declared but not defined in this header)"
+    }
+  ]
+}

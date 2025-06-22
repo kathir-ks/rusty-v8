@@ -1,0 +1,65 @@
+{
+  "metadata": {
+    "path": "/home/kathirks_gc/v8_go/archive/codebase/src/compiler/value-numbering-reducer.h",
+    "file_name": "value-numbering-reducer.h",
+    "language": "cpp",
+    "purpose": "Declares the ValueNumberingReducer class, which is used to perform value numbering optimizations on the graph."
+  },
+  "imports": {
+    "metadata": {
+      "language": "cpp",
+      "purpose": "Includes necessary headers for base compiler specifics, global definitions, and graph reduction functionality."
+    },
+    "code": "#include \"src/base/compiler-specific.h\"\n#include \"src/common/globals.h\"\n#include \"src/compiler/graph-reducer.h\""
+  },
+  "classes": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "ValueNumberingReducer",
+        "extends": "Reducer",
+        "about": "A reducer that performs value numbering to identify and eliminate redundant computations in the graph.",
+        "attributes": [
+          {
+            "name": "entries_",
+            "type": "Node**",
+            "access": "private",
+            "purpose": "Hash table entries for value numbering."
+          },
+          {
+            "name": "capacity_",
+            "type": "size_t",
+            "access": "private",
+            "purpose": "Capacity of the hash table."
+          },
+          {
+            "name": "size_",
+            "type": "size_t",
+            "access": "private",
+            "purpose": "Current number of entries in the hash table."
+          },
+          {
+            "name": "temp_zone_",
+            "type": "Zone*",
+            "access": "private",
+            "purpose": "Temporary zone for allocations."
+          },
+          {
+            "name": "graph_zone_",
+            "type": "Zone*",
+            "access": "private",
+            "purpose": "Zone associated with the graph."
+          }
+        ],
+        "dependencies": [
+          "Reducer",
+          "Zone",
+          "Node"
+        ]
+      },
+      "code": "class V8_EXPORT_PRIVATE ValueNumberingReducer final\n    : public NON_EXPORTED_BASE(Reducer) {\n public:\n  explicit ValueNumberingReducer(Zone* temp_zone, Zone* graph_zone);\n  ~ValueNumberingReducer() override;\n\n  const char* reducer_name() const override { return \"ValueNumberingReducer\"; }\n\n  Reduction Reduce(Node* node) override;\n\n private:\n  enum { kInitialCapacity = 256u };\n\n  Reduction ReplaceIfTypesMatch(Node* node, Node* replacement);\n  void Grow();\n  Zone* temp_zone() const { return temp_zone_; }\n  Zone* graph_zone() const { return graph_zone_; }\n\n  Node** entries_;\n  size_t capacity_;\n  size_t size_;\n  Zone* temp_zone_;\n  Zone* graph_zone_;\n};"
+    }
+  ],
+  "file_path": "/home/kathirks_gc/v8_go/archive/codebase/src/compiler/value-numbering-reducer.h"
+}

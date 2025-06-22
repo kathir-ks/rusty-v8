@@ -1,0 +1,69 @@
+{
+  "metadata": {
+    "path": "/home/kathirks_gc/v8_go/archive/codebase/src/compiler/node-observer.cc",
+    "file_name": "node-observer.cc",
+    "language": "cpp",
+    "purpose": "Provides a mechanism for observing and reacting to changes in the compiler's node graph."
+  },
+  "imports": {
+    "metadata": {
+      "language": "cpp",
+      "purpose": "Includes necessary headers for NodeObserver functionality and node properties."
+    },
+    "code": "#include \"src/compiler/node-observer.h\"\n\n#include \"src/compiler/node-properties.h\""
+  },
+  "classes": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "ObservableNodeState",
+        "about": "Represents the observable state of a node, capturing its ID, operation, and type.",
+        "attributes": [
+          {
+            "name": "id_",
+            "type": "NodeId",
+            "access": "private",
+            "purpose": "The unique ID of the node."
+          },
+          {
+            "name": "op_",
+            "type": "const Operator*",
+            "access": "private",
+            "purpose": "The operator associated with the node."
+          },
+          {
+            "name": "type_",
+            "type": "Type",
+            "access": "private",
+            "purpose": "The type of the node's output."
+          }
+        ],
+        "dependencies": [
+          "Node",
+          "Zone",
+          "NodeProperties"
+        ]
+      },
+      "code": "ObservableNodeState::ObservableNodeState(const Node* node, Zone* zone)\n    : id_(node->id()),\n      op_(node->op()),\n      type_(NodeProperties::GetTypeOrAny(node)) {}"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "ObserveNodeManager",
+        "about": "Manages the observation of nodes, allowing NodeObservers to register for notifications about node creation and changes.",
+        "attributes": [],
+        "dependencies": [
+          "Node",
+          "NodeObserver",
+          "Zone",
+          "NodeObservation",
+          "ObservableNodeState"
+        ]
+      },
+      "code": "void ObserveNodeManager::StartObserving(Node* node, NodeObserver* observer) {\n  DCHECK_NOT_NULL(node);\n  DCHECK_NOT_NULL(observer);\n  DCHECK(observations_.find(node->id()) == observations_.end());\n\n  observer->set_has_observed_changes();\n  NodeObserver::Observation observation = observer->OnNodeCreated(node);\n  if (observation == NodeObserver::Observation::kContinue) {\n    observations_[node->id()] =\n        zone_->New<NodeObservation>(observer, node, zone_);\n  } else {\n    DCHECK_EQ(observation, NodeObserver::Observation::kStop);\n  }\n}\n\nvoid ObserveNodeManager::OnNodeChanged(const char* reducer_name,\n                                       const Node* old_node,\n                                       const Node* new_node) {\n  const auto it = observations_.find(old_node->id());\n  if (it == observations_.end()) return;\n\n  ObservableNodeState new_state{new_node, zone_};\n  NodeObservation* observation = it->second;\n  if (observation->state == new_state) return;\n\n  ObservableNodeState old_state = observation->state;\n  observation->state = new_state;\n\n  NodeObserver::Observation result =\n      observation->observer->OnNodeChanged(reducer_name, new_node, old_state);\n  if (result == NodeObserver::Observation::kStop) {\n    observations_.erase(old_node->id());\n  } else {\n    DCHECK_EQ(result, NodeObserver::Observation::kContinue);\n    if (old_node != new_node) {\n      observations_.erase(old_node->id());\n      observations_[new_node->id()] = observation;\n    }\n  }\n}"
+    }
+  ],
+  "file_path": "/home/kathirks_gc/v8_go/archive/codebase/src/compiler/node-observer.cc"
+}

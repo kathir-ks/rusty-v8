@@ -1,0 +1,146 @@
+{
+  "metadata": {
+    "path": "/home/kathirks_gc/v8_go/archive/codebase/src/strings/unicode.h",
+    "file_name": "unicode.h",
+    "language": "cpp",
+    "purpose": "Defines unicode related constants, classes, and utility functions for V8's string implementation."
+  },
+  "imports": {
+    "metadata": {
+      "language": "cpp",
+      "purpose": "Includes standard system types, bit field manipulation, base vectors, global definitions and utf8 decoder."
+    },
+    "code": "#include <sys/types.h>\n\n#include \"src/base/bit-field.h\"\n#include \"src/base/vector.h\"\n#include \"src/common/globals.h\"\n#include \"third_party/utf8-decoder/utf8-decoder.h\""
+  },
+  "classes": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "Predicate",
+        "about": "A template class used to cache the results of unicode predicates for fast access. Only enabled when V8_INTL_SUPPORT is not defined.",
+        "attributes": [],
+        "dependencies": [
+          "v8::base::BitField"
+        ]
+      },
+      "code": "#ifndef V8_INTL_SUPPORT\ntemplate <class T, int size = 256>\nclass Predicate {\n public:\n  inline Predicate() = default;\n  inline bool get(uchar c);\n\n private:\n  friend class Test;\n  bool CalculateValue(uchar c);\n  class CacheEntry {\n   public:\n    inline CacheEntry()\n        : bit_field_(CodePointField::encode(0) | ValueField::encode(0)) {}\n    inline CacheEntry(uchar code_point, bool value)\n        : bit_field_(\n              CodePointField::encode(CodePointField::kMask & code_point) |\n              ValueField::encode(value)) {\n      DCHECK_IMPLIES((CodePointField::kMask & code_point) != code_point,\n                     code_point == static_cast<uchar>(-1));\n    }\n\n    uchar code_point() const { return CodePointField::decode(bit_field_); }\n    bool value() const { return ValueField::decode(bit_field_); }\n\n   private:\n    using CodePointField = v8::base::BitField<uchar, 0, 21>;\n    using ValueField = v8::base::BitField<bool, 21, 1>;\n\n    uint32_t bit_field_;\n  };\n  static const int kSize = size;\n  static const int kMask = kSize - 1;\n  CacheEntry entries_[kSize];\n};\n#endif  // !V8_INTL_SUPPORT"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "Mapping",
+        "about": "A template class used to cache character mappings.  It caches the value for characters that either have no mapping or map to a single character independent of context.  Only enabled when V8_INTL_SUPPORT is not defined.",
+        "attributes": [],
+        "dependencies": []
+      },
+      "code": "#ifndef V8_INTL_SUPPORT\ntemplate <class T, int size = 256>\nclass Mapping {\n public:\n  inline Mapping() = default;\n  inline int get(uchar c, uchar n, uchar* result);\n\n private:\n  friend class Test;\n  int CalculateValue(uchar c, uchar n, uchar* result);\n  struct CacheEntry {\n    inline CacheEntry() : code_point_(kNoChar), offset_(0) {}\n    inline CacheEntry(uchar code_point, signed offset)\n        : code_point_(code_point), offset_(offset) {}\n    uchar code_point_;\n    signed offset_;\n    static const int kNoChar = (1 << 21) - 1;\n  };\n  static const int kSize = size;\n  static const int kMask = kSize - 1;\n  CacheEntry entries_[kSize];\n};\n#endif  // !V8_INTL_SUPPORT"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "UnicodeData",
+        "about": "Provides access to unicode data. Only enabled when V8_INTL_SUPPORT is not defined.",
+        "attributes": [],
+        "dependencies": []
+      },
+      "code": "#ifndef V8_INTL_SUPPORT\nclass UnicodeData {\n private:\n  friend class Test;\n  static int GetByteCount();\n  static const uchar kMaxCodePoint;\n};\n#endif  // !V8_INTL_SUPPORT"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "Utf16",
+        "about": "Provides utility functions for working with UTF-16 encoding.",
+        "attributes": [],
+        "dependencies": []
+      },
+      "code": "class Utf16 {\n public:\n  static const int kNoPreviousCharacter = -1;\n  static inline bool IsSurrogatePair(int lead, int trail) {\n    return IsLeadSurrogate(lead) && IsTrailSurrogate(trail);\n  }\n  static inline bool IsLeadSurrogate(int code) {\n    return (code & 0x1ffc00) == 0xd800;\n  }\n  static inline bool IsTrailSurrogate(int code) {\n    return (code & 0x1ffc00) == 0xdc00;\n  }\n\n  static inline int CombineSurrogatePair(uchar lead, uchar trail) {\n    return 0x10000 + ((lead & 0x3ff) << 10) + (trail & 0x3ff);\n  }\n  static const uchar kMaxNonSurrogateCharCode = 0xffff;\n  // Encoding a single UTF-16 code unit will produce 1, 2 or 3 bytes\n  // of UTF-8 data.  The special case where the unit is a surrogate\n  // trail produces 1 byte net, because the encoding of the pair is\n  // 4 bytes and the 3 bytes that were used to encode the lead surrogate\n  // can be reclaimed.\n  static const int kMaxExtraUtf8BytesForOneUtf16CodeUnit = 3;\n  // One UTF-16 surrogate is encoded (illegally) as 3 UTF-8 bytes.\n  // The illegality stems from the surrogate not being part of a pair.\n  static const int kUtf8BytesToCodeASurrogate = 3;\n  static inline uint16_t LeadSurrogate(uint32_t char_code) {\n    return 0xd800 + (((char_code - 0x10000) >> 10) & 0x3ff);\n  }\n  static inline uint16_t TrailSurrogate(uint32_t char_code) {\n    return 0xdc00 + (char_code & 0x3ff);\n  }\n  static inline bool HasUnpairedSurrogate(const uint16_t* code_units,\n                                          size_t length);\n\n  static void ReplaceUnpairedSurrogates(const uint16_t* source_code_units,\n                                        uint16_t* dest_code_units,\n                                        size_t length);\n};"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "Latin1",
+        "about": "Provides constants related to Latin-1 encoding.",
+        "attributes": [],
+        "dependencies": []
+      },
+      "code": "class Latin1 {\n public:\n  static const uint16_t kMaxChar = 0xff;\n};"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "Utf8",
+        "about": "Provides constants and utility functions for working with UTF-8 encoding.",
+        "attributes": [],
+        "dependencies": [
+          "Utf8DfaDecoder",
+          "v8::base::Vector"
+        ]
+      },
+      "code": "class V8_EXPORT_PRIVATE Utf8 {\n public:\n  using State = Utf8DfaDecoder::State;\n\n  static inline unsigned LengthOneByte(uint8_t chr);\n  static inline unsigned Length(uchar chr, int previous);\n  static inline unsigned EncodeOneByte(char* out, uint8_t c);\n  static inline unsigned Encode(char* out, uchar c, int previous,\n                                bool replace_invalid = false);\n  static uchar CalculateValue(const uint8_t* str, size_t length,\n                              size_t* cursor);\n\n  // The unicode replacement character, used to signal invalid unicode\n  // sequences (e.g. an orphan surrogate) when converting to a UTF-8 encoding.\n  static const uchar kBadChar = 0xFFFD;\n  static const uchar kBufferEmpty = 0x0;\n  static const uchar kIncomplete = 0xFFFFFFFC;  // any non-valid code point.\n  static const unsigned kMaxEncodedSize = 4;\n  static const unsigned kMaxOneByteChar = 0x7f;\n  static const unsigned kMaxTwoByteChar = 0x7ff;\n  static const unsigned kMaxThreeByteChar = 0xffff;\n  static const unsigned kMaxFourByteChar = 0x1fffff;\n\n  // A single surrogate is coded as a 3 byte UTF-8 sequence, but two together\n  // that match are coded as a 4 byte UTF-8 sequence.\n  static const unsigned kBytesSavedByCombiningSurrogates = 2;\n  static const unsigned kSizeOfUnmatchedSurrogate = 3;\n  // The maximum size a single UTF-16 code unit may take up when encoded as\n  // UTF-8.\n  static const unsigned kMax16BitCodeUnitSize = 3;\n  // The maximum size a single UTF-16 code unit known to be in the range\n  // [0,0xff] may take up when encoded as UTF-8.\n  static const unsigned kMax8BitCodeUnitSize = 2;\n  static inline uchar ValueOf(const uint8_t* str, size_t length,\n                              size_t* cursor);\n\n  using Utf8IncrementalBuffer = uint32_t;\n  static inline uchar ValueOfIncremental(const uint8_t** cursor, State* state,\n                                         Utf8IncrementalBuffer* buffer);\n  static uchar ValueOfIncrementalFinish(State* state);\n\n  // Excludes non-characters from the set of valid code points.\n  static inline bool IsValidCharacter(uchar c);\n\n  // Validate if the input has a valid utf-8 encoding. Unlike JS source code\n  // this validation function will accept any unicode code point, including\n  // kBadChar and BOMs.\n  //\n  // This method checks for:\n  // - valid utf-8 endcoding (e.g. no over-long encodings),\n  // - absence of surrogates,\n  // - valid code point range.\n  static bool ValidateEncoding(const uint8_t* str, size_t length);\n\n  // Encode the given characters as Utf8 into the provided output buffer.\n  struct EncodingResult {\n    size_t bytes_written;\n    size_t characters_processed;\n  };\n  template <typename Char>\n  static EncodingResult Encode(v8::base::Vector<const Char> string,\n                               char* buffer, size_t capacity, bool write_null,\n                               bool replace_invalid_utf8);\n};"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "Wtf8",
+        "about": "Provides utilities for working with WTF-8 encoding. Only enabled when V8_ENABLE_WEBASSEMBLY is defined.",
+        "attributes": [],
+        "dependencies": [
+          "v8::base::Vector"
+        ]
+      },
+      "code": "#if V8_ENABLE_WEBASSEMBLY\nclass V8_EXPORT_PRIVATE Wtf8 {\n public:\n  // Validate that the input has a valid WTF-8 encoding.\n  //\n  // This method checks for:\n  // - valid utf-8 endcoding (e.g. no over-long encodings),\n  // - absence of surrogate pairs,\n  // - valid code point range.\n  //\n  // In terms of the WTF-8 specification (https://simonsapin.github.io/wtf-8/),\n  // this function checks for a valid \"generalized UTF-8\" sequence, with the\n  // additional constraint that surrogate pairs are not allowed.\n  static bool ValidateEncoding(const uint8_t* str, size_t length);\n\n  static void ScanForSurrogates(v8::base::Vector<const uint8_t> wtf8,\n                                std::vector<size_t>* surrogate_offsets);\n};\n#endif  // V8_ENABLE_WEBASSEMBLY"
+    }
+  ],
+  "functions": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "function",
+        "name": "IsLineTerminator",
+        "about": "Determines if a given unicode character is a line terminator character according to ES specification",
+        "parameters": [
+          {
+            "name": "c",
+            "type": "uchar",
+            "purpose": "The unicode character to check"
+          }
+        ],
+        "return": {
+          "type": "bool",
+          "description": "True if the character is a line terminator, false otherwise"
+        },
+        "dependencies": []
+      },
+      "code": "V8_INLINE bool IsLineTerminator(uchar c) {\n  return c == 0x000A || c == 0x000D || c == 0x2028 || c == 0x2029;\n}"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "function",
+        "name": "IsStringLiteralLineTerminator",
+        "about": "Determines if a given unicode character is a line terminator character for string literals",
+        "parameters": [
+          {
+            "name": "c",
+            "type": "uchar",
+            "purpose": "The unicode character to check"
+          }
+        ],
+        "return": {
+          "type": "bool",
+          "description": "True if the character is a string literal line terminator, false otherwise"
+        },
+        "dependencies": []
+      },
+      "code": "V8_INLINE bool IsStringLiteralLineTerminator(uchar c) {\n  return c == 0x000A || c == 0x000D;\n}"
+    }
+  ],
+  "file_path": "/home/kathirks_gc/v8_go/archive/codebase/src/strings/unicode.h"
+}

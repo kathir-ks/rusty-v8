@@ -1,0 +1,56 @@
+{
+  "metadata": {
+    "path": "/home/kathirks_gc/v8_go/archive/codebase/src/execution/clobber-registers.cc",
+    "file_name": "clobber-registers.cc",
+    "language": "cpp",
+    "purpose": "Defines a function to clobber double registers, ensuring they contain garbage data.  This is useful for testing and security purposes to prevent accidental data leaks.  The implementation uses inline assembly for specific architectures."
+  },
+  "imports": {
+    "metadata": {
+      "language": "cpp",
+      "purpose": "Includes necessary headers for the clobber registers functionality, base build configurations, and architecture-specific register definitions."
+    },
+    "code": "#include \"src/execution/clobber-registers.h\"\n\n#include \"src/base/build_config.h\"\n\n// Check both {HOST_ARCH} and {TARGET_ARCH} to disable the functionality of this\n// file for cross-compilation. The reason is that the inline assembly code below\n// does not work for cross-compilation.\n#if V8_HOST_ARCH_ARM && V8_TARGET_ARCH_ARM\n#include \"src/codegen/arm/register-arm.h\"\n#elif V8_HOST_ARCH_ARM64 && V8_TARGET_ARCH_ARM64\n#include \"src/codegen/arm64/register-arm64.h\"\n#elif V8_HOST_ARCH_IA32 && V8_TARGET_ARCH_IA32\n#include \"src/codegen/ia32/register-ia32.h\"\n#elif V8_HOST_ARCH_X64 && V8_TARGET_ARCH_X64\n#include \"src/codegen/x64/register-x64.h\"\n#elif V8_HOST_ARCH_LOONG64 && V8_TARGET_ARCH_LOONG64\n#include \"src/codegen/loong64/register-loong64.h\"\n#elif V8_HOST_ARCH_MIPS64 && V8_TARGET_ARCH_MIPS64\n#include \"src/codegen/mips64/register-mips64.h\"\n#endif"
+  },
+  "functions": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "function",
+        "name": "ClobberDoubleRegisters",
+        "parent": null,
+        "about": "Clobbers all double registers by writing garbage data to them.  If no architecture-specific clobbering macro is defined, it performs a simple calculation to avoid being optimized away.",
+        "logic": "The function uses preprocessor directives and inline assembly to zero out the double registers based on the target architecture.  If the `CLOBBER_REGISTER` macro is defined, it is expanded for each double register using the `DOUBLE_REGISTERS` macro (presumably defined elsewhere). If `CLOBBER_USE_REGISTER` is defined, the registers are used.  If neither is defined, a dummy calculation is performed, but this approach is noted to be incomplete and may not clobber all registers.",
+        "parameters": [
+          {
+            "name": "x1",
+            "type": "double",
+            "purpose": "Dummy parameter to prevent the function from being optimized away in the fallback case."
+          },
+          {
+            "name": "x2",
+            "type": "double",
+            "purpose": "Dummy parameter to prevent the function from being optimized away in the fallback case."
+          },
+          {
+            "name": "x3",
+            "type": "double",
+            "purpose": "Dummy parameter to prevent the function from being optimized away in the fallback case."
+          },
+          {
+            "name": "x4",
+            "type": "double",
+            "purpose": "Dummy parameter to prevent the function from being optimized away in the fallback case."
+          }
+        ],
+        "return": {
+          "type": "double",
+          "description": "Returns 0 if the registers are clobbered using inline assembly; otherwise, returns the result of a dummy calculation."
+        },
+        "dependencies": []
+      },
+      "code": "double ClobberDoubleRegisters(double x1, double x2, double x3, double x4) {\n  // clobber all double registers\n\n#if defined(CLOBBER_REGISTER)\n  DOUBLE_REGISTERS(CLOBBER_REGISTER)\n#undef CLOBBER_REGISTER\n  return 0;\n\n#elif defined(CLOBBER_USE_REGISTER)\n  DOUBLE_USE_REGISTERS(CLOBBER_USE_REGISTER)\n#undef CLOBBER_USE_REGISTER\n  return 0;\n\n#else\n  // TODO(v8:11798): This clobbers only subset of registers depending on\n  // compiler, Rewrite this in assembly to really clobber all registers. GCC for\n  // ia32 uses the FPU and does not touch XMM registers.\n  return x1 * 1.01 + x2 * 2.02 + x3 * 3.03 + x4 * 4.04;\n#endif  // CLOBBER_REGISTER\n}"
+    }
+  ],
+  "file_path": "/home/kathirks_gc/v8_go/archive/codebase/src/execution/clobber-registers.cc"
+}

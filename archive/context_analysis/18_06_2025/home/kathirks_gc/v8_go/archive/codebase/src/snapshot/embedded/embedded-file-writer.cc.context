@@ -1,0 +1,255 @@
+{
+  "metadata": {
+    "path": "/home/kathirks_gc/v8_go/archive/codebase/src/snapshot/embedded/embedded-file-writer.cc",
+    "file_name": "embedded-file-writer.cc",
+    "language": "cpp",
+    "purpose": "Writes embedded data (like builtins) to a file in a format suitable for embedding in a binary."
+  },
+  "imports": {
+    "metadata": {
+      "language": "cpp",
+      "purpose": "Includes necessary headers for functionality, standard library features, and V8-specific components."
+    },
+    "code": "#include \"src/snapshot/embedded/embedded-file-writer.h\"\n\n#include <algorithm>\n#include <cinttypes>\n\n#include \"src/codegen/source-position-table.h\"\n#include \"src/flags/flags.h\"  // For ENABLE_CONTROL_FLOW_INTEGRITY_BOOL\n#include \"src/objects/code-inl.h\"\n#include \"src/snapshot/embedded/embedded-data-inl.h\""
+  },
+  "classes": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "EmbeddedFileWriter",
+        "about": "Writes embedded data (like builtins) to a file in a format suitable for embedding in a binary.",
+        "attributes": [],
+        "dependencies": [
+          "i::EmbeddedData",
+          "PlatformEmbeddedFileWriterBase",
+          "Builtin",
+          "i::Builtins"
+        ]
+      },
+      "code": "void EmbeddedFileWriter::WriteBuiltin(PlatformEmbeddedFileWriterBase* w,\n                                      const i::EmbeddedData* blob,\n                                      const Builtin builtin) const {\n  const bool is_default_variant =\n      std::strcmp(embedded_variant_, kDefaultEmbeddedVariant) == 0;\n\n  base::EmbeddedVector<char, kTemporaryStringLength> builtin_symbol;\n  if (is_default_variant) {\n    // Create nicer symbol names for the default mode.\n    base::SNPrintF(builtin_symbol, \"Builtins_%s\", i::Builtins::name(builtin));\n  } else {\n    base::SNPrintF(builtin_symbol, \"%s_Builtins_%s\", embedded_variant_,\n                   i::Builtins::name(builtin));\n  }\n\n  // Labels created here will show up in backtraces. We check in\n  // Isolate::SetEmbeddedBlob that the blob layout remains unchanged, i.e.\n  // that labels do not insert bytes into the middle of the blob byte\n  // stream.\n  w->DeclareFunctionBegin(builtin_symbol.begin(),\n                          blob->InstructionSizeOf(builtin));\n  const int builtin_id = static_cast<int>(builtin);\n  const std::vector<uint8_t>& current_positions = source_positions_[builtin_id];\n  // The code below interleaves bytes of assembly code for the builtin\n  // function with source positions at the appropriate offsets.\n  base::Vector<const uint8_t> vpos(current_positions.data(),\n                                   current_positions.size());\n  v8::internal::SourcePositionTableIterator positions(\n      vpos, SourcePositionTableIterator::kExternalOnly);\n\n#ifndef DEBUG\n  CHECK(positions.done());  // Release builds must not contain debug infos.\n#endif\n\n  // Some builtins (InterpreterPushArgsThenFastConstructFunction,\n  // JSConstructStubGeneric) have entry points located in the middle of them, we\n  // need to store their addresses since they are part of the list of allowed\n  // return addresses in the deoptimizer.\n  const std::vector<LabelInfo>& current_labels = label_info_[builtin_id];\n  auto label = current_labels.begin();\n\n  const uint8_t* data =\n      reinterpret_cast<const uint8_t*>(blob->InstructionStartOf(builtin));\n  uint32_t size = blob->PaddedInstructionSizeOf(builtin);\n  uint32_t i = 0;\n  uint32_t next_source_pos_offset =\n      static_cast<uint32_t>(positions.done() ? size : positions.code_offset());\n  uint32_t next_label_offset = static_cast<uint32_t>(\n      (label == current_labels.end()) ? size : label->offset);\n  uint32_t next_offset = 0;\n  while (i < size) {\n    if (i == next_source_pos_offset) {\n      // Write source directive.\n      w->SourceInfo(positions.source_position().ExternalFileId(),\n                    GetExternallyCompiledFilename(\n                        positions.source_position().ExternalFileId()),\n                    positions.source_position().ExternalLine());\n      positions.Advance();\n      next_source_pos_offset = static_cast<uint32_t>(\n          positions.done() ? size : positions.code_offset());\n      CHECK_GE(next_source_pos_offset, i);\n    }\n    if (i == next_label_offset) {\n      WriteBuiltinLabels(w, label->name);\n      label++;\n      next_label_offset = static_cast<uint32_t>(\n          (label == current_labels.end()) ? size : label->offset);\n      CHECK_GE(next_label_offset, i);\n    }\n    next_offset = std::min(next_source_pos_offset, next_label_offset);\n    WriteBinaryContentsAsInlineAssembly(w, data + i, next_offset - i);\n    i = next_offset;\n  }\n\n  w->DeclareFunctionEnd(builtin_symbol.begin());\n}"
+    }
+  ],
+  "functions": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "method",
+        "name": "WriteBuiltinLabels",
+        "parent": "EmbeddedFileWriter",
+        "about": "Writes labels for builtins to the output file.",
+        "logic": "Calls the DeclareLabel method of the PlatformEmbeddedFileWriterBase to write the label.",
+        "parameters": [
+          {
+            "name": "w",
+            "type": "PlatformEmbeddedFileWriterBase*",
+            "purpose": "The file writer object."
+          },
+          {
+            "name": "name",
+            "type": "std::string",
+            "purpose": "The name of the label."
+          }
+        ],
+        "return": {
+          "type": "void",
+          "description": "No return value."
+        },
+        "dependencies": [
+          "PlatformEmbeddedFileWriterBase"
+        ]
+      },
+      "code": "void EmbeddedFileWriter::WriteBuiltinLabels(PlatformEmbeddedFileWriterBase* w,\n                                            std::string name) const {\n  w->DeclareLabel(name.c_str());\n}"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "method",
+        "name": "WriteCodeSection",
+        "parent": "EmbeddedFileWriter",
+        "about": "Writes the code section of the embedded blob to the file.",
+        "logic": "Iterates through the builtins and writes each one using the WriteBuiltin method.  Adds a dummy function for the profiler at the beginning, and declares global symbols and labels.",
+        "parameters": [
+          {
+            "name": "w",
+            "type": "PlatformEmbeddedFileWriterBase*",
+            "purpose": "The file writer object."
+          },
+          {
+            "name": "blob",
+            "type": "i::EmbeddedData*",
+            "purpose": "The embedded data blob."
+          }
+        ],
+        "return": {
+          "type": "void",
+          "description": "No return value."
+        },
+        "dependencies": [
+          "PlatformEmbeddedFileWriterBase",
+          "i::EmbeddedData",
+          "WriteBuiltin",
+          "Builtins"
+        ]
+      },
+      "code": "void EmbeddedFileWriter::WriteCodeSection(PlatformEmbeddedFileWriterBase* w,\n                                          const i::EmbeddedData* blob) const {\n  w->Comment(\n      \"The embedded blob code section starts here. It contains the builtin\");\n  w->Comment(\"instruction streams.\");\n  w->SectionText();\n\n#if V8_TARGET_ARCH_IA32 || V8_TARGET_ARCH_X64\n  // UMA needs an exposed function-type label at the start of the embedded\n  // code section.\n  static const char* kCodeStartForProfilerSymbolName =\n      \"v8_code_start_for_profiler_\";\n  static constexpr int kDummyFunctionLength = 1;\n  static constexpr int kDummyFunctionData = 0xcc;\n  w->DeclareFunctionBegin(kCodeStartForProfilerSymbolName,\n                          kDummyFunctionLength);\n  // The label must not be at the same address as the first builtin, insert\n  // padding bytes.\n  WriteDirectiveOrSeparator(w, 0, kByte);\n  w->HexLiteral(kDummyFunctionData);\n  w->Newline();\n  w->DeclareFunctionEnd(kCodeStartForProfilerSymbolName);\n#endif\n\n  w->AlignToCodeAlignment();\n  w->DeclareSymbolGlobal(EmbeddedBlobCodeSymbol().c_str());\n  w->DeclareLabelProlog(EmbeddedBlobCodeSymbol().c_str());\n  w->DeclareLabel(EmbeddedBlobCodeSymbol().c_str());\n\n  static_assert(Builtins::kAllBuiltinsAreIsolateIndependent);\n  for (ReorderedBuiltinIndex embedded_index = 0;\n       embedded_index < Builtins::kBuiltinCount; embedded_index++) {\n    Builtin builtin = blob->GetBuiltinId(embedded_index);\n    WriteBuiltin(w, blob, builtin);\n  }\n  w->AlignToPageSizeIfNeeded();\n  w->DeclareLabelEpilogue();\n  w->Newline();\n}"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "method",
+        "name": "WriteFileEpilogue",
+        "parent": "EmbeddedFileWriter",
+        "about": "Writes the file epilogue, including size information and unwind data (on Windows).",
+        "logic": "Writes the code and data sizes of the embedded blob, and potentially unwind data for Windows.  Declares symbols and uses helper functions from PlatformEmbeddedFileWriterBase.",
+        "parameters": [
+          {
+            "name": "w",
+            "type": "PlatformEmbeddedFileWriterBase*",
+            "purpose": "The file writer object."
+          },
+          {
+            "name": "blob",
+            "type": "i::EmbeddedData*",
+            "purpose": "The embedded data blob."
+          }
+        ],
+        "return": {
+          "type": "void",
+          "description": "No return value."
+        },
+        "dependencies": [
+          "PlatformEmbeddedFileWriterBase",
+          "i::EmbeddedData"
+        ]
+      },
+      "code": "void EmbeddedFileWriter::WriteFileEpilogue(PlatformEmbeddedFileWriterBase* w,\n                                           const i::EmbeddedData* blob) const {\n  {\n    base::EmbeddedVector<char, kTemporaryStringLength>\n        embedded_blob_code_size_symbol;\n    base::SNPrintF(embedded_blob_code_size_symbol,\n                   \"v8_%s_embedded_blob_code_size_\", embedded_variant_);\n\n    w->Comment(\"The size of the embedded blob code in bytes.\");\n    w->SectionRoData();\n    w->AlignToDataAlignment();\n    w->DeclareUint32(embedded_blob_code_size_symbol.begin(), blob->code_size());\n    w->Newline();\n\n    base::EmbeddedVector<char, kTemporaryStringLength>\n        embedded_blob_data_size_symbol;\n    base::SNPrintF(embedded_blob_data_size_symbol,\n                   \"v8_%s_embedded_blob_data_size_\", embedded_variant_);\n\n    w->Comment(\"The size of the embedded blob data section in bytes.\");\n    w->DeclareUint32(embedded_blob_data_size_symbol.begin(), blob->data_size());\n    w->Newline();\n  }\n\n#if defined(V8_OS_WIN64)\n  {\n    base::EmbeddedVector<char, kTemporaryStringLength> unwind_info_symbol;\n    base::SNPrintF(unwind_info_symbol, \"%s_Builtins_UnwindInfo\",\n                   embedded_variant_);\n\n    w->MaybeEmitUnwindData(unwind_info_symbol.begin(),\n                           EmbeddedBlobCodeSymbol().c_str(), blob,\n                           reinterpret_cast<const void*>(&unwind_infos_[0]));\n  }\n#endif  // V8_OS_WIN64\n\n  w->FileEpilogue();\n}"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "method",
+        "name": "WriteBinaryContentsAsInlineAssembly",
+        "parent": "EmbeddedFileWriter",
+        "about": "Writes binary data as inline assembly.",
+        "logic": "Writes the given byte array to the output file as inline assembly. On z/OS, writes data in 32-byte chunks.  Otherwise writes byte chunks using `PlatformEmbeddedFileWriterBase`'s helper methods, falling back to individual byte literals as necessary.",
+        "parameters": [
+          {
+            "name": "w",
+            "type": "PlatformEmbeddedFileWriterBase*",
+            "purpose": "The file writer object."
+          },
+          {
+            "name": "data",
+            "type": "const uint8_t*",
+            "purpose": "The byte array to write."
+          },
+          {
+            "name": "size",
+            "type": "uint32_t",
+            "purpose": "The size of the byte array."
+          }
+        ],
+        "return": {
+          "type": "void",
+          "description": "No return value."
+        },
+        "dependencies": [
+          "PlatformEmbeddedFileWriterBase"
+        ]
+      },
+      "code": "// static\nvoid EmbeddedFileWriter::WriteBinaryContentsAsInlineAssembly(\n    PlatformEmbeddedFileWriterBase* w, const uint8_t* data, uint32_t size) {\n#if V8_OS_ZOS\n  // HLASM source must end at column 71 (followed by an optional\n  // line-continuation char on column 72), so write the binary data\n  // in 32 byte chunks (length 64):\n  uint32_t chunks = (size + 31) / 32;\n  uint32_t i, j;\n  uint32_t offset = 0;\n  for (i = 0; i < chunks; ++i) {\n    fprintf(w->fp(), \" DC x'\");\n    for (j = 0; offset < size && j < 32; ++j) {\n      fprintf(w->fp(), \"%02x\", data[offset++]);\n    }\n    fprintf(w->fp(), \"'\\n\");\n  }\n#else\n  int current_line_length = 0;\n  uint32_t i = 0;\n\n  // Begin by writing out byte chunks.\n  const DataDirective directive = w->ByteChunkDataDirective();\n  const int byte_chunk_size = DataDirectiveSize(directive);\n  for (; i + byte_chunk_size < size; i += byte_chunk_size) {\n    current_line_length =\n        WriteDirectiveOrSeparator(w, current_line_length, directive);\n    current_line_length += w->WriteByteChunk(data + i);\n    current_line_length =\n        WriteLineEndIfNeeded(w, current_line_length, byte_chunk_size);\n  }\n  if (current_line_length != 0) w->Newline();\n  current_line_length = 0;\n\n  // Write any trailing bytes one-by-one.\n  for (; i < size; i++) {\n    current_line_length =\n        WriteDirectiveOrSeparator(w, current_line_length, kByte);\n    current_line_length += w->HexLiteral(data[i]);\n    current_line_length = WriteLineEndIfNeeded(w, current_line_length, 1);\n  }\n\n  if (current_line_length != 0) w->Newline();\n#endif  // V8_OS_ZOS\n}"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "method",
+        "name": "LookupOrAddExternallyCompiledFilename",
+        "parent": "EmbeddedFileWriter",
+        "about": "Looks up or adds a filename to the external filenames map.",
+        "logic": "Maintains a map of filenames to IDs, used for source position information.  If the filename already exists, returns its ID; otherwise, adds it to the map and returns a new ID.",
+        "parameters": [
+          {
+            "name": "filename",
+            "type": "const char*",
+            "purpose": "The filename to look up or add."
+          }
+        ],
+        "return": {
+          "type": "int",
+          "description": "The ID of the filename."
+        },
+        "dependencies": []
+      },
+      "code": "int EmbeddedFileWriter::LookupOrAddExternallyCompiledFilename(\n    const char* filename) {\n  auto result = external_filenames_.find(filename);\n  if (result != external_filenames_.end()) {\n    return result->second;\n  }\n  int new_id =\n      ExternalFilenameIndexToId(static_cast<int>(external_filenames_.size()));\n  external_filenames_.insert(std::make_pair(filename, new_id));\n  external_filenames_by_index_.push_back(filename);\n  DCHECK_EQ(external_filenames_by_index_.size(), external_filenames_.size());\n  return new_id;\n}"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "method",
+        "name": "GetExternallyCompiledFilename",
+        "parent": "EmbeddedFileWriter",
+        "about": "Gets the filename associated with the given file ID.",
+        "logic": "Retrieves the filename from the `external_filenames_by_index_` vector using the given file ID.",
+        "parameters": [
+          {
+            "name": "fileid",
+            "type": "int",
+            "purpose": "The ID of the filename."
+          }
+        ],
+        "return": {
+          "type": "const char*",
+          "description": "The filename associated with the ID."
+        },
+        "dependencies": []
+      },
+      "code": "const char* EmbeddedFileWriter::GetExternallyCompiledFilename(\n    int fileid) const {\n  size_t index = static_cast<size_t>(ExternalFilenameIdToIndex(fileid));\n  DCHECK_GE(index, 0);\n  DCHECK_LT(index, external_filenames_by_index_.size());\n\n  return external_filenames_by_index_[index];\n}"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "method",
+        "name": "GetExternallyCompiledFilenameCount",
+        "parent": "EmbeddedFileWriter",
+        "about": "Gets the number of externally compiled filenames.",
+        "logic": "Returns the number of elements in the `external_filenames_` map, representing the number of externally compiled filenames.",
+        "parameters": [],
+        "return": {
+          "type": "int",
+          "description": "The number of externally compiled filenames."
+        },
+        "dependencies": []
+      },
+      "code": "int EmbeddedFileWriter::GetExternallyCompiledFilenameCount() const {\n  return static_cast<int>(external_filenames_.size());\n}"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "method",
+        "name": "PrepareBuiltinSourcePositionMap",
+        "parent": "EmbeddedFileWriter",
+        "about": "Prepares a map of source positions for builtins.",
+        "logic": "Iterates through all builtins, retrieves their source position tables (if they exist), and copies the data into a map for later use during the writing process.",
+        "parameters": [
+          {
+            "name": "builtins",
+            "type": "Builtins*",
+            "purpose": "A pointer to the Builtins object."
+          }
+        ],
+        "return": {
+          "type": "void",
+          "description": "No return value."
+        },
+        "dependencies": [
+          "Builtins",
+          "Code",
+          "TrustedByteArray"
+        ]
+      },
+      "code": "void EmbeddedFileWriter::PrepareBuiltinSourcePositionMap(Builtins* builtins) {\n  for (Builtin builtin = Builtins::kFirst; builtin <= Builtins::kLast;\n       ++builtin) {\n    // Retrieve the SourcePositionTable and copy it.\n    Tagged<Code> code = builtins->code(builtin);\n    if (!code->has_source_position_table()) continue;\n    Tagged<TrustedByteArray> source_position_table =\n        code->source_position_table();\n    std::vector<unsigned char> data(source_position_table->begin(),\n                                    source_position_table->end());\n    source_positions_[static_cast<int>(builtin)] = data;\n  }\n}"
+    }
+  ],
+  "file_path": "/home/kathirks_gc/v8_go/archive/codebase/src/snapshot/embedded/embedded-file-writer.cc"
+}

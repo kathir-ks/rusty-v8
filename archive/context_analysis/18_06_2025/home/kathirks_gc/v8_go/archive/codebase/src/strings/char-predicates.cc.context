@@ -1,0 +1,96 @@
+{
+  "metadata": {
+    "path": "/home/kathirks_gc/v8_go/archive/codebase/src/strings/char-predicates.cc",
+    "file_name": "char-predicates.cc",
+    "language": "cpp",
+    "purpose": "Provides character predicate functions for identifying identifier start, identifier part, and whitespace characters according to the ECMAScript specification, leveraging ICU (International Components for Unicode) library."
+  },
+  "imports": {
+    "metadata": {
+      "language": "cpp",
+      "purpose": "Includes necessary headers for character predicates, unicode character properties, and ICU library."
+    },
+    "code": "#include \"src/strings/char-predicates.h\"\n\n#include \"unicode/uchar.h\"\n#include \"unicode/urename.h\""
+  },
+  "functions": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "function",
+        "name": "IsIdentifierStartSlow",
+        "parent": null,
+        "about": "Checks if a Unicode code point can be the start of an identifier, according to ES#sec-names-and-keywords.  Handles '$', '_', and '\\' characters in addition to Unicode ID start characters.",
+        "logic": "Uses `u_hasBinaryProperty` from ICU to check for `UCHAR_ID_START` property.  Explicitly checks for '$', '\\', and '_' when the code point is less than 0x60.",
+        "parameters": [
+          {
+            "name": "c",
+            "type": "base::uc32",
+            "purpose": "The Unicode code point to check."
+          }
+        ],
+        "return": {
+          "type": "bool",
+          "description": "True if the code point can start an identifier, false otherwise."
+        },
+        "dependencies": [
+          "u_hasBinaryProperty",
+          "UCHAR_ID_START"
+        ]
+      },
+      "code": "bool IsIdentifierStartSlow(base::uc32 c) {\n  // cannot use u_isIDStart because it does not work for\n  // Other_ID_Start characters.\n  return u_hasBinaryProperty(c, UCHAR_ID_START) ||\n         (c < 0x60 && (c == '$' || c == '\\\\' || c == '_'));\n}"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "function",
+        "name": "IsIdentifierPartSlow",
+        "parent": null,
+        "about": "Checks if a Unicode code point can be part of an identifier, according to ES#sec-names-and-keywords.  Handles '$', '_', '\\', ZWJ, and ZWNJ characters in addition to Unicode ID continue characters.",
+        "logic": "Uses `u_hasBinaryProperty` from ICU to check for `UCHAR_ID_CONTINUE` property.  Explicitly checks for '$', '\\', and '_' when the code point is less than 0x60.  Also checks for ZWJ (0x200D) and ZWNJ (0x200C).",
+        "parameters": [
+          {
+            "name": "c",
+            "type": "base::uc32",
+            "purpose": "The Unicode code point to check."
+          }
+        ],
+        "return": {
+          "type": "bool",
+          "description": "True if the code point can be part of an identifier, false otherwise."
+        },
+        "dependencies": [
+          "u_hasBinaryProperty",
+          "UCHAR_ID_CONTINUE"
+        ]
+      },
+      "code": "bool IsIdentifierPartSlow(base::uc32 c) {\n  // Can't use u_isIDPart because it does not work for\n  // Other_ID_Continue characters.\n  return u_hasBinaryProperty(c, UCHAR_ID_CONTINUE) ||\n         (c < 0x60 && (c == '$' || c == '\\\\' || c == '_')) || c == 0x200C ||\n         c == 0x200D;\n}"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "function",
+        "name": "IsWhiteSpaceSlow",
+        "parent": null,
+        "about": "Checks if a Unicode code point is a whitespace character, according to ES#sec-white-space. Considers Zs category, U+0009, U+000B, U+000C, and U+FEFF as whitespace.",
+        "logic": "Uses `u_charType` from ICU to check if the code point belongs to the `U_SPACE_SEPARATOR` category.  Explicitly checks for U+0009 (TAB), U+000B (Vertical Tab), U+000C (Form Feed), and U+FEFF (Zero-Width No-Break Space).",
+        "parameters": [
+          {
+            "name": "c",
+            "type": "base::uc32",
+            "purpose": "The Unicode code point to check."
+          }
+        ],
+        "return": {
+          "type": "bool",
+          "description": "True if the code point is a whitespace character, false otherwise."
+        },
+        "dependencies": [
+          "u_charType",
+          "U_SPACE_SEPARATOR"
+        ]
+      },
+      "code": "bool IsWhiteSpaceSlow(base::uc32 c) {\n  return (u_charType(c) == U_SPACE_SEPARATOR) ||\n         (c < 0x0D && (c == 0x09 || c == 0x0B || c == 0x0C)) || c == 0xFEFF;\n}"
+    }
+  ],
+  "file_path": "/home/kathirks_gc/v8_go/archive/codebase/src/strings/char-predicates.cc"
+}

@@ -1,0 +1,144 @@
+{
+  "metadata": {
+    "path": "/home/kathirks_gc/v8_go/archive/codebase/src/deoptimizer/frame-description.h",
+    "file_name": "frame-description.h",
+    "language": "cpp",
+    "purpose": "Defines classes for describing the physical stack frame state, used for deoptimization in the V8 JavaScript engine."
+  },
+  "imports": {
+    "metadata": {
+      "language": "cpp",
+      "purpose": "Includes necessary headers for memory management, platform information, register definitions, SIMD support, frame constants, and boxed floats."
+    },
+    "code": "#include \"src/base/memory.h\"\n#include \"src/base/platform/memory.h\"\n#include \"src/codegen/register.h\"\n#include \"src/common/simd128.h\"\n#include \"src/execution/frame-constants.h\"\n#include \"src/utils/boxed-float.h\""
+  },
+  "classes": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "RegisterValues",
+        "about": "Stores general-purpose (gp) and floating-point (fp) register values during deoptimization.  Used to represent the state of registers either as input to an optimized frame or output from an interpreted frame.",
+        "attributes": [
+          {
+            "name": "registers_",
+            "type": "intptr_t[Register::kNumRegisters]",
+            "access": "public",
+            "purpose": "Array to store general-purpose register values."
+          },
+          {
+            "name": "simd128_registers_",
+            "type": "Simd128[Simd128Register::kNumRegisters]",
+            "access": "public",
+            "purpose": "Array to store SIMD128 register values."
+          },
+          {
+            "name": "double_registers_",
+            "type": "Float64[DoubleRegister::kNumRegisters]",
+            "access": "public",
+            "purpose": "Array to store double-precision floating-point register values. Only present on RISC-V architectures."
+          }
+        ],
+        "dependencies": [
+          "Register",
+          "Float32",
+          "Float64",
+          "Simd128",
+          "DoubleRegister",
+          "Simd128Register"
+        ]
+      },
+      "code": "class RegisterValues {\n public:\n  intptr_t GetRegister(unsigned n) const {\n    V8_ASSUME(n < arraysize(registers_));\n    return registers_[n];\n  }\n\n  Float32 GetFloatRegister(unsigned n) const;\n  Float64 GetDoubleRegister(unsigned n) const;\n\n  void SetDoubleRegister(unsigned n, Float64 value);\n\n  Simd128 GetSimd128Register(unsigned n) const {\n    V8_ASSUME(n < arraysize(simd128_registers_));\n    return simd128_registers_[n];\n  }\n\n  void SetRegister(unsigned n, intptr_t value) {\n    V8_ASSUME(n < arraysize(registers_));\n    registers_[n] = value;\n  }\n\n  void SetSimd128Register(unsigned n, Simd128 value) {\n    V8_ASSUME(n < arraysize(simd128_registers_));\n    simd128_registers_[n] = value;\n  }\n\n  intptr_t registers_[Register::kNumRegisters];\n  // Generated code writes directly into the following array, make sure the\n  // element size matches what the machine instructions expect.\n  static_assert(sizeof(Simd128) == kSimd128Size, \"size mismatch\");\n\n#if defined(V8_TARGET_ARCH_RISCV64) || defined(V8_TARGET_ARCH_RISCV32)\n  Float64 double_registers_[DoubleRegister::kNumRegisters];\n  Simd128 simd128_registers_[Simd128Register::kNumRegisters];\n#else\n  Simd128 simd128_registers_[Simd128Register::kNumRegisters];\n#endif\n};"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "FrameDescription",
+        "about": "Describes the layout and content of a stack frame for deoptimization purposes. It contains register values, frame size, program counter, and other frame-related information.",
+        "attributes": [
+          {
+            "name": "frame_size_",
+            "type": "uintptr_t",
+            "access": "private",
+            "purpose": "Size of the stack frame in bytes."
+          },
+          {
+            "name": "parameter_count_",
+            "type": "int",
+            "access": "private",
+            "purpose": "Number of parameters passed to the function."
+          },
+          {
+            "name": "register_values_",
+            "type": "RegisterValues",
+            "access": "private",
+            "purpose": "Holds the values of registers at the point of deoptimization."
+          },
+          {
+            "name": "top_",
+            "type": "intptr_t",
+            "access": "private",
+            "purpose": "Stack pointer value at the top of the frame."
+          },
+          {
+            "name": "pc_",
+            "type": "intptr_t",
+            "access": "private",
+            "purpose": "Program counter value."
+          },
+          {
+            "name": "fp_",
+            "type": "intptr_t",
+            "access": "private",
+            "purpose": "Frame pointer value."
+          },
+          {
+            "name": "constant_pool_",
+            "type": "intptr_t",
+            "access": "private",
+            "purpose": "Pointer to the constant pool."
+          },
+          {
+            "name": "caller_pc_",
+            "type": "intptr_t",
+            "access": "private",
+            "purpose": "Program counter of the caller function."
+          },
+          {
+            "name": "isolate_",
+            "type": "Isolate*",
+            "access": "private",
+            "purpose": "Pointer to the V8 isolate."
+          },
+          {
+            "name": "continuation_",
+            "type": "intptr_t",
+            "access": "private",
+            "purpose": "The PC where the execution continues after deoptimizing."
+          },
+          {
+            "name": "frame_content_",
+            "type": "intptr_t[1]",
+            "access": "private",
+            "purpose": "Dynamically sized array that stores the contents of the stack frame.  Allocated at the end of the class definition to allow for variable frame sizes."
+          }
+        ],
+        "dependencies": [
+          "RegisterValues",
+          "Isolate",
+          "base::Free",
+          "base::Malloc",
+          "base::WriteUnalignedValue",
+          "Address",
+          "StandardFrameConstants",
+          "kSystemPointerSize",
+          "kZapUint32",
+          "Is64"
+        ]
+      },
+      "code": "class FrameDescription {\n public:\n  static FrameDescription* Create(uint32_t frame_size, int parameter_count,\n                                  Isolate* isolate) {\n    return new (frame_size)\n        FrameDescription(frame_size, parameter_count, isolate);\n  }\n\n  void operator delete(void* description) { base::Free(description); }\n\n  uint32_t GetFrameSize() const {\n    USE(frame_content_);\n    DCHECK(static_cast<uint32_t>(frame_size_) == frame_size_);\n    return static_cast<uint32_t>(frame_size_);\n  }\n\n  intptr_t GetFrameSlot(unsigned offset) {\n    return *GetFrameSlotPointer(offset);\n  }\n\n  unsigned GetLastArgumentSlotOffset(bool pad_arguments = true) {\n    int parameter_slots = parameter_count();\n    if (pad_arguments) {\n      parameter_slots = AddArgumentPaddingSlots(parameter_slots);\n    }\n    return GetFrameSize() - parameter_slots * kSystemPointerSize;\n  }\n\n  Address GetFramePointerAddress() {\n    // We should not pad arguments in the bottom frame, since this\n    // already contains a padding if necessary and it might contain\n    // extra arguments (actual argument count > parameter count).\n    const bool pad_arguments_bottom_frame = false;\n    int fp_offset = GetLastArgumentSlotOffset(pad_arguments_bottom_frame) -\n                    StandardFrameConstants::kCallerSPOffset;\n    return reinterpret_cast<Address>(GetFrameSlotPointer(fp_offset));\n  }\n\n  RegisterValues* GetRegisterValues() { return &register_values_; }\n\n  void SetFrameSlot(unsigned offset, intptr_t value) {\n    *GetFrameSlotPointer(offset) = value;\n  }\n\n  // Same as SetFrameSlot but only writes 32 bits. This is needed as liftoff\n  // has 32 bit frame slots.\n  void SetLiftoffFrameSlot32(unsigned offset, int32_t value) {\n    base::WriteUnalignedValue(\n        reinterpret_cast<char*>(GetFrameSlotPointer(offset)), value);\n  }\n\n  // Same as SetFrameSlot but also supports the offset to be unaligned (4 Byte\n  // aligned) as liftoff doesn't align frame slots if they aren't references.\n  void SetLiftoffFrameSlot64(unsigned offset, int64_t value) {\n    base::WriteUnalignedValue(\n        reinterpret_cast<char*>(GetFrameSlotPointer(offset)), value);\n  }\n\n  void SetLiftoffFrameSlotPointer(unsigned offset, intptr_t value) {\n    if constexpr (Is64()) {\n      SetLiftoffFrameSlot64(offset, value);\n    } else {\n      SetLiftoffFrameSlot32(offset, value);\n    }\n  }\n\n  void SetCallerPc(unsigned offset, intptr_t value);\n\n  void SetCallerFp(unsigned offset, intptr_t value);\n\n  void SetCallerConstantPool(unsigned offset, intptr_t value);\n\n  intptr_t GetRegister(unsigned n) const {\n    return register_values_.GetRegister(n);\n  }\n\n  Float64 GetDoubleRegister(unsigned n) const {\n    return register_values_.GetDoubleRegister(n);\n  }\n\n  void SetRegister(unsigned n, intptr_t value) {\n    register_values_.SetRegister(n, value);\n  }\n\n  void SetDoubleRegister(unsigned n, Float64 value) {\n    register_values_.SetDoubleRegister(n, value);\n  }\n\n  void SetSimd128Register(unsigned n, Simd128 value) {\n    register_values_.SetSimd128Register(n, value);\n  }\n\n  intptr_t GetTop() const { return top_; }\n  void SetTop(intptr_t top) { top_ = top; }\n\n  intptr_t GetPc() const { return pc_; }\n  void SetPc(intptr_t pc);\n\n  intptr_t GetFp() const { return fp_; }\n  void SetFp(intptr_t frame_pointer) { fp_ = frame_pointer; }\n\n  intptr_t GetConstantPool() const { return constant_pool_; }\n  void SetConstantPool(intptr_t constant_pool) {\n    constant_pool_ = constant_pool;\n  }\n\n  bool HasCallerPc() const { return caller_pc_ != 0; }\n  intptr_t GetCallerPc() const { return caller_pc_; }\n\n  void SetContinuation(intptr_t pc) { continuation_ = pc; }\n  intptr_t GetContinuation() const { return continuation_; }\n\n  // Argument count, including receiver.\n  int parameter_count() { return parameter_count_; }\n\n  static int registers_offset() {\n    return offsetof(FrameDescription, register_values_.registers_);\n  }\n\n#if defined(V8_TARGET_ARCH_RISCV64) || defined(V8_TARGET_ARCH_RISCV32)\n  static constexpr int double_registers_offset() {\n    return offsetof(FrameDescription, register_values_.double_registers_);\n  }\n#endif\n\n  static constexpr int simd128_registers_offset() {\n    return offsetof(FrameDescription, register_values_.simd128_registers_);\n  }\n\n  static int frame_size_offset() {\n    return offsetof(FrameDescription, frame_size_);\n  }\n\n  static int pc_offset() { return offsetof(FrameDescription, pc_); }\n\n  static int continuation_offset() {\n    return offsetof(FrameDescription, continuation_);\n  }\n\n  static int frame_content_offset() {\n    return offsetof(FrameDescription, frame_content_);\n  }\n\n private:\n  FrameDescription(uint32_t frame_size, int parameter_count, Isolate* isolate)\n      : frame_size_(frame_size),\n        parameter_count_(parameter_count),\n        top_(kZapUint32),\n        pc_(kZapUint32),\n        fp_(kZapUint32),\n        constant_pool_(kZapUint32),\n        isolate_(isolate) {\n    USE(isolate_);\n    // Zap all the registers.\n    for (int r = 0; r < Register::kNumRegisters; r++) {\n      // TODO(jbramley): It isn't safe to use kZapUint32 here. If the register\n      // isn't used before the next safepoint, the GC will try to scan it as a\n      // tagged value. kZapUint32 looks like a valid tagged pointer, but it\n      // isn't.\n#if defined(V8_OS_WIN) && defined(V8_TARGET_ARCH_ARM64)\n      // x18 is reserved as platform register on Windows arm64 platform\n      const int kPlatformRegister = 18;\n      if (r != kPlatformRegister) {\n        SetRegister(r, kZapUint32);\n      }\n#else\n      SetRegister(r, kZapUint32);\n#endif\n    }\n\n    // Zap all the slots.\n    for (unsigned o = 0; o < frame_size; o += kSystemPointerSize) {\n      SetFrameSlot(o, kZapUint32);\n    }\n  }\n\n  void* operator new(size_t size, uint32_t frame_size) {\n    // Subtracts kSystemPointerSize, as the member frame_content_ already\n    // supplies the first element of the area to store the frame.\n    return base::Malloc(size + frame_size - kSystemPointerSize);\n  }\n\n  static const uint32_t kZapUint32 = 0xbeeddead;\n\n  // Frame_size_ must hold a uint32_t value.  It is only a uintptr_t to\n  // keep the variable-size array frame_content_ of type intptr_t at\n  // the end of the structure aligned.\n  uintptr_t frame_size_;  // Number of bytes.\n  int parameter_count_;\n  RegisterValues register_values_;\n  intptr_t top_;\n  intptr_t pc_;\n  intptr_t fp_;\n  intptr_t constant_pool_;\n  intptr_t caller_pc_ = 0;\n\n  Isolate* isolate_;\n\n  // Continuation is the PC where the execution continues after\n  // deoptimizing.\n  intptr_t continuation_;\n\n  // This must be at the end of the object as the object is allocated larger\n  // than its definition indicates to extend this array.\n  intptr_t frame_content_[1];\n\n  intptr_t* GetFrameSlotPointer(unsigned offset) {\n    DCHECK(offset < frame_size_);\n    return reinterpret_cast<intptr_t*>(reinterpret_cast<Address>(this) +\n                                       frame_content_offset() + offset);\n  }\n};"
+    }
+  ],
+  "file_path": "/home/kathirks_gc/v8_go/archive/codebase/src/deoptimizer/frame-description.h"
+}

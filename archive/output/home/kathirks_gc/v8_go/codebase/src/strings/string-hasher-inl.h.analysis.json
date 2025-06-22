@@ -1,0 +1,170 @@
+{
+  "file_path": "/home/kathirks_gc/v8_go/codebase/src/strings/string-hasher-inl.h",
+  "imports": [
+    "src/common/globals.h",
+    "src/strings/string-hasher.h",
+    "src/utils/utils.h",
+    "<emmintrin.h>",
+    "<arm_neon.h>",
+    "<type_traits>",
+    "src/objects/name-inl.h",
+    "src/objects/string-inl.h",
+    "src/strings/char-predicates-inl.h",
+    "src/utils/utils-inl.h",
+    "third_party/rapidhash-v8/rapidhash.h"
+  ],
+  "classes": [
+    {
+      "name": "RunningStringHasher",
+      "properties": [
+        "running_hash_"
+      ],
+      "methods": [
+        {
+          "name": "AddCharacter",
+          "parameters": [
+            "uint16_t c"
+          ],
+          "return_type": "void",
+          "logic": "Updates the running hash by adding the character c and applying bitwise operations to mix the bits."
+        },
+        {
+          "name": "Finalize",
+          "parameters": [],
+          "return_type": "uint32_t",
+          "logic": "Finalizes the running hash by applying more bitwise operations and converting it to a usable hash."
+        }
+      ]
+    },
+    {
+      "name": "StringHasher",
+      "properties": [],
+      "methods": [
+        {
+          "name": "GetTrivialHash",
+          "parameters": [
+            "uint32_t length"
+          ],
+          "return_type": "uint32_t",
+          "logic": "Calculates a trivial hash for large strings based on their length."
+        },
+        {
+          "name": "MakeArrayIndexHash",
+          "parameters": [
+            "uint32_t value",
+            "uint32_t length"
+          ],
+          "return_type": "uint32_t",
+          "logic": "Creates a hash for array indexes by encoding the value and length into a single hash value."
+        },
+        {
+          "name": "HashSequentialString",
+          "parameters": [
+            "const char_t* chars_raw",
+            "uint32_t length",
+            "uint64_t seed"
+          ],
+          "return_type": "uint32_t",
+          "logic": "Hashes a sequential string, attempting to create an array index hash if the string represents a valid array index, otherwise falls back to a regular hash calculation using rapidhash.  Handles both 8-bit and 16-bit characters."
+        }
+      ]
+    },
+    {
+      "name": "SeededStringHasher",
+      "properties": [
+        "hashseed_"
+      ],
+      "methods": [
+        {
+          "name": "operator()",
+          "parameters": [
+            "const char* name"
+          ],
+          "return_type": "std::size_t",
+          "logic": "Function call operator that hashes a C-style string using the provided seed and StringHasher::HashSequentialString."
+        }
+      ]
+    }
+  ],
+  "functions": [
+    {
+      "name": "HashConvertingTo8Bit",
+      "parameters": [
+        "const uint16_t* chars",
+        "uint32_t length",
+        "uint64_t seed"
+      ],
+      "return_type": "uint64_t",
+      "logic": "A private function that computes a hash treating 16 bit chars that happen to be valid 8 bit chars."
+    },
+    {
+      "name": "ConvertRawHashToUsableHash",
+      "parameters": [
+        "T raw_hash"
+      ],
+      "return_type": "uint32_t",
+      "logic": "Converts a raw hash value to a usable hash value by limiting the bits and ensuring that 0 becomes kZeroHash."
+    },
+    {
+      "name": "IsOnly8Bit",
+      "parameters": [
+        "const uint16_t* chars",
+        "unsigned len"
+      ],
+      "return_type": "bool",
+      "logic": "Checks if a sequence of 16-bit characters only contains characters that fit within the 8-bit range (0-255)."
+    },
+    {
+      "name": "GetRapidHash",
+      "parameters": [
+        "const uint8_t* chars",
+        "uint32_t length",
+        "uint64_t seed"
+      ],
+      "return_type": "uint64_t",
+      "logic": "Computes the rapidhash of an array of 8-bit characters with a given seed."
+    },
+    {
+      "name": "GetRapidHash",
+      "parameters": [
+        "const uint16_t* chars",
+        "uint32_t length",
+        "uint64_t seed"
+      ],
+      "return_type": "uint64_t",
+      "logic": "Computes the rapidhash of an array of 16-bit characters with a given seed. If all characters are 8-bit, it calls `HashConvertingTo8Bit`"
+    },
+    {
+      "name": "GetUsableRapidHash",
+      "parameters": [
+        "const uchar* chars",
+        "uint32_t length",
+        "uint64_t seed"
+      ],
+      "return_type": "uint32_t",
+      "logic": "Computes the rapidhash of an array of characters with a given seed and converts the result to a usable hash."
+    },
+    {
+      "name": "TryParseArrayIndex",
+      "parameters": [
+        "const uchar* chars",
+        "uint32_t length",
+        "uint32_t& i",
+        "ArrayIndexT& index"
+      ],
+      "return_type": "IndexParseResult",
+      "logic": "Attempts to parse a string as an array index. Returns kSuccess if successful, kNonIndex if not a valid array index, and kOverflow if the index would overflow the maximum array index size."
+    },
+    {
+      "name": "TryParseIntegerIndex",
+      "parameters": [
+        "const uchar* chars",
+        "uint32_t length",
+        "uint32_t i",
+        "ArrayIndexT index"
+      ],
+      "return_type": "IndexParseResult",
+      "logic": "Attempts to parse a string as a safe integer index greater than array index limit. Only available on 64-bit platforms. Returns kSuccess if successful, kNonIndex if not a valid integer index, and kOverflow if the index would overflow the maximum safe integer size."
+    }
+  ]
+}

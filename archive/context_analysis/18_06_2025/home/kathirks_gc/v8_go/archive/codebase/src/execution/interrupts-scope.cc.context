@@ -1,0 +1,85 @@
+{
+  "metadata": {
+    "path": "/home/kathirks_gc/v8_go/archive/codebase/src/execution/interrupts-scope.cc",
+    "file_name": "interrupts-scope.cc",
+    "language": "cpp",
+    "purpose": "Defines the InterruptsScope class for managing interrupt handling in V8 execution."
+  },
+  "imports": {
+    "metadata": {
+      "language": "cpp",
+      "purpose": "Includes necessary headers for InterruptsScope functionality."
+    },
+    "code": "#include \"src/execution/interrupts-scope.h\"\n\n#include \"src/execution/isolate.h\""
+  },
+  "classes": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "InterruptsScope",
+        "about": "Manages interrupt postponement and interception within a specific scope during V8 execution.",
+        "attributes": [
+          {
+            "name": "prev_",
+            "type": "InterruptsScope*",
+            "access": "private",
+            "purpose": "Pointer to the previous InterruptsScope in the stack."
+          },
+          {
+            "name": "intercept_mask_",
+            "type": "StackGuard::InterruptFlag",
+            "access": "private",
+            "purpose": "A mask indicating which interrupt flags this scope intercepts."
+          },
+          {
+            "name": "mode_",
+            "type": "enum",
+            "access": "private",
+            "purpose": "Specifies the mode of the scope (kRunInterrupts or kPostponeInterrupts)."
+          },
+          {
+            "name": "intercepted_flags_",
+            "type": "StackGuard::InterruptFlag",
+            "access": "private",
+            "purpose": "Stores the interrupt flags that have been intercepted by this scope."
+          }
+        ],
+        "dependencies": [
+          "StackGuard",
+          "Isolate"
+        ]
+      },
+      "code": "namespace v8 {\nnamespace internal {\n\nclass InterruptsScope {\n public:\n  bool Intercept(StackGuard::InterruptFlag flag);\n\n private:\n  InterruptsScope* prev_ = nullptr;\n  StackGuard::InterruptFlag intercept_mask_ = StackGuard::kNoInterrupt;\n  enum Mode { kRunInterrupts, kPostponeInterrupts } mode_ = kRunInterrupts;\n  StackGuard::InterruptFlag intercepted_flags_ = StackGuard::kNoInterrupt;\n};"
+    }
+  ],
+  "functions": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "method",
+        "name": "Intercept",
+        "parent": "InterruptsScope",
+        "about": "Determines whether an interrupt should be intercepted based on the current scope and its parent scopes.",
+        "logic": "Iterates through the stack of InterruptsScope objects. If a scope with kRunInterrupts mode is encountered, interception is prevented. If a scope with kPostponeInterrupts is encountered, it's marked as the last postpone scope. If no postpone scope is found, interception is prevented. Otherwise, the interrupt flag is recorded as intercepted in the last postpone scope.",
+        "parameters": [
+          {
+            "name": "flag",
+            "type": "StackGuard::InterruptFlag",
+            "purpose": "The interrupt flag to check for interception."
+          }
+        ],
+        "return": {
+          "type": "bool",
+          "description": "True if the interrupt is intercepted, false otherwise."
+        },
+        "dependencies": [
+          "StackGuard",
+          "InterruptsScope"
+        ]
+      },
+      "code": "bool InterruptsScope::Intercept(StackGuard::InterruptFlag flag) {\n  InterruptsScope* last_postpone_scope = nullptr;\n  for (InterruptsScope* current = this; current; current = current->prev_) {\n    // We only consider scopes related to passed flag.\n    if (!(current->intercept_mask_ & flag)) continue;\n    if (current->mode_ == kRunInterrupts) {\n      // If innermost scope is kRunInterrupts scope, prevent interrupt from\n      // being intercepted.\n      break;\n    } else {\n      DCHECK_EQ(current->mode_, kPostponeInterrupts);\n      last_postpone_scope = current;\n    }\n  }\n  // If there is no postpone scope for passed flag then we should not intercept.\n  if (!last_postpone_scope) return false;\n  last_postpone_scope->intercepted_flags_ |= flag;\n  return true;\n}"
+    }
+  ],
+  "file_path": "/home/kathirks_gc/v8_go/archive/codebase/src/execution/interrupts-scope.cc"
+}

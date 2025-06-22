@@ -1,0 +1,144 @@
+{
+  "file_path": "/home/kathirks_gc/v8_go/codebase/src/snapshot/embedded/platform-embedded-file-writer-aix.cc",
+  "imports": [
+    "src/snapshot/embedded/platform-embedded-file-writer-aix.h",
+    "src/objects/instruction-stream.h"
+  ],
+  "classes": [
+    {
+      "name": "PlatformEmbeddedFileWriterAIX",
+      "properties": [],
+      "methods": [
+        {
+          "name": "SectionText",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Writes the assembler directive to start the text section (.csect [GL], 6)."
+        },
+        {
+          "name": "SectionRoData",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Writes the assembler directive to start the read-only data section (.csect[RO])."
+        },
+        {
+          "name": "DeclareUint32",
+          "parameters": [
+            "const char* name",
+            "uint32_t value"
+          ],
+          "return_type": "void",
+          "logic": "Declares a global symbol with a 32-bit unsigned integer value, aligning to 2 bytes and using the '.long' directive."
+        },
+        {
+          "name": "DeclareSymbolGlobal",
+          "parameters": [
+            "const char* name"
+          ],
+          "return_type": "void",
+          "logic": "Declares a symbol as global and hidden, making it not visible outside the final binary (.globl %s, hidden)."
+        },
+        {
+          "name": "AlignToCodeAlignment",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Aligns the output to a code alignment boundary (64 bytes on x64 and ppc64, 32 bytes otherwise) using the '.align' directive."
+        },
+        {
+          "name": "AlignToDataAlignment",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Aligns the output to a data alignment boundary (8 bytes) using the '.align' directive."
+        },
+        {
+          "name": "Comment",
+          "parameters": [
+            "const char* string"
+          ],
+          "return_type": "void",
+          "logic": "Writes a comment to the output stream using '//'."
+        },
+        {
+          "name": "DeclareLabel",
+          "parameters": [
+            "const char* name"
+          ],
+          "return_type": "void",
+          "logic": "Declares a label (global) in the assembly output using '.globl %s' and '%s:'."
+        },
+        {
+          "name": "SourceInfo",
+          "parameters": [
+            "int fileid",
+            "const char* filename",
+            "int line"
+          ],
+          "return_type": "void",
+          "logic": "Writes source file and line number information using the '.xline' directive."
+        },
+        {
+          "name": "DeclareFunctionBegin",
+          "parameters": [
+            "const char* name",
+            "uint32_t size"
+          ],
+          "return_type": "void",
+          "logic": "Declares the beginning of a function, creating a function descriptor using '.csect %s[DS]' and related directives. Handles control flow integrity if enabled."
+        },
+        {
+          "name": "DeclareFunctionEnd",
+          "parameters": [
+            "const char* name"
+          ],
+          "return_type": "void",
+          "logic": "Declares the end of a function. Currently empty on AIX."
+        },
+        {
+          "name": "FilePrologue",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Emits the file prologue. Currently empty."
+        },
+        {
+          "name": "DeclareExternalFilename",
+          "parameters": [
+            "int fileid",
+            "const char* filename"
+          ],
+          "return_type": "void",
+          "logic": "Declares an external filename.  Uses the SourceInfo method to emit debug information."
+        },
+        {
+          "name": "FileEpilogue",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Emits the file epilogue. Currently empty."
+        },
+        {
+          "name": "IndentedDataDirective",
+          "parameters": [
+            "DataDirective directive"
+          ],
+          "return_type": "int",
+          "logic": "Writes an indented data directive ('.byte', '.long', or '.llong') to the output stream."
+        },
+        {
+          "name": "ByteChunkDataDirective",
+          "parameters": [],
+          "return_type": "DataDirective",
+          "logic": "Returns the appropriate data directive for byte chunks (kLong for PPC to prevent padding)."
+        }
+      ]
+    }
+  ],
+  "functions": [
+    {
+      "name": "DirectiveAsString",
+      "parameters": [
+        "DataDirective directive"
+      ],
+      "return_type": "const char*",
+      "logic": "Converts a DataDirective enum value to its corresponding string representation ('.byte', '.long', '.llong')."
+    }
+  ]
+}

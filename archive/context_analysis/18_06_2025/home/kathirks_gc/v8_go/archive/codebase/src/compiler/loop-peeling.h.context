@@ -1,0 +1,123 @@
+{
+  "metadata": {
+    "path": "/home/kathirks_gc/v8_go/archive/codebase/src/compiler/loop-peeling.h",
+    "file_name": "loop-peeling.h",
+    "language": "cpp",
+    "purpose": "Declares classes and functions for loop peeling optimization in the V8 compiler."
+  },
+  "imports": {
+    "metadata": {
+      "language": "cpp",
+      "purpose": "Includes necessary headers for base types, compiler-specific features, global definitions, and loop analysis."
+    },
+    "code": "#include \"src/base/compiler-specific.h\"\n            #include \"src/common/globals.h\"\n            #include \"src/compiler/loop-analysis.h\""
+  },
+  "classes": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "PeeledIteration",
+        "extends": "NON_EXPORTED_BASE(ZoneObject)",
+        "about": "Represents the result of peeling a loop, mapping nodes in the original loop body to their corresponding copies in the peeled iteration.",
+        "attributes": [],
+        "dependencies": [
+          "Node"
+        ]
+      },
+      "code": "class V8_EXPORT_PRIVATE PeeledIteration : public NON_EXPORTED_BASE(ZoneObject) {\n            public:\n            // Maps {node} to its corresponding copy in the peeled iteration, if\n            // the node was part of the body of the loop. Returns {node} otherwise.\n            Node* map(Node* node);\n\n            protected:\n            PeeledIteration() = default;\n            };"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "LoopPeeler",
+        "about": "Implements the loop peeling optimization.",
+        "attributes": [],
+        "dependencies": [
+          "TFGraph",
+          "CommonOperatorBuilder",
+          "LoopTree",
+          "Zone",
+          "SourcePositionTable",
+          "NodeOriginTable",
+          "LoopTree::Loop"
+        ]
+      },
+      "code": "class V8_EXPORT_PRIVATE LoopPeeler {\n            public:\n            LoopPeeler(TFGraph* graph, CommonOperatorBuilder* common, LoopTree* loop_tree,\n                        Zone* tmp_zone, SourcePositionTable* source_positions,\n                        NodeOriginTable* node_origins)\n                : graph_(graph),\n                common_(common),\n                loop_tree_(loop_tree),\n                tmp_zone_(tmp_zone),\n                source_positions_(source_positions),\n                node_origins_(node_origins) {}\n            bool CanPeel(LoopTree::Loop* loop) {\n                return LoopFinder::HasMarkedExits(loop_tree_, loop);\n            }\n            PeeledIteration* Peel(LoopTree::Loop* loop);\n            void PeelInnerLoopsOfTree();\n\n            static void EliminateLoopExits(TFGraph* graph, Zone* tmp_zone);\n            static void EliminateLoopExit(Node* loop);\n            static const size_t kMaxPeeledNodes = 1000;\n\n            private:\n            TFGraph* const graph_;\n            CommonOperatorBuilder* const common_;\n            LoopTree* const loop_tree_;\n            Zone* const tmp_zone_;\n            SourcePositionTable* const source_positions_;\n            NodeOriginTable* const node_origins_;\n\n            void PeelInnerLoops(LoopTree::Loop* loop);\n            };"
+    }
+  ],
+  "dependencies": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "TFGraph",
+        "about": "Represents the compiler's typed graph."
+      },
+      "code": "class TFGraph {};",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "CommonOperatorBuilder",
+        "about": "Provides a common interface for creating operators."
+      },
+      "code": "class CommonOperatorBuilder {};",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "LoopTree",
+        "about": "Represents the loop structure of the code."
+      },
+      "code": "class LoopTree {\n                public:\n                    class Loop {};\n                };",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "Zone",
+        "about": "Manages memory allocation in a specific region."
+      },
+      "code": "class Zone {};",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "SourcePositionTable",
+        "about": "Stores the source positions of nodes in the graph."
+      },
+      "code": "class SourcePositionTable {};",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "NodeOriginTable",
+        "about": "Stores the origin of nodes in the graph."
+      },
+      "code": "class NodeOriginTable {};",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "LoopFinder",
+        "about": "Helper class for finding exits from loops"
+      },
+      "code": "class LoopFinder {\n                    public:\n                        static bool HasMarkedExits(LoopTree* loop_tree, LoopTree::Loop* loop);\n                };",
+      "type": "class"
+    }
+  ],
+  "file_path": "/home/kathirks_gc/v8_go/archive/codebase/src/compiler/loop-peeling.h"
+}

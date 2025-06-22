@@ -1,0 +1,386 @@
+{
+  "file_path": "/home/kathirks_gc/v8_go/codebase/src/logging/counters.cc",
+  "imports": [
+    "src/logging/counters.h",
+    "src/base/atomic-utils.h",
+    "src/base/platform/elapsed-timer.h",
+    "src/base/platform/time.h",
+    "src/builtins/builtins-definitions.h",
+    "src/execution/isolate.h",
+    "src/execution/thread-id.h",
+    "src/logging/log-inl.h",
+    "src/logging/log.h"
+  ],
+  "classes": [
+    {
+      "name": "StatsTable",
+      "properties": [
+        "lookup_function_",
+        "create_histogram_function_",
+        "add_histogram_sample_function_"
+      ],
+      "methods": [
+        {
+          "name": "StatsTable",
+          "parameters": [
+            "Counters* counters"
+          ],
+          "return_type": "void",
+          "logic": "Constructor. Initializes member function pointers to nullptr."
+        },
+        {
+          "name": "SetCounterFunction",
+          "parameters": [
+            "CounterLookupCallback f"
+          ],
+          "return_type": "void",
+          "logic": "Sets the counter lookup callback function."
+        }
+      ]
+    },
+    {
+      "name": "StatsCounter",
+      "properties": [
+        "counters_",
+        "name_",
+        "ptr_"
+      ],
+      "methods": [
+        {
+          "name": "Enabled",
+          "parameters": [],
+          "return_type": "bool",
+          "logic": "Checks if the counter is enabled (i.e., points to a valid memory location rather than the unused_counter_dump)."
+        },
+        {
+          "name": "SetupPtrFromStatsTable",
+          "parameters": [],
+          "return_type": "std::atomic<int>*",
+          "logic": "Looks up the counter's memory location in the stats table using its name and stores the atomic pointer to it. If the counter is not found, it points to a default unused counter location."
+        }
+      ]
+    },
+    {
+      "name": "Histogram",
+      "properties": [
+        "counters_",
+        "name_",
+        "min_",
+        "max_",
+        "num_buckets_",
+        "histogram_"
+      ],
+      "methods": [
+        {
+          "name": "AddSample",
+          "parameters": [
+            "int sample"
+          ],
+          "return_type": "void",
+          "logic": "Adds a sample to the histogram, if enabled using the provided counters object."
+        },
+        {
+          "name": "CreateHistogram",
+          "parameters": [],
+          "return_type": "void*",
+          "logic": "Creates a histogram using provided parameters via function pointers in the counters object."
+        }
+      ]
+    },
+    {
+      "name": "TimedHistogram",
+      "properties": [
+        "resolution_"
+      ],
+      "methods": [
+        {
+          "name": "Stop",
+          "parameters": [
+            "base::ElapsedTimer* timer"
+          ],
+          "return_type": "void",
+          "logic": "Stops the timer and adds a timed sample to the histogram."
+        },
+        {
+          "name": "AddTimedSample",
+          "parameters": [
+            "base::TimeDelta sample"
+          ],
+          "return_type": "void",
+          "logic": "Converts a TimeDelta to either microseconds or milliseconds based on resolution and adds the sample to the histogram."
+        },
+        {
+          "name": "RecordAbandon",
+          "parameters": [
+            "base::ElapsedTimer* timer",
+            "Isolate* isolate"
+          ],
+          "return_type": "void",
+          "logic": "Records an abandoned timed sample, using the maximum time value as a sample. Used when a timed operation is interrupted or cancelled."
+        },
+        {
+          "name": "ToggleRunningState",
+          "parameters": [
+            "bool expect_to_run"
+          ],
+          "return_type": "bool",
+          "logic": "DEBUG ONLY: Toggles a thread-local variable to track if the timer should be running."
+        }
+      ]
+    },
+    {
+      "name": "CountersInitializer",
+      "properties": [],
+      "methods": [
+        {
+          "name": "Visit",
+          "parameters": [
+            "Histogram* histogram",
+            "const char* caption",
+            "int min",
+            "int max",
+            "int num_buckets"
+          ],
+          "return_type": "void",
+          "logic": "Initializes a Histogram with the given parameters and counters."
+        },
+        {
+          "name": "Visit",
+          "parameters": [
+            "PercentageHistogram* histogram",
+            "const char* caption"
+          ],
+          "return_type": "void",
+          "logic": "Initializes a PercentageHistogram with the given parameters and counters."
+        },
+        {
+          "name": "Visit",
+          "parameters": [
+            "LegacyMemoryHistogram* histogram",
+            "const char* caption"
+          ],
+          "return_type": "void",
+          "logic": "Initializes a LegacyMemoryHistogram with the given parameters and counters."
+        },
+        {
+          "name": "Visit",
+          "parameters": [
+            "TimedHistogram* histogram",
+            "const char* caption",
+            "int max",
+            "TimedHistogramResolution res"
+          ],
+          "return_type": "void",
+          "logic": "Initializes a TimedHistogram with the given parameters and counters."
+        },
+        {
+          "name": "Visit",
+          "parameters": [
+            "NestedTimedHistogram* histogram",
+            "const char* caption",
+            "int max",
+            "TimedHistogramResolution res"
+          ],
+          "return_type": "void",
+          "logic": "Initializes a NestedTimedHistogram with the given parameters and counters."
+        },
+        {
+          "name": "Visit",
+          "parameters": [
+            "AggregatableHistogramTimer* histogram",
+            "const char* caption"
+          ],
+          "return_type": "void",
+          "logic": "Initializes an AggregatableHistogramTimer with the given parameters and counters."
+        },
+        {
+          "name": "Visit",
+          "parameters": [
+            "StatsCounter* counter",
+            "const char* caption"
+          ],
+          "return_type": "void",
+          "logic": "Initializes a StatsCounter with the given caption and counters."
+        }
+      ]
+    },
+    {
+      "name": "Counters",
+      "properties": [
+        "runtime_call_stats_",
+        "worker_thread_runtime_call_stats_",
+        "isolate_",
+        "stats_table_"
+      ],
+      "methods": [
+        {
+          "name": "Counters",
+          "parameters": [
+            "Isolate* isolate"
+          ],
+          "return_type": "void",
+          "logic": "Constructor. Initializes the counters, runtime call stats, isolate pointer and the stats table. Also, it starts the CountersInitializer to populate initial histogram data"
+        },
+        {
+          "name": "ResetCounterFunction",
+          "parameters": [
+            "CounterLookupCallback f"
+          ],
+          "return_type": "void",
+          "logic": "Sets the counter lookup function for the stats table and resets all the existing counters using Resetter object"
+        },
+        {
+          "name": "ResetCreateHistogramFunction",
+          "parameters": [
+            "CreateHistogramCallback f"
+          ],
+          "return_type": "void",
+          "logic": "Sets the function to create histograms, and resets all histograms with the new setting using HistogramResetter."
+        }
+      ]
+    },
+    {
+      "name": "StatsCounterResetter",
+      "properties": [],
+      "methods": [
+        {
+          "name": "VisitStatsCounter",
+          "parameters": [
+            "StatsCounter* counter",
+            "const char* caption"
+          ],
+          "return_type": "void",
+          "logic": "Resets the StatsCounter."
+        }
+      ]
+    },
+    {
+      "name": "HistogramResetter",
+      "properties": [],
+      "methods": [
+        {
+          "name": "VisitHistogram",
+          "parameters": [
+            "Histogram* histogram",
+            "const char* caption"
+          ],
+          "return_type": "void",
+          "logic": "Resets the Histogram."
+        }
+      ]
+    },
+    {
+      "name": "CountersVisitor",
+      "properties": [],
+      "methods": [
+        {
+          "name": "Start",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Starts visiting all stats counters and histograms."
+        },
+        {
+          "name": "VisitHistograms",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Visits all histograms defined in the HISTOGRAM_* macros, calling the `Visit` method."
+        },
+        {
+          "name": "VisitStatsCounters",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Visits all stats counters defined in the STATS_COUNTER_* macros, calling the `Visit` method."
+        },
+        {
+          "name": "Visit",
+          "parameters": [
+            "Histogram* histogram",
+            "const char* caption",
+            "int min",
+            "int max",
+            "int num_buckets"
+          ],
+          "return_type": "void",
+          "logic": "Helper method to visit a Histogram."
+        },
+        {
+          "name": "Visit",
+          "parameters": [
+            "TimedHistogram* histogram",
+            "const char* caption",
+            "int max",
+            "TimedHistogramResolution res"
+          ],
+          "return_type": "void",
+          "logic": "Helper method to visit a TimedHistogram."
+        },
+        {
+          "name": "Visit",
+          "parameters": [
+            "NestedTimedHistogram* histogram",
+            "const char* caption",
+            "int max",
+            "TimedHistogramResolution res"
+          ],
+          "return_type": "void",
+          "logic": "Helper method to visit a NestedTimedHistogram."
+        },
+        {
+          "name": "Visit",
+          "parameters": [
+            "AggregatableHistogramTimer* histogram",
+            "const char* caption"
+          ],
+          "return_type": "void",
+          "logic": "Helper method to visit an AggregatableHistogramTimer."
+        },
+        {
+          "name": "Visit",
+          "parameters": [
+            "PercentageHistogram* histogram",
+            "const char* caption"
+          ],
+          "return_type": "void",
+          "logic": "Helper method to visit a PercentageHistogram."
+        },
+        {
+          "name": "Visit",
+          "parameters": [
+            "LegacyMemoryHistogram* histogram",
+            "const char* caption"
+          ],
+          "return_type": "void",
+          "logic": "Helper method to visit a LegacyMemoryHistogram."
+        },
+        {
+          "name": "Visit",
+          "parameters": [
+            "StatsCounter* counter",
+            "const char* caption"
+          ],
+          "return_type": "void",
+          "logic": "Helper method to visit a StatsCounter."
+        },
+        {
+          "name": "VisitHistogram",
+          "parameters": [
+            "Histogram* histogram",
+            "const char* caption"
+          ],
+          "return_type": "void",
+          "logic": "Visit Histogram abstract method (has a no-op default).  Override in concrete class."
+        },
+        {
+          "name": "VisitStatsCounter",
+          "parameters": [
+            "StatsCounter* counter",
+            "const char* caption"
+          ],
+          "return_type": "void",
+          "logic": "Visit StatsCounter abstract method (has a no-op default). Override in concrete class."
+        }
+      ]
+    }
+  ],
+  "functions": []
+}

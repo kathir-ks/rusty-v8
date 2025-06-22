@@ -1,0 +1,146 @@
+{
+  "metadata": {
+    "path": "/home/kathirks_gc/v8_go/archive/codebase/src/init/setup-isolate-full.cc",
+    "file_name": "setup-isolate-full.cc",
+    "language": "cpp",
+    "purpose": "Provides functions to set up an isolate, including heap and builtins, potentially using snapshots or compiling from source."
+  },
+  "imports": {
+    "metadata": {
+      "language": "cpp",
+      "purpose": "Includes necessary headers for logging, debug evaluation, isolate execution, heap management, and isolate setup."
+    },
+    "code": "#include \"src/base/logging.h\"\n#include \"src/debug/debug-evaluate.h\"\n#include \"src/execution/isolate.h\"\n#include \"src/heap/heap-inl.h\"\n#include \"src/init/setup-isolate.h\""
+  },
+  "classes": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "SetupIsolateDelegate",
+        "about": "Delegate class responsible for setting up the isolate's heap and builtins.",
+        "attributes": [],
+        "dependencies": [
+          "Isolate"
+        ]
+      },
+      "code": "namespace v8 {\nnamespace internal {\n\nclass SetupIsolateDelegate {\n public:\n  bool SetupHeap(Isolate* isolate, bool create_heap_objects);\n  void SetupBuiltins(Isolate* isolate, bool compile_builtins);\n private:\n  bool SetupHeapInternal(Isolate* isolate);\n  void SetupBuiltinsInternal(Isolate* isolate);\n};\n\n}  // namespace internal\n}  // namespace v8"
+    }
+  ],
+  "functions": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "method",
+        "name": "SetupHeap",
+        "parent": "SetupIsolateDelegate",
+        "about": "Sets up the isolate's heap, either by creating heap objects or using a snapshot.",
+        "logic": "Checks if heap objects should be created. If not, it assumes a snapshot is available and returns true. Otherwise, it calls SetupHeapInternal to perform the heap setup.",
+        "parameters": [
+          {
+            "name": "isolate",
+            "type": "Isolate*",
+            "purpose": "The isolate to set up the heap for."
+          },
+          {
+            "name": "create_heap_objects",
+            "type": "bool",
+            "purpose": "Indicates whether heap objects should be created (true) or a snapshot should be used (false)."
+          }
+        ],
+        "return": {
+          "type": "bool",
+          "description": "True if the heap setup was successful, false otherwise."
+        },
+        "dependencies": [
+          "Isolate",
+          "SetupHeapInternal"
+        ]
+      },
+      "code": "bool SetupIsolateDelegate::SetupHeap(Isolate* isolate,\n                                     bool create_heap_objects) {\n  if (!create_heap_objects) {\n    CHECK(isolate->snapshot_available());\n    return true;\n  }\n  return SetupHeapInternal(isolate);\n}"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "method",
+        "name": "SetupBuiltins",
+        "parent": "SetupIsolateDelegate",
+        "about": "Sets up the isolate's builtins, either by compiling them or using a snapshot.",
+        "logic": "Checks if builtins should be compiled. If not, it assumes a snapshot is available and returns. Otherwise, it calls SetupBuiltinsInternal to perform the builtin setup. In DEBUG mode, it verifies the transitive builtins.",
+        "parameters": [
+          {
+            "name": "isolate",
+            "type": "Isolate*",
+            "purpose": "The isolate to set up the builtins for."
+          },
+          {
+            "name": "compile_builtins",
+            "type": "bool",
+            "purpose": "Indicates whether builtins should be compiled (true) or a snapshot should be used (false)."
+          }
+        ],
+        "return": {
+          "type": "void",
+          "description": "No return value."
+        },
+        "dependencies": [
+          "Isolate",
+          "SetupBuiltinsInternal",
+          "DebugEvaluate"
+        ]
+      },
+      "code": "void SetupIsolateDelegate::SetupBuiltins(Isolate* isolate,\n                                         bool compile_builtins) {\n  if (!compile_builtins) {\n    CHECK(isolate->snapshot_available());\n    return;\n  }\n  SetupBuiltinsInternal(isolate);\n#ifdef DEBUG\n  DebugEvaluate::VerifyTransitiveBuiltins(isolate);\n#endif  // DEBUG\n}"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "method",
+        "name": "SetupHeapInternal",
+        "parent": "SetupIsolateDelegate",
+        "about": "Internal helper function to set up the isolate's heap.",
+        "logic": "This function is declared but not defined in the provided code snippet. It is responsible for the actual heap setup when create_heap_objects is true.",
+        "parameters": [
+          {
+            "name": "isolate",
+            "type": "Isolate*",
+            "purpose": "The isolate to set up the heap for."
+          }
+        ],
+        "return": {
+          "type": "bool",
+          "description": "True if heap setup was successful, false otherwise."
+        },
+        "dependencies": [
+          "Isolate"
+        ]
+      },
+      "code": "bool SetupHeapInternal(Isolate* isolate);"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "method",
+        "name": "SetupBuiltinsInternal",
+        "parent": "SetupIsolateDelegate",
+        "about": "Internal helper function to set up the isolate's builtins.",
+        "logic": "This function is declared but not defined in the provided code snippet. It is responsible for the actual builtins setup when compile_builtins is true.",
+        "parameters": [
+          {
+            "name": "isolate",
+            "type": "Isolate*",
+            "purpose": "The isolate to set up the builtins for."
+          }
+        ],
+        "return": {
+          "type": "void",
+          "description": "No return value."
+        },
+        "dependencies": [
+          "Isolate"
+        ]
+      },
+      "code": "void SetupBuiltinsInternal(Isolate* isolate);"
+    }
+  ],
+  "file_path": "/home/kathirks_gc/v8_go/archive/codebase/src/init/setup-isolate-full.cc"
+}

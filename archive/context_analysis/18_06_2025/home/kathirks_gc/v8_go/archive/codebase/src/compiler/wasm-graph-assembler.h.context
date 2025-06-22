@@ -1,0 +1,250 @@
+{
+  "metadata": {
+    "path": "/home/kathirks_gc/v8_go/archive/codebase/src/compiler/wasm-graph-assembler.h",
+    "file_name": "wasm-graph-assembler.h",
+    "language": "cpp",
+    "purpose": "Defines the WasmGraphAssembler class, which provides a higher-level API for constructing graphs for WebAssembly compilation in V8.  It extends GraphAssembler with WASM-specific functionality."
+  },
+  "imports": {
+    "metadata": {
+      "language": "cpp",
+      "purpose": "Includes necessary headers for graph assembly and wasm code management."
+    },
+    "code": "#include \"src/compiler/graph-assembler.h\"\n#include \"src/wasm/wasm-code-manager.h\""
+  },
+  "dependencies": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "GraphAssembler",
+        "about": "Base class for assembling graphs."
+      },
+      "code": "class GraphAssembler {};",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "MachineGraph",
+        "about": "Represents the machine-level graph."
+      },
+      "code": "class MachineGraph {};",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "Zone",
+        "about": "Memory management zone."
+      },
+      "code": "class Zone {};",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "CallDescriptor",
+        "about": "Describes the calling convention for a function call."
+      },
+      "code": "class CallDescriptor {};",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "enum",
+        "name": "Builtin",
+        "about": "Represents built-in functions."
+      },
+      "code": "enum Builtin {};",
+      "type": "enum"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "enum",
+        "name": "StubCallMode",
+        "about": "Different modes for calling stubs."
+      },
+      "code": "enum StubCallMode {};",
+      "type": "enum"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "Operator",
+        "about": "Base class for operators in the graph."
+      },
+      "code": "class Operator {};",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "enum",
+        "name": "IrOpcode",
+        "about": "Opcodes for intermediate representation nodes."
+      },
+      "code": "enum IrOpcode {};",
+      "type": "enum"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "Node",
+        "about": "A node in the graph."
+      },
+      "code": "class Node {};",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "CommonOperatorBuilder",
+        "about": "Helper class to create common operators."
+      },
+      "code": "class CommonOperatorBuilder {};",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "NodeProperties",
+        "about": "Utility class for working with node properties."
+      },
+      "code": "class NodeProperties {};",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "SimplifiedOperatorBuilder",
+        "about": "Builder for simplified operators."
+      },
+      "code": "class SimplifiedOperatorBuilder {};",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "enum",
+        "name": "BranchHint",
+        "about": "Hint about branch predictability"
+      },
+      "code": "enum BranchHint {};",
+      "type": "enum"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "enum",
+        "name": "InstanceType",
+        "about": "Enum representing the type of the JS object"
+      },
+      "code": "enum InstanceType {};",
+      "type": "enum"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "enum",
+        "name": "TrapId",
+        "about": "Enum representing the different trap reasons."
+      },
+      "code": "enum TrapId {};",
+      "type": "enum"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "ObjectAccess",
+        "about": "Object access descriptor (read/write with/without write barriers)."
+      },
+      "code": "class ObjectAccess {};",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "enum",
+        "name": "MachineType",
+        "about": "Types used for machine operations"
+      },
+      "code": "enum MachineType {};",
+      "type": "enum"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "enum",
+        "name": "LoadRepresentation",
+        "about": "Representation of the loaded value"
+      },
+      "code": "enum LoadRepresentation {};",
+      "type": "enum"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "enum",
+        "name": "ExternalPointerTagRange",
+        "about": "Range of allowed tags for external pointers"
+      },
+      "code": "enum ExternalPointerTagRange {};",
+      "type": "enum"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "enum",
+        "name": "IndirectPointerTag",
+        "about": "Tags for trusted (indirect) pointers"
+      },
+      "code": "enum IndirectPointerTag {};",
+      "type": "enum"
+    }
+  ],
+  "classes": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "WasmGraphAssembler",
+        "extends": "GraphAssembler",
+        "about": "Extends GraphAssembler to provide WASM-specific graph construction utilities.",
+        "attributes": [],
+        "dependencies": [
+          "GraphAssembler",
+          "MachineGraph",
+          "Zone",
+          "Builtin",
+          "CallDescriptor",
+          "StubCallMode",
+          "Operator",
+          "ObjectAccess",
+          "MachineType",
+          "LoadRepresentation",
+          "ExternalPointerTagRange",
+          "IndirectPointerTag",
+          "wasm::StructType",
+          "wasm::ArrayType",
+          "WasmTypeCheckConfig",
+          "TrapId",
+          "wasm::ValueType"
+        ]
+      },
+      "code": "class WasmGraphAssembler : public GraphAssembler {\n public:\n  WasmGraphAssembler(MachineGraph* mcgraph, Zone* zone)\n      : GraphAssembler(mcgraph, zone, BranchSemantics::kMachine),\n        simplified_(zone) {}\n\n  // While CallBuiltin() translates to a direct call to the address of the\n  // builtin, CallBuiltinThroughJumptable instead jumps to a slot in a jump\n  // table that then calls the builtin. As the jump table is \"close\" to the\n  // generated code, this is encoded as a near call resulting in the instruction\n  // being shorter than a direct call to the builtin.\n  template <typename... Args>\n  Node* CallBuiltinThroughJumptable(Builtin builtin,\n                                    Operator::Properties properties,\n                                    Args... args) {\n    auto* call_descriptor = GetBuiltinCallDescriptor(\n        builtin, temp_zone(), StubCallMode::kCallWasmRuntimeStub, false,\n        properties);\n    // A direct call to a wasm runtime stub defined in this module.\n    // Just encode the stub index. This will be patched at relocation.\n    Node* call_target = mcgraph()->RelocatableWasmBuiltinCallTarget(builtin);\n    return Call(call_descriptor, call_target, args...);\n  }\n\n  Node* GetBuiltinPointerTarget(Builtin builtin) {\n    static_assert(std::is_same<Smi, BuiltinPtr>(), \"BuiltinPtr must be Smi\");\n    return NumberConstant(static_cast<int>(builtin));\n  }\n\n  template <typename... Args>\n  Node* CallBuiltin(Builtin name, Operator::Properties properties,\n                    Args... args) {\n    return CallBuiltinImpl(name, false, properties, args...);\n  }\n\n  template <typename... Args>\n  Node* CallBuiltinWithFrameState(Builtin name, Operator::Properties properties,\n                                  Node* frame_state, Args... args) {\n    DCHECK_EQ(frame_state->opcode(), IrOpcode::kFrameState);\n    return CallBuiltinImpl(name, true, properties, frame_state, args...);\n  }\n\n  // Sets {true_node} and {false_node} to their corresponding Branch outputs.\n  // Returns the Branch node. Does not change control().\n  Node* Branch(Node* cond, Node** true_node, Node** false_node,\n               BranchHint hint);\n\n  Node* NumberConstant(double value) {\n    return graph()->NewNode(mcgraph()->common()->NumberConstant(value));\n  }\n\n  Node* SmiConstant(Tagged_t value) {\n    Address tagged_value = Internals::IntegralToSmi(static_cast<int>(value));\n    return kTaggedSize == kInt32Size\n               ? Int32Constant(static_cast<int32_t>(tagged_value))\n               : Int64Constant(static_cast<int64_t>(tagged_value));\n  }\n\n  void MergeControlToEnd(Node* control) {\n    NodeProperties::MergeControlToEnd(graph(), common(), control);\n  }\n\n  // Numeric conversions\n  Node* BuildTruncateIntPtrToInt32(Node* value);\n\n  Node* BuildChangeInt32ToIntPtr(Node* value);\n\n  Node* BuildChangeIntPtrToInt64(Node* value);\n\n  Node* BuildChangeUint32ToUintPtr(Node* node);\n\n  Node* BuildSmiShiftBitsConstant();\n\n  Node* BuildSmiShiftBitsConstant32();\n\n  Node* BuildChangeInt32ToSmi(Node* value);\n\n  Node* BuildChangeUint31ToSmi(Node* value);\n\n  Node* BuildChangeSmiToInt32(Node* value);\n\n  Node* BuildConvertUint32ToSmiWithSaturation(Node* value, uint32_t maxval);\n\n  Node* BuildChangeSmiToIntPtr(Node* value);\n\n  // Helper functions for dealing with HeapObjects.\n  // Rule of thumb: if access to a given field in an object is required in\n  // at least two places, put a helper function here.\n\n  Node* Allocate(int size);\n\n  Node* Allocate(Node* size);\n\n  Node* LoadFromObject(MachineType type, Node* base, Node* offset);\n\n  Node* LoadFromObject(MachineType type, Node* base, int offset) {\n    return LoadFromObject(type, base, IntPtrConstant(offset));\n  }\n\n  Node* LoadProtectedPointerFromObject(Node* object, Node* offset);\n  Node* LoadProtectedPointerFromObject(Node* object, int offset) {\n    return LoadProtectedPointerFromObject(object, IntPtrConstant(offset));\n  }\n\n  Node* LoadImmutableProtectedPointerFromObject(Node* object, Node* offset);\n  Node* LoadImmutableProtectedPointerFromObject(Node* object, int offset) {\n    return LoadImmutableProtectedPointerFromObject(object,\n                                                   IntPtrConstant(offset));\n  }\n\n  Node* LoadImmutableFromObject(MachineType type, Node* base, Node* offset);\n\n  Node* LoadImmutableFromObject(MachineType type, Node* base, int offset) {\n    return LoadImmutableFromObject(type, base, IntPtrConstant(offset));\n  }\n\n  Node* LoadImmutable(LoadRepresentation rep, Node* base, Node* offset);\n\n  Node* LoadImmutable(LoadRepresentation rep, Node* base, int offset) {\n    return LoadImmutable(rep, base, IntPtrConstant(offset));\n  }\n\n  Node* LoadWasmCodePointer(Node* code_pointer);\n\n  Node* StoreToObject(ObjectAccess access, Node* base, Node* offset,\n                      Node* value);\n\n  Node* StoreToObject(ObjectAccess access, Node* base, int offset,\n                      Node* value) {\n    return StoreToObject(access, base, IntPtrConstant(offset), value);\n  }\n\n  Node* InitializeImmutableInObject(ObjectAccess access, Node* base,\n                                    Node* offset, Node* value);\n\n  Node* InitializeImmutableInObject(ObjectAccess access, Node* base, int offset,\n                                    Node* value) {\n    return InitializeImmutableInObject(access, base, IntPtrConstant(offset),\n                                       value);\n  }\n\n  Node* BuildDecodeSandboxedExternalPointer(Node* handle,\n                                            ExternalPointerTagRange tag_range,\n                                            Node* isolate_root);\n  Node* BuildLoadExternalPointerFromObject(Node* object, int offset,\n                                           ExternalPointerTagRange tag_range,\n                                           Node* isolate_root);\n\n  Node* BuildLoadExternalPointerFromObject(Node* object, int offset,\n                                           Node* index,\n                                           ExternalPointerTagRange tag_range,\n                                           Node* isolate_root);\n\n  Node* LoadImmutableTrustedPointerFromObject(Node* object, int offset,\n                                              IndirectPointerTag tag);\n  Node* LoadTrustedPointerFromObject(Node* object, int offset,\n                                     IndirectPointerTag tag);\n  // Returns the load node (where the source position for the trap needs to be\n  // set by the caller) and the result.\n  std::pair<Node*, Node*> LoadTrustedPointerFromObjectTrapOnNull(\n      Node* object, int offset, IndirectPointerTag tag);\n  Node* BuildDecodeTrustedPointer(Node* handle, IndirectPointerTag tag);\n\n  Node* IsSmi(Node* object);\n\n  // Maps and their contents.\n\n  Node* LoadMap(Node* object);\n\n  void StoreMap(Node* heap_object, Node* map);\n\n  Node* LoadInstanceType(Node* map);\n\n  Node* LoadWasmTypeInfo(Node* map);\n\n  // FixedArrays.\n\n  Node* LoadFixedArrayLengthAsSmi(Node* fixed_array);\n\n  Node* LoadFixedArrayElement(Node* fixed_array, Node* index_intptr,\n                              MachineType type = MachineType::AnyTagged());\n\n  Node* LoadImmutableFixedArrayElement(\n      Node* fixed_array, Node* index_intptr,\n      MachineType type = MachineType::AnyTagged());\n\n  Node* LoadFixedArrayElement(Node* array, int index, MachineType type);\n\n  Node* LoadFixedArrayElementSmi(Node* array, int index) {\n    return LoadFixedArrayElement(array, index, MachineType::TaggedSigned());\n  }\n\n  Node* LoadFixedArrayElementPtr(Node* array, int index) {\n    return LoadFixedArrayElement(array, index, MachineType::TaggedPointer());\n  }\n\n  Node* LoadFixedArrayElementAny(Node* array, int index) {\n    return LoadFixedArrayElement(array, index, MachineType::AnyTagged());\n  }\n\n  Node* LoadProtectedFixedArrayElement(Node* array, int index);\n  Node* LoadProtectedFixedArrayElement(Node* array, Node* index_intptr);\n\n  Node* LoadByteArrayElement(Node* byte_array, Node* index_intptr,\n                             MachineType type);\n\n  Node* StoreFixedArrayElement(Node* array, int index, Node* value,\n                               ObjectAccess access);\n\n  Node* StoreFixedArrayElementSmi(Node* array, int index, Node* value) {\n    return StoreFixedArrayElement(\n        array, index, value,\n        ObjectAccess(MachineType::TaggedSigned(), kNoWriteBarrier));\n  }\n\n  Node* StoreFixedArrayElementAny(Node* array, int index, Node* value) {\n    return StoreFixedArrayElement(\n        array, index, value,\n        ObjectAccess(MachineType::AnyTagged(), kFullWriteBarrier));\n  }\n\n  Node* LoadWeakFixedArrayElement(Node* fixed_array, Node* index_intptr);\n\n  // Functions, SharedFunctionInfos, FunctionData.\n\n  Node* LoadSharedFunctionInfo(Node* js_function);\n\n  Node* LoadContextFromJSFunction(Node* js_function);\n\n  Node* LoadFunctionDataFromJSFunction(Node* js_function);\n\n  Node* LoadExportedFunctionIndexAsSmi(Node* exported_function_data);\n\n  Node* LoadExportedFunctionInstanceData(Node* exported_function_data);\n\n  // JavaScript objects.\n\n  Node* LoadJSArrayElements(Node* js_array);\n\n  // WasmGC objects.\n\n  Node* FieldOffset(const wasm::StructType* type, uint32_t field_index);\n\n  Node* WasmArrayElementOffset(Node* index, wasm::ValueType element_type);\n\n  Node* IsDataRefMap(Node* map);\n\n  Node* WasmTypeCheck(Node* object, Node* rtt, WasmTypeCheckConfig config);\n  Node* WasmTypeCheckAbstract(Node* object, WasmTypeCheckConfig config);\n\n  Node* WasmTypeCast(Node* object, Node* rtt, WasmTypeCheckConfig config);\n  Node* WasmTypeCastAbstract(Node* object, WasmTypeCheckConfig config);\n\n  Node* Null(wasm::ValueType type);\n\n  Node* IsNull(Node* object, wasm::ValueType type);\n\n  Node* IsNotNull(Node* object, wasm::ValueType type);\n\n  Node* AssertNotNull(Node* object, wasm::ValueType type, TrapId trap_id);\n\n  Node* WasmAnyConvertExtern(Node* object);\n\n  Node* WasmExternConvertAny(Node* object);\n\n  Node* StructGet(Node* object, const wasm::StructType* type, int field_index,\n                  bool is_signed, CheckForNull null_check);\n\n  void StructSet(Node* object, Node* value, const wasm::StructType* type,\n                 int field_index, CheckForNull null_check);\n\n  Node* ArrayGet(Node* array, Node* index, const wasm::ArrayType* type,\n                 bool is_signed);\n\n  void ArraySet(Node* array, Node* index, Node* value,\n                const wasm::ArrayType* type);\n\n  Node* ArrayLength(Node* array, CheckForNull null_check);\n\n  void ArrayInitializeLength(Node* array, Node* length);\n\n  Node* LoadStringLength(Node* string);\n\n  Node* StringAsWtf16(Node* string);\n\n  Node* StringPrepareForGetCodeunit(Node* string);\n\n  // Generic helpers.\n\n  Node* HasInstanceType(Node* heap_object, InstanceType type);\n\n  void TrapIf(Node* condition, TrapId reason) {\n    // Initially wasm traps don't have a FrameState.\n    const bool has_frame_state = false;\n    AddNode(\n        graph()->NewNode(mcgraph()->common()->TrapIf(reason, has_frame_state),\n                         condition, effect(), control()));\n  }\n\n  void TrapUnless(Node* condition, TrapId reason) {\n    // Initially wasm traps don't have a FrameState.\n    const bool has_frame_state = false;\n    AddNode(graph()->NewNode(\n        mcgraph()->common()->TrapUnless(reason, has_frame_state), condition,\n        effect(), control()));\n  }\n\n  Node* LoadTrustedDataFromInstanceObject(Node* instance_object);\n\n  SimplifiedOperatorBuilder* simplified() override { return &simplified_; }\n\n private:\n  template <typename... Args>\n  Node* CallBuiltinImpl(Builtin name, bool needs_frame_state,\n                        Operator::Properties properties, Args... args) {\n    auto* call_descriptor = GetBuiltinCallDescriptor(\n        name, temp_zone(), StubCallMode::kCallBuiltinPointer, needs_frame_state,\n        properties);\n    Node* call_target = GetBuiltinPointerTarget(name);\n    return Call(call_descriptor, call_target, args...);\n  }\n\n  SimplifiedOperatorBuilder simplified_;\n};"
+    }
+  ],
+  "file_path": "/home/kathirks_gc/v8_go/archive/codebase/src/compiler/wasm-graph-assembler.h"
+}

@@ -1,0 +1,420 @@
+{
+  "file_path": "/home/kathirks_gc/v8_go/codebase/src/compiler/backend/arm64/code-generator-arm64.cc",
+  "imports": [
+    "src/codegen/arm64/assembler-arm64-inl.h",
+    "src/codegen/arm64/constants-arm64.h",
+    "src/codegen/arm64/macro-assembler-arm64-inl.h",
+    "src/codegen/interface-descriptors-inl.h",
+    "src/codegen/machine-type.h",
+    "src/codegen/optimized-compilation-info.h",
+    "src/compiler/backend/code-generator-impl.h",
+    "src/compiler/backend/code-generator.h",
+    "src/compiler/backend/gap-resolver.h",
+    "src/compiler/backend/instruction-codes.h",
+    "src/compiler/node-matchers.h",
+    "src/compiler/osr.h",
+    "src/execution/frame-constants.h",
+    "src/heap/mutable-page-metadata.h",
+    "src/wasm/wasm-linkage.h",
+    "src/wasm/wasm-objects.h"
+  ],
+  "classes": [
+    {
+      "name": "Arm64OperandConverter",
+      "properties": [],
+      "methods": [
+        {
+          "name": "Arm64OperandConverter",
+          "parameters": [
+            "CodeGenerator* gen",
+            "Instruction* instr"
+          ],
+          "return_type": "void",
+          "logic": "Constructor for Arm64OperandConverter, initializes the base class."
+        },
+        {
+          "name": "InputFloat32Register",
+          "parameters": [
+            "size_t index"
+          ],
+          "return_type": "DoubleRegister",
+          "logic": "Returns the lower 32-bits of the input double register as a float32 register."
+        },
+        {
+          "name": "InputFloat64Register",
+          "parameters": [
+            "size_t index"
+          ],
+          "return_type": "DoubleRegister",
+          "logic": "Returns the input double register."
+        },
+        {
+          "name": "InputSimd128Register",
+          "parameters": [
+            "size_t index"
+          ],
+          "return_type": "DoubleRegister",
+          "logic": "Returns the input double register as a Simd128 (Q) register."
+        },
+        {
+          "name": "InputFloat32OrZeroRegister",
+          "parameters": [
+            "size_t index"
+          ],
+          "return_type": "CPURegister",
+          "logic": "Returns wzr if the input at index is an immediate zero float32, otherwise returns the lower 32-bits of the input double register as a float32 register."
+        },
+        {
+          "name": "InputFloat32OrFPZeroRegister",
+          "parameters": [
+            "size_t index"
+          ],
+          "return_type": "CPURegister",
+          "logic": "Returns fp_zero.S() if the input at index is an immediate zero float32, otherwise returns the lower 32-bits of the input double register as a float32 register."
+        },
+        {
+          "name": "InputFloat64OrZeroRegister",
+          "parameters": [
+            "size_t index"
+          ],
+          "return_type": "CPURegister",
+          "logic": "Returns xzr if the input at index is an immediate zero float64, otherwise returns the input double register."
+        },
+        {
+          "name": "InputFloat64OrFPZeroRegister",
+          "parameters": [
+            "size_t index"
+          ],
+          "return_type": "DoubleRegister",
+          "logic": "Returns fp_zero if the input at index is an immediate zero float64, otherwise returns the input double register."
+        },
+        {
+          "name": "OutputCount",
+          "parameters": [],
+          "return_type": "size_t",
+          "logic": "Returns the number of outputs for the instruction."
+        },
+        {
+          "name": "OutputFloat32Register",
+          "parameters": [
+            "size_t index = 0"
+          ],
+          "return_type": "DoubleRegister",
+          "logic": "Returns the lower 32-bits of the output double register as a float32 register."
+        },
+        {
+          "name": "OutputFloat64Register",
+          "parameters": [
+            "size_t index = 0"
+          ],
+          "return_type": "DoubleRegister",
+          "logic": "Returns the output double register."
+        },
+        {
+          "name": "OutputSimd128Register",
+          "parameters": [],
+          "return_type": "DoubleRegister",
+          "logic": "Returns the output double register as a Simd128 (Q) register."
+        },
+        {
+          "name": "InputRegister32",
+          "parameters": [
+            "size_t index"
+          ],
+          "return_type": "Register",
+          "logic": "Returns the lower 32-bits of the input register."
+        },
+        {
+          "name": "InputOrZeroRegister32",
+          "parameters": [
+            "size_t index"
+          ],
+          "return_type": "Register",
+          "logic": "Returns wzr if input is immediate zero, otherwise return the lower 32 bits of the input register."
+        },
+        {
+          "name": "InputRegister64",
+          "parameters": [
+            "size_t index"
+          ],
+          "return_type": "Register",
+          "logic": "Returns the input register."
+        },
+        {
+          "name": "InputOrZeroRegister64",
+          "parameters": [
+            "size_t index"
+          ],
+          "return_type": "Register",
+          "logic": "Returns xzr if input is immediate zero, otherwise return the input register."
+        },
+        {
+          "name": "InputOperand",
+          "parameters": [
+            "size_t index"
+          ],
+          "return_type": "Operand",
+          "logic": "Converts input at index to an Operand."
+        },
+        {
+          "name": "InputOperand64",
+          "parameters": [
+            "size_t index"
+          ],
+          "return_type": "Operand",
+          "logic": "Converts input at index to a 64-bit Operand."
+        },
+        {
+          "name": "InputOperand32",
+          "parameters": [
+            "size_t index"
+          ],
+          "return_type": "Operand",
+          "logic": "Converts input at index to a 32-bit Operand."
+        },
+        {
+          "name": "OutputRegister64",
+          "parameters": [
+            "size_t index = 0"
+          ],
+          "return_type": "Register",
+          "logic": "Returns the output register."
+        },
+        {
+          "name": "OutputRegister32",
+          "parameters": [
+            "size_t index = 0"
+          ],
+          "return_type": "Register",
+          "logic": "Returns the lower 32-bits of the output register."
+        },
+        {
+          "name": "TempRegister32",
+          "parameters": [
+            "size_t index"
+          ],
+          "return_type": "Register",
+          "logic": "Returns the lower 32-bits of a temporary register."
+        },
+        {
+          "name": "InputOperand2_32",
+          "parameters": [
+            "size_t index"
+          ],
+          "return_type": "Operand",
+          "logic": "Decodes addressing mode from opcode and returns the input operand with specified shift or extension. Returns InputOperand32 if mode is kMode_None"
+        },
+        {
+          "name": "InputOperand2_64",
+          "parameters": [
+            "size_t index"
+          ],
+          "return_type": "Operand",
+          "logic": "Decodes addressing mode from opcode and returns the input operand with specified shift or extension. Returns InputOperand64 if mode is kMode_None"
+        },
+        {
+          "name": "MemoryOperand",
+          "parameters": [
+            "size_t index = 0"
+          ],
+          "return_type": "MemOperand",
+          "logic": "Decodes addressing mode and constructs a MemOperand."
+        },
+        {
+          "name": "ToOperand",
+          "parameters": [
+            "InstructionOperand* op"
+          ],
+          "return_type": "Operand",
+          "logic": "Converts an InstructionOperand to an Operand."
+        },
+        {
+          "name": "ToOperand32",
+          "parameters": [
+            "InstructionOperand* op"
+          ],
+          "return_type": "Operand",
+          "logic": "Converts an InstructionOperand to a 32-bit Operand."
+        },
+        {
+          "name": "ToImmediate",
+          "parameters": [
+            "InstructionOperand* operand"
+          ],
+          "return_type": "Operand",
+          "logic": "Converts an InstructionOperand to an Operand representing an immediate value."
+        },
+        {
+          "name": "ToMemOperand",
+          "parameters": [
+            "InstructionOperand* op",
+            "MacroAssembler* masm"
+          ],
+          "return_type": "MemOperand",
+          "logic": "Converts an InstructionOperand representing a stack slot to a MemOperand."
+        },
+        {
+          "name": "SlotToMemOperand",
+          "parameters": [
+            "int slot",
+            "MacroAssembler* masm"
+          ],
+          "return_type": "MemOperand",
+          "logic": "Converts a stack slot to a MemOperand using FrameOffsets and SP adjustments."
+        }
+      ]
+    },
+    {
+      "name": "OutOfLineRecordWrite",
+      "properties": [
+        "object_",
+        "offset_",
+        "value_",
+        "mode_",
+        "stub_mode_",
+        "must_save_lr_",
+        "unwinding_info_writer_",
+        "zone_"
+      ],
+      "methods": [
+        {
+          "name": "OutOfLineRecordWrite",
+          "parameters": [
+            "CodeGenerator* gen",
+            "Register object",
+            "Operand offset",
+            "Register value",
+            "RecordWriteMode mode",
+            "StubCallMode stub_mode",
+            "UnwindingInfoWriter* unwinding_info_writer",
+            "IndirectPointerTag indirect_pointer_tag"
+          ],
+          "return_type": "void",
+          "logic": "Constructor for OutOfLineRecordWrite, initializes members."
+        },
+        {
+          "name": "Generate",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Generates the out-of-line code for a record write barrier."
+        }
+      ]
+    },
+    {
+      "name": "WasmOutOfLineTrap",
+      "properties": [
+        "gen_",
+        "instr_"
+      ],
+      "methods": [
+        {
+          "name": "WasmOutOfLineTrap",
+          "parameters": [
+            "CodeGenerator* gen",
+            "Instruction* instr"
+          ],
+          "return_type": "void",
+          "logic": "Constructor for WasmOutOfLineTrap, initializes members."
+        },
+        {
+          "name": "Generate",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Generates out-of-line code to call a wasm trap handler."
+        },
+        {
+          "name": "GenerateWithTrapId",
+          "parameters": [
+            "TrapId trap_id"
+          ],
+          "return_type": "void",
+          "logic": "Generates a call to a trap with the given trap_id."
+        }
+      ]
+    }
+  ],
+  "functions": [
+    {
+      "name": "FlagsConditionToCondition",
+      "parameters": [
+        "FlagsCondition condition"
+      ],
+      "return_type": "Condition",
+      "logic": "Converts a FlagsCondition enum to an Assembler Condition enum."
+    },
+    {
+      "name": "RecordTrapInfoIfNeeded",
+      "parameters": [
+        "Zone* zone",
+        "CodeGenerator* codegen",
+        "InstructionCode opcode",
+        "Instruction* instr",
+        "int pc"
+      ],
+      "return_type": "void",
+      "logic": "Records protected instruction information if needed for WebAssembly."
+    },
+    {
+      "name": "EmitFpOrNeonUnop",
+      "parameters": [
+        "MacroAssembler* masm",
+        "Fn fn",
+        "Instruction* instr",
+        "Arm64OperandConverter i",
+        "VectorFormat scalar",
+        "VectorFormat vector"
+      ],
+      "return_type": "void",
+      "logic": "Emits a unary floating-point or NEON operation based on whether the input is scalar or vector."
+    },
+    {
+      "name": "AdjustStackPointerForTailCall",
+      "parameters": [
+        "MacroAssembler* masm",
+        "FrameAccessState* state",
+        "int new_slot_above_sp",
+        "bool allow_shrinkage"
+      ],
+      "return_type": "void",
+      "logic": "Adjusts the stack pointer for a tail call, claiming or dropping slots as needed to match the expected stack layout."
+    },
+    {
+      "name": "GetLaneMask",
+      "parameters": [
+        "int32_t lane_count"
+      ],
+      "return_type": "int32_t",
+      "logic": "Computes the lane mask (all ones) for a given lane count, used in shuffle operations."
+    },
+    {
+      "name": "Shuffle1Helper",
+      "parameters": [
+        "MacroAssembler* masm",
+        "Arm64OperandConverter i",
+        "VectorFormat f"
+      ],
+      "return_type": "void",
+      "logic": "Helper for shuffle operations that only target one lane."
+    },
+    {
+      "name": "Shuffle2Helper",
+      "parameters": [
+        "MacroAssembler* masm",
+        "Arm64OperandConverter i",
+        "VectorFormat f"
+      ],
+      "return_type": "void",
+      "logic": "Helper for shuffle operations that only target two lanes."
+    },
+    {
+      "name": "Shuffle4Helper",
+      "parameters": [
+        "MacroAssembler* masm",
+        "Arm64OperandConverter i",
+        "VectorFormat f"
+      ],
+      "return_type": "void",
+      "logic": "Helper for shuffle operations that only target four lanes."
+    }
+  ]
+}

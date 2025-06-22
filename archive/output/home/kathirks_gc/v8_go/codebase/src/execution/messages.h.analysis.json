@@ -1,0 +1,354 @@
+{
+  "file_path": "/home/kathirks_gc/v8_go/codebase/src/execution/messages.h",
+  "imports": [
+    "<memory>",
+    "include/v8-local-handle.h",
+    "src/base/vector.h",
+    "src/common/message-template.h",
+    "src/handles/handles.h",
+    "src/handles/maybe-handles.h"
+  ],
+  "classes": [
+    {
+      "name": "MessageLocation",
+      "properties": [
+        "script_",
+        "start_pos_",
+        "end_pos_",
+        "bytecode_offset_",
+        "shared_"
+      ],
+      "methods": [
+        {
+          "name": "MessageLocation",
+          "parameters": [
+            "Handle<Script> script",
+            "int start_pos",
+            "int end_pos"
+          ],
+          "return_type": "",
+          "logic": "Constructor for when source positions are already known."
+        },
+        {
+          "name": "MessageLocation",
+          "parameters": [
+            "Handle<Script> script",
+            "int start_pos",
+            "int end_pos",
+            "Handle<SharedFunctionInfo> shared"
+          ],
+          "return_type": "",
+          "logic": "Constructor for when source positions are already known with SharedFunctionInfo."
+        },
+        {
+          "name": "MessageLocation",
+          "parameters": [
+            "Handle<Script> script",
+            "Handle<SharedFunctionInfo> shared",
+            "int bytecode_offset"
+          ],
+          "return_type": "",
+          "logic": "Constructor for when source positions were not collected but can be reconstructed from SharedFunctionInfo and bytecode offset."
+        },
+        {
+          "name": "MessageLocation",
+          "parameters": [],
+          "return_type": "",
+          "logic": "Default constructor."
+        },
+        {
+          "name": "script",
+          "parameters": [],
+          "return_type": "Handle<Script>",
+          "logic": "Returns the script."
+        },
+        {
+          "name": "start_pos",
+          "parameters": [],
+          "return_type": "int",
+          "logic": "Returns the start position."
+        },
+        {
+          "name": "end_pos",
+          "parameters": [],
+          "return_type": "int",
+          "logic": "Returns the end position."
+        },
+        {
+          "name": "bytecode_offset",
+          "parameters": [],
+          "return_type": "int",
+          "logic": "Returns the bytecode offset."
+        },
+        {
+          "name": "shared",
+          "parameters": [],
+          "return_type": "Handle<SharedFunctionInfo>",
+          "logic": "Returns the SharedFunctionInfo."
+        }
+      ]
+    },
+    {
+      "name": "ErrorUtils",
+      "properties": [],
+      "methods": [
+        {
+          "name": "Construct",
+          "parameters": [
+            "Isolate* isolate",
+            "DirectHandle<JSFunction> target",
+            "DirectHandle<Object> new_target",
+            "DirectHandle<Object> message",
+            "DirectHandle<Object> options"
+          ],
+          "return_type": "MaybeDirectHandle<JSObject>",
+          "logic": "Constructs a JSObject using Error object, potentially including stack trace information."
+        },
+        {
+          "name": "Construct",
+          "parameters": [
+            "Isolate* isolate",
+            "DirectHandle<JSFunction> target",
+            "DirectHandle<Object> new_target",
+            "DirectHandle<Object> message",
+            "DirectHandle<Object> options",
+            "FrameSkipMode mode",
+            "DirectHandle<Object> caller",
+            "StackTraceCollection stack_trace_collection"
+          ],
+          "return_type": "MaybeHandle<JSObject>",
+          "logic": "Constructs a JSObject using Error object with advanced options for frame skipping and stack trace collection."
+        },
+        {
+          "name": "ToString",
+          "parameters": [
+            "Isolate* isolate",
+            "DirectHandle<Object> recv",
+            "ToStringMessageSource message_source"
+          ],
+          "return_type": "MaybeHandle<String>",
+          "logic": "Converts an object to a string representation for error messages, potentially retrieving the message from the error object itself."
+        },
+        {
+          "name": "MakeGenericError",
+          "parameters": [
+            "Isolate* isolate",
+            "DirectHandle<JSFunction> constructor",
+            "MessageTemplate index",
+            "base::Vector<const DirectHandle<Object>> args",
+            "FrameSkipMode mode"
+          ],
+          "return_type": "Handle<JSObject>",
+          "logic": "Creates a generic error object using a constructor and a message template."
+        },
+        {
+          "name": "ShadowRealmConstructTypeErrorCopy",
+          "parameters": [
+            "Isolate* isolate",
+            "DirectHandle<Object> original",
+            "MessageTemplate index",
+            "base::Vector<const DirectHandle<Object>> args"
+          ],
+          "return_type": "DirectHandle<JSObject>",
+          "logic": "Creates a copy of a TypeError object, intended for use in ShadowRealms."
+        },
+        {
+          "name": "FormatStackTrace",
+          "parameters": [
+            "Isolate* isolate",
+            "DirectHandle<JSObject> error",
+            "DirectHandle<Object> stack_trace"
+          ],
+          "return_type": "MaybeDirectHandle<Object>",
+          "logic": "Formats a stack trace into a string representation."
+        },
+        {
+          "name": "NewIteratorError",
+          "parameters": [
+            "Isolate* isolate",
+            "DirectHandle<Object> source"
+          ],
+          "return_type": "DirectHandle<JSObject>",
+          "logic": "Creates a new IteratorError object."
+        },
+        {
+          "name": "NewCalledNonCallableError",
+          "parameters": [
+            "Isolate* isolate",
+            "DirectHandle<Object> source"
+          ],
+          "return_type": "DirectHandle<JSObject>",
+          "logic": "Creates a new error object for when a non-callable object is called."
+        },
+        {
+          "name": "NewConstructedNonConstructable",
+          "parameters": [
+            "Isolate* isolate",
+            "DirectHandle<Object> source"
+          ],
+          "return_type": "DirectHandle<JSObject>",
+          "logic": "Creates a new error object for when a non-constructable object is used as a constructor."
+        },
+        {
+          "name": "ThrowSpreadArgError",
+          "parameters": [
+            "Isolate* isolate",
+            "MessageTemplate id",
+            "DirectHandle<Object> object"
+          ],
+          "return_type": "Tagged<Object>",
+          "logic": "Throws an error related to spread arguments."
+        },
+        {
+          "name": "ThrowLoadFromNullOrUndefined",
+          "parameters": [
+            "Isolate* isolate",
+            "DirectHandle<Object> object",
+            "MaybeDirectHandle<Object> key"
+          ],
+          "return_type": "Tagged<Object>",
+          "logic": "Throws an error when attempting to load a property from null or undefined."
+        },
+        {
+          "name": "HasErrorStackSymbolOwnProperty",
+          "parameters": [
+            "Isolate* isolate",
+            "DirectHandle<JSObject> object"
+          ],
+          "return_type": "bool",
+          "logic": "Checks if the object has its own property named by the error stack symbol."
+        },
+        {
+          "name": "GetErrorStackProperty",
+          "parameters": [
+            "Isolate* isolate",
+            "DirectHandle<JSReceiver> maybe_error_object"
+          ],
+          "return_type": "ErrorUtils::StackPropertyLookupResult",
+          "logic": "Gets the value of the error stack symbol property by traversing the prototype chain."
+        },
+        {
+          "name": "GetFormattedStack",
+          "parameters": [
+            "Isolate* isolate",
+            "DirectHandle<JSObject> maybe_error_object"
+          ],
+          "return_type": "MaybeDirectHandle<Object>",
+          "logic": "Retrieves the formatted stack trace from a JSObject."
+        },
+        {
+          "name": "SetFormattedStack",
+          "parameters": [
+            "Isolate* isolate",
+            "DirectHandle<JSObject> maybe_error_object",
+            "DirectHandle<Object> formatted_stack"
+          ],
+          "return_type": "void",
+          "logic": "Sets the formatted stack trace on a JSObject."
+        },
+        {
+          "name": "CaptureStackTrace",
+          "parameters": [
+            "Isolate* isolate",
+            "DirectHandle<JSObject> object",
+            "FrameSkipMode mode",
+            "Handle<Object> caller"
+          ],
+          "return_type": "MaybeHandle<Object>",
+          "logic": "Captures the stack trace and installs the stack property accessors."
+        }
+      ]
+    },
+    {
+      "name": "MessageFormatter",
+      "properties": [],
+      "methods": [
+        {
+          "name": "TemplateString",
+          "parameters": [
+            "MessageTemplate index"
+          ],
+          "return_type": "const char*",
+          "logic": "Returns the template string for a given message template index."
+        },
+        {
+          "name": "TryFormat",
+          "parameters": [
+            "Isolate* isolate",
+            "MessageTemplate index",
+            "base::Vector<const DirectHandle<String>> args"
+          ],
+          "return_type": "MaybeHandle<String>",
+          "logic": "Attempts to format a message using the given template and arguments."
+        },
+        {
+          "name": "Format",
+          "parameters": [
+            "Isolate* isolate",
+            "MessageTemplate index",
+            "base::Vector<const DirectHandle<Object>> args"
+          ],
+          "return_type": "DirectHandle<String>",
+          "logic": "Formats a message using the given template and arguments."
+        }
+      ]
+    },
+    {
+      "name": "MessageHandler",
+      "properties": [],
+      "methods": [
+        {
+          "name": "MakeMessageObject",
+          "parameters": [
+            "Isolate* isolate",
+            "MessageTemplate type",
+            "const MessageLocation* location",
+            "DirectHandle<Object> argument",
+            "DirectHandle<StackTraceInfo> stack_trace"
+          ],
+          "return_type": "Handle<JSMessageObject>",
+          "logic": "Creates a message object for the API to use."
+        },
+        {
+          "name": "ReportMessage",
+          "parameters": [
+            "Isolate* isolate",
+            "const MessageLocation* loc",
+            "DirectHandle<JSMessageObject> message"
+          ],
+          "return_type": "void",
+          "logic": "Reports a formatted message."
+        },
+        {
+          "name": "DefaultMessageReport",
+          "parameters": [
+            "Isolate* isolate",
+            "const MessageLocation* loc",
+            "DirectHandle<Object> message_obj"
+          ],
+          "return_type": "void",
+          "logic": "Default handler for reporting messages."
+        },
+        {
+          "name": "GetMessage",
+          "parameters": [
+            "Isolate* isolate",
+            "DirectHandle<Object> data"
+          ],
+          "return_type": "DirectHandle<String>",
+          "logic": "Retrieves a message string from the provided data."
+        },
+        {
+          "name": "GetLocalizedMessage",
+          "parameters": [
+            "Isolate* isolate",
+            "DirectHandle<Object> data"
+          ],
+          "return_type": "std::unique_ptr<char[]>",
+          "logic": "Retrieves a localized message from the provided data."
+        }
+      ]
+    }
+  ],
+  "functions": []
+}

@@ -1,0 +1,185 @@
+{
+  "metadata": {
+    "path": "/home/kathirks_gc/v8_go/archive/codebase/src/compiler/frame.cc",
+    "file_name": "frame.cc",
+    "language": "cpp",
+    "purpose": "Implements stack frame management for the compiler"
+  },
+  "imports": {
+    "metadata": {
+      "language": "cpp",
+      "purpose": "Includes the definition of the Frame class."
+    },
+    "code": "#include \"src/compiler/frame.h\""
+  },
+  "dependencies": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "AlignedSlotAllocator",
+        "about": "Manages aligned memory allocation in slots"
+      },
+      "code": "class AlignedSlotAllocator {\n                public:\n                    static int NumSlotsForWidth(int width);\n                    void Align(int slot_count);\n                    int Size() const;\n                };",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "name": "base::bits",
+        "purpose": "Provides bit manipulation utilities."
+      },
+      "code": "namespace base { namespace bits {\n                    bool IsPowerOfTwo(int x);\n                }}",
+      "type": "namespace"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "name": "v8::internal",
+        "purpose": "V8 internal namespace"
+      },
+      "code": "namespace v8 { namespace internal {} }",
+      "type": "namespace"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "name": "v8::internal::compiler",
+        "purpose": "V8 compiler namespace"
+      },
+      "code": "namespace v8 { namespace internal { namespace compiler {} } }",
+      "type": "namespace"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "Zone",
+        "about": "Memory allocation zone"
+      },
+      "code": "class Zone {};",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "FrameOffset",
+        "about": "Represents an offset within a frame."
+      },
+      "code": "class FrameOffset {\n                public:\n                    static FrameOffset FromFramePointer(int offset);\n                    static FrameOffset FromStackPointer(int offset);\n                };",
+      "type": "class"
+    }
+  ],
+  "classes": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "Frame",
+        "about": "Represents the stack frame of a function.",
+        "attributes": [
+          {
+            "name": "fixed_slot_count_",
+            "type": "int",
+            "access": "private",
+            "purpose": "The number of fixed slots in the frame."
+          },
+          {
+            "name": "allocated_registers_",
+            "type": "nullptr",
+            "access": "private",
+            "purpose": "Placeholder for allocated registers (currently unused)."
+          },
+          {
+            "name": "allocated_double_registers_",
+            "type": "nullptr",
+            "access": "private",
+            "purpose": "Placeholder for allocated double registers (currently unused)."
+          },
+          {
+            "name": "zone_",
+            "type": "Zone*",
+            "access": "private",
+            "purpose": "Memory zone for allocating frame data."
+          },
+          {
+            "name": "slot_allocator_",
+            "type": "AlignedSlotAllocator",
+            "access": "private",
+            "purpose": "Allocator for slots in the frame."
+          },
+          {
+            "name": "return_slot_count_",
+            "type": "int",
+            "access": "private",
+            "purpose": "Keeps track of the number of slots used for return values."
+          },
+          {
+            "name": "spill_slot_count_",
+            "type": "int",
+            "access": "private",
+            "purpose": "Keeps track of spill slots"
+          }
+        ],
+        "dependencies": [
+          "AlignedSlotAllocator",
+          "Zone"
+        ]
+      },
+      "code": "Frame::Frame(int fixed_frame_size_in_slots, Zone* zone)\n                : fixed_slot_count_(fixed_frame_size_in_slots),\n                  allocated_registers_(nullptr),\n                  allocated_double_registers_(nullptr),\n                  zone_(zone) {\n              slot_allocator_.AllocateUnaligned(fixed_frame_size_in_slots);\n            }"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "FrameAccessState",
+        "about": "Manages the frame access state (whether a frame is present and how it is accessed).",
+        "attributes": [
+          {
+            "name": "has_frame_",
+            "type": "bool",
+            "access": "private",
+            "purpose": "Indicates whether a frame is present."
+          },
+          {
+            "name": "fp_relative_only_",
+            "type": "bool",
+            "access": "private",
+            "purpose": "Indicates whether frame access is only relative to the frame pointer."
+          }
+        ]
+      },
+      "code": "void FrameAccessState::MarkHasFrame(bool state) {\n              has_frame_ = state;\n              SetFrameAccessToDefault();\n            }\n\n            void FrameAccessState::SetFPRelativeOnly(bool state) {\n              fp_relative_only_ = state;\n            }\n\n            void FrameAccessState::SetFrameAccessToDefault() {\n              if (has_frame()) {\n                SetFrameAccessToFP();\n              } else {\n                SetFrameAccessToSP();\n              }\n            }\n\n            FrameOffset FrameAccessState::GetFrameOffset(int spill_slot) const {\n              const int frame_offset = FrameSlotToFPOffset(spill_slot);\n              if (access_frame_with_fp()) {\n                return FrameOffset::FromFramePointer(frame_offset);\n              } else {\n                // No frame. Retrieve all parameters relative to stack pointer.\n                int sp_offset = frame_offset + GetSPToFPOffset();\n                DCHECK_GE(sp_offset, 0);\n                return FrameOffset::FromStackPointer(sp_offset);\n              }\n            }"
+    }
+  ],
+  "functions": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "method",
+        "name": "AlignFrame",
+        "parent": "Frame",
+        "about": "Aligns the stack frame to the specified memory boundary",
+        "logic": "Ensures both return slots and regular slots are aligned to the power-of-2 boundary by adding padding slots as necessary",
+        "parameters": [
+          {
+            "name": "alignment",
+            "type": "int",
+            "purpose": "The memory alignment boundary (must be a power of 2)"
+          }
+        ],
+        "return": {
+          "type": "void",
+          "description": "No return value"
+        },
+        "dependencies": [
+          "AlignedSlotAllocator",
+          "base::bits"
+        ]
+      },
+      "code": "void Frame::AlignFrame(int alignment) {\n            #if DEBUG\n              spill_slots_finished_ = true;\n              frame_aligned_ = true;\n            #endif\n              // In the calculations below we assume that alignment is a power of 2.\n              DCHECK(base::bits::IsPowerOfTwo(alignment));\n              int alignment_in_slots = AlignedSlotAllocator::NumSlotsForWidth(alignment);\n\n              // We have to align return slots separately, because they are claimed\n              // separately on the stack.\n              const int mask = alignment_in_slots - 1;\n              int return_delta = alignment_in_slots - (return_slot_count_ & mask);\n              if (return_delta != alignment_in_slots) {\n                return_slot_count_ += return_delta;\n              }\n              int delta = alignment_in_slots - (slot_allocator_.Size() & mask);\n              if (delta != alignment_in_slots) {\n                slot_allocator_.Align(alignment_in_slots);\n                if (spill_slot_count_ != 0) {\n                  spill_slot_count_ += delta;\n                }\n              }\n            }"
+    }
+  ],
+  "file_path": "/home/kathirks_gc/v8_go/archive/codebase/src/compiler/frame.cc"
+}

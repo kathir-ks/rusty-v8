@@ -1,0 +1,169 @@
+{
+  "file_path": "/home/kathirks_gc/v8_go/codebase/src/wasm/interpreter/x64/interpreter-builtins-x64.cc",
+  "imports": [
+    "src/codegen/code-factory.h",
+    "src/codegen/macro-assembler.h",
+    "src/codegen/signature.h",
+    "src/execution/frame-constants.h",
+    "src/execution/isolate.h",
+    "src/wasm/interpreter/wasm-interpreter-runtime.h",
+    "src/wasm/object-access.h",
+    "src/wasm/wasm-objects.h"
+  ],
+  "classes": [
+    {
+      "name": "Builtins",
+      "properties": [],
+      "methods": [
+        {
+          "name": "Generate_WasmInterpreterEntry",
+          "parameters": [
+            "MacroAssembler* masm"
+          ],
+          "return_type": "void",
+          "logic": "Generates the code for the entry point of the WebAssembly interpreter. Sets up the stack frame, calls the runtime function to run the interpreter, and then deconstructs the stack frame and returns."
+        },
+        {
+          "name": "Generate_GenericJSToWasmInterpreterWrapper",
+          "parameters": [
+            "MacroAssembler* masm"
+          ],
+          "return_type": "void",
+          "logic": "Generates the code for a wrapper function that converts arguments from JavaScript to WebAssembly, calls the WebAssembly function, and converts the results back to JavaScript. Handles stack frame setup, argument conversion, Wasm call, result conversion, and stack frame teardown."
+        },
+        {
+          "name": "Generate_WasmInterpreterCWasmEntry",
+          "parameters": [
+            "MacroAssembler* masm"
+          ],
+          "return_type": "void",
+          "logic": "Generates a C entry point to be used by the Wasm interpreter when calling JS functions. It sets up a specific frame (C_WASM_ENTRY) so the interpreter stack frames can be unwound correctly during exception handling. Includes try/catch logic for exceptions."
+        },
+        {
+          "name": "Generate_GenericWasmToJSInterpreterWrapper",
+          "parameters": [
+            "MacroAssembler* masm"
+          ],
+          "return_type": "void",
+          "logic": "Generates the code for a wrapper function that converts arguments from WebAssembly to JavaScript, calls the JavaScript function, and converts the results back to WebAssembly. Handles stack frame setup, argument conversion, JS call, result conversion, and stack frame teardown."
+        }
+      ]
+    }
+  ],
+  "functions": [
+    {
+      "name": "PrepareForJsToWasmConversionBuiltinCall",
+      "parameters": [
+        "MacroAssembler* masm",
+        "Register array_start",
+        "Register param_count",
+        "Register current_param_slot",
+        "Register valuetypes_array_ptr",
+        "Register wasm_instance",
+        "Register function_data"
+      ],
+      "return_type": "void",
+      "logic": "Prepares the stack and registers for a builtin call to convert JavaScript values to WebAssembly values before calling the WebAssembly function."
+    },
+    {
+      "name": "RestoreAfterJsToWasmConversionBuiltinCall",
+      "parameters": [
+        "MacroAssembler* masm",
+        "Register function_data",
+        "Register wasm_instance",
+        "Register valuetypes_array_ptr",
+        "Register current_param_slot",
+        "Register param_count",
+        "Register array_start"
+      ],
+      "return_type": "void",
+      "logic": "Restores the stack and registers after a builtin call to convert JavaScript values to WebAssembly values, cleaning up the stack."
+    },
+    {
+      "name": "PrepareForBuiltinCall",
+      "parameters": [
+        "MacroAssembler* masm",
+        "Register array_start",
+        "Register return_count",
+        "Register wasm_instance"
+      ],
+      "return_type": "void",
+      "logic": "Prepares the stack and registers for a builtin call related to WebAssembly, managing GC and other setup."
+    },
+    {
+      "name": "RestoreAfterBuiltinCall",
+      "parameters": [
+        "MacroAssembler* masm",
+        "Register wasm_instance",
+        "Register return_count",
+        "Register array_start"
+      ],
+      "return_type": "void",
+      "logic": "Restores the stack and registers after a builtin call related to WebAssembly, cleaning up the stack."
+    },
+    {
+      "name": "PrepareForWasmToJsConversionBuiltinCall",
+      "parameters": [
+        "MacroAssembler* masm",
+        "Register return_count",
+        "Register result_index",
+        "Register current_return_slot",
+        "Register valuetypes_array_ptr",
+        "Register wasm_instance",
+        "Register fixed_array",
+        "Register jsarray"
+      ],
+      "return_type": "void",
+      "logic": "Prepares the stack and registers for a builtin call to convert WebAssembly values to JavaScript values after calling the WebAssembly function."
+    },
+    {
+      "name": "RestoreAfterWasmToJsConversionBuiltinCall",
+      "parameters": [
+        "MacroAssembler* masm",
+        "Register jsarray",
+        "Register fixed_array",
+        "Register wasm_instance",
+        "Register valuetypes_array_ptr",
+        "Register current_return_slot",
+        "Register result_index",
+        "Register return_count"
+      ],
+      "return_type": "void",
+      "logic": "Restores the stack and registers after a builtin call to convert WebAssembly values to JavaScript values, cleaning up the stack."
+    },
+    {
+      "name": "LoadFunctionDataAndWasmInstance",
+      "parameters": [
+        "MacroAssembler* masm",
+        "Register function_data",
+        "Register wasm_instance"
+      ],
+      "return_type": "void",
+      "logic": "Loads the function data and the WebAssembly instance from the provided register into the specified registers."
+    },
+    {
+      "name": "LoadFromSignature",
+      "parameters": [
+        "MacroAssembler* masm",
+        "Register valuetypes_array_ptr",
+        "Register return_count",
+        "Register param_count"
+      ],
+      "return_type": "void",
+      "logic": "Loads the return count and parameter count from the function signature into the specified registers."
+    },
+    {
+      "name": "LoadValueTypesArray",
+      "parameters": [
+        "MacroAssembler* masm",
+        "Register function_data",
+        "Register valuetypes_array_ptr",
+        "Register return_count",
+        "Register param_count",
+        "Register signature_data"
+      ],
+      "return_type": "void",
+      "logic": "Loads the value types array from the function data into the specified register."
+    }
+  ]
+}

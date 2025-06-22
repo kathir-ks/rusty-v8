@@ -1,0 +1,227 @@
+{
+  "metadata": {
+    "path": "/home/kathirks_gc/v8_go/archive/codebase/src/execution/pointer-authentication.h",
+    "file_name": "pointer-authentication.h",
+    "language": "cpp",
+    "purpose": "Provides an abstraction layer for pointer authentication, enabling or disabling it based on compile-time flags (V8_ENABLE_CONTROL_FLOW_INTEGRITY).  When enabled (and on ARM64), it uses ARM64's pointer authentication features for control flow integrity (CFI). When disabled, it uses a dummy implementation."
+  },
+  "imports": {
+    "metadata": {
+      "language": "cpp",
+      "purpose": "Includes necessary headers for V8 internal types, macros, and global definitions."
+    },
+    "code": "#include \"include/v8-internal.h\"\n#include \"src/base/macros.h\"\n#include \"src/common/globals.h\""
+  },
+  "classes": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "PointerAuthentication",
+        "extends": "AllStatic",
+        "about": "Provides static methods for authenticating and manipulating program counter (PC) addresses, depending on whether CFI is enabled.",
+        "attributes": [],
+        "dependencies": [
+          "AllStatic",
+          "Address",
+          "Isolate"
+        ]
+      },
+      "code": "class PointerAuthentication : public AllStatic {\n public:\n  // When CFI is enabled, authenticate the address stored in {pc_address} and\n  // return the authenticated address. {offset_from_sp} is the offset between\n  // {pc_address} and the pointer used as a context for signing.\n  // When CFI is not enabled, simply load return address from {pc_address} and\n  // return it.\n  V8_INLINE static Address AuthenticatePC(Address* pc_address,\n                                          unsigned offset_from_sp);\n\n  // When CFI is enabled, strip Pointer Authentication Code (PAC) from {pc} and\n  // return the raw value.\n  // When CFI is not enabled, return {pc} unmodified.\n  V8_INLINE static Address StripPAC(Address pc);\n\n  // When CFI is enabled, authenticate the address stored in {pc_address} and\n  // replace it with {new_pc}, after signing it. {offset_from_sp} is the offset\n  // between {pc_address} and the pointer used as a context for signing.\n  // When CFI is not enabled, store {new_pc} to {pc_address} without signing.\n  V8_INLINE static void ReplacePC(Address* pc_address, Address new_pc,\n                                  int offset_from_sp);\n\n  // When CFI is enabled, sign {pc} using {sp}, check the address and return the\n  // signed value. When CFI is not enabled, return {pc} unmodified. This method\n  // only applies in the deoptimizer.\n  V8_INLINE static Address SignAndCheckPC(Isolate* isolate, Address pc,\n                                          Address sp);\n\n  // When CFI is enabled, verify that {pc} is signed correctly for {old_sp},\n  // then re-sign {pc} using {new_sp} and return the signed value. When CFI is\n  // not enabled, return {pc} unmodified. This method only applies in the\n  // deoptimizer for wasm deoptimizations.\n  V8_INLINE static Address MoveSignedPC(Isolate* isolate, Address pc,\n                                        Address new_sp, Address old_sp);\n};"
+    }
+  ],
+  "functions": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "method",
+        "name": "AuthenticatePC",
+        "parent": "PointerAuthentication",
+        "about": "Authenticates a PC address if CFI is enabled, otherwise returns the address directly from memory.",
+        "logic": "If V8_ENABLE_CONTROL_FLOW_INTEGRITY is defined, the function authenticates the address pointed to by `pc_address` using `offset_from_sp` as context. Otherwise, it simply dereferences `pc_address` and returns the contained address.",
+        "parameters": [
+          {
+            "name": "pc_address",
+            "type": "Address*",
+            "purpose": "Pointer to the address to authenticate."
+          },
+          {
+            "name": "offset_from_sp",
+            "type": "unsigned",
+            "purpose": "Offset from the stack pointer used as a context for signing."
+          }
+        ],
+        "return": {
+          "type": "Address",
+          "description": "Authenticated address or the address directly from memory."
+        },
+        "dependencies": []
+      },
+      "code": "V8_INLINE static Address AuthenticatePC(Address* pc_address,\n                                          unsigned offset_from_sp);"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "method",
+        "name": "StripPAC",
+        "parent": "PointerAuthentication",
+        "about": "Strips the Pointer Authentication Code (PAC) from a PC address if CFI is enabled, otherwise returns the address unmodified.",
+        "logic": "If V8_ENABLE_CONTROL_FLOW_INTEGRITY is defined, the function removes the PAC from `pc`. Otherwise, it returns `pc` unchanged.",
+        "parameters": [
+          {
+            "name": "pc",
+            "type": "Address",
+            "purpose": "The address from which to strip the PAC."
+          }
+        ],
+        "return": {
+          "type": "Address",
+          "description": "The address with PAC removed or the original address."
+        },
+        "dependencies": []
+      },
+      "code": "V8_INLINE static Address StripPAC(Address pc);"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "method",
+        "name": "ReplacePC",
+        "parent": "PointerAuthentication",
+        "about": "Replaces a PC address with a new one, authenticating the new address if CFI is enabled, otherwise storing the new address directly.",
+        "logic": "If V8_ENABLE_CONTROL_FLOW_INTEGRITY is defined, the function authenticates `new_pc` using `offset_from_sp` as context and then stores it at `pc_address`. Otherwise, it simply stores `new_pc` at `pc_address`.",
+        "parameters": [
+          {
+            "name": "pc_address",
+            "type": "Address*",
+            "purpose": "Pointer to the address to replace."
+          },
+          {
+            "name": "new_pc",
+            "type": "Address",
+            "purpose": "The new address to store."
+          },
+          {
+            "name": "offset_from_sp",
+            "type": "int",
+            "purpose": "Offset from the stack pointer used as a context for signing."
+          }
+        ],
+        "return": {
+          "type": "void",
+          "description": "No return value."
+        },
+        "dependencies": []
+      },
+      "code": "V8_INLINE static void ReplacePC(Address* pc_address, Address new_pc,\n                                  int offset_from_sp);"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "method",
+        "name": "SignAndCheckPC",
+        "parent": "PointerAuthentication",
+        "about": "Signs and checks a PC address using the stack pointer if CFI is enabled, otherwise returns the address unmodified. This method is used in the deoptimizer.",
+        "logic": "If V8_ENABLE_CONTROL_FLOW_INTEGRITY is defined, the function signs `pc` using `sp` as context and checks the address. Otherwise, it returns `pc` unchanged.",
+        "parameters": [
+          {
+            "name": "isolate",
+            "type": "Isolate*",
+            "purpose": "The isolate associated with the current execution context."
+          },
+          {
+            "name": "pc",
+            "type": "Address",
+            "purpose": "The address to sign and check."
+          },
+          {
+            "name": "sp",
+            "type": "Address",
+            "purpose": "The stack pointer used as a context for signing."
+          }
+        ],
+        "return": {
+          "type": "Address",
+          "description": "The signed and checked address or the original address."
+        },
+        "dependencies": [
+          "Isolate"
+        ]
+      },
+      "code": "V8_INLINE static Address SignAndCheckPC(Isolate* isolate, Address pc,\n                                          Address sp);"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "method",
+        "name": "MoveSignedPC",
+        "parent": "PointerAuthentication",
+        "about": "Verifies that a PC address is signed correctly for an old stack pointer, then re-signs it using a new stack pointer if CFI is enabled, otherwise returns the address unmodified. This method is used in the deoptimizer for WebAssembly deoptimizations.",
+        "logic": "If V8_ENABLE_CONTROL_FLOW_INTEGRITY is defined, the function verifies that `pc` is signed correctly for `old_sp`, then re-signs it using `new_sp`. Otherwise, it returns `pc` unchanged.",
+        "parameters": [
+          {
+            "name": "isolate",
+            "type": "Isolate*",
+            "purpose": "The isolate associated with the current execution context."
+          },
+          {
+            "name": "pc",
+            "type": "Address",
+            "purpose": "The address to re-sign."
+          },
+          {
+            "name": "new_sp",
+            "type": "Address",
+            "purpose": "The new stack pointer to use for signing."
+          },
+          {
+            "name": "old_sp",
+            "type": "Address",
+            "purpose": "The old stack pointer used for the original signing."
+          }
+        ],
+        "return": {
+          "type": "Address",
+          "description": "The re-signed address or the original address."
+        },
+        "dependencies": [
+          "Isolate"
+        ]
+      },
+      "code": "V8_INLINE static Address MoveSignedPC(Isolate* isolate, Address pc,\n                                        Address new_sp, Address old_sp);"
+    }
+  ],
+  "dependencies": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "AllStatic",
+        "about": "A base class indicating that a class only contains static methods."
+      },
+      "code": "class AllStatic {};",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "Isolate",
+        "about": "Represents an isolated instance of the V8 JavaScript engine."
+      },
+      "code": "class Isolate {};",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "typedef",
+        "name": "Address",
+        "about": "Represents a memory address."
+      },
+      "code": "typedef uintptr_t Address;",
+      "type": "typedef"
+    }
+  ],
+  "file_path": "/home/kathirks_gc/v8_go/archive/codebase/src/execution/pointer-authentication.h"
+}

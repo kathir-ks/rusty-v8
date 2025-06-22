@@ -1,0 +1,519 @@
+{
+  "metadata": {
+    "path": "/home/kathirks_gc/v8_go/archive/codebase/src/snapshot/embedded/platform-embedded-file-writer-zos.cc",
+    "file_name": "platform-embedded-file-writer-zos.cc",
+    "language": "cpp",
+    "purpose": "Implements a platform-specific file writer for embedded snapshots on z/OS, generating HLASM (High Level Assembler) code."
+  },
+  "imports": {
+    "metadata": {
+      "language": "cpp",
+      "purpose": "Includes necessary headers for functionality like standard input/output, variable arguments, string manipulation, and the platform-independent embedded file writer interface.",
+      "dependencies": []
+    },
+    "code": "#include \"src/snapshot/embedded/platform-embedded-file-writer-zos.h\"\n\n#include <stdarg.h>\n\n#include <string>"
+  },
+  "functions": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "function",
+        "name": "hlasmPrintLine",
+        "parent": null,
+        "about": "Prints a line of HLASM code to the specified file pointer, handling line continuation according to z/OS HLASM conventions.",
+        "logic": "Formats the input string using vsnprintf, then checks if the resulting line exceeds the maximum HLASM line length (kAsmMaxLineLen). If it does, it breaks the line into multiple lines, adding continuation characters ('-') and indentation (kAsmContIndentLen) as required. It uses fwrite to write the output to the file pointer.",
+        "parameters": [
+          {
+            "name": "fp",
+            "type": "FILE*",
+            "purpose": "File pointer to write the HLASM code to."
+          },
+          {
+            "name": "fmt",
+            "type": "const char*",
+            "purpose": "Format string for the HLASM code to be printed."
+          },
+          {
+            "name": "...",
+            "type": "...",
+            "purpose": "Variable arguments to be formatted according to the format string."
+          }
+        ],
+        "return": {
+          "type": "int",
+          "description": "The total number of characters written to the file."
+        },
+        "dependencies": []
+      },
+      "code": "namespace {\nint hlasmPrintLine(FILE* fp, const char* fmt, ...) {\n  int ret;\n  char buffer[4096];\n  int offset = 0;\n  static char indent[kAsmContIndentLen] = \"\";\n  va_list ap;\n  va_start(ap, fmt);\n  ret = vsnprintf(buffer, sizeof(buffer), fmt, ap);\n  va_end(ap);\n  if (!*indent) memset(indent, ' ', sizeof(indent));\n  if (ret > kAsmMaxLineLen && buffer[kAsmMaxLineLen] != '\\n') {\n    offset += fwrite(buffer + offset, 1, kAsmMaxLineLen, fp);\n    // Write continuation mark\n    fwrite(\"-\\n\", 1, 2, fp);\n    ret -= kAsmMaxLineLen;\n    while (ret > kAsmContMaxLen) {\n      // indent by kAsmContIndentLen\n      fwrite(indent, 1, kAsmContIndentLen, fp);\n      offset += fwrite(buffer + offset, 1, kAsmContMaxLen, fp);\n      // write continuation mark\n      fwrite(\"-\\n\", 1, 2, fp);\n      ret -= kAsmContMaxLen;\n    }\n    if (ret > 0) {\n      // indent kAsmContIndentLen blanks\n      fwrite(indent, 1, kAsmContIndentLen, fp);\n      offset += fwrite(buffer + offset, 1, ret, fp);\n    }\n  } else {\n    offset += fwrite(buffer + offset, 1, ret, fp);\n  }\n  return ret;\n}\n}  // namespace"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "method",
+        "name": "DeclareLabelProlog",
+        "parent": "PlatformEmbeddedFileWriterZOS",
+        "about": "Declares the prolog for a label, generating HLASM code to define an alias for the label.",
+        "logic": "Prints HLASM directives to define a WSA (Writable Static Area) label, assign an alias, and set attributes for the label's storage.",
+        "parameters": [
+          {
+            "name": "name",
+            "type": "const char*",
+            "purpose": "The name of the label to declare."
+          }
+        ],
+        "return": {
+          "type": "void",
+          "description": "No return value."
+        },
+        "dependencies": []
+      },
+      "code": "void PlatformEmbeddedFileWriterZOS::DeclareLabelProlog(const char* name) {\n  fprintf(fp_,\n          \"&suffix SETA &suffix+1\\n\"\n          \"CEECWSA LOCTR\\n\"\n          \"AL&suffix ALIAS C'%s'\\n\"\n          \"C_WSA64 CATTR DEFLOAD,RMODE(64),PART(AL&suffix)\\n\"\n          \"AL&suffix XATTR REF(DATA),LINKAGE(XPLINK),SCOPE(EXPORT)\\n\",\n          name);\n}"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "method",
+        "name": "DeclareLabelEpilogue",
+        "parent": "PlatformEmbeddedFileWriterZOS",
+        "about": "Declares the epilogue for a label, generating HLASM code to finalize the label definition.",
+        "logic": "Prints HLASM directives to set CATTR and define the label's address.",
+        "parameters": [],
+        "return": {
+          "type": "void",
+          "description": "No return value."
+        },
+        "dependencies": []
+      },
+      "code": "void PlatformEmbeddedFileWriterZOS::DeclareLabelEpilogue() {\n  fprintf(fp_,\n          \"C_WSA64 CATTR PART(PART1)\\n\"\n          \"LBL&suffix DC AD(AL&suffix)\\n\");\n}"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "method",
+        "name": "DeclareUint32",
+        "parent": "PlatformEmbeddedFileWriterZOS",
+        "about": "Declares a uint32_t value as a global symbol, generating HLASM code to define the symbol and its value.",
+        "logic": "Calls DeclareSymbolGlobal to declare the symbol as global, then prints HLASM directives to define a WSA label, assign an alias, set attributes, define the uint32_t value using DC (Define Constant), and define the label's address.",
+        "parameters": [
+          {
+            "name": "name",
+            "type": "const char*",
+            "purpose": "The name of the symbol to declare."
+          },
+          {
+            "name": "value",
+            "type": "uint32_t",
+            "purpose": "The value of the symbol."
+          }
+        ],
+        "return": {
+          "type": "void",
+          "description": "No return value."
+        },
+        "dependencies": [
+          "DeclareSymbolGlobal"
+        ]
+      },
+      "code": "void PlatformEmbeddedFileWriterZOS::DeclareUint32(const char* name,\n                                                  uint32_t value) {\n  DeclareSymbolGlobal(name);\n  fprintf(fp_,\n          \"&suffix SETA &suffix+1\\n\"\n          \"CEECWSA LOCTR\\n\"\n          \"AL&suffix ALIAS C'%s'\\n\"\n          \"C_WSA64 CATTR DEFLOAD,RMODE(64),PART(AL&suffix)\\n\"\n          \"AL&suffix XATTR REF(DATA),LINKAGE(XPLINK),SCOPE(EXPORT)\\n\"\n          \" DC F'%d'\\n\"\n          \"C_WSA64 CATTR PART(PART1)\\n\"\n          \"LBL&suffix DC AD(AL&suffix)\\n\",\n          name, value);\n}"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "method",
+        "name": "DeclareSymbolGlobal",
+        "parent": "PlatformEmbeddedFileWriterZOS",
+        "about": "Declares a symbol as global in the HLASM code.",
+        "logic": "Prints a comment indicating that the specified symbol is a global symbol.",
+        "parameters": [
+          {
+            "name": "name",
+            "type": "const char*",
+            "purpose": "The name of the global symbol."
+          }
+        ],
+        "return": {
+          "type": "void",
+          "description": "No return value."
+        },
+        "dependencies": [
+          "hlasmPrintLine"
+        ]
+      },
+      "code": "void PlatformEmbeddedFileWriterZOS::DeclareSymbolGlobal(const char* name) {\n  hlasmPrintLine(fp_, \"* Global Symbol %s\\n\", name);\n}"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "method",
+        "name": "AlignToCodeAlignment",
+        "parent": "PlatformEmbeddedFileWriterZOS",
+        "about": "Aligns the output to the required code alignment.",
+        "logic": "This implementation does nothing, as code alignment is not required on z/OS.",
+        "parameters": [],
+        "return": {
+          "type": "void",
+          "description": "No return value."
+        },
+        "dependencies": []
+      },
+      "code": "void PlatformEmbeddedFileWriterZOS::AlignToCodeAlignment() {\n  // No code alignment required.\n}"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "method",
+        "name": "AlignToDataAlignment",
+        "parent": "PlatformEmbeddedFileWriterZOS",
+        "about": "Aligns the output to the required data alignment.",
+        "logic": "This implementation does nothing, as data alignment is not required on z/OS.",
+        "parameters": [],
+        "return": {
+          "type": "void",
+          "description": "No return value."
+        },
+        "dependencies": []
+      },
+      "code": "void PlatformEmbeddedFileWriterZOS::AlignToDataAlignment() {\n  // No data alignment required.\n}"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "method",
+        "name": "Comment",
+        "parent": "PlatformEmbeddedFileWriterZOS",
+        "about": "Adds a comment to the HLASM code.",
+        "logic": "Prints the specified string as a comment in the HLASM output.",
+        "parameters": [
+          {
+            "name": "string",
+            "type": "const char*",
+            "purpose": "The comment string."
+          }
+        ],
+        "return": {
+          "type": "void",
+          "description": "No return value."
+        },
+        "dependencies": [
+          "hlasmPrintLine"
+        ]
+      },
+      "code": "void PlatformEmbeddedFileWriterZOS::Comment(const char* string) {\n  hlasmPrintLine(fp_, \"* %s\\n\", string);\n}"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "method",
+        "name": "DeclareLabel",
+        "parent": "PlatformEmbeddedFileWriterZOS",
+        "about": "Declares a label in the HLASM code.",
+        "logic": "Prints comments to mark the label and then declares the label using the `DS 0H` directive.",
+        "parameters": [
+          {
+            "name": "name",
+            "type": "const char*",
+            "purpose": "The name of the label."
+          }
+        ],
+        "return": {
+          "type": "void",
+          "description": "No return value."
+        },
+        "dependencies": [
+          "hlasmPrintLine"
+        ]
+      },
+      "code": "void PlatformEmbeddedFileWriterZOS::DeclareLabel(const char* name) {\n  hlasmPrintLine(fp_, \"*--------------------------------------------\\n\");\n  hlasmPrintLine(fp_, \"* Label %s\\n\", name);\n  hlasmPrintLine(fp_, \"*--------------------------------------------\\n\");\n  hlasmPrintLine(fp_, \"%s DS 0H\\n\", name);\n}"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "method",
+        "name": "SourceInfo",
+        "parent": "PlatformEmbeddedFileWriterZOS",
+        "about": "Adds source code information to the HLASM code as a comment.",
+        "logic": "Prints a comment with the file name and line number.",
+        "parameters": [
+          {
+            "name": "fileid",
+            "type": "int",
+            "purpose": "The file ID (not used in the HLASM output)."
+          },
+          {
+            "name": "filename",
+            "type": "const char*",
+            "purpose": "The name of the source file."
+          },
+          {
+            "name": "line",
+            "type": "int",
+            "purpose": "The line number in the source file."
+          }
+        ],
+        "return": {
+          "type": "void",
+          "description": "No return value."
+        },
+        "dependencies": [
+          "hlasmPrintLine"
+        ]
+      },
+      "code": "void PlatformEmbeddedFileWriterZOS::SourceInfo(int fileid, const char* filename,\n                                               int line) {\n  hlasmPrintLine(fp_, \"* line %d \\\"%s\\\"\\n\", line, filename);\n}"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "method",
+        "name": "DeclareFunctionBegin",
+        "parent": "PlatformEmbeddedFileWriterZOS",
+        "about": "Declares the beginning of a function in the HLASM code.",
+        "logic": "Prints comments to mark the function and then declares the function's label using the `DS 0H` directive.",
+        "parameters": [
+          {
+            "name": "name",
+            "type": "const char*",
+            "purpose": "The name of the function."
+          },
+          {
+            "name": "size",
+            "type": "uint32_t",
+            "purpose": "The size of the function (not used in the HLASM output)."
+          }
+        ],
+        "return": {
+          "type": "void",
+          "description": "No return value."
+        },
+        "dependencies": [
+          "hlasmPrintLine"
+        ]
+      },
+      "code": "void PlatformEmbeddedFileWriterZOS::DeclareFunctionBegin(const char* name,\n                                                         uint32_t size) {\n  hlasmPrintLine(fp_, \"*--------------------------------------------\\n\");\n  hlasmPrintLine(fp_, \"* Builtin %s\\n\", name);\n  hlasmPrintLine(fp_, \"*--------------------------------------------\\n\");\n  hlasmPrintLine(fp_, \"%s DS 0H\\n\", name);\n}"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "method",
+        "name": "DeclareFunctionEnd",
+        "parent": "PlatformEmbeddedFileWriterZOS",
+        "about": "Declares the end of a function in the HLASM code.",
+        "logic": "This implementation does nothing, as the end of the function is not explicitly marked in the HLASM output.",
+        "parameters": [
+          {
+            "name": "name",
+            "type": "const char*",
+            "purpose": "The name of the function."
+          }
+        ],
+        "return": {
+          "type": "void",
+          "description": "No return value."
+        },
+        "dependencies": []
+      },
+      "code": "void PlatformEmbeddedFileWriterZOS::DeclareFunctionEnd(const char* name) {\n  // Not used.\n}"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "method",
+        "name": "HexLiteral",
+        "parent": "PlatformEmbeddedFileWriterZOS",
+        "about": "Writes a 64-bit value as a hexadecimal literal to the output file.",
+        "logic": "Formats the 64-bit value as a 16-digit hexadecimal number using fprintf. It casts the value to `unsigned long` to ensure compatibility with different platforms.",
+        "parameters": [
+          {
+            "name": "value",
+            "type": "uint64_t",
+            "purpose": "The 64-bit value to write as a hexadecimal literal."
+          }
+        ],
+        "return": {
+          "type": "int",
+          "description": "The number of characters written to the output file."
+        },
+        "dependencies": []
+      },
+      "code": "int PlatformEmbeddedFileWriterZOS::HexLiteral(uint64_t value) {\n  // The cast is because some platforms define uint64_t as unsigned long long,\n  // while others (e.g. z/OS) define it as unsigned long.\n  return fprintf(fp_, \"%.16lx\", static_cast<unsigned long>(value));\n}"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "method",
+        "name": "FilePrologue",
+        "parent": "PlatformEmbeddedFileWriterZOS",
+        "about": "Writes the file prologue, including HLASM directives to set the environment.",
+        "logic": "Prints HLASM directives to define a SETC variable, set the AMODE and RMODE to 64, and begin a csect.",
+        "parameters": [],
+        "return": {
+          "type": "void",
+          "description": "No return value."
+        },
+        "dependencies": []
+      },
+      "code": "void PlatformEmbeddedFileWriterZOS::FilePrologue() {\n  fprintf(fp_,\n          \"&C SETC 'embed'\\n\"\n          \" SYSSTATE AMODE64=YES\\n\"\n          \"&C csect\\n\"\n          \"&C amode 64\\n\"\n          \"&C rmode 64\\n\");\n}"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "method",
+        "name": "DeclareExternalFilename",
+        "parent": "PlatformEmbeddedFileWriterZOS",
+        "about": "Declares an external filename. Not used in this implementation.",
+        "logic": "This method does nothing.",
+        "parameters": [
+          {
+            "name": "fileid",
+            "type": "int",
+            "purpose": "The file ID (not used)."
+          },
+          {
+            "name": "filename",
+            "type": "const char*",
+            "purpose": "The name of the file (not used)."
+          }
+        ],
+        "return": {
+          "type": "void",
+          "description": "No return value."
+        },
+        "dependencies": []
+      },
+      "code": "void PlatformEmbeddedFileWriterZOS::DeclareExternalFilename(\n    int fileid, const char* filename) {\n  // Not used.\n}"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "method",
+        "name": "FileEpilogue",
+        "parent": "PlatformEmbeddedFileWriterZOS",
+        "about": "Writes the file epilogue, including the HLASM `end` directive.",
+        "logic": "Prints the HLASM `end` directive to signify the end of the assembly.",
+        "parameters": [],
+        "return": {
+          "type": "void",
+          "description": "No return value."
+        },
+        "dependencies": []
+      },
+      "code": "void PlatformEmbeddedFileWriterZOS::FileEpilogue() { fprintf(fp_, \" end\\n\"); }"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "method",
+        "name": "IndentedDataDirective",
+        "parent": "PlatformEmbeddedFileWriterZOS",
+        "about": "Writes an indented data directive. Not used in this implementation.",
+        "logic": "This method does nothing and returns 0.",
+        "parameters": [
+          {
+            "name": "directive",
+            "type": "DataDirective",
+            "purpose": "The data directive (not used)."
+          }
+        ],
+        "return": {
+          "type": "int",
+          "description": "Returns 0."
+        },
+        "dependencies": []
+      },
+      "code": "int PlatformEmbeddedFileWriterZOS::IndentedDataDirective(\n    DataDirective directive) {\n  // Not used.\n  return 0;\n}"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "method",
+        "name": "ByteChunkDataDirective",
+        "parent": "PlatformEmbeddedFileWriterZOS",
+        "about": "Returns the data directive to use for byte chunks.",
+        "logic": "This implementation always returns `kQuad`.",
+        "parameters": [],
+        "return": {
+          "type": "DataDirective",
+          "description": "Returns `kQuad`."
+        },
+        "dependencies": []
+      },
+      "code": "DataDirective PlatformEmbeddedFileWriterZOS::ByteChunkDataDirective() const {\n  return kQuad;\n}"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "method",
+        "name": "WriteByteChunk",
+        "parent": "PlatformEmbeddedFileWriterZOS",
+        "about": "Writes a byte chunk as a quad-word (64-bit) hexadecimal literal.",
+        "logic": "Reinterprets the byte chunk as a pointer to a `uint64_t`, then calls `HexLiteral` to write the value as a hexadecimal literal.  It also asserts that `ByteChunkDataDirective()` returns `kQuad`.",
+        "parameters": [
+          {
+            "name": "data",
+            "type": "const uint8_t*",
+            "purpose": "A pointer to the beginning of the byte chunk."
+          }
+        ],
+        "return": {
+          "type": "int",
+          "description": "The number of characters written (returned by HexLiteral)."
+        },
+        "dependencies": [
+          "HexLiteral",
+          "ByteChunkDataDirective"
+        ]
+      },
+      "code": "int PlatformEmbeddedFileWriterZOS::WriteByteChunk(const uint8_t* data) {\n  DCHECK_EQ(ByteChunkDataDirective(), kQuad);\n  const uint64_t* quad_ptr = reinterpret_cast<const uint64_t*>(data);\n  return HexLiteral(*quad_ptr);\n}"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "method",
+        "name": "SectionText",
+        "parent": "PlatformEmbeddedFileWriterZOS",
+        "about": "Switches to the text section.  Not used in this implementation.",
+        "logic": "This method does nothing.",
+        "parameters": [],
+        "return": {
+          "type": "void",
+          "description": "No return value."
+        },
+        "dependencies": []
+      },
+      "code": "void PlatformEmbeddedFileWriterZOS::SectionText() {\n  // Not used.\n}"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "method",
+        "name": "SectionRoData",
+        "parent": "PlatformEmbeddedFileWriterZOS",
+        "about": "Switches to the read-only data section.  Not used in this implementation.",
+        "logic": "This method does nothing.",
+        "parameters": [],
+        "return": {
+          "type": "void",
+          "description": "No return value."
+        },
+        "dependencies": []
+      },
+      "code": "void PlatformEmbeddedFileWriterZOS::SectionRoData() {\n  // Not used.\n}"
+    }
+  ],
+  "classes": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "PlatformEmbeddedFileWriterZOS",
+        "extends": null,
+        "implements": [],
+        "about": "Platform-specific implementation of the embedded file writer for z/OS, generating HLASM code.",
+        "attributes": [],
+        "dependencies": []
+      },
+      "code": "void PlatformEmbeddedFileWriterZOS::DeclareLabelProlog(const char* name) {\n  fprintf(fp_,\n          \"&suffix SETA &suffix+1\\n\"\n          \"CEECWSA LOCTR\\n\"\n          \"AL&suffix ALIAS C'%s'\\n\"\n          \"C_WSA64 CATTR DEFLOAD,RMODE(64),PART(AL&suffix)\\n\"\n          \"AL&suffix XATTR REF(DATA),LINKAGE(XPLINK),SCOPE(EXPORT)\\n\",\n          name);\n}\n\nvoid PlatformEmbeddedFileWriterZOS::DeclareLabelEpilogue() {\n  fprintf(fp_,\n          \"C_WSA64 CATTR PART(PART1)\\n\"\n          \"LBL&suffix DC AD(AL&suffix)\\n\");\n}\n\nvoid PlatformEmbeddedFileWriterZOS::DeclareUint32(const char* name,\n                                                  uint32_t value) {\n  DeclareSymbolGlobal(name);\n  fprintf(fp_,\n          \"&suffix SETA &suffix+1\\n\"\n          \"CEECWSA LOCTR\\n\"\n          \"AL&suffix ALIAS C'%s'\\n\"\n          \"C_WSA64 CATTR DEFLOAD,RMODE(64),PART(AL&suffix)\\n\"\n          \"AL&suffix XATTR REF(DATA),LINKAGE(XPLINK),SCOPE(EXPORT)\\n\"\n          \" DC F'%d'\\n\"\n          \"C_WSA64 CATTR PART(PART1)\\n\"\n          \"LBL&suffix DC AD(AL&suffix)\\n\",\n          name, value);\n}\n\nvoid PlatformEmbeddedFileWriterZOS::DeclareSymbolGlobal(const char* name) {\n  hlasmPrintLine(fp_, \"* Global Symbol %s\\n\", name);\n}\n\nvoid PlatformEmbeddedFileWriterZOS::AlignToCodeAlignment() {\n  // No code alignment required.\n}\n\nvoid PlatformEmbeddedFileWriterZOS::AlignToDataAlignment() {\n  // No data alignment required.\n}\n\nvoid PlatformEmbeddedFileWriterZOS::Comment(const char* string) {\n  hlasmPrintLine(fp_, \"* %s\\n\", string);\n}\n\nvoid PlatformEmbeddedFileWriterZOS::DeclareLabel(const char* name) {\n  hlasmPrintLine(fp_, \"*--------------------------------------------\\n\");\n  hlasmPrintLine(fp_, \"* Label %s\\n\", name);\n  hlasmPrintLine(fp_, \"*--------------------------------------------\\n\");\n  hlasmPrintLine(fp_, \"%s DS 0H\\n\", name);\n}\n\nvoid PlatformEmbeddedFileWriterZOS::SourceInfo(int fileid, const char* filename,\n                                               int line) {\n  hlasmPrintLine(fp_, \"* line %d \\\"%s\\\"\\n\", line, filename);\n}\n\nvoid PlatformEmbeddedFileWriterZOS::DeclareFunctionBegin(const char* name,\n                                                         uint32_t size) {\n  hlasmPrintLine(fp_, \"*--------------------------------------------\\n\");\n  hlasmPrintLine(fp_, \"* Builtin %s\\n\", name);\n  hlasmPrintLine(fp_, \"*--------------------------------------------\\n\");\n  hlasmPrintLine(fp_, \"%s DS 0H\\n\", name);\n}\n\nvoid PlatformEmbeddedFileWriterZOS::DeclareFunctionEnd(const char* name) {\n  // Not used.\n}\n\nint PlatformEmbeddedFileWriterZOS::HexLiteral(uint64_t value) {\n  // The cast is because some platforms define uint64_t as unsigned long long,\n  // while others (e.g. z/OS) define it as unsigned long.\n  return fprintf(fp_, \"%.16lx\", static_cast<unsigned long>(value));\n}\n\nvoid PlatformEmbeddedFileWriterZOS::FilePrologue() {\n  fprintf(fp_,\n          \"&C SETC 'embed'\\n\"\n          \" SYSSTATE AMODE64=YES\\n\"\n          \"&C csect\\n\"\n          \"&C amode 64\\n\"\n          \"&C rmode 64\\n\");\n}\n\nvoid PlatformEmbeddedFileWriterZOS::DeclareExternalFilename(\n    int fileid, const char* filename) {\n  // Not used.\n}\n\nvoid PlatformEmbeddedFileWriterZOS::FileEpilogue() { fprintf(fp_, \" end\\n\"); }\n\nint PlatformEmbeddedFileWriterZOS::IndentedDataDirective(\n    DataDirective directive) {\n  // Not used.\n  return 0;\n}\n\nDataDirective PlatformEmbeddedFileWriterZOS::ByteChunkDataDirective() const {\n  return kQuad;\n}\n\nint PlatformEmbeddedFileWriterZOS::WriteByteChunk(const uint8_t* data) {\n  DCHECK_EQ(ByteChunkDataDirective(), kQuad);\n  const uint64_t* quad_ptr = reinterpret_cast<const uint64_t*>(data);\n  return HexLiteral(*quad_ptr);\n}\n\nvoid PlatformEmbeddedFileWriterZOS::SectionText() {\n  // Not used.\n}\n\nvoid PlatformEmbeddedFileWriterZOS::SectionRoData() {\n  // Not used.\n}"
+    }
+  ],
+  "file_path": "/home/kathirks_gc/v8_go/archive/codebase/src/snapshot/embedded/platform-embedded-file-writer-zos.cc"
+}

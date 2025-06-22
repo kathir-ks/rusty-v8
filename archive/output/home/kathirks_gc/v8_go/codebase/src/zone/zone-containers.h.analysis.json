@@ -1,0 +1,861 @@
+{
+  "file_path": "/home/kathirks_gc/v8_go/codebase/src/zone/zone-containers.h",
+  "imports": [
+    "<deque>",
+    "<forward_list>",
+    "<initializer_list>",
+    "<iterator>",
+    "<list>",
+    "<map>",
+    "<queue>",
+    "<set>",
+    "<stack>",
+    "<unordered_map>",
+    "<unordered_set>",
+    "\"absl/container/btree_map.h\"",
+    "\"absl/container/flat_hash_map.h\"",
+    "\"absl/container/flat_hash_set.h\"",
+    "\"src/base/hashing.h\"",
+    "\"src/base/intrusive-set.h\"",
+    "\"src/base/small-map.h\"",
+    "\"src/base/small-vector.h\"",
+    "\"src/zone/zone-allocator.h\""
+  ],
+  "classes": [
+    {
+      "name": "ZoneVector",
+      "properties": [
+        "zone_",
+        "data_",
+        "end_",
+        "capacity_"
+      ],
+      "methods": [
+        {
+          "name": "ZoneVector",
+          "parameters": [
+            "Zone* zone"
+          ],
+          "return_type": "explicit ZoneVector",
+          "logic": "Constructor. Constructs an empty vector."
+        },
+        {
+          "name": "ZoneVector",
+          "parameters": [
+            "size_t size",
+            "Zone* zone"
+          ],
+          "return_type": "ZoneVector",
+          "logic": "Constructor. Constructs a new vector and fills it with {size} elements, each constructed via the default constructor."
+        },
+        {
+          "name": "ZoneVector",
+          "parameters": [
+            "size_t size",
+            "T def",
+            "Zone* zone"
+          ],
+          "return_type": "ZoneVector",
+          "logic": "Constructor. Constructs a new vector and fills it with {size} elements, each having the value {def}."
+        },
+        {
+          "name": "ZoneVector",
+          "parameters": [
+            "std::initializer_list<T> list",
+            "Zone* zone"
+          ],
+          "return_type": "ZoneVector",
+          "logic": "Constructor. Constructs a new vector and fills it with the contents of the given initializer list."
+        },
+        {
+          "name": "ZoneVector",
+          "parameters": [
+            "It first",
+            "It last",
+            "Zone* zone"
+          ],
+          "return_type": "ZoneVector",
+          "logic": "Constructor. Constructs a new vector and fills it with the contents of the range [first, last)."
+        },
+        {
+          "name": "ZoneVector",
+          "parameters": [
+            "const ZoneVector& other"
+          ],
+          "return_type": "ZoneVector",
+          "logic": "Copy constructor. Creates a new ZoneVector as a copy of the provided ZoneVector."
+        },
+        {
+          "name": "ZoneVector",
+          "parameters": [
+            "ZoneVector&& other"
+          ],
+          "return_type": "ZoneVector",
+          "logic": "Move constructor. Creates a new ZoneVector by moving resources from another ZoneVector."
+        },
+        {
+          "name": "~ZoneVector",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Destructor. Destroys all elements and deallocates memory from the zone."
+        },
+        {
+          "name": "operator=",
+          "parameters": [
+            "const ZoneVector& other"
+          ],
+          "return_type": "ZoneVector&",
+          "logic": "Copy assignment operator. Assigns the contents of another ZoneVector to this one."
+        },
+        {
+          "name": "operator=",
+          "parameters": [
+            "ZoneVector&& other"
+          ],
+          "return_type": "ZoneVector&",
+          "logic": "Move assignment operator. Move assigns the contents of another ZoneVector to this one."
+        },
+        {
+          "name": "operator=",
+          "parameters": [
+            "std::initializer_list<T> ilist"
+          ],
+          "return_type": "ZoneVector&",
+          "logic": "Assignment operator from initializer list."
+        },
+        {
+          "name": "swap",
+          "parameters": [
+            "ZoneVector<T>& other"
+          ],
+          "return_type": "void",
+          "logic": "Swaps the contents of two ZoneVectors."
+        },
+        {
+          "name": "resize",
+          "parameters": [
+            "size_t new_size"
+          ],
+          "return_type": "void",
+          "logic": "Resizes the vector to the specified size. If the new size is larger, new elements are default-constructed. If smaller, elements are destroyed."
+        },
+        {
+          "name": "resize",
+          "parameters": [
+            "size_t new_size",
+            "const T& value"
+          ],
+          "return_type": "void",
+          "logic": "Resizes the vector to the specified size. If the new size is larger, new elements are copy-constructed with the given value. If smaller, elements are destroyed."
+        },
+        {
+          "name": "assign",
+          "parameters": [
+            "size_t new_size",
+            "const T& value"
+          ],
+          "return_type": "void",
+          "logic": "Assigns a new size and fills elements with a given value."
+        },
+        {
+          "name": "clear",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Removes all elements from the vector."
+        },
+        {
+          "name": "size",
+          "parameters": [],
+          "return_type": "size_t",
+          "logic": "Returns the number of elements in the vector."
+        },
+        {
+          "name": "empty",
+          "parameters": [],
+          "return_type": "bool",
+          "logic": "Returns true if the vector is empty."
+        },
+        {
+          "name": "capacity",
+          "parameters": [],
+          "return_type": "size_t",
+          "logic": "Returns the allocated storage capacity of the vector."
+        },
+        {
+          "name": "reserve",
+          "parameters": [
+            "size_t new_cap"
+          ],
+          "return_type": "void",
+          "logic": "Reserves memory for at least the specified number of elements."
+        },
+        {
+          "name": "data",
+          "parameters": [],
+          "return_type": "T*",
+          "logic": "Returns a pointer to the underlying data array."
+        },
+        {
+          "name": "data",
+          "parameters": [],
+          "return_type": "const T*",
+          "logic": "Returns a const pointer to the underlying data array."
+        },
+        {
+          "name": "zone",
+          "parameters": [],
+          "return_type": "Zone*",
+          "logic": "Returns the Zone associated with the vector."
+        },
+        {
+          "name": "at",
+          "parameters": [
+            "size_t pos"
+          ],
+          "return_type": "T&",
+          "logic": "Returns a reference to the element at the specified position."
+        },
+        {
+          "name": "at",
+          "parameters": [
+            "size_t pos"
+          ],
+          "return_type": "const T&",
+          "logic": "Returns a const reference to the element at the specified position."
+        },
+        {
+          "name": "operator[]",
+          "parameters": [
+            "size_t pos"
+          ],
+          "return_type": "T&",
+          "logic": "Returns a reference to the element at the specified position using array indexing."
+        },
+        {
+          "name": "operator[]",
+          "parameters": [
+            "size_t pos"
+          ],
+          "return_type": "const T&",
+          "logic": "Returns a const reference to the element at the specified position using array indexing."
+        },
+        {
+          "name": "front",
+          "parameters": [],
+          "return_type": "T&",
+          "logic": "Returns a reference to the first element."
+        },
+        {
+          "name": "front",
+          "parameters": [],
+          "return_type": "const T&",
+          "logic": "Returns a const reference to the first element."
+        },
+        {
+          "name": "back",
+          "parameters": [],
+          "return_type": "T&",
+          "logic": "Returns a reference to the last element."
+        },
+        {
+          "name": "back",
+          "parameters": [],
+          "return_type": "const T&",
+          "logic": "Returns a const reference to the last element."
+        },
+        {
+          "name": "begin",
+          "parameters": [],
+          "return_type": "T*",
+          "logic": "Returns an iterator to the beginning of the vector."
+        },
+        {
+          "name": "begin",
+          "parameters": [],
+          "return_type": "const T*",
+          "logic": "Returns a const iterator to the beginning of the vector."
+        },
+        {
+          "name": "cbegin",
+          "parameters": [],
+          "return_type": "const T*",
+          "logic": "Returns a const iterator to the beginning of the vector."
+        },
+        {
+          "name": "end",
+          "parameters": [],
+          "return_type": "T*",
+          "logic": "Returns an iterator to the end of the vector."
+        },
+        {
+          "name": "end",
+          "parameters": [],
+          "return_type": "const T*",
+          "logic": "Returns a const iterator to the end of the vector."
+        },
+        {
+          "name": "cend",
+          "parameters": [],
+          "return_type": "const T*",
+          "logic": "Returns a const iterator to the end of the vector."
+        },
+        {
+          "name": "rbegin",
+          "parameters": [],
+          "return_type": "reverse_iterator",
+          "logic": "Returns a reverse iterator to the beginning of the reversed vector."
+        },
+        {
+          "name": "rbegin",
+          "parameters": [],
+          "return_type": "const_reverse_iterator",
+          "logic": "Returns a const reverse iterator to the beginning of the reversed vector."
+        },
+        {
+          "name": "crbegin",
+          "parameters": [],
+          "return_type": "const_reverse_iterator",
+          "logic": "Returns a const reverse iterator to the beginning of the reversed vector."
+        },
+        {
+          "name": "rend",
+          "parameters": [],
+          "return_type": "reverse_iterator",
+          "logic": "Returns a reverse iterator to the end of the reversed vector."
+        },
+        {
+          "name": "rend",
+          "parameters": [],
+          "return_type": "const_reverse_iterator",
+          "logic": "Returns a const reverse iterator to the end of the reversed vector."
+        },
+        {
+          "name": "crend",
+          "parameters": [],
+          "return_type": "const_reverse_iterator",
+          "logic": "Returns a const reverse iterator to the end of the reversed vector."
+        },
+        {
+          "name": "push_back",
+          "parameters": [
+            "const T& value"
+          ],
+          "return_type": "void",
+          "logic": "Appends a copy of the given value to the end of the vector."
+        },
+        {
+          "name": "push_back",
+          "parameters": [
+            "T&& value"
+          ],
+          "return_type": "void",
+          "logic": "Appends a move of the given value to the end of the vector."
+        },
+        {
+          "name": "pop_back",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Removes the last element from the vector."
+        },
+        {
+          "name": "emplace_back",
+          "parameters": [
+            "Args&&... args"
+          ],
+          "return_type": "T&",
+          "logic": "Constructs a new element at the end of the vector."
+        },
+        {
+          "name": "insert",
+          "parameters": [
+            "const T* pos",
+            "It first",
+            "It last"
+          ],
+          "return_type": "T*",
+          "logic": "Inserts elements from the range [first, last) before the specified position.  Handles RandomAccessIterators efficiently."
+        },
+        {
+          "name": "insert",
+          "parameters": [
+            "const T* pos",
+            "size_t count",
+            "const T& value"
+          ],
+          "return_type": "T*",
+          "logic": "Inserts count copies of the given value before the specified position."
+        },
+        {
+          "name": "erase",
+          "parameters": [
+            "const T* pos"
+          ],
+          "return_type": "T*",
+          "logic": "Removes the element at the specified position."
+        },
+        {
+          "name": "erase",
+          "parameters": [
+            "const T* first",
+            "const T* last"
+          ],
+          "return_type": "T*",
+          "logic": "Removes the elements in the range [first, last)."
+        },
+        {
+          "name": "NewCapacity",
+          "parameters": [
+            "size_t minimum"
+          ],
+          "return_type": "size_t",
+          "logic": "Calculates new capacity for growing the vector"
+        },
+        {
+          "name": "EnsureOneMoreCapacity",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Ensures that there's enough capacity for one more element"
+        },
+        {
+          "name": "EnsureCapacity",
+          "parameters": [
+            "size_t minimum"
+          ],
+          "return_type": "void",
+          "logic": "Ensures the vector has at least the specified capacity"
+        },
+        {
+          "name": "CopyToNewStorage",
+          "parameters": [
+            "T* dst",
+            "const T* src"
+          ],
+          "return_type": "void",
+          "logic": "Copies data from an already initialized source to a new uninitialized destination (using emplace)"
+        },
+        {
+          "name": "MoveToNewStorage",
+          "parameters": [
+            "T* dst",
+            "T* src"
+          ],
+          "return_type": "void",
+          "logic": "Moves data from an already initialized source to a new uninitialized destination (using emplace and move)"
+        },
+        {
+          "name": "CopyingOverwrite",
+          "parameters": [
+            "T* dst",
+            "const T* src"
+          ],
+          "return_type": "void",
+          "logic": "Overwrites an existing element (already initialized) with the value from the source. Copy assignment, or emplace if not copy-assignable."
+        },
+        {
+          "name": "MovingOverwrite",
+          "parameters": [
+            "T* dst",
+            "T* src"
+          ],
+          "return_type": "void",
+          "logic": "Overwrites an existing element (already initialized) with the value from the source. Move assignment, or CopyingOverwrite if not move-assignable."
+        },
+        {
+          "name": "CopyToNewStorage",
+          "parameters": [
+            "T* dst",
+            "const T* src",
+            "const T* src_end"
+          ],
+          "return_type": "void",
+          "logic": "Copies range of elements from an already initialized source to a new uninitialized destination (using CopyToNewStorage for each element)"
+        },
+        {
+          "name": "MoveToNewStorage",
+          "parameters": [
+            "T* dst",
+            "T* src",
+            "const T* src_end"
+          ],
+          "return_type": "void",
+          "logic": "Moves range of elements from an already initialized source to a new uninitialized destination (using MoveToNewStorage for each element)"
+        },
+        {
+          "name": "CopyingOverwrite",
+          "parameters": [
+            "T* dst",
+            "const T* src",
+            "const T* src_end"
+          ],
+          "return_type": "void",
+          "logic": "Overwrites a range of existing elements (already initialized) with the values from the source (using CopyingOverwrite for each element)"
+        },
+        {
+          "name": "MovingOverwrite",
+          "parameters": [
+            "T* dst",
+            "T* src",
+            "const T* src_end"
+          ],
+          "return_type": "void",
+          "logic": "Overwrites a range of existing elements (already initialized) with the values from the source (using MovingOverwrite for each element)"
+        },
+        {
+          "name": "Grow",
+          "parameters": [
+            "size_t minimum"
+          ],
+          "return_type": "void",
+          "logic": "Allocates a new backing store, copies or moves existing elements into it, and deletes the old backing store."
+        },
+        {
+          "name": "PrepareForInsertion",
+          "parameters": [
+            "const T* pos",
+            "size_t count",
+            "size_t* assignable"
+          ],
+          "return_type": "T*",
+          "logic": "Prepares memory for insertion of new elements."
+        },
+        {
+          "name": "erase",
+          "parameters": [
+            "const T* first",
+            "size_t count"
+          ],
+          "return_type": "T*",
+          "logic": "Erases count elements starting from 'first'."
+        },
+        {
+          "name": "emplace",
+          "parameters": [
+            "T* target",
+            "Args&&... args"
+          ],
+          "return_type": "void",
+          "logic": "Placement new a T at target with given arguments."
+        }
+      ]
+    },
+    {
+      "name": "ZoneIntrusiveSet",
+      "properties": [],
+      "methods": [
+        {
+          "name": "ZoneIntrusiveSet",
+          "parameters": [
+            "Zone* zone",
+            "GetIntrusiveSetIndex index_functor = {}"
+          ],
+          "return_type": "explicit ZoneIntrusiveSet",
+          "logic": "Constructor for ZoneIntrusiveSet"
+        }
+      ]
+    },
+    {
+      "name": "ZoneDeque",
+      "properties": [],
+      "methods": [
+        {
+          "name": "ZoneDeque",
+          "parameters": [
+            "Zone* zone"
+          ],
+          "return_type": "explicit ZoneDeque",
+          "logic": "Constructor for ZoneDeque"
+        }
+      ]
+    },
+    {
+      "name": "ZoneLinkedList",
+      "properties": [],
+      "methods": [
+        {
+          "name": "ZoneLinkedList",
+          "parameters": [
+            "Zone* zone"
+          ],
+          "return_type": "explicit ZoneLinkedList",
+          "logic": "Constructor for ZoneLinkedList"
+        }
+      ]
+    },
+    {
+      "name": "ZoneForwardList",
+      "properties": [],
+      "methods": [
+        {
+          "name": "ZoneForwardList",
+          "parameters": [
+            "Zone* zone"
+          ],
+          "return_type": "explicit ZoneForwardList",
+          "logic": "Constructor for ZoneForwardList"
+        }
+      ]
+    },
+    {
+      "name": "ZonePriorityQueue",
+      "properties": [],
+      "methods": [
+        {
+          "name": "ZonePriorityQueue",
+          "parameters": [
+            "Zone* zone"
+          ],
+          "return_type": "explicit ZonePriorityQueue",
+          "logic": "Constructor for ZonePriorityQueue"
+        }
+      ]
+    },
+    {
+      "name": "ZoneQueue",
+      "properties": [],
+      "methods": [
+        {
+          "name": "ZoneQueue",
+          "parameters": [
+            "Zone* zone"
+          ],
+          "return_type": "explicit ZoneQueue",
+          "logic": "Constructor for ZoneQueue"
+        }
+      ]
+    },
+    {
+      "name": "ZoneStack",
+      "properties": [],
+      "methods": [
+        {
+          "name": "ZoneStack",
+          "parameters": [
+            "Zone* zone"
+          ],
+          "return_type": "explicit ZoneStack",
+          "logic": "Constructor for ZoneStack"
+        }
+      ]
+    },
+    {
+      "name": "ZoneSet",
+      "properties": [],
+      "methods": [
+        {
+          "name": "ZoneSet",
+          "parameters": [
+            "Zone* zone"
+          ],
+          "return_type": "explicit ZoneSet",
+          "logic": "Constructor for ZoneSet"
+        }
+      ]
+    },
+    {
+      "name": "ZoneMultiset",
+      "properties": [],
+      "methods": [
+        {
+          "name": "ZoneMultiset",
+          "parameters": [
+            "Zone* zone"
+          ],
+          "return_type": "explicit ZoneMultiset",
+          "logic": "Constructor for ZoneMultiset"
+        }
+      ]
+    },
+    {
+      "name": "ZoneMap",
+      "properties": [],
+      "methods": [
+        {
+          "name": "ZoneMap",
+          "parameters": [
+            "Zone* zone"
+          ],
+          "return_type": "explicit ZoneMap",
+          "logic": "Constructor for ZoneMap"
+        }
+      ]
+    },
+    {
+      "name": "ZoneUnorderedMap",
+      "properties": [],
+      "methods": [
+        {
+          "name": "ZoneUnorderedMap",
+          "parameters": [
+            "Zone* zone",
+            "size_t bucket_count = 0"
+          ],
+          "return_type": "explicit ZoneUnorderedMap",
+          "logic": "Constructor for ZoneUnorderedMap"
+        }
+      ]
+    },
+    {
+      "name": "ZoneUnorderedSet",
+      "properties": [],
+      "methods": [
+        {
+          "name": "ZoneUnorderedSet",
+          "parameters": [
+            "Zone* zone",
+            "size_t bucket_count = 0"
+          ],
+          "return_type": "explicit ZoneUnorderedSet",
+          "logic": "Constructor for ZoneUnorderedSet"
+        }
+      ]
+    },
+    {
+      "name": "ZoneMultimap",
+      "properties": [],
+      "methods": [
+        {
+          "name": "ZoneMultimap",
+          "parameters": [
+            "Zone* zone"
+          ],
+          "return_type": "explicit ZoneMultimap",
+          "logic": "Constructor for ZoneMultimap"
+        }
+      ]
+    },
+    {
+      "name": "SmallZoneVector",
+      "properties": [],
+      "methods": [
+        {
+          "name": "SmallZoneVector",
+          "parameters": [
+            "Zone* zone"
+          ],
+          "return_type": "explicit SmallZoneVector",
+          "logic": "Constructor for SmallZoneVector"
+        },
+        {
+          "name": "SmallZoneVector",
+          "parameters": [
+            "size_t size",
+            "Zone* zone"
+          ],
+          "return_type": "explicit SmallZoneVector",
+          "logic": "Constructor for SmallZoneVector with size"
+        }
+      ]
+    },
+    {
+      "name": "ZoneMapInit",
+      "properties": [
+        "zone_"
+      ],
+      "methods": [
+        {
+          "name": "ZoneMapInit",
+          "parameters": [
+            "Zone* zone"
+          ],
+          "return_type": "explicit ZoneMapInit",
+          "logic": "Constructor for ZoneMapInit"
+        },
+        {
+          "name": "operator()",
+          "parameters": [
+            "ZoneMap* map"
+          ],
+          "return_type": "void",
+          "logic": "Placement new of ZoneMap"
+        }
+      ]
+    },
+    {
+      "name": "SmallZoneMap",
+      "properties": [],
+      "methods": [
+        {
+          "name": "SmallZoneMap",
+          "parameters": [
+            "Zone* zone"
+          ],
+          "return_type": "explicit SmallZoneMap",
+          "logic": "Constructor for SmallZoneMap"
+        }
+      ]
+    },
+    {
+      "name": "ZoneAbslFlatHashMap",
+      "properties": [],
+      "methods": [
+        {
+          "name": "ZoneAbslFlatHashMap",
+          "parameters": [
+            "Zone* zone",
+            "size_t bucket_count = 0"
+          ],
+          "return_type": "explicit ZoneAbslFlatHashMap",
+          "logic": "Constructor for ZoneAbslFlatHashMap"
+        }
+      ]
+    },
+    {
+      "name": "ZoneAbslFlatHashSet",
+      "properties": [],
+      "methods": [
+        {
+          "name": "ZoneAbslFlatHashSet",
+          "parameters": [
+            "Zone* zone",
+            "size_t bucket_count = 0"
+          ],
+          "return_type": "explicit ZoneAbslFlatHashSet",
+          "logic": "Constructor for ZoneAbslFlatHashSet"
+        }
+      ]
+    },
+    {
+      "name": "ZoneAbslBTreeMap",
+      "properties": [],
+      "methods": [
+        {
+          "name": "ZoneAbslBTreeMap",
+          "parameters": [
+            "Zone* zone"
+          ],
+          "return_type": "explicit ZoneAbslBTreeMap",
+          "logic": "Constructor for ZoneAbslBTreeMap"
+        }
+      ]
+    }
+  ],
+  "functions": [
+    {
+      "name": "operator==",
+      "parameters": [
+        "const ZoneVector<T>& lhs",
+        "const ZoneVector<T>& rhs"
+      ],
+      "return_type": "bool",
+      "logic": "Compares two ZoneVectors for equality."
+    },
+    {
+      "name": "operator!=",
+      "parameters": [
+        "const ZoneVector<T>& lhs",
+        "const ZoneVector<T>& rhs"
+      ],
+      "return_type": "bool",
+      "logic": "Compares two ZoneVectors for inequality."
+    },
+    {
+      "name": "operator<",
+      "parameters": [
+        "const ZoneVector<T>& lhs",
+        "const ZoneVector<T>& rhs"
+      ],
+      "return_type": "bool",
+      "logic": "Compares two ZoneVectors using lexicographical comparison."
+    }
+  ]
+}

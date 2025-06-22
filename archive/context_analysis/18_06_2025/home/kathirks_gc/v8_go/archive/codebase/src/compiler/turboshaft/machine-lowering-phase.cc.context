@@ -1,0 +1,58 @@
+{
+  "metadata": {
+    "path": "/home/kathirks_gc/v8_go/archive/codebase/src/compiler/turboshaft/machine-lowering-phase.cc",
+    "file_name": "machine-lowering-phase.cc",
+    "language": "cpp",
+    "purpose": "Defines the MachineLoweringPhase which performs lowering operations specific to the target machine architecture within the Turboshaft compiler pipeline."
+  },
+  "imports": {
+    "metadata": {
+      "language": "cpp",
+      "purpose": "Includes necessary headers for the MachineLoweringPhase, including its own header and headers for various reducers used in the phase."
+    },
+    "code": "#include \"src/compiler/turboshaft/machine-lowering-phase.h\"\n\n#include \"src/compiler/turboshaft/copying-phase.h\"\n#include \"src/compiler/turboshaft/dataview-lowering-reducer.h\"\n#include \"src/compiler/turboshaft/fast-api-call-lowering-reducer.h\"\n#include \"src/compiler/turboshaft/js-generic-lowering-reducer.h\"\n#include \"src/compiler/turboshaft/machine-lowering-reducer-inl.h\"\n#include \"src/compiler/turboshaft/machine-optimization-reducer.h\"\n#include \"src/compiler/turboshaft/required-optimization-reducer.h\"\n#include \"src/compiler/turboshaft/select-lowering-reducer.h\"\n#include \"src/compiler/turboshaft/string-escape-analysis-reducer.h\"\n#include \"src/compiler/turboshaft/variable-reducer.h\""
+  },
+  "functions": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "method",
+        "name": "Run",
+        "parent": "MachineLoweringPhase",
+        "about": "Executes the machine lowering phase of the Turboshaft compiler pipeline.",
+        "logic": "This phase uses a CopyingPhase with a list of reducers to perform various lowering and optimization steps. It includes reducers for string escape analysis, JS generic lowering, DataView lowering, machine-specific lowering, Fast API call lowering, variable reduction, select lowering and machine optimization.",
+        "parameters": [
+          {
+            "name": "data",
+            "type": "PipelineData*",
+            "purpose": "Pointer to the pipeline data structure, containing information about the compilation process."
+          },
+          {
+            "name": "temp_zone",
+            "type": "Zone*",
+            "purpose": "Pointer to a temporary memory zone used for allocation during the phase."
+          }
+        ],
+        "return": {
+          "type": "void",
+          "description": "This method does not return a value."
+        },
+        "dependencies": [
+          "CopyingPhase",
+          "StringEscapeAnalysisReducer",
+          "JSGenericLoweringReducer",
+          "DataViewLoweringReducer",
+          "MachineLoweringReducer",
+          "FastApiCallLoweringReducer",
+          "VariableReducer",
+          "SelectLoweringReducer",
+          "MachineOptimizationReducer",
+          "PipelineData",
+          "Zone"
+        ]
+      },
+      "code": "void MachineLoweringPhase::Run(PipelineData* data, Zone* temp_zone) {\n  // TODO(dmercadier): It would make sense to run JSGenericLoweringReducer\n  // during SimplifiedLowering. However, SimplifiedLowering is currently WIP,\n  // and it would be better to not tie the Maglev graph builder to\n  // SimplifiedLowering just yet, so I'm hijacking MachineLoweringPhase to run\n  // JSGenericLoweringReducer without requiring a whole phase just for that.\n  CopyingPhase<StringEscapeAnalysisReducer, JSGenericLoweringReducer,\n               DataViewLoweringReducer, MachineLoweringReducer,\n               FastApiCallLoweringReducer, VariableReducer,\n               SelectLoweringReducer,\n               MachineOptimizationReducer>::Run(data, temp_zone);\n}"
+    }
+  ],
+  "file_path": "/home/kathirks_gc/v8_go/archive/codebase/src/compiler/turboshaft/machine-lowering-phase.cc"
+}

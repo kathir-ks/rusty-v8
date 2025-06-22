@@ -1,0 +1,473 @@
+{
+  "file_path": "/home/kathirks_gc/v8_go/codebase/src/compiler/turboshaft/wasm-revec-reducer.cc",
+  "imports": [
+    "src/compiler/turboshaft/wasm-revec-reducer.h",
+    "optional",
+    "src/base/logging.h",
+    "src/compiler/turboshaft/opmasks.h",
+    "src/wasm/simd-shuffle.h"
+  ],
+  "classes": [
+    {
+      "name": "StoreLoadInfo",
+      "properties": [
+        "op_",
+        "base_",
+        "index_",
+        "offset_"
+      ],
+      "methods": [
+        {
+          "name": "StoreLoadInfo",
+          "parameters": [
+            "const Graph* graph",
+            "const Op* op"
+          ],
+          "return_type": "void",
+          "logic": "Constructor for StoreLoadInfo. Initializes the object with a graph, operation, and offset.  Handles special cases for Simd128LoadTransformOp, including extracting base and offset from the add operation.  Attempts to simplify the index and offset by incorporating constant indices."
+        },
+        {
+          "name": "operator-",
+          "parameters": [
+            "const StoreLoadInfo<Op>& rhs"
+          ],
+          "return_type": "std::optional<int>",
+          "logic": "Calculates the relative offset between two StoreLoadInfo objects if the base and index are the same. Also checks if the kind of operation is the same. Returns an empty optional if the offsets cannot be calculated."
+        },
+        {
+          "name": "IsValid",
+          "parameters": [],
+          "return_type": "bool",
+          "logic": "Checks if the StoreLoadInfo object is valid (op_ is not null)."
+        },
+        {
+          "name": "index",
+          "parameters": [],
+          "return_type": "const Operation*",
+          "logic": "Returns the index operation associated with the store or load."
+        },
+        {
+          "name": "offset",
+          "parameters": [],
+          "return_type": "int64_t",
+          "logic": "Returns the offset of the store or load."
+        },
+        {
+          "name": "op",
+          "parameters": [],
+          "return_type": "const Op*",
+          "logic": "Returns the underlying store or load operation."
+        },
+        {
+          "name": "SetInvalid",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Sets the StoreLoadInfo object to invalid by setting op_ to nullptr."
+        }
+      ]
+    },
+    {
+      "name": "StoreInfoCompare",
+      "properties": [],
+      "methods": [
+        {
+          "name": "operator()",
+          "parameters": [
+            "const StoreLoadInfo<StoreOp>& lhs",
+            "const StoreLoadInfo<StoreOp>& rhs"
+          ],
+          "return_type": "bool",
+          "logic": "Compares two StoreLoadInfo objects based on their index and offset. Used for sorting a set of StoreLoadInfo objects."
+        }
+      ]
+    },
+    {
+      "name": "PackNode",
+      "properties": [
+        "nodes_"
+      ],
+      "methods": [
+        {
+          "name": "Print",
+          "parameters": [
+            "Graph* graph"
+          ],
+          "return_type": "void",
+          "logic": "Prints the nodes contained within the PackNode along with their opcodes. Used for debugging."
+        }
+      ]
+    },
+    {
+      "name": "SLPTree",
+      "properties": [
+        "graph_",
+        "analyzer_",
+        "phase_zone_",
+        "root_",
+        "node_to_packnode_",
+        "node_to_intersect_packnodes_"
+      ],
+      "methods": [
+        {
+          "name": "GetPackNode",
+          "parameters": [
+            "OpIndex node"
+          ],
+          "return_type": "PackNode*",
+          "logic": "Retrieves the PackNode associated with a given node index. Checks its own map first, then delegates to the analyzer."
+        },
+        {
+          "name": "GetIntersectPackNodes",
+          "parameters": [
+            "OpIndex node"
+          ],
+          "return_type": "ZoneVector<PackNode*>*",
+          "logic": "Retrieves the intersect PackNodes associated with a given node index."
+        },
+        {
+          "name": "Print",
+          "parameters": [
+            "const char* info"
+          ],
+          "return_type": "void",
+          "logic": "Prints the SLPTree, iterating through and printing all packed nodes. Only executes if the trace_wasm_revectorize flag is set."
+        },
+        {
+          "name": "HasInputDependencies",
+          "parameters": [
+            "const NodeGroup& node_group"
+          ],
+          "return_type": "bool",
+          "logic": "Checks if the nodes in a node group have input dependencies on each other. Used to prevent problematic force packing."
+        },
+        {
+          "name": "NewPackNode",
+          "parameters": [
+            "const NodeGroup& node_group"
+          ],
+          "return_type": "PackNode*",
+          "logic": "Creates a new PackNode for a given node group and adds the node to the nodemap."
+        },
+        {
+          "name": "NewForcePackNode",
+          "parameters": [
+            "const NodeGroup& node_group",
+            "ForcePackNode::ForcePackType type",
+            "const Graph& graph"
+          ],
+          "return_type": "PackNode*",
+          "logic": "Creates a new ForcePackNode for a given node group and adds it to the nodemap. Checks for input dependencies to prevent incorrect transformations."
+        },
+        {
+          "name": "NewBundlePackNode",
+          "parameters": [
+            "const NodeGroup& node_group",
+            "OpIndex base",
+            "int8_t offset",
+            "uint8_t lane_size",
+            "bool is_sign_extract",
+            "bool is_sign_convert"
+          ],
+          "return_type": "BundlePackNode*",
+          "logic": "Creates a new BundlePackNode for a given node group and adds it to the nodemap. Used for extend int to f32x4 pattern matching."
+        },
+        {
+          "name": "NewIntersectPackNode",
+          "parameters": [
+            "const NodeGroup& node_group"
+          ],
+          "return_type": "PackNode*",
+          "logic": "Creates a new IntersectPackNode for a given node group and adds the node to the nodemap.  Used when there's a partial overlap with an existing pack node."
+        },
+        {
+          "name": "NewCommutativePackNodeAndRecurs",
+          "parameters": [
+            "const NodeGroup& node_group",
+            "unsigned depth"
+          ],
+          "return_type": "PackNode*",
+          "logic": "Creates a new PackNode for commutative binary operations and recursively builds the tree for the operands. Swaps the operands if necessary to improve packing."
+        },
+        {
+          "name": "NewPackNodeAndRecurs",
+          "parameters": [
+            "const NodeGroup& node_group",
+            "int start_index",
+            "int count",
+            "unsigned depth"
+          ],
+          "return_type": "PackNode*",
+          "logic": "Creates a new PackNode and recursively builds the tree for its operands."
+        },
+        {
+          "name": "NewShufflePackNode",
+          "parameters": [
+            "const NodeGroup& node_group",
+            "ShufflePackNode::SpecificInfo::Kind kind"
+          ],
+          "return_type": "ShufflePackNode*",
+          "logic": "Creates a new ShufflePackNode for a given node group and adds it to the nodemap. Used for specific shuffle patterns."
+        },
+        {
+          "name": "Try256ShuffleMatchLoad8x8U",
+          "parameters": [
+            "const NodeGroup& node_group",
+            "const uint8_t* shuffle0",
+            "const uint8_t* shuffle1"
+          ],
+          "return_type": "ShufflePackNode*",
+          "logic": "Attempts to match a specific shuffle pattern related to load extend 8x8->32x8 and creates a ShufflePackNode if a match is found."
+        },
+        {
+          "name": "X64TryMatch256Shuffle",
+          "parameters": [
+            "const NodeGroup& node_group",
+            "const uint8_t* shuffle0",
+            "const uint8_t* shuffle1"
+          ],
+          "return_type": "ShufflePackNode*",
+          "logic": "Attempts to match a specific shuffle pattern for X64 architecture and creates a ShufflePackNode if a match is found."
+        },
+        {
+          "name": "TryGetExtendIntToF32x4Info",
+          "parameters": [
+            "OpIndex index"
+          ],
+          "return_type": "std::optional<SLPTree::ExtendIntToF32x4Info>",
+          "logic": "Tries to match f32x4.convert_i32x4(i32x4.extract_lane) pattern and returns the information needed to build a BundlePackNode if a match is found."
+        },
+        {
+          "name": "TryMatchExtendIntToF32x4",
+          "parameters": [
+            "const NodeGroup& node_group",
+            "ExtendIntToF32x4Info* info"
+          ],
+          "return_type": "bool",
+          "logic": "Checks whether two nodes can be packed together as a extend i8x4/i16x4 to f32x4 pattern. If matched, fills the 'info' struct with details to be used during pack node creation."
+        },
+        {
+          "name": "IsSideEffectFree",
+          "parameters": [
+            "OpIndex first",
+            "OpIndex second"
+          ],
+          "return_type": "bool",
+          "logic": "Checks if all operations between 'first' and 'second' indices are side-effect free, therefore allowing the nodes to be reordered."
+        },
+        {
+          "name": "CanBePacked",
+          "parameters": [
+            "const NodeGroup& node_group"
+          ],
+          "return_type": "bool",
+          "logic": "Checks if two operations can be packed together based on opcode, type and side effects."
+        },
+        {
+          "name": "IsEqual",
+          "parameters": [
+            "const OpIndex node0",
+            "const OpIndex node1"
+          ],
+          "return_type": "bool",
+          "logic": "Checks if two nodes are considered equal. Compares constant values if both nodes are constants."
+        },
+        {
+          "name": "BuildTree",
+          "parameters": [
+            "const NodeGroup& roots"
+          ],
+          "return_type": "PackNode*",
+          "logic": "Builds the SLP tree starting from the given roots."
+        },
+        {
+          "name": "BuildTreeRec",
+          "parameters": [
+            "const NodeGroup& node_group",
+            "unsigned recursion_depth"
+          ],
+          "return_type": "PackNode*",
+          "logic": "Recursively builds the SLP tree by attempting to pack nodes and their operands together. Handles various opcodes and calls specific packing logic based on the opcode."
+        }
+      ]
+    },
+    {
+      "name": "WasmRevecAnalyzer",
+      "properties": [
+        "graph_",
+        "phase_zone_",
+        "store_seeds_",
+        "reduce_seeds_",
+        "revectorizable_node_",
+        "revectorizable_intersect_node_",
+        "use_map_",
+        "should_reduce_"
+      ],
+      "methods": [
+        {
+          "name": "MergeSLPTree",
+          "parameters": [
+            "SLPTree& slp_tree"
+          ],
+          "return_type": "void",
+          "logic": "Merges the node mappings from an SLPTree into the analyzer's mappings."
+        },
+        {
+          "name": "IsSupportedReduceSeed",
+          "parameters": [
+            "const Operation& op"
+          ],
+          "return_type": "bool",
+          "logic": "Checks if a given operation is a supported reduce operation to be used as revec seed."
+        },
+        {
+          "name": "ProcessBlock",
+          "parameters": [
+            "const Block& block"
+          ],
+          "return_type": "void",
+          "logic": "Processes a basic block to find SIMD store seeds and reduce ops, which can then be used as revectorization seeds."
+        },
+        {
+          "name": "Run",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Runs the re-vectorization analysis, processing each block, building SLP trees, and deciding whether to vectorize."
+        },
+        {
+          "name": "DecideVectorize",
+          "parameters": [],
+          "return_type": "bool",
+          "logic": "Decides whether to vectorize based on a cost model that considers the savings from vectorization versus the cost of extract operations."
+        },
+        {
+          "name": "Print",
+          "parameters": [
+            "const char* info"
+          ],
+          "return_type": "void",
+          "logic": "Prints the revectorizable nodes, displaying the nodes and their opcodes. Only enabled when the trace_wasm_revectorize flag is set."
+        },
+        {
+          "name": "GetPackNode",
+          "parameters": [
+            "OpIndex node"
+          ],
+          "return_type": "PackNode*",
+          "logic": "Return cached PackNode if it can be found from analyer"
+        },
+        {
+          "name": "GetIntersectPackNodes",
+          "parameters": [
+            "OpIndex node"
+          ],
+          "return_type": "ZoneVector<PackNode*>*",
+          "logic": "Retrieves the intersect PackNodes associated with a given node index from analyzer."
+        }
+      ]
+    },
+    {
+      "name": "ForcePackNode",
+      "properties": [],
+      "methods": []
+    },
+    {
+      "name": "BundlePackNode",
+      "properties": [],
+      "methods": []
+    },
+    {
+      "name": "ShufflePackNode",
+      "properties": [],
+      "methods": []
+    }
+  ],
+  "functions": [
+    {
+      "name": "IsSameOpAndKind",
+      "parameters": [
+        "const Operation& op0",
+        "const Operation& op1"
+      ],
+      "return_type": "bool",
+      "logic": "Checks if two operations have the same opcode and kind, specifically for Simd128 operations (Simd128Unary, Simd128Binop, Simd128Shift, Simd128Ternary, Simd128Splat). Returns true for other operations with the same opcode."
+    },
+    {
+      "name": "GetSimdOpcodeName",
+      "parameters": [
+        "Operation const& op"
+      ],
+      "return_type": "std::string",
+      "logic": "Returns the name of the Simd operation"
+    },
+    {
+      "name": "LoadStrideEqualTo",
+      "parameters": [
+        "const Graph& graph",
+        "const NodeGroup& node_group",
+        "int stride"
+      ],
+      "return_type": "bool",
+      "logic": "Returns whether the stride of the load operation in node_group equals to specific value"
+    },
+    {
+      "name": "IsSplat",
+      "parameters": [
+        "const T& node_group"
+      ],
+      "return_type": "bool",
+      "logic": "Returns true if all nodes in node_group are identical"
+    },
+    {
+      "name": "ForEach",
+      "parameters": [
+        "FunctionType callback",
+        "const ZoneUnorderedMap<OpIndex, PackNode*>& node_map"
+      ],
+      "return_type": "void",
+      "logic": "Iterates through a ZoneUnorderedMap of PackNodes, avoiding duplicates, and calls a callback function on each PackNode."
+    },
+    {
+      "name": "ForEach",
+      "parameters": [
+        "FunctionType callback",
+        "const ZoneUnorderedMap<OpIndex, ZoneVector<PackNode*>>& node_map"
+      ],
+      "return_type": "void",
+      "logic": "Iterates through a ZoneUnorderedMap of ZoneVectors of PackNodes, avoiding duplicates, and calls a callback function on each PackNode."
+    },
+    {
+      "name": "CannotSwapOperations",
+      "parameters": [
+        "OpEffects first",
+        "OpEffects second"
+      ],
+      "return_type": "bool",
+      "logic": "Returns `true` if operation defined by `first` can't be swapped with operation defined by `second`."
+    },
+    {
+      "name": "CannotSwapProtectedLoads",
+      "parameters": [
+        "OpEffects first",
+        "OpEffects second"
+      ],
+      "return_type": "bool",
+      "logic": "Returns `true` if load with trap handler defined by `first` can't be swapped with load with trap handler defined by `second`."
+    },
+    {
+      "name": "IsProtectedLoad",
+      "parameters": [
+        "Operation& op"
+      ],
+      "return_type": "bool",
+      "logic": "Returns true if load has a trap handler."
+    },
+    {
+      "name": "IsSignExtensionOp",
+      "parameters": [
+        "Operation& op"
+      ],
+      "return_type": "bool",
+      "logic": "Returns true if operation is a sign extension."
+    }
+  ]
+}

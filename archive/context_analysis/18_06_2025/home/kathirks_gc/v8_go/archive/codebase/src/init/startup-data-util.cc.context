@@ -1,0 +1,285 @@
+{
+  "metadata": {
+    "path": "/home/kathirks_gc/v8_go/archive/codebase/src/init/startup-data-util.cc",
+    "file_name": "startup-data-util.cc",
+    "language": "cpp",
+    "purpose": "Provides utilities for loading external startup data (snapshot blob) for the V8 JavaScript engine."
+  },
+  "imports": {
+    "metadata": {
+      "language": "cpp",
+      "purpose": "Includes necessary headers for startup data handling, file operations, and V8 initialization."
+    },
+    "code": "#include \"src/init/startup-data-util.h\"\n\n#include <stdlib.h>\n#include <string.h>\n\n#include \"include/v8-initialization.h\"\n#include \"include/v8-snapshot.h\"\n#include \"src/base/file-utils.h\"\n#include \"src/base/logging.h\"\n#include \"src/base/platform/platform.h\"\n#include \"src/base/platform/wrappers.h\"\n#include \"src/flags/flags.h\"\n#include \"src/utils/utils.h\""
+  },
+  "functions": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "function",
+        "name": "ClearStartupData",
+        "parent": null,
+        "about": "Clears the contents of a v8::StartupData struct.",
+        "logic": "Sets the data pointer to nullptr and raw_size to 0.",
+        "parameters": [
+          {
+            "name": "data",
+            "type": "v8::StartupData*",
+            "purpose": "Pointer to the StartupData struct to clear."
+          }
+        ],
+        "return": {
+          "type": "void",
+          "description": "No return value."
+        },
+        "dependencies": []
+      },
+      "code": "void ClearStartupData(v8::StartupData* data) {\n  data->data = nullptr;\n  data->raw_size = 0;\n}"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "function",
+        "name": "DeleteStartupData",
+        "parent": null,
+        "about": "Deallocates the memory pointed to by the data field of a v8::StartupData struct and then clears the struct.",
+        "logic": "Deletes the char array pointed to by data, then calls ClearStartupData.",
+        "parameters": [
+          {
+            "name": "data",
+            "type": "v8::StartupData*",
+            "purpose": "Pointer to the StartupData struct to delete."
+          }
+        ],
+        "return": {
+          "type": "void",
+          "description": "No return value."
+        },
+        "dependencies": [
+          "ClearStartupData"
+        ]
+      },
+      "code": "void DeleteStartupData(v8::StartupData* data) {\n  delete[] data->data;\n  ClearStartupData(data);\n}"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "function",
+        "name": "FreeStartupData",
+        "parent": null,
+        "about": "Frees the global snapshot data.",
+        "logic": "Calls DeleteStartupData on the global g_snapshot variable.",
+        "parameters": [],
+        "return": {
+          "type": "void",
+          "description": "No return value."
+        },
+        "dependencies": [
+          "DeleteStartupData",
+          "g_snapshot"
+        ]
+      },
+      "code": "void FreeStartupData() {\n  DeleteStartupData(&g_snapshot);\n}"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "function",
+        "name": "Load",
+        "parent": null,
+        "about": "Loads startup data from a file.",
+        "logic": "Opens the specified file, reads its contents into a buffer, and sets the provided StartupData struct.  It also calls a setter function to register the data with V8.",
+        "parameters": [
+          {
+            "name": "blob_file",
+            "type": "const char*",
+            "purpose": "Path to the snapshot blob file."
+          },
+          {
+            "name": "startup_data",
+            "type": "v8::StartupData*",
+            "purpose": "Pointer to the StartupData struct to populate."
+          },
+          {
+            "name": "setter_fn",
+            "type": "void (*)(v8::StartupData*)",
+            "purpose": "Function to call to set the startup data in V8."
+          }
+        ],
+        "return": {
+          "type": "void",
+          "description": "No return value."
+        },
+        "dependencies": [
+          "ClearStartupData",
+          "base::Fopen",
+          "base::Fclose",
+          "v8::V8::SetSnapshotDataBlob"
+        ]
+      },
+      "code": "void Load(const char* blob_file, v8::StartupData* startup_data,\n          void (*setter_fn)(v8::StartupData*)) {\n  ClearStartupData(startup_data);\n\n  CHECK(blob_file);\n\n  FILE* file = base::Fopen(blob_file, \"rb\");\n  if (!file) {\n    PrintF(stderr, \"Failed to open startup resource '%s'.\\n\", blob_file);\n    return;\n  }\n\n  fseek(file, 0, SEEK_END);\n  startup_data->raw_size = static_cast<int>(ftell(file));\n  rewind(file);\n\n  startup_data->data = new char[startup_data->raw_size];\n  int read_size = static_cast<int>(fread(const_cast<char*>(startup_data->data),\n                                         1, startup_data->raw_size, file));\n  base::Fclose(file);\n\n  if (startup_data->raw_size == read_size) {\n    (*setter_fn)(startup_data);\n  } else {\n    PrintF(stderr, \"Corrupted startup resource '%s'.\\n\", blob_file);\n  }\n}"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "function",
+        "name": "LoadFromFile",
+        "parent": null,
+        "about": "Loads the snapshot data from a file into the global snapshot data variable.",
+        "logic": "Calls Load with the snapshot file path, the global g_snapshot variable, and the V8::SetSnapshotDataBlob function.  It also registers FreeStartupData to be called at exit to free the allocated memory.",
+        "parameters": [
+          {
+            "name": "snapshot_blob",
+            "type": "const char*",
+            "purpose": "Path to the snapshot blob file."
+          }
+        ],
+        "return": {
+          "type": "void",
+          "description": "No return value."
+        },
+        "dependencies": [
+          "Load",
+          "g_snapshot",
+          "v8::V8::SetSnapshotDataBlob",
+          "FreeStartupData"
+        ]
+      },
+      "code": "void LoadFromFile(const char* snapshot_blob) {\n  Load(snapshot_blob, &g_snapshot, v8::V8::SetSnapshotDataBlob);\n  atexit(&FreeStartupData);\n}"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "function",
+        "name": "InitializeExternalStartupData",
+        "parent": null,
+        "about": "Initializes external startup data by loading it from a file in the specified directory.",
+        "logic": "Constructs the full path to the snapshot file by combining the directory path with the snapshot_blob.bin filename. Then loads the data from the file using LoadFromFile.",
+        "parameters": [
+          {
+            "name": "directory_path",
+            "type": "const char*",
+            "purpose": "Path to the directory containing the snapshot file."
+          }
+        ],
+        "return": {
+          "type": "void",
+          "description": "No return value."
+        },
+        "dependencies": [
+          "LoadFromFile",
+          "base::RelativePath"
+        ]
+      },
+      "code": "void InitializeExternalStartupData(const char* directory_path) {\n#ifdef V8_USE_EXTERNAL_STARTUP_DATA\n  const char* snapshot_name = \"snapshot_blob.bin\";\n  std::unique_ptr<char[]> snapshot =\n      base::RelativePath(directory_path, snapshot_name);\n  LoadFromFile(snapshot.get());\n#endif  // V8_USE_EXTERNAL_STARTUP_DATA\n}"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "function",
+        "name": "InitializeExternalStartupDataFromFile",
+        "parent": null,
+        "about": "Initializes external startup data by loading it directly from the specified file.",
+        "logic": "Calls LoadFromFile to load the snapshot data from the given file path.",
+        "parameters": [
+          {
+            "name": "snapshot_blob",
+            "type": "const char*",
+            "purpose": "Path to the snapshot blob file."
+          }
+        ],
+        "return": {
+          "type": "void",
+          "description": "No return value."
+        },
+        "dependencies": [
+          "LoadFromFile"
+        ]
+      },
+      "code": "void InitializeExternalStartupDataFromFile(const char* snapshot_blob) {\n#ifdef V8_USE_EXTERNAL_STARTUP_DATA\n  LoadFromFile(snapshot_blob);\n#endif  // V8_USE_EXTERNAL_STARTUP_DATA\n}"
+    }
+  ],
+  "classes": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "v8::StartupData",
+        "about": "Represents the startup data (snapshot blob) used by V8.",
+        "attributes": [
+          {
+            "name": "data",
+            "type": "const char*",
+            "access": "public",
+            "purpose": "Pointer to the raw startup data."
+          },
+          {
+            "name": "raw_size",
+            "type": "int",
+            "access": "public",
+            "purpose": "Size of the raw startup data in bytes."
+          }
+        ],
+        "dependencies": []
+      },
+      "code": "namespace v8 {\n    struct StartupData {\n        const char* data;\n        int raw_size;\n    };\n}"
+    }
+  ],
+  "dependencies": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "base::RelativePath",
+        "about": "Constructs a relative path.",
+        "attributes": []
+      },
+      "code": "namespace base {\n                    std::unique_ptr<char[]> RelativePath(const char* dir, const char* name);\n                }",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "function",
+        "name": "v8::V8::SetSnapshotDataBlob",
+        "about": "Sets the snapshot data blob in V8.",
+        "attributes": []
+      },
+      "code": "namespace v8 {\n                    namespace V8 {\n                        void SetSnapshotDataBlob(StartupData* data);\n                    }\n                }",
+      "type": "func"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "function",
+        "name": "base::Fopen",
+        "about": "Opens a file in binary read mode.",
+        "attributes": []
+      },
+      "code": "namespace base {\n                    FILE* Fopen(const char* filename, const char* mode);\n                }",
+      "type": "func"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "function",
+        "name": "base::Fclose",
+        "about": "Closes an opened file.",
+        "attributes": []
+      },
+      "code": "namespace base {\n                    int Fclose(FILE* file);\n                }",
+      "type": "func"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "variable",
+        "name": "g_snapshot",
+        "about": "Global variable to hold the snapshot data."
+      },
+      "code": "v8::StartupData g_snapshot;",
+      "type": "variable"
+    }
+  ],
+  "file_path": "/home/kathirks_gc/v8_go/archive/codebase/src/init/startup-data-util.cc"
+}

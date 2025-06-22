@@ -1,0 +1,212 @@
+{
+  "metadata": {
+    "path": "/home/kathirks_gc/v8_go/archive/codebase/src/compiler/loop-peeling.cc",
+    "file_name": "loop-peeling.cc",
+    "language": "cpp",
+    "purpose": "Implements loop peeling optimization for the Turbofan compiler in V8."
+  },
+  "imports": {
+    "metadata": {
+      "language": "cpp",
+      "purpose": "Includes necessary headers for compiler components, data structures, and utility functions."
+    },
+    "code": "#include \"src/compiler/loop-peeling.h\"\n\n#include \"src/compiler/common-operator.h\"\n#include \"src/compiler/compiler-source-position-table.h\"\n#include \"src/compiler/loop-analysis.h\"\n#include \"src/compiler/node-marker.h\"\n#include \"src/compiler/node-origin-table.h\"\n#include \"src/compiler/node-properties.h\"\n#include \"src/compiler/node.h\"\n#include \"src/compiler/turbofan-graph.h\"\n#include \"src/zone/zone.h\""
+  },
+  "classes": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "PeeledIterationImpl",
+        "extends": "PeeledIteration",
+        "about": "Implementation class for PeeledIteration, holding node pairs.",
+        "attributes": [
+          {
+            "name": "node_pairs_",
+            "type": "NodeVector",
+            "access": "public",
+            "purpose": "Stores pairs of original and peeled nodes."
+          }
+        ],
+        "dependencies": [
+          "PeeledIteration",
+          "NodeVector",
+          "Zone"
+        ]
+      },
+      "code": "class PeeledIterationImpl : public PeeledIteration {\n public:\n  NodeVector node_pairs_;\n  explicit PeeledIterationImpl(Zone* zone) : node_pairs_(zone) {}\n};"
+    }
+  ],
+  "functions": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "method",
+        "name": "map",
+        "parent": "PeeledIteration",
+        "about": "Maps a node from the original loop to its corresponding node in the peeled iteration.",
+        "logic": "Performs a linear search through the node_pairs_ vector to find the mapping.  Note: the comment indicates this is only really used for testing.",
+        "parameters": [
+          {
+            "name": "node",
+            "type": "Node*",
+            "purpose": "The node to map."
+          }
+        ],
+        "return": {
+          "type": "Node*",
+          "description": "The corresponding node in the peeled iteration, or the original node if no mapping exists."
+        },
+        "dependencies": [
+          "PeeledIterationImpl",
+          "Node"
+        ]
+      },
+      "code": "Node* PeeledIteration::map(Node* node) {\n  // TODO(turbofan): we use a simple linear search, since the peeled iteration\n  // is really only used in testing.\n  PeeledIterationImpl* impl = static_cast<PeeledIterationImpl*>(this);\n  for (size_t i = 0; i < impl->node_pairs_.size(); i += 2) {\n    if (impl->node_pairs_[i] == node) return impl->node_pairs_[i + 1];\n  }\n  return node;\n}"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "method",
+        "name": "Peel",
+        "parent": "LoopPeeler",
+        "about": "Performs the loop peeling optimization for a given loop.",
+        "logic": "1. Checks if the loop can be peeled using CanPeel(). 2. Creates a PeeledIterationImpl object. 3. Creates a NodeCopier to duplicate the loop body. 4. Maps the loop header nodes to their entry values. 5. Copies the nodes of the loop body. 6. Replaces the entry to the loop with the output of the peeled iteration, handling cases with single and multiple backedges. 7. Changes the exit and exit markers to merge/phi/effect-phi nodes.",
+        "parameters": [
+          {
+            "name": "loop",
+            "type": "LoopTree::Loop*",
+            "purpose": "The loop to peel."
+          }
+        ],
+        "return": {
+          "type": "PeeledIteration*",
+          "description": "A pointer to the peeled iteration object, or nullptr if peeling is not possible."
+        },
+        "dependencies": [
+          "LoopTree::Loop",
+          "CanPeel",
+          "PeeledIterationImpl",
+          "NodeCopier",
+          "CommonOperatorBuilder",
+          "Node",
+          "NodeVector",
+          "IrOpcode",
+          "NodeProperties",
+          "LoopExitValueRepresentationOf"
+        ]
+      },
+      "code": "PeeledIteration* LoopPeeler::Peel(LoopTree::Loop* loop) {\n  if (!CanPeel(loop)) return nullptr;\n\n  //============================================================================\n  // Construct the peeled iteration.\n  //============================================================================\n  PeeledIterationImpl* iter = tmp_zone_->New<PeeledIterationImpl>(tmp_zone_);\n  uint32_t estimated_peeled_size = 5 + loop->TotalSize() * 2;\n  NodeCopier copier(graph_, estimated_peeled_size, &iter->node_pairs_, 1);\n\n  Node* dead = graph_->NewNode(common_->Dead());\n\n  // Map the loop header nodes to their entry values.\n  for (Node* node : loop_tree_->HeaderNodes(loop)) {\n    copier.Insert(node, node->InputAt(kAssumedLoopEntryIndex));\n  }\n\n  // Copy all the nodes of loop body for the peeled iteration.\n  copier.CopyNodes(graph_, tmp_zone_, dead, loop_tree_->BodyNodes(loop),\n                   source_positions_, node_origins_);\n\n  //============================================================================\n  // Replace the entry to the loop with the output of the peeled iteration.\n  //============================================================================\n  Node* loop_node = loop_tree_->GetLoopControl(loop);\n  Node* new_entry;\n  int backedges = loop_node->InputCount() - 1;\n  if (backedges > 1) {\n    // Multiple backedges from original loop, therefore multiple output edges\n    // from the peeled iteration.\n    NodeVector inputs(tmp_zone_);\n    for (int i = 1; i < loop_node->InputCount(); i++) {\n      inputs.push_back(copier.map(loop_node->InputAt(i)));\n    }\n    Node* merge =\n        graph_->NewNode(common_->Merge(backedges), backedges, &inputs[0]);\n\n    // Merge values from the multiple output edges of the peeled iteration.\n    for (Node* node : loop_tree_->HeaderNodes(loop)) {\n      if (node->opcode() == IrOpcode::kLoop) continue;  // already done.\n      inputs.clear();\n      for (int i = 0; i < backedges; i++) {\n        inputs.push_back(copier.map(node->InputAt(1 + i)));\n      }\n      for (Node* input : inputs) {\n        if (input != inputs[0]) {  // Non-redundant phi.\n          inputs.push_back(merge);\n          const Operator* op = common_->ResizeMergeOrPhi(node->op(), backedges);\n          Node* phi = graph_->NewNode(op, backedges + 1, &inputs[0]);\n          node->ReplaceInput(0, phi);\n          break;\n        }\n      }\n    }\n    new_entry = merge;\n  } else {\n    // Only one backedge, simply replace the input to loop with output of\n    // peeling.\n    for (Node* node : loop_tree_->HeaderNodes(loop)) {\n      node->ReplaceInput(0, copier.map(node->InputAt(1)));\n    }\n    new_entry = copier.map(loop_node->InputAt(1));\n  }\n  loop_node->ReplaceInput(0, new_entry);\n\n  //============================================================================\n  // Change the exit and exit markers to merge/phi/effect-phi.\n  //============================================================================\n  for (Node* exit : loop_tree_->ExitNodes(loop)) {\n    switch (exit->opcode()) {\n      case IrOpcode::kLoopExit:\n        // Change the loop exit node to a merge node.\n        exit->ReplaceInput(1, copier.map(exit->InputAt(0)));\n        NodeProperties::ChangeOp(exit, common_->Merge(2));\n        break;\n      case IrOpcode::kLoopExitValue:\n        // Change exit marker to phi.\n        exit->InsertInput(graph_->zone(), 1, copier.map(exit->InputAt(0)));\n        NodeProperties::ChangeOp(\n            exit, common_->Phi(LoopExitValueRepresentationOf(exit->op()), 2));\n        break;\n      case IrOpcode::kLoopExitEffect:\n        // Change effect exit marker to effect phi.\n        exit->InsertInput(graph_->zone(), 1, copier.map(exit->InputAt(0)));\n        NodeProperties::ChangeOp(exit, common_->EffectPhi(2));\n        break;\n      default:\n        break;\n    }\n  }\n  return iter;\n}"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "method",
+        "name": "PeelInnerLoops",
+        "parent": "LoopPeeler",
+        "about": "Recursively peels inner loops of a given loop.",
+        "logic": "1. If the loop has nested loops, recursively calls PeelInnerLoops on each child loop. 2. If the loop is a leaf loop, checks if its size is within the limit (kMaxPeeledNodes). 3. If tracing is enabled, prints information about the loop. 4. Calls the Peel() method to peel the loop.",
+        "parameters": [
+          {
+            "name": "loop",
+            "type": "LoopTree::Loop*",
+            "purpose": "The loop to process."
+          }
+        ],
+        "return": {
+          "type": "void",
+          "description": "No return value."
+        },
+        "dependencies": [
+          "LoopTree::Loop",
+          "Peel"
+        ]
+      },
+      "code": "void LoopPeeler::PeelInnerLoops(LoopTree::Loop* loop) {\n  // If the loop has nested loops, peel inside those.\n  if (!loop->children().empty()) {\n    for (LoopTree::Loop* inner_loop : loop->children()) {\n      PeelInnerLoops(inner_loop);\n    }\n    return;\n  }\n  // Only peel small-enough loops.\n  if (loop->TotalSize() > LoopPeeler::kMaxPeeledNodes) return;\n  if (v8_flags.trace_turbo_loop) {\n    PrintF(\"Peeling loop with header: \");\n    for (Node* node : loop_tree_->HeaderNodes(loop)) {\n      PrintF(\"%i \", node->id());\n    }\n    PrintF(\"\\n\");\n  }\n\n  Peel(loop);\n}"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "method",
+        "name": "EliminateLoopExit",
+        "parent": "LoopPeeler",
+        "about": "Eliminates a loop exit node by replacing its uses with appropriate inputs and then killing the node.",
+        "logic": "Iterates through the uses of the loop exit node, replacing uses of LoopExitValue and LoopExitEffect markers with their respective inputs. Replaces uses of the loop exit node itself with its control input. Finally, kills the loop exit node.",
+        "parameters": [
+          {
+            "name": "node",
+            "type": "Node*",
+            "purpose": "The loop exit node to eliminate."
+          }
+        ],
+        "return": {
+          "type": "void",
+          "description": "No return value."
+        },
+        "dependencies": [
+          "Node",
+          "IrOpcode",
+          "NodeProperties",
+          "Edge"
+        ]
+      },
+      "code": "void LoopPeeler::EliminateLoopExit(Node* node) {\n  DCHECK_EQ(IrOpcode::kLoopExit, node->opcode());\n  // The exit markers take the loop exit as input. We iterate over uses\n  // and remove all the markers from the graph.\n  for (Edge edge : node->use_edges()) {\n    if (NodeProperties::IsControlEdge(edge)) {\n      Node* marker = edge.from();\n      if (marker->opcode() == IrOpcode::kLoopExitValue) {\n        NodeProperties::ReplaceUses(marker, marker->InputAt(0));\n        marker->Kill();\n      } else if (marker->opcode() == IrOpcode::kLoopExitEffect) {\n        NodeProperties::ReplaceUses(marker, nullptr,\n                                    NodeProperties::GetEffectInput(marker));\n        marker->Kill();\n      }\n    }\n  }\n  NodeProperties::ReplaceUses(node, nullptr, nullptr,\n                              NodeProperties::GetControlInput(node, 0));\n  node->Kill();\n}"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "method",
+        "name": "PeelInnerLoopsOfTree",
+        "parent": "LoopPeeler",
+        "about": "Peels inner loops of the entire loop tree.",
+        "logic": "Iterates through the outer loops of the loop tree and calls PeelInnerLoops on each. Then, it calls EliminateLoopExits to remove any remaining loop exits.",
+        "parameters": [],
+        "return": {
+          "type": "void",
+          "description": "No return value."
+        },
+        "dependencies": [
+          "PeelInnerLoops",
+          "EliminateLoopExits"
+        ]
+      },
+      "code": "void LoopPeeler::PeelInnerLoopsOfTree() {\n  for (LoopTree::Loop* loop : loop_tree_->outer_loops()) {\n    PeelInnerLoops(loop);\n  }\n\n  EliminateLoopExits(graph_, tmp_zone_);\n}"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "method",
+        "name": "EliminateLoopExits",
+        "parent": "LoopPeeler",
+        "about": "A static method that eliminates all loop exit nodes in the graph.",
+        "logic": "Uses a breadth-first search starting from the end node to find and eliminate LoopExit nodes.  The search only follows control edges.",
+        "parameters": [
+          {
+            "name": "graph",
+            "type": "TFGraph*",
+            "purpose": "The graph to process."
+          },
+          {
+            "name": "tmp_zone",
+            "type": "Zone*",
+            "purpose": "A temporary zone for allocating data structures."
+          }
+        ],
+        "return": {
+          "type": "void",
+          "description": "No return value."
+        },
+        "dependencies": [
+          "TFGraph",
+          "Zone",
+          "Node",
+          "IrOpcode",
+          "NodeProperties",
+          "EliminateLoopExit"
+        ]
+      },
+      "code": "// static\nvoid LoopPeeler::EliminateLoopExits(TFGraph* graph, Zone* tmp_zone) {\n  ZoneQueue<Node*> queue(tmp_zone);\n  BitVector visited(static_cast<int>(graph->NodeCount()), tmp_zone);\n  queue.push(graph->end());\n  while (!queue.empty()) {\n    Node* node = queue.front();\n    queue.pop();\n\n    if (node->opcode() == IrOpcode::kLoopExit) {\n      Node* control = NodeProperties::GetControlInput(node);\n      EliminateLoopExit(node);\n      if (!visited.Contains(control->id())) {\n        visited.Add(control->id());\n        queue.push(control);\n      }\n    } else {\n      for (int i = 0; i < node->op()->ControlInputCount(); i++) {\n        Node* control = NodeProperties::GetControlInput(node, i);\n        if (!visited.Contains(control->id())) {\n          visited.Add(control->id());\n          queue.push(control);\n        }\n      }\n    }\n  }\n}"
+    }
+  ],
+  "file_path": "/home/kathirks_gc/v8_go/archive/codebase/src/compiler/loop-peeling.cc"
+}

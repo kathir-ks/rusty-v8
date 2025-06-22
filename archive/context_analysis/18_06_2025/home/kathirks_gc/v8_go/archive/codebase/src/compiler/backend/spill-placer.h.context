@@ -1,0 +1,138 @@
+{
+  "metadata": {
+    "path": "/home/kathirks_gc/v8_go/archive/codebase/src/compiler/backend/spill-placer.h",
+    "file_name": "spill-placer.h",
+    "language": "cpp",
+    "purpose": "Declares the SpillPlacer class, which finds optimal spill insertion positions during register allocation."
+  },
+  "imports": {
+    "metadata": {
+      "language": "cpp",
+      "purpose": "Includes the Instruction class definition."
+    },
+    "code": "#include \"src/compiler/backend/instruction.h\""
+  },
+  "classes": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "SpillPlacer",
+        "about": "Finds optimal spill insertion positions during register allocation.",
+        "attributes": [
+          {
+            "name": "data_",
+            "type": "RegisterAllocationData*",
+            "access": "private",
+            "purpose": "Pointer to register allocation data."
+          },
+          {
+            "name": "zone_",
+            "type": "Zone*",
+            "access": "private",
+            "purpose": "Memory zone for allocation."
+          },
+          {
+            "name": "entries_",
+            "type": "Entry*",
+            "access": "private",
+            "purpose": "An array of one Entry per block, where blocks are in reverse post-order."
+          },
+          {
+            "name": "vreg_numbers_",
+            "type": "int*",
+            "access": "private",
+            "purpose": "An array representing which TopLevelLiveRange is in each bit."
+          },
+          {
+            "name": "assigned_indices_",
+            "type": "int",
+            "access": "private",
+            "purpose": "The number of vreg_numbers_ that have been assigned."
+          },
+          {
+            "name": "first_block_",
+            "type": "RpoNumber",
+            "access": "private",
+            "purpose": "The first block that have any definitions or uses in the current batch of values."
+          },
+          {
+            "name": "last_block_",
+            "type": "RpoNumber",
+            "access": "private",
+            "purpose": "The last block that have any definitions or uses in the current batch of values."
+          }
+        ],
+        "dependencies": [
+          "RegisterAllocationData",
+          "TopLevelLiveRange",
+          "InstructionBlock",
+          "Zone",
+          "RpoNumber"
+        ]
+      },
+      "code": "class SpillPlacer {\n public:\n  SpillPlacer(RegisterAllocationData* data, Zone* zone);\n\n  ~SpillPlacer();\n\n  SpillPlacer(const SpillPlacer&) = delete;\n  SpillPlacer& operator=(const SpillPlacer&) = delete;\n\n  // Adds the given TopLevelLiveRange to the SpillPlacer's state. Will\n  // eventually commit spill moves for that range and mark the range to indicate\n  // whether its value is spilled at the definition or some later point, so that\n  // subsequent phases can know whether to assume the value is always on-stack.\n  // However, those steps may happen during a later call to Add or during the\n  // destructor.\n  void Add(TopLevelLiveRange* range);\n\n private:\n  RegisterAllocationData* data() const { return data_; }\n\n  // While initializing data for a range, returns the index within each Entry\n  // where data about that range should be stored. May cause data about previous\n  // ranges to be committed to make room if the table is full.\n  int GetOrCreateIndexForLatestVreg(int vreg);\n\n  bool IsLatestVreg(int vreg) const {\n    return assigned_indices_ > 0 &&\n           vreg_numbers_[assigned_indices_ - 1] == vreg;\n  }\n\n  // Processes all of the ranges which have been added, inserts spill moves for\n  // them to the instruction sequence, and marks the ranges with whether they\n  // are spilled at the definition or later.\n  void CommitSpills();\n\n  void ClearData();\n\n  // Updates the iteration bounds first_block_ and last_block_ so that they\n  // include the new value.\n  void ExpandBoundsToInclude(RpoNumber block);\n\n  void SetSpillRequired(InstructionBlock* block, int vreg,\n                        RpoNumber top_start_block);\n\n  void SetDefinition(RpoNumber block, int vreg);\n\n  // The first backward pass is responsible for marking blocks which do not\n  // themselves need the value to be on the stack, but which do have successors\n  // requiring the value to be on the stack.\n  void FirstBackwardPass();\n\n  // The forward pass is responsible for selecting merge points that should\n  // require the value to be on the stack.\n  void ForwardPass();\n\n  // The second backward pass is responsible for propagating the spill\n  // requirements to the earliest block where all successors can agree a spill\n  // is required. It also emits the actual spill instructions.\n  void SecondBackwardPass();\n\n  void CommitSpill(int vreg, InstructionBlock* predecessor,\n                   InstructionBlock* successor);\n\n  // Each Entry represents the state for 64 values at a block, so that we can\n  // compute a batch of values in parallel.\n  class Entry;\n  static constexpr int kValueIndicesPerEntry = 64;\n\n  // Objects provided to the constructor, which all outlive this SpillPlacer.\n  RegisterAllocationData* data_;\n  Zone* zone_;\n\n  // An array of one Entry per block, where blocks are in reverse post-order.\n  Entry* entries_ = nullptr;\n\n  // An array representing which TopLevelLiveRange is in each bit.\n  int* vreg_numbers_ = nullptr;\n\n  // The number of vreg_numbers_ that have been assigned.\n  int assigned_indices_ = 0;\n\n  // The first and last block that have any definitions or uses in the current\n  // batch of values. In large functions, tracking these bounds can help prevent\n  // additional work.\n  RpoNumber first_block_ = RpoNumber::Invalid();\n  RpoNumber last_block_ = RpoNumber::Invalid();\n};"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "LiveRangeFinder",
+        "about": "A class used to find live ranges of variables.",
+        "dependencies": []
+      },
+      "code": "class LiveRangeFinder;"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "TopLevelLiveRange",
+        "about": "A class representing the top-level live range of a variable.",
+        "dependencies": []
+      },
+      "code": "class TopLevelLiveRange;"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "RegisterAllocationData",
+        "about": "A class holding data related to register allocation.",
+        "dependencies": []
+      },
+      "code": "class RegisterAllocationData;"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "InstructionBlock",
+        "about": "Represents a basic block of instructions.",
+        "dependencies": []
+      },
+      "code": "class InstructionBlock;"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "Zone",
+        "about": "Memory allocation zone.",
+        "dependencies": []
+      },
+      "code": "class Zone;"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "RpoNumber",
+        "about": "Represents a reverse postorder number.",
+        "dependencies": []
+      },
+      "code": "class RpoNumber;"
+    }
+  ],
+  "file_path": "/home/kathirks_gc/v8_go/archive/codebase/src/compiler/backend/spill-placer.h"
+}

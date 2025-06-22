@@ -1,0 +1,221 @@
+{
+  "file_path": "/home/kathirks_gc/v8_go/codebase/src/strings/uri.cc",
+  "imports": [
+    "src/strings/uri.h",
+    "vector",
+    "src/execution/isolate-inl.h",
+    "src/strings/char-predicates-inl.h",
+    "src/strings/string-search.h",
+    "src/strings/unicode-inl.h"
+  ],
+  "classes": [
+    {
+      "name": "Uri",
+      "properties": [],
+      "methods": [
+        {
+          "name": "Decode",
+          "parameters": [
+            "Isolate* isolate",
+            "DirectHandle<String> uri",
+            "bool is_uri"
+          ],
+          "return_type": "MaybeDirectHandle<String>",
+          "logic": "Decodes a URI string. It handles both one-byte and two-byte characters, decoding escaped sequences like '%XX' and '%uXXXX'.  It also handles surrogate pairs.  Returns a MaybeDirectHandle to the decoded string or throws an error if decoding fails."
+        },
+        {
+          "name": "Encode",
+          "parameters": [
+            "Isolate* isolate",
+            "DirectHandle<String> uri",
+            "bool is_uri"
+          ],
+          "return_type": "MaybeDirectHandle<String>",
+          "logic": "Encodes a URI string. It escapes characters that are not alphanumeric or in a set of allowed characters. Encodes UTF-16 surrogate pairs as well. Returns a MaybeDirectHandle to the encoded string or throws an error if encoding fails."
+        },
+        {
+          "name": "Escape",
+          "parameters": [
+            "Isolate* isolate",
+            "Handle<String> string"
+          ],
+          "return_type": "MaybeDirectHandle<String>",
+          "logic": "Escapes a string by encoding characters that are not alphanumeric or in a set of allowed characters, replacing them with '%XX' or '%uXXXX' sequences.  It handles both one-byte and two-byte strings."
+        },
+        {
+          "name": "Unescape",
+          "parameters": [
+            "Isolate* isolate",
+            "Handle<String> string"
+          ],
+          "return_type": "MaybeDirectHandle<String>",
+          "logic": "Unescapes a string by decoding '%XX' and '%uXXXX' sequences into their corresponding characters. It handles both one-byte and two-byte strings. "
+        }
+      ]
+    }
+  ],
+  "functions": [
+    {
+      "name": "IsReservedPredicate",
+      "parameters": [
+        "base::uc16 c"
+      ],
+      "return_type": "bool",
+      "logic": "Checks if a character is a reserved character in a URI."
+    },
+    {
+      "name": "IsReplacementCharacter",
+      "parameters": [
+        "const uint8_t* octets",
+        "int length"
+      ],
+      "return_type": "bool",
+      "logic": "Checks if a byte sequence represents the Unicode replacement character (U+FFFD)."
+    },
+    {
+      "name": "DecodeOctets",
+      "parameters": [
+        "const uint8_t* octets",
+        "int length",
+        "std::vector<base::uc16>* buffer"
+      ],
+      "return_type": "bool",
+      "logic": "Decodes a UTF-8 byte sequence into a Unicode character (uc32) using `unibrow::Utf8::ValueOf`. If the UTF-8 sequence is invalid, it checks if its the replacement character. Appends the decoded character (or surrogate pair if the character is outside the BMP) to the provided buffer."
+    },
+    {
+      "name": "TwoDigitHex",
+      "parameters": [
+        "base::uc16 character1",
+        "base::uc16 character2"
+      ],
+      "return_type": "int",
+      "logic": "Converts two hexadecimal characters into an integer value. Returns -1 if either character is invalid."
+    },
+    {
+      "name": "AddToBuffer",
+      "parameters": [
+        "base::uc16 decoded",
+        "String::FlatContent* uri_content",
+        "int index",
+        "bool is_uri",
+        "std::vector<T>* buffer"
+      ],
+      "return_type": "void",
+      "logic": "Adds a decoded character to the buffer. If `is_uri` is true and the character is a reserved character, it adds the original escaped sequence ('%XX') to the buffer instead."
+    },
+    {
+      "name": "IntoTwoByte",
+      "parameters": [
+        "int index",
+        "bool is_uri",
+        "int uri_length",
+        "String::FlatContent* uri_content",
+        "std::vector<base::uc16>* buffer"
+      ],
+      "return_type": "bool",
+      "logic": "Handles the case where the decoded URI contains two-byte characters. It iterates through the URI content from the given index. If it encounters a '%' it will try to decode the next two hex characters. It decodes UTF-8 sequences that are larger than a single byte. Returns true on success and false on failure (invalid input)."
+    },
+    {
+      "name": "IntoOneAndTwoByte",
+      "parameters": [
+        "DirectHandle<String> uri",
+        "bool is_uri",
+        "std::vector<uint8_t>* one_byte_buffer",
+        "std::vector<base::uc16>* two_byte_buffer"
+      ],
+      "return_type": "bool",
+      "logic": "Parses the URI string and separates one-byte and two-byte characters into different buffers.  If a two-byte character is found, it calls IntoTwoByte to handle the rest of the string. Returns true on success, false otherwise."
+    },
+    {
+      "name": "IsUnescapePredicateInUriComponent",
+      "parameters": [
+        "base::uc16 c"
+      ],
+      "return_type": "bool",
+      "logic": "Checks if a character is allowed in a URI component without escaping (alphanumeric or one of a set of specific symbols)."
+    },
+    {
+      "name": "IsUriSeparator",
+      "parameters": [
+        "base::uc16 c"
+      ],
+      "return_type": "bool",
+      "logic": "Checks if a character is a URI separator character."
+    },
+    {
+      "name": "AddEncodedOctetToBuffer",
+      "parameters": [
+        "uint8_t octet",
+        "std::vector<uint8_t>* buffer"
+      ],
+      "return_type": "void",
+      "logic": "Adds an encoded octet ('%XX') to the buffer."
+    },
+    {
+      "name": "EncodeSingle",
+      "parameters": [
+        "base::uc16 c",
+        "std::vector<uint8_t>* buffer"
+      ],
+      "return_type": "void",
+      "logic": "Encodes a single Unicode character as UTF-8 and adds the encoded bytes to the buffer as '%XX' sequences."
+    },
+    {
+      "name": "EncodePair",
+      "parameters": [
+        "base::uc16 cc1",
+        "base::uc16 cc2",
+        "std::vector<uint8_t>* buffer"
+      ],
+      "return_type": "void",
+      "logic": "Encodes a surrogate pair as UTF-8 and adds the encoded bytes to the buffer as '%XX' sequences."
+    },
+    {
+      "name": "UnescapeChar",
+      "parameters": [
+        "base::Vector<const Char> vector",
+        "int i",
+        "int length",
+        "int* step"
+      ],
+      "return_type": "int",
+      "logic": "Unescapes a single character or a sequence of escaped characters (%XX or %uXXXX). Returns the unescaped character and updates the step to indicate how many characters were processed."
+    },
+    {
+      "name": "UnescapeSlow",
+      "parameters": [
+        "Isolate* isolate",
+        "DirectHandle<String> string",
+        "int start_index"
+      ],
+      "return_type": "MaybeHandle<String>",
+      "logic": "Unescapes a string, handling %XX and %uXXXX sequences. Creates a new string with the unescaped characters.  Handles both one-byte and two-byte results."
+    },
+    {
+      "name": "IsNotEscaped",
+      "parameters": [
+        "uint16_t c"
+      ],
+      "return_type": "bool",
+      "logic": "Checks if a character does not need to be escaped based on a set of allowed characters."
+    },
+    {
+      "name": "UnescapePrivate",
+      "parameters": [
+        "Isolate* isolate",
+        "Handle<String> source"
+      ],
+      "return_type": "MaybeHandle<String>",
+      "logic": "Unescapes a string by calling UnescapeSlow at the first occurence of a '%' character. Returns the original string if no escaping is needed."
+    },
+    {
+      "name": "EscapePrivate",
+      "parameters": [
+        "Isolate* isolate",
+        "Handle<String> string"
+      ],
+      "return_type": "MaybeHandle<String>",
+      "logic": "Escapes a string, replacing characters that are not in a set of allowed characters with '%XX' or '%uXXXX' sequences. Creates a new one byte string with escaped characters.  Returns the original string if no escaping is needed."
+    }
+  ]
+}

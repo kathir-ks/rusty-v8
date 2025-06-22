@@ -1,0 +1,482 @@
+{
+  "metadata": {
+    "path": "/home/kathirks_gc/v8_go/archive/codebase/src/compiler/machine-graph.cc",
+    "file_name": "machine-graph.cc",
+    "language": "cpp",
+    "purpose": "Provides a graph representation specialized for machine-level operations in the V8 compiler.  Includes methods for creating and caching constant nodes."
+  },
+  "imports": {
+    "metadata": {
+      "language": "cpp",
+      "purpose": "Includes necessary headers for machine graph implementation, code generation and external references."
+    },
+    "code": "#include \"src/compiler/machine-graph.h\"\n\n#include \"src/codegen/external-reference.h\""
+  },
+  "functions": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "method",
+        "name": "UniqueInt32Constant",
+        "parent": "MachineGraph",
+        "about": "Creates a new Int32 constant Node.",
+        "logic": "Creates a new Int32Constant node in the graph using the provided value, bypassing the cache.",
+        "parameters": [
+          {
+            "name": "value",
+            "type": "int32_t",
+            "purpose": "The integer value for the constant node."
+          }
+        ],
+        "return": {
+          "type": "Node*",
+          "description": "Pointer to the newly created Int32Constant node."
+        },
+        "dependencies": [
+          "graph",
+          "common"
+        ]
+      },
+      "code": "Node* MachineGraph::UniqueInt32Constant(int32_t value) {\n  return graph()->NewNode(common()->Int32Constant(value));\n}"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "method",
+        "name": "UniqueInt64Constant",
+        "parent": "MachineGraph",
+        "about": "Creates a new Int64 constant Node.",
+        "logic": "Creates a new Int64Constant node in the graph using the provided value, bypassing the cache.",
+        "parameters": [
+          {
+            "name": "value",
+            "type": "int64_t",
+            "purpose": "The integer value for the constant node."
+          }
+        ],
+        "return": {
+          "type": "Node*",
+          "description": "Pointer to the newly created Int64Constant node."
+        },
+        "dependencies": [
+          "graph",
+          "common"
+        ]
+      },
+      "code": "Node* MachineGraph::UniqueInt64Constant(int64_t value) {\n  return graph()->NewNode(common()->Int64Constant(value));\n}"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "method",
+        "name": "Int32Constant",
+        "parent": "MachineGraph",
+        "about": "Retrieves an Int32 constant Node, using a cache.",
+        "logic": "Checks the cache for an existing Int32Constant node with the given value. If not found, creates a new one using UniqueInt32Constant and adds it to the cache.",
+        "parameters": [
+          {
+            "name": "value",
+            "type": "int32_t",
+            "purpose": "The integer value for the constant node."
+          }
+        ],
+        "return": {
+          "type": "Node*",
+          "description": "Pointer to the Int32Constant node (either cached or newly created)."
+        },
+        "dependencies": [
+          "cache_",
+          "UniqueInt32Constant"
+        ]
+      },
+      "code": "Node* MachineGraph::Int32Constant(int32_t value) {\n  Node** loc = cache_.FindInt32Constant(value);\n  if (*loc == nullptr) {\n    *loc = UniqueInt32Constant(value);\n  }\n  return *loc;\n}"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "method",
+        "name": "Int64Constant",
+        "parent": "MachineGraph",
+        "about": "Retrieves an Int64 constant Node, using a cache.",
+        "logic": "Checks the cache for an existing Int64Constant node with the given value. If not found, creates a new one using UniqueInt64Constant and adds it to the cache.",
+        "parameters": [
+          {
+            "name": "value",
+            "type": "int64_t",
+            "purpose": "The integer value for the constant node."
+          }
+        ],
+        "return": {
+          "type": "Node*",
+          "description": "Pointer to the Int64Constant node (either cached or newly created)."
+        },
+        "dependencies": [
+          "cache_",
+          "UniqueInt64Constant"
+        ]
+      },
+      "code": "Node* MachineGraph::Int64Constant(int64_t value) {\n  Node** loc = cache_.FindInt64Constant(value);\n  if (*loc == nullptr) {\n    *loc = UniqueInt64Constant(value);\n  }\n  return *loc;\n}"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "method",
+        "name": "IntPtrConstant",
+        "parent": "MachineGraph",
+        "about": "Retrieves an IntPtr constant Node, using a cache and considering the platform's pointer size.",
+        "logic": "Determines whether the platform is 32-bit or 64-bit and calls the appropriate Int32Constant or Int64Constant method accordingly.",
+        "parameters": [
+          {
+            "name": "value",
+            "type": "intptr_t",
+            "purpose": "The integer value for the constant node (platform-dependent size)."
+          }
+        ],
+        "return": {
+          "type": "Node*",
+          "description": "Pointer to the IntPtrConstant node (either cached or newly created)."
+        },
+        "dependencies": [
+          "machine",
+          "Int32Constant",
+          "Int64Constant"
+        ]
+      },
+      "code": "Node* MachineGraph::IntPtrConstant(intptr_t value) {\n  return machine()->Is32() ? Int32Constant(static_cast<int32_t>(value))\n                           : Int64Constant(static_cast<int64_t>(value));\n}"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "method",
+        "name": "UintPtrConstant",
+        "parent": "MachineGraph",
+        "about": "Retrieves a UintPtr constant Node, using a cache and considering the platform's pointer size.",
+        "logic": "Determines whether the platform is 32-bit or 64-bit and calls appropriate Uint32Constant or Uint64Constant. Uint variants are not defined in this file, assumed to exist.",
+        "parameters": [
+          {
+            "name": "value",
+            "type": "uintptr_t",
+            "purpose": "The unsigned integer value for the constant node (platform-dependent size)."
+          }
+        ],
+        "return": {
+          "type": "Node*",
+          "description": "Pointer to the UintPtrConstant node (either cached or newly created)."
+        },
+        "dependencies": [
+          "machine"
+        ]
+      },
+      "code": "Node* MachineGraph::UintPtrConstant(uintptr_t value) {\n  return machine()->Is32() ? Uint32Constant(static_cast<uint32_t>(value))\n                           : Uint64Constant(static_cast<uint64_t>(value));\n}"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "method",
+        "name": "UniqueIntPtrConstant",
+        "parent": "MachineGraph",
+        "about": "Creates a unique IntPtr constant Node, considering the platform's pointer size.",
+        "logic": "Determines whether the platform is 32-bit or 64-bit and calls the appropriate UniqueInt32Constant or UniqueInt64Constant method accordingly.",
+        "parameters": [
+          {
+            "name": "value",
+            "type": "intptr_t",
+            "purpose": "The integer value for the constant node (platform-dependent size)."
+          }
+        ],
+        "return": {
+          "type": "Node*",
+          "description": "Pointer to the IntPtrConstant node."
+        },
+        "dependencies": [
+          "machine",
+          "UniqueInt32Constant",
+          "UniqueInt64Constant"
+        ]
+      },
+      "code": "Node* MachineGraph::UniqueIntPtrConstant(intptr_t value) {\n  return machine()->Is32() ? UniqueInt32Constant(static_cast<int32_t>(value))\n                           : UniqueInt64Constant(static_cast<int64_t>(value));\n}"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "method",
+        "name": "TaggedIndexConstant",
+        "parent": "MachineGraph",
+        "about": "Retrieves a TaggedIndex constant Node, using a cache.",
+        "logic": "Checks the cache for an existing TaggedIndexConstant node with the given value. If not found, creates a new one and adds it to the cache.",
+        "parameters": [
+          {
+            "name": "value",
+            "type": "intptr_t",
+            "purpose": "The integer value for the constant node."
+          }
+        ],
+        "return": {
+          "type": "Node*",
+          "description": "Pointer to the TaggedIndexConstant node (either cached or newly created)."
+        },
+        "dependencies": [
+          "cache_",
+          "graph",
+          "common"
+        ]
+      },
+      "code": "Node* MachineGraph::TaggedIndexConstant(intptr_t value) {\n  int32_t value32 = static_cast<int32_t>(value);\n  Node** loc = cache_.FindTaggedIndexConstant(value32);\n  if (*loc == nullptr) {\n    *loc = graph()->NewNode(common()->TaggedIndexConstant(value32));\n  }\n  return *loc;\n}"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "method",
+        "name": "RelocatableInt32Constant",
+        "parent": "MachineGraph",
+        "about": "Retrieves a RelocatableInt32 constant Node, using a cache.",
+        "logic": "Checks the cache for an existing RelocatableInt32Constant node with the given value and relocation mode. If not found, creates a new one and adds it to the cache.",
+        "parameters": [
+          {
+            "name": "value",
+            "type": "int32_t",
+            "purpose": "The integer value for the constant node."
+          },
+          {
+            "name": "rmode",
+            "type": "RelocInfo::Mode",
+            "purpose": "The relocation mode for the constant."
+          }
+        ],
+        "return": {
+          "type": "Node*",
+          "description": "Pointer to the RelocatableInt32Constant node (either cached or newly created)."
+        },
+        "dependencies": [
+          "cache_",
+          "graph",
+          "common"
+        ]
+      },
+      "code": "Node* MachineGraph::RelocatableInt32Constant(int32_t value,\n                                             RelocInfo::Mode rmode) {\n  Node** loc = cache_.FindRelocatableInt32Constant(\n      value, static_cast<RelocInfoMode>(rmode));\n  if (*loc == nullptr) {\n    *loc = graph()->NewNode(common()->RelocatableInt32Constant(value, rmode));\n  }\n  return *loc;\n}"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "method",
+        "name": "RelocatableInt64Constant",
+        "parent": "MachineGraph",
+        "about": "Retrieves a RelocatableInt64 constant Node, using a cache.",
+        "logic": "Checks the cache for an existing RelocatableInt64Constant node with the given value and relocation mode. If not found, creates a new one and adds it to the cache.",
+        "parameters": [
+          {
+            "name": "value",
+            "type": "int64_t",
+            "purpose": "The integer value for the constant node."
+          },
+          {
+            "name": "rmode",
+            "type": "RelocInfo::Mode",
+            "purpose": "The relocation mode for the constant."
+          }
+        ],
+        "return": {
+          "type": "Node*",
+          "description": "Pointer to the RelocatableInt64Constant node (either cached or newly created)."
+        },
+        "dependencies": [
+          "cache_",
+          "graph",
+          "common"
+        ]
+      },
+      "code": "Node* MachineGraph::RelocatableInt64Constant(int64_t value,\n                                             RelocInfo::Mode rmode) {\n  Node** loc = cache_.FindRelocatableInt64Constant(\n      value, static_cast<RelocInfoMode>(rmode));\n  if (*loc == nullptr) {\n    *loc = graph()->NewNode(common()->RelocatableInt64Constant(value, rmode));\n  }\n  return *loc;\n}"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "method",
+        "name": "RelocatableIntPtrConstant",
+        "parent": "MachineGraph",
+        "about": "Retrieves a RelocatableIntPtr constant Node, using a cache and considering the platform's pointer size.",
+        "logic": "Determines whether the platform is 32-bit or 64-bit and calls the appropriate RelocatableInt32Constant or RelocatableInt64Constant method accordingly.",
+        "parameters": [
+          {
+            "name": "value",
+            "type": "intptr_t",
+            "purpose": "The integer value for the constant node (platform-dependent size)."
+          },
+          {
+            "name": "rmode",
+            "type": "RelocInfo::Mode",
+            "purpose": "The relocation mode for the constant."
+          }
+        ],
+        "return": {
+          "type": "Node*",
+          "description": "Pointer to the RelocatableIntPtrConstant node (either cached or newly created)."
+        },
+        "dependencies": [
+          "RelocatableInt64Constant",
+          "RelocatableInt32Constant"
+        ]
+      },
+      "code": "Node* MachineGraph::RelocatableIntPtrConstant(intptr_t value,\n                                              RelocInfo::Mode rmode) {\n  return kSystemPointerSize == 8\n             ? RelocatableInt64Constant(value, rmode)\n             : RelocatableInt32Constant(static_cast<int>(value), rmode);\n}"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "method",
+        "name": "RelocatableWasmBuiltinCallTarget",
+        "parent": "MachineGraph",
+        "about": "Retrieves a RelocatableIntPtr constant Node for a WebAssembly builtin call target.",
+        "logic": "Creates a relocatable integer constant representing a wasm builtin function, using RelocInfo::WASM_STUB_CALL relocation mode.",
+        "parameters": [
+          {
+            "name": "builtin",
+            "type": "Builtin",
+            "purpose": "The WebAssembly builtin function identifier."
+          }
+        ],
+        "return": {
+          "type": "Node*",
+          "description": "Pointer to the RelocatableIntPtrConstant node."
+        },
+        "dependencies": [
+          "RelocatableIntPtrConstant"
+        ]
+      },
+      "code": "Node* MachineGraph::RelocatableWasmBuiltinCallTarget(Builtin builtin) {\n  return RelocatableIntPtrConstant(static_cast<intptr_t>(builtin),\n                                   RelocInfo::WASM_STUB_CALL);\n}"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "method",
+        "name": "Float32Constant",
+        "parent": "MachineGraph",
+        "about": "Retrieves a Float32 constant Node, using a cache.",
+        "logic": "Checks the cache for an existing Float32Constant node with the given value. If not found, creates a new one and adds it to the cache.",
+        "parameters": [
+          {
+            "name": "value",
+            "type": "float",
+            "purpose": "The floating-point value for the constant node."
+          }
+        ],
+        "return": {
+          "type": "Node*",
+          "description": "Pointer to the Float32Constant node (either cached or newly created)."
+        },
+        "dependencies": [
+          "cache_",
+          "graph",
+          "common"
+        ]
+      },
+      "code": "Node* MachineGraph::Float32Constant(float value) {\n  Node** loc = cache_.FindFloat32Constant(value);\n  if (*loc == nullptr) {\n    *loc = graph()->NewNode(common()->Float32Constant(value));\n  }\n  return *loc;\n}"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "method",
+        "name": "Float64Constant",
+        "parent": "MachineGraph",
+        "about": "Retrieves a Float64 constant Node, using a cache.",
+        "logic": "Checks the cache for an existing Float64Constant node with the given value. If not found, creates a new one and adds it to the cache.",
+        "parameters": [
+          {
+            "name": "value",
+            "type": "double",
+            "purpose": "The double-precision floating-point value for the constant node."
+          }
+        ],
+        "return": {
+          "type": "Node*",
+          "description": "Pointer to the Float64Constant node (either cached or newly created)."
+        },
+        "dependencies": [
+          "cache_",
+          "graph",
+          "common"
+        ]
+      },
+      "code": "Node* MachineGraph::Float64Constant(double value) {\n  Node** loc = cache_.FindFloat64Constant(value);\n  if (*loc == nullptr) {\n    *loc = graph()->NewNode(common()->Float64Constant(value));\n  }\n  return *loc;\n}"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "method",
+        "name": "PointerConstant",
+        "parent": "MachineGraph",
+        "about": "Retrieves a Pointer constant Node, using a cache.",
+        "logic": "Checks the cache for an existing PointerConstant node with the given value. If not found, creates a new one and adds it to the cache.",
+        "parameters": [
+          {
+            "name": "value",
+            "type": "intptr_t",
+            "purpose": "The pointer value for the constant node."
+          }
+        ],
+        "return": {
+          "type": "Node*",
+          "description": "Pointer to the PointerConstant node (either cached or newly created)."
+        },
+        "dependencies": [
+          "cache_",
+          "graph",
+          "common"
+        ]
+      },
+      "code": "Node* MachineGraph::PointerConstant(intptr_t value) {\n  Node** loc = cache_.FindPointerConstant(value);\n  if (*loc == nullptr) {\n    *loc = graph()->NewNode(common()->PointerConstant(value));\n  }\n  return *loc;\n}"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "method",
+        "name": "ExternalConstant",
+        "parent": "MachineGraph",
+        "about": "Retrieves an ExternalReference constant Node, using a cache.",
+        "logic": "Checks the cache for an existing ExternalConstant node with the given ExternalReference. If not found, creates a new one and adds it to the cache.",
+        "parameters": [
+          {
+            "name": "reference",
+            "type": "ExternalReference",
+            "purpose": "The external reference for the constant node."
+          }
+        ],
+        "return": {
+          "type": "Node*",
+          "description": "Pointer to the ExternalConstant node (either cached or newly created)."
+        },
+        "dependencies": [
+          "cache_",
+          "graph",
+          "common"
+        ]
+      },
+      "code": "Node* MachineGraph::ExternalConstant(ExternalReference reference) {\n  Node** loc = cache_.FindExternalConstant(reference);\n  if (*loc == nullptr) {\n    *loc = graph()->NewNode(common()->ExternalConstant(reference));\n  }\n  return *loc;\n}"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "method",
+        "name": "ExternalConstant",
+        "parent": "MachineGraph",
+        "about": "Retrieves an ExternalReference constant Node, creating the ExternalReference from a Runtime::FunctionId.",
+        "logic": "Creates an ExternalReference from the provided Runtime::FunctionId and then calls the other ExternalConstant overload.",
+        "parameters": [
+          {
+            "name": "function_id",
+            "type": "Runtime::FunctionId",
+            "purpose": "The runtime function ID for the external reference."
+          }
+        ],
+        "return": {
+          "type": "Node*",
+          "description": "Pointer to the ExternalConstant node (either cached or newly created)."
+        },
+        "dependencies": [
+          "ExternalReference",
+          "ExternalConstant"
+        ]
+      },
+      "code": "Node* MachineGraph::ExternalConstant(Runtime::FunctionId function_id) {\n  return ExternalConstant(ExternalReference::Create(function_id));\n}"
+    }
+  ],
+  "file_path": "/home/kathirks_gc/v8_go/archive/codebase/src/compiler/machine-graph.cc"
+}

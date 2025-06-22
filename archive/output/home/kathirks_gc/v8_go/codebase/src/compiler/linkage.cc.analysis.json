@@ -1,0 +1,241 @@
+{
+  "file_path": "/home/kathirks_gc/v8_go/codebase/src/compiler/linkage.cc",
+  "imports": [
+    "src/compiler/linkage.h",
+    "src/builtins/builtins-descriptors.h",
+    "src/codegen/assembler-inl.h",
+    "src/codegen/macro-assembler.h",
+    "src/codegen/optimized-compilation-info.h",
+    "src/compiler/frame.h",
+    "src/compiler/globals.h",
+    "src/compiler/osr.h",
+    "src/compiler/pipeline.h",
+    "src/compiler/wasm-compiler-definitions.h"
+  ],
+  "classes": [
+    {
+      "name": "CallDescriptor",
+      "properties": [],
+      "methods": [
+        {
+          "name": "GetMachineSignature",
+          "parameters": [
+            "Zone* zone"
+          ],
+          "return_type": "MachineSignature*",
+          "logic": "Creates and returns a MachineSignature object representing the input and output types of the call descriptor."
+        },
+        {
+          "name": "GetStackParameterDelta",
+          "parameters": [
+            "CallDescriptor const* tail_caller"
+          ],
+          "return_type": "int",
+          "logic": "Calculates the difference in stack parameter slots between the current call descriptor and a tail caller."
+        },
+        {
+          "name": "GetOffsetToFirstUnusedStackSlot",
+          "parameters": [],
+          "return_type": "int",
+          "logic": "Calculates the offset to the first unused stack slot relative to the callee's frame."
+        },
+        {
+          "name": "GetOffsetToReturns",
+          "parameters": [],
+          "return_type": "int",
+          "logic": "Calculates the offset to the return slots in the caller's frame."
+        },
+        {
+          "name": "GetTaggedParameterSlots",
+          "parameters": [],
+          "return_type": "uint32_t",
+          "logic": "Calculates the number of tagged parameter slots on the stack and their offset."
+        },
+        {
+          "name": "CanTailCall",
+          "parameters": [
+            "const CallDescriptor* callee"
+          ],
+          "return_type": "bool",
+          "logic": "Determines if a tail call can be performed from the current call descriptor to the callee."
+        },
+        {
+          "name": "CalculateFixedFrameSize",
+          "parameters": [
+            "CodeKind code_kind"
+          ],
+          "return_type": "int",
+          "logic": "Calculates the fixed frame size based on the call descriptor kind and code kind."
+        },
+        {
+          "name": "signature_hash",
+          "parameters": [],
+          "return_type": "uint64_t",
+          "logic": "Returns the signature hash, used in indirect wasm calls"
+        },
+        {
+          "name": "ToEncodedCSignature",
+          "parameters": [],
+          "return_type": "EncodedCSignature",
+          "logic": "Converts the CallDescriptor to an EncodedCSignature, which describes the function's argument and return types."
+        },
+        {
+          "name": "ComputeParamCounts",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Computes the number of general-purpose and floating-point parameters."
+        }
+      ]
+    },
+    {
+      "name": "Linkage",
+      "properties": [],
+      "methods": [
+        {
+          "name": "GetOsrValueLocation",
+          "parameters": [
+            "int index"
+          ],
+          "return_type": "LinkageLocation",
+          "logic": "Determines the location of an OSR value based on its index."
+        },
+        {
+          "name": "ParameterHasSecondaryLocation",
+          "parameters": [
+            "int index"
+          ],
+          "return_type": "bool",
+          "logic": "Checks if a parameter has a secondary location in addition to its primary location."
+        },
+        {
+          "name": "GetParameterSecondaryLocation",
+          "parameters": [
+            "int index"
+          ],
+          "return_type": "LinkageLocation",
+          "logic": "Gets the secondary location of a parameter."
+        },
+        {
+          "name": "ComputeIncoming",
+          "parameters": [
+            "Zone* zone",
+            "OptimizedCompilationInfo* info"
+          ],
+          "return_type": "CallDescriptor*",
+          "logic": "Computes the incoming CallDescriptor based on the compilation info."
+        },
+        {
+          "name": "NeedsFrameStateInput",
+          "parameters": [
+            "Runtime::FunctionId function"
+          ],
+          "return_type": "bool",
+          "logic": "Checks if a runtime function requires a FrameState as input."
+        },
+        {
+          "name": "GetRuntimeCallDescriptor",
+          "parameters": [
+            "Zone* zone",
+            "Runtime::FunctionId function_id",
+            "int js_parameter_count",
+            "Operator::Properties properties",
+            "CallDescriptor::Flags flags",
+            "LazyDeoptOnThrow lazy_deopt_on_throw"
+          ],
+          "return_type": "CallDescriptor*",
+          "logic": "Creates a CallDescriptor for a runtime call."
+        },
+        {
+          "name": "GetCEntryStubCallDescriptor",
+          "parameters": [
+            "Zone* zone",
+            "int return_count",
+            "int js_parameter_count",
+            "const char* debug_name",
+            "Operator::Properties properties",
+            "CallDescriptor::Flags flags",
+            "StackArgumentOrder stack_order"
+          ],
+          "return_type": "CallDescriptor*",
+          "logic": "Creates a CallDescriptor for a C entry stub call."
+        },
+        {
+          "name": "GetJSCallDescriptor",
+          "parameters": [
+            "Zone* zone",
+            "bool is_osr",
+            "int js_parameter_count",
+            "CallDescriptor::Flags flags",
+            "Operator::Properties properties"
+          ],
+          "return_type": "CallDescriptor*",
+          "logic": "Creates a CallDescriptor for a JS function call."
+        },
+        {
+          "name": "GetStubCallDescriptor",
+          "parameters": [
+            "Zone* zone",
+            "const CallInterfaceDescriptor& descriptor",
+            "int stack_parameter_count",
+            "CallDescriptor::Flags flags",
+            "Operator::Properties properties",
+            "StubCallMode stub_mode"
+          ],
+          "return_type": "CallDescriptor*",
+          "logic": "Creates a CallDescriptor for a stub call."
+        },
+        {
+          "name": "GetBytecodeDispatchCallDescriptor",
+          "parameters": [
+            "Zone* zone",
+            "const CallInterfaceDescriptor& descriptor",
+            "int stack_parameter_count"
+          ],
+          "return_type": "CallDescriptor*",
+          "logic": "Creates a CallDescriptor for a bytecode dispatch call."
+        }
+      ]
+    }
+  ],
+  "functions": [
+    {
+      "name": "operator<<",
+      "parameters": [
+        "std::ostream& os",
+        "const CallDescriptor::Kind& k"
+      ],
+      "return_type": "std::ostream&",
+      "logic": "Overloads the << operator to print the CallDescriptor::Kind enum as a string to an output stream."
+    },
+    {
+      "name": "operator<<",
+      "parameters": [
+        "std::ostream& os",
+        "const CallDescriptor& d"
+      ],
+      "return_type": "std::ostream&",
+      "logic": "Overloads the << operator to print a CallDescriptor object to an output stream."
+    },
+    {
+      "name": "ReplaceTypeInCallDescriptorWith",
+      "parameters": [
+        "Zone* zone",
+        "const CallDescriptor* call_descriptor",
+        "size_t num_replacements",
+        "MachineType from",
+        "MachineType to"
+      ],
+      "return_type": "CallDescriptor*",
+      "logic": "Helper function used for wasm calls. Replaces a certain number of instances of type 'from' by type 'to' in a call descriptor and returns the resulting CallDescriptor. It is used to change a call signature."
+    },
+    {
+      "name": "GetI32WasmCallDescriptor",
+      "parameters": [
+        "Zone* zone",
+        "const CallDescriptor* call_descriptor"
+      ],
+      "return_type": "CallDescriptor*",
+      "logic": "For WebAssembly, this function replaces MachineType::Int64 with two instances of MachineType::Int32 within the provided CallDescriptor and returns a new CallDescriptor."
+    }
+  ]
+}

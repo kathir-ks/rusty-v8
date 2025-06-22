@@ -1,0 +1,331 @@
+{
+  "file_path": "/home/kathirks_gc/v8_go/codebase/src/compiler/backend/ppc/instruction-selector-ppc.cc",
+  "imports": [
+    "src/base/iterator.h",
+    "src/compiler/backend/instruction-selector-impl.h",
+    "src/compiler/turboshaft/opmasks.h",
+    "src/execution/ppc/frame-constants-ppc.h",
+    "src/roots/roots-inl.h"
+  ],
+  "classes": [
+    {
+      "name": "PPCOperandGeneratorT",
+      "properties": [],
+      "methods": [
+        {
+          "name": "PPCOperandGeneratorT",
+          "parameters": [
+            "InstructionSelectorT* selector"
+          ],
+          "return_type": "explicit",
+          "logic": "Constructor for PPCOperandGeneratorT, initializes the base class OperandGeneratorT with the given selector."
+        },
+        {
+          "name": "UseOperand",
+          "parameters": [
+            "OpIndex node",
+            "ImmediateMode mode"
+          ],
+          "return_type": "InstructionOperand",
+          "logic": "Selects whether to use an immediate or register operand based on whether the node can be represented as an immediate with the given mode.  If possible it will use the immediate otherwise the register."
+        },
+        {
+          "name": "CanBeImmediate",
+          "parameters": [
+            "OpIndex node",
+            "ImmediateMode mode"
+          ],
+          "return_type": "bool",
+          "logic": "Checks if a given node (typically a constant) can be represented as an immediate value according to the specified mode. It handles compressed heap objects and root handles specially."
+        },
+        {
+          "name": "CanBeImmediate",
+          "parameters": [
+            "int64_t value",
+            "ImmediateMode mode"
+          ],
+          "return_type": "bool",
+          "logic": "Checks if a given 64-bit integer value can be represented as an immediate value according to the specified ImmediateMode."
+        }
+      ]
+    }
+  ],
+  "functions": [
+    {
+      "name": "VisitRR",
+      "parameters": [
+        "InstructionSelectorT* selector",
+        "InstructionCode opcode",
+        "OpIndex node"
+      ],
+      "return_type": "void",
+      "logic": "Emits an instruction with the given opcode, defining the node as a register and using the first input as a register operand."
+    },
+    {
+      "name": "VisitRRR",
+      "parameters": [
+        "InstructionSelectorT* selector",
+        "InstructionCode opcode",
+        "OpIndex node"
+      ],
+      "return_type": "void",
+      "logic": "Emits an instruction with the given opcode, defining the node as a register and using the first two inputs as register operands."
+    },
+    {
+      "name": "VisitRRO",
+      "parameters": [
+        "InstructionSelectorT* selector",
+        "InstructionCode opcode",
+        "OpIndex node",
+        "ImmediateMode operand_mode"
+      ],
+      "return_type": "void",
+      "logic": "Emits an instruction with the given opcode, defining the node as a register and using the first input as a register operand and the second input as an operand that can be either a register or an immediate."
+    },
+    {
+      "name": "VisitTryTruncateDouble",
+      "parameters": [
+        "InstructionSelectorT* selector",
+        "InstructionCode opcode",
+        "OpIndex node"
+      ],
+      "return_type": "void",
+      "logic": "Emits an instruction for trying to truncate a double, handling the success projection if present."
+    },
+    {
+      "name": "VisitBinop",
+      "parameters": [
+        "InstructionSelectorT* selector",
+        "OpIndex node",
+        "InstructionCode opcode",
+        "ImmediateMode operand_mode",
+        "FlagsContinuationT* cont"
+      ],
+      "return_type": "void",
+      "logic": "Shared routine for multiple binary operations.  Emits instructions with flags continuations and output same as first, if the binop result could result in deoptimization."
+    },
+    {
+      "name": "VisitBinop",
+      "parameters": [
+        "InstructionSelectorT* selector",
+        "OpIndex node",
+        "InstructionCode opcode",
+        "ImmediateMode operand_mode"
+      ],
+      "return_type": "void",
+      "logic": "Shared routine for multiple binary operations. Calls overloaded version with a default FlagsContinuationT."
+    },
+    {
+      "name": "SelectLoadOpcode",
+      "parameters": [
+        "MemoryRepresentation loaded_rep",
+        "RegisterRepresentation result_rep",
+        "ImmediateMode* mode"
+      ],
+      "return_type": "ArchOpcode",
+      "logic": "Selects the appropriate load opcode based on the memory representation and result representation, setting the immediate mode accordingly."
+    },
+    {
+      "name": "SelectLoadOpcode",
+      "parameters": [
+        "LoadRepresentation load_rep",
+        "ImmediateMode* mode"
+      ],
+      "return_type": "ArchOpcode",
+      "logic": "Selects the appropriate load opcode based on the load representation and sets the immediate mode accordingly."
+    },
+    {
+      "name": "VisitLoadCommon",
+      "parameters": [
+        "InstructionSelectorT* selector",
+        "OpIndex node",
+        "ImmediateMode mode",
+        "InstructionCode opcode"
+      ],
+      "return_type": "void",
+      "logic": "Common routine for handling load instructions, emitting instructions based on whether the base and offset can be immediates or registers, and root register support."
+    },
+    {
+      "name": "VisitStoreCommon",
+      "parameters": [
+        "InstructionSelectorT* selector",
+        "OpIndex node",
+        "StoreRepresentation store_rep",
+        "std::optional<AtomicMemoryOrder> atomic_order"
+      ],
+      "return_type": "void",
+      "logic": "Common routine for handling store instructions, emitting instructions based on immediate and register usage, and handling write barriers and atomic stores."
+    },
+    {
+      "name": "VisitLogical",
+      "parameters": [
+        "InstructionSelectorT* selector",
+        "OpIndex node",
+        "ArchOpcode opcode",
+        "bool left_can_cover",
+        "bool right_can_cover",
+        "ImmediateMode imm_mode"
+      ],
+      "return_type": "void",
+      "logic": "Handles logical operations (AND, OR) and attempts to optimize by using complemented versions or absorbing XOR operations."
+    },
+    {
+      "name": "IsContiguousMask32",
+      "parameters": [
+        "uint32_t value",
+        "int* mb",
+        "int* me"
+      ],
+      "return_type": "static inline bool",
+      "logic": "Checks if a 32-bit value represents a contiguous mask and calculates the most significant bit (mb) and least significant bit (me) of the mask."
+    },
+    {
+      "name": "IsContiguousMask64",
+      "parameters": [
+        "uint64_t value",
+        "int* mb",
+        "int* me"
+      ],
+      "return_type": "static inline bool",
+      "logic": "Checks if a 64-bit value represents a contiguous mask and calculates the most significant bit (mb) and least significant bit (me) of the mask."
+    },
+    {
+      "name": "VisitCompare",
+      "parameters": [
+        "InstructionSelectorT* selector",
+        "InstructionCode opcode",
+        "InstructionOperand left",
+        "InstructionOperand right",
+        "FlagsContinuationT* cont"
+      ],
+      "return_type": "void",
+      "logic": "Shared routine for multiple compare operations.  Emits instructions with the flags continuation passed in."
+    },
+    {
+      "name": "EmitInt32MulWithOverflow",
+      "parameters": [
+        "InstructionSelectorT* selector",
+        "OpIndex node",
+        "FlagsContinuationT* cont"
+      ],
+      "return_type": "void",
+      "logic": "Emits instruction for Int32Mul with Overflow by using Mul32WithHigh32 and ShiftRightAlg32 to determine whether an overflow has occurred."
+    },
+    {
+      "name": "EmitInt64MulWithOverflow",
+      "parameters": [
+        "InstructionSelectorT* selector",
+        "OpIndex node",
+        "FlagsContinuationT* cont"
+      ],
+      "return_type": "void",
+      "logic": "Emits instructions for Int64Mul with Overflow, by using Mul64 and MulHighS64, to determine whether an overflow has occurred."
+    },
+    {
+      "name": "CompareLogical",
+      "parameters": [
+        "FlagsContinuationT* cont"
+      ],
+      "return_type": "static bool",
+      "logic": "Helper method which returns true when flags continuation condition contains any of kUnsignedLessThan, kUnsignedGreaterThanOrEqual, kUnsignedLessThanOrEqual, kUnsignedGreaterThan"
+    },
+    {
+      "name": "VisitWordCompare",
+      "parameters": [
+        "InstructionSelectorT* selector",
+        "OpIndex node",
+        "InstructionCode opcode",
+        "FlagsContinuationT* cont",
+        "bool commutative",
+        "ImmediateMode immediate_mode"
+      ],
+      "return_type": "void",
+      "logic": "Shared routine for multiple word compare operations."
+    },
+    {
+      "name": "VisitWord32Compare",
+      "parameters": [
+        "InstructionSelectorT* selector",
+        "OpIndex node",
+        "FlagsContinuationT* cont"
+      ],
+      "return_type": "void",
+      "logic": "Routine which uses VisitWordCompare to handle word 32 bit comparisions."
+    },
+    {
+      "name": "VisitWord64Compare",
+      "parameters": [
+        "InstructionSelectorT* selector",
+        "OpIndex node",
+        "FlagsContinuationT* cont"
+      ],
+      "return_type": "void",
+      "logic": "Routine which uses VisitWordCompare to handle word 64 bit comparisions."
+    },
+    {
+      "name": "VisitFloat32Compare",
+      "parameters": [
+        "InstructionSelectorT* selector",
+        "OpIndex node",
+        "FlagsContinuationT* cont"
+      ],
+      "return_type": "void",
+      "logic": "Routine used to handle float 32-bit comparision instructions."
+    },
+    {
+      "name": "VisitFloat64Compare",
+      "parameters": [
+        "InstructionSelectorT* selector",
+        "OpIndex node",
+        "FlagsContinuationT* cont"
+      ],
+      "return_type": "void",
+      "logic": "Routine used to handle float 64-bit comparision instructions."
+    },
+    {
+      "name": "VisitAtomicExchange",
+      "parameters": [
+        "InstructionSelectorT* selector",
+        "OpIndex node",
+        "ArchOpcode opcode"
+      ],
+      "return_type": "void",
+      "logic": "Visit implementation method for all atomic exchange instructions."
+    },
+    {
+      "name": "VisitAtomicCompareExchange",
+      "parameters": [
+        "InstructionSelectorT* selector",
+        "OpIndex node",
+        "ArchOpcode opcode"
+      ],
+      "return_type": "void",
+      "logic": "Visit implementation method for all atomic compare exchange instructions."
+    },
+    {
+      "name": "VisitAtomicBinaryOperation",
+      "parameters": [
+        "InstructionSelectorT* selector",
+        "OpIndex node",
+        "ArchOpcode int8_op",
+        "ArchOpcode uint8_op",
+        "ArchOpcode int16_op",
+        "ArchOpcode uint16_op",
+        "ArchOpcode int32_op",
+        "ArchOpcode uint32_op",
+        "ArchOpcode int64_op",
+        "ArchOpcode uint64_op"
+      ],
+      "return_type": "void",
+      "logic": "Visit implementation method for all atomic binary operation instructions such as Add, Sub, And, Or and Xor."
+    },
+    {
+      "name": "Pack4Lanes",
+      "parameters": [
+        "const uint8_t* shuffle"
+      ],
+      "return_type": "static int32_t",
+      "logic": "Helper function to pack 4 shuffle lanes into a 32-bit integer."
+    }
+  ]
+}

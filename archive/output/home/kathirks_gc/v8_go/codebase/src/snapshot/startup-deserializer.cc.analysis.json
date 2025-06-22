@@ -1,0 +1,48 @@
+{
+  "file_path": "/home/kathirks_gc/v8_go/codebase/src/snapshot/startup-deserializer.cc",
+  "imports": [
+    "src/snapshot/startup-deserializer.h",
+    "src/api/api.h",
+    "src/codegen/flush-instruction-cache.h",
+    "src/execution/v8threads.h",
+    "src/handles/handles-inl.h",
+    "src/heap/paged-spaces-inl.h",
+    "src/logging/counters-scopes.h",
+    "src/logging/log.h",
+    "src/objects/oddball.h",
+    "src/roots/roots-inl.h"
+  ],
+  "classes": [
+    {
+      "name": "StartupDeserializer",
+      "properties": [],
+      "methods": [
+        {
+          "name": "DeserializeIntoIsolate",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Deserializes the startup snapshot into the isolate, effectively restoring the initial state of the V8 engine. It iterates over different root sets, deserializes deferred objects, and handles external references.  It also handles post-deserialization tasks such as flushing the instruction cache, setting up heap lists, marking builtins as initialized, logging map events, and rehashing if necessary."
+        },
+        {
+          "name": "DeserializeAndCheckExternalReferenceTable",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Verifies that the external reference table in the deserialized isolate matches the original table used during serialization, ensuring consistency in external references across the snapshot."
+        },
+        {
+          "name": "LogNewMapEvents",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Logs map creation events if the `log_maps` flag is enabled.  This is used for debugging and performance analysis."
+        },
+        {
+          "name": "FlushICache",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Flushes the instruction cache for the entire code space after deserialization. This ensures that the newly deserialized code is executed correctly by invalidating any stale cached instructions."
+        }
+      ]
+    }
+  ],
+  "functions": []
+}

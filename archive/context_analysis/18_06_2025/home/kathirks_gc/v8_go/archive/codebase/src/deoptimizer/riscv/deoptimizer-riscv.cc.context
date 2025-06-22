@@ -1,0 +1,96 @@
+{
+  "metadata": {
+    "path": "/home/kathirks_gc/v8_go/archive/codebase/src/deoptimizer/riscv/deoptimizer-riscv.cc",
+    "file_name": "deoptimizer-riscv.cc",
+    "language": "cpp",
+    "purpose": "RISC-V specific implementation of the deoptimizer for the V8 JavaScript engine."
+  },
+  "imports": {
+    "metadata": {
+      "language": "cpp",
+      "purpose": "Includes the general deoptimizer header file."
+    },
+    "code": "#include \"src/deoptimizer/deoptimizer.h\""
+  },
+  "classes": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "Deoptimizer",
+        "about": "Provides functionality for deoptimizing compiled code.",
+        "attributes": [],
+        "dependencies": []
+      },
+      "code": "namespace v8 {\nnamespace internal {\n\nconst int Deoptimizer::kEagerDeoptExitSize = 2 * kInstrSize;\nconst int Deoptimizer::kLazyDeoptExitSize = 2 * kInstrSize;\n\nconst int Deoptimizer::kAdaptShadowStackOffsetToSubtract = 0;\n\n// static\nvoid Deoptimizer::PatchToJump(Address pc, Address new_pc) { UNREACHABLE(); }"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "RegisterValues",
+        "about": "Represents the values of registers.",
+        "attributes": [],
+        "dependencies": [
+          "Float32",
+          "Float64"
+        ]
+      },
+      "code": "Float32 RegisterValues::GetFloatRegister(unsigned n) const {\n  return Float32::FromBits(\n      static_cast<uint32_t>(double_registers_[n].get_bits()));\n}\nFloat64 RegisterValues::GetDoubleRegister(unsigned n) const {\n  return Float64::FromBits(\n      static_cast<uint64_t>(double_registers_[n].get_bits()));\n}\n\nvoid RegisterValues::SetDoubleRegister(unsigned n, Float64 value) {\n  base::WriteUnalignedValue<Float64>(\n      reinterpret_cast<Address>(double_registers_ + n), value);\n}"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "FrameDescription",
+        "about": "Describes a stack frame.",
+        "attributes": [],
+        "dependencies": []
+      },
+      "code": "void FrameDescription::SetCallerPc(unsigned offset, intptr_t value) {\n  SetFrameSlot(offset, value);\n}\n\nvoid FrameDescription::SetCallerFp(unsigned offset, intptr_t value) {\n  SetFrameSlot(offset, value);\n}\n\nvoid FrameDescription::SetCallerConstantPool(unsigned offset, intptr_t value) {\n  // No embedded constant pool support.\n  UNREACHABLE();\n}\n\nvoid FrameDescription::SetPc(intptr_t pc) { pc_ = pc; }\n\n}  // namespace internal\n}  // namespace v8"
+    }
+  ],
+  "dependencies": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "Float32",
+        "about": "Represents a 32-bit floating-point number."
+      },
+      "code": "class Float32 {\n            public:\n                static Float32 FromBits(uint32_t bits);\n            };",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "Float64",
+        "about": "Represents a 64-bit floating-point number."
+      },
+      "code": "class Float64 {\n            public:\n                static Float64 FromBits(uint64_t bits);\n            };",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "base::WriteUnalignedValue",
+        "about": "Writes a value to memory without alignment requirements."
+      },
+      "code": "namespace base {\n                template <typename T>\n                void WriteUnalignedValue(Address dst, T value);\n            }",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "Address",
+        "about": "Represents memory address."
+      },
+      "code": "typedef uintptr_t Address;",
+      "type": "class"
+    }
+  ],
+  "file_path": "/home/kathirks_gc/v8_go/archive/codebase/src/deoptimizer/riscv/deoptimizer-riscv.cc"
+}

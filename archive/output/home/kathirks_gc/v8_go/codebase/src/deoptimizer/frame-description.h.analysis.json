@@ -1,0 +1,389 @@
+{
+  "file_path": "/home/kathirks_gc/v8_go/codebase/src/deoptimizer/frame-description.h",
+  "imports": [
+    "src/base/memory.h",
+    "src/base/platform/memory.h",
+    "src/codegen/register.h",
+    "src/common/simd128.h",
+    "src/execution/frame-constants.h",
+    "src/utils/boxed-float.h"
+  ],
+  "classes": [
+    {
+      "name": "RegisterValues",
+      "properties": [
+        "registers_[Register::kNumRegisters]",
+        "simd128_registers_[Simd128Register::kNumRegisters]",
+        "double_registers_[DoubleRegister::kNumRegisters] (conditional based on V8_TARGET_ARCH)"
+      ],
+      "methods": [
+        {
+          "name": "GetRegister",
+          "parameters": [
+            "unsigned n"
+          ],
+          "return_type": "intptr_t",
+          "logic": "Returns the value of the nth general-purpose register."
+        },
+        {
+          "name": "GetFloatRegister",
+          "parameters": [
+            "unsigned n"
+          ],
+          "return_type": "Float32",
+          "logic": "Returns the value of the nth float register."
+        },
+        {
+          "name": "GetDoubleRegister",
+          "parameters": [
+            "unsigned n"
+          ],
+          "return_type": "Float64",
+          "logic": "Returns the value of the nth double register."
+        },
+        {
+          "name": "SetDoubleRegister",
+          "parameters": [
+            "unsigned n",
+            "Float64 value"
+          ],
+          "return_type": "void",
+          "logic": "Sets the value of the nth double register."
+        },
+        {
+          "name": "GetSimd128Register",
+          "parameters": [
+            "unsigned n"
+          ],
+          "return_type": "Simd128",
+          "logic": "Returns the value of the nth SIMD128 register."
+        },
+        {
+          "name": "SetRegister",
+          "parameters": [
+            "unsigned n",
+            "intptr_t value"
+          ],
+          "return_type": "void",
+          "logic": "Sets the value of the nth general-purpose register."
+        },
+        {
+          "name": "SetSimd128Register",
+          "parameters": [
+            "unsigned n",
+            "Simd128 value"
+          ],
+          "return_type": "void",
+          "logic": "Sets the value of the nth SIMD128 register."
+        }
+      ]
+    },
+    {
+      "name": "FrameDescription",
+      "properties": [
+        "frame_size_",
+        "parameter_count_",
+        "register_values_",
+        "top_",
+        "pc_",
+        "fp_",
+        "constant_pool_",
+        "caller_pc_",
+        "isolate_",
+        "continuation_",
+        "frame_content_[1]"
+      ],
+      "methods": [
+        {
+          "name": "Create",
+          "parameters": [
+            "uint32_t frame_size",
+            "int parameter_count",
+            "Isolate* isolate"
+          ],
+          "return_type": "FrameDescription*",
+          "logic": "Allocates a new FrameDescription object using placement new. The FrameDescription object is allocated with extra memory for the frame content."
+        },
+        {
+          "name": "operator delete",
+          "parameters": [
+            "void* description"
+          ],
+          "return_type": "void",
+          "logic": "Deallocates the memory for a FrameDescription object."
+        },
+        {
+          "name": "GetFrameSize",
+          "parameters": [],
+          "return_type": "uint32_t",
+          "logic": "Returns the size of the frame."
+        },
+        {
+          "name": "GetFrameSlot",
+          "parameters": [
+            "unsigned offset"
+          ],
+          "return_type": "intptr_t",
+          "logic": "Returns the value at a specific offset within the frame."
+        },
+        {
+          "name": "GetLastArgumentSlotOffset",
+          "parameters": [
+            "bool pad_arguments = true"
+          ],
+          "return_type": "unsigned",
+          "logic": "Calculates the offset of the last argument slot in the frame."
+        },
+        {
+          "name": "GetFramePointerAddress",
+          "parameters": [],
+          "return_type": "Address",
+          "logic": "Calculates and returns the address of the frame pointer."
+        },
+        {
+          "name": "GetRegisterValues",
+          "parameters": [],
+          "return_type": "RegisterValues*",
+          "logic": "Returns a pointer to the RegisterValues object."
+        },
+        {
+          "name": "SetFrameSlot",
+          "parameters": [
+            "unsigned offset",
+            "intptr_t value"
+          ],
+          "return_type": "void",
+          "logic": "Sets the value at a specific offset within the frame."
+        },
+        {
+          "name": "SetLiftoffFrameSlot32",
+          "parameters": [
+            "unsigned offset",
+            "int32_t value"
+          ],
+          "return_type": "void",
+          "logic": "Sets the value at a specific offset within the frame, writing only 32 bits. Used by liftoff."
+        },
+        {
+          "name": "SetLiftoffFrameSlot64",
+          "parameters": [
+            "unsigned offset",
+            "int64_t value"
+          ],
+          "return_type": "void",
+          "logic": "Sets the value at a specific offset within the frame, writing only 64 bits. Used by liftoff."
+        },
+        {
+          "name": "SetLiftoffFrameSlotPointer",
+          "parameters": [
+            "unsigned offset",
+            "intptr_t value"
+          ],
+          "return_type": "void",
+          "logic": "Sets the value at a specific offset within the frame, using the appropriate 32 or 64 bit write based on the architecture. Used by liftoff."
+        },
+        {
+          "name": "SetCallerPc",
+          "parameters": [
+            "unsigned offset",
+            "intptr_t value"
+          ],
+          "return_type": "void",
+          "logic": "Sets the caller's program counter in the frame."
+        },
+        {
+          "name": "SetCallerFp",
+          "parameters": [
+            "unsigned offset",
+            "intptr_t value"
+          ],
+          "return_type": "void",
+          "logic": "Sets the caller's frame pointer in the frame."
+        },
+        {
+          "name": "SetCallerConstantPool",
+          "parameters": [
+            "unsigned offset",
+            "intptr_t value"
+          ],
+          "return_type": "void",
+          "logic": "Sets the caller's constant pool pointer in the frame."
+        },
+        {
+          "name": "GetRegister",
+          "parameters": [
+            "unsigned n"
+          ],
+          "return_type": "intptr_t",
+          "logic": "Gets the value of the nth register."
+        },
+        {
+          "name": "GetDoubleRegister",
+          "parameters": [
+            "unsigned n"
+          ],
+          "return_type": "Float64",
+          "logic": "Gets the value of the nth double register."
+        },
+        {
+          "name": "SetRegister",
+          "parameters": [
+            "unsigned n",
+            "intptr_t value"
+          ],
+          "return_type": "void",
+          "logic": "Sets the value of the nth register."
+        },
+        {
+          "name": "SetDoubleRegister",
+          "parameters": [
+            "unsigned n",
+            "Float64 value"
+          ],
+          "return_type": "void",
+          "logic": "Sets the value of the nth double register."
+        },
+        {
+          "name": "SetSimd128Register",
+          "parameters": [
+            "unsigned n",
+            "Simd128 value"
+          ],
+          "return_type": "void",
+          "logic": "Sets the value of the nth SIMD128 register."
+        },
+        {
+          "name": "GetTop",
+          "parameters": [],
+          "return_type": "intptr_t",
+          "logic": "Returns the value of top_."
+        },
+        {
+          "name": "SetTop",
+          "parameters": [
+            "intptr_t top"
+          ],
+          "return_type": "void",
+          "logic": "Sets the value of top_."
+        },
+        {
+          "name": "GetPc",
+          "parameters": [],
+          "return_type": "intptr_t",
+          "logic": "Returns the value of pc_."
+        },
+        {
+          "name": "SetPc",
+          "parameters": [
+            "intptr_t pc"
+          ],
+          "return_type": "void",
+          "logic": "Sets the value of pc_."
+        },
+        {
+          "name": "GetFp",
+          "parameters": [],
+          "return_type": "intptr_t",
+          "logic": "Returns the value of fp_ (frame pointer)."
+        },
+        {
+          "name": "SetFp",
+          "parameters": [
+            "intptr_t frame_pointer"
+          ],
+          "return_type": "void",
+          "logic": "Sets the value of fp_ (frame pointer)."
+        },
+        {
+          "name": "GetConstantPool",
+          "parameters": [],
+          "return_type": "intptr_t",
+          "logic": "Returns the value of constant_pool_."
+        },
+        {
+          "name": "SetConstantPool",
+          "parameters": [
+            "intptr_t constant_pool"
+          ],
+          "return_type": "void",
+          "logic": "Sets the value of constant_pool_."
+        },
+        {
+          "name": "HasCallerPc",
+          "parameters": [],
+          "return_type": "bool",
+          "logic": "Returns true if caller_pc_ is not zero, indicating that a caller PC is present."
+        },
+        {
+          "name": "GetCallerPc",
+          "parameters": [],
+          "return_type": "intptr_t",
+          "logic": "Returns the value of caller_pc_."
+        },
+        {
+          "name": "SetContinuation",
+          "parameters": [
+            "intptr_t pc"
+          ],
+          "return_type": "void",
+          "logic": "Sets the continuation point (pc) after deoptimization."
+        },
+        {
+          "name": "GetContinuation",
+          "parameters": [],
+          "return_type": "intptr_t",
+          "logic": "Returns the continuation point (pc) after deoptimization."
+        },
+        {
+          "name": "parameter_count",
+          "parameters": [],
+          "return_type": "int",
+          "logic": "Returns the number of parameters (including the receiver)."
+        },
+        {
+          "name": "registers_offset",
+          "parameters": [],
+          "return_type": "int",
+          "logic": "Returns the offset of the registers_ array within the FrameDescription object."
+        },
+        {
+          "name": "double_registers_offset",
+          "parameters": [],
+          "return_type": "constexpr int",
+          "logic": "Returns the offset of the double_registers_ array within the FrameDescription object. (RISCV only)"
+        },
+        {
+          "name": "simd128_registers_offset",
+          "parameters": [],
+          "return_type": "constexpr int",
+          "logic": "Returns the offset of the simd128_registers_ array within the FrameDescription object."
+        },
+        {
+          "name": "frame_size_offset",
+          "parameters": [],
+          "return_type": "int",
+          "logic": "Returns the offset of the frame_size_ member within the FrameDescription object."
+        },
+        {
+          "name": "pc_offset",
+          "parameters": [],
+          "return_type": "int",
+          "logic": "Returns the offset of the pc_ member within the FrameDescription object."
+        },
+        {
+          "name": "continuation_offset",
+          "parameters": [],
+          "return_type": "int",
+          "logic": "Returns the offset of the continuation_ member within the FrameDescription object."
+        },
+        {
+          "name": "frame_content_offset",
+          "parameters": [],
+          "return_type": "int",
+          "logic": "Returns the offset of the frame_content_ member within the FrameDescription object."
+        }
+      ]
+    }
+  ],
+  "functions": []
+}

@@ -1,0 +1,62 @@
+{
+  "metadata": {
+    "path": "/home/kathirks_gc/v8_go/archive/codebase/src/compiler/turboshaft/simplify-tf-loops.cc",
+    "file_name": "simplify-tf-loops.cc",
+    "language": "cpp",
+    "purpose": "Implements loop simplification transformations for Turboshaft, specifically targeting TensorFlow-like loops."
+  },
+  "imports": {
+    "metadata": {
+      "language": "cpp",
+      "purpose": "Includes necessary headers for loop simplification, vector operations, graph manipulation, and node property access."
+    },
+    "code": "#include \"src/compiler/turboshaft/simplify-tf-loops.h\"\n\n#include \"src/base/small-vector.h\"\n#include \"src/compiler/machine-graph.h\"\n#include \"src/compiler/node-properties.h\""
+  },
+  "classes": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "SimplifyTFLoops",
+        "about": "Class responsible for simplifying TensorFlow-like loops in the Turboshaft compiler."
+      },
+      "code": "namespace v8::internal::compiler {\n\nclass SimplifyTFLoops {\n public:\n  Reduction Reduce(Node* node);\n\n private:\n  MachineGraph* mcgraph_;\n};"
+    }
+  ],
+  "functions": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "method",
+        "name": "Reduce",
+        "parent": "SimplifyTFLoops",
+        "about": "Attempts to simplify a given node, specifically targeting loop nodes with more than two inputs. Transforms the loop by inserting a new loop node and adjusting Phi nodes.",
+        "logic": "1. Checks if the node is a loop and has more than two inputs.\n2. Creates a new loop node with the first input of the original loop and the original loop as inputs.\n3. Removes the first input from the original loop.\n4. Changes the opcode of the original loop to a Merge node.\n5. Iterates through the uses of the original loop, identifying Phi nodes and other control uses.\n6. For Phi nodes, moves the dominating input to a new Phi node that feeds into the original Phi node and the new loop node.\n7. Replaces the original Phi node's uses with the new Phi node.\n8. Updates control uses of the original loop to use the new loop instead.",
+        "parameters": [
+          {
+            "name": "node",
+            "type": "Node*",
+            "purpose": "The node to attempt to simplify."
+          }
+        ],
+        "return": {
+          "type": "Reduction",
+          "description": "Indicates whether the node was successfully reduced (simplified)."
+        },
+        "dependencies": [
+          "IrOpcode",
+          "Node",
+          "MachineGraph",
+          "CommonOperatorBuilder",
+          "NodeProperties",
+          "PhiRepresentationOf",
+          "Edge",
+          "base::SmallVector",
+          "Merge"
+        ]
+      },
+      "code": "Reduction SimplifyTFLoops::Reduce(Node* node) {\n  if (node->opcode() != IrOpcode::kLoop) return NoChange();\n  if (node->InputCount() <= 2) return NoChange();\n\n  Node* new_loop = mcgraph_->graph()->NewNode(mcgraph_->common()->Loop(2),\n                                              node->InputAt(0), node);\n  node->RemoveInput(0);\n  NodeProperties::ChangeOp(node, mcgraph_->common()->Merge(node->InputCount()));\n\n  base::SmallVector<Edge, 4> control_uses;\n\n  for (Edge edge : node->use_edges()) {\n    Node* use = edge.from();\n    if (!NodeProperties::IsPhi(use)) {\n      control_uses.emplace_back(edge);\n      continue;\n    }\n    Node* dominating_input = use->InputAt(0);\n    use->RemoveInput(0);\n    NodeProperties::ChangeOp(\n        use, use->opcode() == IrOpcode::kPhi\n                 ? mcgraph_->common()->Phi(PhiRepresentationOf(use->op()),\n                                           use->InputCount() - 1)\n                 : mcgraph_->common()->EffectPhi(use->InputCount() - 1));\n\n    Node* new_phi = mcgraph_->graph()->NewNode(\n        use->opcode() == IrOpcode::kPhi\n            ? mcgraph_->common()->Phi(PhiRepresentationOf(use->op()), 2)\n            : mcgraph_->common()->EffectPhi(2),\n        dominating_input, use, new_loop);\n\n    ReplaceWithValue(use, new_phi, new_phi, new_phi);\n    // Restore the use <- new_phi edge we just broke.\n    new_phi->ReplaceInput(1, use);\n  }\n\n  for (Edge edge : control_uses) {\n    if (edge.from() != new_loop) {\n      edge.from()->ReplaceInput(edge.index(), new_loop);\n    }\n  }\n\n  return NoChange();\n}"
+    }
+  ],
+  "file_path": "/home/kathirks_gc/v8_go/archive/codebase/src/compiler/turboshaft/simplify-tf-loops.cc"
+}

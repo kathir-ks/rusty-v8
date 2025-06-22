@@ -1,0 +1,944 @@
+{
+  "file_path": "/home/kathirks_gc/v8_go/codebase/src/execution/arm64/simulator-arm64.cc",
+  "imports": [
+    "src/execution/arm64/simulator-arm64.h",
+    "src/execution/isolate.h",
+    "<stdlib.h>",
+    "<cmath>",
+    "<cstdarg>",
+    "<type_traits>",
+    "src/base/overflowing-math.h",
+    "src/base/platform/platform.h",
+    "src/base/platform/wrappers.h",
+    "src/base/sanitizer/msan.h",
+    "src/codegen/arm64/decoder-arm64-inl.h",
+    "src/codegen/assembler-inl.h",
+    "src/codegen/macro-assembler.h",
+    "src/diagnostics/disasm.h",
+    "src/heap/base/stack.h",
+    "src/heap/combined-heap.h",
+    "src/objects/objects-inl.h",
+    "src/runtime/runtime-utils.h",
+    "src/snapshot/embedded/embedded-data.h",
+    "src/utils/ostreams.h",
+    "src/trap-handler/trap-handler-simulator.h",
+    "<windows.h>"
+  ],
+  "classes": [
+    {
+      "name": "Simulator",
+      "properties": [
+        "decoder_",
+        "guard_pages_",
+        "last_debugger_input_",
+        "log_parameters_",
+        "icount_for_stop_sim_at_",
+        "isolate_",
+        "stack_",
+        "stack_limit_",
+        "stream_",
+        "print_disasm_",
+        "disassembler_decoder_",
+        "global_monitor_",
+        "global_monitor_processor_",
+        "pc_",
+        "registers_",
+        "vregisters_",
+        "nzcv_",
+        "fpcr_",
+        "breakpoints_",
+        "break_on_next_",
+        "pc_modified_",
+        "btype_"
+      ],
+      "methods": [
+        {
+          "name": "ProbeMemory",
+          "parameters": [
+            "address",
+            "access_size"
+          ],
+          "return_type": "bool",
+          "logic": "Checks if memory access is valid, handling wasm traps if necessary."
+        },
+        {
+          "name": "TraceSim",
+          "parameters": [
+            "format",
+            "..."
+          ],
+          "return_type": "void",
+          "logic": "Prints trace messages if v8_flags.trace_sim is enabled."
+        },
+        {
+          "name": "current",
+          "parameters": [
+            "isolate"
+          ],
+          "return_type": "Simulator*",
+          "logic": "Returns the active Simulator for the current thread and isolate."
+        },
+        {
+          "name": "CallImpl",
+          "parameters": [
+            "entry",
+            "args"
+          ],
+          "return_type": "void",
+          "logic": "Calls a function at a given entry point, setting up the stack and registers according to the provided arguments."
+        },
+        {
+          "name": "CheckPCSComplianceAndRun",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Adjusts stack limit, saves and restores callee-saved registers, corrupts caller-saved registers (in DEBUG mode), and runs the simulation."
+        },
+        {
+          "name": "PushAddress",
+          "parameters": [
+            "address"
+          ],
+          "return_type": "uintptr_t",
+          "logic": "Pushes an address onto the simulator stack, adjusting the stack pointer."
+        },
+        {
+          "name": "PopAddress",
+          "parameters": [],
+          "return_type": "uintptr_t",
+          "logic": "Pops an address from the simulator stack, adjusting the stack pointer."
+        },
+        {
+          "name": "StackLimit",
+          "parameters": [
+            "c_limit"
+          ],
+          "return_type": "uintptr_t",
+          "logic": "Returns the limit of the stack area, considering C stack exhaustion."
+        },
+        {
+          "name": "StackBase",
+          "parameters": [],
+          "return_type": "uintptr_t",
+          "logic": "Returns the base of the stack."
+        },
+        {
+          "name": "SetStackLimit",
+          "parameters": [
+            "limit"
+          ],
+          "return_type": "void",
+          "logic": "Sets the stack limit."
+        },
+        {
+          "name": "GetCentralStackView",
+          "parameters": [],
+          "return_type": "base::Vector<uint8_t>",
+          "logic": "Returns a view of the central stack."
+        },
+        {
+          "name": "IterateRegistersAndStack",
+          "parameters": [
+            "visitor"
+          ],
+          "return_type": "void",
+          "logic": "Iterates registers and stack, visiting pointers."
+        },
+        {
+          "name": "SetRedirectInstruction",
+          "parameters": [
+            "instruction"
+          ],
+          "return_type": "void",
+          "logic": "Sets the given instruction to a redirection instruction."
+        },
+        {
+          "name": "Simulator",
+          "parameters": [
+            "decoder",
+            "isolate",
+            "stream"
+          ],
+          "return_type": null,
+          "logic": "Constructor for the simulator with a decoder and isolate. Initializes the simulator and its components."
+        },
+        {
+          "name": "Simulator",
+          "parameters": [],
+          "return_type": null,
+          "logic": "Default constructor for the simulator. Initializes the simulator."
+        },
+        {
+          "name": "Init",
+          "parameters": [
+            "stream"
+          ],
+          "return_type": "void",
+          "logic": "Initializes the simulator's internal state, allocates memory for the stack, and sets up the decoder and disassembler."
+        },
+        {
+          "name": "ResetState",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Resets the simulator's registers, program counter, and other internal state to a known initial condition."
+        },
+        {
+          "name": "~Simulator",
+          "parameters": [],
+          "return_type": null,
+          "logic": "Destructor for the Simulator class. Deallocates memory and releases resources."
+        },
+        {
+          "name": "Run",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Executes instructions until the program counter reaches the end-of-simulation address."
+        },
+        {
+          "name": "RunFrom",
+          "parameters": [
+            "start"
+          ],
+          "return_type": "void",
+          "logic": "Starts simulation from a given instruction."
+        },
+        {
+          "name": "DoRuntimeCall",
+          "parameters": [
+            "instr"
+          ],
+          "return_type": "void",
+          "logic": "Handles a runtime call by fetching the target function, setting up arguments, and calling the function."
+        },
+        {
+          "name": "WRegNameForCode",
+          "parameters": [
+            "code",
+            "mode"
+          ],
+          "return_type": "const char*",
+          "logic": "Returns the name of a W register for a given code, considering Reg31Mode."
+        },
+        {
+          "name": "XRegNameForCode",
+          "parameters": [
+            "code",
+            "mode"
+          ],
+          "return_type": "const char*",
+          "logic": "Returns the name of an X register for a given code, considering Reg31Mode."
+        },
+        {
+          "name": "SRegNameForCode",
+          "parameters": [
+            "code"
+          ],
+          "return_type": "const char*",
+          "logic": "Returns the name of an S register for a given code."
+        },
+        {
+          "name": "DRegNameForCode",
+          "parameters": [
+            "code"
+          ],
+          "return_type": "const char*",
+          "logic": "Returns the name of a D register for a given code."
+        },
+        {
+          "name": "VRegNameForCode",
+          "parameters": [
+            "code"
+          ],
+          "return_type": "const char*",
+          "logic": "Returns the name of a V register for a given code."
+        },
+        {
+          "name": "CodeFromName",
+          "parameters": [
+            "name"
+          ],
+          "return_type": "int",
+          "logic": "Returns the code of a register based on its name."
+        },
+        {
+          "name": "AddWithCarry",
+          "parameters": [
+            "set_flags",
+            "left",
+            "right",
+            "carry_in"
+          ],
+          "return_type": "T",
+          "logic": "Performs addition with carry and optionally sets the NZCV flags."
+        },
+        {
+          "name": "AddSubWithCarry",
+          "parameters": [
+            "instr"
+          ],
+          "return_type": "void",
+          "logic": "Handles the AddSubWithCarry instruction."
+        },
+        {
+          "name": "PolynomialMult128",
+          "parameters": [
+            "op1",
+            "op2",
+            "lane_size_in_bits"
+          ],
+          "return_type": "sim_uint128_t",
+          "logic": "Performs a polynomial multiplication of 128 bits."
+        },
+        {
+          "name": "Lsl128",
+          "parameters": [
+            "x",
+            "shift"
+          ],
+          "return_type": "sim_uint128_t",
+          "logic": "Performs a left shift operation on a 128-bit value."
+        },
+        {
+          "name": "Eor128",
+          "parameters": [
+            "x",
+            "y"
+          ],
+          "return_type": "sim_uint128_t",
+          "logic": "Performs an exclusive OR operation on two 128-bit values."
+        },
+        {
+          "name": "ShiftOperand",
+          "parameters": [
+            "value",
+            "shift_type",
+            "amount"
+          ],
+          "return_type": "T",
+          "logic": "Shifts an operand by a given amount and type."
+        },
+        {
+          "name": "ExtendValue",
+          "parameters": [
+            "value",
+            "extend_type",
+            "left_shift"
+          ],
+          "return_type": "T",
+          "logic": "Extends a value based on the specified extend type and left shift."
+        },
+        {
+          "name": "Extract",
+          "parameters": [
+            "instr"
+          ],
+          "return_type": "void",
+          "logic": "Extracts a value from a register based on the given instruction."
+        },
+        {
+          "name": "FPCompare",
+          "parameters": [
+            "val0",
+            "val1"
+          ],
+          "return_type": "void",
+          "logic": "Compares two floating-point values and sets the NZCV flags accordingly."
+        },
+        {
+          "name": "GetPrintRegisterFormatForSize",
+          "parameters": [
+            "reg_size",
+            "lane_size"
+          ],
+          "return_type": "Simulator::PrintRegisterFormat",
+          "logic": "Gets the print register format for a specific register and lane size."
+        },
+        {
+          "name": "GetPrintRegisterFormat",
+          "parameters": [
+            "vform"
+          ],
+          "return_type": "Simulator::PrintRegisterFormat",
+          "logic": "Gets the print register format for a vector format."
+        },
+        {
+          "name": "GetPrintRegisterFormatFP",
+          "parameters": [
+            "vform"
+          ],
+          "return_type": "Simulator::PrintRegisterFormat",
+          "logic": "Gets the print register format for a floating-point vector format."
+        },
+        {
+          "name": "SetBreakpoint",
+          "parameters": [
+            "location"
+          ],
+          "return_type": "void",
+          "logic": "Sets a breakpoint at a given instruction location."
+        },
+        {
+          "name": "ListBreakpoints",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Lists all active breakpoints."
+        },
+        {
+          "name": "CheckBreakpoints",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Checks if any breakpoints are hit and triggers the debugger if so."
+        },
+        {
+          "name": "CheckBreakNext",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Checks if there is a next breakpoint to be inserted."
+        },
+        {
+          "name": "PrintInstructionsAt",
+          "parameters": [
+            "start",
+            "count"
+          ],
+          "return_type": "void",
+          "logic": "Prints instructions at a given start address for a given count."
+        },
+        {
+          "name": "PrintWrittenRegisters",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Prints registers that have been written since last log."
+        },
+        {
+          "name": "PrintWrittenVRegisters",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Prints vector registers that have been written since last log."
+        },
+        {
+          "name": "PrintSystemRegisters",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Prints system registers."
+        },
+        {
+          "name": "PrintRegisters",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Prints all registers."
+        },
+        {
+          "name": "PrintVRegisters",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Prints all vector registers."
+        },
+        {
+          "name": "PrintRegister",
+          "parameters": [
+            "code",
+            "r31mode"
+          ],
+          "return_type": "void",
+          "logic": "Prints a register's name and value."
+        },
+        {
+          "name": "PrintVRegister",
+          "parameters": [
+            "code",
+            "format"
+          ],
+          "return_type": "void",
+          "logic": "Prints a vector register with a specific format."
+        },
+        {
+          "name": "PrintSystemRegister",
+          "parameters": [
+            "id"
+          ],
+          "return_type": "void",
+          "logic": "Prints the value of a system register."
+        },
+        {
+          "name": "PrintRead",
+          "parameters": [
+            "address",
+            "reg_code",
+            "format"
+          ],
+          "return_type": "void",
+          "logic": "Prints a read operation with memory address and register information."
+        },
+        {
+          "name": "PrintVRead",
+          "parameters": [
+            "address",
+            "reg_code",
+            "format",
+            "lane"
+          ],
+          "return_type": "void",
+          "logic": "Prints a vector read operation with memory address, register, format, and lane information."
+        },
+        {
+          "name": "PrintWrite",
+          "parameters": [
+            "address",
+            "reg_code",
+            "format"
+          ],
+          "return_type": "void",
+          "logic": "Prints a write operation with memory address and register information."
+        },
+        {
+          "name": "PrintVWrite",
+          "parameters": [
+            "address",
+            "reg_code",
+            "format",
+            "lane"
+          ],
+          "return_type": "void",
+          "logic": "Prints a vector write operation with memory address, register, format, and lane information."
+        },
+        {
+          "name": "VisitUnimplemented",
+          "parameters": [
+            "instr"
+          ],
+          "return_type": "void",
+          "logic": "Handles unimplemented instructions."
+        },
+        {
+          "name": "VisitUnallocated",
+          "parameters": [
+            "instr"
+          ],
+          "return_type": "void",
+          "logic": "Handles unallocated instructions."
+        },
+        {
+          "name": "VisitPCRelAddressing",
+          "parameters": [
+            "instr"
+          ],
+          "return_type": "void",
+          "logic": "Handles PC-relative addressing instructions (ADR, ADRP)."
+        },
+        {
+          "name": "VisitUnconditionalBranch",
+          "parameters": [
+            "instr"
+          ],
+          "return_type": "void",
+          "logic": "Handles unconditional branch instructions (B, BL)."
+        },
+        {
+          "name": "VisitConditionalBranch",
+          "parameters": [
+            "instr"
+          ],
+          "return_type": "void",
+          "logic": "Handles conditional branch instructions (B_cond)."
+        },
+        {
+          "name": "GetBTypeFromInstruction",
+          "parameters": [
+            "instr"
+          ],
+          "return_type": "Simulator::BType",
+          "logic": "Retrieves the BType from the given instruction."
+        },
+        {
+          "name": "VisitUnconditionalBranchToRegister",
+          "parameters": [
+            "instr"
+          ],
+          "return_type": "void",
+          "logic": "Handles unconditional branch to register instructions (BR, BLR, RET)."
+        },
+        {
+          "name": "VisitTestBranch",
+          "parameters": [
+            "instr"
+          ],
+          "return_type": "void",
+          "logic": "Handles test branch instructions (TBZ, TBNZ)."
+        },
+        {
+          "name": "VisitCompareBranch",
+          "parameters": [
+            "instr"
+          ],
+          "return_type": "void",
+          "logic": "Handles compare branch instructions (CBZ, CBNZ)."
+        },
+        {
+          "name": "AddSubHelper",
+          "parameters": [
+            "instr",
+            "op2"
+          ],
+          "return_type": "void",
+          "logic": "Helper function for add and subtract operations, handling flags and register updates."
+        },
+        {
+          "name": "VisitAddSubShifted",
+          "parameters": [
+            "instr"
+          ],
+          "return_type": "void",
+          "logic": "Handles add and subtract instructions with shifted operands."
+        },
+        {
+          "name": "VisitAddSubImmediate",
+          "parameters": [
+            "instr"
+          ],
+          "return_type": "void",
+          "logic": "Handles add and subtract instructions with immediate operands."
+        },
+        {
+          "name": "VisitAddSubExtended",
+          "parameters": [
+            "instr"
+          ],
+          "return_type": "void",
+          "logic": "Handles add and subtract instructions with extended operands."
+        },
+        {
+          "name": "VisitAddSubWithCarry",
+          "parameters": [
+            "instr"
+          ],
+          "return_type": "void",
+          "logic": "Handles add and subtract with carry instructions (ADC, SBC)."
+        },
+        {
+          "name": "VisitLogicalShifted",
+          "parameters": [
+            "instr"
+          ],
+          "return_type": "void",
+          "logic": "Handles logical instructions with shifted operands (AND, ORR, EOR)."
+        },
+        {
+          "name": "VisitLogicalImmediate",
+          "parameters": [
+            "instr"
+          ],
+          "return_type": "void",
+          "logic": "Handles logical instructions with immediate operands (AND, ORR, EOR)."
+        },
+        {
+          "name": "LogicalHelper",
+          "parameters": [
+            "instr",
+            "op2"
+          ],
+          "return_type": "void",
+          "logic": "Helper for the execution of logical instructions."
+        },
+        {
+          "name": "VisitConditionalCompareRegister",
+          "parameters": [
+            "instr"
+          ],
+          "return_type": "void",
+          "logic": "Handles conditional compare instructions with a register operand."
+        },
+        {
+          "name": "VisitConditionalCompareImmediate",
+          "parameters": [
+            "instr"
+          ],
+          "return_type": "void",
+          "logic": "Handles conditional compare instructions with an immediate operand."
+        },
+        {
+          "name": "ConditionalCompareHelper",
+          "parameters": [
+            "instr",
+            "op2"
+          ],
+          "return_type": "void",
+          "logic": "Helper function for conditional compare instructions."
+        },
+        {
+          "name": "VisitLoadStoreUnsignedOffset",
+          "parameters": [
+            "instr"
+          ],
+          "return_type": "void",
+          "logic": "Handles load and store instructions with unsigned offset."
+        },
+        {
+          "name": "VisitLoadStoreUnscaledOffset",
+          "parameters": [
+            "instr"
+          ],
+          "return_type": "void",
+          "logic": "Handles load and store instructions with unscaled offset."
+        },
+        {
+          "name": "VisitLoadStorePreIndex",
+          "parameters": [
+            "instr"
+          ],
+          "return_type": "void",
+          "logic": "Handles load and store instructions with pre-index addressing."
+        },
+        {
+          "name": "VisitLoadStorePostIndex",
+          "parameters": [
+            "instr"
+          ],
+          "return_type": "void",
+          "logic": "Handles load and store instructions with post-index addressing."
+        },
+        {
+          "name": "VisitLoadStoreRegisterOffset",
+          "parameters": [
+            "instr"
+          ],
+          "return_type": "void",
+          "logic": "Handles load and store instructions with register offset addressing."
+        },
+        {
+          "name": "LoadStoreHelper",
+          "parameters": [
+            "instr",
+            "offset",
+            "addrmode"
+          ],
+          "return_type": "void",
+          "logic": "Helper function for load and store instructions, performing memory access and register updates."
+        },
+        {
+          "name": "VisitLoadStorePairOffset",
+          "parameters": [
+            "instr"
+          ],
+          "return_type": "void",
+          "logic": "Handles load and store pair instructions with offset."
+        },
+        {
+          "name": "VisitLoadStorePairPreIndex",
+          "parameters": [
+            "instr"
+          ],
+          "return_type": "void",
+          "logic": "Handles load and store pair instructions with pre-index addressing."
+        },
+        {
+          "name": "VisitLoadStorePairPostIndex",
+          "parameters": [
+            "instr"
+          ],
+          "return_type": "void",
+          "logic": "Handles load and store pair instructions with post-index addressing."
+        },
+        {
+          "name": "LoadStorePairHelper",
+          "parameters": [
+            "instr",
+            "addrmode"
+          ],
+          "return_type": "void",
+          "logic": "Helper function for load and store pair instructions, performing memory access and register updates."
+        },
+        {
+          "name": "VisitLoadLiteral",
+          "parameters": [
+            "instr"
+          ],
+          "return_type": "void",
+          "logic": "Handles load literal instructions."
+        },
+        {
+          "name": "LoadStoreAddress",
+          "parameters": [
+            "addr_reg",
+            "offset",
+            "addrmode"
+          ],
+          "return_type": "uintptr_t",
+          "logic": "Calculates the address for a load or store operation based on the base register, offset, and addressing mode."
+        },
+        {
+          "name": "LoadStoreWriteBack",
+          "parameters": [
+            "addr_reg",
+            "offset",
+            "addrmode"
+          ],
+          "return_type": "void",
+          "logic": "Performs writeback for load and store instructions with pre- or post-index addressing."
+        },
+        {
+          "name": "get_transaction_size",
+          "parameters": [
+            "size"
+          ],
+          "return_type": "Simulator::TransactionSize",
+          "logic": "Calculates the transaction size based on the specified size."
+        },
+        {
+          "name": "VisitLoadStoreAcquireRelease",
+          "parameters": [
+            "instr"
+          ],
+          "return_type": "void",
+          "logic": "Handles the execution of load and store acquire/release instructions."
+        },
+        {
+          "name": "CompareAndSwapHelper",
+          "parameters": [
+            "instr"
+          ],
+          "return_type": "void",
+          "logic": "Compare and swap helper function."
+        },
+        {
+          "name": "CompareAndSwapPairHelper",
+          "parameters": [
+            "instr"
+          ],
+          "return_type": "void",
+          "logic": "Compare and swap pair helper function."
+        },
+        {
+          "name": "AtomicMemorySimpleHelper",
+          "parameters": [
+            "instr"
+          ],
+          "return_type": "void",
+          "logic": "Atomic memory simple helper function."
+        },
+        {
+          "name": "AtomicMemorySwapHelper",
+          "parameters": [
+            "instr"
+          ],
+          "return_type": "void",
+          "logic": "Atomic memory swap helper function."
+        },
+        {
+          "name": "VisitAtomicMemory",
+          "parameters": [
+            "instr"
+          ],
+          "return_type": "void",
+          "logic": "Visit function to handle Atomic memory instructions."
+        },
+        {
+          "name": "CheckMemoryAccess",
+          "parameters": [
+            "address",
+            "stack"
+          ],
+          "return_type": "void",
+          "logic": "Checks if a memory access is valid, considering stack boundaries."
+        },
+        {
+          "name": "VisitMoveWideImmediate",
+          "parameters": [
+            "instr"
+          ],
+          "return_type": "void",
+          "logic": "Handles move wide immediate instructions (MOVN, MOVZ, MOVK)."
+        }
+      ]
+    },
+    {
+      "name": "SimSystemRegister",
+      "properties": [
+        "value_",
+        "write_ignore_mask_"
+      ],
+      "methods": [
+        {
+          "name": "SetBits",
+          "parameters": [
+            "msb",
+            "lsb",
+            "bits"
+          ],
+          "return_type": "void",
+          "logic": "Sets bits within the system register, respecting the write ignore mask."
+        },
+        {
+          "name": "DefaultValueFor",
+          "parameters": [
+            "id"
+          ],
+          "return_type": "SimSystemRegister",
+          "logic": "Returns the default value for a specific system register."
+        }
+      ]
+    },
+    {
+      "name": "LogicVRegister",
+      "properties": [
+        "register_"
+      ],
+      "methods": [
+        {
+          "name": "ReadUintFromMem",
+          "parameters": [
+            "vform",
+            "index",
+            "addr"
+          ],
+          "return_type": "void",
+          "logic": "Reads an unsigned integer from memory and inserts it into a vector register."
+        },
+        {
+          "name": "WriteUintToMem",
+          "parameters": [
+            "vform",
+            "index",
+            "addr"
+          ],
+          "return_type": "void",
+          "logic": "Writes an unsigned integer from a vector register to memory."
+        }
+      ]
+    },
+    {
+      "name": "GlobalMonitor",
+      "properties": [],
+      "methods": []
+    }
+  ],
+  "functions": [
+    {
+      "name": "UnsafeGenericFunctionCall",
+      "parameters": [
+        "function",
+        "arg0",
+        "arg1",
+        "arg2",
+        "arg3",
+        "arg4",
+        "arg5",
+        "arg6",
+        "arg7",
+        "arg8",
+        "arg9",
+        "arg10",
+        "arg11",
+        "arg12",
+        "arg13",
+        "arg14",
+        "arg15",
+        "arg16",
+        "arg17",
+        "arg18",
+        "arg19"
+      ],
+      "return_type": "ObjectPair",
+      "logic": "Calls a C++ function exposed via the \"fast C call\" mechanism, casting a generic function pointer to the appropriate signature."
+    }
+  ]
+}

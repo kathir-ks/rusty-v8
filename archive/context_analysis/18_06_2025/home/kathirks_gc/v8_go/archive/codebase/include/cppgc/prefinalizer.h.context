@@ -1,0 +1,73 @@
+{
+  "metadata": {
+    "path": "/home/kathirks_gc/v8_go/archive/codebase/include/cppgc/prefinalizer.h",
+    "file_name": "prefinalizer.h",
+    "language": "cpp",
+    "purpose": "Defines the prefinalizer mechanism for cppgc, allowing callbacks to be invoked before an object is destructed during garbage collection."
+  },
+  "imports": {
+    "metadata": {
+      "language": "cpp",
+      "purpose": "Includes necessary headers for compiler-specific features and liveness tracking."
+    },
+    "code": "#include \"cppgc/internal/compiler-specific.h\"\n#include \"cppgc/liveness-broker.h\""
+  },
+  "classes": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "PrefinalizerRegistration",
+        "about": "Registers a prefinalizer callback with the garbage collector.",
+        "attributes": [],
+        "dependencies": [
+          "cppgc::LivenessBroker"
+        ]
+      },
+      "code": "class V8_EXPORT PrefinalizerRegistration final {\n public:\n  using Callback = bool (*)(const cppgc::LivenessBroker&, void*);\n\n  PrefinalizerRegistration(void*, Callback);\n\n  void* operator new(size_t, void* location) = delete;\n  void* operator new(size_t) = delete;\n};"
+    }
+  ],
+  "dependencies": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "interface",
+        "name": "cppgc::LivenessBroker",
+        "about": "Provides information about object liveness during garbage collection."
+      },
+      "code": "namespace cppgc {\n                    class LivenessBroker {\n                    public:\n                        bool IsHeapObjectAlive(const void* object) const;\n                    };\n                }",
+      "type": "interface"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "macro",
+        "name": "V8_EXPORT",
+        "about": "Compiler specific export macro."
+      },
+      "code": "#define V8_EXPORT // placeholder",
+      "type": "macro"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "macro",
+        "name": "CPPGC_NO_UNIQUE_ADDRESS",
+        "about": "Compiler specific attribute to indicate that a member does not contribute to the size of the class."
+      },
+      "code": "#define CPPGC_NO_UNIQUE_ADDRESS // placeholder",
+      "type": "macro"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "template",
+        "name": "cppgc::IsGarbageCollectedOrMixinTypeV",
+        "about": "Type trait to check if a type is garbage collected."
+      },
+      "code": "namespace cppgc {\n                    template <typename T>\n                    constexpr bool IsGarbageCollectedOrMixinTypeV = false;\n                }",
+      "type": "template"
+    }
+  ],
+  "file_path": "/home/kathirks_gc/v8_go/archive/codebase/include/cppgc/prefinalizer.h"
+}

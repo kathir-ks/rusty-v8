@@ -1,0 +1,106 @@
+{
+  "metadata": {
+    "path": "/home/kathirks_gc/v8_go/archive/codebase/src/compiler/backend/frame-elider.h",
+    "file_name": "frame-elider.h",
+    "language": "cpp",
+    "purpose": "Header file for the FrameElider class, which determines where stack frames are needed and manages their construction/deconstruction in the V8 compiler backend."
+  },
+  "imports": {
+    "metadata": {
+      "language": "cpp",
+      "purpose": "Includes the Instruction definition needed for FrameElider's operation."
+    },
+    "code": "#include \"src/compiler/backend/instruction.h\""
+  },
+  "classes": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "FrameElider",
+        "about": "Determines which instruction blocks need a frame and where frames must be constructed/deconstructed.",
+        "attributes": [
+          {
+            "name": "code_",
+            "type": "InstructionSequence*",
+            "access": "private",
+            "purpose": "Pointer to the instruction sequence being processed."
+          },
+          {
+            "name": "has_dummy_end_block_",
+            "type": "bool",
+            "access": "private",
+            "purpose": "Indicates whether a dummy end block exists."
+          },
+          {
+            "name": "is_wasm_to_js_",
+            "type": "bool",
+            "access": "private",
+            "purpose": "Indicates whether the code is being compiled from WebAssembly to JavaScript."
+          }
+        ],
+        "dependencies": [
+          "InstructionSequence",
+          "InstructionBlocks",
+          "InstructionBlock",
+          "RpoNumber",
+          "Instruction"
+        ]
+      },
+      "code": "class FrameElider {\n            public:\n            explicit FrameElider(InstructionSequence* code, bool has_dummy_end_block,\n                                bool is_wasm_to_js);\n            void Run();\n\n            private:\n            void MarkBlocks();\n            void PropagateMarks();\n            void MarkDeConstruction();\n            bool PropagateInOrder();\n            bool PropagateReversed();\n            bool PropagateIntoBlock(InstructionBlock* block);\n            const InstructionBlocks& instruction_blocks() const;\n            InstructionBlock* InstructionBlockAt(RpoNumber rpo_number) const;\n            Instruction* InstructionAt(int index) const;\n\n            InstructionSequence* const code_;\n            const bool has_dummy_end_block_;\n            const bool is_wasm_to_js_;\n            };"
+    }
+  ],
+  "dependencies": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "InstructionSequence",
+        "about": "Represents a sequence of instructions."
+      },
+      "code": "class InstructionSequence;",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "InstructionBlocks",
+        "about": "Represents a collection of instruction blocks."
+      },
+      "code": "class InstructionBlocks;",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "InstructionBlock",
+        "about": "Represents a basic block of instructions."
+      },
+      "code": "class InstructionBlock;",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "RpoNumber",
+        "about": "Represents a reverse postorder number."
+      },
+      "code": "class RpoNumber;",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "Instruction",
+        "about": "Represents a single instruction."
+      },
+      "code": "class Instruction;",
+      "type": "class"
+    }
+  ],
+  "file_path": "/home/kathirks_gc/v8_go/archive/codebase/src/compiler/backend/frame-elider.h"
+}

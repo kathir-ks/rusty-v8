@@ -1,0 +1,35 @@
+{
+  "file_path": "/home/kathirks_gc/v8_go/codebase/include/v8-version-string.h",
+  "imports": [
+    "v8-version.h"
+  ],
+  "classes": [],
+  "functions": [],
+  "macros": [
+    {
+      "name": "V8_CANDIDATE_STRING",
+      "definition": "V8_IS_CANDIDATE_VERSION ? \" (candidate)\" : \"\"",
+      "logic": "Defines a string that is appended to the version string if the V8_IS_CANDIDATE_VERSION macro is defined and non-zero. Otherwise, it's an empty string.  This indicates whether the build is a candidate release."
+    },
+    {
+      "name": "V8_EMBEDDER_STRING",
+      "definition": "\"\"",
+      "logic": "Defines a string that allows embedders (projects that use V8) to add a custom string to the version. Defaults to an empty string if not defined by the embedder."
+    },
+    {
+      "name": "V8_SX(x)",
+      "definition": "#x",
+      "logic": "Stringifies the macro argument x. This is used to convert the version number macros (which are integers) into strings."
+    },
+    {
+      "name": "V8_S(x)",
+      "definition": "V8_SX(x)",
+      "logic": "Expands the macro argument `x` before stringifying it using `V8_SX`. This allows nested macros to be properly resolved."
+    },
+    {
+      "name": "V8_VERSION_STRING",
+      "definition": "V8_PATCH_LEVEL > 0 ? V8_S(V8_MAJOR_VERSION) \".\" V8_S(V8_MINOR_VERSION) \".\" V8_S(V8_BUILD_NUMBER) \".\" V8_S(V8_PATCH_LEVEL) V8_EMBEDDER_STRING V8_CANDIDATE_STRING : V8_S(V8_MAJOR_VERSION) \".\" V8_S(V8_MINOR_VERSION) \".\" V8_S(V8_BUILD_NUMBER) V8_EMBEDDER_STRING V8_CANDIDATE_STRING",
+      "logic": "Combines the major, minor, build, and patch version numbers, along with the embedder and candidate strings, into a single version string.  The patch level is included only if it's greater than 0."
+    }
+  ]
+}

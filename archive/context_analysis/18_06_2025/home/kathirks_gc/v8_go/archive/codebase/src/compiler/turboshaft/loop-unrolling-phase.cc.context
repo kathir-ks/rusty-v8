@@ -1,0 +1,168 @@
+{
+  "metadata": {
+    "path": "/home/kathirks_gc/v8_go/archive/codebase/src/compiler/turboshaft/loop-unrolling-phase.cc",
+    "file_name": "loop-unrolling-phase.cc",
+    "language": "cpp",
+    "purpose": "Implements the loop unrolling optimization phase for the Turboshaft compiler."
+  },
+  "imports": {
+    "metadata": {
+      "language": "cpp",
+      "purpose": "Includes necessary headers for loop unrolling, copying, machine optimization, value numbering, variable reduction, phase management, logging, and number conversions."
+    },
+    "code": "#include \"src/compiler/turboshaft/loop-unrolling-phase.h\"\n\n#include \"src/base/logging.h\"\n#include \"src/compiler/turboshaft/copying-phase.h\"\n#include \"src/compiler/turboshaft/loop-unrolling-reducer.h\"\n#include \"src/compiler/turboshaft/machine-optimization-reducer.h\"\n#include \"src/compiler/turboshaft/phase.h\"\n#include \"src/compiler/turboshaft/required-optimization-reducer.h\"\n#include \"src/compiler/turboshaft/value-numbering-reducer.h\"\n#include \"src/compiler/turboshaft/variable-reducer.h\"\n#include \"src/numbers/conversions-inl.h\""
+  },
+  "classes": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "LoopUnrollingPhase",
+        "about": "The loop unrolling optimization phase for the Turboshaft compiler.",
+        "attributes": [],
+        "dependencies": [
+          "PipelineData",
+          "Zone",
+          "LoopUnrollingAnalyzer",
+          "CopyingPhase",
+          "LoopStackCheckElisionReducer",
+          "LoopUnrollingReducer",
+          "MachineOptimizationReducer",
+          "ValueNumberingReducer"
+        ]
+      },
+      "code": "namespace v8::internal::compiler::turboshaft {\n\nvoid LoopUnrollingPhase::Run(PipelineData* data, Zone* temp_zone) {\n  LoopUnrollingAnalyzer analyzer(temp_zone, &data->graph(), data->is_wasm());\n  if (analyzer.CanUnrollAtLeastOneLoop()) {\n    data->graph().set_loop_unrolling_analyzer(&analyzer);\n    turboshaft::CopyingPhase<LoopStackCheckElisionReducer, LoopUnrollingReducer,\n                             MachineOptimizationReducer,\n                             ValueNumberingReducer>::Run(data, temp_zone);\n    // When the CopyingPhase finishes, it calls SwapWithCompanion, which resets\n    // the current graph's LoopUnrollingAnalyzer (since the old input_graph is\n    // now somewhat out-dated).\n    DCHECK(!data->graph().has_loop_unrolling_analyzer());\n    // The LoopUnrollingAnalyzer should not be copied to the output_graph during\n    // CopyingPhase, since it's refering to the input_graph.\n    DCHECK(!data->graph().GetOrCreateCompanion().has_loop_unrolling_analyzer());\n  }\n}\n\n}  // namespace v8::internal::compiler::turboshaft"
+    }
+  ],
+  "functions": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "method",
+        "name": "Run",
+        "parent": "LoopUnrollingPhase",
+        "about": "Executes the loop unrolling optimization phase.",
+        "logic": "Analyzes the graph for loops that can be unrolled. If any such loops exist, it sets the loop unrolling analyzer on the graph and runs the CopyingPhase with specified reducers, including LoopUnrollingReducer. After the CopyingPhase, it asserts that the LoopUnrollingAnalyzer is not copied to the output graph because it refers to the input graph.",
+        "parameters": [
+          {
+            "name": "data",
+            "type": "PipelineData*",
+            "purpose": "Pointer to the pipeline data containing the graph and other relevant information."
+          },
+          {
+            "name": "temp_zone",
+            "type": "Zone*",
+            "purpose": "Pointer to a temporary zone for allocating memory during the phase."
+          }
+        ],
+        "return": {
+          "type": "void",
+          "description": "No return value."
+        },
+        "dependencies": [
+          "LoopUnrollingAnalyzer",
+          "CanUnrollAtLeastOneLoop",
+          "CopyingPhase",
+          "LoopStackCheckElisionReducer",
+          "LoopUnrollingReducer",
+          "MachineOptimizationReducer",
+          "ValueNumberingReducer"
+        ]
+      },
+      "code": "void LoopUnrollingPhase::Run(PipelineData* data, Zone* temp_zone) {\n  LoopUnrollingAnalyzer analyzer(temp_zone, &data->graph(), data->is_wasm());\n  if (analyzer.CanUnrollAtLeastOneLoop()) {\n    data->graph().set_loop_unrolling_analyzer(&analyzer);\n    turboshaft::CopyingPhase<LoopStackCheckElisionReducer, LoopUnrollingReducer,\n                             MachineOptimizationReducer,\n                             ValueNumberingReducer>::Run(data, temp_zone);\n    // When the CopyingPhase finishes, it calls SwapWithCompanion, which resets\n    // the current graph's LoopUnrollingAnalyzer (since the old input_graph is\n    // now somewhat out-dated).\n    DCHECK(!data->graph().has_loop_unrolling_analyzer());\n    // The LoopUnrollingAnalyzer should not be copied to the output_graph during\n    // CopyingPhase, since it's refering to the input_graph.\n    DCHECK(!data->graph().GetOrCreateCompanion().has_loop_unrolling_analyzer());\n  }\n}"
+    }
+  ],
+  "dependencies": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "LoopUnrollingAnalyzer",
+        "about": "Analyzes the graph to determine if loop unrolling is possible."
+      },
+      "code": "class LoopUnrollingAnalyzer {\n                public:\n                    LoopUnrollingAnalyzer(Zone* zone, Graph* graph, bool is_wasm);\n                    bool CanUnrollAtLeastOneLoop();\n                };",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "PipelineData",
+        "about": "Contains data relevant to the Turboshaft pipeline."
+      },
+      "code": "class PipelineData {\n                public:\n                    Graph& graph();\n                    bool is_wasm();\n                };",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "Graph",
+        "about": "Represents the Turboshaft graph."
+      },
+      "code": "class Graph {\n                public:\n                    void set_loop_unrolling_analyzer(LoopUnrollingAnalyzer* analyzer);\n                    bool has_loop_unrolling_analyzer();\n                    Graph& GetOrCreateCompanion();\n                };",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "CopyingPhase",
+        "about": "A phase that copies the graph and applies reducers."
+      },
+      "code": "template <typename... Reducers>\n                class CopyingPhase {\n                public:\n                    static void Run(PipelineData* data, Zone* temp_zone);\n                };",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "LoopStackCheckElisionReducer",
+        "about": "A reducer that elides loop stack checks."
+      },
+      "code": "class LoopStackCheckElisionReducer {};",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "LoopUnrollingReducer",
+        "about": "A reducer that performs loop unrolling."
+      },
+      "code": "class LoopUnrollingReducer {};",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "MachineOptimizationReducer",
+        "about": "A reducer that performs machine-level optimizations."
+      },
+      "code": "class MachineOptimizationReducer {};",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "ValueNumberingReducer",
+        "about": "A reducer that performs value numbering."
+      },
+      "code": "class ValueNumberingReducer {};",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "Zone",
+        "about": "Memory allocation zone."
+      },
+      "code": "class Zone {};",
+      "type": "class"
+    }
+  ],
+  "file_path": "/home/kathirks_gc/v8_go/archive/codebase/src/compiler/turboshaft/loop-unrolling-phase.cc"
+}

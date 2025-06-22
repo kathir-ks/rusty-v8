@@ -1,0 +1,208 @@
+{
+  "file_path": "/home/kathirks_gc/v8_go/codebase/src/sandbox/code-pointer-table.h",
+  "imports": [
+    "include/v8config.h",
+    "src/base/atomicops.h",
+    "src/base/memory.h",
+    "src/common/globals.h",
+    "src/sandbox/code-entrypoint-tag.h",
+    "src/sandbox/external-entity-table.h"
+  ],
+  "classes": [
+    {
+      "name": "CodePointerTableEntry",
+      "properties": [
+        "static constexpr bool IsWriteProtected",
+        "static constexpr Address kFreeEntryTag",
+        "static constexpr Address kMarkingBit",
+        "std::atomic<Address> entrypoint_",
+        "std::atomic<Address> code_"
+      ],
+      "methods": [
+        {
+          "name": "MakeCodePointerEntry",
+          "parameters": [
+            "Address code",
+            "Address entrypoint",
+            "CodeEntrypointTag tag",
+            "bool mark_as_alive"
+          ],
+          "return_type": "void",
+          "logic": "Makes this entry a code pointer entry for the given code object and entrypoint."
+        },
+        {
+          "name": "MakeFreelistEntry",
+          "parameters": [
+            "uint32_t next_entry_index"
+          ],
+          "return_type": "void",
+          "logic": "Makes this entry a freelist entry, containing the index of the next entry on the freelist."
+        },
+        {
+          "name": "GetEntrypoint",
+          "parameters": [
+            "CodeEntrypointTag tag"
+          ],
+          "return_type": "Address",
+          "logic": "Loads the code entrypoint pointer stored in this entry."
+        },
+        {
+          "name": "SetEntrypoint",
+          "parameters": [
+            "Address value",
+            "CodeEntrypointTag tag"
+          ],
+          "return_type": "void",
+          "logic": "Stores the given code entrypoint pointer in this entry."
+        },
+        {
+          "name": "GetCodeObject",
+          "parameters": [],
+          "return_type": "Address",
+          "logic": "Loads the code object pointer stored in this entry."
+        },
+        {
+          "name": "SetCodeObject",
+          "parameters": [
+            "Address value"
+          ],
+          "return_type": "void",
+          "logic": "Stores the given code object pointer in this entry."
+        },
+        {
+          "name": "IsFreelistEntry",
+          "parameters": [],
+          "return_type": "bool",
+          "logic": "Returns true if this entry is a freelist entry."
+        },
+        {
+          "name": "GetNextFreelistEntryIndex",
+          "parameters": [],
+          "return_type": "uint32_t",
+          "logic": "Gets the index of the next entry on the freelist."
+        },
+        {
+          "name": "Mark",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Marks this entry as alive during garbage collection."
+        },
+        {
+          "name": "Unmark",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Unmarks this entry during sweeping."
+        },
+        {
+          "name": "IsMarked",
+          "parameters": [],
+          "return_type": "bool",
+          "logic": "Tests whether this entry is currently marked as alive."
+        }
+      ]
+    },
+    {
+      "name": "CodePointerTable",
+      "properties": [],
+      "methods": [
+        {
+          "name": "GetEntrypoint",
+          "parameters": [
+            "CodePointerHandle handle",
+            "CodeEntrypointTag tag"
+          ],
+          "return_type": "Address",
+          "logic": "Retrieves the entrypoint of the entry referenced by the given handle."
+        },
+        {
+          "name": "GetCodeObject",
+          "parameters": [
+            "CodePointerHandle handle"
+          ],
+          "return_type": "Address",
+          "logic": "Retrieves the code object of the entry referenced by the given handle."
+        },
+        {
+          "name": "SetEntrypoint",
+          "parameters": [
+            "CodePointerHandle handle",
+            "Address value",
+            "CodeEntrypointTag tag"
+          ],
+          "return_type": "void",
+          "logic": "Sets the entrypoint of the entry referenced by the given handle."
+        },
+        {
+          "name": "SetCodeObject",
+          "parameters": [
+            "CodePointerHandle handle",
+            "Address value"
+          ],
+          "return_type": "void",
+          "logic": "Sets the code object of the entry referenced by the given handle."
+        },
+        {
+          "name": "AllocateAndInitializeEntry",
+          "parameters": [
+            "Space* space",
+            "Address code",
+            "Address entrypoint",
+            "CodeEntrypointTag tag"
+          ],
+          "return_type": "CodePointerHandle",
+          "logic": "Allocates a new entry in the table and initializes it."
+        },
+        {
+          "name": "Mark",
+          "parameters": [
+            "Space* space",
+            "CodePointerHandle handle"
+          ],
+          "return_type": "void",
+          "logic": "Marks the specified entry as alive."
+        },
+        {
+          "name": "Sweep",
+          "parameters": [
+            "Space* space",
+            "Counters* counters"
+          ],
+          "return_type": "uint32_t",
+          "logic": "Frees all unmarked entries in the given space."
+        },
+        {
+          "name": "IterateActiveEntriesIn",
+          "parameters": [
+            "Space* space",
+            "Callback callback"
+          ],
+          "return_type": "void",
+          "logic": "Iterates over all active entries in the given space."
+        },
+        {
+          "name": "base_address",
+          "parameters": [],
+          "return_type": "Address",
+          "logic": "Returns the base address of this table, for use in JIT compilers."
+        },
+        {
+          "name": "HandleToIndex",
+          "parameters": [
+            "CodePointerHandle handle"
+          ],
+          "return_type": "uint32_t",
+          "logic": "Converts a CodePointerHandle to an index."
+        },
+        {
+          "name": "IndexToHandle",
+          "parameters": [
+            "uint32_t index"
+          ],
+          "return_type": "CodePointerHandle",
+          "logic": "Converts an index to a CodePointerHandle."
+        }
+      ]
+    }
+  ],
+  "functions": []
+}

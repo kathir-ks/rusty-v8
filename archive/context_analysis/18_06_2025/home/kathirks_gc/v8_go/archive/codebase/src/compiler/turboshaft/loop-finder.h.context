@@ -1,0 +1,96 @@
+{
+  "metadata": {
+    "path": "/home/kathirks_gc/v8_go/archive/codebase/src/compiler/turboshaft/loop-finder.h",
+    "file_name": "loop-finder.h",
+    "language": "cpp",
+    "purpose": "Defines the LoopFinder class for identifying loops in a Turboshaft graph."
+  },
+  "imports": {
+    "metadata": {
+      "language": "cpp",
+      "purpose": "Includes necessary headers for logging, graph representation, indexing, and operation definitions."
+    },
+    "code": "#include \"src/base/logging.h\"\n#include \"src/compiler/turboshaft/graph.h\"\n#include \"src/compiler/turboshaft/index.h\"\n#include \"src/compiler/turboshaft/operations.h\""
+  },
+  "classes": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "LoopFinder",
+        "about": "Analyzes a Turboshaft graph to identify loops and their properties.",
+        "attributes": [],
+        "dependencies": [
+          "Graph",
+          "Block",
+          "Zone",
+          "FixedBlockSidetable",
+          "ZoneUnorderedMap",
+          "ZoneVector",
+          "ZoneSet"
+        ]
+      },
+      "code": "class V8_EXPORT_PRIVATE LoopFinder {\n  // This analyzer finds which loop each Block of a graph belongs to, and\n  // computes a list of all of the loops headers.\n  //\n  // A block is considered to \"belong to a loop\" if there is a forward-path (ie,\n  // without taking backedges) from this block to the backedge of the loop.\n  //\n  // This analysis runs in O(number of blocks), iterating each block once, and\n  // iterating blocks that are in a loop twice.\n  //\n  // Implementation:\n  // LoopFinder::Run walks the blocks of the graph backwards, and when it\n  // reaches a LoopHeader, it calls LoopFinder::VisitLoop.\n  // LoopFinder::VisitLoop iterates all of the blocks of the loop backwards,\n  // starting from the backedge, and stopping upon reaching the loop header. It\n  // marks the blocks that don't have a `parent_loops_` set as being part of the\n  // current loop (= sets their `parent_loops_` to the current loop header). If\n  // it finds a block that already has a `parent_loops_` set, it means that this\n  // loop contains an inner loop, so we skip this inner block as set the\n  // `has_inner_loops` bit.\n  //\n  // By iterating the blocks backwards in Run, we are guaranteed that inner\n  // loops are visited before their outer loops. Walking the graph forward\n  // doesn't work quite as nicely:\n  //  - When seeing loop headers for the 1st time, we wouldn't have visited\n  //    their inner loops yet.\n  //  - If we decided to still iterate forward but to call VisitLoop when\n  //    reaching their backedge rather than their header, it would work in most\n  //    cases but not all, since the backedge of an outer loop can have a\n  //    BlockIndex that is smaller than the one of an inner loop.\n public:\n  struct LoopInfo {\n    const Block* start = nullptr;\n    const Block* end = nullptr;\n    bool has_inner_loops = false;\n    size_t block_count = 0;  // Number of blocks in this loop\n                             // (excluding inner loops)\n    size_t op_count = 0;     // Upper bound on the number of operations in this\n                             // loop (excluding inner loops). This is computed\n                             // using \"end - begin\" for each block, which can be\n                             // more than the number of operations when some\n                             // operations are large (like CallOp and\n                             // FrameStateOp typically).\n  };\n  LoopFinder(Zone* phase_zone, const Graph* input_graph)\n      : phase_zone_(phase_zone),\n        input_graph_(input_graph),\n        loop_headers_(input_graph->block_count(), nullptr, phase_zone),\n        loop_header_info_(phase_zone),\n        queue_(phase_zone) {\n    Run();\n  }\n\n  const ZoneUnorderedMap<const Block*, LoopInfo>& LoopHeaders() const {\n    return loop_header_info_;\n  }\n  const Block* GetLoopHeader(const Block* block) const {\n    return loop_headers_[block->index()];\n  }\n  LoopInfo GetLoopInfo(const Block* block) const {\n    DCHECK(block->IsLoop());\n    auto it = loop_header_info_.find(block);\n    DCHECK_NE(it, loop_header_info_.end());\n    return it->second;\n  }\n\n  struct BlockCmp {\n    bool operator()(const Block* a, const Block* b) const {\n      return a->index().id() < b->index().id();\n    }\n  };\n  ZoneSet<const Block*, BlockCmp> GetLoopBody(const Block* loop_header);\n\n private:\n  void Run();\n  LoopInfo VisitLoop(const Block* header);\n\n  Zone* phase_zone_;\n  const Graph* input_graph_;\n\n  // Map from block to the loop header of the closest enclosing loop. For loop\n  // headers, this map contains the enclosing loop header, rather than the\n  // identity.\n  // For instance, if a loop B1 contains a loop B2 which contains a block B3,\n  // {loop_headers_} will map:\n  //   B3 -> B2\n  //   B2 -> B1\n  //   B1 -> nullptr (if B1 is an outermost loop)\n  FixedBlockSidetable<const Block*> loop_headers_;\n\n  // Map from Loop headers to the LoopInfo for their loops. Only Loop blocks\n  // have entries in this map.\n  ZoneUnorderedMap<const Block*, LoopInfo> loop_header_info_;\n\n  // {queue_} is used in `VisitLoop`, but is declared as a class variable to\n  // reuse memory.\n  ZoneVector<const Block*> queue_;\n};"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "struct",
+        "name": "LoopInfo",
+        "parent": "LoopFinder",
+        "about": "Stores information about a single loop.",
+        "attributes": [
+          {
+            "name": "start",
+            "type": "const Block*",
+            "access": "public",
+            "purpose": "Pointer to the start block of the loop."
+          },
+          {
+            "name": "end",
+            "type": "const Block*",
+            "access": "public",
+            "purpose": "Pointer to the end block of the loop."
+          },
+          {
+            "name": "has_inner_loops",
+            "type": "bool",
+            "access": "public",
+            "purpose": "Indicates whether the loop contains inner loops."
+          },
+          {
+            "name": "block_count",
+            "type": "size_t",
+            "access": "public",
+            "purpose": "Number of blocks in the loop, excluding inner loops."
+          },
+          {
+            "name": "op_count",
+            "type": "size_t",
+            "access": "public",
+            "purpose": "Upper bound on the number of operations in the loop, excluding inner loops."
+          }
+        ],
+        "dependencies": [
+          "Block"
+        ]
+      },
+      "code": "struct LoopInfo {\n    const Block* start = nullptr;\n    const Block* end = nullptr;\n    bool has_inner_loops = false;\n    size_t block_count = 0;  // Number of blocks in this loop\n                             // (excluding inner loops)\n    size_t op_count = 0;     // Upper bound on the number of operations in this\n                             // loop (excluding inner loops). This is computed\n                             // using \"end - begin\" for each block, which can be\n                             // more than the number of operations when some\n                             // operations are large (like CallOp and\n                             // FrameStateOp typically).\n  };"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "struct",
+        "name": "BlockCmp",
+        "parent": "LoopFinder",
+        "about": "Functor for comparing Block pointers based on their index.",
+        "attributes": [],
+        "dependencies": [
+          "Block"
+        ]
+      },
+      "code": "struct BlockCmp {\n    bool operator()(const Block* a, const Block* b) const {\n      return a->index().id() < b->index().id();\n    }\n  };"
+    }
+  ],
+  "file_path": "/home/kathirks_gc/v8_go/archive/codebase/src/compiler/turboshaft/loop-finder.h"
+}

@@ -1,0 +1,277 @@
+{
+  "metadata": {
+    "path": "/home/kathirks_gc/v8_go/archive/codebase/src/compiler/allocation-builder-inl.h",
+    "file_name": "allocation-builder-inl.h",
+    "language": "cpp",
+    "purpose": "Inline implementation of the AllocationBuilder class, which provides methods for allocating various objects on the heap during compilation."
+  },
+  "imports": {
+    "metadata": {
+      "language": "cpp",
+      "purpose": "Includes necessary headers for access building, allocation building, heap management, and argument handling."
+    },
+    "code": "#include \"src/compiler/access-builder.h\"\n#include \"src/compiler/allocation-builder.h\"\n#include \"src/heap/heap-inl.h\"\n#include \"src/objects/arguments-inl.h\""
+  },
+  "functions": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "method",
+        "name": "Allocate",
+        "parent": "AllocationBuilder",
+        "about": "Allocates a new object of the specified size and type on the heap.",
+        "logic": "Checks that the size is valid, creates a BeginRegion node for observability, allocates the object using the simplified Allocate node, and updates the effect chain.",
+        "parameters": [
+          {
+            "name": "size",
+            "type": "int",
+            "purpose": "The size of the object to allocate in bytes."
+          },
+          {
+            "name": "allocation",
+            "type": "AllocationType",
+            "purpose": "The type of allocation (e.g., kYoung, kOld)."
+          },
+          {
+            "name": "type",
+            "type": "Type",
+            "purpose": "The V8 type of the object being allocated."
+          }
+        ],
+        "return": {
+          "type": "void",
+          "description": "No return value."
+        },
+        "dependencies": [
+          "isolate",
+          "heap",
+          "MaxRegularHeapObjectSize",
+          "graph",
+          "NewNode",
+          "common",
+          "BeginRegion",
+          "RegionObservability",
+          "kNotObservable",
+          "simplified",
+          "Allocate",
+          "jsgraph",
+          "ConstantNoHole"
+        ]
+      },
+      "code": "void AllocationBuilder::Allocate(int size, AllocationType allocation,\n                                 Type type) {\n  CHECK_GT(size, 0);\n  DCHECK_LE(size, isolate()->heap()->MaxRegularHeapObjectSize(allocation));\n  effect_ = graph()->NewNode(\n      common()->BeginRegion(RegionObservability::kNotObservable), effect_);\n  allocation_ =\n      graph()->NewNode(simplified()->Allocate(type, allocation),\n                       jsgraph()->ConstantNoHole(size), effect_, control_);\n  effect_ = allocation_;\n}"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "method",
+        "name": "AllocateContext",
+        "parent": "AllocationBuilder",
+        "about": "Allocates a new context object on the heap.",
+        "logic": "Checks that the map's instance type is a context type, calculates the size of the context, allocates the context, stores the map, and stores the variadic part length.",
+        "parameters": [
+          {
+            "name": "variadic_part_length",
+            "type": "int",
+            "purpose": "The length of the variadic part of the context."
+          },
+          {
+            "name": "map",
+            "type": "MapRef",
+            "purpose": "A reference to the map of the context."
+          }
+        ],
+        "return": {
+          "type": "void",
+          "description": "No return value."
+        },
+        "dependencies": [
+          "base::IsInRange",
+          "FIRST_CONTEXT_TYPE",
+          "LAST_CONTEXT_TYPE",
+          "NATIVE_CONTEXT_TYPE",
+          "Context::SizeFor",
+          "Allocate",
+          "AllocationType::kYoung",
+          "Type::OtherInternal",
+          "Store",
+          "AccessBuilder::ForMap",
+          "AccessBuilder::ForFixedArrayLength",
+          "jsgraph",
+          "ConstantNoHole"
+        ]
+      },
+      "code": "void AllocationBuilder::AllocateContext(int variadic_part_length, MapRef map) {\n  DCHECK(base::IsInRange(map.instance_type(), FIRST_CONTEXT_TYPE,\n                         LAST_CONTEXT_TYPE));\n  DCHECK_NE(NATIVE_CONTEXT_TYPE, map.instance_type());\n  int size = Context::SizeFor(variadic_part_length);\n  Allocate(size, AllocationType::kYoung, Type::OtherInternal());\n  Store(AccessBuilder::ForMap(), map);\n  static_assert(static_cast<int>(Context::kLengthOffset) ==\n                static_cast<int>(offsetof(FixedArray, length_)));\n  Store(AccessBuilder::ForFixedArrayLength(),\n        jsgraph()->ConstantNoHole(variadic_part_length));\n}"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "method",
+        "name": "CanAllocateArray",
+        "parent": "AllocationBuilder",
+        "about": "Checks if an array of the given length and map can be allocated on the heap.",
+        "logic": "Calculates the size of the array based on its map and length, and checks if the size is within the maximum regular heap object size.",
+        "parameters": [
+          {
+            "name": "length",
+            "type": "int",
+            "purpose": "The length of the array."
+          },
+          {
+            "name": "map",
+            "type": "MapRef",
+            "purpose": "A reference to the map of the array."
+          },
+          {
+            "name": "allocation",
+            "type": "AllocationType",
+            "purpose": "The type of allocation (e.g., kYoung, kOld)."
+          }
+        ],
+        "return": {
+          "type": "bool",
+          "description": "True if the array can be allocated, false otherwise."
+        },
+        "dependencies": [
+          "map.instance_type",
+          "FIXED_ARRAY_TYPE",
+          "FIXED_DOUBLE_ARRAY_TYPE",
+          "FixedArray::SizeFor",
+          "FixedDoubleArray::SizeFor",
+          "isolate",
+          "heap",
+          "MaxRegularHeapObjectSize"
+        ]
+      },
+      "code": "bool AllocationBuilder::CanAllocateArray(int length, MapRef map,\n                                         AllocationType allocation) {\n  DCHECK(map.instance_type() == FIXED_ARRAY_TYPE ||\n         map.instance_type() == FIXED_DOUBLE_ARRAY_TYPE);\n  int const size = (map.instance_type() == FIXED_ARRAY_TYPE)\n                       ? FixedArray::SizeFor(length)\n                       : FixedDoubleArray::SizeFor(length);\n  return size <= isolate()->heap()->MaxRegularHeapObjectSize(allocation);\n}"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "method",
+        "name": "AllocateArray",
+        "parent": "AllocationBuilder",
+        "about": "Allocates a new array of the given length and map on the heap.",
+        "logic": "Checks if the array can be allocated, calculates the size of the array, allocates the array, stores the map, and stores the length.",
+        "parameters": [
+          {
+            "name": "length",
+            "type": "int",
+            "purpose": "The length of the array."
+          },
+          {
+            "name": "map",
+            "type": "MapRef",
+            "purpose": "A reference to the map of the array."
+          },
+          {
+            "name": "allocation",
+            "type": "AllocationType",
+            "purpose": "The type of allocation (e.g., kYoung, kOld)."
+          }
+        ],
+        "return": {
+          "type": "void",
+          "description": "No return value."
+        },
+        "dependencies": [
+          "CanAllocateArray",
+          "map.instance_type",
+          "FIXED_ARRAY_TYPE",
+          "FIXED_DOUBLE_ARRAY_TYPE",
+          "FixedArray::SizeFor",
+          "FixedDoubleArray::SizeFor",
+          "Allocate",
+          "Type::OtherInternal",
+          "Store",
+          "AccessBuilder::ForMap",
+          "AccessBuilder::ForFixedArrayLength",
+          "jsgraph",
+          "ConstantNoHole"
+        ]
+      },
+      "code": "// Compound allocation of a FixedArray.\nvoid AllocationBuilder::AllocateArray(int length, MapRef map,\n                                      AllocationType allocation) {\n  DCHECK(CanAllocateArray(length, map, allocation));\n  int size = (map.instance_type() == FIXED_ARRAY_TYPE)\n                 ? FixedArray::SizeFor(length)\n                 : FixedDoubleArray::SizeFor(length);\n  Allocate(size, allocation, Type::OtherInternal());\n  Store(AccessBuilder::ForMap(), map);\n  Store(AccessBuilder::ForFixedArrayLength(),\n        jsgraph()->ConstantNoHole(length));\n}"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "method",
+        "name": "CanAllocateSloppyArgumentElements",
+        "parent": "AllocationBuilder",
+        "about": "Checks if sloppy argument elements of the given length and map can be allocated on the heap.",
+        "logic": "Calculates the size of the sloppy argument elements and checks if the size is within the maximum regular heap object size.",
+        "parameters": [
+          {
+            "name": "length",
+            "type": "int",
+            "purpose": "The length of the sloppy argument elements."
+          },
+          {
+            "name": "map",
+            "type": "MapRef",
+            "purpose": "A reference to the map of the sloppy argument elements."
+          },
+          {
+            "name": "allocation",
+            "type": "AllocationType",
+            "purpose": "The type of allocation (e.g., kYoung, kOld)."
+          }
+        ],
+        "return": {
+          "type": "bool",
+          "description": "True if the sloppy argument elements can be allocated, false otherwise."
+        },
+        "dependencies": [
+          "SloppyArgumentsElements::SizeFor",
+          "isolate",
+          "heap",
+          "MaxRegularHeapObjectSize"
+        ]
+      },
+      "code": "bool AllocationBuilder::CanAllocateSloppyArgumentElements(\n    int length, MapRef map, AllocationType allocation) {\n  int const size = SloppyArgumentsElements::SizeFor(length);\n  return size <= isolate()->heap()->MaxRegularHeapObjectSize(allocation);\n}"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "method",
+        "name": "AllocateSloppyArgumentElements",
+        "parent": "AllocationBuilder",
+        "about": "Allocates new sloppy argument elements of the given length and map on the heap.",
+        "logic": "Checks if the sloppy argument elements can be allocated, calculates the size of the sloppy argument elements, allocates the elements, stores the map, and stores the length.",
+        "parameters": [
+          {
+            "name": "length",
+            "type": "int",
+            "purpose": "The length of the sloppy argument elements."
+          },
+          {
+            "name": "map",
+            "type": "MapRef",
+            "purpose": "A reference to the map of the sloppy argument elements."
+          },
+          {
+            "name": "allocation",
+            "type": "AllocationType",
+            "purpose": "The type of allocation (e.g., kYoung, kOld)."
+          }
+        ],
+        "return": {
+          "type": "void",
+          "description": "No return value."
+        },
+        "dependencies": [
+          "CanAllocateSloppyArgumentElements",
+          "SloppyArgumentsElements::SizeFor",
+          "Allocate",
+          "Type::OtherInternal",
+          "Store",
+          "AccessBuilder::ForMap",
+          "AccessBuilder::ForFixedArrayLength",
+          "jsgraph",
+          "ConstantNoHole"
+        ]
+      },
+      "code": "void AllocationBuilder::AllocateSloppyArgumentElements(\n    int length, MapRef map, AllocationType allocation) {\n  DCHECK(CanAllocateSloppyArgumentElements(length, map, allocation));\n  int size = SloppyArgumentsElements::SizeFor(length);\n  Allocate(size, allocation, Type::OtherInternal());\n  Store(AccessBuilder::ForMap(), map);\n  Store(AccessBuilder::ForFixedArrayLength(),\n        jsgraph()->ConstantNoHole(length));\n}"
+    }
+  ],
+  "file_path": "/home/kathirks_gc/v8_go/archive/codebase/src/compiler/allocation-builder-inl.h"
+}

@@ -1,0 +1,76 @@
+{
+  "metadata": {
+    "path": "/home/kathirks_gc/v8_go/archive/codebase/include/v8-container.h",
+    "file_name": "v8-container.h",
+    "language": "cpp",
+    "purpose": "Declares the v8::Array, v8::Map, and v8::Set classes, which are interfaces to the JavaScript built-in container types (Array, Map, and Set)."
+  },
+  "imports": {
+    "metadata": {
+      "language": "cpp",
+      "purpose": "Includes standard C++ headers and V8-specific headers for basic functionality."
+    },
+    "code": "#include <stddef.h>\n            #include <stdint.h>\n\n            #include <functional>\n\n            #include \"v8-local-handle.h\"  // NOLINT(build/include_directory)\n            #include \"v8-object.h\"        // NOLINT(build/include_directory)\n            #include \"v8config.h\"         // NOLINT(build/include_directory)"
+  },
+  "classes": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "Array",
+        "extends": "Object",
+        "about": "Represents a JavaScript array.",
+        "attributes": [],
+        "dependencies": [
+          "Object",
+          "Isolate",
+          "Local",
+          "Value",
+          "Context",
+          "MaybeLocal",
+          "std::function"
+        ]
+      },
+      "code": "class V8_EXPORT Array : public Object {\n            public:\n            uint32_t Length() const;\n\n            /**\n             * Creates a JavaScript array with the given length. If the length\n             * is negative the returned array will have length 0.\n             */\n            static Local<Array> New(Isolate* isolate, int length = 0);\n\n            /**\n             * Creates a JavaScript array out of a Local<Value> array in C++\n             * with a known length.\n             */\n            static Local<Array> New(Isolate* isolate, Local<Value>* elements,\n                                    size_t length);\n            V8_INLINE static Array* Cast(Value* value) {\n            #ifdef V8_ENABLE_CHECKS\n                CheckCast(value);\n            #endif\n            return static_cast<Array*>(value);\n            }\n\n            /**\n             * Creates a JavaScript array from a provided callback.\n             *\n             * \\param context The v8::Context to create the array in.\n             * \\param length The length of the array to be created.\n             * \\param next_value_callback The callback that is invoked to retrieve\n             *     elements for the array. The embedder can signal that the array\n             *     initialization should be aborted by throwing an exception and returning\n             *     an empty MaybeLocal.\n             * \\returns The v8::Array if all elements were constructed successfully and an\n             *     empty MaybeLocal otherwise.\n             */\n            static MaybeLocal<Array> New(\n                Local<Context> context, size_t length,\n                std::function<MaybeLocal<v8::Value>()> next_value_callback);\n\n            enum class CallbackResult {\n                kException,\n                kBreak,\n                kContinue,\n            };\n            using IterationCallback = CallbackResult (*)(uint32_t index,\n                                                        Local<Value> element,\n                                                        void* data);\n\n            /**\n             * Calls {callback} for every element of this array, passing {callback_data}\n             * as its {data} parameter.\n             * This function will typically be faster than calling {Get()} repeatedly.\n             * As a consequence of being optimized for low overhead, the provided\n             * callback must adhere to the following restrictions:\n             *  - It must not allocate any V8 objects and continue iterating; it may\n             *    allocate (e.g. an error message/object) and then immediately terminate\n             *    the iteration.\n             *  - It must not modify the array being iterated.\n             *  - It must not call back into V8 (unless it can guarantee that such a\n             *    call does not violate the above restrictions, which is difficult).\n             *  - The {Local<Value> element} must not \"escape\", i.e. must not be assigned\n             *    to any other {Local}. Creating a {Global} from it, or updating a\n             *    v8::TypecheckWitness with it, is safe.\n             * These restrictions may be lifted in the future if use cases arise that\n             * justify a slower but more robust implementation.\n             *\n             * Returns {Nothing} on exception; use a {TryCatch} to catch and handle this\n             * exception.\n             * When the {callback} returns {kException}, iteration is terminated\n             * immediately, returning {Nothing}. By returning {kBreak}, the callback\n             * can request non-exceptional early termination of the iteration.\n             */\n            Maybe<void> Iterate(Local<Context> context, IterationCallback callback,\n                                void* callback_data);\n\n            private:\n            Array();\n            static void CheckCast(Value* obj);\n            };"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "Map",
+        "extends": "Object",
+        "about": "Represents a JavaScript Map object.",
+        "attributes": [],
+        "dependencies": [
+          "Object",
+          "Isolate",
+          "Local",
+          "Value",
+          "Context",
+          "MaybeLocal"
+        ]
+      },
+      "code": "class V8_EXPORT Map : public Object {\n            public:\n            size_t Size() const;\n            void Clear();\n            V8_WARN_UNUSED_RESULT MaybeLocal<Value> Get(Local<Context> context,\n                                                        Local<Value> key);\n            V8_WARN_UNUSED_RESULT MaybeLocal<Map> Set(Local<Context> context,\n                                                    Local<Value> key,\n                                                    Local<Value> value);\n            V8_WARN_UNUSED_RESULT Maybe<bool> Has(Local<Context> context,\n                                                Local<Value> key);\n            V8_WARN_UNUSED_RESULT Maybe<bool> Delete(Local<Context> context,\n                                                    Local<Value> key);\n\n            /**\n             * Returns an array of length Size() * 2, where index N is the Nth key and\n             * index N + 1 is the Nth value.\n             */\n            Local<Array> AsArray() const;\n\n            /**\n             * Creates a new empty Map.\n             */\n            static Local<Map> New(Isolate* isolate);\n\n            V8_INLINE static Map* Cast(Value* value) {\n            #ifdef V8_ENABLE_CHECKS\n                CheckCast(value);\n            #endif\n            return static_cast<Map*>(value);\n            }\n\n            private:\n            Map();\n            static void CheckCast(Value* obj);\n            };"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "Set",
+        "extends": "Object",
+        "about": "Represents a JavaScript Set object.",
+        "attributes": [],
+        "dependencies": [
+          "Object",
+          "Isolate",
+          "Local",
+          "Value",
+          "Context",
+          "MaybeLocal"
+        ]
+      },
+      "code": "class V8_EXPORT Set : public Object {\n            public:\n            size_t Size() const;\n            void Clear();\n            V8_WARN_UNUSED_RESULT MaybeLocal<Set> Add(Local<Context> context,\n                                                        Local<Value> key);\n            V8_WARN_UNUSED_RESULT Maybe<bool> Has(Local<Context> context,\n                                                Local<Value> key);\n            V8_WARN_UNUSED_RESULT Maybe<bool> Delete(Local<Context> context,\n                                                    Local<Value> key);\n\n            /**\n             * Returns an array of the keys in this Set.\n             */\n            Local<Array> AsArray() const;\n\n            /**\n             * Creates a new empty Set.\n             */\n            static Local<Set> New(Isolate* isolate);\n\n            V8_INLINE static Set* Cast(Value* value) {\n            #ifdef V8_ENABLE_CHECKS\n                CheckCast(value);\n            #endif\n            return static_cast<Set*>(value);\n            }\n\n            private:\n            Set();\n            static void CheckCast(Value* obj);\n            };"
+    }
+  ],
+  "file_path": "/home/kathirks_gc/v8_go/archive/codebase/include/v8-container.h"
+}

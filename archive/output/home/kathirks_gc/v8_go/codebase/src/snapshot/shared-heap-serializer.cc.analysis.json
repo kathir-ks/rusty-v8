@@ -1,0 +1,134 @@
+{
+  "file_path": "/home/kathirks_gc/v8_go/codebase/src/snapshot/shared-heap-serializer.cc",
+  "imports": [
+    "src/snapshot/shared-heap-serializer.h",
+    "src/heap/read-only-heap.h",
+    "src/objects/objects-inl.h",
+    "src/snapshot/read-only-serializer.h"
+  ],
+  "classes": [
+    {
+      "name": "SharedHeapSerializer",
+      "properties": [
+        "RootsSerializer fields (inherited)",
+        "serialized_objects_ (DEBUG only)"
+      ],
+      "methods": [
+        {
+          "name": "CanBeInSharedOldSpace",
+          "parameters": [
+            "Tagged<HeapObject> obj"
+          ],
+          "return_type": "bool",
+          "logic": "Checks if a given HeapObject can reside in the shared old space.  It returns false if the object is in read-only heap. It checks if object is a string, and checks if it is either internalized or in-place internalizable"
+        },
+        {
+          "name": "ShouldBeInSharedHeapObjectCache",
+          "parameters": [
+            "Tagged<HeapObject> obj"
+          ],
+          "return_type": "bool",
+          "logic": "Determines whether a given HeapObject should be included in the shared heap object cache.  Returns true only for internalized strings."
+        },
+        {
+          "name": "SharedHeapSerializer",
+          "parameters": [
+            "Isolate* isolate",
+            "Snapshot::SerializerFlags flags"
+          ],
+          "return_type": "constructor",
+          "logic": "Constructor for the SharedHeapSerializer. Initializes the RootsSerializer base class and potentially reconstructs the shared heap object cache for testing purposes."
+        },
+        {
+          "name": "~SharedHeapSerializer",
+          "parameters": [],
+          "return_type": "destructor",
+          "logic": "Destructor for the SharedHeapSerializer. Outputs statistics about the serialization process."
+        },
+        {
+          "name": "FinalizeSerialization",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Finalizes the serialization process. Adds an undefined value to terminate the shared heap object cache, serializes the string table, serializes deferred objects, and adds padding."
+        },
+        {
+          "name": "SerializeUsingSharedHeapObjectCache",
+          "parameters": [
+            "SnapshotByteSink* sink",
+            "Handle<HeapObject> obj"
+          ],
+          "return_type": "bool",
+          "logic": "Attempts to serialize an object using the shared heap object cache. If the object should be in the cache, it retrieves the cache index, writes the cache indicator and the index to the sink, and returns true.  Handles reconstruction of the cache during testing if enabled."
+        },
+        {
+          "name": "SerializeStringTable",
+          "parameters": [
+            "StringTable* string_table"
+          ],
+          "return_type": "void",
+          "logic": "Serializes the string table to the snapshot. It iterates over string table's elements, and serializes each string. The hashmap structure is not serialized."
+        },
+        {
+          "name": "SerializeObjectImpl",
+          "parameters": [
+            "Handle<HeapObject> obj",
+            "SlotType slot_type"
+          ],
+          "return_type": "void",
+          "logic": "Serializes a HeapObject. Checks if the object is hot, a root, or a back reference and serialize accordingly.  Otherwise, it uses the ObjectSerializer to perform the actual serialization."
+        },
+        {
+          "name": "ShouldReconstructSharedHeapObjectCacheForTesting",
+          "parameters": [],
+          "return_type": "bool",
+          "logic": "Determines whether the shared heap object cache should be reconstructed for testing. This is done when serializing a live isolate that has a shared space."
+        },
+        {
+          "name": "ReconstructSharedHeapObjectCacheForTesting",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Reconstructs the shared heap object cache for testing purposes by iterating through the existing cache and serializing each object in the cache. It ensures objects are of the expected type."
+        }
+      ]
+    },
+    {
+      "name": "SharedHeapSerializerStringTableVisitor",
+      "properties": [
+        "serializer_"
+      ],
+      "methods": [
+        {
+          "name": "SharedHeapSerializerStringTableVisitor",
+          "parameters": [
+            "SharedHeapSerializer* serializer"
+          ],
+          "return_type": "constructor",
+          "logic": "Constructor for the SharedHeapSerializerStringTableVisitor. Initializes the serializer pointer."
+        },
+        {
+          "name": "VisitRootPointers",
+          "parameters": [
+            "Root root",
+            "const char* description",
+            "FullObjectSlot start",
+            "FullObjectSlot end"
+          ],
+          "return_type": "void",
+          "logic": "An overridden method from RootVisitor, this version for FullObjectSlot is not meant to be called (UNREACHABLE)."
+        },
+        {
+          "name": "VisitRootPointers",
+          "parameters": [
+            "Root root",
+            "const char* description",
+            "OffHeapObjectSlot start",
+            "OffHeapObjectSlot end"
+          ],
+          "return_type": "void",
+          "logic": "An overridden method from RootVisitor, this version iterates over OffHeapObjectSlots containing strings, serializes them."
+        }
+      ]
+    }
+  ],
+  "functions": []
+}

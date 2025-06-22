@@ -1,0 +1,243 @@
+{
+  "file_path": "/home/kathirks_gc/v8_go/codebase/src/maglev/maglev-assembler.cc",
+  "imports": [
+    "src/maglev/maglev-assembler.h",
+    "src/builtins/builtins-inl.h",
+    "src/codegen/reglist.h",
+    "src/maglev/maglev-assembler-inl.h",
+    "src/maglev/maglev-code-generator.h",
+    "src/numbers/conversions.h"
+  ],
+  "classes": [
+    {
+      "name": "MaglevAssembler",
+      "properties": [],
+      "methods": [
+        {
+          "name": "AllocateHeapNumber",
+          "parameters": [
+            "RegisterSnapshot register_snapshot",
+            "Register result",
+            "DoubleRegister value"
+          ],
+          "return_type": "void",
+          "logic": "Allocates a HeapNumber object in the heap and stores the given double value into it."
+        },
+        {
+          "name": "AllocateTwoByteString",
+          "parameters": [
+            "RegisterSnapshot register_snapshot",
+            "Register result",
+            "int length"
+          ],
+          "return_type": "void",
+          "logic": "Allocates a two-byte string of specified length in the heap."
+        },
+        {
+          "name": "FromAnyToRegister",
+          "parameters": [
+            "const Input& input",
+            "Register scratch"
+          ],
+          "return_type": "Register",
+          "logic": "Loads the value from the given input (which can be a constant, register, or stack slot) into a register and returns the register."
+        },
+        {
+          "name": "LoadSingleCharacterString",
+          "parameters": [
+            "Register result",
+            "int char_code"
+          ],
+          "return_type": "void",
+          "logic": "Loads a single-character string from the single character string table into the given register."
+        },
+        {
+          "name": "LoadDataField",
+          "parameters": [
+            "const PolymorphicAccessInfo& access_info",
+            "Register result",
+            "Register object",
+            "Register scratch"
+          ],
+          "return_type": "void",
+          "logic": "Loads a data field from an object, taking into account polymorphic access information and property holder resolution."
+        },
+        {
+          "name": "JumpIfNotUndetectable",
+          "parameters": [
+            "Register object",
+            "Register scratch",
+            "CheckType check_type",
+            "Label* target",
+            "Label::Distance distance"
+          ],
+          "return_type": "void",
+          "logic": "Jumps to the target label if the given object is detectable."
+        },
+        {
+          "name": "JumpIfUndetectable",
+          "parameters": [
+            "Register object",
+            "Register scratch",
+            "CheckType check_type",
+            "Label* target",
+            "Label::Distance distance"
+          ],
+          "return_type": "void",
+          "logic": "Jumps to the target label if the given object is undetectable."
+        },
+        {
+          "name": "JumpIfNotCallable",
+          "parameters": [
+            "Register object",
+            "Register scratch",
+            "CheckType check_type",
+            "Label* target",
+            "Label::Distance distance"
+          ],
+          "return_type": "void",
+          "logic": "Jumps to the target label if the given object is not callable."
+        },
+        {
+          "name": "EnsureWritableFastElements",
+          "parameters": [
+            "RegisterSnapshot register_snapshot",
+            "Register elements",
+            "Register object",
+            "Register scratch"
+          ],
+          "return_type": "void",
+          "logic": "Ensures that the fast elements of an object are writable. If not, it calls a builtin to copy the elements."
+        },
+        {
+          "name": "ToBoolean",
+          "parameters": [
+            "Register value",
+            "CheckType check_type",
+            "ZoneLabelRef is_true",
+            "ZoneLabelRef is_false",
+            "bool fallthrough_when_true"
+          ],
+          "return_type": "void",
+          "logic": "Converts a value to a boolean, jumping to either the 'is_true' or 'is_false' labels depending on the truthiness of the value."
+        },
+        {
+          "name": "MaterialiseValueNode",
+          "parameters": [
+            "Register dst",
+            "ValueNode* value"
+          ],
+          "return_type": "void",
+          "logic": "Materializes a value node (which represents a constant or a stack slot) into a register."
+        },
+        {
+          "name": "TestTypeOf",
+          "parameters": [
+            "Register object",
+            "interpreter::TestTypeOfFlags::LiteralFlag literal",
+            "Label* is_true",
+            "Label::Distance true_distance",
+            "bool fallthrough_when_true",
+            "Label* is_false",
+            "Label::Distance false_distance",
+            "bool fallthrough_when_false"
+          ],
+          "return_type": "void",
+          "logic": "Tests the type of an object against a literal type (e.g., Number, String, Symbol) and jumps to the corresponding label."
+        },
+        {
+          "name": "CheckAndEmitDeferredWriteBarrier",
+          "parameters": [
+            "Register object",
+            "OffsetTypeFor<store_mode> offset",
+            "Register value",
+            "RegisterSnapshot register_snapshot",
+            "ValueIsCompressed value_is_compressed",
+            "ValueCanBeSmi value_can_be_smi"
+          ],
+          "return_type": "void",
+          "logic": "Checks whether a write barrier is needed and emits deferred code to execute it if necessary."
+        },
+        {
+          "name": "CheckAndEmitDeferredIndirectPointerWriteBarrier",
+          "parameters": [
+            "Register object",
+            "int offset",
+            "Register value",
+            "RegisterSnapshot register_snapshot",
+            "IndirectPointerTag tag"
+          ],
+          "return_type": "void",
+          "logic": "Checks whether an indirect pointer write barrier is needed and emits deferred code to execute it if necessary."
+        },
+        {
+          "name": "StoreTaggedFieldWithWriteBarrier",
+          "parameters": [
+            "Register object",
+            "int offset",
+            "Register value",
+            "RegisterSnapshot register_snapshot",
+            "ValueIsCompressed value_is_compressed",
+            "ValueCanBeSmi value_can_be_smi"
+          ],
+          "return_type": "void",
+          "logic": "Stores a tagged field with a write barrier to ensure proper garbage collection behavior."
+        },
+        {
+          "name": "StoreTrustedPointerFieldWithWriteBarrier",
+          "parameters": [
+            "Register object",
+            "int offset",
+            "Register value",
+            "RegisterSnapshot register_snapshot",
+            "IndirectPointerTag tag"
+          ],
+          "return_type": "void",
+          "logic": "Stores a trusted pointer field with a write barrier to ensure proper garbage collection behavior."
+        },
+        {
+          "name": "StoreFixedArrayElementWithWriteBarrier",
+          "parameters": [
+            "Register array",
+            "Register index",
+            "Register value",
+            "RegisterSnapshot register_snapshot"
+          ],
+          "return_type": "void",
+          "logic": "Stores a fixed array element with a write barrier."
+        },
+        {
+          "name": "GenerateCheckConstTrackingLetCellFooter",
+          "parameters": [
+            "Register context",
+            "Register data",
+            "int index",
+            "Label* done"
+          ],
+          "return_type": "void",
+          "logic": "Generates code to check the const tracking let cell footer."
+        },
+        {
+          "name": "TryMigrateInstance",
+          "parameters": [
+            "Register object",
+            "RegisterSnapshot& register_snapshot",
+            "Label* fail"
+          ],
+          "return_type": "void",
+          "logic": "Tries to migrate an instance to a more efficient representation, and jumps to fail if it fails."
+        },
+        {
+          "name": "TryMigrateInstanceAndMarkMapAsMigrationTarget",
+          "parameters": [
+            "Register object",
+            "RegisterSnapshot& register_snapshot"
+          ],
+          "return_type": "void",
+          "logic": "Tries to migrate an instance to a more efficient representation and mark the map as a migration target."
+        }
+      ]
+    }
+  ],
+  "functions": []
+}

@@ -1,0 +1,81 @@
+{
+  "metadata": {
+    "path": "/home/kathirks_gc/v8_go/archive/codebase/src/compiler/backend/ppc/instruction-scheduler-ppc.cc",
+    "file_name": "instruction-scheduler-ppc.cc",
+    "language": "cpp",
+    "purpose": "Implements the instruction scheduler for the PPC architecture in the V8 compiler backend."
+  },
+  "imports": {
+    "metadata": {
+      "language": "cpp",
+      "purpose": "Includes the necessary header file for instruction scheduling functionality."
+    },
+    "code": "#include \"src/compiler/backend/instruction-scheduler.h\""
+  },
+  "functions": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "method",
+        "name": "SchedulerSupported",
+        "parent": "InstructionScheduler",
+        "about": "Determines if the instruction scheduler is supported for the PPC architecture.",
+        "logic": "Always returns true, indicating that instruction scheduling is supported.",
+        "parameters": [],
+        "return": {
+          "type": "bool",
+          "description": "Returns true if the scheduler is supported, false otherwise."
+        },
+        "dependencies": []
+      },
+      "code": "bool InstructionScheduler::SchedulerSupported() { return true; }"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "method",
+        "name": "GetTargetInstructionFlags",
+        "parent": "InstructionScheduler",
+        "about": "Retrieves target-specific instruction flags for a given instruction on the PPC architecture.",
+        "logic": "Uses a switch statement to determine the flags based on the instruction's architecture opcode.  It categorizes instructions as having no special flags, being a load operation, or having side effects.",
+        "parameters": [
+          {
+            "name": "instr",
+            "type": "const Instruction*",
+            "purpose": "The instruction to retrieve flags for."
+          }
+        ],
+        "return": {
+          "type": "int",
+          "description": "An integer representing the instruction flags."
+        },
+        "dependencies": []
+      },
+      "code": "int InstructionScheduler::GetTargetInstructionFlags(\n    const Instruction* instr) const {\n  switch (instr->arch_opcode()) {\n    case kPPC_And:\n    case kPPC_AndComplement:\n    case kPPC_Or:\n    case kPPC_OrComplement:\n    case kPPC_Xor:\n    case kPPC_ShiftLeft32:\n    case kPPC_ShiftLeft64:\n    case kPPC_ShiftLeftPair:\n    case kPPC_ShiftRight32:\n    case kPPC_ShiftRight64:\n    case kPPC_ShiftRightPair:\n    case kPPC_ShiftRightAlg32:\n    case kPPC_ShiftRightAlg64:\n    case kPPC_ShiftRightAlgPair:\n    case kPPC_RotRight32:\n    case kPPC_RotRight64:\n    case kPPC_Not:\n    case kPPC_RotLeftAndMask32:\n    case kPPC_RotLeftAndClear64:\n    case kPPC_RotLeftAndClearLeft64:\n    case kPPC_RotLeftAndClearRight64:\n    case kPPC_Add32:\n    case kPPC_Add64:\n    case kPPC_AddWithOverflow32:\n    case kPPC_AddPair:\n    case kPPC_AddDouble:\n    case kPPC_Sub:\n    case kPPC_SubWithOverflow32:\n    case kPPC_SubPair:\n    case kPPC_SubDouble:\n    case kPPC_Mul32:\n    case kPPC_Mul32WithHigh32:\n    case kPPC_Mul64:\n    case kPPC_MulHighS64:\n    case kPPC_MulHighU64:\n    case kPPC_MulHigh32:\n    case kPPC_MulHighU32:\n    case kPPC_MulPair:\n    case kPPC_MulDouble:\n    case kPPC_Div32:\n    case kPPC_Div64:\n    case kPPC_DivU32:\n    case kPPC_DivU64:\n    case kPPC_DivDouble:\n    case kPPC_Mod32:\n    case kPPC_Mod64:\n    case kPPC_ModU32:\n    case kPPC_ModU64:\n    case kPPC_ModDouble:\n    case kPPC_Neg:\n    case kPPC_NegDouble:\n    case kPPC_SqrtDouble:\n    case kPPC_FloorDouble:\n    case kPPC_CeilDouble:\n    case kPPC_TruncateDouble:\n    case kPPC_RoundDouble:\n    case kPPC_MaxDouble:\n    case kPPC_MinDouble:\n    case kPPC_AbsDouble:\n    case kPPC_Cntlz32:\n    case kPPC_Cntlz64:\n    case kPPC_Popcnt32:\n    case kPPC_Popcnt64:\n    case kPPC_Cmp32:\n    case kPPC_Cmp64:\n    case kPPC_CmpDouble:\n    case kPPC_Tst32:\n    case kPPC_Tst64:\n    case kPPC_ExtendSignWord8:\n    case kPPC_ExtendSignWord16:\n    case kPPC_ExtendSignWord32:\n    case kPPC_Uint32ToUint64:\n    case kPPC_Int64ToInt32:\n    case kPPC_Int64ToFloat32:\n    case kPPC_Int64ToDouble:\n    case kPPC_Uint64ToFloat32:\n    case kPPC_Uint64ToDouble:\n    case kPPC_Int32ToFloat32:\n    case kPPC_Int32ToDouble:\n    case kPPC_Uint32ToFloat32:\n    case kPPC_Uint32ToDouble:\n    case kPPC_Float32ToInt32:\n    case kPPC_Float32ToUint32:\n    case kPPC_Float32ToDouble:\n    case kPPC_Float64SilenceNaN:\n    case kPPC_DoubleToInt32:\n    case kPPC_DoubleToUint32:\n    case kPPC_DoubleToInt64:\n    case kPPC_DoubleToUint64:\n    case kPPC_DoubleToFloat32:\n    case kPPC_DoubleExtractLowWord32:\n    case kPPC_DoubleExtractHighWord32:\n    case kPPC_DoubleFromWord32Pair:\n    case kPPC_DoubleInsertLowWord32:\n    case kPPC_DoubleInsertHighWord32:\n    case kPPC_DoubleConstruct:\n    case kPPC_BitcastInt32ToFloat32:\n    case kPPC_BitcastFloat32ToInt32:\n    case kPPC_BitcastInt64ToDouble:\n    case kPPC_BitcastDoubleToInt64:\n    case kPPC_ByteRev32:\n    case kPPC_ByteRev64:\n    case kPPC_F64x2Add:\n    case kPPC_F64x2Sub:\n    case kPPC_F64x2Mul:\n    case kPPC_F64x2Eq:\n    case kPPC_F64x2Ne:\n    case kPPC_F64x2Le:\n    case kPPC_F64x2Lt:\n    case kPPC_F64x2Abs:\n    case kPPC_F64x2Neg:\n    case kPPC_F64x2Sqrt:\n    case kPPC_F64x2Qfma:\n    case kPPC_F64x2Qfms:\n    case kPPC_F64x2Div:\n    case kPPC_F64x2Min:\n    case kPPC_F64x2Max:\n    case kPPC_F64x2Ceil:\n    case kPPC_F64x2Floor:\n    case kPPC_F64x2Trunc:\n    case kPPC_F64x2Pmin:\n    case kPPC_F64x2Pmax:\n    case kPPC_F64x2ConvertLowI32x4S:\n    case kPPC_F64x2ConvertLowI32x4U:\n    case kPPC_F64x2PromoteLowF32x4:\n    case kPPC_F32x4Add:\n    case kPPC_F32x4Sub:\n    case kPPC_F32x4Mul:\n    case kPPC_F32x4Eq:\n    case kPPC_F32x4Ne:\n    case kPPC_F32x4Lt:\n    case kPPC_F32x4Le:\n    case kPPC_F32x4Abs:\n    case kPPC_F32x4Neg:\n    case kPPC_F32x4Sqrt:\n    case kPPC_F32x4SConvertI32x4:\n    case kPPC_F32x4UConvertI32x4:\n    case kPPC_F32x4Qfma:\n    case kPPC_F32x4Qfms:\n    case kPPC_F32x4Div:\n    case kPPC_F32x4Min:\n    case kPPC_F32x4Max:\n    case kPPC_F32x4Ceil:\n    case kPPC_F32x4Floor:\n    case kPPC_F32x4Trunc:\n    case kPPC_F32x4Pmin:\n    case kPPC_F32x4Pmax:\n    case kPPC_F32x4DemoteF64x2Zero:\n    case kPPC_I64x2Add:\n    case kPPC_I64x2Sub:\n    case kPPC_I64x2Mul:\n    case kPPC_I64x2Eq:\n    case kPPC_I64x2Ne:\n    case kPPC_I64x2GtS:\n    case kPPC_I64x2GeS:\n    case kPPC_I64x2Shl:\n    case kPPC_I64x2ShrS:\n    case kPPC_I64x2ShrU:\n    case kPPC_I64x2Neg:\n    case kPPC_I64x2BitMask:\n    case kPPC_I64x2SConvertI32x4Low:\n    case kPPC_I64x2SConvertI32x4High:\n    case kPPC_I64x2UConvertI32x4Low:\n    case kPPC_I64x2UConvertI32x4High:\n    case kPPC_I64x2ExtMulLowI32x4S:\n    case kPPC_I64x2ExtMulHighI32x4S:\n    case kPPC_I64x2ExtMulLowI32x4U:\n    case kPPC_I64x2ExtMulHighI32x4U:\n    case kPPC_I64x2Abs:\n    case kPPC_I32x4Add:\n    case kPPC_I32x4Sub:\n    case kPPC_I32x4Mul:\n    case kPPC_I32x4MinS:\n    case kPPC_I32x4MinU:\n    case kPPC_I32x4MaxS:\n    case kPPC_I32x4MaxU:\n    case kPPC_I32x4Eq:\n    case kPPC_I32x4Ne:\n    case kPPC_I32x4GtS:\n    case kPPC_I32x4GeS:\n    case kPPC_I32x4GtU:\n    case kPPC_I32x4GeU:\n    case kPPC_I32x4Shl:\n    case kPPC_I32x4ShrS:\n    case kPPC_I32x4ShrU:\n    case kPPC_I32x4Neg:\n    case kPPC_I32x4Abs:\n    case kPPC_I32x4SConvertF32x4:\n    case kPPC_I32x4UConvertF32x4:\n    case kPPC_I32x4SConvertI16x8Low:\n    case kPPC_I32x4SConvertI16x8High:\n    case kPPC_I32x4UConvertI16x8Low:\n    case kPPC_I32x4UConvertI16x8High:\n    case kPPC_I32x4BitMask:\n    case kPPC_I32x4DotI16x8S:\n    case kPPC_I32x4ExtAddPairwiseI16x8S:\n    case kPPC_I32x4ExtAddPairwiseI16x8U:\n    case kPPC_I32x4ExtMulLowI16x8S:\n    case kPPC_I32x4ExtMulHighI16x8S:\n    case kPPC_I32x4ExtMulLowI16x8U:\n    case kPPC_I32x4ExtMulHighI16x8U:\n    case kPPC_I32x4TruncSatF64x2SZero:\n    case kPPC_I32x4TruncSatF64x2UZero:\n    case kPPC_I32x4DotI8x16AddS:\n    case kPPC_I16x8Add:\n    case kPPC_I16x8Sub:\n    case kPPC_I16x8Mul:\n    case kPPC_I16x8MinS:\n    case kPPC_I16x8MinU:\n    case kPPC_I16x8MaxS:\n    case kPPC_I16x8MaxU:\n    case kPPC_I16x8Eq:\n    case kPPC_I16x8Ne:\n    case kPPC_I16x8GtS:\n    case kPPC_I16x8GeS:\n    case kPPC_I16x8GtU:\n    case kPPC_I16x8GeU:\n    case kPPC_I16x8Shl:\n    case kPPC_I16x8ShrS:\n    case kPPC_I16x8ShrU:\n    case kPPC_I16x8Neg:\n    case kPPC_I16x8Abs:\n    case kPPC_I16x8SConvertI32x4:\n    case kPPC_I16x8UConvertI32x4:\n    case kPPC_I16x8SConvertI8x16Low:\n    case kPPC_I16x8SConvertI8x16High:\n    case kPPC_I16x8UConvertI8x16Low:\n    case kPPC_I16x8UConvertI8x16High:\n    case kPPC_I16x8AddSatS:\n    case kPPC_I16x8SubSatS:\n    case kPPC_I16x8AddSatU:\n    case kPPC_I16x8SubSatU:\n    case kPPC_I16x8RoundingAverageU:\n    case kPPC_I16x8BitMask:\n    case kPPC_I16x8ExtAddPairwiseI8x16S:\n    case kPPC_I16x8ExtAddPairwiseI8x16U:\n    case kPPC_I16x8Q15MulRSatS:\n    case kPPC_I16x8ExtMulLowI8x16S:\n    case kPPC_I16x8ExtMulHighI8x16S:\n    case kPPC_I16x8ExtMulLowI8x16U:\n    case kPPC_I16x8ExtMulHighI8x16U:\n    case kPPC_I16x8DotI8x16S:\n    case kPPC_I8x16Add:\n    case kPPC_I8x16Sub:\n    case kPPC_I8x16MinS:\n    case kPPC_I8x16MinU:\n    case kPPC_I8x16MaxS:\n    case kPPC_I8x16MaxU:\n    case kPPC_I8x16Eq:\n    case kPPC_I8x16Ne:\n    case kPPC_I8x16GtS:\n    case kPPC_I8x16GeS:\n    case kPPC_I8x16GtU:\n    case kPPC_I8x16GeU:\n    case kPPC_I8x16Shl:\n    case kPPC_I8x16ShrS:\n    case kPPC_I8x16ShrU:\n    case kPPC_I8x16Neg:\n    case kPPC_I8x16Abs:\n    case kPPC_I8x16SConvertI16x8:\n    case kPPC_I8x16UConvertI16x8:\n    case kPPC_I8x16AddSatS:\n    case kPPC_I8x16SubSatS:\n    case kPPC_I8x16AddSatU:\n    case kPPC_I8x16SubSatU:\n    case kPPC_I8x16RoundingAverageU:\n    case kPPC_I8x16Shuffle:\n    case kPPC_I8x16Swizzle:\n    case kPPC_I8x16BitMask:\n    case kPPC_I8x16Popcnt:\n    case kPPC_I64x2AllTrue:\n    case kPPC_I32x4AllTrue:\n    case kPPC_I16x8AllTrue:\n    case kPPC_I8x16AllTrue:\n    case kPPC_V128AnyTrue:\n    case kPPC_S128And:\n    case kPPC_S128Or:\n    case kPPC_S128Xor:\n    case kPPC_S128Const:\n    case kPPC_S128Zero:\n    case kPPC_S128AllOnes:\n    case kPPC_S128Not:\n    case kPPC_S128Select:\n    case kPPC_S128AndNot:\n    case kPPC_FExtractLane:\n    case kPPC_IExtractLane:\n    case kPPC_IExtractLaneU:\n    case kPPC_IExtractLaneS:\n    case kPPC_FReplaceLane:\n    case kPPC_IReplaceLane:\n    case kPPC_FSplat:\n    case kPPC_ISplat:\n    case kPPC_LoadReverseSimd128RR:\n      return kNoOpcodeFlags;\n\n    case kPPC_LoadWordS8:\n    case kPPC_LoadWordU8:\n    case kPPC_LoadWordS16:\n    case kPPC_LoadWordU16:\n    case kPPC_LoadWordS32:\n    case kPPC_LoadWordU32:\n    case kPPC_LoadByteRev32:\n    case kPPC_LoadWord64:\n    case kPPC_LoadByteRev64:\n    case kPPC_LoadFloat32:\n    case kPPC_LoadDouble:\n    case kPPC_LoadSimd128:\n    case kPPC_Peek:\n    case kPPC_LoadDecompressTaggedSigned:\n    case kPPC_LoadDecompressTagged:\n    case kPPC_LoadDecodeSandboxedPointer:\n    case kPPC_S128Load8Splat:\n    case kPPC_S128Load16Splat:\n    case kPPC_S128Load32Splat:\n    case kPPC_S128Load64Splat:\n    case kPPC_S128Load8x8S:\n    case kPPC_S128Load8x8U:\n    case kPPC_S128Load16x4S:\n    case kPPC_S128Load16x4U:\n    case kPPC_S128Load32x2S:\n    case kPPC_S128Load32x2U:\n    case kPPC_S128Load32Zero:\n    case kPPC_S128Load64Zero:\n    case kPPC_S128Load8Lane:\n    case kPPC_S128Load16Lane:\n    case kPPC_S128Load32Lane:\n    case kPPC_S128Load64Lane:\n      return kIsLoadOperation;\n\n    case kPPC_StoreWord8:\n    case kPPC_StoreWord16:\n    case kPPC_StoreWord32:\n    case kPPC_StoreByteRev32:\n    case kPPC_StoreWord64:\n    case kPPC_StoreByteRev64:\n    case kPPC_StoreFloat32:\n    case kPPC_StoreDouble:\n    case kPPC_StoreSimd128:\n    case kPPC_StoreCompressTagged:\n    case kPPC_StoreIndirectPointer:\n    case kPPC_StoreEncodeSandboxedPointer:\n    case kPPC_Push:\n    case kPPC_PushFrame:\n    case kPPC_StoreToStackSlot:\n    case kPPC_Sync:\n    case kPPC_S128Store8Lane:\n    case kPPC_S128Store16Lane:\n    case kPPC_S128Store32Lane:\n    case kPPC_S128Store64Lane:\n      return kHasSideEffect;\n\n    case kPPC_AtomicExchangeUint8:\n    case kPPC_AtomicExchangeUint16:\n    case kPPC_AtomicExchangeWord32:\n    case kPPC_AtomicExchangeWord64:\n    case kPPC_AtomicCompareExchangeUint8:\n    case kPPC_AtomicCompareExchangeUint16:\n    case kPPC_AtomicCompareExchangeWord32:\n    case kPPC_AtomicCompareExchangeWord64:\n    case kPPC_AtomicAddUint8:\n    case kPPC_AtomicAddUint16:\n    case kPPC_AtomicAddUint32:\n    case kPPC_AtomicAddUint64:\n    case kPPC_AtomicAddInt8:\n    case kPPC_AtomicAddInt16:\n    case kPPC_AtomicAddInt32:\n    case kPPC_AtomicAddInt64:\n    case kPPC_AtomicSubUint8:\n    case kPPC_AtomicSubUint16:\n    case kPPC_AtomicSubUint32:\n    case kPPC_AtomicSubUint64:\n    case kPPC_AtomicSubInt8:\n    case kPPC_AtomicSubInt16:\n    case kPPC_AtomicSubInt32:\n    case kPPC_AtomicSubInt64:\n    case kPPC_AtomicAndUint8:\n    case kPPC_AtomicAndUint16:\n    case kPPC_AtomicAndUint32:\n    case kPPC_AtomicAndUint64:\n    case kPPC_AtomicAndInt8:\n    case kPPC_AtomicAndInt16:\n    case kPPC_AtomicAndInt32:\n    case kPPC_AtomicAndInt64:\n    case kPPC_AtomicOrUint8:\n    case kPPC_AtomicOrUint16:\n    case kPPC_AtomicOrUint32:\n    case kPPC_AtomicOrUint64:\n    case kPPC_AtomicOrInt8:\n    case kPPC_AtomicOrInt16:\n    case kPPC_AtomicOrInt32:\n    case kPPC_AtomicOrInt64:\n    case kPPC_AtomicXorUint8:\n    case kPPC_AtomicXorUint16:\n    case kPPC_AtomicXorUint32:\n    case kPPC_AtomicXorUint64:\n    case kPPC_AtomicXorInt8:\n    case kPPC_AtomicXorInt16:\n    case kPPC_AtomicXorInt32:\n    case kPPC_AtomicXorInt64:\n      return kHasSideEffect;\n\n#define CASE(Name) case k##Name:\n      COMMON_ARCH_OPCODE_LIST(CASE)\n#undef CASE\n      // Already covered in architecture independent code.\n      UNREACHABLE();\n  }\n\n  UNREACHABLE();\n}"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "method",
+        "name": "GetInstructionLatency",
+        "parent": "InstructionScheduler",
+        "about": "Retrieves the instruction latency for a given instruction.",
+        "logic": "Currently returns a fixed latency of 1 for all instructions.  TODO: Add instruction cost modeling.",
+        "parameters": [
+          {
+            "name": "instr",
+            "type": "const Instruction*",
+            "purpose": "The instruction to retrieve latency for."
+          }
+        ],
+        "return": {
+          "type": "int",
+          "description": "The instruction latency."
+        },
+        "dependencies": []
+      },
+      "code": "int InstructionScheduler::GetInstructionLatency(const Instruction* instr) {\n  // TODO(all): Add instruction cost modeling.\n  return 1;\n}"
+    }
+  ],
+  "file_path": "/home/kathirks_gc/v8_go/archive/codebase/src/compiler/backend/ppc/instruction-scheduler-ppc.cc"
+}

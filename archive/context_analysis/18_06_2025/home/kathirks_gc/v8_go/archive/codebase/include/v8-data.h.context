@@ -1,0 +1,69 @@
+{
+  "metadata": {
+    "path": "/home/kathirks_gc/v8_go/archive/codebase/include/v8-data.h",
+    "file_name": "v8-data.h",
+    "language": "cpp",
+    "purpose": "Declares the Data class and related classes (FixedArray) which are fundamental building blocks for V8's heap objects.  It defines interfaces for determining the specific type of Data object."
+  },
+  "imports": {
+    "metadata": {
+      "language": "cpp",
+      "purpose": "Includes necessary V8 headers for local handles and configuration."
+    },
+    "code": "#include \"v8-local-handle.h\"  // NOLINT(build/include_directory)\n            #include \"v8config.h\"         // NOLINT(build/include_directory)"
+  },
+  "classes": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "Data",
+        "about": "The superclass of objects that can reside on V8's heap.",
+        "attributes": [],
+        "dependencies": []
+      },
+      "code": "class V8_EXPORT Data {\n            public:\n              /**\n               * Returns true if this data is a |v8::Value|.\n               */\n              bool IsValue() const;\n\n              /**\n               * Returns true if this data is a |v8::Module|.\n               */\n              bool IsModule() const;\n\n              /**\n               * Returns true if this data is a |v8::ModuleRequest|.\n               */\n              bool IsModuleRequest() const;\n\n              /**\n               * Returns tru if this data is a |v8::FixedArray|\n               */\n              bool IsFixedArray() const;\n\n              /**\n               * Returns true if this data is a |v8::Private|.\n               */\n              bool IsPrivate() const;\n\n              /**\n               * Returns true if this data is a |v8::ObjectTemplate|.\n               */\n              bool IsObjectTemplate() const;\n\n              /**\n               * Returns true if this data is a |v8::FunctionTemplate|.\n               */\n              bool IsFunctionTemplate() const;\n\n              /**\n               * Returns true if this data is a |v8::Context|.\n               */\n              bool IsContext() const;\n\n             private:\n              Data() = delete;\n            };"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "FixedArray",
+        "extends": "Data",
+        "about": "A fixed-sized array with elements of type Data.",
+        "attributes": [],
+        "dependencies": [
+          "Data",
+          "Context",
+          "Local"
+        ]
+      },
+      "code": "class V8_EXPORT FixedArray : public Data {\n            public:\n              int Length() const;\n              Local<Data> Get(Local<Context> context, int i) const;\n\n              V8_INLINE static FixedArray* Cast(Data* data) {\n            #ifdef V8_ENABLE_CHECKS\n                CheckCast(data);\n            #endif\n                return reinterpret_cast<FixedArray*>(data);\n              }\n\n             private:\n              static void CheckCast(Data* obj);\n            };"
+    }
+  ],
+  "dependencies": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "Context",
+        "about": "Represents a V8 execution context.",
+        "dependencies": []
+      },
+      "code": "class Context;",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "template",
+        "name": "Local",
+        "about": "A smart pointer for V8 objects, handling garbage collection.",
+        "dependencies": []
+      },
+      "code": "template <typename T> class Local {};",
+      "type": "class"
+    }
+  ],
+  "file_path": "/home/kathirks_gc/v8_go/archive/codebase/include/v8-data.h"
+}

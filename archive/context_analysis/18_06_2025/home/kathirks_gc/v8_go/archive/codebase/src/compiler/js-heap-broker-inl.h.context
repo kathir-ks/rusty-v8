@@ -1,0 +1,138 @@
+{
+  "metadata": {
+    "path": "/home/kathirks_gc/v8_go/archive/codebase/src/compiler/js-heap-broker-inl.h",
+    "file_name": "js-heap-broker-inl.h",
+    "language": "cpp",
+    "purpose": "Inline implementations for the JSHeapBroker class, providing access to the JavaScript heap during compilation."
+  },
+  "imports": {
+    "metadata": {
+      "language": "cpp",
+      "purpose": "Includes necessary headers for JSHeapBroker functionality and parked scope management."
+    },
+    "code": "#include \"src/compiler/js-heap-broker.h\"\n#include \"src/heap/parked-scope-inl.h\""
+  },
+  "classes": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "RecursiveMutexGuardIfNeeded",
+        "about": "A helper class that acquires a recursive mutex only if needed. It manages the depth of the mutex and only locks when the depth is 0.",
+        "attributes": [
+          {
+            "name": "mutex_depth_address_",
+            "type": "int*",
+            "access": "private",
+            "purpose": "Pointer to the mutex depth counter."
+          },
+          {
+            "name": "initial_mutex_depth_",
+            "type": "int",
+            "access": "private",
+            "purpose": "Stores the initial mutex depth when the guard is created."
+          },
+          {
+            "name": "mutex_guard_",
+            "type": "ParkedMutexGuard",
+            "access": "private",
+            "purpose": "The actual mutex guard that locks/unlocks the mutex."
+          }
+        ],
+        "dependencies": [
+          "LocalIsolate",
+          "base::Mutex",
+          "ParkedMutexGuard"
+        ]
+      },
+      "code": "V8_INLINE\nJSHeapBroker::RecursiveMutexGuardIfNeeded::RecursiveMutexGuardIfNeeded(\n    LocalIsolate* local_isolate, base::Mutex* mutex, int* mutex_depth_address)\n    : mutex_depth_address_(mutex_depth_address),\n      initial_mutex_depth_(*mutex_depth_address_),\n      mutex_guard_(local_isolate, mutex, initial_mutex_depth_ == 0) {\n  (*mutex_depth_address_)++;\n}"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "MapUpdaterGuardIfNeeded",
+        "about": "A specialized RecursiveMutexGuardIfNeeded for protecting map updates in the JSHeapBroker.",
+        "attributes": [],
+        "dependencies": [
+          "JSHeapBroker",
+          "RecursiveMutexGuardIfNeeded",
+          "LocalIsolate",
+          "Isolate",
+          "base::Mutex"
+        ]
+      },
+      "code": "V8_INLINE JSHeapBroker::MapUpdaterGuardIfNeeded::MapUpdaterGuardIfNeeded(\n    JSHeapBroker* broker)\n    : RecursiveMutexGuardIfNeeded(broker -> local_isolate_or_isolate(),\n                                  broker->isolate()->map_updater_access(),\n                                  &broker->map_updater_mutex_depth_) {}"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "BoilerplateMigrationGuardIfNeeded",
+        "about": "A specialized RecursiveMutexGuardIfNeeded for protecting boilerplate migrations in the JSHeapBroker.",
+        "attributes": [],
+        "dependencies": [
+          "JSHeapBroker",
+          "RecursiveMutexGuardIfNeeded",
+          "LocalIsolate",
+          "Isolate",
+          "base::Mutex"
+        ]
+      },
+      "code": "V8_INLINE JSHeapBroker::BoilerplateMigrationGuardIfNeeded::\n    BoilerplateMigrationGuardIfNeeded(JSHeapBroker* broker)\n    : RecursiveMutexGuardIfNeeded(\n          broker -> local_isolate_or_isolate(),\n          broker->isolate()->boilerplate_migration_access(),\n          &broker->boilerplate_migration_mutex_depth_) {}"
+    }
+  ],
+  "dependencies": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "JSHeapBroker",
+        "about": "Provides access to the JavaScript heap during compilation."
+      },
+      "code": "class JSHeapBroker {\n                 public:\n                  LocalIsolate* local_isolate_or_isolate() { return nullptr; }\n                  Isolate* isolate() { return nullptr; }\n                  int map_updater_mutex_depth_;\n                  int boilerplate_migration_mutex_depth_;\n                };",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "LocalIsolate",
+        "about": "Represents a local isolate."
+      },
+      "code": "class LocalIsolate {};",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "Isolate",
+        "about": "Represents an isolate."
+      },
+      "code": "class Isolate {\n                 public:\n                  base::Mutex* map_updater_access() { return nullptr; }\n                  base::Mutex* boilerplate_migration_access() { return nullptr; }\n                };",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "base::Mutex",
+        "about": "A mutex."
+      },
+      "code": "namespace base { class Mutex {}; }",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "ParkedMutexGuard",
+        "about": "A mutex guard that can be parked."
+      },
+      "code": "class ParkedMutexGuard {\n                 public:\n                  ParkedMutexGuard(LocalIsolate* local_isolate, base::Mutex* mutex, bool should_lock) {}\n                };",
+      "type": "class"
+    }
+  ],
+  "file_path": "/home/kathirks_gc/v8_go/archive/codebase/src/compiler/js-heap-broker-inl.h"
+}

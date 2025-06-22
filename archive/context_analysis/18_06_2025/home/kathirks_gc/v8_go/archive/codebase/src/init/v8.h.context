@@ -1,0 +1,98 @@
+{
+  "metadata": {
+    "path": "/home/kathirks_gc/v8_go/archive/codebase/src/init/v8.h",
+    "file_name": "v8.h",
+    "language": "cpp",
+    "purpose": "Declares the V8 class, which provides global control and initialization for the V8 JavaScript engine."
+  },
+  "imports": {
+    "metadata": {
+      "language": "cpp",
+      "purpose": "Includes the globals header file, which defines global constants and types used throughout the V8 codebase."
+    },
+    "code": "#include \"src/common/globals.h\""
+  },
+  "classes": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "struct",
+        "name": "OOMDetails",
+        "about": "Structure to hold details about out-of-memory errors.",
+        "attributes": [],
+        "dependencies": []
+      },
+      "code": "struct OOMDetails;"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "Platform",
+        "about": "Abstracts the underlying platform for V8.",
+        "attributes": [],
+        "dependencies": []
+      },
+      "code": "class Platform;"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "StartupData",
+        "about": "Represents startup data used to initialize the V8 engine.",
+        "attributes": [],
+        "dependencies": []
+      },
+      "code": "class StartupData;"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "V8",
+        "extends": "AllStatic",
+        "about": "Provides global control and initialization for the V8 JavaScript engine.",
+        "attributes": [
+          {
+            "name": "platform_",
+            "type": "v8::Platform*",
+            "access": "private",
+            "purpose": "Stores a pointer to the current platform."
+          }
+        ],
+        "dependencies": [
+          "AllStatic",
+          "v8::Platform",
+          "StartupData",
+          "internal::Isolate",
+          "OOMDetails"
+        ]
+      },
+      "code": "class V8 : public AllStatic {\n        public:\n          // Global actions.\n          static void Initialize();\n          static void Dispose();\n\n          // Report process out of memory. Implementation found in api.cc.\n          // This function will not return, but will terminate the execution.\n          // IMPORTANT: Update the Google-internal crash processer if this signature\n          // changes to be able to extract detailed v8::internal::HeapStats on OOM.\n          [[noreturn]] V8_EXPORT_PRIVATE static void FatalProcessOutOfMemory(\n              Isolate* isolate, const char* location,\n              const OOMDetails& details = kNoOOMDetails);\n\n          // Constants to be used for V8::FatalProcessOutOfMemory. They avoid having\n          // to include v8-callbacks.h in all callers.\n          V8_EXPORT_PRIVATE static const OOMDetails kNoOOMDetails;\n          V8_EXPORT_PRIVATE static const OOMDetails kHeapOOM;\n\n          // Another variant of FatalProcessOutOfMemory, which constructs the OOMDetails\n          // struct internally from another \"detail\" c-string.\n          // This can be removed once we support designated initializers (C++20).\n          [[noreturn]] V8_EXPORT_PRIVATE static void FatalProcessOutOfMemory(\n              Isolate* isolate, const char* location, const char* detail);\n\n          static void InitializePlatform(v8::Platform* platform);\n          V8_EXPORT_PRIVATE static void InitializePlatformForTesting(\n              v8::Platform* platform);\n          static void DisposePlatform();\n          V8_EXPORT_PRIVATE static v8::Platform* GetCurrentPlatform();\n          // Replaces the current platform with the given platform.\n          // Should be used only for testing.\n          V8_EXPORT_PRIVATE static void SetPlatformForTesting(v8::Platform* platform);\n\n          static void SetSnapshotBlob(StartupData* snapshot_blob);\n\n         private:\n          static v8::Platform* platform_;\n        };"
+    }
+  ],
+  "dependencies": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "AllStatic",
+        "about": "Base class ensuring that all methods are static."
+      },
+      "code": "class AllStatic {};",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "Isolate",
+        "about": "Represents an isolated instance of the V8 JavaScript engine."
+      },
+      "code": "class Isolate;",
+      "type": "class"
+    }
+  ],
+  "file_path": "/home/kathirks_gc/v8_go/archive/codebase/src/init/v8.h"
+}

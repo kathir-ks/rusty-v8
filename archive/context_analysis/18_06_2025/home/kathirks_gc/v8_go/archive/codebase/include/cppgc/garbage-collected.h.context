@@ -1,0 +1,66 @@
+{
+  "metadata": {
+    "path": "/home/kathirks_gc/v8_go/archive/codebase/include/cppgc/garbage-collected.h",
+    "file_name": "garbage-collected.h",
+    "language": "cpp",
+    "purpose": "Defines base classes for garbage-collected objects in cppgc."
+  },
+  "imports": {
+    "metadata": {
+      "language": "cpp",
+      "purpose": "Includes necessary headers for cppgc internal API, platform definitions, trace traits, and type traits."
+    },
+    "code": "#include \"cppgc/internal/api-constants.h\"\n#include \"cppgc/platform.h\"\n#include \"cppgc/trace-trait.h\"\n#include \"cppgc/type-traits.h\""
+  },
+  "classes": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "GarbageCollected",
+        "about": "Base class for managed objects that are garbage collected.  Must be inherited from as left-most base class.",
+        "attributes": [],
+        "dependencies": [
+          "Visitor"
+        ]
+      },
+      "code": "template <typename T>\nclass GarbageCollected {\n public:\n  using IsGarbageCollectedTypeMarker = void;\n  using ParentMostGarbageCollectedType = T;\n\n  // Must use MakeGarbageCollected.\n  void* operator new(size_t) = delete;\n  void* operator new[](size_t) = delete;\n  // The garbage collector is taking care of reclaiming the object. Also,\n  // virtual destructor requires an unambiguous, accessible 'operator delete'.\n  void operator delete(void*) {\n#ifdef V8_ENABLE_CHECKS\n    internal::Fatal(\n        \"Manually deleting a garbage collected object is not allowed\");\n#endif  // V8_ENABLE_CHECKS\n  }\n  void operator delete[](void*) = delete;\n\n protected:\n  GarbageCollected() = default;\n};"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "GarbageCollectedMixin",
+        "about": "Base class for managed mixin objects. Such objects cannot be constructed directly but must be mixed into the inheritance hierarchy of a GarbageCollected object.",
+        "attributes": [],
+        "dependencies": [
+          "Visitor"
+        ]
+      },
+      "code": "class GarbageCollectedMixin {\n public:\n  using IsGarbageCollectedMixinTypeMarker = void;\n\n  // Must use MakeGarbageCollected.\n  void* operator new(size_t) = delete;\n  void* operator new[](size_t) = delete;\n  // The garbage collector is taking care of reclaiming the object.\n  // Not override the non-array varaint of `delete` to not conflict with the\n  // operator in GarbageCollected above.\n  void operator delete[](void*) = delete;\n\n  /**\n   * This Trace method must be overriden by objects inheriting from\n   * GarbageCollectedMixin.\n   */\n  virtual void Trace(cppgc::Visitor*) const {}\n};"
+    }
+  ],
+  "dependencies": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "Visitor",
+        "about": "Interface to visit managed objects during garbage collection."
+      },
+      "code": "class Visitor;",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "function",
+        "name": "Fatal",
+        "about": "A fatal error reporting function. Likely terminates the program."
+      },
+      "code": "namespace internal {\n                void Fatal(const char* message);\n            }",
+      "type": "func"
+    }
+  ],
+  "file_path": "/home/kathirks_gc/v8_go/archive/codebase/include/cppgc/garbage-collected.h"
+}

@@ -1,0 +1,142 @@
+{
+  "metadata": {
+    "path": "/home/kathirks_gc/v8_go/archive/codebase/src/execution/execution.h",
+    "file_name": "execution.h",
+    "language": "cpp",
+    "purpose": "Declares the Execution class, which provides static methods for executing JavaScript code (functions and scripts) within the V8 engine."
+  },
+  "imports": {
+    "metadata": {
+      "language": "cpp",
+      "purpose": "Includes necessary headers for vector and global definitions."
+    },
+    "code": "#include \"src/base/vector.h\"\n            #include \"src/common/globals.h\""
+  },
+  "classes": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "Execution",
+        "extends": "AllStatic",
+        "about": "Provides static methods for executing JavaScript code.",
+        "attributes": [],
+        "dependencies": [
+          "MicrotaskQueue",
+          "Isolate",
+          "Object",
+          "JSFunction",
+          "JSReceiver",
+          "Code",
+          "WasmCodePointer",
+          "base::Vector",
+          "DirectHandle",
+          "MaybeHandle",
+          "MaybeDirectHandle",
+          "FixedArray"
+        ]
+      },
+      "code": "class Execution final : public AllStatic {\n            public:\n              // Whether to report pending messages, or keep them pending on the isolate.\n              enum class MessageHandling { kReport, kKeepPending };\n              enum class Target { kCallable, kRunMicrotasks };\n\n              // Call a function (that is not a script), the caller supplies a receiver and\n              // an array of arguments.\n              // When the function called is not in strict mode, receiver is\n              // converted to an object.\n              V8_EXPORT_PRIVATE V8_WARN_UNUSED_RESULT static MaybeHandle<Object> Call(\n                  Isolate* isolate, DirectHandle<Object> callable,\n                  DirectHandle<Object> receiver,\n                  base::Vector<const DirectHandle<Object>> args);\n              // Run a script. For JSFunctions that are not scripts, use Execution::Call.\n              // Depending on the script, the host_defined_options might not be used but the\n              // caller has to provide it at all times.\n              V8_EXPORT_PRIVATE V8_WARN_UNUSED_RESULT static MaybeHandle<Object> CallScript(\n                  Isolate* isolate, DirectHandle<JSFunction> callable,\n                  DirectHandle<Object> receiver, DirectHandle<Object> host_defined_options);\n\n              V8_WARN_UNUSED_RESULT static MaybeHandle<Object> CallBuiltin(\n                  Isolate* isolate, DirectHandle<JSFunction> builtin,\n                  DirectHandle<Object> receiver,\n                  base::Vector<const DirectHandle<Object>> args);\n\n              // Construct object from function, the caller supplies an array of\n              // arguments.\n              V8_WARN_UNUSED_RESULT static MaybeDirectHandle<JSReceiver> New(\n                  Isolate* isolate, DirectHandle<Object> constructor,\n                  base::Vector<const DirectHandle<Object>> args);\n              V8_WARN_UNUSED_RESULT static MaybeDirectHandle<JSReceiver> New(\n                  Isolate* isolate, DirectHandle<Object> constructor,\n                  DirectHandle<Object> new_target,\n                  base::Vector<const DirectHandle<Object>> args);\n\n              // Call a function, just like Call(), but handle don't report exceptions\n              // externally.\n              // The return value is either the result of calling the function (if no\n              // exception occurred), or an empty handle.\n              // If message_handling is MessageHandling::kReport, exceptions (except for\n              // termination exceptions) will be stored in exception_out (if not a\n              // nullptr).\n              V8_EXPORT_PRIVATE static MaybeDirectHandle<Object> TryCall(\n                  Isolate* isolate, DirectHandle<Object> callable,\n                  DirectHandle<Object> receiver,\n                  base::Vector<const DirectHandle<Object>> args,\n                  MessageHandling message_handling,\n                  MaybeDirectHandle<Object>* exception_out);\n              // Same as Execute::TryCall but for scripts which need an explicit\n              // host-defined options object. See Execution:CallScript\n              V8_EXPORT_PRIVATE static MaybeDirectHandle<Object> TryCallScript(\n                  Isolate* isolate, DirectHandle<JSFunction> script_function,\n                  DirectHandle<Object> receiver,\n                  DirectHandle<FixedArray> host_defined_options);\n\n              // Convenience method for performing RunMicrotasks\n              static MaybeDirectHandle<Object> TryRunMicrotasks(\n                  Isolate* isolate, MicrotaskQueue* microtask_queue);\n\n            #if V8_ENABLE_WEBASSEMBLY\n              // Call a Wasm function identified by {wasm_call_target} through the\n              // provided {wrapper_code}, which must match the function's signature.\n              // Upon return, either isolate->has_exception() is true, or\n              // the function's return values are in {packed_args}.\n              V8_EXPORT_PRIVATE static void CallWasm(Isolate* isolate,\n                                                     DirectHandle<Code> wrapper_code,\n                                                     WasmCodePointer wasm_call_target,\n                                                     DirectHandle<Object> object_ref,\n                                                     Address packed_args);\n            #endif  // V8_ENABLE_WEBASSEMBLY\n            };"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "AllStatic",
+        "about": "Base class enforcing static-only usage.  Definition not provided, assumed to exist."
+      },
+      "code": "class AllStatic {};"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "MicrotaskQueue",
+        "about": "Represents the microtask queue. Definition not provided, assumed to exist."
+      },
+      "code": "class MicrotaskQueue {};"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "Isolate",
+        "about": "Represents an isolated instance of the V8 JavaScript engine. Definition not provided, assumed to exist."
+      },
+      "code": "class Isolate {};"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "Object",
+        "about": "Base class for all JavaScript objects. Definition not provided, assumed to exist."
+      },
+      "code": "class Object {};"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "JSFunction",
+        "about": "Represents a JavaScript function. Definition not provided, assumed to exist."
+      },
+      "code": "class JSFunction {};"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "JSReceiver",
+        "about": "Represents a JavaScript receiver. Definition not provided, assumed to exist."
+      },
+      "code": "class JSReceiver {};"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "Code",
+        "about": "Represents compiled code. Definition not provided, assumed to exist."
+      },
+      "code": "class Code {};"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "FixedArray",
+        "about": "Represents a fixed-size array. Definition not provided, assumed to exist."
+      },
+      "code": "class FixedArray {};"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "DirectHandle",
+        "about": "A handle to a V8 object. Definition not provided, assumed to exist."
+      },
+      "code": "template <typename T> class DirectHandle {};"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "MaybeHandle",
+        "about": "A maybe handle to a V8 object. Definition not provided, assumed to exist."
+      },
+      "code": "template <typename T> class MaybeHandle {};"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "MaybeDirectHandle",
+        "about": "A maybe direct handle to a V8 object. Definition not provided, assumed to exist."
+      },
+      "code": "template <typename T> class MaybeDirectHandle {};"
+    }
+  ],
+  "file_path": "/home/kathirks_gc/v8_go/archive/codebase/src/execution/execution.h"
+}

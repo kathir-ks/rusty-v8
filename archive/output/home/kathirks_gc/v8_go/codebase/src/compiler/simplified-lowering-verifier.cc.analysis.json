@@ -1,0 +1,93 @@
+{
+  "file_path": "/home/kathirks_gc/v8_go/codebase/src/compiler/simplified-lowering-verifier.cc",
+  "imports": [
+    "src/compiler/simplified-lowering-verifier.h",
+    "src/compiler/backend/instruction-codes.h",
+    "src/compiler/common-operator.h",
+    "src/compiler/operation-typer.h",
+    "src/compiler/type-cache.h"
+  ],
+  "classes": [
+    {
+      "name": "SimplifiedLoweringVerifier",
+      "properties": [],
+      "methods": [
+        {
+          "name": "CheckType",
+          "parameters": [
+            "Node* node",
+            "const Type& type"
+          ],
+          "return_type": "void",
+          "logic": "Checks if the type assigned to a node during lowering matches the expected type, throwing a fatal error if they don't match."
+        },
+        {
+          "name": "CheckAndSet",
+          "parameters": [
+            "Node* node",
+            "const Type& type",
+            "const Truncation& trunc"
+          ],
+          "return_type": "void",
+          "logic": "Checks if a node is typed, and if so, verifies its type against the provided type. If not typed, it sets the type.  It also sets the truncation of the node, generalized by the given type."
+        },
+        {
+          "name": "ReportInvalidTypeCombination",
+          "parameters": [
+            "Node* node",
+            "const std::vector<Type>& types"
+          ],
+          "return_type": "void",
+          "logic": "Reports a fatal error when an invalid combination of input types is encountered for a node. Prints the types and the graph for debugging."
+        },
+        {
+          "name": "GeneralizeTruncation",
+          "parameters": [
+            "const Truncation& truncation",
+            "const Type& type"
+          ],
+          "return_type": "Truncation",
+          "logic": "Generalizes the given truncation based on the type. It considers whether the type might be minus zero and adjusts the identify_zeros field accordingly. For specific truncation kinds, it may return Truncation::Any if the type is compatible, otherwise returns a new Truncation object of the same kind but generalized."
+        },
+        {
+          "name": "JoinTruncation",
+          "parameters": [
+            "const Truncation& t1",
+            "const Truncation& t2"
+          ],
+          "return_type": "Truncation",
+          "logic": "Combines two truncations by selecting the more general truncation kind and the more general IdentifyZeros value."
+        },
+        {
+          "name": "VisitNode",
+          "parameters": [
+            "Node* node",
+            "OperationTyper& op_typer"
+          ],
+          "return_type": "void",
+          "logic": "The main method for verifying the lowered graph. It switches based on the node's opcode, performing type and truncation checks and setting appropriate types and truncations based on the specific operation semantics. It handles various operations including constants, checked operations, change operators, arithmetic operations, and control flow. It uses an `OperationTyper` instance to get the operation-specific types."
+        }
+      ]
+    }
+  ],
+  "functions": [
+    {
+      "name": "IsNonTruncatingMachineTypeFor",
+      "parameters": [
+        "const MachineType& mt",
+        "const Type& type",
+        "Zone* graph_zone"
+      ],
+      "return_type": "bool",
+      "logic": "Checks if a given machine type is non-truncating for a specific type.  Currently handles cases for BigInts and booleans, otherwise defaults to true. The goal is to ensure that machine types used for specific types don't lead to data loss."
+    },
+    {
+      "name": "IsModuloTruncation",
+      "parameters": [
+        "const Truncation& truncation"
+      ],
+      "return_type": "bool",
+      "logic": "Checks if a truncation represents modulo semantics by determining if it is used as Word32 or Word64."
+    }
+  ]
+}

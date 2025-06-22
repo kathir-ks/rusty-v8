@@ -1,0 +1,173 @@
+{
+  "metadata": {
+    "path": "/home/kathirks_gc/v8_go/archive/codebase/src/compiler/turboshaft/code-elimination-and-simplification-phase.cc",
+    "file_name": "code-elimination-and-simplification-phase.cc",
+    "language": "cpp",
+    "purpose": "Implements the code elimination and simplification phase in the Turboshaft compiler pipeline."
+  },
+  "imports": {
+    "metadata": {
+      "language": "cpp",
+      "purpose": "Includes necessary headers for the phase implementation, including reducers and other Turboshaft components."
+    },
+    "code": "#include \"src/compiler/turboshaft/code-elimination-and-simplification-phase.h\"\n\n#include \"src/compiler/js-heap-broker.h\"\n#include \"src/compiler/turboshaft/copying-phase.h\"\n#include \"src/compiler/turboshaft/dead-code-elimination-reducer.h\"\n#include \"src/compiler/turboshaft/duplication-optimization-reducer.h\"\n#include \"src/compiler/turboshaft/instruction-selection-normalization-reducer.h\"\n#include \"src/compiler/turboshaft/load-store-simplification-reducer.h\"\n#include \"src/compiler/turboshaft/phase.h\"\n#include \"src/compiler/turboshaft/stack-check-lowering-reducer.h\"\n\n#if V8_ENABLE_WEBASSEMBLY\n#include \"src/compiler/turboshaft/wasm-js-lowering-reducer.h\"\n#endif"
+  },
+  "functions": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "method",
+        "name": "Run",
+        "parent": "CodeEliminationAndSimplificationPhase",
+        "about": "Executes the code elimination and simplification phase.",
+        "logic": "Uses the CopyingPhase to apply a sequence of reducers for dead code elimination, stack check lowering, WASM-JS lowering (if enabled), load/store simplification, duplication optimization, instruction selection normalization, and value numbering.",
+        "parameters": [
+          {
+            "name": "data",
+            "type": "PipelineData*",
+            "purpose": "Pointer to the pipeline data object."
+          },
+          {
+            "name": "temp_zone",
+            "type": "Zone*",
+            "purpose": "Pointer to a temporary zone for memory allocation."
+          }
+        ],
+        "return": {
+          "type": "void",
+          "description": "No return value."
+        },
+        "dependencies": [
+          "UnparkedScopeIfNeeded",
+          "CopyingPhase",
+          "DeadCodeEliminationReducer",
+          "StackCheckLoweringReducer",
+          "WasmJSLoweringReducer",
+          "LoadStoreSimplificationReducer",
+          "DuplicationOptimizationReducer",
+          "InstructionSelectionNormalizationReducer",
+          "ValueNumberingReducer"
+        ]
+      },
+      "code": "void CodeEliminationAndSimplificationPhase::Run(PipelineData* data,\n                                                Zone* temp_zone) {\n  UnparkedScopeIfNeeded scope(data->broker(), DEBUG_BOOL);\n\n  CopyingPhase<DeadCodeEliminationReducer, StackCheckLoweringReducer,\n#if V8_ENABLE_WEBASSEMBLY\n               WasmJSLoweringReducer,\n#endif\n               LoadStoreSimplificationReducer,\n               // We make sure that DuplicationOptimizationReducer runs after\n               // LoadStoreSimplificationReducer, so that it can optimize\n               // Loads/Stores produced by LoadStoreSimplificationReducer\n               // (which, for simplificy, doesn't use the Assembler helper\n               // methods, but only calls Next::ReduceLoad/Store).\n               DuplicationOptimizationReducer,\n               InstructionSelectionNormalizationReducer,\n               ValueNumberingReducer>::Run(data, temp_zone);\n}"
+    }
+  ],
+  "classes": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "CodeEliminationAndSimplificationPhase",
+        "about": "Represents the code elimination and simplification phase in the Turboshaft compiler.",
+        "attributes": [],
+        "dependencies": [
+          "PipelineData",
+          "Zone",
+          "UnparkedScopeIfNeeded",
+          "CopyingPhase",
+          "DeadCodeEliminationReducer",
+          "StackCheckLoweringReducer",
+          "WasmJSLoweringReducer",
+          "LoadStoreSimplificationReducer",
+          "DuplicationOptimizationReducer",
+          "InstructionSelectionNormalizationReducer",
+          "ValueNumberingReducer"
+        ]
+      },
+      "code": "namespace v8::internal::compiler::turboshaft {\n\nvoid CodeEliminationAndSimplificationPhase::Run(PipelineData* data,\n                                                Zone* temp_zone) {\n  UnparkedScopeIfNeeded scope(data->broker(), DEBUG_BOOL);\n\n  CopyingPhase<DeadCodeEliminationReducer, StackCheckLoweringReducer,\n#if V8_ENABLE_WEBASSEMBLY\n               WasmJSLoweringReducer,\n#endif\n               LoadStoreSimplificationReducer,\n               // We make sure that DuplicationOptimizationReducer runs after\n               // LoadStoreSimplificationReducer, so that it can optimize\n               // Loads/Stores produced by LoadStoreSimplificationReducer\n               // (which, for simplificy, doesn't use the Assembler helper\n               // methods, but only calls Next::ReduceLoad/Store).\n               DuplicationOptimizationReducer,\n               InstructionSelectionNormalizationReducer,\n               ValueNumberingReducer>::Run(data, temp_zone);\n}\n\n}  // namespace v8::internal::compiler::turboshaft"
+    }
+  ],
+  "dependencies": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "UnparkedScopeIfNeeded",
+        "about": "A utility class to manage unparked scopes."
+      },
+      "code": "class UnparkedScopeIfNeeded {\n                public:\n                    UnparkedScopeIfNeeded(JSHeapBroker* broker, bool flag);\n                    ~UnparkedScopeIfNeeded();\n                };",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "CopyingPhase",
+        "about": "A phase in the Turboshaft pipeline that applies reducers by copying the graph."
+      },
+      "code": "template <typename... Reducers>\n                class CopyingPhase {\n                public:\n                    static void Run(PipelineData* data, Zone* temp_zone);\n                };",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "DeadCodeEliminationReducer",
+        "about": "A reducer that eliminates dead code."
+      },
+      "code": "class DeadCodeEliminationReducer {};",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "StackCheckLoweringReducer",
+        "about": "A reducer that lowers stack checks."
+      },
+      "code": "class StackCheckLoweringReducer {};",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "WasmJSLoweringReducer",
+        "about": "A reducer for lowering WASM-JS code."
+      },
+      "code": "class WasmJSLoweringReducer {};",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "LoadStoreSimplificationReducer",
+        "about": "A reducer that simplifies load and store operations."
+      },
+      "code": "class LoadStoreSimplificationReducer {};",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "DuplicationOptimizationReducer",
+        "about": "A reducer that optimizes code by duplicating and simplifying."
+      },
+      "code": "class DuplicationOptimizationReducer {};",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "InstructionSelectionNormalizationReducer",
+        "about": "A reducer that normalizes code after instruction selection."
+      },
+      "code": "class InstructionSelectionNormalizationReducer {};",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "ValueNumberingReducer",
+        "about": "A reducer that performs value numbering to identify and eliminate redundant computations."
+      },
+      "code": "class ValueNumberingReducer {};",
+      "type": "class"
+    }
+  ],
+  "file_path": "/home/kathirks_gc/v8_go/archive/codebase/src/compiler/turboshaft/code-elimination-and-simplification-phase.cc"
+}

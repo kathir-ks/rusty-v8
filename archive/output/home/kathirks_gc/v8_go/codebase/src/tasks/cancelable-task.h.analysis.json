@@ -1,0 +1,205 @@
+{
+  "file_path": "/home/kathirks_gc/v8_go/codebase/src/tasks/cancelable-task.h",
+  "imports": [
+    "<atomic>",
+    "<unordered_map>",
+    "include/v8-platform.h",
+    "src/base/macros.h",
+    "src/base/platform/condition-variable.h"
+  ],
+  "classes": [
+    {
+      "name": "CancelableTaskManager",
+      "properties": [
+        "task_id_counter_",
+        "cancelable_tasks_",
+        "cancelable_tasks_barrier_",
+        "mutex_",
+        "canceled_"
+      ],
+      "methods": [
+        {
+          "name": "CancelableTaskManager",
+          "parameters": [],
+          "return_type": null,
+          "logic": "Constructor for the CancelableTaskManager."
+        },
+        {
+          "name": "~CancelableTaskManager",
+          "parameters": [],
+          "return_type": null,
+          "logic": "Destructor for the CancelableTaskManager."
+        },
+        {
+          "name": "Register",
+          "parameters": [
+            "Cancelable* task"
+          ],
+          "return_type": "Id",
+          "logic": "Registers a new cancelable task and returns its unique ID."
+        },
+        {
+          "name": "TryAbort",
+          "parameters": [
+            "Id id"
+          ],
+          "return_type": "TryAbortResult",
+          "logic": "Attempts to abort a task identified by its ID."
+        },
+        {
+          "name": "TryAbortAll",
+          "parameters": [],
+          "return_type": "TryAbortResult",
+          "logic": "Attempts to cancel all registered tasks."
+        },
+        {
+          "name": "CancelAndWait",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Cancels all remaining registered tasks and waits for running tasks to finish."
+        },
+        {
+          "name": "canceled",
+          "parameters": [],
+          "return_type": "bool",
+          "logic": "Returns true if the task manager has been cancelled."
+        },
+        {
+          "name": "RemoveFinishedTask",
+          "parameters": [
+            "Id id"
+          ],
+          "return_type": "void",
+          "logic": "Removes a finished task from the manager."
+        }
+      ]
+    },
+    {
+      "name": "Cancelable",
+      "properties": [
+        "parent_",
+        "status_",
+        "id_"
+      ],
+      "methods": [
+        {
+          "name": "Cancelable",
+          "parameters": [
+            "CancelableTaskManager* parent"
+          ],
+          "return_type": null,
+          "logic": "Constructor for the Cancelable class, registers the task with the parent task manager."
+        },
+        {
+          "name": "~Cancelable",
+          "parameters": [],
+          "return_type": null,
+          "logic": "Virtual destructor for the Cancelable class."
+        },
+        {
+          "name": "id",
+          "parameters": [],
+          "return_type": "CancelableTaskManager::Id",
+          "logic": "Returns the ID of the cancelable task."
+        },
+        {
+          "name": "TryRun",
+          "parameters": [
+            "Status* previous = nullptr"
+          ],
+          "return_type": "bool",
+          "logic": "Attempts to transition the task's state from Waiting to Running. Returns true on success."
+        },
+        {
+          "name": "Cancel",
+          "parameters": [],
+          "return_type": "bool",
+          "logic": "Attempts to transition the task's state from Waiting to Canceled. Returns true on success."
+        },
+        {
+          "name": "CompareExchangeStatus",
+          "parameters": [
+            "Status expected",
+            "Status desired",
+            "Status* previous = nullptr"
+          ],
+          "return_type": "bool",
+          "logic": "Atomically compares and exchanges the task's status. Returns true on success."
+        }
+      ]
+    },
+    {
+      "name": "CancelableTask",
+      "properties": [],
+      "methods": [
+        {
+          "name": "CancelableTask",
+          "parameters": [
+            "Isolate* isolate"
+          ],
+          "return_type": null,
+          "logic": "Constructor for CancelableTask taking an Isolate."
+        },
+        {
+          "name": "CancelableTask",
+          "parameters": [
+            "CancelableTaskManager* manager"
+          ],
+          "return_type": null,
+          "logic": "Constructor for CancelableTask taking a CancelableTaskManager."
+        },
+        {
+          "name": "Run",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Overrides Task::Run. Tries to run the task, and if successful, calls RunInternal."
+        },
+        {
+          "name": "RunInternal",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Pure virtual method to be implemented by derived classes. Contains the actual task logic."
+        }
+      ]
+    },
+    {
+      "name": "CancelableIdleTask",
+      "properties": [],
+      "methods": [
+        {
+          "name": "CancelableIdleTask",
+          "parameters": [
+            "Isolate* isolate"
+          ],
+          "return_type": null,
+          "logic": "Constructor for CancelableIdleTask taking an Isolate."
+        },
+        {
+          "name": "CancelableIdleTask",
+          "parameters": [
+            "CancelableTaskManager* manager"
+          ],
+          "return_type": null,
+          "logic": "Constructor for CancelableIdleTask taking a CancelableTaskManager."
+        },
+        {
+          "name": "Run",
+          "parameters": [
+            "double deadline_in_seconds"
+          ],
+          "return_type": "void",
+          "logic": "Overrides IdleTask::Run. Tries to run the task, and if successful, calls RunInternal."
+        },
+        {
+          "name": "RunInternal",
+          "parameters": [
+            "double deadline_in_seconds"
+          ],
+          "return_type": "void",
+          "logic": "Pure virtual method to be implemented by derived classes. Contains the actual idle task logic."
+        }
+      ]
+    }
+  ],
+  "functions": []
+}

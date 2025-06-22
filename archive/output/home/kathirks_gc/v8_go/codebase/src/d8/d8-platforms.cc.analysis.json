@@ -1,0 +1,449 @@
+{
+  "file_path": "/home/kathirks_gc/v8_go/codebase/src/d8/d8-platforms.cc",
+  "imports": [
+    "src/d8/d8-platforms.h",
+    "memory",
+    "unordered_map",
+    "include/libplatform/libplatform.h",
+    "include/v8-platform.h",
+    "src/base/logging.h",
+    "src/base/macros.h",
+    "src/base/platform/mutex.h",
+    "src/base/platform/platform.h",
+    "src/base/platform/time.h",
+    "src/base/utils/random-number-generator.h"
+  ],
+  "classes": [
+    {
+      "name": "PredictablePlatform",
+      "properties": [
+        "std::atomic<uint64_t> synthetic_time_",
+        "std::unique_ptr<Platform> platform_"
+      ],
+      "methods": [
+        {
+          "name": "PredictablePlatform",
+          "parameters": [
+            "std::unique_ptr<Platform> platform"
+          ],
+          "return_type": "explicit PredictablePlatform",
+          "logic": "Constructor that initializes the underlying platform."
+        },
+        {
+          "name": "GetPageAllocator",
+          "parameters": [],
+          "return_type": "PageAllocator*",
+          "logic": "Returns the page allocator from the underlying platform."
+        },
+        {
+          "name": "OnCriticalMemoryPressure",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Forwards the critical memory pressure notification to the underlying platform."
+        },
+        {
+          "name": "GetForegroundTaskRunner",
+          "parameters": [
+            "v8::Isolate* isolate",
+            "TaskPriority priority"
+          ],
+          "return_type": "std::shared_ptr<TaskRunner>",
+          "logic": "Returns the foreground task runner from the underlying platform."
+        },
+        {
+          "name": "NumberOfWorkerThreads",
+          "parameters": [],
+          "return_type": "int",
+          "logic": "Returns the number of worker threads from the underlying platform. Always uses the underlying platform's count to avoid unexpected behavioral changes."
+        },
+        {
+          "name": "PostTaskOnWorkerThreadImpl",
+          "parameters": [
+            "TaskPriority priority",
+            "std::unique_ptr<Task> task",
+            "const SourceLocation& location"
+          ],
+          "return_type": "void",
+          "logic": "Posts a task to the foreground task runner of the predictable worker task queue. The queue is executed on the main thread, thus ensuring predictable behavior."
+        },
+        {
+          "name": "PostDelayedTaskOnWorkerThreadImpl",
+          "parameters": [
+            "TaskPriority priority",
+            "std::unique_ptr<Task> task",
+            "double delay_in_seconds",
+            "const SourceLocation& location"
+          ],
+          "return_type": "void",
+          "logic": "This method doesn't run delayed tasks."
+        },
+        {
+          "name": "IdleTasksEnabled",
+          "parameters": [
+            "Isolate* isolate"
+          ],
+          "return_type": "bool",
+          "logic": "Returns false, disabling idle tasks."
+        },
+        {
+          "name": "CreateJobImpl",
+          "parameters": [
+            "TaskPriority priority",
+            "std::unique_ptr<JobTask> job_task",
+            "const SourceLocation& location"
+          ],
+          "return_type": "std::unique_ptr<JobHandle>",
+          "logic": "Creates a default job handle associated with the current predictable platform."
+        },
+        {
+          "name": "MonotonicallyIncreasingTime",
+          "parameters": [],
+          "return_type": "double",
+          "logic": "Returns a monotonically increasing time based on an atomic counter. Used for predictable time in tests. Uses atomic increment to avoid TSan issues when running multiple isolates with '--predictable'."
+        },
+        {
+          "name": "CurrentClockTimeMillis",
+          "parameters": [],
+          "return_type": "double",
+          "logic": "Returns the current clock time in milliseconds, based on the monotonically increasing time."
+        },
+        {
+          "name": "GetTracingController",
+          "parameters": [],
+          "return_type": "v8::TracingController*",
+          "logic": "Returns the tracing controller from the underlying platform."
+        },
+        {
+          "name": "platform",
+          "parameters": [],
+          "return_type": "Platform*",
+          "logic": "Returns the underlying platform."
+        }
+      ]
+    },
+    {
+      "name": "DelayedTasksPlatform",
+      "properties": [
+        "std::unique_ptr<Platform> platform_",
+        "base::Mutex mutex_",
+        "base::RandomNumberGenerator rng_",
+        "std::unordered_map<TaskRunner*, std::weak_ptr<DelayedTaskRunner>> delayed_task_runners_"
+      ],
+      "methods": [
+        {
+          "name": "DelayedTasksPlatform",
+          "parameters": [
+            "std::unique_ptr<Platform> platform"
+          ],
+          "return_type": "explicit DelayedTasksPlatform",
+          "logic": "Constructor that initializes the underlying platform with random seed."
+        },
+        {
+          "name": "DelayedTasksPlatform",
+          "parameters": [
+            "std::unique_ptr<Platform> platform",
+            "int64_t random_seed"
+          ],
+          "return_type": "explicit DelayedTasksPlatform",
+          "logic": "Constructor that initializes the underlying platform with random seed."
+        },
+        {
+          "name": "~DelayedTasksPlatform",
+          "parameters": [],
+          "return_type": "DelayedTasksPlatform",
+          "logic": "Destructor. Checks that all {DelayedTaskRunner} instances are freed"
+        },
+        {
+          "name": "GetPageAllocator",
+          "parameters": [],
+          "return_type": "PageAllocator*",
+          "logic": "Returns the page allocator from the underlying platform."
+        },
+        {
+          "name": "OnCriticalMemoryPressure",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Forwards the critical memory pressure notification to the underlying platform."
+        },
+        {
+          "name": "GetForegroundTaskRunner",
+          "parameters": [
+            "v8::Isolate* isolate",
+            "TaskPriority priority"
+          ],
+          "return_type": "std::shared_ptr<TaskRunner>",
+          "logic": "Returns a delayed task runner. It either re-materializes a {DelayedTaskRunner} from {delayed_task_runners_}, or creates a new one and keeps a weak reference."
+        },
+        {
+          "name": "NumberOfWorkerThreads",
+          "parameters": [],
+          "return_type": "int",
+          "logic": "Returns the number of worker threads from the underlying platform."
+        },
+        {
+          "name": "PostTaskOnWorkerThreadImpl",
+          "parameters": [
+            "TaskPriority priority",
+            "std::unique_ptr<Task> task",
+            "const SourceLocation& location"
+          ],
+          "return_type": "void",
+          "logic": "Posts a delayed task on the worker thread."
+        },
+        {
+          "name": "PostDelayedTaskOnWorkerThreadImpl",
+          "parameters": [
+            "TaskPriority priority",
+            "std::unique_ptr<Task> task",
+            "double delay_in_seconds",
+            "const SourceLocation& location"
+          ],
+          "return_type": "void",
+          "logic": "Posts a delayed task on the worker thread, taking into account the external delay."
+        },
+        {
+          "name": "IdleTasksEnabled",
+          "parameters": [
+            "Isolate* isolate"
+          ],
+          "return_type": "bool",
+          "logic": "Returns whether idle tasks are enabled on the underlying platform."
+        },
+        {
+          "name": "CreateJobImpl",
+          "parameters": [
+            "TaskPriority priority",
+            "std::unique_ptr<JobTask> job_task",
+            "const SourceLocation& location"
+          ],
+          "return_type": "std::unique_ptr<JobHandle>",
+          "logic": "Creates a job using a delayed job task."
+        },
+        {
+          "name": "MonotonicallyIncreasingTime",
+          "parameters": [],
+          "return_type": "double",
+          "logic": "Returns monotonically increasing time from the underlying platform."
+        },
+        {
+          "name": "CurrentClockTimeMillis",
+          "parameters": [],
+          "return_type": "double",
+          "logic": "Returns the current clock time in milliseconds from the underlying platform."
+        },
+        {
+          "name": "GetTracingController",
+          "parameters": [],
+          "return_type": "v8::TracingController*",
+          "logic": "Returns the tracing controller from the underlying platform."
+        },
+        {
+          "name": "GetRandomDelayInMilliseconds",
+          "parameters": [],
+          "return_type": "int32_t",
+          "logic": "Generates a random delay in milliseconds using the internal RNG."
+        },
+        {
+          "name": "MakeDelayedTask",
+          "parameters": [
+            "std::unique_ptr<Task> task"
+          ],
+          "return_type": "std::unique_ptr<Task>",
+          "logic": "Wraps a task in a delayed task."
+        },
+        {
+          "name": "MakeDelayedIdleTask",
+          "parameters": [
+            "std::unique_ptr<IdleTask> task"
+          ],
+          "return_type": "std::unique_ptr<IdleTask>",
+          "logic": "Wraps an idle task in a delayed idle task."
+        },
+        {
+          "name": "MakeDelayedJob",
+          "parameters": [
+            "std::unique_ptr<JobTask> task"
+          ],
+          "return_type": "std::unique_ptr<JobTask>",
+          "logic": "Wraps a job task in a delayed job task."
+        }
+      ]
+    },
+    {
+      "name": "DelayedTaskRunner",
+      "properties": [
+        "std::shared_ptr<TaskRunner> task_runner_",
+        "DelayedTasksPlatform* platform_"
+      ],
+      "methods": [
+        {
+          "name": "DelayedTaskRunner",
+          "parameters": [
+            "std::shared_ptr<TaskRunner> task_runner",
+            "DelayedTasksPlatform* platform"
+          ],
+          "return_type": "DelayedTaskRunner",
+          "logic": "Constructor."
+        },
+        {
+          "name": "~DelayedTaskRunner",
+          "parameters": [],
+          "return_type": "DelayedTaskRunner",
+          "logic": "Destructor. Erases the runner from {delayed_task_runners_}."
+        },
+        {
+          "name": "IdleTasksEnabled",
+          "parameters": [],
+          "return_type": "bool",
+          "logic": "Returns {IdleTasksEnabled} from the wrapped {task_runner_}."
+        },
+        {
+          "name": "NonNestableTasksEnabled",
+          "parameters": [],
+          "return_type": "bool",
+          "logic": "Returns {NonNestableTasksEnabled} from the wrapped {task_runner_}."
+        },
+        {
+          "name": "PostTaskImpl",
+          "parameters": [
+            "std::unique_ptr<Task> task",
+            "const SourceLocation& location"
+          ],
+          "return_type": "void",
+          "logic": "Wraps the task in a delayed task and posts it to the underlying task runner."
+        },
+        {
+          "name": "PostNonNestableTaskImpl",
+          "parameters": [
+            "std::unique_ptr<Task> task",
+            "const SourceLocation& location"
+          ],
+          "return_type": "void",
+          "logic": "Wraps the task in a delayed task and posts it as a non-nestable task to the underlying task runner."
+        },
+        {
+          "name": "PostDelayedTaskImpl",
+          "parameters": [
+            "std::unique_ptr<Task> task",
+            "double delay_in_seconds",
+            "const SourceLocation& location"
+          ],
+          "return_type": "void",
+          "logic": "Wraps the task in a delayed task and posts it as a delayed task to the underlying task runner."
+        },
+        {
+          "name": "PostIdleTaskImpl",
+          "parameters": [
+            "std::unique_ptr<IdleTask> task",
+            "const SourceLocation& location"
+          ],
+          "return_type": "void",
+          "logic": "Wraps the idle task in a delayed idle task and posts it to the underlying task runner."
+        }
+      ]
+    },
+    {
+      "name": "DelayedTask",
+      "properties": [
+        "std::unique_ptr<Task> task_",
+        "int32_t delay_ms_"
+      ],
+      "methods": [
+        {
+          "name": "DelayedTask",
+          "parameters": [
+            "std::unique_ptr<Task> task",
+            "int32_t delay_ms"
+          ],
+          "return_type": "DelayedTask",
+          "logic": "Constructor that initializes the underlying task and delay."
+        },
+        {
+          "name": "Run",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Sleeps for a specified duration and then runs the wrapped task."
+        }
+      ]
+    },
+    {
+      "name": "DelayedIdleTask",
+      "properties": [
+        "std::unique_ptr<IdleTask> task_",
+        "int32_t delay_ms_"
+      ],
+      "methods": [
+        {
+          "name": "DelayedIdleTask",
+          "parameters": [
+            "std::unique_ptr<IdleTask> task",
+            "int32_t delay_ms"
+          ],
+          "return_type": "DelayedIdleTask",
+          "logic": "Constructor that initializes the underlying idle task and delay."
+        },
+        {
+          "name": "Run",
+          "parameters": [
+            "double deadline_in_seconds"
+          ],
+          "return_type": "void",
+          "logic": "Sleeps for a specified duration and then runs the wrapped idle task."
+        }
+      ]
+    },
+    {
+      "name": "DelayedJob",
+      "properties": [
+        "std::unique_ptr<JobTask> job_task_",
+        "int32_t delay_ms_"
+      ],
+      "methods": [
+        {
+          "name": "DelayedJob",
+          "parameters": [
+            "std::unique_ptr<JobTask> job_task",
+            "int32_t delay_ms"
+          ],
+          "return_type": "DelayedJob",
+          "logic": "Constructor that initializes the underlying job task and delay."
+        },
+        {
+          "name": "Run",
+          "parameters": [
+            "JobDelegate* delegate"
+          ],
+          "return_type": "void",
+          "logic": "Sleeps for a specified duration and then runs the wrapped job task."
+        },
+        {
+          "name": "GetMaxConcurrency",
+          "parameters": [
+            "size_t worker_count"
+          ],
+          "return_type": "size_t",
+          "logic": "Returns the maximum concurrency of the wrapped job task."
+        }
+      ]
+    }
+  ],
+  "functions": [
+    {
+      "name": "MakePredictablePlatform",
+      "parameters": [
+        "std::unique_ptr<Platform> platform"
+      ],
+      "return_type": "std::unique_ptr<Platform>",
+      "logic": "Creates a PredictablePlatform wrapping the given platform."
+    },
+    {
+      "name": "MakeDelayedTasksPlatform",
+      "parameters": [
+        "std::unique_ptr<Platform> platform",
+        "int64_t random_seed"
+      ],
+      "return_type": "std::unique_ptr<Platform>",
+      "logic": "Creates a DelayedTasksPlatform wrapping the given platform, with optionally using a given random seed."
+    }
+  ]
+}

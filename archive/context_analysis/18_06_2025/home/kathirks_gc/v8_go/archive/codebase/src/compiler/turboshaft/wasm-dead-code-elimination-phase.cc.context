@@ -1,0 +1,56 @@
+{
+  "metadata": {
+    "path": "/home/kathirks_gc/v8_go/archive/codebase/src/compiler/turboshaft/wasm-dead-code-elimination-phase.cc",
+    "file_name": "wasm-dead-code-elimination-phase.cc",
+    "language": "cpp",
+    "purpose": "Defines the WasmDeadCodeEliminationPhase which performs dead code elimination and other optimizations on the Turboshaft pipeline for WebAssembly compilation."
+  },
+  "imports": {
+    "metadata": {
+      "language": "cpp",
+      "purpose": "Includes necessary headers for the WasmDeadCodeEliminationPhase, providing access to various compiler components and reducers."
+    },
+    "code": "#include \"src/compiler/turboshaft/wasm-dead-code-elimination-phase.h\"\n\n#include \"src/compiler/js-heap-broker.h\"\n#include \"src/compiler/turboshaft/copying-phase.h\"\n#include \"src/compiler/turboshaft/dead-code-elimination-reducer.h\"\n#include \"src/compiler/turboshaft/duplication-optimization-reducer.h\"\n#include \"src/compiler/turboshaft/growable-stacks-reducer.h\"\n#include \"src/compiler/turboshaft/instruction-selection-normalization-reducer.h\"\n#include \"src/compiler/turboshaft/load-store-simplification-reducer.h\"\n#include \"src/compiler/turboshaft/phase.h\"\n#include \"src/compiler/turboshaft/stack-check-lowering-reducer.h\"\n#include \"src/compiler/turboshaft/value-numbering-reducer.h\""
+  },
+  "functions": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "method",
+        "name": "Run",
+        "parent": "WasmDeadCodeEliminationPhase",
+        "about": "Runs the dead code elimination phase, which includes value numbering and other optimization reducers.",
+        "logic": "This function orchestrates the dead code elimination process by running a CopyingPhase with a specific set of reducers. It ensures proper ordering of reducers to maximize optimization opportunities. Notably, it runs ValueNumberingReducer, DeadCodeEliminationReducer, StackCheckLoweringReducer, GrowableStacksReducer, LoadStoreSimplificationReducer, DuplicationOptimizationReducer, and InstructionSelectionNormalizationReducer.",
+        "parameters": [
+          {
+            "name": "data",
+            "type": "PipelineData*",
+            "purpose": "Pointer to the pipeline data, containing information about the compilation process."
+          },
+          {
+            "name": "temp_zone",
+            "type": "Zone*",
+            "purpose": "Pointer to a temporary memory zone used for the phase."
+          }
+        ],
+        "return": {
+          "type": "void",
+          "description": "No return value."
+        },
+        "dependencies": [
+          "UnparkedScopeIfNeeded",
+          "CopyingPhase",
+          "DeadCodeEliminationReducer",
+          "StackCheckLoweringReducer",
+          "GrowableStacksReducer",
+          "LoadStoreSimplificationReducer",
+          "DuplicationOptimizationReducer",
+          "InstructionSelectionNormalizationReducer",
+          "ValueNumberingReducer"
+        ]
+      },
+      "code": "void WasmDeadCodeEliminationPhase::Run(PipelineData* data, Zone* temp_zone) {\n  UnparkedScopeIfNeeded scope(data->broker(), DEBUG_BOOL);\n\n  // The value numbering ensures that load with similar patterns in the complex\n  // loads can share those calculations.\n  CopyingPhase<DeadCodeEliminationReducer, StackCheckLoweringReducer,\n               GrowableStacksReducer, LoadStoreSimplificationReducer,\n               // We make sure that DuplicationOptimizationReducer runs after\n               // LoadStoreSimplificationReducer, so that it can optimize\n               // Loads/Stores produced by LoadStoreSimplificationReducer\n               // (which, for simplificy, doesn't use the Assembler helper\n               // methods, but only calls Next::ReduceLoad/Store).\n               DuplicationOptimizationReducer,\n               InstructionSelectionNormalizationReducer,\n               ValueNumberingReducer>::Run(data, temp_zone);\n}"
+    }
+  ],
+  "file_path": "/home/kathirks_gc/v8_go/archive/codebase/src/compiler/turboshaft/wasm-dead-code-elimination-phase.cc"
+}

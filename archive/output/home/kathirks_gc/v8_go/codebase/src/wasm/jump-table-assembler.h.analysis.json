@@ -1,0 +1,209 @@
+{
+  "file_path": "/home/kathirks_gc/v8_go/codebase/src/wasm/jump-table-assembler.h",
+  "imports": [
+    "src/codegen/flush-instruction-cache.h",
+    "src/codegen/macro-assembler.h"
+  ],
+  "classes": [
+    {
+      "name": "JumpTableAssembler",
+      "properties": [
+        "jit_allocation_",
+        "buffer_start_",
+        "pc_",
+        "kJumpTableSlotSize",
+        "kJumpTableLineSize",
+        "kFarJumpTableSlotSize",
+        "kLazyCompileTableSlotSize",
+        "kJumpTableSlotsPerLine"
+      ],
+      "methods": [
+        {
+          "name": "SlotOffsetToIndex",
+          "parameters": [
+            "uint32_t slot_offset"
+          ],
+          "return_type": "uint32_t",
+          "logic": "Translates a jump table offset to a jump table index."
+        },
+        {
+          "name": "JumpSlotIndexToOffset",
+          "parameters": [
+            "uint32_t slot_index"
+          ],
+          "return_type": "uint32_t",
+          "logic": "Translates a jump table index to an offset."
+        },
+        {
+          "name": "SizeForNumberOfSlots",
+          "parameters": [
+            "uint32_t slot_count"
+          ],
+          "return_type": "uint32_t",
+          "logic": "Determines the size of a jump table for a given number of slots."
+        },
+        {
+          "name": "FarJumpSlotIndexToOffset",
+          "parameters": [
+            "uint32_t slot_index"
+          ],
+          "return_type": "uint32_t",
+          "logic": "Translates a far jump table index to an offset."
+        },
+        {
+          "name": "FarJumpSlotOffsetToIndex",
+          "parameters": [
+            "uint32_t offset"
+          ],
+          "return_type": "uint32_t",
+          "logic": "Translates a far jump table offset to an index."
+        },
+        {
+          "name": "SizeForNumberOfFarJumpSlots",
+          "parameters": [
+            "int num_runtime_slots",
+            "int num_function_slots"
+          ],
+          "return_type": "uint32_t",
+          "logic": "Determines the size of a far jump table given the number of runtime and function slots."
+        },
+        {
+          "name": "LazyCompileSlotIndexToOffset",
+          "parameters": [
+            "uint32_t slot_index"
+          ],
+          "return_type": "uint32_t",
+          "logic": "Translates a lazy compile table index to an offset."
+        },
+        {
+          "name": "SizeForNumberOfLazyFunctions",
+          "parameters": [
+            "uint32_t slot_count"
+          ],
+          "return_type": "uint32_t",
+          "logic": "Determines the size of a lazy compile table."
+        },
+        {
+          "name": "GenerateLazyCompileTable",
+          "parameters": [
+            "Address base",
+            "uint32_t num_slots",
+            "uint32_t num_imported_functions",
+            "Address wasm_compile_lazy_target"
+          ],
+          "return_type": "void",
+          "logic": "Generates a lazy compile table at the given address."
+        },
+        {
+          "name": "InitializeJumpsToLazyCompileTable",
+          "parameters": [
+            "Address base",
+            "uint32_t num_slots",
+            "Address lazy_compile_table_start"
+          ],
+          "return_type": "void",
+          "logic": "Initializes the jump table with jumps to the lazy compile table."
+        },
+        {
+          "name": "GenerateFarJumpTable",
+          "parameters": [
+            "WritableJitAllocation& jit_allocation",
+            "Address base",
+            "Address* stub_targets",
+            "int num_runtime_slots",
+            "int num_function_slots"
+          ],
+          "return_type": "void",
+          "logic": "Generates a far jump table."
+        },
+        {
+          "name": "PatchJumpTableSlot",
+          "parameters": [
+            "WritableJumpTablePair& jump_table_pair",
+            "Address jump_table_slot",
+            "Address far_jump_table_slot",
+            "Address target"
+          ],
+          "return_type": "void",
+          "logic": "Patches a jump table slot to point to a target address, using the far jump table if necessary."
+        },
+        {
+          "name": "JumpTableAssembler",
+          "parameters": [
+            "WritableJitAllocation& jit_allocation",
+            "Address slot_addr"
+          ],
+          "return_type": "",
+          "logic": "Constructor for JumpTableAssembler used for patching."
+        },
+        {
+          "name": "EmitLazyCompileJumpSlot",
+          "parameters": [
+            "uint32_t func_index",
+            "Address lazy_compile_target"
+          ],
+          "return_type": "void",
+          "logic": "Emits a jump slot to the lazy compile target."
+        },
+        {
+          "name": "EmitJumpSlot",
+          "parameters": [
+            "Address target"
+          ],
+          "return_type": "bool",
+          "logic": "Emits a jump slot to the given target, returning true if successful, false otherwise (indicating it needs a far jump)."
+        },
+        {
+          "name": "EmitFarJumpSlot",
+          "parameters": [
+            "Address target"
+          ],
+          "return_type": "void",
+          "logic": "Emits a far jump slot to the given target."
+        },
+        {
+          "name": "PatchFarJumpSlot",
+          "parameters": [
+            "WritableJitAllocation& jit_allocation",
+            "Address slot",
+            "Address target"
+          ],
+          "return_type": "void",
+          "logic": "Patches a far jump slot to the given target address."
+        },
+        {
+          "name": "SkipUntil",
+          "parameters": [
+            "int offset"
+          ],
+          "return_type": "void",
+          "logic": "Skips until the specified offset in the buffer."
+        },
+        {
+          "name": "pc_offset",
+          "parameters": [],
+          "return_type": "int",
+          "logic": "Returns the current offset within the buffer."
+        },
+        {
+          "name": "emit",
+          "parameters": [
+            "V value"
+          ],
+          "return_type": "void",
+          "logic": "Emits a value to the buffer."
+        },
+        {
+          "name": "emit",
+          "parameters": [
+            "V value",
+            "RelaxedStoreTag"
+          ],
+          "return_type": "void",
+          "logic": "Emits a value to the buffer with a relaxed store tag."
+        }
+      ]
+    }
+  ],
+  "functions": []
+}

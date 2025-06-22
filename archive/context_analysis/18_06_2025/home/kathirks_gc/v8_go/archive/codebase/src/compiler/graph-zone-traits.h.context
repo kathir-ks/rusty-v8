@@ -1,0 +1,53 @@
+{
+  "metadata": {
+    "path": "/home/kathirks_gc/v8_go/archive/codebase/src/compiler/graph-zone-traits.h",
+    "file_name": "graph-zone-traits.h",
+    "language": "cpp",
+    "purpose": "Defines zone pointer types for the compiler graph based on whether graph zone compression is enabled."
+  },
+  "imports": {
+    "metadata": {
+      "language": "cpp",
+      "purpose": "Provides zone-related type traits."
+    },
+    "code": "#include \"src/zone/zone-type-traits.h\""
+  },
+  "classes": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "Node",
+        "about": "Forward declaration for the Node class, representing a node in the compiler graph."
+      },
+      "code": "class Node;"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "GraphZoneTraits",
+        "about": "Provides typedefs for zone pointer types (compressed or not) based on kCompressGraphZone.",
+        "dependencies": [
+          "ZoneTypeTraits",
+          "kCompressGraphZone"
+        ]
+      },
+      "code": "using GraphZoneTraits = ZoneTypeTraits<kCompressGraphZone>;"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "ZoneNodePtr",
+        "about": "A potentially compressed pointer to a Node allocated in zone memory, determined by GraphZoneTraits.",
+        "dependencies": [
+          "GraphZoneTraits",
+          "Node"
+        ]
+      },
+      "code": "using ZoneNodePtr = GraphZoneTraits::Ptr<Node>;"
+    }
+  ],
+  "file_path": "/home/kathirks_gc/v8_go/archive/codebase/src/compiler/graph-zone-traits.h"
+}

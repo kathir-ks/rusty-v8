@@ -1,0 +1,156 @@
+{
+  "metadata": {
+    "path": "/home/kathirks_gc/v8_go/archive/codebase/src/compiler/per-isolate-compiler-cache.h",
+    "file_name": "per-isolate-compiler-cache.h",
+    "language": "cpp",
+    "purpose": "Defines the PerIsolateCompilerCache class, which stores data that persists across compiler runs in an isolate, such as serialized data for common objects like builtins."
+  },
+  "imports": {
+    "metadata": {
+      "language": "cpp",
+      "purpose": "Includes necessary headers for RefsMap and Isolate."
+    },
+    "code": "#include \"src/compiler/refs-map.h\"\n#include \"src/execution/isolate.h\""
+  },
+  "classes": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "PerIsolateCompilerCache",
+        "extends": "ZoneObject",
+        "about": "Container for data that should persist across compiler runs in an isolate. Stores serialized data for common objects like builtins.",
+        "attributes": [
+          {
+            "name": "zone_",
+            "type": "Zone*",
+            "access": "private",
+            "purpose": "The zone used for allocating memory within the cache."
+          },
+          {
+            "name": "refs_snapshot_",
+            "type": "RefsMap*",
+            "access": "private",
+            "purpose": "A snapshot of the RefsMap, used to store serialized data of common objects."
+          }
+        ],
+        "dependencies": [
+          "Zone",
+          "RefsMap",
+          "Isolate"
+        ]
+      },
+      "code": "class PerIsolateCompilerCache : public ZoneObject {\n public:\n  explicit PerIsolateCompilerCache(Zone* zone)\n      : zone_(zone), refs_snapshot_(nullptr) {}\n\n  bool HasSnapshot() const { return refs_snapshot_ != nullptr; }\n  RefsMap* GetSnapshot() {\n    DCHECK(HasSnapshot());\n    return refs_snapshot_;\n  }\n  void SetSnapshot(RefsMap* refs) {\n    DCHECK(!HasSnapshot());\n    DCHECK(!refs->IsEmpty());\n    refs_snapshot_ = zone_->New<RefsMap>(refs, zone_);\n    DCHECK(HasSnapshot());\n  }\n\n  Zone* zone() const { return zone_; }\n\n  static void Setup(Isolate* isolate) {\n    if (isolate->compiler_cache() == nullptr) {\n      Zone* zone = new Zone(isolate->allocator(), \"Compiler zone\");\n      PerIsolateCompilerCache* cache = zone->New<PerIsolateCompilerCache>(zone);\n      isolate->set_compiler_utils(cache, zone);\n    }\n    DCHECK_NOT_NULL(isolate->compiler_cache());\n  }\n\n private:\n  Zone* const zone_;\n  RefsMap* refs_snapshot_;\n};"
+    }
+  ],
+  "functions": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "method",
+        "name": "HasSnapshot",
+        "parent": "PerIsolateCompilerCache",
+        "about": "Checks if a snapshot exists.",
+        "logic": "Returns true if refs_snapshot_ is not a nullptr, indicating a snapshot exists.",
+        "parameters": [],
+        "return": {
+          "type": "bool",
+          "description": "True if snapshot exists, false otherwise."
+        },
+        "dependencies": []
+      },
+      "code": "bool HasSnapshot() const { return refs_snapshot_ != nullptr; }"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "method",
+        "name": "GetSnapshot",
+        "parent": "PerIsolateCompilerCache",
+        "about": "Gets the RefsMap snapshot.",
+        "logic": "Returns the refs_snapshot_ pointer.  Asserts that HasSnapshot() is true before returning.",
+        "parameters": [],
+        "return": {
+          "type": "RefsMap*",
+          "description": "Pointer to the RefsMap snapshot."
+        },
+        "dependencies": [
+          "RefsMap"
+        ]
+      },
+      "code": "RefsMap* GetSnapshot() {\n    DCHECK(HasSnapshot());\n    return refs_snapshot_;\n  }"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "method",
+        "name": "SetSnapshot",
+        "parent": "PerIsolateCompilerCache",
+        "about": "Sets the RefsMap snapshot.",
+        "logic": "Sets the refs_snapshot_ pointer to a copy of the provided RefsMap, created in the cache's zone. Asserts that there is no existing snapshot and that the provided RefsMap is not empty.",
+        "parameters": [
+          {
+            "name": "refs",
+            "type": "RefsMap*",
+            "purpose": "Pointer to the RefsMap to be set as the snapshot."
+          }
+        ],
+        "return": {
+          "type": "void",
+          "description": "No return value."
+        },
+        "dependencies": [
+          "RefsMap",
+          "Zone"
+        ]
+      },
+      "code": "void SetSnapshot(RefsMap* refs) {\n    DCHECK(!HasSnapshot());\n    DCHECK(!refs->IsEmpty());\n    refs_snapshot_ = zone_->New<RefsMap>(refs, zone_);\n    DCHECK(HasSnapshot());\n  }"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "method",
+        "name": "zone",
+        "parent": "PerIsolateCompilerCache",
+        "about": "Gets the Zone associated with the cache.",
+        "logic": "Returns the zone_ pointer.",
+        "parameters": [],
+        "return": {
+          "type": "Zone*",
+          "description": "Pointer to the Zone."
+        },
+        "dependencies": [
+          "Zone"
+        ]
+      },
+      "code": "Zone* zone() const { return zone_; }"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "method",
+        "name": "Setup",
+        "parent": "PerIsolateCompilerCache",
+        "about": "Sets up the PerIsolateCompilerCache for an isolate.",
+        "logic": "If the isolate doesn't have a compiler cache, it creates a new Zone and a new PerIsolateCompilerCache within that zone, and then sets the isolate's compiler utils to point to the cache and zone.",
+        "parameters": [
+          {
+            "name": "isolate",
+            "type": "Isolate*",
+            "purpose": "Pointer to the Isolate to set up the cache for."
+          }
+        ],
+        "return": {
+          "type": "void",
+          "description": "No return value."
+        },
+        "dependencies": [
+          "Isolate",
+          "Zone"
+        ]
+      },
+      "code": "static void Setup(Isolate* isolate) {\n    if (isolate->compiler_cache() == nullptr) {\n      Zone* zone = new Zone(isolate->allocator(), \"Compiler zone\");\n      PerIsolateCompilerCache* cache = zone->New<PerIsolateCompilerCache>(zone);\n      isolate->set_compiler_utils(cache, zone);\n    }\n    DCHECK_NOT_NULL(isolate->compiler_cache());\n  }"
+    }
+  ],
+  "file_path": "/home/kathirks_gc/v8_go/archive/codebase/src/compiler/per-isolate-compiler-cache.h"
+}

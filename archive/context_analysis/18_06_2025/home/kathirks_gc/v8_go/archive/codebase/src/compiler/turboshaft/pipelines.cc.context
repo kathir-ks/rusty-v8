@@ -1,0 +1,54 @@
+{
+  "metadata": {
+    "path": "/home/kathirks_gc/v8_go/archive/codebase/src/compiler/turboshaft/pipelines.cc",
+    "file_name": "pipelines.cc",
+    "language": "cpp",
+    "purpose": "Defines the Turboshaft compiler pipelines for simplification, normalization, register allocation, code generation, and builtin optimization."
+  },
+  "imports": {
+    "metadata": {
+      "language": "cpp",
+      "purpose": "Includes necessary header files for Turboshaft compiler pipeline stages and data structures."
+    },
+    "code": "#include \"src/compiler/turboshaft/pipelines.h\"\n\n#include \"src/compiler/pipeline-data-inl.h\"\n#include \"src/compiler/turboshaft/csa-optimize-phase.h\"\n#include \"src/compiler/turboshaft/debug-feature-lowering-phase.h\"\n#include \"src/compiler/turboshaft/instruction-selection-normalization-reducer.h\"\n#include \"src/compiler/turboshaft/load-store-simplification-reducer.h\"\n#include \"src/compiler/turboshaft/stack-check-lowering-reducer.h\""
+  },
+  "classes": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "SimplificationAndNormalizationPhase",
+        "about": "A Turboshaft pipeline phase that combines load/store simplification and instruction selection normalization.",
+        "attributes": [],
+        "dependencies": [
+          "LoadStoreSimplificationReducer",
+          "InstructionSelectionNormalizationReducer"
+        ]
+      },
+      "code": "void SimplificationAndNormalizationPhase::Run(PipelineData* data,\n                                              Zone* temp_zone) {\n  CopyingPhase<LoadStoreSimplificationReducer,\n               InstructionSelectionNormalizationReducer>::Run(data, temp_zone);\n}"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "Pipeline",
+        "about": "The base class for Turboshaft compiler pipelines.",
+        "attributes": [],
+        "dependencies": []
+      },
+      "code": "void Pipeline::AllocateRegisters(const RegisterConfiguration* config,\n                                 CallDescriptor* call_descriptor,\n                                 bool run_verifier) {\n  // Don't track usage for this zone in compiler stats.\n  std::unique_ptr<Zone> verifier_zone;\n  RegisterAllocatorVerifier* verifier = nullptr;\n  if (run_verifier) {\n    AccountingAllocator* allocator = data()->allocator();\n    DCHECK_NOT_NULL(allocator);\n    verifier_zone.reset(\n        new Zone(allocator, kRegisterAllocatorVerifierZoneName));\n    verifier = verifier_zone->New<RegisterAllocatorVerifier>(\n        verifier_zone.get(), config, data()->sequence(), data()->frame());\n  }\n\n#ifdef DEBUG\n  data_->sequence()->ValidateEdgeSplitForm();\n  data_->sequence()->ValidateDeferredBlockEntryPaths();\n  data_->sequence()->ValidateDeferredBlockExitPaths();\n#endif\n\n  data_->InitializeRegisterComponent(config, call_descriptor);\n\n  Run<MeetRegisterConstraintsPhase>();\n  Run<ResolvePhisPhase>();\n  Run<BuildLiveRangesPhase>();\n  Run<BuildLiveRangeBundlesPhase>();\n\n  TraceSequence(\"before register allocation\");\n  if (verifier != nullptr) {\n    CHECK(!data_->register_allocation_data()->ExistsUseWithoutDefinition());\n    CHECK(data_->register_allocation_data()\n              ->RangesDefinedInDeferredStayInDeferred());\n  }\n\n  if (data_->info()->trace_turbo_json() && !MayHaveUnverifiableGraph()) {\n    TurboCfgFile tcf(data_->isolate());\n    tcf << AsC1VRegisterAllocationData(\"PreAllocation\",\n                                       data_->register_allocation_data());\n  }\n\n  Run<AllocateGeneralRegistersPhase<LinearScanAllocator>>();\n\n  if (data_->sequence()->HasFPVirtualRegisters()) {\n    Run<AllocateFPRegistersPhase<LinearScanAllocator>>();\n  }\n\n  if (data_->sequence()->HasSimd128VirtualRegisters() &&\n      (kFPAliasing == AliasingKind::kIndependent)) {\n    Run<AllocateSimd128RegistersPhase<LinearScanAllocator>>();\n  }\n\n  Run<DecideSpillingModePhase>();\n  Run<AssignSpillSlotsPhase>();\n  Run<CommitAssignmentPhase>();\n\n  // TODO(chromium:725559): remove this check once\n  // we understand the cause of the bug. We keep just the\n  // check at the end of the allocation.\n  if (verifier != nullptr) {\n    verifier->VerifyAssignment(\"Immediately after CommitAssignmentPhase.\");\n  }\n\n  Run<ConnectRangesPhase>();\n\n  Run<ResolveControlFlowPhase>();\n\n  Run<PopulateReferenceMapsPhase>();\n\n  if (v8_flags.turbo_move_optimization) {\n    Run<OptimizeMovesPhase>();\n  }\n\n  TraceSequence(\"after register allocation\");\n\n  if (verifier != nullptr) {\n    verifier->VerifyAssignment(\"End of regalloc pipeline.\");\n    verifier->VerifyGapMoves();\n  }\n\n  if (data_->info()->trace_turbo_json() && !MayHaveUnverifiableGraph()) {\n    TurboCfgFile tcf(data_->isolate());\n    tcf << AsC1VRegisterAllocationData(\"CodeGen\",\n                                       data_->register_allocation_data());\n  }\n\n  data()->ClearRegisterComponent();\n}\n\n[[nodiscard]] bool Pipeline::GenerateCode(\n    Linkage* linkage, std::shared_ptr<OsrHelper> osr_helper,\n    JumpOptimizationInfo* jump_optimization_info,\n    const ProfileDataFromFile* profile, int initial_graph_hash) {\n  // Run code generation. If we optimize jumps, we repeat this a second time.\n  data()->InitializeCodegenComponent(osr_helper, jump_optimization_info);\n\n  // Perform instruction selection and register allocation.\n  PrepareForInstructionSelection(profile);\n  CHECK(SelectInstructions(linkage));\n  CHECK(AllocateRegisters(linkage->GetIncomingDescriptor()));\n  AssembleCode(linkage);\n\n  if (v8_flags.turbo_profiling) {\n    info()->profiler_data()->SetHash(initial_graph_hash);\n  }\n\n  if (jump_optimization_info && jump_optimization_info->is_optimizable()) {\n    // Reset data for a second run of instruction selection.\n    data()->ClearCodegenComponent();\n    jump_optimization_info->set_optimizing();\n\n    // Perform instruction selection and register allocation.\n    data()->InitializeCodegenComponent(osr_helper, jump_optimization_info);\n    if (!SelectInstructions(linkage)) {\n      return false;\n    }\n    AllocateRegisters(linkage->GetIncomingDescriptor());\n    // Generate the final machine code.\n    AssembleCode(linkage);\n  }\n  return true;\n}"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "BuiltinPipeline",
+        "about": "A Turboshaft pipeline specifically for optimizing built-in functions.",
+        "attributes": [],
+        "dependencies": []
+      },
+      "code": "void BuiltinPipeline::OptimizeBuiltin() {\n  Tracing::Scope tracing_scope(data()->info());\n\n  Run<CsaEarlyMachineOptimizationPhase>();\n  Run<CsaLoadEliminationPhase>();\n  Run<CsaLateEscapeAnalysisPhase>();\n  Run<CsaBranchEliminationPhase>();\n  Run<CsaOptimizePhase>();\n\n  if (v8_flags.turboshaft_enable_debug_features) {\n    Run<DebugFeatureLoweringPhase>();\n  }\n\n  Run<CodeEliminationAndSimplificationPhase>();\n}"
+    }
+  ],
+  "file_path": "/home/kathirks_gc/v8_go/archive/codebase/src/compiler/turboshaft/pipelines.cc"
+}

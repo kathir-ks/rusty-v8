@@ -1,0 +1,143 @@
+{
+  "file_path": "/home/kathirks_gc/v8_go/codebase/src/compiler/wasm-address-reassociation.cc",
+  "imports": [
+    "src/compiler/wasm-address-reassociation.h",
+    "src/compiler/common-operator.h",
+    "src/compiler/js-graph.h",
+    "src/compiler/machine-graph.h",
+    "src/compiler/machine-operator.h",
+    "src/compiler/node-matchers.h",
+    "src/compiler/node-properties.h",
+    "src/compiler/node.h",
+    "src/compiler/opcodes.h",
+    "src/compiler/operator.h",
+    "src/compiler/turbofan-graph.h",
+    "src/zone/zone.h"
+  ],
+  "classes": [
+    {
+      "name": "WasmAddressReassociation",
+      "properties": [
+        "graph_",
+        "common_",
+        "machine_",
+        "candidate_base_addrs_",
+        "candidates_",
+        "zone_"
+      ],
+      "methods": [
+        {
+          "name": "WasmAddressReassociation",
+          "parameters": [
+            "JSGraph* jsgraph",
+            "Zone* zone"
+          ],
+          "return_type": "void",
+          "logic": "Constructor for the WasmAddressReassociation class. Initializes the graph, common operator, machine operator, and data structures for storing candidate addresses."
+        },
+        {
+          "name": "Optimize",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Iterates through the candidate address mappings, and if they meet certain criteria, reassociates the address calculations and replaces the memory operation inputs with the new base and offset."
+        },
+        {
+          "name": "ShouldTryOptimize",
+          "parameters": [
+            "const CandidateAddressKey& key"
+          ],
+          "return_type": "bool",
+          "logic": "Determines whether an address mapping should be reassociated based on the number of candidate uses. It checks if the number of nodes for a key is greater than 1."
+        },
+        {
+          "name": "CreateNewBase",
+          "parameters": [
+            "const CandidateAddressKey& key"
+          ],
+          "return_type": "Node*",
+          "logic": "Creates a new base node by adding the original base and register offset from the candidate base address."
+        },
+        {
+          "name": "ReplaceInputs",
+          "parameters": [
+            "Node* mem_op",
+            "Node* base",
+            "Node* offset"
+          ],
+          "return_type": "void",
+          "logic": "Replaces the inputs of a memory operation node with a new base and offset."
+        },
+        {
+          "name": "VisitProtectedMemOp",
+          "parameters": [
+            "Node* node",
+            "NodeId effect_chain"
+          ],
+          "return_type": "void",
+          "logic": "Visits a protected memory operation (load or store) and checks if its address calculation can be reassociated. If a suitable pattern is found, it adds the operation as a candidate."
+        },
+        {
+          "name": "AddCandidate",
+          "parameters": [
+            "Node* mem_op",
+            "Node* base",
+            "Node* reg_offset",
+            "int64_t imm_offset",
+            "NodeId effect_chain"
+          ],
+          "return_type": "void",
+          "logic": "Adds a memory operation as a candidate for address reassociation. It stores the base, register offset, and immediate offset in the corresponding data structures."
+        },
+        {
+          "name": "HasCandidateBaseAddr",
+          "parameters": [
+            "const CandidateAddressKey& key"
+          ],
+          "return_type": "bool",
+          "logic": "Checks if a candidate base address exists for a given key."
+        }
+      ]
+    },
+    {
+      "name": "WasmAddressReassociation::CandidateMemOps",
+      "properties": [
+        "mem_ops_",
+        "imm_offsets_"
+      ],
+      "methods": [
+        {
+          "name": "AddCandidate",
+          "parameters": [
+            "Node* mem_op",
+            "int64_t imm_offset"
+          ],
+          "return_type": "void",
+          "logic": "Adds a memory operation and its immediate offset to the candidate lists."
+        },
+        {
+          "name": "GetNumNodes",
+          "parameters": [],
+          "return_type": "size_t",
+          "logic": "Returns the number of candidate memory operations."
+        },
+        {
+          "name": "mem_op",
+          "parameters": [
+            "size_t i"
+          ],
+          "return_type": "Node*",
+          "logic": "Returns the memory operation at index i."
+        },
+        {
+          "name": "imm_offset",
+          "parameters": [
+            "size_t i"
+          ],
+          "return_type": "int64_t",
+          "logic": "Returns the immediate offset at index i."
+        }
+      ]
+    }
+  ],
+  "functions": []
+}

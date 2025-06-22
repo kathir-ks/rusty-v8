@@ -1,0 +1,50 @@
+{
+  "file_path": "/home/kathirks_gc/v8_go/codebase/include/cppgc/internal/conditional-stack-allocated.h",
+  "imports": [
+    "<type_traits>",
+    "cppgc/macros.h",
+    "cppgc/type-traits.h"
+  ],
+  "classes": [
+    {
+      "name": "ConditionalStackAllocatedBase<T>",
+      "properties": [],
+      "methods": [
+        {
+          "name": "ConditionalStackAllocatedBase",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "The primary template of `ConditionalStackAllocatedBase<T>` applies when `RequiresStackAllocated<T>` is true. It uses the `CPPGC_STACK_ALLOCATED()` macro to mark the class as stack-allocated. This signifies that objects of this class (or classes derived from it) should preferentially be allocated on the stack."
+        }
+      ],
+      "template_parameters": [
+        "T"
+      ],
+      "conditional_constraint": "RequiresStackAllocated<T>"
+    },
+    {
+      "name": "ConditionalStackAllocatedBase<T>",
+      "properties": [],
+      "methods": [
+        {
+          "name": "ConditionalStackAllocatedBase",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "The specialization of `ConditionalStackAllocatedBase<T>` applies when `RequiresStackAllocated<T>` is false.  It's an empty class, meaning that it doesn't provide any stack-allocation specific behavior.  Inheriting from this specialization has no effect."
+        }
+      ],
+      "template_parameters": [
+        "T"
+      ],
+      "conditional_constraint": "!RequiresStackAllocated<T>"
+    }
+  ],
+  "functions": [
+    {
+      "name": "RequiresStackAllocated<T>",
+      "parameters": [],
+      "return_type": "bool",
+      "logic": "A concept that checks if a type `T` should be considered stack-allocated. It returns `true` if `T` is not void and if it is either marked as stack-allocated using `cppgc::IsStackAllocatedType`, or if it's a traceable type according to `cppgc::internal::IsTraceableV`, or if it's a garbage collected or mixin type according to `cppgc::IsGarbageCollectedOrMixinTypeV`."
+    }
+  ]
+}

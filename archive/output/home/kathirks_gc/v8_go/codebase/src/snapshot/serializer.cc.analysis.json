@@ -1,0 +1,712 @@
+{
+  "file_path": "/home/kathirks_gc/v8_go/codebase/src/snapshot/serializer.cc",
+  "imports": [
+    "src/snapshot/serializer.h",
+    "include/v8-internal.h",
+    "src/codegen/assembler-inl.h",
+    "src/common/globals.h",
+    "src/handles/global-handles-inl.h",
+    "src/heap/heap-inl.h",
+    "src/heap/mutable-page-metadata-inl.h",
+    "src/heap/read-only-heap.h",
+    "src/heap/visit-object.h",
+    "src/objects/code.h",
+    "src/objects/descriptor-array.h",
+    "src/objects/instance-type-checker.h",
+    "src/objects/instance-type.h",
+    "src/objects/js-array-buffer-inl.h",
+    "src/objects/map.h",
+    "src/objects/objects-body-descriptors-inl.h",
+    "src/objects/slots-inl.h",
+    "src/objects/slots.h",
+    "src/objects/smi.h",
+    "src/sandbox/js-dispatch-table-inl.h",
+    "src/snapshot/embedded/embedded-data.h",
+    "src/snapshot/serializer-deserializer.h",
+    "src/snapshot/serializer-inl.h"
+  ],
+  "classes": [
+    {
+      "name": "Serializer",
+      "properties": [
+        "isolate_",
+        "cage_base_",
+        "hot_objects_",
+        "reference_map_",
+        "external_reference_encoder_",
+        "root_index_map_",
+        "deferred_objects_",
+        "forward_refs_per_pending_object_",
+        "flags_",
+        "back_refs_",
+        "stack_",
+        "allocation_size_",
+        "instance_type_count_",
+        "instance_type_size_",
+        "num_back_refs_",
+        "sink_",
+        "unresolved_forward_refs_",
+        "next_forward_ref_id_",
+        "code_address_map_",
+        "code_buffer_",
+        "dispatch_handle_map_",
+        "seen_backing_stores_index_"
+      ],
+      "methods": [
+        {
+          "name": "Serializer",
+          "parameters": [
+            "Isolate* isolate",
+            "Snapshot::SerializerFlags flags"
+          ],
+          "return_type": "void",
+          "logic": "Constructor for the Serializer class, initializes its members."
+        },
+        {
+          "name": "PopStack",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Pops an element from the stack (DEBUG only)."
+        },
+        {
+          "name": "CountAllocation",
+          "parameters": [
+            "Tagged<Map> map",
+            "int size",
+            "SnapshotSpace space"
+          ],
+          "return_type": "void",
+          "logic": "Counts memory allocation statistics during serialization."
+        },
+        {
+          "name": "TotalAllocationSize",
+          "parameters": [],
+          "return_type": "int",
+          "logic": "Calculates the total allocation size across all snapshot spaces."
+        },
+        {
+          "name": "OutputStatistics",
+          "parameters": [
+            "const char* name"
+          ],
+          "return_type": "void",
+          "logic": "Prints serialization statistics, including allocation sizes per space and instance type."
+        },
+        {
+          "name": "SerializeDeferredObjects",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Serializes objects that were deferred during the initial serialization pass."
+        },
+        {
+          "name": "SerializeObject",
+          "parameters": [
+            "Handle<HeapObject> obj",
+            "SlotType slot_type"
+          ],
+          "return_type": "void",
+          "logic": "Serializes a HeapObject, handling ThinStrings and Code objects specially."
+        },
+        {
+          "name": "MustBeDeferred",
+          "parameters": [
+            "Tagged<HeapObject> object"
+          ],
+          "return_type": "bool",
+          "logic": "Determines if an object should be deferred for later serialization; always returns false in this base class."
+        },
+        {
+          "name": "VisitRootPointers",
+          "parameters": [
+            "Root root",
+            "const char* description",
+            "FullObjectSlot start",
+            "FullObjectSlot end"
+          ],
+          "return_type": "void",
+          "logic": "Serializes a range of root pointers."
+        },
+        {
+          "name": "SerializeRootObject",
+          "parameters": [
+            "FullObjectSlot slot"
+          ],
+          "return_type": "void",
+          "logic": "Serializes a single root object, handling Smis and HeapObjects differently."
+        },
+        {
+          "name": "PrintStack",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Prints the serialization stack (DEBUG only)."
+        },
+        {
+          "name": "PrintStack",
+          "parameters": [
+            "std::ostream& out"
+          ],
+          "return_type": "void",
+          "logic": "Prints the serialization stack to a given output stream (DEBUG only)."
+        },
+        {
+          "name": "SerializeRoot",
+          "parameters": [
+            "Tagged<HeapObject> obj"
+          ],
+          "return_type": "bool",
+          "logic": "Serializes a root object by its root index."
+        },
+        {
+          "name": "SerializeHotObject",
+          "parameters": [
+            "Tagged<HeapObject> obj"
+          ],
+          "return_type": "bool",
+          "logic": "Serializes a hot object by its index in the hot objects list."
+        },
+        {
+          "name": "SerializeBackReference",
+          "parameters": [
+            "Tagged<HeapObject> obj"
+          ],
+          "return_type": "bool",
+          "logic": "Serializes a back reference to an already serialized object."
+        },
+        {
+          "name": "SerializePendingObject",
+          "parameters": [
+            "Tagged<HeapObject> obj"
+          ],
+          "return_type": "bool",
+          "logic": "Serializes a forward reference to a pending (not yet fully serialized) object."
+        },
+        {
+          "name": "ObjectIsBytecodeHandler",
+          "parameters": [
+            "Tagged<HeapObject> obj"
+          ],
+          "return_type": "bool",
+          "logic": "Checks if an object is a bytecode handler Code object."
+        },
+        {
+          "name": "PutRoot",
+          "parameters": [
+            "RootIndex root"
+          ],
+          "return_type": "void",
+          "logic": "Writes a root index to the snapshot."
+        },
+        {
+          "name": "PutSmiRoot",
+          "parameters": [
+            "FullObjectSlot slot"
+          ],
+          "return_type": "void",
+          "logic": "Serializes a Smi root."
+        },
+        {
+          "name": "PutBackReference",
+          "parameters": [
+            "Tagged<HeapObject> object",
+            "SerializerReference reference"
+          ],
+          "return_type": "void",
+          "logic": "Outputs a back reference index."
+        },
+        {
+          "name": "PutAttachedReference",
+          "parameters": [
+            "SerializerReference reference"
+          ],
+          "return_type": "void",
+          "logic": "Outputs an attached reference index."
+        },
+        {
+          "name": "PutRepeatRoot",
+          "parameters": [
+            "int repeat_count",
+            "RootIndex root_index"
+          ],
+          "return_type": "void",
+          "logic": "Outputs a repeated root index."
+        },
+        {
+          "name": "PutPendingForwardReference",
+          "parameters": [
+            "PendingObjectReferences& refs"
+          ],
+          "return_type": "void",
+          "logic": "Registers and outputs a pending forward reference."
+        },
+        {
+          "name": "ResolvePendingForwardReference",
+          "parameters": [
+            "int forward_reference_id"
+          ],
+          "return_type": "void",
+          "logic": "Resolves a pending forward reference."
+        },
+        {
+          "name": "EncodeExternalReference",
+          "parameters": [
+            "Address addr"
+          ],
+          "return_type": "ExternalReferenceEncoder::Value",
+          "logic": "Encodes an external reference using the ExternalReferenceEncoder."
+        },
+        {
+          "name": "RegisterObjectIsPending",
+          "parameters": [
+            "Tagged<HeapObject> obj"
+          ],
+          "return_type": "void",
+          "logic": "Registers an object as pending, creating a forward reference entry if necessary."
+        },
+        {
+          "name": "ResolvePendingObject",
+          "parameters": [
+            "Tagged<HeapObject> obj"
+          ],
+          "return_type": "void",
+          "logic": "Resolves all forward references to a pending object."
+        },
+        {
+          "name": "Pad",
+          "parameters": [
+            "int padding_offset"
+          ],
+          "return_type": "void",
+          "logic": "Adds padding bytes to the snapshot."
+        },
+        {
+          "name": "InitializeCodeAddressMap",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Initializes the CodeAddressMap for logging code names."
+        },
+        {
+          "name": "CopyCode",
+          "parameters": [
+            "Tagged<InstructionStream> istream"
+          ],
+          "return_type": "Tagged<InstructionStream>",
+          "logic": "Copies code, typically instruction stream, to the code buffer."
+        },
+        {
+          "name": "root_index_map",
+          "parameters": [],
+          "return_type": "RootIndexMap*",
+          "logic": "returns the address of root_index_map_"
+        },
+        {
+          "name": "serializer_tracks_serialization_statistics",
+          "parameters": [],
+          "return_type": "bool",
+          "logic": "returns v8_flags.serialization_statistics"
+        },
+        {
+          "name": "TryEncodeExternalReference",
+          "parameters": [
+            "Address target"
+          ],
+          "return_type": "Maybe<ExternalReferenceEncoder::Value>",
+          "logic": "Attempts to encode an external reference."
+        },
+        {
+          "name": "allow_unknown_external_references_for_testing",
+          "parameters": [],
+          "return_type": "bool",
+          "logic": "returns v8_flags.allow_unknown_external_references_for_testing"
+        },
+        {
+          "name": "QueueDeferredObject",
+          "parameters": [
+            "Tagged<HeapObject> object"
+          ],
+          "return_type": "void",
+          "logic": "Adds an object to the deferred objects queue."
+        },
+        {
+          "name": "IsNotMappedSymbol",
+          "parameters": [
+            "Tagged<HeapObject> obj"
+          ],
+          "return_type": "bool",
+          "logic": "Checks if the object is a not mapped symbol."
+        },
+        {
+          "name": "cage_base",
+          "parameters": [],
+          "return_type": "PtrComprCageBase&",
+          "logic": "Returns the cage base."
+        },
+        {
+          "name": "isolate",
+          "parameters": [],
+          "return_type": "Isolate*",
+          "logic": "Returns the isolate."
+        }
+      ]
+    },
+    {
+      "name": "Serializer::ObjectSerializer",
+      "properties": [
+        "serializer_",
+        "object_",
+        "sink_",
+        "bytes_processed_so_far_"
+      ],
+      "methods": [
+        {
+          "name": "ObjectSerializer",
+          "parameters": [
+            "Serializer* serializer",
+            "Handle<HeapObject> obj",
+            "SnapshotByteSink* sink"
+          ],
+          "return_type": "void",
+          "logic": "Constructor for ObjectSerializer.  Initializes members."
+        },
+        {
+          "name": "SerializePrologue",
+          "parameters": [
+            "SnapshotSpace space",
+            "int size",
+            "Tagged<Map> map"
+          ],
+          "return_type": "void",
+          "logic": "Serializes the object prologue: code name (if any), new object marker, size, and map."
+        },
+        {
+          "name": "SerializeBackingStore",
+          "parameters": [
+            "void* backing_store",
+            "uint32_t byte_length",
+            "Maybe<uint32_t> max_byte_length"
+          ],
+          "return_type": "uint32_t",
+          "logic": "Serializes an off-heap backing store, handling resizable ArrayBuffers."
+        },
+        {
+          "name": "SerializeJSTypedArray",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Serializes a JSTypedArray, including its backing store if it's off-heap."
+        },
+        {
+          "name": "SerializeJSArrayBuffer",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Serializes a JSArrayBuffer, including its backing store."
+        },
+        {
+          "name": "SerializeExternalString",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Serializes an external string by encoding external references to resources or as a sequential string."
+        },
+        {
+          "name": "SerializeExternalStringAsSequentialString",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Serializes an external string as an equivalent sequential string."
+        },
+        {
+          "name": "Serialize",
+          "parameters": [
+            "SlotType slot_type"
+          ],
+          "return_type": "void",
+          "logic": "Orchestrates the serialization of a heap object, handling deferral and recursion."
+        },
+        {
+          "name": "SerializeObject",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Serializes an object, including its prologue, content, and handling descriptor array maps."
+        },
+        {
+          "name": "SerializeDeferred",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Serializes an object that was previously deferred."
+        },
+        {
+          "name": "SerializeContent",
+          "parameters": [
+            "Tagged<Map> map",
+            "int size"
+          ],
+          "return_type": "void",
+          "logic": "Serializes the content (fields and raw data) of an object."
+        },
+        {
+          "name": "VisitPointers",
+          "parameters": [
+            "Tagged<HeapObject> host",
+            "ObjectSlot start",
+            "ObjectSlot end"
+          ],
+          "return_type": "void",
+          "logic": "Visits object pointers (HeapObjectSlots) in a range, serializing the pointed-to objects."
+        },
+        {
+          "name": "VisitPointers",
+          "parameters": [
+            "Tagged<HeapObject> host",
+            "MaybeObjectSlot start",
+            "MaybeObjectSlot end"
+          ],
+          "return_type": "void",
+          "logic": "Visits object pointers (MaybeObjectSlot) in a range, serializing the pointed-to objects."
+        },
+        {
+          "name": "VisitInstructionStreamPointer",
+          "parameters": [
+            "Tagged<Code> host",
+            "InstructionStreamSlot slot"
+          ],
+          "return_type": "void",
+          "logic": "Does nothing."
+        },
+        {
+          "name": "VisitEmbeddedPointer",
+          "parameters": [
+            "Tagged<InstructionStream> host",
+            "RelocInfo* rinfo"
+          ],
+          "return_type": "void",
+          "logic": "Unreachable."
+        },
+        {
+          "name": "VisitExternalReference",
+          "parameters": [
+            "Tagged<InstructionStream> host",
+            "RelocInfo* rinfo"
+          ],
+          "return_type": "void",
+          "logic": "Unreachable."
+        },
+        {
+          "name": "VisitInternalReference",
+          "parameters": [
+            "Tagged<InstructionStream> host",
+            "RelocInfo* rinfo"
+          ],
+          "return_type": "void",
+          "logic": "Unreachable."
+        },
+        {
+          "name": "VisitOffHeapTarget",
+          "parameters": [
+            "Tagged<InstructionStream> host",
+            "RelocInfo* rinfo"
+          ],
+          "return_type": "void",
+          "logic": "Unreachable."
+        },
+        {
+          "name": "VisitCodeTarget",
+          "parameters": [
+            "Tagged<InstructionStream> host",
+            "RelocInfo* rinfo"
+          ],
+          "return_type": "void",
+          "logic": "Unreachable."
+        },
+        {
+          "name": "OutputExternalReference",
+          "parameters": [
+            "Address target",
+            "int target_size",
+            "bool sandboxify",
+            "ExternalPointerTag tag"
+          ],
+          "return_type": "void",
+          "logic": "Outputs an encoded external reference, handling API references and sandboxing."
+        },
+        {
+          "name": "VisitCppHeapPointer",
+          "parameters": [
+            "Tagged<HeapObject> host",
+            "CppHeapPointerSlot slot"
+          ],
+          "return_type": "void",
+          "logic": "Serializes the CppHeapPointerSlot, replacing it with empty data."
+        },
+        {
+          "name": "VisitExternalPointer",
+          "parameters": [
+            "Tagged<HeapObject> host",
+            "ExternalPointerSlot slot"
+          ],
+          "return_type": "void",
+          "logic": "Serializes an external pointer by encoding an external reference."
+        },
+        {
+          "name": "VisitIndirectPointer",
+          "parameters": [
+            "Tagged<HeapObject> host",
+            "IndirectPointerSlot slot",
+            "IndirectPointerMode mode"
+          ],
+          "return_type": "void",
+          "logic": "Serializes an indirect pointer, mainly used for ExposedTrustedObject's self pointer."
+        },
+        {
+          "name": "VisitTrustedPointerTableEntry",
+          "parameters": [
+            "Tagged<HeapObject> host",
+            "IndirectPointerSlot slot"
+          ],
+          "return_type": "void",
+          "logic": "Handles serialization of TrustedPointerTableEntry, mostly by initializing a self indirect pointer (sandboxing)."
+        },
+        {
+          "name": "VisitProtectedPointer",
+          "parameters": [
+            "Tagged<TrustedObject> host",
+            "ProtectedPointerSlot slot"
+          ],
+          "return_type": "void",
+          "logic": "Serializes a protected pointer to a heap object."
+        },
+        {
+          "name": "VisitProtectedPointer",
+          "parameters": [
+            "Tagged<TrustedObject> host",
+            "ProtectedMaybeObjectSlot slot"
+          ],
+          "return_type": "void",
+          "logic": "Serializes a protected maybe object pointer to a heap object."
+        },
+        {
+          "name": "VisitJSDispatchTableEntry",
+          "parameters": [
+            "Tagged<HeapObject> host",
+            "JSDispatchHandle handle"
+          ],
+          "return_type": "void",
+          "logic": "Serializes a JSDispatchTable entry."
+        },
+        {
+          "name": "OutputRawData",
+          "parameters": [
+            "Address up_to"
+          ],
+          "return_type": "void",
+          "logic": "Outputs raw data from the object up to a given address, handling SharedFunctionInfo::age and descriptor array marking states."
+        },
+        {
+          "name": "isolate",
+          "parameters": [],
+          "return_type": "Isolate*",
+          "logic": "Returns the isolate."
+        }
+      ]
+    },
+    {
+      "name": "Serializer::HotObjectsList",
+      "properties": [
+        "heap_",
+        "circular_queue_",
+        "strong_roots_entry_"
+      ],
+      "methods": [
+        {
+          "name": "HotObjectsList",
+          "parameters": [
+            "Heap* heap"
+          ],
+          "return_type": "void",
+          "logic": "Constructor. Registers a strong root to hold hot objects."
+        },
+        {
+          "name": "~HotObjectsList",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Destructor. Unregisters the strong root."
+        },
+        {
+          "name": "Find",
+          "parameters": [
+            "Tagged<HeapObject> obj"
+          ],
+          "return_type": "int",
+          "logic": "Finds the index of an object in the circular queue, or returns kNotFound if the object isn't present."
+        },
+        {
+          "name": "Add",
+          "parameters": [
+            "Tagged<HeapObject> object"
+          ],
+          "return_type": "void",
+          "logic": "Adds an object to the hot objects circular queue."
+        }
+      ]
+    },
+    {
+      "name": "ObjectCacheIndexMap",
+      "properties": [
+        "map_"
+      ],
+      "methods": [
+        {
+          "name": "Values",
+          "parameters": [
+            "Isolate* isolate"
+          ],
+          "return_type": "DirectHandle<FixedArray>",
+          "logic": "Return a FixedArray of values contained in the map."
+        },
+        {
+          "name": "size",
+          "parameters": [],
+          "return_type": "size_t",
+          "logic": "Return the size of the map."
+        }
+      ]
+    }
+  ],
+  "functions": [
+    {
+      "name": "ToString",
+      "parameters": [
+        "SnapshotSpace space"
+      ],
+      "return_type": "const char*",
+      "logic": "Converts a SnapshotSpace enum to a string representation."
+    },
+    {
+      "name": "GetSnapshotSpace",
+      "parameters": [
+        "Tagged<HeapObject> object"
+      ],
+      "return_type": "SnapshotSpace",
+      "logic": "Gets the snapshot space corresponding to the given HeapObject."
+    },
+    {
+      "name": "OutputRawWithCustomField",
+      "parameters": [
+        "SnapshotByteSink* sink",
+        "Address object_start",
+        "int written_so_far",
+        "int bytes_to_write",
+        "int field_offset",
+        "int field_size",
+        "const uint8_t* field_value"
+      ],
+      "return_type": "void",
+      "logic": "Outputs raw data from a buffer, substituting a specific field with a custom value instead of reading it from memory."
+    },
+    {
+      "name": "Serializer::SerializeReadOnlyObjectReference",
+      "parameters": [
+        "Tagged<HeapObject> obj",
+        "SnapshotByteSink* sink"
+      ],
+      "return_type": "bool",
+      "logic": "Serializes a reference to a read-only heap object as chunk index and offset."
+    }
+  ]
+}

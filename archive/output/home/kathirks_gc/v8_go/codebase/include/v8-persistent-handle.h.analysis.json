@@ -1,0 +1,440 @@
+{
+  "file_path": "/home/kathirks_gc/v8_go/codebase/include/v8-persistent-handle.h",
+  "imports": [
+    "v8-internal.h",
+    "v8-local-handle.h",
+    "v8-weak-callback-info.h",
+    "v8config.h"
+  ],
+  "classes": [
+    {
+      "name": "Eternal",
+      "properties": [],
+      "methods": [
+        {
+          "name": "Eternal",
+          "parameters": [],
+          "return_type": "Eternal",
+          "logic": "Default constructor"
+        },
+        {
+          "name": "Eternal",
+          "parameters": [
+            "Isolate* isolate",
+            "Local<S> handle"
+          ],
+          "return_type": "Eternal",
+          "logic": "Constructor that takes an isolate and a Local handle and eternalizes the handle using api_internal::Eternalize."
+        },
+        {
+          "name": "Get",
+          "parameters": [
+            "Isolate* isolate"
+          ],
+          "return_type": "Local<T>",
+          "logic": "Returns a Local handle for the eternalized object.  Since eternal handles live for the lifetime of the isolate, it directly fetches the object from its slot without opening a handle scope."
+        },
+        {
+          "name": "Set",
+          "parameters": [
+            "Isolate* isolate",
+            "Local<S> handle"
+          ],
+          "return_type": "void",
+          "logic": "Eternalizes the passed Local handle by calling `api_internal::Eternalize`."
+        }
+      ]
+    },
+    {
+      "name": "PersistentBase",
+      "properties": [],
+      "methods": [
+        {
+          "name": "Reset",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Disposes the underlying storage cell, making the handle empty."
+        },
+        {
+          "name": "Reset",
+          "parameters": [
+            "Isolate* isolate",
+            "const Local<S>& other"
+          ],
+          "return_type": "void",
+          "logic": "Disposes the existing storage cell (if any) and creates a new one with the contents of 'other' if 'other' is non-empty."
+        },
+        {
+          "name": "Reset",
+          "parameters": [
+            "Isolate* isolate",
+            "const PersistentBase<S>& other"
+          ],
+          "return_type": "void",
+          "logic": "Disposes the existing storage cell (if any) and creates a new one with the contents of 'other' if 'other' is non-empty.  This variant takes another PersistentBase as input."
+        },
+        {
+          "name": "Get",
+          "parameters": [
+            "Isolate* isolate"
+          ],
+          "return_type": "Local<T>",
+          "logic": "Returns a Local handle that points to the same object as the PersistentBase."
+        },
+        {
+          "name": "operator==",
+          "parameters": [
+            "const PersistentBase<S>& that"
+          ],
+          "return_type": "bool",
+          "logic": "Compares this PersistentBase with another PersistentBase for equality using HandleHelper::EqualHandles."
+        },
+        {
+          "name": "operator==",
+          "parameters": [
+            "const Local<S>& that"
+          ],
+          "return_type": "bool",
+          "logic": "Compares this PersistentBase with a Local handle for equality using HandleHelper::EqualHandles."
+        },
+        {
+          "name": "operator!=",
+          "parameters": [
+            "const PersistentBase<S>& that"
+          ],
+          "return_type": "bool",
+          "logic": "Compares this PersistentBase with another PersistentBase for inequality (negation of operator==)."
+        },
+        {
+          "name": "operator!=",
+          "parameters": [
+            "const Local<S>& that"
+          ],
+          "return_type": "bool",
+          "logic": "Compares this PersistentBase with a Local handle for inequality (negation of operator==)."
+        },
+        {
+          "name": "SetWeak",
+          "parameters": [
+            "P* parameter",
+            "typename WeakCallbackInfo<P>::Callback callback",
+            "WeakCallbackType type"
+          ],
+          "return_type": "void",
+          "logic": "Installs a finalization callback on this object. The callback is invoked when the object is garbage collected. It calls api_internal::MakeWeak to set the weak callback."
+        },
+        {
+          "name": "SetWeak",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Turns this handle into a weak phantom handle without a finalization callback. The handle will be reset automatically when the garbage collector detects that the object is no longer reachable."
+        },
+        {
+          "name": "ClearWeak",
+          "parameters": [],
+          "return_type": "P*",
+          "logic": "Clears the weak callback and returns the parameter passed to SetWeak."
+        },
+        {
+          "name": "ClearWeak",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Clears the weak status. Deprecated variant."
+        },
+        {
+          "name": "AnnotateStrongRetainer",
+          "parameters": [
+            "const char* label"
+          ],
+          "return_type": "void",
+          "logic": "Annotates the strong handle with the given label, which is used by the heap snapshot generator."
+        },
+        {
+          "name": "IsWeak",
+          "parameters": [],
+          "return_type": "bool",
+          "logic": "Returns true if the handle's reference is weak."
+        },
+        {
+          "name": "SetWrapperClassId",
+          "parameters": [
+            "uint16_t class_id"
+          ],
+          "return_type": "void",
+          "logic": "Assigns a wrapper class ID to the handle."
+        },
+        {
+          "name": "WrapperClassId",
+          "parameters": [],
+          "return_type": "uint16_t",
+          "logic": "Returns the class ID previously assigned to this handle, or 0 if no class ID was previously assigned."
+        }
+      ]
+    },
+    {
+      "name": "NonCopyablePersistentTraits",
+      "properties": [],
+      "methods": [
+        {
+          "name": "Copy",
+          "parameters": [
+            "const Persistent<S, M>& source",
+            "NonCopyablePersistent* dest"
+          ],
+          "return_type": "void",
+          "logic": "Static assert to prevent instantiation."
+        }
+      ]
+    },
+    {
+      "name": "Persistent",
+      "properties": [],
+      "methods": [
+        {
+          "name": "Persistent",
+          "parameters": [],
+          "return_type": "Persistent",
+          "logic": "Default constructor: creates a Persistent with no storage cell."
+        },
+        {
+          "name": "Persistent",
+          "parameters": [
+            "Isolate* isolate",
+            "Local<S> that"
+          ],
+          "return_type": "Persistent",
+          "logic": "Constructs a Persistent from a Local handle. Creates a new storage cell pointing to the same object."
+        },
+        {
+          "name": "Persistent",
+          "parameters": [
+            "Isolate* isolate",
+            "const Persistent<S, M2>& that"
+          ],
+          "return_type": "Persistent",
+          "logic": "Constructs a Persistent from another Persistent handle. Creates a new storage cell pointing to the same object."
+        },
+        {
+          "name": "Persistent",
+          "parameters": [
+            "const Persistent& that"
+          ],
+          "return_type": "Persistent",
+          "logic": "Copy constructor: copies the other persistent."
+        },
+        {
+          "name": "Persistent",
+          "parameters": [
+            "const Persistent<S, M2>& that"
+          ],
+          "return_type": "Persistent",
+          "logic": "Copy constructor (template version): copies the other persistent."
+        },
+        {
+          "name": "operator=",
+          "parameters": [
+            "const Persistent& that"
+          ],
+          "return_type": "Persistent&",
+          "logic": "Assignment operator: copies the other persistent."
+        },
+        {
+          "name": "operator=",
+          "parameters": [
+            "const Persistent<S, M2>& that"
+          ],
+          "return_type": "Persistent&",
+          "logic": "Assignment operator (template version): copies the other persistent."
+        },
+        {
+          "name": "~Persistent",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Destructor: resets the Persistent if M::kResetInDestructor is true."
+        },
+        {
+          "name": "Cast",
+          "parameters": [
+            "const Persistent<S, M2>& that"
+          ],
+          "return_type": "Persistent<T, M>&",
+          "logic": "Casts the persistent to type T"
+        },
+        {
+          "name": "As",
+          "parameters": [],
+          "return_type": "Persistent<S, M2>&",
+          "logic": "Returns a reference to itself casted to different Persistent"
+        },
+        {
+          "name": "Copy",
+          "parameters": [
+            "const Persistent<S, M2>& that"
+          ],
+          "return_type": "void",
+          "logic": "Copies value from other persistent to this."
+        }
+      ]
+    },
+    {
+      "name": "Global",
+      "properties": [],
+      "methods": [
+        {
+          "name": "Global",
+          "parameters": [],
+          "return_type": "Global",
+          "logic": "Default constructor: creates a Global with no storage cell."
+        },
+        {
+          "name": "Global",
+          "parameters": [
+            "Isolate* isolate",
+            "Local<S> that"
+          ],
+          "return_type": "Global",
+          "logic": "Constructs a Global from a Local handle. Creates a new storage cell pointing to the same object."
+        },
+        {
+          "name": "Global",
+          "parameters": [
+            "Isolate* isolate",
+            "const PersistentBase<S>& that"
+          ],
+          "return_type": "Global",
+          "logic": "Constructs a Global from PersistentBase handle. Creates a new storage cell pointing to the same object."
+        },
+        {
+          "name": "Global",
+          "parameters": [
+            "Global&& other"
+          ],
+          "return_type": "Global",
+          "logic": "Move constructor."
+        },
+        {
+          "name": "~Global",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Destructor: resets the Global"
+        },
+        {
+          "name": "operator=",
+          "parameters": [
+            "Global<S>&& rhs"
+          ],
+          "return_type": "Global&",
+          "logic": "Move via assignment."
+        },
+        {
+          "name": "Pass",
+          "parameters": [],
+          "return_type": "Global",
+          "logic": "Pass allows returning uniques from functions, etc."
+        }
+      ]
+    },
+    {
+      "name": "PersistentHandleVisitor",
+      "properties": [],
+      "methods": [
+        {
+          "name": "~PersistentHandleVisitor",
+          "parameters": [],
+          "return_type": "virtual",
+          "logic": "Virtual destructor."
+        },
+        {
+          "name": "VisitPersistentHandle",
+          "parameters": [
+            "Persistent<Value>* value",
+            "uint16_t class_id"
+          ],
+          "return_type": "virtual void",
+          "logic": "Virtual method to visit a persistent handle. This is where derived classes would perform operations on the handle."
+        }
+      ]
+    }
+  ],
+  "functions": [
+    {
+      "name": "Eternalize",
+      "parameters": [
+        "v8::Isolate* isolate",
+        "Value* handle"
+      ],
+      "return_type": "internal::Address*",
+      "logic": "Copies a handle to eternal memory.  Internal V8 API."
+    },
+    {
+      "name": "CopyGlobalReference",
+      "parameters": [
+        "internal::Address* from"
+      ],
+      "return_type": "internal::Address*",
+      "logic": "Copies a global reference.  Internal V8 API."
+    },
+    {
+      "name": "DisposeGlobal",
+      "parameters": [
+        "internal::Address* global_handle"
+      ],
+      "return_type": "void",
+      "logic": "Disposes of a global handle.  Internal V8 API."
+    },
+    {
+      "name": "MakeWeak",
+      "parameters": [
+        "internal::Address** location_addr"
+      ],
+      "return_type": "void",
+      "logic": "Makes a handle weak.  Internal V8 API."
+    },
+    {
+      "name": "ClearWeak",
+      "parameters": [
+        "internal::Address* location"
+      ],
+      "return_type": "void*",
+      "logic": "Clears the weak flag from a handle.  Internal V8 API."
+    },
+    {
+      "name": "AnnotateStrongRetainer",
+      "parameters": [
+        "internal::Address* location",
+        "const char* label"
+      ],
+      "return_type": "void",
+      "logic": "Annotates a strong handle with a label.  Internal V8 API."
+    },
+    {
+      "name": "GlobalizeReference",
+      "parameters": [
+        "internal::Isolate* isolate",
+        "internal::Address value"
+      ],
+      "return_type": "internal::Address*",
+      "logic": "Converts a reference to a global reference.  Internal V8 API."
+    },
+    {
+      "name": "MoveGlobalReference",
+      "parameters": [
+        "internal::Address** from",
+        "internal::Address** to"
+      ],
+      "return_type": "void",
+      "logic": "Moves a global reference from one location to another.  Internal V8 API."
+    },
+    {
+      "name": "MakeWeak",
+      "parameters": [
+        "internal::Address* location",
+        "void* data",
+        "WeakCallbackInfo<void>::Callback weak_callback",
+        "WeakCallbackType type"
+      ],
+      "return_type": "void",
+      "logic": "Makes a handle weak with a callback. Internal V8 API."
+    }
+  ]
+}

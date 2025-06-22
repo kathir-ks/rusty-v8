@@ -1,0 +1,91 @@
+{
+  "metadata": {
+    "path": "/home/kathirks_gc/v8_go/archive/codebase/include/cppgc/internal/atomic-entry-flag.h",
+    "file_name": "atomic-entry-flag.h",
+    "language": "cpp",
+    "purpose": "Defines a class AtomicEntryFlag that provides a fast check whether a scope may be entered on the current thread using atomic operations."
+  },
+  "imports": {
+    "metadata": {
+      "language": "cpp",
+      "purpose": "Provides atomic types and operations."
+    },
+    "code": "#include <atomic>"
+  },
+  "classes": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "AtomicEntryFlag",
+        "extends": null,
+        "implements": [],
+        "about": "A flag which provides a fast check whether a scope may be entered on the current thread, without needing to access thread-local storage or mutex. Can have false positives.",
+        "attributes": [
+          {
+            "name": "entries_",
+            "type": "std::atomic_int",
+            "access": "private",
+            "purpose": "Counts the number of entries to the guarded scope.  Used to determine if the scope *might* be entered."
+          }
+        ],
+        "dependencies": []
+      },
+      "code": "class AtomicEntryFlag final {\n public:\n  void Enter() { entries_.fetch_add(1, std::memory_order_relaxed); }\n  void Exit() { entries_.fetch_sub(1, std::memory_order_relaxed); }\n\n  // Returns false only if the current thread is not between a call to Enter\n  // and a call to Exit. Returns true if this thread or another thread may\n  // currently be in the scope guarded by this flag.\n  bool MightBeEntered() const {\n    return entries_.load(std::memory_order_relaxed) != 0;\n  }\n\n private:\n  std::atomic_int entries_{0};\n};"
+    }
+  ],
+  "functions": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "method",
+        "name": "Enter",
+        "parent": "AtomicEntryFlag",
+        "about": "Increments the entry count.",
+        "logic": "Atomically increments the 'entries_' counter using a relaxed memory order.",
+        "parameters": [],
+        "return": {
+          "type": "void",
+          "description": "No return value."
+        },
+        "dependencies": []
+      },
+      "code": "void Enter() { entries_.fetch_add(1, std::memory_order_relaxed); }"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "method",
+        "name": "Exit",
+        "parent": "AtomicEntryFlag",
+        "about": "Decrements the entry count.",
+        "logic": "Atomically decrements the 'entries_' counter using a relaxed memory order.",
+        "parameters": [],
+        "return": {
+          "type": "void",
+          "description": "No return value."
+        },
+        "dependencies": []
+      },
+      "code": "void Exit() { entries_.fetch_sub(1, std::memory_order_relaxed); }"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "method",
+        "name": "MightBeEntered",
+        "parent": "AtomicEntryFlag",
+        "about": "Checks if the flag might be entered.",
+        "logic": "Atomically loads the 'entries_' counter using a relaxed memory order and checks if it's non-zero.",
+        "parameters": [],
+        "return": {
+          "type": "bool",
+          "description": "Returns false only if the current thread is not between a call to Enter and a call to Exit. Returns true if this thread or another thread may currently be in the scope guarded by this flag."
+        },
+        "dependencies": []
+      },
+      "code": "bool MightBeEntered() const {\n    return entries_.load(std::memory_order_relaxed) != 0;\n  }"
+    }
+  ],
+  "file_path": "/home/kathirks_gc/v8_go/archive/codebase/include/cppgc/internal/atomic-entry-flag.h"
+}

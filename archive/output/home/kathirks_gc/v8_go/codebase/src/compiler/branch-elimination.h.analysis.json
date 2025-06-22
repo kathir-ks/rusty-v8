@@ -1,0 +1,226 @@
+{
+  "file_path": "/home/kathirks_gc/v8_go/codebase/src/compiler/branch-elimination.h",
+  "imports": [
+    "src/base/compiler-specific.h",
+    "src/compiler/control-path-state.h",
+    "src/compiler/graph-reducer.h"
+  ],
+  "classes": [
+    {
+      "name": "BranchCondition",
+      "properties": [
+        "node",
+        "branch",
+        "is_true"
+      ],
+      "methods": [
+        {
+          "name": "BranchCondition",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Default constructor, initializes node and branch to nullptr and is_true to false."
+        },
+        {
+          "name": "BranchCondition",
+          "parameters": [
+            "Node* condition",
+            "Node* branch",
+            "bool is_true"
+          ],
+          "return_type": "void",
+          "logic": "Constructor that initializes the node, branch, and is_true members with provided values."
+        },
+        {
+          "name": "operator==",
+          "parameters": [
+            "const BranchCondition& other"
+          ],
+          "return_type": "bool",
+          "logic": "Compares two BranchCondition objects for equality based on their node, branch, and is_true members."
+        },
+        {
+          "name": "operator!=",
+          "parameters": [
+            "const BranchCondition& other"
+          ],
+          "return_type": "bool",
+          "logic": "Compares two BranchCondition objects for inequality."
+        },
+        {
+          "name": "IsSet",
+          "parameters": [],
+          "return_type": "bool",
+          "logic": "Checks if the BranchCondition is set (i.e., node is not nullptr)."
+        }
+      ]
+    },
+    {
+      "name": "BranchElimination",
+      "properties": [
+        "jsgraph_",
+        "dead_",
+        "phase_"
+      ],
+      "methods": [
+        {
+          "name": "BranchElimination",
+          "parameters": [
+            "Editor* editor",
+            "JSGraph* js_graph",
+            "Zone* zone",
+            "Phase phase"
+          ],
+          "return_type": "void",
+          "logic": "Constructor for the BranchElimination class. Initializes the reducer with necessary components like the editor, JSGraph, zone and the selected phase."
+        },
+        {
+          "name": "~BranchElimination",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Destructor for the BranchElimination class."
+        },
+        {
+          "name": "reducer_name",
+          "parameters": [],
+          "return_type": "const char*",
+          "logic": "Returns the name of the reducer, which is \"BranchElimination\"."
+        },
+        {
+          "name": "Reduce",
+          "parameters": [
+            "Node* node"
+          ],
+          "return_type": "Reduction",
+          "logic": "Reduces the given node by attempting to eliminate redundant branches based on control-flow analysis."
+        },
+        {
+          "name": "ReduceBranch",
+          "parameters": [
+            "Node* node"
+          ],
+          "return_type": "Reduction",
+          "logic": "Handles the reduction of a Branch node."
+        },
+        {
+          "name": "ReduceDeoptimizeConditional",
+          "parameters": [
+            "Node* node"
+          ],
+          "return_type": "Reduction",
+          "logic": "Handles the reduction of a DeoptimizeConditional node."
+        },
+        {
+          "name": "ReduceIf",
+          "parameters": [
+            "Node* node",
+            "bool is_true_branch"
+          ],
+          "return_type": "Reduction",
+          "logic": "Handles the reduction of an If node, taking into account whether it's the true or false branch."
+        },
+        {
+          "name": "ReduceTrapConditional",
+          "parameters": [
+            "Node* node"
+          ],
+          "return_type": "Reduction",
+          "logic": "Handles the reduction of a TrapConditional node."
+        },
+        {
+          "name": "ReduceLoop",
+          "parameters": [
+            "Node* node"
+          ],
+          "return_type": "Reduction",
+          "logic": "Handles the reduction of a Loop node."
+        },
+        {
+          "name": "ReduceMerge",
+          "parameters": [
+            "Node* node"
+          ],
+          "return_type": "Reduction",
+          "logic": "Handles the reduction of a Merge node."
+        },
+        {
+          "name": "ReduceStart",
+          "parameters": [
+            "Node* node"
+          ],
+          "return_type": "Reduction",
+          "logic": "Handles the reduction of a Start node."
+        },
+        {
+          "name": "ReduceOtherControl",
+          "parameters": [
+            "Node* node"
+          ],
+          "return_type": "Reduction",
+          "logic": "Handles the reduction of other control flow nodes."
+        },
+        {
+          "name": "SimplifyBranchCondition",
+          "parameters": [
+            "Node* branch"
+          ],
+          "return_type": "void",
+          "logic": "Simplifies the condition of the given branch node."
+        },
+        {
+          "name": "TryEliminateBranchWithPhiCondition",
+          "parameters": [
+            "Node* branch",
+            "Node* phi",
+            "Node* merge"
+          ],
+          "return_type": "bool",
+          "logic": "Attempts to eliminate a branch based on a Phi node condition, potentially simplifying the control flow."
+        },
+        {
+          "name": "UpdateStatesHelper",
+          "parameters": [
+            "Node* node",
+            "ControlPathConditions prev_conditions",
+            "Node* current_condition",
+            "Node* current_branch",
+            "bool is_true_branch",
+            "bool in_new_block"
+          ],
+          "return_type": "Reduction",
+          "logic": "A helper function to update the control-path states based on a new condition. Creates a BranchCondition object and calls UpdateStates."
+        },
+        {
+          "name": "dead",
+          "parameters": [],
+          "return_type": "Node*",
+          "logic": "Returns the dead node."
+        },
+        {
+          "name": "graph",
+          "parameters": [],
+          "return_type": "TFGraph*",
+          "logic": "Returns the TFGraph object."
+        },
+        {
+          "name": "jsgraph",
+          "parameters": [],
+          "return_type": "JSGraph*",
+          "logic": "Returns the JSGraph object."
+        },
+        {
+          "name": "isolate",
+          "parameters": [],
+          "return_type": "Isolate*",
+          "logic": "Returns the Isolate object."
+        },
+        {
+          "name": "common",
+          "parameters": [],
+          "return_type": "CommonOperatorBuilder*",
+          "logic": "Returns the CommonOperatorBuilder object."
+        }
+      ]
+    }
+  ],
+  "functions": []
+}

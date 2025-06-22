@@ -1,0 +1,125 @@
+{
+  "file_path": "/home/kathirks_gc/v8_go/codebase/src/compiler/turboshaft/duplication-optimization-reducer.h",
+  "imports": [
+    "src/compiler/turboshaft/assembler.h",
+    "src/compiler/turboshaft/graph.h",
+    "src/compiler/turboshaft/index.h",
+    "src/compiler/turboshaft/operations.h",
+    "src/compiler/turboshaft/value-numbering-reducer.h",
+    "src/compiler/turboshaft/define-assembler-macros.inc",
+    "src/compiler/turboshaft/undef-assembler-macros.inc"
+  ],
+  "classes": [
+    {
+      "name": "DuplicationOptimizationReducer",
+      "properties": [],
+      "methods": [
+        {
+          "name": "REDUCE_INPUT_GRAPH(Branch)",
+          "parameters": [
+            "V<None> ig_index",
+            "const BranchOp& branch"
+          ],
+          "return_type": "V<None>",
+          "logic": "Duplicates branch conditions if they have multiple uses. Checks if the condition should be duplicated using `MaybeDuplicateCond`. If duplication is needed, creates a new branch with the duplicated condition."
+        },
+        {
+          "name": "REDUCE_INPUT_GRAPH(Select)",
+          "parameters": [
+            "V<Any> ig_index",
+            "const SelectOp& select"
+          ],
+          "return_type": "V<Any>",
+          "logic": "Duplicates select conditions if they have multiple uses. Checks if the condition should be duplicated using `MaybeDuplicateCond`. If duplication is needed, creates a new select with the duplicated condition."
+        },
+        {
+          "name": "REDUCE(Load)",
+          "parameters": [
+            "OpIndex base",
+            "OptionalOpIndex index",
+            "LoadOp::Kind kind",
+            "MemoryRepresentation loaded_rep",
+            "RegisterRepresentation result_rep",
+            "int32_t offset",
+            "uint8_t element_size_log2"
+          ],
+          "return_type": "OpIndex",
+          "logic": "On Arm64, potentially duplicates the index of a Load operation if it is a shift by a constant. Calls `MaybeDuplicateOutputGraphShift` to determine if duplication is necessary."
+        },
+        {
+          "name": "REDUCE(Store)",
+          "parameters": [
+            "OpIndex base",
+            "OptionalOpIndex index",
+            "OpIndex value",
+            "StoreOp::Kind kind",
+            "MemoryRepresentation stored_rep",
+            "WriteBarrierKind write_barrier",
+            "int32_t offset",
+            "uint8_t element_size_log2",
+            "bool maybe_initializing_or_transitioning",
+            "IndirectPointerTag maybe_indirect_pointer_tag"
+          ],
+          "return_type": "OpIndex",
+          "logic": "On Arm64, potentially duplicates the index of a Store operation if it is a shift by a constant. Calls `MaybeDuplicateOutputGraphShift` to determine if duplication is necessary."
+        },
+        {
+          "name": "MaybeDuplicateCond",
+          "parameters": [
+            "const Operation& cond",
+            "OpIndex input_idx",
+            "V<Word32>* new_cond"
+          ],
+          "return_type": "bool",
+          "logic": "Determines if a given condition (`cond`) should be duplicated. Dispatches to specific duplication methods based on the condition's opcode (Comparison, WordBinop, Shift)."
+        },
+        {
+          "name": "MaybeCanDuplicateGenericBinop",
+          "parameters": [
+            "OpIndex input_idx",
+            "OpIndex left",
+            "OpIndex right"
+          ],
+          "return_type": "bool",
+          "logic": "Helper function to check common pre-conditions that must be met to allow duplication of a binop (binary operation)."
+        },
+        {
+          "name": "MaybeDuplicateWordBinop",
+          "parameters": [
+            "const WordBinopOp& binop",
+            "OpIndex input_idx"
+          ],
+          "return_type": "OpIndex",
+          "logic": "Duplicates a WordBinop operation if its inputs are not used only once and it's not an expensive operation (div/mod). Creates a new WordBinop node in the graph."
+        },
+        {
+          "name": "MaybeDuplicateComparison",
+          "parameters": [
+            "const ComparisonOp& comp",
+            "OpIndex input_idx"
+          ],
+          "return_type": "V<Word32>",
+          "logic": "Duplicates a Comparison operation if its inputs are not used only once. Creates a new Comparison node in the graph."
+        },
+        {
+          "name": "MaybeDuplicateShift",
+          "parameters": [
+            "const ShiftOp& shift",
+            "OpIndex input_idx"
+          ],
+          "return_type": "OpIndex",
+          "logic": "Duplicates a Shift operation if its inputs are not used only once. Creates a new Shift node in the graph."
+        },
+        {
+          "name": "MaybeDuplicateOutputGraphShift",
+          "parameters": [
+            "OpIndex index"
+          ],
+          "return_type": "OpIndex",
+          "logic": "Detects shift operations on the output graph. If it matches a pattern of `constant << shift_amount`, then duplicate the shift by creating a new shift instruction."
+        }
+      ]
+    }
+  ],
+  "functions": []
+}

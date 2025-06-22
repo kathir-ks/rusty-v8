@@ -1,0 +1,185 @@
+{
+  "metadata": {
+    "path": "/home/kathirks_gc/v8_go/archive/codebase/src/execution/pointer-authentication-dummy.h",
+    "file_name": "pointer-authentication-dummy.h",
+    "language": "cpp",
+    "purpose": "Dummy implementation of PointerAuthentication class for systems without CFI (Control Flow Integrity) support."
+  },
+  "imports": {
+    "metadata": {
+      "language": "cpp",
+      "purpose": "Includes necessary V8 internal headers and standard libraries."
+    },
+    "code": "#include \"include/v8-internal.h\"\n#include \"src/base/logging.h\"\n#include \"src/base/macros.h\"\n#include \"src/execution/pointer-authentication.h\"\n#include \"src/flags/flags.h\""
+  },
+  "classes": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "PointerAuthentication",
+        "about": "Dummy implementation of the PointerAuthentication class methods when CFI is not enabled.",
+        "dependencies": []
+      },
+      "code": "namespace v8 {\nnamespace internal {\n\n// Dummy implementation of the PointerAuthentication class methods, to be used\n// when CFI is not enabled.\n\nclass PointerAuthentication {\n public:\n  // Load return address from {pc_address} and return it.\n  V8_INLINE static Address AuthenticatePC(Address* pc_address,\n                                                        unsigned);\n\n  // Return {pc} unmodified.\n  V8_INLINE static Address StripPAC(Address pc);\n\n  // Store {new_pc} to {pc_address} without signing.\n  V8_INLINE static void ReplacePC(Address* pc_address,\n                                                Address new_pc, int);\n\n  // Return {pc} unmodified.\n  V8_INLINE static Address SignAndCheckPC(Isolate*, Address pc,\n                                                        Address);\n\n  V8_INLINE static Address MoveSignedPC(Isolate*, Address pc,\n                                                      Address, Address);\n };\n\n}  // namespace internal\n}  // namespace v8"
+    }
+  ],
+  "functions": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "method",
+        "name": "AuthenticatePC",
+        "parent": "PointerAuthentication",
+        "about": "Dummy implementation: Loads return address from {pc_address} and returns it.",
+        "logic": "Simply dereferences the provided address and returns the value at that address.",
+        "parameters": [
+          {
+            "name": "pc_address",
+            "type": "Address*",
+            "purpose": "Pointer to the address containing the return address."
+          },
+          {
+            "name": "unsigned",
+            "type": "unsigned",
+            "purpose": "Unused argument"
+          }
+        ],
+        "return": {
+          "type": "Address",
+          "description": "The value stored at the address pointed to by pc_address."
+        },
+        "dependencies": []
+      },
+      "code": "V8_INLINE Address PointerAuthentication::AuthenticatePC(Address* pc_address,\n                                                        unsigned) {\n  return *pc_address;\n}"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "method",
+        "name": "StripPAC",
+        "parent": "PointerAuthentication",
+        "about": "Dummy implementation: Returns {pc} unmodified.",
+        "logic": "Returns the input address without any modification.",
+        "parameters": [
+          {
+            "name": "pc",
+            "type": "Address",
+            "purpose": "The program counter address."
+          }
+        ],
+        "return": {
+          "type": "Address",
+          "description": "The original program counter address."
+        },
+        "dependencies": []
+      },
+      "code": "V8_INLINE Address PointerAuthentication::StripPAC(Address pc) { return pc; }"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "method",
+        "name": "ReplacePC",
+        "parent": "PointerAuthentication",
+        "about": "Dummy implementation: Stores {new_pc} to {pc_address} without signing.",
+        "logic": "Assigns the value of new_pc to the memory location pointed to by pc_address.",
+        "parameters": [
+          {
+            "name": "pc_address",
+            "type": "Address*",
+            "purpose": "Pointer to the memory location where the new program counter should be stored."
+          },
+          {
+            "name": "new_pc",
+            "type": "Address",
+            "purpose": "The new program counter address to be stored."
+          },
+          {
+            "name": "int",
+            "type": "int",
+            "purpose": "Unused argument"
+          }
+        ],
+        "return": {
+          "type": "void",
+          "description": "No return value."
+        },
+        "dependencies": []
+      },
+      "code": "V8_INLINE void PointerAuthentication::ReplacePC(Address* pc_address,\n                                                Address new_pc, int) {\n  *pc_address = new_pc;\n}"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "method",
+        "name": "SignAndCheckPC",
+        "parent": "PointerAuthentication",
+        "about": "Dummy implementation: Returns {pc} unmodified.",
+        "logic": "Returns the input address without any modification.",
+        "parameters": [
+          {
+            "name": "Isolate*",
+            "type": "Isolate*",
+            "purpose": "Unused argument"
+          },
+          {
+            "name": "pc",
+            "type": "Address",
+            "purpose": "The program counter address."
+          },
+          {
+            "name": "Address",
+            "type": "Address",
+            "purpose": "Unused argument"
+          }
+        ],
+        "return": {
+          "type": "Address",
+          "description": "The original program counter address."
+        },
+        "dependencies": []
+      },
+      "code": "V8_INLINE Address PointerAuthentication::SignAndCheckPC(Isolate*, Address pc,\n                                                        Address) {\n  return pc;\n}"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "method",
+        "name": "MoveSignedPC",
+        "parent": "PointerAuthentication",
+        "about": "Dummy implementation: Returns {pc} unmodified, but includes a check for wasm deoptimization or growable stacks.",
+        "logic": "Returns the input address without modification. Contains a preprocessor check for V8_ENABLE_WEBASSEMBLY, and asserts that wasm deopt or growable stacks are enabled if webassembly is enabled; otherwise it calls UNREACHABLE().",
+        "parameters": [
+          {
+            "name": "Isolate*",
+            "type": "Isolate*",
+            "purpose": "Unused argument"
+          },
+          {
+            "name": "pc",
+            "type": "Address",
+            "purpose": "The program counter address."
+          },
+          {
+            "name": "Address",
+            "type": "Address",
+            "purpose": "Unused argument"
+          },
+          {
+            "name": "Address",
+            "type": "Address",
+            "purpose": "Unused argument"
+          }
+        ],
+        "return": {
+          "type": "Address",
+          "description": "The original program counter address."
+        },
+        "dependencies": []
+      },
+      "code": "V8_INLINE Address PointerAuthentication::MoveSignedPC(Isolate*, Address pc,\n                                                      Address, Address) {\n#if V8_ENABLE_WEBASSEMBLY\n  // Only used by wasm deoptimizations and growable stacks.\n  CHECK(v8_flags.wasm_deopt || v8_flags.experimental_wasm_growable_stacks);\n  return pc;\n#else\n  UNREACHABLE();\n#endif\n}"
+    }
+  ],
+  "file_path": "/home/kathirks_gc/v8_go/archive/codebase/src/execution/pointer-authentication-dummy.h"
+}

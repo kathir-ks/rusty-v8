@@ -1,0 +1,92 @@
+{
+  "metadata": {
+    "path": "/home/kathirks_gc/v8_go/archive/codebase/src/execution/embedder-state.h",
+    "file_name": "embedder-state.h",
+    "language": "cpp",
+    "purpose": "Defines the EmbedderState class, which allows embedding applications to store state associated with a v8::Context."
+  },
+  "imports": {
+    "metadata": {
+      "language": "cpp",
+      "purpose": "Provides access to the Isolate class, representing a V8 isolate."
+    },
+    "code": "#include \"src/execution/isolate.h\""
+  },
+  "classes": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "EmbedderState",
+        "about": "Represents the state associated with a v8::Context for embedding applications.",
+        "attributes": [
+          {
+            "name": "isolate_",
+            "type": "Isolate*",
+            "access": "private",
+            "purpose": "Pointer to the V8 isolate."
+          },
+          {
+            "name": "tag_",
+            "type": "EmbedderStateTag",
+            "access": "private",
+            "purpose": "Tag identifying the type of embedder state."
+          },
+          {
+            "name": "native_context_address_",
+            "type": "Address",
+            "access": "private",
+            "purpose": "Address of the native context."
+          },
+          {
+            "name": "previous_embedder_state_",
+            "type": "EmbedderState*",
+            "access": "private",
+            "purpose": "Pointer to the previous EmbedderState in a linked list."
+          }
+        ],
+        "dependencies": [
+          "v8::Isolate",
+          "v8::Local",
+          "v8::Context",
+          "EmbedderStateTag",
+          "Address"
+        ]
+      },
+      "code": "class V8_EXPORT_PRIVATE EmbedderState {\n            public:\n            EmbedderState(v8::Isolate* isolate, Local<v8::Context> context,\n                            EmbedderStateTag tag);\n\n            ~EmbedderState();\n\n            EmbedderStateTag GetState() const { return tag_; }\n\n            Address native_context_address() const { return native_context_address_; }\n\n            void OnMoveEvent(Address from, Address to);\n\n            private:\n            Isolate* isolate_;\n            EmbedderStateTag tag_;\n            Address native_context_address_ = kNullAddress;\n            EmbedderState* previous_embedder_state_;\n            };"
+    }
+  ],
+  "dependencies": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "enum",
+        "name": "EmbedderStateTag",
+        "about": "Enum representing the type of embedder state."
+      },
+      "code": "enum class EmbedderStateTag : uint8_t;",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "v8::Isolate",
+        "about": "Represents an isolated instance of the V8 JavaScript engine."
+      },
+      "code": "namespace v8 {\n                    class Isolate {};\n                    template <typename T> class Local {};\n                    class Context {};\n                }",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "type",
+        "name": "Address",
+        "about": "Represents a memory address."
+      },
+      "code": "typedef uintptr_t Address;\n                constexpr Address kNullAddress = 0;",
+      "type": "class"
+    }
+  ],
+  "file_path": "/home/kathirks_gc/v8_go/archive/codebase/src/execution/embedder-state.h"
+}

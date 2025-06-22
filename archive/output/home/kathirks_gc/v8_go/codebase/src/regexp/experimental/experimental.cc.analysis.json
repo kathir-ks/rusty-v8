@@ -1,0 +1,151 @@
+{
+  "file_path": "/home/kathirks_gc/v8_go/codebase/src/regexp/experimental/experimental.cc",
+  "imports": [
+    "src/regexp/experimental/experimental.h",
+    "<optional>",
+    "src/common/assert-scope.h",
+    "src/objects/js-regexp-inl.h",
+    "src/regexp/experimental/experimental-compiler.h",
+    "src/regexp/experimental/experimental-interpreter.h",
+    "src/regexp/regexp-parser.h",
+    "src/regexp/regexp-result-vector.h",
+    "src/utils/ostreams.h"
+  ],
+  "classes": [
+    {
+      "name": "ExperimentalRegExp",
+      "properties": [],
+      "methods": [
+        {
+          "name": "CanBeHandled",
+          "parameters": [
+            "RegExpTree* tree",
+            "DirectHandle<String> pattern",
+            "RegExpFlags flags",
+            "int capture_count"
+          ],
+          "return_type": "bool",
+          "logic": "Checks if a given RegExp pattern can be handled by the experimental engine, based on the capabilities of the compiler and flags. Traces if the pattern is not supported."
+        },
+        {
+          "name": "Initialize",
+          "parameters": [
+            "Isolate* isolate",
+            "DirectHandle<JSRegExp> re",
+            "DirectHandle<String> source",
+            "RegExpFlags flags",
+            "int capture_count"
+          ],
+          "return_type": "void",
+          "logic": "Initializes an experimental RegExp object with the source, flags, and capture count. Stores the experimental data in the JSRegExp object."
+        },
+        {
+          "name": "IsCompiled",
+          "parameters": [
+            "DirectHandle<IrRegExpData> re_data",
+            "Isolate* isolate"
+          ],
+          "return_type": "bool",
+          "logic": "Checks if the experimental RegExp data has already been compiled into bytecode."
+        },
+        {
+          "name": "Compile",
+          "parameters": [
+            "Isolate* isolate",
+            "DirectHandle<IrRegExpData> re_data"
+          ],
+          "return_type": "bool",
+          "logic": "Compiles an experimental RegExp pattern into bytecode and stores it in the IrRegExpData object along with capture names map. Returns false if compilation fails (e.g., due to stack overflow)."
+        },
+        {
+          "name": "ExecRaw",
+          "parameters": [
+            "Isolate* isolate",
+            "RegExp::CallOrigin call_origin",
+            "Tagged<IrRegExpData> regexp_data",
+            "Tagged<String> subject",
+            "int32_t* output_registers",
+            "int32_t output_register_count",
+            "int32_t subject_index"
+          ],
+          "return_type": "int32_t",
+          "logic": "Executes the compiled bytecode of an experimental RegExp on a given subject string, writing the match results to the provided output registers. Returns number of matches found."
+        },
+        {
+          "name": "MatchForCallFromJs",
+          "parameters": [
+            "Address subject",
+            "int32_t start_position",
+            "Address input_start",
+            "Address input_end",
+            "int* output_registers",
+            "int32_t output_register_count",
+            "RegExp::CallOrigin call_origin",
+            "Isolate* isolate",
+            "Address regexp_data"
+          ],
+          "return_type": "int32_t",
+          "logic": "Wrapper for `ExecRaw` called from JavaScript.  Converts raw addresses to V8 objects and executes the RegExp. Asserts that this function is only called from JS."
+        },
+        {
+          "name": "Exec",
+          "parameters": [
+            "Isolate* isolate",
+            "DirectHandle<IrRegExpData> regexp_data",
+            "DirectHandle<String> subject",
+            "int index",
+            "int32_t* result_offsets_vector",
+            "uint32_t result_offsets_vector_length"
+          ],
+          "return_type": "std::optional<int>",
+          "logic": "Executes a compiled experimental RegExp on a given subject string, handling compilation if needed.  Returns the number of matches or an empty optional if an exception occurs.  Handles retries."
+        },
+        {
+          "name": "OneshotExecRaw",
+          "parameters": [
+            "Isolate* isolate",
+            "DirectHandle<IrRegExpData> regexp_data",
+            "DirectHandle<String> subject",
+            "int32_t* output_registers",
+            "int32_t output_register_count",
+            "int32_t subject_index"
+          ],
+          "return_type": "int32_t",
+          "logic": "Compiles and executes the regexp immediately (one-shot). Used when excessive backtracks occur in the legacy regexp engine."
+        },
+        {
+          "name": "OneshotExec",
+          "parameters": [
+            "Isolate* isolate",
+            "DirectHandle<IrRegExpData> regexp_data",
+            "DirectHandle<String> subject",
+            "int subject_index",
+            "int32_t* result_offsets_vector",
+            "uint32_t result_offsets_vector_length"
+          ],
+          "return_type": "std::optional<int>",
+          "logic": "Executes a compiled experimental RegExp on a given subject string, without storing the compiled bytecode (one-shot).  Returns the number of matches or an empty optional if an exception occurs.  Handles retries."
+        }
+      ]
+    }
+  ],
+  "functions": [
+    {
+      "name": "VectorToByteArray",
+      "parameters": [
+        "Isolate* isolate",
+        "base::Vector<T> data"
+      ],
+      "return_type": "DirectHandle<TrustedByteArray>",
+      "logic": "Converts a vector of trivial types to a TrustedByteArray."
+    },
+    {
+      "name": "AsInstructionSequence",
+      "parameters": [
+        "Tagged<TrustedByteArray> raw_bytes"
+      ],
+      "return_type": "base::Vector<RegExpInstruction>",
+      "logic": "Interprets the content of a byte array as a sequence of RegExpInstructions."
+    }
+  ]
+}

@@ -1,0 +1,132 @@
+{
+  "file_path": "/home/kathirks_gc/v8_go/codebase/src/sandbox/isolate.h",
+  "imports": [
+    "src/sandbox/code-pointer-table.h",
+    "src/sandbox/cppheap-pointer-table.h",
+    "src/sandbox/external-pointer-table.h",
+    "src/sandbox/indirect-pointer-tag.h",
+    "src/sandbox/js-dispatch-table.h",
+    "src/sandbox/trusted-pointer-table.h"
+  ],
+  "classes": [
+    {
+      "name": "IsolateForSandbox",
+      "properties": [
+        "isolate_"
+      ],
+      "methods": [
+        {
+          "name": "IsolateForSandbox",
+          "parameters": [
+            "IsolateT* isolate"
+          ],
+          "return_type": "N/A (Constructor)",
+          "logic": "Constructor. Initializes IsolateForSandbox with an isolate (either Isolate* or LocalIsolate*) by calling isolate->ForSandbox(). If `V8_ENABLE_SANDBOX` is not defined, the constructor does nothing."
+        },
+        {
+          "name": "GetExternalPointerTableFor",
+          "parameters": [
+            "ExternalPointerTagRange tag_range"
+          ],
+          "return_type": "ExternalPointerTable&",
+          "logic": "Returns the ExternalPointerTable associated with the given tag range. Only defined when `V8_ENABLE_SANDBOX` is set."
+        },
+        {
+          "name": "GetExternalPointerTableSpaceFor",
+          "parameters": [
+            "ExternalPointerTagRange tag_range",
+            "Address host"
+          ],
+          "return_type": "ExternalPointerTable::Space*",
+          "logic": "Returns the ExternalPointerTable::Space associated with the given tag range and host address. Only defined when `V8_ENABLE_SANDBOX` is set."
+        },
+        {
+          "name": "GetCodePointerTableSpaceFor",
+          "parameters": [
+            "Address owning_slot"
+          ],
+          "return_type": "CodePointerTable::Space*",
+          "logic": "Returns the CodePointerTable::Space associated with the given owning slot. Only defined when `V8_ENABLE_SANDBOX` is set."
+        },
+        {
+          "name": "GetTrustedPointerTableFor",
+          "parameters": [
+            "IndirectPointerTag tag"
+          ],
+          "return_type": "TrustedPointerTable&",
+          "logic": "Returns the TrustedPointerTable associated with the given indirect pointer tag. Only defined when `V8_ENABLE_SANDBOX` is set."
+        },
+        {
+          "name": "GetTrustedPointerTableSpaceFor",
+          "parameters": [
+            "IndirectPointerTag tag"
+          ],
+          "return_type": "TrustedPointerTable::Space*",
+          "logic": "Returns the TrustedPointerTable::Space associated with the given indirect pointer tag. Only defined when `V8_ENABLE_SANDBOX` is set."
+        },
+        {
+          "name": "GetExternalPointerTableTagFor",
+          "parameters": [
+            "Tagged<HeapObject> witness",
+            "ExternalPointerHandle handle"
+          ],
+          "return_type": "ExternalPointerTag",
+          "logic": "Returns the ExternalPointerTag associated with the given HeapObject witness and ExternalPointerHandle. Only defined when `V8_ENABLE_SANDBOX` is set."
+        }
+      ]
+    },
+    {
+      "name": "IsolateForPointerCompression",
+      "properties": [
+        "isolate_"
+      ],
+      "methods": [
+        {
+          "name": "IsolateForPointerCompression",
+          "parameters": [
+            "IsolateT* isolate"
+          ],
+          "return_type": "N/A (Constructor)",
+          "logic": "Constructor. Initializes IsolateForPointerCompression with an isolate by calling isolate->ForSandbox(). Only defined when `V8_COMPRESS_POINTERS` is set. If not defined, the constructor does nothing."
+        },
+        {
+          "name": "GetExternalPointerTableFor",
+          "parameters": [
+            "ExternalPointerTagRange tag_range"
+          ],
+          "return_type": "ExternalPointerTable&",
+          "logic": "Returns the ExternalPointerTable associated with the given tag range. Only defined when `V8_COMPRESS_POINTERS` is set."
+        },
+        {
+          "name": "GetExternalPointerTableSpaceFor",
+          "parameters": [
+            "ExternalPointerTagRange tag_range",
+            "Address host"
+          ],
+          "return_type": "ExternalPointerTable::Space*",
+          "logic": "Returns the ExternalPointerTable::Space associated with the given tag range and host address. Only defined when `V8_COMPRESS_POINTERS` is set."
+        },
+        {
+          "name": "GetCppHeapPointerTable",
+          "parameters": [],
+          "return_type": "CppHeapPointerTable&",
+          "logic": "Returns the CppHeapPointerTable. Only defined when `V8_COMPRESS_POINTERS` is set."
+        },
+        {
+          "name": "GetCppHeapPointerTableSpace",
+          "parameters": [],
+          "return_type": "CppHeapPointerTable::Space*",
+          "logic": "Returns the CppHeapPointerTable::Space. Only defined when `V8_COMPRESS_POINTERS` is set."
+        }
+      ]
+    }
+  ],
+  "functions": [
+    {
+      "name": "GetCurrentIsolateForSandbox",
+      "parameters": [],
+      "return_type": "IsolateForSandbox",
+      "logic": "Returns the current IsolateForSandbox. If V8_ENABLE_SANDBOX is defined, returns a constructed IsolateForSandbox; otherwise, it returns a default-constructed instance (no-op)."
+    }
+  ]
+}

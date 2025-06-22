@@ -1,0 +1,520 @@
+{
+  "file_path": "/home/kathirks_gc/v8_go/codebase/src/ic/accessor-assembler.cc",
+  "imports": [
+    "src/ic/accessor-assembler.h",
+    "<optional>",
+    "src/ast/ast.h",
+    "src/builtins/builtins-constructor-gen.h",
+    "src/builtins/builtins-inl.h",
+    "src/codegen/code-stub-assembler-inl.h",
+    "src/codegen/interface-descriptors-inl.h",
+    "src/common/globals.h",
+    "src/ic/handler-configuration.h",
+    "src/ic/ic.h",
+    "src/ic/keyed-store-generic.h",
+    "src/ic/stub-cache.h",
+    "src/logging/counters.h",
+    "src/objects/cell.h",
+    "src/objects/dictionary.h",
+    "src/objects/feedback-vector.h",
+    "src/objects/foreign.h",
+    "src/objects/heap-number.h",
+    "src/objects/megadom-handler.h",
+    "src/objects/module.h",
+    "src/objects/objects-inl.h",
+    "src/objects/property-details.h",
+    "src/objects/smi.h"
+  ],
+  "classes": [
+    {
+      "name": "AccessorAssembler",
+      "properties": [],
+      "methods": [
+        {
+          "name": "LoadHandlerDataField",
+          "parameters": [
+            "TNode<DataHandler> handler",
+            "int data_index"
+          ],
+          "return_type": "TNode<MaybeObject>",
+          "logic": "Loads a data field (data1, data2, or data3) from a DataHandler object, based on the provided data_index. It includes assertions to check the handler type and size."
+        },
+        {
+          "name": "TryMonomorphicCase",
+          "parameters": [
+            "TNode<TaggedIndex> slot",
+            "TNode<FeedbackVector> vector",
+            "TNode<HeapObjectReference> weak_lookup_start_object_map",
+            "Label* if_handler",
+            "TVariable<MaybeObject>* var_handler",
+            "Label* if_miss"
+          ],
+          "return_type": "TNode<HeapObjectReference>",
+          "logic": "Attempts to handle the monomorphic case in ICs by checking if the feedback slot matches the expected map. If it matches, loads the handler and jumps to the handler label; otherwise, it jumps to the miss label."
+        },
+        {
+          "name": "HandlePolymorphicCase",
+          "parameters": [
+            "TNode<HeapObjectReference> weak_lookup_start_object_map",
+            "TNode<WeakFixedArray> feedback",
+            "Label* if_handler",
+            "TVariable<MaybeObject>* var_handler",
+            "Label* if_miss"
+          ],
+          "return_type": "void",
+          "logic": "Handles the polymorphic case in ICs by iterating through a WeakFixedArray of feedback entries. If a matching map is found, loads the handler and jumps to the handler label; otherwise, it jumps to the miss label."
+        },
+        {
+          "name": "TryMegaDOMCase",
+          "parameters": [
+            "TNode<Object> lookup_start_object",
+            "TNode<Map> lookup_start_object_map",
+            "TVariable<MaybeObject>* var_handler",
+            "TNode<Object> vector",
+            "TNode<TaggedIndex> slot",
+            "Label* miss",
+            "ExitPoint* exit_point"
+          ],
+          "return_type": "void",
+          "logic": "Tries to handle the MegaDOM case for JS API objects, checks access checks, loads the handler and the getter, and calls the getter function."
+        },
+        {
+          "name": "TryEnumeratedKeyedLoad",
+          "parameters": [
+            "const LoadICParameters* p",
+            "TNode<Map> lookup_start_object_map",
+            "ExitPoint* exit_point"
+          ],
+          "return_type": "void",
+          "logic": "Handles enumerated keyed load operations, checking for a match between the lookup start object map and the enum cache type. It uses field index in EnumCache and if found, returns the result."
+        },
+        {
+          "name": "HandleLoadICHandlerCase",
+          "parameters": [
+            "const LazyLoadICParameters* p",
+            "TNode<MaybeObject> handler",
+            "Label* miss",
+            "ExitPoint* exit_point",
+            "ICMode ic_mode",
+            "OnNonExistent on_nonexistent",
+            "ElementSupport support_elements",
+            "LoadAccessMode access_mode"
+          ],
+          "return_type": "void",
+          "logic": "Handles the load IC handler case, branching based on whether the handler is a SMI, proto handler or code object. Implements various load strategies, including SMI handling, proto chain lookups, getter calls, and stub calls."
+        },
+        {
+          "name": "HandleLoadCallbackProperty",
+          "parameters": [
+            "const LazyLoadICParameters* p",
+            "TNode<JSObject> holder",
+            "TNode<Word32T> handler_word",
+            "ExitPoint* exit_point"
+          ],
+          "return_type": "void",
+          "logic": "Handles loading a callback property using accessor information from a descriptor, calling an API getter."
+        },
+        {
+          "name": "HandleLoadAccessor",
+          "parameters": [
+            "const LazyLoadICParameters* p",
+            "TNode<FunctionTemplateInfo> function_template_info",
+            "TNode<Word32T> handler_word",
+            "TNode<DataHandler> handler",
+            "TNode<Uint32T> handler_kind",
+            "ExitPoint* exit_point"
+          ],
+          "return_type": "void",
+          "logic": "Handles loading an accessor property, loading the context and calling an API callback."
+        },
+        {
+          "name": "HandleLoadField",
+          "parameters": [
+            "TNode<JSObject> holder",
+            "TNode<Word32T> handler_word",
+            "TVariable<Float64T>* var_double_value",
+            "Label* rebox_double",
+            "Label* miss",
+            "ExitPoint* exit_point"
+          ],
+          "return_type": "void",
+          "logic": "Handles loading a field, loading the object field and checks if field is a double."
+        },
+        {
+          "name": "HandleLoadWasmField",
+          "parameters": [
+            "TNode<WasmObject> holder",
+            "TNode<Int32T> wasm_value_type",
+            "TNode<IntPtrT> field_offset",
+            "TVariable<Float64T>* var_double_value",
+            "Label* rebox_double",
+            "ExitPoint* exit_point"
+          ],
+          "return_type": "void",
+          "logic": "Handles loading a wasm field by branching on WasmValueType and then returning the appropriate field value."
+        },
+        {
+          "name": "HandleLoadWasmField",
+          "parameters": [
+            "TNode<WasmObject> holder",
+            "TNode<Word32T> handler_word",
+            "TVariable<Float64T>* var_double_value",
+            "Label* rebox_double",
+            "ExitPoint* exit_point"
+          ],
+          "return_type": "void",
+          "logic": "Handles loading a WASM field by decoding type and offset information from the handler_word and calls the other HandleLoadWasmField to load the data."
+        },
+        {
+          "name": "LoadDescriptorValue",
+          "parameters": [
+            "TNode<Map> map",
+            "TNode<IntPtrT> descriptor_entry"
+          ],
+          "return_type": "TNode<Object>",
+          "logic": "Loads the value of a descriptor from a DescriptorArray using the provided map and descriptor entry."
+        },
+        {
+          "name": "LoadDescriptorValueOrFieldType",
+          "parameters": [
+            "TNode<Map> map",
+            "TNode<IntPtrT> descriptor_entry"
+          ],
+          "return_type": "TNode<MaybeObject>",
+          "logic": "Loads descriptor value or field type by descriptor entry."
+        },
+        {
+          "name": "HandleLoadICSmiHandlerCase",
+          "parameters": [
+            "const LazyLoadICParameters* p",
+            "TNode<Object> holder",
+            "TNode<Smi> smi_handler",
+            "TNode<MaybeObject> handler",
+            "Label* miss",
+            "ExitPoint* exit_point",
+            "ICMode ic_mode",
+            "OnNonExistent on_nonexistent",
+            "ElementSupport support_elements",
+            "LoadAccessMode access_mode"
+          ],
+          "return_type": "void",
+          "logic": "Handles LoadIC Smi Handler cases, dealing with element loads, indexed strings, properties, holes, and various optimizations."
+        },
+        {
+          "name": "HandleLoadICSmiHandlerLoadNamedCase",
+          "parameters": [
+            "const LazyLoadICParameters* p",
+            "TNode<Object> holder",
+            "TNode<Uint32T> handler_kind",
+            "TNode<Word32T> handler_word",
+            "Label* rebox_double",
+            "TVariable<Float64T>* var_double_value",
+            "TNode<MaybeObject> handler",
+            "Label* miss",
+            "ExitPoint* exit_point",
+            "ICMode ic_mode",
+            "OnNonExistent on_nonexistent",
+            "ElementSupport support_elements"
+          ],
+          "return_type": "void",
+          "logic": "Handles LoadIC Smi Handler for named property loading, distinguishing between constant, field, normal, accessor, global, slow, interceptor, and proxy properties."
+        },
+        {
+          "name": "HandleLoadICSmiHandlerHasNamedCase",
+          "parameters": [
+            "const LazyLoadICParameters* p",
+            "TNode<Object> holder",
+            "TNode<Uint32T> handler_kind",
+            "Label* miss",
+            "ExitPoint* exit_point",
+            "ICMode ic_mode"
+          ],
+          "return_type": "void",
+          "logic": "Handles LoadIC Smi Handler for has named case, distinguishes between field, constant, normal, accessor, global, slow, interceptor, and proxy cases."
+        },
+        {
+          "name": "HandleProtoHandler",
+          "parameters": [
+            "const ICParameters* p",
+            "TNode<DataHandler> handler",
+            "const OnCodeHandler& on_code_handler",
+            "const OnFoundOnLookupStartObject& on_found_on_lookup_start_object",
+            "Label* miss",
+            "ICMode ic_mode"
+          ],
+          "return_type": "TNode<Object>",
+          "logic": "Performs actions common to both load and store handlers: checks prototype validity cell, processes smi or code handler, performs access checks, and does dictionary lookup on the receiver."
+        },
+        {
+          "name": "HandleLoadICProtoHandler",
+          "parameters": [
+            "const LazyLoadICParameters* p",
+            "TNode<DataHandler> handler",
+            "TVariable<Object>* var_holder",
+            "TVariable<MaybeObject>* var_smi_handler",
+            "Label* if_smi_handler",
+            "Label* miss",
+            "ExitPoint* exit_point",
+            "ICMode ic_mode",
+            "LoadAccessMode access_mode"
+          ],
+          "return_type": "void",
+          "logic": "Handles LoadIC prototype handler by checking validity cell and calling correct load based on handler. Also, manages the lookup of the cached holder."
+        },
+        {
+          "name": "EmitAccessCheck",
+          "parameters": [
+            "TNode<Context> expected_native_context",
+            "TNode<Context> context",
+            "TNode<Object> receiver",
+            "Label* can_access",
+            "Label* miss"
+          ],
+          "return_type": "void",
+          "logic": "Emits code to perform an access check, comparing the current and expected native contexts. If the receiver is a JSGlobalProxy, it also compares security tokens."
+        },
+        {
+          "name": "JumpIfDataProperty",
+          "parameters": [
+            "TNode<Uint32T> details",
+            "Label* writable",
+            "Label* readonly"
+          ],
+          "return_type": "void",
+          "logic": "Jumps to writable label if details indicate data property and not read only. Jumps to readonly label if details indicate read only."
+        },
+        {
+          "name": "HandleStoreICNativeDataProperty",
+          "parameters": [
+            "const StoreICParameters* p",
+            "TNode<HeapObject> holder",
+            "TNode<Word32T> handler_word"
+          ],
+          "return_type": "void",
+          "logic": "Handles storing to a native data property by calling a Runtime function to perform the callback."
+        },
+        {
+          "name": "HandleStoreICSmiHandlerJSSharedStructFieldCase",
+          "parameters": [
+            "TNode<Context> context",
+            "TNode<Word32T> handler_word",
+            "TNode<JSObject> holder",
+            "TNode<Object> value"
+          ],
+          "return_type": "void",
+          "logic": "Handles the StoreIC case where the handler indicates storing to a JSSharedStruct field. This includes applying the SharedValueBarrier for GC."
+        },
+        {
+          "name": "HandleStoreICHandlerCase",
+          "parameters": [
+            "const StoreICParameters* p",
+            "TNode<MaybeObject> handler",
+            "Label* miss",
+            "ICMode ic_mode",
+            "ElementSupport support_elements"
+          ],
+          "return_type": "void",
+          "logic": "Handles the StoreIC case, branching based on SMI, code, or proto handlers to determine storage mechanism."
+        },
+        {
+          "name": "HandleStoreICTransitionMapHandlerCase",
+          "parameters": [
+            "const StoreICParameters* p",
+            "TNode<Map> transition_map",
+            "Label* miss",
+            "StoreTransitionMapFlags flags"
+          ],
+          "return_type": "void",
+          "logic": "Handles storing to an object that transitions to a new map, performing prototype validity checks and writing to the data property."
+        },
+        {
+          "name": "UpdateMayHaveInterestingProperty",
+          "parameters": [
+            "TNode<PropertyDictionary> dict",
+            "TNode<Name> name"
+          ],
+          "return_type": "void",
+          "logic": "Updates flags of name dictionary to track whether name has any interesting properties."
+        },
+        {
+          "name": "CheckFieldType",
+          "parameters": [
+            "TNode<DescriptorArray> descriptors",
+            "TNode<IntPtrT> name_index",
+            "TNode<Word32T> representation",
+            "TNode<Object> value",
+            "Label* bailout"
+          ],
+          "return_type": "void",
+          "logic": "Checks that the value is of the correct type corresponding to representation and jumps to bail out label if that's not the case."
+        },
+        {
+          "name": "IsPropertyDetailsConst",
+          "parameters": [
+            "TNode<Uint32T> details"
+          ],
+          "return_type": "TNode<BoolT>",
+          "logic": "Checks whether a property details indicates that the property is constant."
+        },
+        {
+          "name": "OverwriteExistingFastDataProperty",
+          "parameters": [
+            "TNode<HeapObject> object",
+            "TNode<Map> object_map",
+            "TNode<DescriptorArray> descriptors",
+            "TNode<IntPtrT> descriptor_name_index",
+            "TNode<Uint32T> details",
+            "TNode<Object> value",
+            "Label* slow",
+            "bool do_transitioning_store"
+          ],
+          "return_type": "void",
+          "logic": "Overwrites an existing fast data property, handling different property locations (field or descriptor) and representations (tagged, double)."
+        },
+        {
+          "name": "StoreJSSharedStructField",
+          "parameters": [
+            "TNode<Context> context",
+            "TNode<HeapObject> shared_struct",
+            "TNode<Map> shared_struct_map",
+            "TNode<DescriptorArray> descriptors",
+            "TNode<IntPtrT> descriptor_name_index",
+            "TNode<Uint32T> details",
+            "TNode<Object> maybe_local_value"
+          ],
+          "return_type": "void",
+          "logic": "Stores to a JSSharedStruct's field by loading the data at the appropriate offset. Also, performs checks and applies SharedValueBarrier."
+        },
+        {
+          "name": "CheckPrototypeValidityCell",
+          "parameters": [
+            "TNode<Object> maybe_validity_cell",
+            "Label* miss"
+          ],
+          "return_type": "void",
+          "logic": "Checks if the prototype validity cell is valid, jumping to the miss label if not valid."
+        },
+        {
+          "name": "HandleStoreICProtoHandler",
+          "parameters": [
+            "const StoreICParameters* p",
+            "TNode<StoreHandler> handler",
+            "Label* slow",
+            "Label* miss",
+            "ICMode ic_mode",
+            "ElementSupport support_elements"
+          ],
+          "return_type": "void",
+          "logic": "Handles StoreIC prototype handler by checking validity cell, calling correct Store based on handler, and calling add to the dictionary in the case the dictionary is empty."
+        },
+        {
+          "name": "HandleStoreToProxy",
+          "parameters": [
+            "const StoreICParameters* p",
+            "TNode<JSProxy> proxy",
+            "Label* miss",
+            "ElementSupport support_elements"
+          ],
+          "return_type": "void",
+          "logic": "Handles storing to a proxy object, calling a built-in or a runtime function depending on whether the property is a symbol or not."
+        },
+        {
+          "name": "HandleStoreICSmiHandlerCase",
+          "parameters": [
+            "TNode<Word32T> handler_word",
+            "TNode<JSObject> holder",
+            "TNode<Object> value",
+            "Label* miss"
+          ],
+          "return_type": "void",
+          "logic": "Handles field stores when handler is a Smi object."
+        },
+        {
+          "name": "CheckHeapObjectTypeMatchesDescriptor",
+          "parameters": [
+            "TNode<Word32T> handler_word",
+            "TNode<JSObject> holder",
+            "TNode<Object> value",
+            "Label* bailout"
+          ],
+          "return_type": "void",
+          "logic": "Checks if heap object types matches the descriptor."
+        },
+        {
+          "name": "CheckDescriptorConsidersNumbersMutable",
+          "parameters": [
+            "TNode<Word32T> handler_word",
+            "TNode<JSObject> holder",
+            "Label* bailout"
+          ],
+          "return_type": "void",
+          "logic": "We have to check that the representation is Double."
+        },
+        {
+          "name": "GotoIfNotSameNumberBitPattern",
+          "parameters": [
+            "TNode<Float64T> left",
+            "TNode<Float64T> right",
+            "Label* miss"
+          ],
+          "return_type": "void",
+          "logic": "Check if two number has a same bit pattern."
+        },
+        {
+          "name": "HandleStoreFieldAndReturn",
+          "parameters": [
+            "TNode<Word32T> handler_word",
+            "TNode<JSObject> holder",
+            "TNode<Object> value",
+            "std::optional<TNode<Float64T>> double_value",
+            "Representation representation",
+            "Label* miss"
+          ],
+          "return_type": "void",
+          "logic": "Abstract store function for any field in an object."
+        },
+        {
+          "name": "ExtendPropertiesBackingStore",
+          "parameters": [
+            "TNode<HeapObject> object",
+            "TNode<IntPtrT> index"
+          ],
+          "return_type": "TNode<PropertyArray>",
+          "logic": "Extends the backing store (PropertyArray) of a JSObject, copying the existing properties to the new store."
+        },
+        {
+          "name": "EmitFastElementsBoundsCheck",
+          "parameters": [
+            "TNode<JSObject> object",
+            "TNode<FixedArrayBase> elements",
+            "TNode<IntPtrT> intptr_index",
+            "TNode<BoolT> is_jsarray_condition",
+            "Label* miss"
+          ],
+          "return_type": "void",
+          "logic": "Emits code to perform a bounds check on fast elements, branching to miss if the index is out of bounds."
+        },
+        {
+          "name": "EmitElementLoad",
+          "parameters": [
+            "TNode<HeapObject> object",
+            "TNode<Word32T> elements_kind",
+            "TNode<IntPtrT> intptr_index",
+            "TNode<BoolT> is_jsarray_condition",
+            "Label* if_hole",
+            "Label* rebox_double",
+            "TVariable<Float64T>* var_double_value",
+            "Label* unimplemented_elements_kind",
+            "Label* out_of_bounds",
+            "Label* miss",
+            "ExitPoint* exit_point",
+            "LoadAccessMode access_mode"
+          ],
+          "return_type": "void",
+          "logic": "Emits code to load an element from a JSObject's elements array, handling different elements kinds and types (fast, holey, double, dictionary)."
+        }
+      ]
+    }
+  ],
+  "functions": []
+}

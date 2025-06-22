@@ -1,0 +1,135 @@
+{
+  "metadata": {
+    "path": "/home/kathirks_gc/v8_go/archive/codebase/src/compiler/turboshaft/wasm-gc-optimize-phase.cc",
+    "file_name": "wasm-gc-optimize-phase.cc",
+    "language": "cpp",
+    "purpose": "Defines the WasmGCOptimizePhase which runs optimization passes specific to WebAssembly garbage collection."
+  },
+  "imports": {
+    "metadata": {
+      "language": "cpp",
+      "purpose": "Includes necessary headers for the WasmGCOptimizePhase."
+    },
+    "code": "#include \"src/compiler/turboshaft/wasm-gc-optimize-phase.h\"\n\n#include \"src/compiler/js-heap-broker.h\"\n#include \"src/compiler/turboshaft/copying-phase.h\"\n#include \"src/compiler/turboshaft/phase.h\"\n#include \"src/compiler/turboshaft/wasm-gc-typed-optimization-reducer.h\"\n#include \"src/compiler/turboshaft/wasm-load-elimination-reducer.h\""
+  },
+  "functions": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "method",
+        "name": "Run",
+        "parent": "WasmGCOptimizePhase",
+        "about": "Runs the WebAssembly garbage collection optimization phase.",
+        "logic": "This phase uses CopyingPhase to apply WasmLoadEliminationReducer and WasmGCTypedOptimizationReducer.",
+        "parameters": [
+          {
+            "name": "data",
+            "type": "PipelineData*",
+            "purpose": "Pointer to the pipeline data used in the Turboshaft compiler."
+          },
+          {
+            "name": "temp_zone",
+            "type": "Zone*",
+            "purpose": "Pointer to a temporary zone for memory allocation."
+          }
+        ],
+        "return": {
+          "type": "void",
+          "description": "No return value."
+        },
+        "dependencies": [
+          "UnparkedScopeIfNeeded",
+          "CopyingPhase",
+          "WasmLoadEliminationReducer",
+          "WasmGCTypedOptimizationReducer",
+          "PipelineData",
+          "Zone"
+        ]
+      },
+      "code": "void WasmGCOptimizePhase::Run(PipelineData* data, Zone* temp_zone) {\n  UnparkedScopeIfNeeded scope(data->broker(),\n                              v8_flags.turboshaft_trace_reduction);\n  CopyingPhase<WasmLoadEliminationReducer, WasmGCTypedOptimizationReducer>::Run(\n      data, temp_zone);\n}"
+    }
+  ],
+  "classes": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "WasmGCOptimizePhase",
+        "about": "Class encapsulating the WebAssembly Garbage Collection optimization phase.",
+        "attributes": [],
+        "dependencies": [
+          "PipelineData",
+          "Zone",
+          "UnparkedScopeIfNeeded",
+          "CopyingPhase",
+          "WasmLoadEliminationReducer",
+          "WasmGCTypedOptimizationReducer"
+        ]
+      },
+      "code": "namespace v8::internal::compiler::turboshaft {\n\nvoid WasmGCOptimizePhase::Run(PipelineData* data, Zone* temp_zone) {\n  UnparkedScopeIfNeeded scope(data->broker(),\n                              v8_flags.turboshaft_trace_reduction);\n  CopyingPhase<WasmLoadEliminationReducer, WasmGCTypedOptimizationReducer>::Run(\n      data, temp_zone);\n}\n\n}  // namespace v8::internal::compiler::turboshaft"
+    }
+  ],
+  "dependencies": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "PipelineData",
+        "about": "Data structure passed through the Turboshaft pipeline."
+      },
+      "code": "class PipelineData;",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "Zone",
+        "about": "Memory allocation zone."
+      },
+      "code": "class Zone;",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "UnparkedScopeIfNeeded",
+        "about": "A class that manages a scope which might need to be unparked."
+      },
+      "code": "class UnparkedScopeIfNeeded;",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "CopyingPhase",
+        "about": "Generic phase that uses copying for its operations."
+      },
+      "code": "template <typename... T>\n                class CopyingPhase;",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "WasmLoadEliminationReducer",
+        "about": "Reducer for eliminating redundant Wasm loads."
+      },
+      "code": "class WasmLoadEliminationReducer;",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "WasmGCTypedOptimizationReducer",
+        "about": "Reducer for performing typed optimizations on Wasm GC code."
+      },
+      "code": "class WasmGCTypedOptimizationReducer;",
+      "type": "class"
+    }
+  ],
+  "file_path": "/home/kathirks_gc/v8_go/archive/codebase/src/compiler/turboshaft/wasm-gc-optimize-phase.cc"
+}

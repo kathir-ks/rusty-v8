@@ -1,0 +1,329 @@
+{
+  "file_path": "/home/kathirks_gc/v8_go/codebase/src/torque/utils.cc",
+  "imports": [
+    "src/torque/utils.h",
+    "algorithm",
+    "fstream",
+    "iostream",
+    "optional",
+    "string",
+    "src/base/bits.h",
+    "src/base/logging.h",
+    "src/torque/ast.h",
+    "src/torque/constants.h",
+    "src/torque/declarable.h"
+  ],
+  "classes": [
+    {
+      "name": "MessageBuilder",
+      "properties": [
+        "message_",
+        "extra_messages_"
+      ],
+      "methods": [
+        {
+          "name": "MessageBuilder",
+          "parameters": [
+            "const std::string& message",
+            "TorqueMessage::Kind kind"
+          ],
+          "return_type": "MessageBuilder",
+          "logic": "Constructor for MessageBuilder. Creates a TorqueMessage with the given message and kind, attaching source position information if available. It also traverses the scope tree to find specialization requests and creates additional messages to record the specialization stack."
+        },
+        {
+          "name": "Report",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Appends the main message and all extra messages to the TorqueMessages global list."
+        },
+        {
+          "name": "Throw",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Throws a TorqueAbortCompilation exception."
+        }
+      ]
+    },
+    {
+      "name": "IfDefScope",
+      "properties": [
+        "os_",
+        "d_"
+      ],
+      "methods": [
+        {
+          "name": "IfDefScope",
+          "parameters": [
+            "std::ostream& os",
+            "std::string d"
+          ],
+          "return_type": "IfDefScope",
+          "logic": "Constructor for IfDefScope. Writes a #ifdef directive to the output stream."
+        },
+        {
+          "name": "~IfDefScope",
+          "parameters": [],
+          "return_type": "IfDefScope",
+          "logic": "Destructor for IfDefScope. Writes a #endif directive to the output stream."
+        }
+      ]
+    },
+    {
+      "name": "NamespaceScope",
+      "properties": [
+        "os_",
+        "d_"
+      ],
+      "methods": [
+        {
+          "name": "NamespaceScope",
+          "parameters": [
+            "std::ostream& os",
+            "std::initializer_list<std::string> namespaces"
+          ],
+          "return_type": "NamespaceScope",
+          "logic": "Constructor for NamespaceScope. Writes opening namespace declarations to the output stream."
+        },
+        {
+          "name": "~NamespaceScope",
+          "parameters": [],
+          "return_type": "NamespaceScope",
+          "logic": "Destructor for NamespaceScope. Writes closing namespace declarations to the output stream."
+        }
+      ]
+    },
+    {
+      "name": "IncludeGuardScope",
+      "properties": [
+        "os_",
+        "d_"
+      ],
+      "methods": [
+        {
+          "name": "IncludeGuardScope",
+          "parameters": [
+            "std::ostream& os",
+            "std::string file_name"
+          ],
+          "return_type": "IncludeGuardScope",
+          "logic": "Constructor for IncludeGuardScope. Writes include guard preprocessor directives to the output stream."
+        },
+        {
+          "name": "~IncludeGuardScope",
+          "parameters": [],
+          "return_type": "IncludeGuardScope",
+          "logic": "Destructor for IncludeGuardScope. Writes include guard closing preprocessor directives to the output stream."
+        }
+      ]
+    },
+    {
+      "name": "IncludeObjectMacrosScope",
+      "properties": [
+        "os_"
+      ],
+      "methods": [
+        {
+          "name": "IncludeObjectMacrosScope",
+          "parameters": [
+            "std::ostream& os"
+          ],
+          "return_type": "IncludeObjectMacrosScope",
+          "logic": "Constructor for IncludeObjectMacrosScope. Includes the object-macros.h file."
+        },
+        {
+          "name": "~IncludeObjectMacrosScope",
+          "parameters": [],
+          "return_type": "IncludeObjectMacrosScope",
+          "logic": "Destructor for IncludeObjectMacrosScope. Undefines the macros defined in object-macros.h"
+        }
+      ]
+    },
+    {
+      "name": "ResidueClass",
+      "properties": [
+        "value_",
+        "modulus_log_2_"
+      ],
+      "methods": [
+        {
+          "name": "AlignmentLog2",
+          "parameters": [],
+          "return_type": "size_t",
+          "logic": "Calculates the alignment log2 based on the residue class's value and modulus."
+        }
+      ]
+    }
+  ],
+  "functions": [
+    {
+      "name": "StringLiteralUnquote",
+      "parameters": [
+        "const std::string& s"
+      ],
+      "return_type": "std::string",
+      "logic": "Unquotes a string literal, handling escape sequences."
+    },
+    {
+      "name": "StringLiteralQuote",
+      "parameters": [
+        "const std::string& s"
+      ],
+      "return_type": "std::string",
+      "logic": "Quotes a string literal, escaping special characters."
+    },
+    {
+      "name": "HexCharToInt",
+      "parameters": [
+        "unsigned char c"
+      ],
+      "return_type": "int",
+      "logic": "Converts a hexadecimal character to its integer value."
+    },
+    {
+      "name": "FileUriDecode",
+      "parameters": [
+        "const std::string& uri"
+      ],
+      "return_type": "std::optional<std::string>",
+      "logic": "Decodes a file URI, converting percent-encoded characters. Returns std::nullopt if the URI is invalid."
+    },
+    {
+      "name": "ContainsUnderscore",
+      "parameters": [
+        "const std::string& s"
+      ],
+      "return_type": "bool",
+      "logic": "Checks if a string contains an underscore character."
+    },
+    {
+      "name": "ContainsUpperCase",
+      "parameters": [
+        "const std::string& s"
+      ],
+      "return_type": "bool",
+      "logic": "Checks if a string contains an uppercase character."
+    },
+    {
+      "name": "IsKeywordLikeName",
+      "parameters": [
+        "const std::string& s"
+      ],
+      "return_type": "bool",
+      "logic": "Checks if a string is a keyword-like constant name (e.g., True, False)."
+    },
+    {
+      "name": "IsMachineType",
+      "parameters": [
+        "const std::string& s"
+      ],
+      "return_type": "bool",
+      "logic": "Checks if a string is a machine type (e.g., int32, float64)."
+    },
+    {
+      "name": "IsLowerCamelCase",
+      "parameters": [
+        "const std::string& s"
+      ],
+      "return_type": "bool",
+      "logic": "Checks if a string is in lower camel case."
+    },
+    {
+      "name": "IsUpperCamelCase",
+      "parameters": [
+        "const std::string& s"
+      ],
+      "return_type": "bool",
+      "logic": "Checks if a string is in upper camel case."
+    },
+    {
+      "name": "IsSnakeCase",
+      "parameters": [
+        "const std::string& s"
+      ],
+      "return_type": "bool",
+      "logic": "Checks if a string is in snake case."
+    },
+    {
+      "name": "IsValidNamespaceConstName",
+      "parameters": [
+        "const std::string& s"
+      ],
+      "return_type": "bool",
+      "logic": "Checks if a string is a valid namespace constant name (starts with 'k' and is in upper camel case)."
+    },
+    {
+      "name": "IsValidTypeName",
+      "parameters": [
+        "const std::string& s"
+      ],
+      "return_type": "bool",
+      "logic": "Checks if a string is a valid type name (either a machine type or in upper camel case)."
+    },
+    {
+      "name": "CapifyStringWithUnderscores",
+      "parameters": [
+        "const std::string& camellified_string"
+      ],
+      "return_type": "std::string",
+      "logic": "Converts a camel case string to a capitalized string with underscores (e.g., AbcDef -> ABC_DEF)."
+    },
+    {
+      "name": "CamelifyString",
+      "parameters": [
+        "const std::string& underscore_string"
+      ],
+      "return_type": "std::string",
+      "logic": "Converts an underscore-separated string to camel case (e.g., abc_def -> AbcDef)."
+    },
+    {
+      "name": "SnakeifyString",
+      "parameters": [
+        "const std::string& camel_string"
+      ],
+      "return_type": "std::string",
+      "logic": "Converts a camel case string to snake case (e.g., AbcDef -> abc_def)."
+    },
+    {
+      "name": "DashifyString",
+      "parameters": [
+        "const std::string& underscore_string"
+      ],
+      "return_type": "std::string",
+      "logic": "Replaces underscores in a string with dashes."
+    },
+    {
+      "name": "UnderlinifyPath",
+      "parameters": [
+        "std::string path"
+      ],
+      "return_type": "std::string",
+      "logic": "Converts a path string to an upper-case string with underscores replacing path separators and dots."
+    },
+    {
+      "name": "StartsWithSingleUnderscore",
+      "parameters": [
+        "const std::string& str"
+      ],
+      "return_type": "bool",
+      "logic": "Checks if a string starts with a single underscore."
+    },
+    {
+      "name": "ReplaceFileContentsIfDifferent",
+      "parameters": [
+        "const std::string& file_path",
+        "const std::string& contents"
+      ],
+      "return_type": "void",
+      "logic": "Replaces the contents of a file with new contents only if the new contents are different from the existing contents."
+    },
+    {
+      "name": "operator<<",
+      "parameters": [
+        "std::ostream& os",
+        "const ResidueClass& a"
+      ],
+      "return_type": "std::ostream&",
+      "logic": "Overloads the << operator to print a ResidueClass object."
+    }
+  ]
+}

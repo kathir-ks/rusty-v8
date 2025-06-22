@@ -1,0 +1,103 @@
+{
+  "file_path": "/home/kathirks_gc/v8_go/codebase/src/sandbox/external-pointer-inl.h",
+  "imports": [
+    "include/v8-internal.h",
+    "src/base/atomic-utils.h",
+    "src/objects/slots-inl.h",
+    "src/sandbox/external-pointer-table-inl.h",
+    "src/sandbox/external-pointer.h",
+    "src/sandbox/isolate-inl.h",
+    "src/sandbox/isolate.h"
+  ],
+  "classes": [
+    {
+      "name": "ExternalPointerMember",
+      "properties": [
+        "storage_"
+      ],
+      "methods": [
+        {
+          "name": "Init",
+          "parameters": [
+            "Address host_address",
+            "IsolateForSandbox isolate",
+            "Address value"
+          ],
+          "return_type": "void",
+          "logic": "Initializes the external pointer field.  Delegates to InitExternalPointerField to perform the actual initialization."
+        },
+        {
+          "name": "load",
+          "parameters": [
+            "const IsolateForSandbox isolate"
+          ],
+          "return_type": "Address",
+          "logic": "Loads the address from the external pointer field. Delegates to ReadExternalPointerField for the actual load."
+        },
+        {
+          "name": "store",
+          "parameters": [
+            "IsolateForSandbox isolate",
+            "Address value"
+          ],
+          "return_type": "void",
+          "logic": "Stores the address to the external pointer field. Delegates to WriteExternalPointerField for the actual store."
+        },
+        {
+          "name": "load_encoded",
+          "parameters": [],
+          "return_type": "ExternalPointer_t",
+          "logic": "Loads the raw encoded value of the ExternalPointer."
+        },
+        {
+          "name": "store_encoded",
+          "parameters": [
+            "ExternalPointer_t value"
+          ],
+          "return_type": "void",
+          "logic": "Stores a raw encoded value into the ExternalPointer."
+        }
+      ]
+    }
+  ],
+  "functions": [
+    {
+      "name": "InitExternalPointerField",
+      "parameters": [
+        "Address host_address",
+        "Address field_address",
+        "IsolateForSandbox isolate",
+        "Address value"
+      ],
+      "return_type": "void",
+      "logic": "Initializes an external pointer field. In sandbox mode, it allocates an entry in the ExternalPointerTable, stores the value there, and stores the handle to that entry in the field.  Outside of sandbox mode, it directly writes the value to the field."
+    },
+    {
+      "name": "ReadExternalPointerField",
+      "parameters": [
+        "Address field_address",
+        "IsolateForSandbox isolate"
+      ],
+      "return_type": "Address",
+      "logic": "Reads an external pointer field. In sandbox mode, it reads the handle from the field, retrieves the value from the ExternalPointerTable using the handle, and returns the value. Outside of sandbox mode, it directly reads the value from the field."
+    },
+    {
+      "name": "WriteExternalPointerField",
+      "parameters": [
+        "Address field_address",
+        "IsolateForSandbox isolate",
+        "Address value"
+      ],
+      "return_type": "void",
+      "logic": "Writes to an external pointer field. In sandbox mode, it reads the handle from the field, and updates the value in the ExternalPointerTable using the handle.  Outside of sandbox mode, it directly writes the value to the field."
+    },
+    {
+      "name": "SetupLazilyInitializedExternalPointerField",
+      "parameters": [
+        "Address field_address"
+      ],
+      "return_type": "void",
+      "logic": "This function does nothing. Presumably, it's intended to be implemented or used later for lazy initialization of external pointer fields, possibly with different behavior in and out of sandbox mode."
+    }
+  ]
+}

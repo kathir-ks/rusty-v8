@@ -1,0 +1,61 @@
+{
+  "file_path": "/home/kathirks_gc/v8_go/codebase/src/extensions/trigger-failure-extension.cc",
+  "imports": [
+    "src/extensions/trigger-failure-extension.h",
+    "include/v8-template.h",
+    "src/base/logging.h",
+    "src/common/checks.h"
+  ],
+  "classes": [
+    {
+      "name": "TriggerFailureExtension",
+      "properties": [
+        "kSource"
+      ],
+      "methods": [
+        {
+          "name": "GetNativeFunctionTemplate",
+          "parameters": [
+            "v8::Isolate* isolate",
+            "v8::Local<v8::String> str"
+          ],
+          "return_type": "v8::Local<v8::FunctionTemplate>",
+          "logic": "Returns a FunctionTemplate for a native function based on the provided string. It checks the string against 'triggerCheckFalse', 'triggerAssertFalse', and 'triggerSlowAssertFalse' and returns the corresponding template.  It uses CHECK_EQ to ensure that if it is not one of the first two, it *must* be the third.  This will abort if it is not."
+        },
+        {
+          "name": "TriggerCheckFalse",
+          "parameters": [
+            "const v8::FunctionCallbackInfo<v8::Value>& info"
+          ],
+          "return_type": "void",
+          "logic": "Triggers a CHECK failure, causing the program to abort if checks are enabled."
+        },
+        {
+          "name": "TriggerAssertFalse",
+          "parameters": [
+            "const v8::FunctionCallbackInfo<v8::Value>& info"
+          ],
+          "return_type": "void",
+          "logic": "Triggers a DCHECK failure. It is similar to CHECK but is only active in debug builds. It will halt the program only if assertions are enabled."
+        },
+        {
+          "name": "TriggerSlowAssertFalse",
+          "parameters": [
+            "const v8::FunctionCallbackInfo<v8::Value>& info"
+          ],
+          "return_type": "void",
+          "logic": "Triggers a SLOW_DCHECK failure.  This check is even slower than DCHECK.  It halts the program only if slow assertions are enabled."
+        }
+      ]
+    }
+  ],
+  "functions": [],
+  "constants": [
+    {
+      "name": "TriggerFailureExtension::kSource",
+      "type": "const char*",
+      "value": "\"native function triggerCheckFalse();native function triggerAssertFalse();native function triggerSlowAssertFalse();\"",
+      "description": "A string containing JavaScript code that declares the native functions that this extension provides."
+    }
+  ]
+}

@@ -1,0 +1,138 @@
+{
+  "metadata": {
+    "path": "/home/kathirks_gc/v8_go/archive/codebase/src/execution/ppc/frame-constants-ppc.cc",
+    "file_name": "frame-constants-ppc.cc",
+    "language": "cpp",
+    "purpose": "Defines frame constants specific to the PPC64 architecture for the V8 JavaScript engine."
+  },
+  "imports": {
+    "metadata": {
+      "language": "cpp",
+      "purpose": "Includes necessary headers for frame constants and architecture-specific code."
+    },
+    "code": "#include \"src/execution/ppc/frame-constants-ppc.h\"\n\n            #include \"src/codegen/assembler-inl.h\"\n            #include \"src/codegen/macro-assembler.h\"\n            #include \"src/execution/frame-constants.h\""
+  },
+  "functions": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "function",
+        "name": "fp_register",
+        "parent": "JavaScriptFrame",
+        "about": "Returns the frame pointer register for JavaScript frames on PPC64.",
+        "logic": "Returns the register 'fp' which is defined elsewhere, presumably in an architecture-specific header.",
+        "parameters": [],
+        "return": {
+          "type": "Register",
+          "description": "The frame pointer register."
+        },
+        "dependencies": []
+      },
+      "code": "Register JavaScriptFrame::fp_register() { return v8::internal::fp; }"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "function",
+        "name": "context_register",
+        "parent": "JavaScriptFrame",
+        "about": "Returns the context register for JavaScript frames on PPC64.",
+        "logic": "Returns the register 'cp' which is likely defined elsewhere, representing the context pointer.",
+        "parameters": [],
+        "return": {
+          "type": "Register",
+          "description": "The context register."
+        },
+        "dependencies": []
+      },
+      "code": "Register JavaScriptFrame::context_register() { return cp; }"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "function",
+        "name": "constant_pool_pointer_register",
+        "parent": "JavaScriptFrame",
+        "about": "Returns the constant pool pointer register.",
+        "logic": "Returns the 'kConstantPoolRegister' register, but only if the `V8_EMBEDDED_CONSTANT_POOL_BOOL` flag is set.",
+        "parameters": [],
+        "return": {
+          "type": "Register",
+          "description": "The constant pool pointer register."
+        },
+        "dependencies": []
+      },
+      "code": "Register JavaScriptFrame::constant_pool_pointer_register() {\n            DCHECK(V8_EMBEDDED_CONSTANT_POOL_BOOL);\n            return kConstantPoolRegister;\n            }"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "function",
+        "name": "RegisterStackSlotCount",
+        "parent": "UnoptimizedFrameConstants",
+        "about": "Returns the number of stack slots required for registers in an unoptimized frame.",
+        "logic": "Simply returns the register count, indicating a 1:1 mapping between registers and stack slots in unoptimized frames.",
+        "parameters": [
+          {
+            "name": "register_count",
+            "type": "int",
+            "purpose": "The number of registers."
+          }
+        ],
+        "return": {
+          "type": "int",
+          "description": "The number of stack slots."
+        },
+        "dependencies": []
+      },
+      "code": "int UnoptimizedFrameConstants::RegisterStackSlotCount(int register_count) {\n            return register_count;\n            }"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "function",
+        "name": "PaddingSlotCount",
+        "parent": "BuiltinContinuationFrameConstants",
+        "about": "Returns the number of padding slots required in a built-in continuation frame.",
+        "logic": "Always returns 0, indicating no padding slots are required in this type of frame on PPC64.",
+        "parameters": [
+          {
+            "name": "register_count",
+            "type": "int",
+            "purpose": "The number of registers (unused)."
+          }
+        ],
+        "return": {
+          "type": "int",
+          "description": "The number of padding slots (always 0)."
+        },
+        "dependencies": []
+      },
+      "code": "int BuiltinContinuationFrameConstants::PaddingSlotCount(int register_count) {\n            USE(register_count);\n            return 0;\n            }"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "function",
+        "name": "StackGuardFrameSize",
+        "parent": "MaglevFrame",
+        "about": "Returns the size of the stack guard frame for Maglev frames.",
+        "logic": "This function is currently unreachable and will cause a crash if called.  This may indicate incomplete implementation or a PPC64-specific exclusion.",
+        "parameters": [
+          {
+            "name": "register_input_count",
+            "type": "int",
+            "purpose": "The number of register inputs (unused)."
+          }
+        ],
+        "return": {
+          "type": "intptr_t",
+          "description": "The size of the stack guard frame (function is unreachable)."
+        },
+        "dependencies": []
+      },
+      "code": "// static\n            intptr_t MaglevFrame::StackGuardFrameSize(int register_input_count) {\n            USE(register_input_count);\n            UNREACHABLE();\n            }"
+    }
+  ],
+  "file_path": "/home/kathirks_gc/v8_go/archive/codebase/src/execution/ppc/frame-constants-ppc.cc"
+}

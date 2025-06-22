@@ -1,0 +1,467 @@
+{
+  "file_path": "/home/kathirks_gc/v8_go/codebase/src/deoptimizer/frame-translation-builder.h",
+  "imports": [
+    "<optional>",
+    "src/codegen/register.h",
+    "src/deoptimizer/translation-opcode.h",
+    "src/objects/deoptimization-data.h",
+    "src/zone/zone-containers.h",
+    "src/wasm/value-type.h"
+  ],
+  "classes": [
+    {
+      "name": "FrameTranslationBuilder",
+      "properties": [
+        "contents_",
+        "contents_for_compression_",
+        "basis_instructions_",
+        "zone_",
+        "matching_instructions_count_",
+        "total_matching_instructions_in_current_translation_",
+        "instruction_index_within_translation_",
+        "index_of_basis_translation_start_",
+        "match_previous_allowed_"
+      ],
+      "methods": [
+        {
+          "name": "FrameTranslationBuilder",
+          "parameters": [
+            "Zone* zone"
+          ],
+          "return_type": "N/A (Constructor)",
+          "logic": "Constructor for the FrameTranslationBuilder class. Initializes the member variables with the provided zone."
+        },
+        {
+          "name": "ToFrameTranslation",
+          "parameters": [
+            "LocalFactory* factory"
+          ],
+          "return_type": "DirectHandle<DeoptimizationFrameTranslation>",
+          "logic": "Converts the collected frame translation data into a DeoptimizationFrameTranslation object."
+        },
+        {
+          "name": "ToFrameTranslationWasm",
+          "parameters": [],
+          "return_type": "base::Vector<const uint8_t>",
+          "logic": "Converts the collected frame translation data into a byte vector for WebAssembly."
+        },
+        {
+          "name": "BeginTranslation",
+          "parameters": [
+            "int frame_count",
+            "int jsframe_count",
+            "bool update_feedback"
+          ],
+          "return_type": "int",
+          "logic": "Starts a new frame translation sequence. It prepares the builder for writing a new frame translation."
+        },
+        {
+          "name": "BeginInterpretedFrame",
+          "parameters": [
+            "BytecodeOffset bytecode_offset",
+            "int literal_id",
+            "int bytecode_array_id",
+            "unsigned height",
+            "int return_value_offset",
+            "int return_value_count"
+          ],
+          "return_type": "void",
+          "logic": "Starts building the translation for an interpreted frame, providing metadata about the bytecode being executed."
+        },
+        {
+          "name": "BeginInlinedExtraArguments",
+          "parameters": [
+            "int literal_id",
+            "unsigned height",
+            "uint32_t parameter_count"
+          ],
+          "return_type": "void",
+          "logic": "Starts building the translation for inlined extra arguments."
+        },
+        {
+          "name": "BeginConstructCreateStubFrame",
+          "parameters": [
+            "int literal_id",
+            "unsigned height"
+          ],
+          "return_type": "void",
+          "logic": "Starts building the translation for a construct create stub frame."
+        },
+        {
+          "name": "BeginConstructInvokeStubFrame",
+          "parameters": [
+            "int literal_id"
+          ],
+          "return_type": "void",
+          "logic": "Starts building the translation for a construct invoke stub frame."
+        },
+        {
+          "name": "BeginBuiltinContinuationFrame",
+          "parameters": [
+            "BytecodeOffset bailout_id",
+            "int literal_id",
+            "unsigned height"
+          ],
+          "return_type": "void",
+          "logic": "Starts building the translation for a builtin continuation frame, used when a built-in function calls back into JavaScript."
+        },
+        {
+          "name": "BeginJSToWasmBuiltinContinuationFrame",
+          "parameters": [
+            "BytecodeOffset bailout_id",
+            "int literal_id",
+            "unsigned height",
+            "std::optional<wasm::ValueKind> return_kind"
+          ],
+          "return_type": "void",
+          "logic": "Starts building the translation for a JavaScript to WebAssembly built-in continuation frame. (WASM-specific)"
+        },
+        {
+          "name": "BeginWasmInlinedIntoJSFrame",
+          "parameters": [
+            "BytecodeOffset bailout_id",
+            "int literal_id",
+            "unsigned height"
+          ],
+          "return_type": "void",
+          "logic": "Starts building the translation for a WebAssembly frame that was inlined into a JavaScript frame. (WASM-specific)"
+        },
+        {
+          "name": "BeginLiftoffFrame",
+          "parameters": [
+            "BytecodeOffset bailout_id",
+            "unsigned height",
+            "uint32_t wasm_function_index"
+          ],
+          "return_type": "void",
+          "logic": "Starts building the translation for a WebAssembly Liftoff frame. (WASM-specific)"
+        },
+        {
+          "name": "BeginJavaScriptBuiltinContinuationFrame",
+          "parameters": [
+            "BytecodeOffset bailout_id",
+            "int literal_id",
+            "unsigned height"
+          ],
+          "return_type": "void",
+          "logic": "Starts building the translation for a JavaScript built-in continuation frame."
+        },
+        {
+          "name": "BeginJavaScriptBuiltinContinuationWithCatchFrame",
+          "parameters": [
+            "BytecodeOffset bailout_id",
+            "int literal_id",
+            "unsigned height"
+          ],
+          "return_type": "void",
+          "logic": "Starts building the translation for a JavaScript built-in continuation frame with a catch block."
+        },
+        {
+          "name": "ArgumentsElements",
+          "parameters": [
+            "CreateArgumentsType type"
+          ],
+          "return_type": "void",
+          "logic": "Stores information about the arguments elements of a function."
+        },
+        {
+          "name": "ArgumentsLength",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Stores the length of the arguments object."
+        },
+        {
+          "name": "RestLength",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Stores the length of the rest parameters."
+        },
+        {
+          "name": "BeginCapturedObject",
+          "parameters": [
+            "int length"
+          ],
+          "return_type": "void",
+          "logic": "Starts building the translation for a captured object."
+        },
+        {
+          "name": "AddUpdateFeedback",
+          "parameters": [
+            "int vector_literal",
+            "int slot"
+          ],
+          "return_type": "void",
+          "logic": "Adds an update feedback instruction, storing information about feedback vectors."
+        },
+        {
+          "name": "DuplicateObject",
+          "parameters": [
+            "int object_index"
+          ],
+          "return_type": "void",
+          "logic": "Duplicates an object at a specified index."
+        },
+        {
+          "name": "StringConcat",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Records that a string concatenation operation occurred."
+        },
+        {
+          "name": "StoreRegister",
+          "parameters": [
+            "TranslationOpcode opcode",
+            "Register reg"
+          ],
+          "return_type": "void",
+          "logic": "Stores the value of a register based on the given opcode."
+        },
+        {
+          "name": "StoreRegister",
+          "parameters": [
+            "Register reg"
+          ],
+          "return_type": "void",
+          "logic": "Stores the value of a register."
+        },
+        {
+          "name": "StoreInt32Register",
+          "parameters": [
+            "Register reg"
+          ],
+          "return_type": "void",
+          "logic": "Stores the value of an int32 register."
+        },
+        {
+          "name": "StoreInt64Register",
+          "parameters": [
+            "Register reg"
+          ],
+          "return_type": "void",
+          "logic": "Stores the value of an int64 register."
+        },
+        {
+          "name": "StoreIntPtrRegister",
+          "parameters": [
+            "Register reg"
+          ],
+          "return_type": "void",
+          "logic": "Stores the value of an IntPtr register."
+        },
+        {
+          "name": "StoreSignedBigInt64Register",
+          "parameters": [
+            "Register reg"
+          ],
+          "return_type": "void",
+          "logic": "Stores the value of a signed BigInt64 register."
+        },
+        {
+          "name": "StoreUnsignedBigInt64Register",
+          "parameters": [
+            "Register reg"
+          ],
+          "return_type": "void",
+          "logic": "Stores the value of an unsigned BigInt64 register."
+        },
+        {
+          "name": "StoreUint32Register",
+          "parameters": [
+            "Register reg"
+          ],
+          "return_type": "void",
+          "logic": "Stores the value of a Uint32 register."
+        },
+        {
+          "name": "StoreBoolRegister",
+          "parameters": [
+            "Register reg"
+          ],
+          "return_type": "void",
+          "logic": "Stores the value of a Boolean register."
+        },
+        {
+          "name": "StoreFloatRegister",
+          "parameters": [
+            "FloatRegister reg"
+          ],
+          "return_type": "void",
+          "logic": "Stores the value of a Float register."
+        },
+        {
+          "name": "StoreDoubleRegister",
+          "parameters": [
+            "DoubleRegister reg"
+          ],
+          "return_type": "void",
+          "logic": "Stores the value of a Double register."
+        },
+        {
+          "name": "StoreHoleyDoubleRegister",
+          "parameters": [
+            "DoubleRegister reg"
+          ],
+          "return_type": "void",
+          "logic": "Stores the value of a Holey Double register."
+        },
+        {
+          "name": "StoreSimd128Register",
+          "parameters": [
+            "Simd128Register reg"
+          ],
+          "return_type": "void",
+          "logic": "Stores the value of a Simd128 register."
+        },
+        {
+          "name": "StoreStackSlot",
+          "parameters": [
+            "int index"
+          ],
+          "return_type": "void",
+          "logic": "Stores the value of a stack slot at the specified index."
+        },
+        {
+          "name": "StoreInt32StackSlot",
+          "parameters": [
+            "int index"
+          ],
+          "return_type": "void",
+          "logic": "Stores the value of an Int32 stack slot at the specified index."
+        },
+        {
+          "name": "StoreInt64StackSlot",
+          "parameters": [
+            "int index"
+          ],
+          "return_type": "void",
+          "logic": "Stores the value of an Int64 stack slot at the specified index."
+        },
+        {
+          "name": "StoreIntPtrStackSlot",
+          "parameters": [
+            "int index"
+          ],
+          "return_type": "void",
+          "logic": "Stores the value of an IntPtr stack slot at the specified index."
+        },
+        {
+          "name": "StoreSignedBigInt64StackSlot",
+          "parameters": [
+            "int index"
+          ],
+          "return_type": "void",
+          "logic": "Stores the value of a signed BigInt64 stack slot at the specified index."
+        },
+        {
+          "name": "StoreUnsignedBigInt64StackSlot",
+          "parameters": [
+            "int index"
+          ],
+          "return_type": "void",
+          "logic": "Stores the value of an unsigned BigInt64 stack slot at the specified index."
+        },
+        {
+          "name": "StoreUint32StackSlot",
+          "parameters": [
+            "int index"
+          ],
+          "return_type": "void",
+          "logic": "Stores the value of a Uint32 stack slot at the specified index."
+        },
+        {
+          "name": "StoreBoolStackSlot",
+          "parameters": [
+            "int index"
+          ],
+          "return_type": "void",
+          "logic": "Stores the value of a Boolean stack slot at the specified index."
+        },
+        {
+          "name": "StoreFloatStackSlot",
+          "parameters": [
+            "int index"
+          ],
+          "return_type": "void",
+          "logic": "Stores the value of a Float stack slot at the specified index."
+        },
+        {
+          "name": "StoreDoubleStackSlot",
+          "parameters": [
+            "int index"
+          ],
+          "return_type": "void",
+          "logic": "Stores the value of a Double stack slot at the specified index."
+        },
+        {
+          "name": "StoreSimd128StackSlot",
+          "parameters": [
+            "int index"
+          ],
+          "return_type": "void",
+          "logic": "Stores the value of a Simd128 stack slot at the specified index."
+        },
+        {
+          "name": "StoreHoleyDoubleStackSlot",
+          "parameters": [
+            "int index"
+          ],
+          "return_type": "void",
+          "logic": "Stores the value of a Holey Double stack slot at the specified index."
+        },
+        {
+          "name": "StoreLiteral",
+          "parameters": [
+            "int literal_id"
+          ],
+          "return_type": "void",
+          "logic": "Stores a literal value with the specified ID."
+        },
+        {
+          "name": "StoreOptimizedOut",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Indicates that a value has been optimized out during compilation."
+        },
+        {
+          "name": "StoreJSFrameFunction",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Stores the JS Frame Function."
+        },
+        {
+          "name": "Size",
+          "parameters": [],
+          "return_type": "int",
+          "logic": "Returns the size of the contents_ or contents_for_compression_ vector."
+        },
+        {
+          "name": "SizeInBytes",
+          "parameters": [],
+          "return_type": "int",
+          "logic": "Returns the size in bytes of the contents_ or contents_for_compression_ vector."
+        },
+        {
+          "name": "zone",
+          "parameters": [],
+          "return_type": "Zone*",
+          "logic": "Returns the zone_ member variable."
+        },
+        {
+          "name": "FinishPendingInstructionIfNeeded",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Completes the current instruction writing if there is one pending."
+        },
+        {
+          "name": "ValidateBytes",
+          "parameters": [
+            "DeoptTranslationIterator& iter"
+          ],
+          "return_type": "void",
+          "logic": "Validates the compiled bytecode against the original source bytes. (Debug only)"
+        }
+      ]
+    }
+  ],
+  "functions": []
+}

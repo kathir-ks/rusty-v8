@@ -1,0 +1,83 @@
+{
+  "metadata": {
+    "path": "/home/kathirks_gc/v8_go/archive/codebase/src/deoptimizer/mips64/deoptimizer-mips64.cc",
+    "file_name": "deoptimizer-mips64.cc",
+    "language": "cpp",
+    "purpose": "Provides MIPS64-specific implementations for the deoptimizer, including patching and register value access."
+  },
+  "imports": {
+    "metadata": {
+      "language": "cpp",
+      "purpose": "Includes the Deoptimizer class definition."
+    },
+    "code": "#include \"src/deoptimizer/deoptimizer.h\""
+  },
+  "classes": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "Deoptimizer",
+        "about": "Provides functionality for deoptimizing compiled code.  This file defines MIPS64-specific constants related to deoptimization.",
+        "attributes": [],
+        "dependencies": []
+      },
+      "code": "namespace v8 {\nnamespace internal {\n\nconst int Deoptimizer::kEagerDeoptExitSize = 3 * kInstrSize;\nconst int Deoptimizer::kLazyDeoptExitSize = 3 * kInstrSize;\n\nconst int Deoptimizer::kAdaptShadowStackOffsetToSubtract = 0;\n\n// static\nvoid Deoptimizer::PatchToJump(Address pc, Address new_pc) { UNREACHABLE(); }"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "RegisterValues",
+        "about": "Provides access to register values during deoptimization, handling Float32 and Float64 registers specifically.",
+        "attributes": [],
+        "dependencies": []
+      },
+      "code": "Float32 RegisterValues::GetFloatRegister(unsigned n) const {\n  V8_ASSUME(n < arraysize(simd128_registers_));\n  return base::ReadUnalignedValue<Float32>(\n      reinterpret_cast<Address>(simd128_registers_ + n));\n}\n\nFloat64 RegisterValues::GetDoubleRegister(unsigned n) const {\n  V8_ASSUME(n < arraysize(simd128_registers_));\n  return base::ReadUnalignedValue<Float64>(\n      reinterpret_cast<Address>(simd128_registers_ + n));\n}\n\nvoid RegisterValues::SetDoubleRegister(unsigned n, Float64 value) {\n  V8_ASSUME(n < arraysize(simd128_registers_));\n  base::WriteUnalignedValue(reinterpret_cast<Address>(simd128_registers_ + n),\n                            value);\n}"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "FrameDescription",
+        "about": "Describes a stack frame during deoptimization, providing methods to set caller PC, FP, and other frame-related information.",
+        "attributes": [],
+        "dependencies": []
+      },
+      "code": "void FrameDescription::SetCallerPc(unsigned offset, intptr_t value) {\n  SetFrameSlot(offset, value);\n}\n\nvoid FrameDescription::SetCallerFp(unsigned offset, intptr_t value) {\n  SetFrameSlot(offset, value);\n}\n\nvoid FrameDescription::SetCallerConstantPool(unsigned offset, intptr_t value) {\n  // No embedded constant pool support.\n  UNREACHABLE();\n}\n\nvoid FrameDescription::SetPc(intptr_t pc) { pc_ = pc; }\n\n}  // namespace internal\n}  // namespace v8"
+    }
+  ],
+  "dependencies": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "Address",
+        "about": "Represents a memory address."
+      },
+      "code": "class Address {};",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "Float32",
+        "about": "Represents a 32-bit floating point number."
+      },
+      "code": "class Float32 {};",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "Float64",
+        "about": "Represents a 64-bit floating point number."
+      },
+      "code": "class Float64 {};",
+      "type": "class"
+    }
+  ],
+  "file_path": "/home/kathirks_gc/v8_go/archive/codebase/src/deoptimizer/mips64/deoptimizer-mips64.cc"
+}

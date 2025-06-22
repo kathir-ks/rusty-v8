@@ -1,0 +1,199 @@
+{
+  "file_path": "/home/kathirks_gc/v8_go/codebase/src/compiler/loop-variable-optimizer.cc",
+  "imports": [
+    "src/compiler/loop-variable-optimizer.h",
+    "src/compiler/common-operator.h",
+    "src/compiler/node-marker.h",
+    "src/compiler/node-properties.h",
+    "src/compiler/node.h",
+    "src/compiler/turbofan-graph.h",
+    "src/zone/zone-containers.h",
+    "src/zone/zone.h"
+  ],
+  "classes": [
+    {
+      "name": "LoopVariableOptimizer",
+      "properties": [
+        "graph_",
+        "common_",
+        "zone_",
+        "limits_",
+        "reduced_",
+        "induction_vars_"
+      ],
+      "methods": [
+        {
+          "name": "LoopVariableOptimizer",
+          "parameters": [
+            "TFGraph* graph",
+            "CommonOperatorBuilder* common",
+            "Zone* zone"
+          ],
+          "return_type": "void",
+          "logic": "Constructor for LoopVariableOptimizer. Initializes graph_, common_, zone_, limits_, reduced_ and induction_vars_."
+        },
+        {
+          "name": "Run",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Performs the loop variable optimization by traversing the graph and collecting information about loop variables and their constraints. Uses a worklist (queue) to process nodes."
+        },
+        {
+          "name": "VisitBackedge",
+          "parameters": [
+            "Node* from",
+            "Node* loop"
+          ],
+          "return_type": "void",
+          "logic": "Visits the back edge of a loop, updating induction variables based on constraints found on the incoming edge.  If the constraint involves a phi node in the loop, it updates the upper or lower bounds of the corresponding induction variable."
+        },
+        {
+          "name": "VisitNode",
+          "parameters": [
+            "Node* node"
+          ],
+          "return_type": "void",
+          "logic": "Visits a node based on its opcode, dispatching to specific Visit... methods for different node types."
+        },
+        {
+          "name": "VisitMerge",
+          "parameters": [
+            "Node* node"
+          ],
+          "return_type": "void",
+          "logic": "Visits a Merge node, merging the variable limits of all incoming edges."
+        },
+        {
+          "name": "VisitLoop",
+          "parameters": [
+            "Node* node"
+          ],
+          "return_type": "void",
+          "logic": "Visits a Loop node, detecting induction variables in the loop and taking the limits from the loop entry."
+        },
+        {
+          "name": "VisitIf",
+          "parameters": [
+            "Node* node",
+            "bool polarity"
+          ],
+          "return_type": "void",
+          "logic": "Visits an If node, adding the condition to the variable limits based on the polarity of the branch."
+        },
+        {
+          "name": "AddCmpToLimits",
+          "parameters": [
+            "VariableLimits* limits",
+            "Node* node",
+            "InductionVariable::ConstraintKind kind",
+            "bool polarity"
+          ],
+          "return_type": "void",
+          "logic": "Adds a comparison node to the variable limits.  It determines if the inputs to the comparison are induction variables and adds constraints accordingly."
+        },
+        {
+          "name": "VisitStart",
+          "parameters": [
+            "Node* node"
+          ],
+          "return_type": "void",
+          "logic": "Visits a Start node, setting the limits to empty."
+        },
+        {
+          "name": "VisitLoopExit",
+          "parameters": [
+            "Node* node"
+          ],
+          "return_type": "void",
+          "logic": "Visits a LoopExit node, taking the conditions from the first control input."
+        },
+        {
+          "name": "VisitOtherControl",
+          "parameters": [
+            "Node* node"
+          ],
+          "return_type": "void",
+          "logic": "Visits other control nodes, taking the conditions from the first control input."
+        },
+        {
+          "name": "TakeConditionsFromFirstControl",
+          "parameters": [
+            "Node* node"
+          ],
+          "return_type": "void",
+          "logic": "Sets the limits of the node to the limits of its first control input."
+        },
+        {
+          "name": "FindInductionVariable",
+          "parameters": [
+            "Node* node"
+          ],
+          "return_type": "const InductionVariable*",
+          "logic": "Finds an induction variable by its node ID in the induction_vars_ map. Returns nullptr if not found."
+        },
+        {
+          "name": "TryGetInductionVariable",
+          "parameters": [
+            "Node* phi"
+          ],
+          "return_type": "InductionVariable*",
+          "logic": "Tries to identify an induction variable based on the structure of the phi node and its arithmetic operation (addition or subtraction). Checks that the arithmetic operation's input is the phi node itself."
+        },
+        {
+          "name": "DetectInductionVariables",
+          "parameters": [
+            "Node* loop"
+          ],
+          "return_type": "void",
+          "logic": "Detects induction variables within a loop by examining phi nodes connected to the loop's control edge. Calls TryGetInductionVariable to confirm if a candidate is indeed an induction variable and stores it in the induction_vars_ map."
+        },
+        {
+          "name": "ChangeToInductionVariablePhis",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Changes regular Phi nodes for induction variables to InductionVariablePhi nodes.  Inserts the increment value and bounds as additional inputs to the phi node."
+        },
+        {
+          "name": "ChangeToPhisAndInsertGuards",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Reverts InductionVariablePhi nodes back to regular Phi nodes and inserts TypeGuard nodes if the backedge type is not a subtype of the phi's type. This is done after the loop optimization if needed."
+        }
+      ]
+    },
+    {
+      "name": "InductionVariable",
+      "properties": [
+        "phi_",
+        "effect_phi_",
+        "arith_",
+        "increment_",
+        "initial_",
+        "upper_bounds_",
+        "lower_bounds_",
+        "arithmetic_type_"
+      ],
+      "methods": [
+        {
+          "name": "AddUpperBound",
+          "parameters": [
+            "Node* bound",
+            "InductionVariable::ConstraintKind kind"
+          ],
+          "return_type": "void",
+          "logic": "Adds an upper bound constraint to the induction variable."
+        },
+        {
+          "name": "AddLowerBound",
+          "parameters": [
+            "Node* bound",
+            "InductionVariable::ConstraintKind kind"
+          ],
+          "return_type": "void",
+          "logic": "Adds a lower bound constraint to the induction variable."
+        }
+      ]
+    }
+  ],
+  "functions": []
+}

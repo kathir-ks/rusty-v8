@@ -1,0 +1,248 @@
+{
+  "metadata": {
+    "path": "/home/kathirks_gc/v8_go/archive/codebase/src/execution/arm64/pointer-authentication-arm64.h",
+    "file_name": "pointer-authentication-arm64.h",
+    "language": "cpp",
+    "purpose": "Provides ARM64 specific pointer authentication functionality, including signing, authenticating, stripping, and replacing program counter (PC) addresses."
+  },
+  "imports": {
+    "metadata": {
+      "language": "cpp",
+      "purpose": "Includes necessary headers for globals, deoptimization, ARM64 simulator, and generic pointer authentication functionality."
+    },
+    "code": "#include \"src/common/globals.h\"\n#include \"src/deoptimizer/deoptimizer.h\"\n#include \"src/execution/arm64/simulator-arm64.h\"\n#include \"src/execution/pointer-authentication.h\""
+  },
+  "functions": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "function",
+        "name": "SignPC",
+        "parent": "impl",
+        "about": "Signs a program counter (PC) address using the stack pointer (SP).",
+        "logic": "Uses ARM64's PACIB1716 instruction for signing if not using the simulator; otherwise, it calls the Simulator::AddPAC function.",
+        "parameters": [
+          {
+            "name": "pc",
+            "type": "Address",
+            "purpose": "The program counter address to sign."
+          },
+          {
+            "name": "sp",
+            "type": "Address",
+            "purpose": "The stack pointer address to use as context."
+          }
+        ],
+        "return": {
+          "type": "Address",
+          "description": "The signed program counter address."
+        },
+        "dependencies": [
+          "Simulator::AddPAC"
+        ]
+      },
+      "code": "V8_INLINE Address SignPC(Address pc, Address sp) {\n#ifdef USE_SIMULATOR\n  pc = Simulator::AddPAC(pc, sp, Simulator::kPACKeyIB,\n                         Simulator::kInstructionPointer);\n#else\n  asm volatile(\n      \"  mov x17, %[pc]\\n\"\n      \"  mov x16, %[sp]\\n\"\n      \"  pacib1716\\n\"\n      \"  mov %[pc], x17\\n\"\n      : [pc] \"+r\"(pc)\n      : [sp] \"r\"(sp)\n      : \"x16\", \"x17\");\n#endif\n  return pc;\n}"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "function",
+        "name": "AuthPAC",
+        "parent": "impl",
+        "about": "Authenticates a program counter (PC) address using the stack pointer (SP).",
+        "logic": "Uses ARM64's AUTIB1716 instruction for authentication if not using the simulator; otherwise, it calls the Simulator::AuthPAC function.  It also verifies the authentication by stripping PAC and comparing",
+        "parameters": [
+          {
+            "name": "pc",
+            "type": "Address",
+            "purpose": "The program counter address to authenticate."
+          },
+          {
+            "name": "sp",
+            "type": "Address",
+            "purpose": "The stack pointer address to use as context."
+          }
+        ],
+        "return": {
+          "type": "Address",
+          "description": "The authenticated program counter address."
+        },
+        "dependencies": [
+          "Simulator::AuthPAC"
+        ]
+      },
+      "code": "V8_INLINE Address AuthPAC(Address pc, Address sp) {\n#ifdef USE_SIMULATOR\n  pc = Simulator::AuthPAC(pc, sp, Simulator::kPACKeyIB,\n                          Simulator::kInstructionPointer);\n#else\n  asm volatile(\n      \"  mov x17, %[pc]\\n\"\n      \"  mov x16, %[stack_ptr]\\n\"\n      \"  autib1716\\n\"\n      \"  mov %[pc], x17\\n\"\n      // Save LR.\n      \"  mov x16, x30\\n\"\n      // Check if authentication was successful, otherwise crash.\n      \"  mov x30, x17\\n\"\n      \"  xpaclri\\n\"\n      \"  cmp x30, x17\\n\"\n      // Restore LR, to help with unwinding in case `brk #0` is hit below.\n      \"  mov x30, x16\\n\"\n      \"  b.eq 1f\\n\"\n      \"  brk #0\\n\"\n      \"1:\\n\"\n      : [pc] \"+r\"(pc)\n      : [stack_ptr] \"r\"(sp)\n      : \"x16\", \"x17\", \"x30\", \"cc\");\n#endif\n  return pc;\n}"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "function",
+        "name": "AuthenticatePC",
+        "parent": "PointerAuthentication",
+        "about": "Authenticates the address stored in {pc_address} using a stack pointer offset.",
+        "logic": "Calculates the stack pointer address based on the offset and then calls impl::AuthPAC to perform the authentication.",
+        "parameters": [
+          {
+            "name": "pc_address",
+            "type": "Address*",
+            "purpose": "A pointer to the program counter address to authenticate."
+          },
+          {
+            "name": "offset_from_sp",
+            "type": "unsigned",
+            "purpose": "The offset from the stack pointer to the context used for signing."
+          }
+        ],
+        "return": {
+          "type": "Address",
+          "description": "The authenticated program counter address."
+        },
+        "dependencies": [
+          "impl::AuthPAC"
+        ]
+      },
+      "code": "V8_INLINE Address PointerAuthentication::AuthenticatePC(\n    Address* pc_address, unsigned offset_from_sp) {\n  uint64_t sp = reinterpret_cast<uint64_t>(pc_address) + offset_from_sp;\n  uint64_t pc = static_cast<uint64_t>(*pc_address);\n  return impl::AuthPAC(pc, sp);\n}"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "function",
+        "name": "StripPAC",
+        "parent": "PointerAuthentication",
+        "about": "Strips the Pointer Authentication Code (PAC) from a program counter (PC) address.",
+        "logic": "Uses ARM64's XPACLRI instruction to strip the PAC if not using the simulator; otherwise, it calls the Simulator::StripPAC function.",
+        "parameters": [
+          {
+            "name": "pc",
+            "type": "Address",
+            "purpose": "The program counter address to strip."
+          }
+        ],
+        "return": {
+          "type": "Address",
+          "description": "The program counter address with the PAC removed."
+        },
+        "dependencies": [
+          "Simulator::StripPAC"
+        ]
+      },
+      "code": "V8_INLINE Address PointerAuthentication::StripPAC(Address pc) {\n#ifdef USE_SIMULATOR\n  return Simulator::StripPAC(pc, Simulator::kInstructionPointer);\n#else\n  // x30 == lr, but use 'x30' instead of 'lr' below, as GCC does not accept\n  // 'lr' in the clobbers list.\n  asm volatile(\n      \"  mov x16, x30\\n\"\n      \"  mov x30, %[pc]\\n\"\n      \"  xpaclri\\n\"\n      \"  mov %[pc], x30\\n\"\n      \"  mov x30, x16\\n\"\n      : [pc] \"+r\"(pc)\n      :\n      : \"x16\", \"x30\");\n  return pc;\n#endif\n}"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "function",
+        "name": "ReplacePC",
+        "parent": "PointerAuthentication",
+        "about": "Authenticates the address stored in {pc_address} and replaces it with {new_pc} after signing it.",
+        "logic": "Calculates the stack pointer address based on the offset.  It uses ARM64's PACIB1716 instruction to sign the new_pc, and AUTIB1716 to authenticate the old_pc. Checks if authentication succeeds and crashes if it does not.",
+        "parameters": [
+          {
+            "name": "pc_address",
+            "type": "Address*",
+            "purpose": "A pointer to the program counter address to replace."
+          },
+          {
+            "name": "new_pc",
+            "type": "Address",
+            "purpose": "The new program counter address to store."
+          },
+          {
+            "name": "offset_from_sp",
+            "type": "int",
+            "purpose": "The offset from the stack pointer to the context used for signing."
+          }
+        ],
+        "return": {
+          "type": "void",
+          "description": "No return value."
+        },
+        "dependencies": [
+          "Simulator::AuthPAC",
+          "Simulator::StripPAC",
+          "Simulator::AddPAC"
+        ]
+      },
+      "code": "V8_INLINE void PointerAuthentication::ReplacePC(Address* pc_address,\n                                                Address new_pc,\n                                                int offset_from_sp) {\n  uint64_t sp = reinterpret_cast<uint64_t>(pc_address) + offset_from_sp;\n  uint64_t old_pc = static_cast<uint64_t>(*pc_address);\n#ifdef USE_SIMULATOR\n  uint64_t auth_old_pc = Simulator::AuthPAC(old_pc, sp, Simulator::kPACKeyIB,\n                                            Simulator::kInstructionPointer);\n  uint64_t raw_old_pc =\n      Simulator::StripPAC(old_pc, Simulator::kInstructionPointer);\n  // Verify that the old address is authenticated.\n  CHECK_EQ(auth_old_pc, raw_old_pc);\n  new_pc = Simulator::AddPAC(new_pc, sp, Simulator::kPACKeyIB,\n                             Simulator::kInstructionPointer);\n#else\n  // Only store newly signed address after we have verified that the old\n  // address is authenticated.\n  asm volatile(\n      \"  mov x17, %[new_pc]\\n\"\n      \"  mov x16, %[sp]\\n\"\n      \"  pacib1716\\n\"\n      \"  mov %[new_pc], x17\\n\"\n      \"  mov x17, %[old_pc]\\n\"\n      \"  autib1716\\n\"\n      // Save LR.\n      \"  mov x16, x30\\n\"\n      // Check if authentication was successful, otherwise crash.\n      \"  mov x30, x17\\n\"\n      \"  xpaclri\\n\"\n      \"  cmp x30, x17\\n\"\n      // Restore LR, to help with unwinding in case `brk #0` is hit below.\n      \"  mov x30, x16\\n\"\n      \"  b.eq 1f\\n\"\n      \"  brk #0\\n\"\n      \"1:\\n\"\n      : [new_pc] \"+&r\"(new_pc)\n      : [sp] \"r\"(sp), [old_pc] \"r\"(old_pc)\n      : \"x16\", \"x17\", \"x30\", \"cc\");\n#endif\n  *pc_address = new_pc;\n}"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "function",
+        "name": "SignAndCheckPC",
+        "parent": "PointerAuthentication",
+        "about": "Signs a program counter (PC) address using the stack pointer (SP) and ensures the return address is valid.",
+        "logic": "Calls impl::SignPC to sign the PC and then uses Deoptimizer::EnsureValidReturnAddress to validate the return address after stripping the PAC.",
+        "parameters": [
+          {
+            "name": "isolate",
+            "type": "Isolate*",
+            "purpose": "The V8 isolate."
+          },
+          {
+            "name": "pc",
+            "type": "Address",
+            "purpose": "The program counter address to sign."
+          },
+          {
+            "name": "sp",
+            "type": "Address",
+            "purpose": "The stack pointer address to use as context."
+          }
+        ],
+        "return": {
+          "type": "Address",
+          "description": "The signed program counter address."
+        },
+        "dependencies": [
+          "impl::SignPC",
+          "Deoptimizer::EnsureValidReturnAddress",
+          "PointerAuthentication::StripPAC"
+        ]
+      },
+      "code": "V8_INLINE Address PointerAuthentication::SignAndCheckPC(Isolate* isolate,\n                                                        Address pc,\n                                                        Address sp) {\n  pc = impl::SignPC(pc, sp);\n  Deoptimizer::EnsureValidReturnAddress(isolate,\n                                        PointerAuthentication::StripPAC(pc));\n  return pc;\n}"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "function",
+        "name": "MoveSignedPC",
+        "parent": "PointerAuthentication",
+        "about": "Moves a signed program counter (PC) address from one stack pointer (SP) to another.",
+        "logic": "Verifies that either wasm deoptimization or experimental wasm growable stacks are enabled.  Authenticates the pc with the old_sp and signs it with the new_sp.",
+        "parameters": [
+          {
+            "name": "isolate",
+            "type": "Isolate*",
+            "purpose": "The V8 isolate."
+          },
+          {
+            "name": "pc",
+            "type": "Address",
+            "purpose": "The program counter address to move."
+          },
+          {
+            "name": "new_sp",
+            "type": "Address",
+            "purpose": "The new stack pointer address."
+          },
+          {
+            "name": "old_sp",
+            "type": "Address",
+            "purpose": "The old stack pointer address."
+          }
+        ],
+        "return": {
+          "type": "Address",
+          "description": "The signed program counter address with the new stack pointer context."
+        },
+        "dependencies": [
+          "impl::SignPC",
+          "impl::AuthPAC"
+        ]
+      },
+      "code": "V8_INLINE Address PointerAuthentication::MoveSignedPC(Isolate* isolate,\n                                                      Address pc,\n                                                      Address new_sp,\n                                                      Address old_sp) {\n#if V8_ENABLE_WEBASSEMBLY\n  // Only used by wasm deoptimizations and growable stacks.\n  CHECK(v8_flags.wasm_deopt || v8_flags.experimental_wasm_growable_stacks);\n  // Verify the old pc and sign it for the new sp.\n  return impl::SignPC(impl::AuthPAC(pc, old_sp), new_sp);\n#else\n  UNREACHABLE();\n#endif\n}"
+    }
+  ],
+  "file_path": "/home/kathirks_gc/v8_go/archive/codebase/src/execution/arm64/pointer-authentication-arm64.h"
+}

@@ -1,0 +1,152 @@
+{
+  "metadata": {
+    "path": "/home/kathirks_gc/v8_go/archive/codebase/src/roots/roots.h",
+    "file_name": "roots.h",
+    "language": "cpp",
+    "purpose": "Defines the root list and related classes for the V8 JavaScript engine.  The root list contains a comprehensive set of frequently used objects, maps, and other data structures that the garbage collector needs to be aware of."
+  },
+  "imports": {
+    "metadata": {
+      "language": "cpp",
+      "purpose": "Includes necessary headers for macros, built-in accessors, global definitions, handles, heap symbols, object definitions, object slots, and tagged objects."
+    },
+    "code": "#include \"src/base/macros.h\"\n#include \"src/builtins/accessors.h\"\n#include \"src/common/globals.h\"\n#include \"src/handles/handles.h\"\n#include \"src/init/heap-symbols.h\"\n#include \"src/objects/objects-definitions.h\"\n#include \"src/objects/objects.h\"\n#include \"src/objects/slots.h\"\n#include \"src/objects/tagged.h\""
+  },
+  "classes": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "RootsTable",
+        "about": "Represents a storage of V8 heap roots.",
+        "attributes": [
+          {
+            "name": "roots_",
+            "type": "Address[kEntriesCount]",
+            "access": "private",
+            "purpose": "Array holding the addresses of the root objects."
+          },
+          {
+            "name": "root_names_",
+            "type": "const char*[kEntriesCount]",
+            "access": "private",
+            "purpose": "Array holding the names of the root objects (for debugging/introspection)."
+          }
+        ],
+        "dependencies": []
+      },
+      "code": "class RootsTable {\n public:\n  static constexpr size_t kEntriesCount =\n      static_cast<size_t>(RootIndex::kRootListLength);\n\n  RootsTable() : roots_{} {}\n\n  inline bool IsRootHandleLocation(Address* handle_location,\n                                   RootIndex* index) const;\n\n  template <typename T>\n  bool IsRootHandle(IndirectHandle<T> handle, RootIndex* index) const;\n\n  // Returns heap number with identical value if it already exists or the empty\n  // handle otherwise.\n  IndirectHandle<HeapNumber> FindHeapNumber(double value);\n\n#define ROOT_ACCESSOR(Type, name, CamelName) \\\n  V8_INLINE IndirectHandle<Type> name();\n  ROOT_LIST(ROOT_ACCESSOR)\n#undef ROOT_ACCESSOR\n\n  V8_INLINE IndirectHandle<Object> handle_at(RootIndex root_index);\n\n  Address const& operator[](RootIndex root_index) const {\n    size_t index = static_cast<size_t>(root_index);\n    DCHECK_LT(index, kEntriesCount);\n    return roots_[index];\n  }\n\n  FullObjectSlot slot(RootIndex root_index) {\n    size_t index = static_cast<size_t>(root_index);\n    DCHECK_LT(index, kEntriesCount);\n    return FullObjectSlot(&roots_[index]);\n  }\n\n  static const char* name(RootIndex root_index) {\n    size_t index = static_cast<size_t>(root_index);\n    DCHECK_LT(index, kEntriesCount);\n    return root_names_[index];\n  }\n\n  static constexpr int offset_of(RootIndex root_index) {\n    return static_cast<int>(root_index) * kSystemPointerSize;\n  }\n\n  // Immortal immovable root objects are allocated in OLD space and GC never\n  // moves them and the root table entries are guaranteed to not be modified\n  // after initialization. Note, however, that contents of those root objects\n  // that are allocated in writable space can still be modified after\n  // initialization.\n  // Generated code can treat direct references to these roots as constants.\n  static constexpr bool IsImmortalImmovable(RootIndex root_index) {\n    static_assert(static_cast<int>(RootIndex::kFirstImmortalImmovableRoot) ==\n                  0);\n    return static_cast<unsigned>(root_index) <=\n           static_cast<unsigned>(RootIndex::kLastImmortalImmovableRoot);\n  }\n\n  static constexpr bool IsReadOnly(RootIndex root_index) {\n    static_assert(static_cast<int>(RootIndex::kFirstReadOnlyRoot) == 0);\n    return static_cast<unsigned>(root_index) <=\n           static_cast<unsigned>(RootIndex::kLastReadOnlyRoot);\n  }\n\n  static constexpr RootIndex SingleCharacterStringIndex(int c) {\n    DCHECK_GE(c, 0);\n    DCHECK_LE(c, static_cast<unsigned>(RootIndex::klatin1_ff_string) -\n                     static_cast<unsigned>(RootIndex::kascii_nul_string));\n    static_assert(static_cast<int>(RootIndex::kFirstReadOnlyRoot) == 0);\n    return static_cast<RootIndex>(\n        static_cast<unsigned>(RootIndex::kascii_nul_string) + c);\n  }\n\n private:\n  FullObjectSlot begin() {\n    return FullObjectSlot(&roots_[static_cast<size_t>(RootIndex::kFirstRoot)]);\n  }\n  FullObjectSlot end() {\n    return FullObjectSlot(\n        &roots_[static_cast<size_t>(RootIndex::kLastRoot) + 1]);\n  }\n\n  // Used for iterating over all of the read-only and mutable strong roots.\n  FullObjectSlot strong_or_read_only_roots_begin() const {\n    static_assert(static_cast<size_t>(RootIndex::kLastReadOnlyRoot) ==\n                  static_cast<size_t>(RootIndex::kFirstStrongRoot) - 1);\n    return FullObjectSlot(\n        &roots_[static_cast<size_t>(RootIndex::kFirstStrongOrReadOnlyRoot)]);\n  }\n  FullObjectSlot strong_or_read_only_roots_end() const {\n    return FullObjectSlot(\n        &roots_[static_cast<size_t>(RootIndex::kLastStrongOrReadOnlyRoot) + 1]);\n  }\n\n  // The read-only, strong and Smi roots as defined by these accessors are all\n  // disjoint.\n  FullObjectSlot read_only_roots_begin() const {\n    return FullObjectSlot(\n        &roots_[static_cast<size_t>(RootIndex::kFirstReadOnlyRoot)]);\n  }\n  FullObjectSlot read_only_roots_end() const {\n    return FullObjectSlot(\n        &roots_[static_cast<size_t>(RootIndex::kLastReadOnlyRoot) + 1]);\n  }\n\n  FullObjectSlot strong_roots_begin() const {\n    return FullObjectSlot(\n        &roots_[static_cast<size_t>(RootIndex::kFirstStrongRoot)]);\n  }\n  FullObjectSlot strong_roots_end() const {\n    return FullObjectSlot(\n        &roots_[static_cast<size_t>(RootIndex::kLastStrongRoot) + 1]);\n  }\n\n  FullObjectSlot smi_roots_begin() const {\n    return FullObjectSlot(\n        &roots_[static_cast<size_t>(RootIndex::kFirstSmiRoot)]);\n  }\n  FullObjectSlot smi_roots_end() const {\n    return FullObjectSlot(\n        &roots_[static_cast<size_t>(RootIndex::kLastSmiRoot) + 1]);\n  }\n\n  Address& operator[](RootIndex root_index) {\n    size_t index = static_cast<size_t>(root_index);\n    DCHECK_LT(index, kEntriesCount);\n    return roots_[index];\n  }\n\n  Address roots_[kEntriesCount];\n  static const char* root_names_[kEntriesCount];\n\n  friend class Isolate;\n  friend class Heap;\n  friend class Factory;\n  friend class FactoryBase<Factory>;\n  friend class FactoryBase<LocalFactory>;\n  friend class ReadOnlyHeap;\n  friend class ReadOnlyRoots;\n  friend class RootsSerializer;\n};"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "ReadOnlyRoots",
+        "about": "Provides access to read-only roots.",
+        "attributes": [
+          {
+            "name": "read_only_roots_",
+            "type": "Address*",
+            "access": "private",
+            "purpose": "Pointer to the array holding read-only root addresses."
+          }
+        ],
+        "dependencies": []
+      },
+      "code": "class ReadOnlyRoots {\n public:\n  static constexpr size_t kEntriesCount =\n      static_cast<size_t>(RootIndex::kReadOnlyRootsCount);\n\n  V8_INLINE explicit ReadOnlyRoots(Heap* heap);\n  V8_INLINE explicit ReadOnlyRoots(const Isolate* isolate);\n  V8_INLINE explicit ReadOnlyRoots(LocalIsolate* isolate);\n\n  // For `v8_enable_map_packing=true`, this will return a packed (also untagged)\n  // map-word instead of a tagged heap pointer.\n  MapWord one_pointer_filler_map_word();\n\n#define ROOT_ACCESSOR(Type, name, CamelName) \\\n  V8_INLINE Tagged<Type> name() const;       \\\n  V8_INLINE Tagged<Type> unchecked_##name() const;\n\n  READ_ONLY_ROOT_LIST(ROOT_ACCESSOR)\n#undef ROOT_ACCESSOR\n\n  V8_INLINE bool IsNameForProtector(Tagged<HeapObject> object) const;\n  V8_INLINE void VerifyNameForProtectorsPages() const;\n#ifdef DEBUG\n  void VerifyNameForProtectors();\n  void VerifyTypes();\n#endif\n\n  V8_INLINE Tagged<Boolean> boolean_value(bool value) const;\n\n  V8_INLINE Address address_at(RootIndex root_index) const;\n  V8_INLINE Tagged<Object> object_at(RootIndex root_index) const;\n\n  // Check if a slot is initialized yet. Should only be necessary for code\n  // running during snapshot creation.\n  V8_INLINE bool is_initialized(RootIndex root_index) const;\n\n  // Iterate over all the read-only roots. This is not necessary for garbage\n  // collection and is usually only performed as part of (de)serialization or\n  // heap verification.\n  void Iterate(RootVisitor* visitor);\n\n  // Uncompress pointers in the static roots table and store them into the\n  // actual roots table.\n  void InitFromStaticRootsTable(Address cage_base);\n\n private:\n  V8_INLINE Address first_name_for_protector() const;\n  V8_INLINE Address last_name_for_protector() const;\n\n  V8_INLINE explicit ReadOnlyRoots(Address* ro_roots)\n      : read_only_roots_(ro_roots) {}\n\n  Address* read_only_roots_;\n\n  friend class ReadOnlyHeap;\n  friend class DeserializerAllocator;\n  friend class ReadOnlyHeapImageDeserializer;\n  friend ReadOnlyRoots GetReadOnlyRoots();\n};"
+    }
+  ],
+  "functions": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "function",
+        "name": "GetReadOnlyRoots",
+        "about": "A global function declared inline that returns a `ReadOnlyRoots` object.",
+        "logic": "The function probably returns a singleton or a thread-local instance of `ReadOnlyRoots`.  The actual implementation would be elsewhere but this inline declaration hints at global access.",
+        "parameters": [],
+        "return": {
+          "type": "ReadOnlyRoots",
+          "description": "An instance of the ReadOnlyRoots class."
+        },
+        "dependencies": [
+          "ReadOnlyRoots"
+        ]
+      },
+      "code": "inline ReadOnlyRoots GetReadOnlyRoots();"
+    }
+  ],
+  "dependencies": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "Boolean",
+        "about": "Represents a boolean value in the V8 heap."
+      },
+      "code": "class Boolean;",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "Factory",
+        "about": "Used to create objects in the V8 heap."
+      },
+      "code": "class Factory;",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "PropertyCell",
+        "about": "Represents a cell holding a property value."
+      },
+      "code": "class PropertyCell;",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "ReadOnlyHeap",
+        "about": "Represents the read-only heap in V8."
+      },
+      "code": "class ReadOnlyHeap;",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "RootVisitor",
+        "about": "Abstract class for visiting roots during garbage collection."
+      },
+      "code": "class RootVisitor;",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "enum",
+        "name": "ElementsKind",
+        "about": "Enumerates different kinds of elements in a JavaScript array."
+      },
+      "code": "enum ElementsKind : uint8_t;",
+      "type": "enum"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "HeapNumber",
+        "about": "Represents a floating-point number stored in the V8 heap."
+      },
+      "code": "class HeapNumber;",
+      "type": "class"
+    }
+  ],
+  "file_path": "/home/kathirks_gc/v8_go/archive/codebase/src/roots/roots.h"
+}

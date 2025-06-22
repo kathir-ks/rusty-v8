@@ -1,0 +1,271 @@
+{
+  "metadata": {
+    "path": "/home/kathirks_gc/v8_go/archive/codebase/src/baseline/baseline-assembler.h",
+    "file_name": "baseline-assembler.h",
+    "language": "cpp",
+    "purpose": "Defines the BaselineAssembler class, which provides an abstraction layer over MacroAssembler for generating baseline compiler code."
+  },
+  "imports": {
+    "metadata": {
+      "language": "cpp",
+      "purpose": "Includes necessary header files for code generation, interpreter registers, and tagged indices."
+    },
+    "code": "#include \"src/codegen/macro-assembler.h\"\n#include \"src/interpreter/bytecode-register.h\"\n#include \"src/objects/tagged-index.h\""
+  },
+  "classes": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "BaselineAssembler",
+        "about": "Provides an interface for generating baseline compiler code using a MacroAssembler.",
+        "attributes": [
+          {
+            "name": "masm_",
+            "type": "MacroAssembler*",
+            "access": "private",
+            "purpose": "Pointer to the underlying MacroAssembler object."
+          },
+          {
+            "name": "scratch_register_scope_",
+            "type": "ScratchRegisterScope*",
+            "access": "private",
+            "purpose": "Pointer to ScratchRegisterScope object."
+          }
+        ],
+        "dependencies": [
+          "MacroAssembler",
+          "interpreter::Register",
+          "TaggedIndex",
+          "ScratchRegisterScope",
+          "Builtin",
+          "Runtime",
+          "FeedbackSlot",
+          "HeapObject",
+          "Tagged",
+          "Smi",
+          "ExternalReference",
+          "Handle",
+          "LocalIsolate",
+          "CodeDesc",
+          "Label"
+        ]
+      },
+      "code": "class BaselineAssembler {\n public:\n  class ScratchRegisterScope;\n\n  explicit BaselineAssembler(MacroAssembler* masm) : masm_(masm) {}\n  inline static MemOperand RegisterFrameOperand(\n      interpreter::Register interpreter_register);\n  inline void RegisterFrameAddress(interpreter::Register interpreter_register,\n                                   Register rscratch);\n  inline MemOperand ContextOperand();\n  inline MemOperand FunctionOperand();\n  inline MemOperand FeedbackVectorOperand();\n  inline MemOperand FeedbackCellOperand();\n\n  inline void GetCode(LocalIsolate* isolate, CodeDesc* desc);\n  inline int pc_offset() const;\n  inline void CodeEntry() const;\n  inline void ExceptionHandler() const;\n  V8_INLINE void RecordComment(const char* string);\n  inline void Trap();\n  inline void DebugBreak();\n\n  template <typename Field>\n  inline void DecodeField(Register reg);\n\n  inline void Bind(Label* label);\n  // Marks the current position as a valid jump target on CFI enabled\n  // architectures.\n  inline void JumpTarget();\n  inline void Jump(Label* target, Label::Distance distance = Label::kFar);\n  inline void JumpIfRoot(Register value, RootIndex index, Label* target,\n                         Label::Distance distance = Label::kFar);\n  inline void JumpIfNotRoot(Register value, RootIndex index, Label* target,\n                            Label ::Distance distance = Label::kFar);\n  inline void JumpIfSmi(Register value, Label* target,\n                        Label::Distance distance = Label::kFar);\n  inline void JumpIfNotSmi(Register value, Label* target,\n                           Label::Distance distance = Label::kFar);\n\n  inline void TestAndBranch(Register value, int mask, Condition cc,\n                            Label* target,\n                            Label::Distance distance = Label::kFar);\n\n  inline void JumpIf(Condition cc, Register lhs, const Operand& rhs,\n                     Label* target, Label::Distance distance = Label::kFar);\n#if V8_STATIC_ROOTS_BOOL\n  // Fast JS_RECEIVER test which assumes to receive either a primitive object or\n  // a js receiver.\n  inline void JumpIfJSAnyIsPrimitive(Register heap_object, Label* target,\n                                     Label::Distance distance = Label::kFar);\n#endif\n  inline void JumpIfObjectType(Condition cc, Register object,\n                               InstanceType instance_type, Register map,\n                               Label* target,\n                               Label::Distance distance = Label::kFar);\n  // Might not load the map into the scratch register.\n  inline void JumpIfObjectTypeFast(Condition cc, Register object,\n                                   InstanceType instance_type, Label* target,\n                                   Label::Distance distance = Label::kFar);\n  inline void JumpIfInstanceType(Condition cc, Register map,\n                                 InstanceType instance_type, Label* target,\n                                 Label::Distance distance = Label::kFar);\n  inline void JumpIfPointer(Condition cc, Register value, MemOperand operand,\n                            Label* target,\n                            Label::Distance distance = Label::kFar);\n  inline Condition CheckSmi(Register value);\n  inline void JumpIfSmi(Condition cc, Register value, Tagged<Smi> smi,\n                        Label* target, Label::Distance distance = Label::kFar);\n  inline void JumpIfSmi(Condition cc, Register lhs, Register rhs, Label* target,\n                        Label::Distance distance = Label::kFar);\n  inline void JumpIfImmediate(Condition cc, Register left, int right,\n                              Label* target,\n                              Label::Distance distance = Label::kFar);\n  inline void JumpIfTagged(Condition cc, Register value, MemOperand operand,\n                           Label* target,\n                           Label::Distance distance = Label::kFar);\n  inline void JumpIfTagged(Condition cc, MemOperand operand, Register value,\n                           Label* target,\n                           Label::Distance distance = Label::kFar);\n  inline void JumpIfByte(Condition cc, Register value, int32_t byte,\n                         Label* target, Label::Distance distance = Label::kFar);\n\n  inline void LoadMap(Register output, Register value);\n  inline void LoadRoot(Register output, RootIndex index);\n  inline void LoadNativeContextSlot(Register output, uint32_t index);\n\n  inline void Move(Register output, Register source);\n  inline void Move(Register output, MemOperand operand);\n  inline void Move(Register output, Tagged<Smi> value);\n  inline void Move(Register output, Tagged<TaggedIndex> value);\n  inline void Move(Register output, interpreter::Register source);\n  inline void Move(interpreter::Register output, Register source);\n  inline void Move(Register output, RootIndex source);\n  inline void Move(MemOperand output, Register source);\n  inline void Move(Register output, ExternalReference reference);\n  inline void Move(Register output, Handle<HeapObject> value);\n  inline void Move(Register output, int32_t immediate);\n  inline void MoveMaybeSmi(Register output, Register source);\n  inline void MoveSmi(Register output, Register source);\n\n  // Push the given values, in the given order. If the stack needs alignment\n  // (looking at you Arm64), the stack is padded from the front (i.e. before the\n  // first value is pushed).\n  //\n  // This supports pushing a RegisterList as the last value -- the list is\n  // iterated and each interpreter Register is pushed.\n  //\n  // The total number of values pushed is returned. Note that this might be\n  // different from sizeof(T...), specifically if there was a RegisterList.\n  template <typename... T>\n  inline int Push(T... vals);\n\n  // Like Push(vals...), but pushes in reverse order, to support our reversed\n  // order argument JS calling convention. Doesn't return the number of\n  // arguments pushed though.\n  //\n  // Note that padding is still inserted before the first pushed value (i.e. the\n  // last value).\n  template <typename... T>\n  inline void PushReverse(T... vals);\n\n  // Pop values off the stack into the given registers.\n  //\n  // Note that this inserts into registers in the given order, i.e. in reverse\n  // order if the registers were pushed. This means that to spill registers,\n  // push and pop have to be in reverse order, e.g.\n  //\n  //     Push(r1, r2, ..., rN);\n  //     ClobberRegisters();\n  //     Pop(rN, ..., r2, r1);\n  //\n  // On stack-alignment architectures, any padding is popped off after the last\n  // register. This the behaviour of Push, which means that the above code still\n  // works even if the number of registers doesn't match stack alignment.\n  template <typename... T>\n  inline void Pop(T... registers);\n\n  inline void CallBuiltin(Builtin builtin);\n  inline void TailCallBuiltin(Builtin builtin);\n  inline void CallRuntime(Runtime::FunctionId function, int nargs);\n\n  inline void LoadTaggedField(Register output, Register source, int offset);\n  inline void LoadTaggedSignedField(Register output, Register source,\n                                    int offset);\n  inline void LoadTaggedSignedFieldAndUntag(Register output, Register source,\n                                            int offset);\n  inline void LoadWord16FieldZeroExtend(Register output, Register source,\n                                        int offset);\n  inline void LoadWord8Field(Register output, Register source, int offset);\n  inline void StoreTaggedSignedField(Register target, int offset,\n                                     Tagged<Smi> value);\n  inline void StoreTaggedFieldWithWriteBarrier(Register target, int offset,\n                                               Register value);\n  inline void StoreTaggedFieldNoWriteBarrier(Register target, int offset,\n                                             Register value);\n  inline void LoadFixedArrayElement(Register output, Register array,\n                                    int32_t index);\n  inline void LoadPrototype(Register prototype, Register object);\n\n// Loads compressed pointer or loads from compressed pointer. This is because\n// X64 supports complex addressing mode, pointer decompression can be done by\n// [%compressed_base + %r1 + K].\n#if V8_TARGET_ARCH_X64\n  inline void LoadTaggedField(TaggedRegister output, Register source,\n                              int offset);\n  inline void LoadTaggedField(TaggedRegister output, TaggedRegister source,\n                              int offset);\n  inline void LoadTaggedField(Register output, TaggedRegister source,\n                              int offset);\n  inline void LoadFixedArrayElement(Register output, TaggedRegister array,\n                                    int32_t index);\n  inline void LoadFixedArrayElement(TaggedRegister output, TaggedRegister array,\n                                    int32_t index);\n#endif\n\n  // Falls through and sets scratch_and_result to 0 on failure, jumps to\n  // on_result on success.\n  inline void TryLoadOptimizedOsrCode(Register scratch_and_result,\n                                      Register feedback_vector,\n                                      FeedbackSlot slot, Label* on_result,\n                                      Label::Distance distance);\n\n  // Loads the feedback cell from the function, and sets flags on add so that\n  // we can compare afterward.\n  inline void AddToInterruptBudgetAndJumpIfNotExceeded(\n      int32_t weight, Label* skip_interrupt_label);\n  inline void AddToInterruptBudgetAndJumpIfNotExceeded(\n      Register weight, Label* skip_interrupt_label);\n\n  // By default, the output register may be compressed on 64-bit architectures\n  // that support pointer compression.\n  enum class CompressionMode {\n    kDefault,\n    kForceDecompression,\n  };\n  inline void LdaContextSlot(\n      Register context, uint32_t index, uint32_t depth,\n      CompressionMode compression_mode = CompressionMode::kDefault);\n  inline void StaContextSlot(Register context, Register value, uint32_t index,\n                             uint32_t depth);\n  inline void LdaModuleVariable(Register context, int cell_index,\n                                uint32_t depth);\n  inline void StaModuleVariable(Register context, Register value,\n                                int cell_index, uint32_t depth);\n\n  inline void IncrementSmi(MemOperand lhs);\n  inline void SmiUntag(Register value);\n  inline void SmiUntag(Register output, Register value);\n\n  inline void Word32And(Register output, Register lhs, int rhs);\n\n  inline void Switch(Register reg, int case_value_base, Label** labels,\n                     int num_labels);\n\n  // Register operands.\n  inline void LoadRegister(Register output, interpreter::Register source);\n  inline void StoreRegister(interpreter::Register output, Register value);\n\n  // Frame values\n  inline void LoadFunction(Register output);\n  inline void LoadContext(Register output);\n  inline void StoreContext(Register context);\n\n  inline void LoadFeedbackCell(Register output);\n  inline void AssertFeedbackCell(Register object);\n\n#ifdef V8_ENABLE_CET_SHADOW_STACK\n  // If CET shadow stack is enabled, reserves a few bytes as NOP that can be\n  // patched later.\n  inline void MaybeEmitPlaceHolderForDeopt();\n#endif  // V8_ENABLE_CET_SHADOW_STACK\n\n  inline static void EmitReturn(MacroAssembler* masm);\n\n  MacroAssembler* masm() { return masm_; }\n\n private:\n  MacroAssembler* masm_;\n  ScratchRegisterScope* scratch_register_scope_ = nullptr;\n};"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "EnsureAccumulatorPreservedScope",
+        "about": "Ensures that the accumulator register is preserved within a certain scope.",
+        "attributes": [
+          {
+            "name": "assembler_",
+            "type": "BaselineAssembler*",
+            "access": "private",
+            "purpose": "Pointer to the BaselineAssembler object."
+          }
+        ],
+        "dependencies": [
+          "BaselineAssembler",
+          "Register"
+        ]
+      },
+      "code": "class EnsureAccumulatorPreservedScope final {\n public:\n  inline explicit EnsureAccumulatorPreservedScope(BaselineAssembler* assembler);\n\n  inline ~EnsureAccumulatorPreservedScope();\n\n private:\n  inline void AssertEqualToAccumulator(Register reg);\n\n  BaselineAssembler* assembler_;\n#ifdef V8_CODE_COMMENTS\n  Assembler::CodeComment comment_;\n#endif\n};"
+    }
+  ],
+  "dependencies": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "MacroAssembler",
+        "about": "Provides an architecture-independent interface for generating machine code."
+      },
+      "code": "class MacroAssembler {};",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "LocalIsolate",
+        "about": "Represents an isolate-local handle scope."
+      },
+      "code": "class LocalIsolate {};",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "CodeDesc",
+        "about": "Describes a block of generated code."
+      },
+      "code": "class CodeDesc {};",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "Label",
+        "about": "Represents a target for jumps in the generated code."
+      },
+      "code": "class Label {\n                public:\n                    enum Distance { kNear, kFar };\n                };",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "Register",
+        "about": "Represents a CPU register."
+      },
+      "code": "class Register {};",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "Operand",
+        "about": "Represents an operand for an assembly instruction."
+      },
+      "code": "class Operand {};",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "MemOperand",
+        "about": "Represents an memory operand for an assembly instruction."
+      },
+      "code": "class MemOperand {};",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "TaggedRegister",
+        "about": "Represents a register that holds a tagged value."
+      },
+      "code": "class TaggedRegister {};",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "enum",
+        "name": "RootIndex",
+        "about": "Enumerates the indices of the root array."
+      },
+      "code": "enum RootIndex {};",
+      "type": "enum"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "enum",
+        "name": "InstanceType",
+        "about": "Enumerates the possible instance types of JavaScript objects."
+      },
+      "code": "enum InstanceType {};",
+      "type": "enum"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "enum",
+        "name": "Condition",
+        "about": "Enumerates condition codes for conditional jumps."
+      },
+      "code": "enum Condition {};",
+      "type": "enum"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "enum",
+        "name": "Builtin",
+        "about": "Enumerates the built-in functions."
+      },
+      "code": "enum Builtin {};",
+      "type": "enum"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "enum",
+        "name": "Runtime::FunctionId",
+        "about": "Enumerates the runtime functions."
+      },
+      "code": "namespace Runtime { enum FunctionId {}; }",
+      "type": "enum"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "FeedbackSlot",
+        "about": "Represents a slot in the feedback vector."
+      },
+      "code": "class FeedbackSlot {};",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "Handle",
+        "about": "A pointer to a heap object that is managed by the garbage collector."
+      },
+      "code": "template <typename T> class Handle {};",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "HeapObject",
+        "about": "The base class for all heap objects."
+      },
+      "code": "class HeapObject {};",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "ExternalReference",
+        "about": "Represents a reference to an external function or variable."
+      },
+      "code": "class ExternalReference {};",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "Tagged",
+        "about": "A tagged value that can be either a Smi or a HeapObject."
+      },
+      "code": "template <typename T> class Tagged {};",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "Smi",
+        "about": "A small integer that is directly encoded in a tagged value."
+      },
+      "code": "class Smi {};",
+      "type": "class"
+    }
+  ],
+  "file_path": "/home/kathirks_gc/v8_go/archive/codebase/src/baseline/baseline-assembler.h"
+}

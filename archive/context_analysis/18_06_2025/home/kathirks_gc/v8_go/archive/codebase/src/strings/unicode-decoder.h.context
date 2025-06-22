@@ -1,0 +1,143 @@
+{
+  "metadata": {
+    "path": "/home/kathirks_gc/v8_go/archive/codebase/src/strings/unicode-decoder.h",
+    "file_name": "unicode-decoder.h",
+    "language": "cpp",
+    "purpose": "Declares classes and functions for decoding UTF-8 encoded strings, including handling of invalid sequences and different UTF-8 variants."
+  },
+  "imports": {
+    "metadata": {
+      "language": "cpp",
+      "purpose": "Provides dynamic array functionality, Unicode character properties and related utilities."
+    },
+    "code": "#include \"src/base/vector.h\"\n#include \"src/strings/unicode.h\""
+  },
+  "functions": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "function",
+        "name": "NonAsciiStart",
+        "about": "Finds the index of the first non-ASCII character in a byte string.",
+        "logic": "Optimized to check aligned words for non-ASCII characters using bitwise operations when the string length exceeds a certain threshold (kIntptrSize). It uses a mask to efficiently identify bytes with the high bit set. Handles unaligned bytes at the beginning and end of the string separately.",
+        "parameters": [
+          {
+            "name": "chars",
+            "type": "const uint8_t*",
+            "purpose": "Pointer to the start of the byte string."
+          },
+          {
+            "name": "length",
+            "type": "uint32_t",
+            "purpose": "Length of the byte string."
+          }
+        ],
+        "return": {
+          "type": "uint32_t",
+          "description": "Index of the first non-ASCII character, or the length of the string if all characters are ASCII."
+        },
+        "dependencies": []
+      },
+      "code": "inline uint32_t NonAsciiStart(const uint8_t* chars, uint32_t length) {\n  const uint8_t* start = chars;\n  const uint8_t* limit = chars + length;\n\n  if (static_cast<size_t>(length) >= kIntptrSize) {\n    // Check unaligned bytes.\n    while (!IsAligned(reinterpret_cast<intptr_t>(chars), kIntptrSize)) {\n      if (*chars > unibrow::Utf8::kMaxOneByteChar) {\n        return static_cast<uint32_t>(chars - start);\n      }\n      ++chars;\n    }\n    // Check aligned words.\n    DCHECK_EQ(unibrow::Utf8::kMaxOneByteChar, 0x7F);\n    const uintptr_t non_one_byte_mask = kUintptrAllBitsSet / 0xFF * 0x80;\n    while (chars + sizeof(uintptr_t) <= limit) {\n      if (*reinterpret_cast<const uintptr_t*>(chars) & non_one_byte_mask) {\n        return static_cast<uint32_t>(chars - start);\n      }\n      chars += sizeof(uintptr_t);\n    }\n  }\n  // Check remaining unaligned bytes.\n  while (chars < limit) {\n    if (*chars > unibrow::Utf8::kMaxOneByteChar) {\n      return static_cast<uint32_t>(chars - start);\n    }\n    ++chars;\n  }\n\n  return static_cast<uint32_t>(chars - start);\n}"
+    }
+  ],
+  "classes": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "Utf8DecoderBase",
+        "about": "Base class for UTF-8 decoders, providing common functionality and state management.",
+        "attributes": [
+          {
+            "name": "encoding_",
+            "type": "Encoding",
+            "access": "protected",
+            "purpose": "Stores the encoding type detected during decoding."
+          },
+          {
+            "name": "non_ascii_start_",
+            "type": "int",
+            "access": "protected",
+            "purpose": "Stores the index of the first non-ASCII character."
+          },
+          {
+            "name": "utf16_length_",
+            "type": "int",
+            "access": "protected",
+            "purpose": "Stores the length of the decoded UTF-16 string."
+          }
+        ],
+        "dependencies": [
+          "base::Vector"
+        ]
+      },
+      "code": "template <class Decoder>\nclass Utf8DecoderBase {\n public:\n  enum class Encoding : uint8_t { kAscii, kLatin1, kUtf16, kInvalid };\n\n  bool is_invalid() const {\n    return static_cast<const Decoder&>(*this).is_invalid();\n  }\n  bool is_ascii() const { return encoding_ == Encoding::kAscii; }\n  bool is_one_byte() const { return encoding_ <= Encoding::kLatin1; }\n  int utf16_length() const {\n    DCHECK(!is_invalid());\n    return utf16_length_;\n  }\n  int non_ascii_start() const {\n    DCHECK(!is_invalid());\n    return non_ascii_start_;\n  }\n\n  template <typename Char>\n  void Decode(Char* out, base::Vector<const uint8_t> data);\n\n protected:\n  explicit Utf8DecoderBase(base::Vector<const uint8_t> data);\n  Encoding encoding_;\n  int non_ascii_start_;\n  int utf16_length_;\n};"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "Utf8Decoder",
+        "extends": "Utf8DecoderBase",
+        "about": "UTF-8 decoder that replaces invalid byte sequences with U+FFFD.",
+        "dependencies": [
+          "Utf8DecoderBase",
+          "base::Vector"
+        ]
+      },
+      "code": "class V8_EXPORT_PRIVATE Utf8Decoder final\n    : public Utf8DecoderBase<Utf8Decoder> {\n public:\n  explicit Utf8Decoder(base::Vector<const uint8_t> data)\n      : Utf8DecoderBase(data) {}\n\n  // This decoder never fails; an invalid byte sequence decodes to U+FFFD and\n  // then the decode continues.\n  bool is_invalid() const {\n    DCHECK_NE(encoding_, Encoding::kInvalid);\n    return false;\n  }\n};"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "Wtf8Decoder",
+        "extends": "Utf8DecoderBase",
+        "about": "UTF-8 decoder that has a separate Encoding::kInvalid state and accepts isolated surrogates. Intended for WebAssembly.",
+        "dependencies": [
+          "Utf8DecoderBase",
+          "base::Vector"
+        ]
+      },
+      "code": "#if V8_ENABLE_WEBASSEMBLY\n// Like Utf8Decoder above, except that instead of replacing invalid sequences\n// with U+FFFD, we have a separate Encoding::kInvalid state, and we also accept\n// isolated surrogates.\nclass Wtf8Decoder : public Utf8DecoderBase<Wtf8Decoder> {\n public:\n  explicit Wtf8Decoder(base::Vector<const uint8_t> data)\n      : Utf8DecoderBase(data) {}\n\n  bool is_invalid() const { return encoding_ == Encoding::kInvalid; }\n};"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "StrictUtf8Decoder",
+        "extends": "Utf8DecoderBase",
+        "about": "UTF-8 decoder that has a separate Encoding::kInvalid state for invalid sequences.",
+        "dependencies": [
+          "Utf8DecoderBase",
+          "base::Vector"
+        ]
+      },
+      "code": "// Like Utf8Decoder above, except that instead of replacing invalid sequences\n// with U+FFFD, we have a separate Encoding::kInvalid state.\nclass StrictUtf8Decoder : public Utf8DecoderBase<StrictUtf8Decoder> {\n public:\n  explicit StrictUtf8Decoder(base::Vector<const uint8_t> data)\n      : Utf8DecoderBase(data) {}\n\n  bool is_invalid() const { return encoding_ == Encoding::kInvalid; }\n};\n#endif  // V8_ENABLE_WEBASSEMBLY"
+    }
+  ],
+  "dependencies": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "base::Vector",
+        "about": "A resizable array class."
+      },
+      "code": "namespace base {\n                    template <typename T> class Vector {};\n                }",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "unibrow::Utf8",
+        "about": "Provides constants and utilities related to UTF-8 encoding, particularly for identifying one-byte characters."
+      },
+      "code": "namespace unibrow {\n                    namespace Utf8 {\n                        static const int kMaxOneByteChar = 0x7F;\n                    }\n                }",
+      "type": "class"
+    }
+  ],
+  "file_path": "/home/kathirks_gc/v8_go/archive/codebase/src/strings/unicode-decoder.h"
+}

@@ -1,0 +1,50 @@
+{
+  "metadata": {
+    "path": "/home/kathirks_gc/v8_go/archive/codebase/src/snapshot/shared-heap-serializer.h",
+    "file_name": "shared-heap-serializer.h",
+    "language": "cpp",
+    "purpose": "Declares the SharedHeapSerializer class, responsible for serializing objects into the shared heap snapshot for V8 isolates."
+  },
+  "imports": {
+    "metadata": {
+      "language": "cpp",
+      "purpose": "Includes the RootsSerializer class definition which this class inherits from."
+    },
+    "code": "#include \"src/snapshot/roots-serializer.h\""
+  },
+  "classes": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "SharedHeapSerializer",
+        "extends": "RootsSerializer",
+        "about": "Serializes objects for the shared heap in V8 isolates.  Used when the shared heap is enabled (e.g., with --shared-string-table).",
+        "attributes": [],
+        "dependencies": [
+          "HeapObject",
+          "Isolate",
+          "SnapshotByteSink",
+          "Handle",
+          "StringTable",
+          "SlotType",
+          "IdentityMap"
+        ]
+      },
+      "code": "class V8_EXPORT_PRIVATE SharedHeapSerializer : public RootsSerializer {\n public:\n  SharedHeapSerializer(Isolate* isolate, Snapshot::SerializerFlags flags);\n  ~SharedHeapSerializer() override;\n  SharedHeapSerializer(const SharedHeapSerializer&) = delete;\n  SharedHeapSerializer& operator=(const SharedHeapSerializer&) = delete;\n\n  // Terminate the shared heap object cache with an undefined value and\n  // serialize the string table..\n  void FinalizeSerialization();\n\n  // If |obj| can be serialized in the shared heap snapshot then add it to the\n  // shared heap object cache if not already present and emit a\n  // SharedHeapObjectCache bytecode into |sink|. Returns whether this was\n  // successful.\n  bool SerializeUsingSharedHeapObjectCache(SnapshotByteSink* sink,\n                                           Handle<HeapObject> obj);\n\n  static bool CanBeInSharedOldSpace(Tagged<HeapObject> obj);\n\n  static bool ShouldBeInSharedHeapObjectCache(Tagged<HeapObject> obj);\n\n private:\n  bool ShouldReconstructSharedHeapObjectCacheForTesting() const;\n\n  void ReconstructSharedHeapObjectCacheForTesting();\n\n  void SerializeStringTable(StringTable* string_table);\n\n  void SerializeObjectImpl(Handle<HeapObject> obj, SlotType slot_type) override;\n\n#ifdef DEBUG\n  IdentityMap<int, base::DefaultAllocationPolicy> serialized_objects_;\n#endif\n};"
+    }
+  ],
+  "dependencies": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "IdentityMap",
+        "about": "A map that uses object identity as the key."
+      },
+      "code": "template <typename K, typename A> class IdentityMap {};",
+      "type": "class"
+    }
+  ],
+  "file_path": "/home/kathirks_gc/v8_go/archive/codebase/src/snapshot/shared-heap-serializer.h"
+}

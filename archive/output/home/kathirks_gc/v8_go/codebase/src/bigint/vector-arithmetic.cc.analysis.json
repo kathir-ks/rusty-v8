@@ -1,0 +1,111 @@
+{
+  "file_path": "/home/kathirks_gc/v8_go/codebase/src/bigint/vector-arithmetic.cc",
+  "imports": [
+    "src/bigint/vector-arithmetic.h",
+    "src/bigint/bigint-internal.h",
+    "src/bigint/digit-arithmetic.h"
+  ],
+  "classes": [],
+  "functions": [
+    {
+      "name": "AddAndReturnOverflow",
+      "parameters": [
+        "RWDigits Z",
+        "Digits X"
+      ],
+      "return_type": "digit_t",
+      "logic": "Adds the digits in X to the digits in Z, returning the overflow digit. Normalizes X before adding. Loops through the digits of X and adds them to the corresponding digits of Z along with the carry. If there's a carry left after adding all digits of X, it continues to add the carry to the remaining digits of Z until the carry is zero or all digits of Z have been processed."
+    },
+    {
+      "name": "SubAndReturnBorrow",
+      "parameters": [
+        "RWDigits Z",
+        "Digits X"
+      ],
+      "return_type": "digit_t",
+      "logic": "Subtracts the digits in X from the digits in Z, returning the borrow digit. Normalizes X before subtracting. Loops through the digits of X and subtracts them from the corresponding digits of Z along with the borrow. If there's a borrow left after subtracting all digits of X, it continues to subtract the borrow from the remaining digits of Z until the borrow is zero or all digits of Z have been processed."
+    },
+    {
+      "name": "Add",
+      "parameters": [
+        "RWDigits Z",
+        "Digits X",
+        "Digits Y"
+      ],
+      "return_type": "void",
+      "logic": "Adds the digits in X and Y and stores the result in Z. It first ensures that X is the longer or equal length operand to Y. It iterates through the digits of Y, adding the corresponding digits of X and Y along with the carry. Then it iterates through the remaining digits of X, adding them to the carry. Finally, it sets the remaining digits of Z to the carry value and resets the carry."
+    },
+    {
+      "name": "Subtract",
+      "parameters": [
+        "RWDigits Z",
+        "Digits X",
+        "Digits Y"
+      ],
+      "return_type": "void",
+      "logic": "Subtracts the digits in Y from the digits in X and stores the result in Z. It assumes that X >= Y and normalizes both X and Y. It iterates through the digits of Y, subtracting them from the corresponding digits of X along with the borrow. Then, it iterates through the remaining digits of X, subtracting the borrow from them. It asserts that the final borrow is zero. Finally, it sets the remaining digits of Z to 0."
+    },
+    {
+      "name": "AddAndReturnCarry",
+      "parameters": [
+        "RWDigits Z",
+        "Digits X",
+        "Digits Y"
+      ],
+      "return_type": "digit_t",
+      "logic": "Adds the digits in X and Y and stores the result in Z, returning the final carry. Assumes Z, X >= Y in length. Iterates through the digits of Y, adding corresponding digits in X and Y and the carry and stores result in Z."
+    },
+    {
+      "name": "SubtractAndReturnBorrow",
+      "parameters": [
+        "RWDigits Z",
+        "Digits X",
+        "Digits Y"
+      ],
+      "return_type": "digit_t",
+      "logic": "Subtracts the digits in Y from the digits in X and stores the result in Z, returning the final borrow. Assumes Z, X >= Y in length. Iterates through the digits of Y, subtracting corresponding digits in Y from X and adds borrow if necessary and stores the result in Z."
+    },
+    {
+      "name": "AddSigned",
+      "parameters": [
+        "RWDigits Z",
+        "Digits X",
+        "bool x_negative",
+        "Digits Y",
+        "bool y_negative"
+      ],
+      "return_type": "bool",
+      "logic": "Adds two signed big integers represented as digit arrays (X, x_negative) and (Y, y_negative) and stores the result in Z. Returns the sign of the result. If the signs are the same, it performs addition. Otherwise, it performs subtraction and returns the sign based on which number is larger."
+    },
+    {
+      "name": "SubtractSigned",
+      "parameters": [
+        "RWDigits Z",
+        "Digits X",
+        "bool x_negative",
+        "Digits Y",
+        "bool y_negative"
+      ],
+      "return_type": "bool",
+      "logic": "Subtracts two signed big integers represented as digit arrays (X, x_negative) and (Y, y_negative) and stores the result in Z. Returns the sign of the result. If the signs are different, it performs addition. Otherwise, it performs subtraction and returns the sign based on which number is larger."
+    },
+    {
+      "name": "AddOne",
+      "parameters": [
+        "RWDigits Z",
+        "Digits X"
+      ],
+      "return_type": "void",
+      "logic": "Adds one to the big integer X and stores the result in Z. It iterates through the digits of X, adding the carry (initially 1) until the carry is zero. The remaining digits of Z are set to X and then filled with 0 up to the length of Z."
+    },
+    {
+      "name": "SubtractOne",
+      "parameters": [
+        "RWDigits Z",
+        "Digits X"
+      ],
+      "return_type": "void",
+      "logic": "Subtracts one from the big integer X and stores the result in Z. It iterates through the digits of X, subtracting the borrow (initially 1) until the borrow is zero. The remaining digits of Z are set to X and then filled with 0 up to the length of Z."
+    }
+  ]
+}

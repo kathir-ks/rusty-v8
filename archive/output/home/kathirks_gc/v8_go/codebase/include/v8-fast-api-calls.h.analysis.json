@@ -1,0 +1,307 @@
+{
+  "file_path": "/home/kathirks_gc/v8_go/codebase/include/v8-fast-api-calls.h",
+  "imports": [
+    "<stddef.h>",
+    "<stdint.h>",
+    "<tuple>",
+    "<type_traits>",
+    "v8-internal.h",
+    "v8-local-handle.h",
+    "v8-typed-array.h",
+    "v8-value.h",
+    "v8config.h"
+  ],
+  "classes": [
+    {
+      "name": "CTypeInfo",
+      "properties": [
+        "Type type_",
+        "SequenceType sequence_type_",
+        "Flags flags_"
+      ],
+      "methods": [
+        {
+          "name": "CTypeInfo",
+          "parameters": [
+            "Type type",
+            "Flags flags = Flags::kNone"
+          ],
+          "return_type": "void",
+          "logic": "Constructor for CTypeInfo, initializes type_ and flags_."
+        },
+        {
+          "name": "CTypeInfo",
+          "parameters": [
+            "Identifier identifier"
+          ],
+          "return_type": "void",
+          "logic": "Constructor for CTypeInfo, initializes members from identifier"
+        },
+        {
+          "name": "GetId",
+          "parameters": [],
+          "return_type": "Identifier",
+          "logic": "Returns a combined identifier based on the type_, sequence_type_ and flags_."
+        },
+        {
+          "name": "GetType",
+          "parameters": [],
+          "return_type": "Type",
+          "logic": "Returns the type_ member."
+        },
+        {
+          "name": "GetSequenceType",
+          "parameters": [],
+          "return_type": "SequenceType",
+          "logic": "Returns the sequence_type_ member."
+        },
+        {
+          "name": "GetFlags",
+          "parameters": [],
+          "return_type": "Flags",
+          "logic": "Returns the flags_ member."
+        },
+        {
+          "name": "IsIntegralType",
+          "parameters": [
+            "Type type"
+          ],
+          "return_type": "bool",
+          "logic": "Checks if the given type is an integral type (int32_t, uint32_t, int64_t, uint64_t, uint8_t)."
+        },
+        {
+          "name": "IsFloatingPointType",
+          "parameters": [
+            "Type type"
+          ],
+          "return_type": "bool",
+          "logic": "Checks if the given type is a floating-point type (float32_t, float64_t)."
+        },
+        {
+          "name": "IsPrimitive",
+          "parameters": [
+            "Type type"
+          ],
+          "return_type": "bool",
+          "logic": "Checks if the given type is a primitive type (integral, floating-point, or boolean)."
+        }
+      ]
+    },
+    {
+      "name": "CFunctionInfo",
+      "properties": [
+        "const CTypeInfo return_info_",
+        "const Int64Representation repr_",
+        "const unsigned int arg_count_",
+        "const CTypeInfo* arg_info_"
+      ],
+      "methods": [
+        {
+          "name": "CFunctionInfo",
+          "parameters": [
+            "const CTypeInfo& return_info",
+            "unsigned int arg_count",
+            "const CTypeInfo* arg_info",
+            "Int64Representation repr = Int64Representation::kNumber"
+          ],
+          "return_type": "void",
+          "logic": "Constructor for CFunctionInfo, initializes member variables."
+        },
+        {
+          "name": "ReturnInfo",
+          "parameters": [],
+          "return_type": "const CTypeInfo&",
+          "logic": "Returns the return_info_ member."
+        },
+        {
+          "name": "ArgumentCount",
+          "parameters": [],
+          "return_type": "unsigned int",
+          "logic": "Returns the number of arguments (excluding options, if present)."
+        },
+        {
+          "name": "GetInt64Representation",
+          "parameters": [],
+          "return_type": "Int64Representation",
+          "logic": "Returns the repr_ member."
+        },
+        {
+          "name": "ArgumentInfo",
+          "parameters": [
+            "unsigned int index"
+          ],
+          "return_type": "const CTypeInfo&",
+          "logic": "Returns the CTypeInfo at the given index from arg_info_."
+        },
+        {
+          "name": "HasOptions",
+          "parameters": [],
+          "return_type": "bool",
+          "logic": "Checks if the function has a FastApiCallbackOptions argument as the last argument."
+        }
+      ]
+    },
+    {
+      "name": "CFunction",
+      "properties": [
+        "const void* address_",
+        "const CFunctionInfo* type_info_"
+      ],
+      "methods": [
+        {
+          "name": "CFunction",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Default constructor, initializes address_ and type_info_ to nullptr."
+        },
+        {
+          "name": "ReturnInfo",
+          "parameters": [],
+          "return_type": "const CTypeInfo&",
+          "logic": "Returns the ReturnInfo() from the type_info_."
+        },
+        {
+          "name": "ArgumentInfo",
+          "parameters": [
+            "unsigned int index"
+          ],
+          "return_type": "const CTypeInfo&",
+          "logic": "Returns the ArgumentInfo() from the type_info_."
+        },
+        {
+          "name": "ArgumentCount",
+          "parameters": [],
+          "return_type": "unsigned int",
+          "logic": "Returns the ArgumentCount() from the type_info_."
+        },
+        {
+          "name": "GetAddress",
+          "parameters": [],
+          "return_type": "const void*",
+          "logic": "Returns the address_ member."
+        },
+        {
+          "name": "GetInt64Representation",
+          "parameters": [],
+          "return_type": "CFunctionInfo::Int64Representation",
+          "logic": "Returns the Int64Representation from the type_info_."
+        },
+        {
+          "name": "GetTypeInfo",
+          "parameters": [],
+          "return_type": "const CFunctionInfo*",
+          "logic": "Returns the type_info_ member."
+        },
+        {
+          "name": "Make",
+          "parameters": [
+            "F* func",
+            "CFunctionInfo::Int64Representation int64_rep = CFunctionInfo::Int64Representation::kNumber"
+          ],
+          "return_type": "CFunction",
+          "logic": "Creates a CFunction from a function pointer using template metaprogramming to infer argument types. Performs argument unwrapping."
+        },
+        {
+          "name": "Make",
+          "parameters": [
+            "R (*func)(Args...)",
+            "R_Patch (*patching_func)(Args_Patch...)",
+            "CFunctionInfo::Int64Representation int64_rep = CFunctionInfo::Int64Representation::kNumber"
+          ],
+          "return_type": "CFunction",
+          "logic": "Creates a CFunction with a patching function for testing."
+        },
+        {
+          "name": "CFunction",
+          "parameters": [
+            "const void* address",
+            "const CFunctionInfo* type_info"
+          ],
+          "return_type": "void",
+          "logic": "Constructor for CFunction, initializes address_ and type_info_."
+        }
+      ]
+    },
+    {
+      "name": "FastApiCallbackOptions",
+      "properties": [
+        "v8::Isolate* isolate = nullptr",
+        "v8::Local<v8::Value> data"
+      ],
+      "methods": [
+        {
+          "name": "CreateForTesting",
+          "parameters": [
+            "Isolate* isolate"
+          ],
+          "return_type": "FastApiCallbackOptions",
+          "logic": "Creates an instance of FastApiCallbackOptions for testing purposes."
+        }
+      ]
+    },
+    {
+      "name": "CTypeInfoBuilder",
+      "properties": [],
+      "methods": [
+        {
+          "name": "Build",
+          "parameters": [],
+          "return_type": "CTypeInfo",
+          "logic": "Builds a CTypeInfo based on template parameters, merging flags and validating constraints."
+        }
+      ]
+    }
+  ],
+  "functions": [
+    {
+      "name": "TryToCopyAndConvertArrayToCppBuffer",
+      "parameters": [
+        "Local<Array> src",
+        "T* dst",
+        "uint32_t max_length"
+      ],
+      "return_type": "bool",
+      "logic": "Copies elements from a JavaScript array to a C++ buffer, converting types as necessary. Returns false if the array is invalid or too long."
+    },
+    {
+      "name": "TryToCopyAndConvertArrayToCppBuffer",
+      "parameters": [
+        "Local<Array> src",
+        "int32_t* dst",
+        "uint32_t max_length"
+      ],
+      "return_type": "bool",
+      "logic": "Copies elements from a JavaScript array to a C++ buffer, converting to int32_t. Returns false if the array is invalid or too long."
+    },
+    {
+      "name": "TryToCopyAndConvertArrayToCppBuffer",
+      "parameters": [
+        "Local<Array> src",
+        "uint32_t* dst",
+        "uint32_t max_length"
+      ],
+      "return_type": "bool",
+      "logic": "Copies elements from a JavaScript array to a C++ buffer, converting to uint32_t. Returns false if the array is invalid or too long."
+    },
+    {
+      "name": "TryToCopyAndConvertArrayToCppBuffer",
+      "parameters": [
+        "Local<Array> src",
+        "float* dst",
+        "uint32_t max_length"
+      ],
+      "return_type": "bool",
+      "logic": "Copies elements from a JavaScript array to a C++ buffer, converting to float. Returns false if the array is invalid or too long."
+    },
+    {
+      "name": "TryToCopyAndConvertArrayToCppBuffer",
+      "parameters": [
+        "Local<Array> src",
+        "double* dst",
+        "uint32_t max_length"
+      ],
+      "return_type": "bool",
+      "logic": "Copies elements from a JavaScript array to a C++ buffer, converting to double. Returns false if the array is invalid or too long."
+    }
+  ]
+}

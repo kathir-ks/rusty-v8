@@ -1,0 +1,93 @@
+{
+  "file_path": "/home/kathirks_gc/v8_go/codebase/src/debug/wasm/gdb-server/session.cc",
+  "imports": [
+    "src/debug/wasm/gdb-server/session.h",
+    "src/debug/wasm/gdb-server/packet.h",
+    "src/debug/wasm/gdb-server/transport.h"
+  ],
+  "classes": [
+    {
+      "name": "Session",
+      "properties": [
+        "io_",
+        "connected_",
+        "ack_enabled_"
+      ],
+      "methods": [
+        {
+          "name": "Session",
+          "parameters": [
+            "TransportBase* transport"
+          ],
+          "return_type": "void",
+          "logic": "Constructor for the Session class. Initializes the transport, connected state, and ACK enabling."
+        },
+        {
+          "name": "WaitForDebugStubEvent",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Waits for a debug stub event using the transport's method."
+        },
+        {
+          "name": "SignalThreadEvent",
+          "parameters": [],
+          "return_type": "bool",
+          "logic": "Signals a thread event using the transport's method. Returns the result of the signal operation."
+        },
+        {
+          "name": "IsDataAvailable",
+          "parameters": [],
+          "return_type": "bool",
+          "logic": "Checks if data is available on the transport. Returns true if data is available, false otherwise."
+        },
+        {
+          "name": "IsConnected",
+          "parameters": [],
+          "return_type": "bool",
+          "logic": "Checks if the session is connected. Returns true if connected, false otherwise."
+        },
+        {
+          "name": "Disconnect",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Disconnects the session by disconnecting the transport and setting the connected flag to false."
+        },
+        {
+          "name": "GetChar",
+          "parameters": [
+            "char* ch"
+          ],
+          "return_type": "bool",
+          "logic": "Reads a single character from the transport. If the read fails, disconnects the session and returns false. Otherwise, returns true."
+        },
+        {
+          "name": "SendPacket",
+          "parameters": [
+            "Packet* pkt",
+            "bool expect_ack"
+          ],
+          "return_type": "bool",
+          "logic": "Sends a packet over the transport. If ACKs are enabled and expected, waits for an ACK ('+') from the remote end. Retries if the ACK is not received. Returns true on success, false on failure."
+        },
+        {
+          "name": "GetPayload",
+          "parameters": [
+            "Packet* pkt",
+            "uint8_t* checksum"
+          ],
+          "return_type": "bool",
+          "logic": "Reads the payload of a packet from the transport until a '#' character is encountered. Calculates a checksum of the payload. If a '$' is encountered, it retries reading the packet payload. Returns true on success, false on failure."
+        },
+        {
+          "name": "GetPacket",
+          "parameters": [
+            "Packet* pkt"
+          ],
+          "return_type": "bool",
+          "logic": "Reads a complete packet from the transport, including the start character ('$'), payload, checksum, and optional sequence number. Verifies the checksum and sends an ACK if ACKs are enabled and the checksum is valid.  Retries receiving if the checksums don't match. Returns true on success, false on failure."
+        }
+      ]
+    }
+  ],
+  "functions": []
+}

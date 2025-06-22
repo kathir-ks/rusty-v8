@@ -1,0 +1,124 @@
+{
+  "metadata": {
+    "path": "/home/kathirks_gc/v8_go/archive/codebase/src/compiler/basic-block-instrumentor.h",
+    "file_name": "basic-block-instrumentor.h",
+    "language": "cpp",
+    "purpose": "Defines classes for instrumenting basic blocks in the compiler for profiling and call graph analysis."
+  },
+  "imports": {
+    "metadata": {
+      "language": "cpp",
+      "purpose": "Includes necessary headers for diagnostics, allocation, and turboshaft graph."
+    },
+    "code": "#include \"src/diagnostics/basic-block-profiler.h\"\n#include \"src/utils/allocation.h\""
+  },
+  "classes": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "BasicBlockInstrumentor",
+        "extends": "AllStatic",
+        "about": "Provides a static method to instrument basic blocks for profiling.",
+        "attributes": [],
+        "dependencies": [
+          "OptimizedCompilationInfo",
+          "TFGraph",
+          "Schedule",
+          "Isolate",
+          "BasicBlockProfilerData"
+        ]
+      },
+      "code": "class BasicBlockInstrumentor : public AllStatic {\n public:\n  static BasicBlockProfilerData* Instrument(OptimizedCompilationInfo* info,\n                                            TFGraph* graph, Schedule* schedule,\n                                            Isolate* isolate);\n};"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "BasicBlockCallGraphProfiler",
+        "extends": "AllStatic",
+        "about": "Provides static methods to store the call graph between builtins for reordering.",
+        "attributes": [],
+        "dependencies": [
+          "OptimizedCompilationInfo",
+          "Schedule",
+          "turboshaft::Graph"
+        ]
+      },
+      "code": "class BasicBlockCallGraphProfiler : public AllStatic {\n public:\n  // The method will iterate all the basic blocks and visit all the nodes inside\n  // the block, if there is a Call/TailCall node to another builtin, it will\n  // save a record line (like builtin A calls builtin B at block N).\n  static void StoreCallGraph(OptimizedCompilationInfo* info,\n                             Schedule* schedule);\n  static void StoreCallGraph(OptimizedCompilationInfo* info,\n                             const turboshaft::Graph& graph);\n};"
+    }
+  ],
+  "dependencies": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "OptimizedCompilationInfo",
+        "about": "Provides information about the optimized compilation process."
+      },
+      "code": "class OptimizedCompilationInfo;",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "TFGraph",
+        "about": "Represents the TensorFlow graph."
+      },
+      "code": "class TFGraph;",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "Schedule",
+        "about": "Represents the schedule of basic blocks."
+      },
+      "code": "class Schedule;",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "Isolate",
+        "about": "Represents an isolated instance of the V8 JavaScript engine."
+      },
+      "code": "class Isolate;",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "BasicBlockProfilerData",
+        "about": "Stores profiling data for basic blocks."
+      },
+      "code": "class BasicBlockProfilerData;",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "turboshaft::Graph",
+        "about": "Represents the turboshaft graph."
+      },
+      "code": "namespace turboshaft {\n                class Graph;\n            }",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "AllStatic",
+        "about": "Base class that prevents object creation and enforces static usage."
+      },
+      "code": "class AllStatic {\n                protected:\n                    AllStatic() = default;\n                private:\n                    AllStatic(const AllStatic&) = delete;\n                    AllStatic& operator=(const AllStatic&) = delete;\n            };",
+      "type": "class"
+    }
+  ],
+  "file_path": "/home/kathirks_gc/v8_go/archive/codebase/src/compiler/basic-block-instrumentor.h"
+}

@@ -1,0 +1,90 @@
+{
+  "metadata": {
+    "path": "/home/kathirks_gc/v8_go/archive/codebase/src/snapshot/embedded/platform-embedded-file-writer-mac.h",
+    "file_name": "platform-embedded-file-writer-mac.h",
+    "language": "cpp",
+    "purpose": "Declares the PlatformEmbeddedFileWriterMac class, which specializes in writing embedded files for the macOS platform."
+  },
+  "imports": {
+    "metadata": {
+      "language": "cpp",
+      "purpose": "Includes necessary headers for macros and the base class."
+    },
+    "code": "#include \"src/base/macros.h\"\n#include \"src/snapshot/embedded/platform-embedded-file-writer-base.h\""
+  },
+  "classes": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "PlatformEmbeddedFileWriterMac",
+        "extends": "PlatformEmbeddedFileWriterBase",
+        "about": "Specializes in writing embedded files for the macOS platform.",
+        "attributes": [
+          {
+            "name": "target_arch_",
+            "type": "EmbeddedTargetArch",
+            "access": "private",
+            "purpose": "Stores the target architecture for the embedded file."
+          },
+          {
+            "name": "target_os_",
+            "type": "EmbeddedTargetOs",
+            "access": "private",
+            "purpose": "Stores the target operating system for the embedded file (always kMac)."
+          }
+        ],
+        "dependencies": [
+          "PlatformEmbeddedFileWriterBase",
+          "EmbeddedTargetArch",
+          "EmbeddedTargetOs",
+          "DataDirective"
+        ]
+      },
+      "code": "class PlatformEmbeddedFileWriterMac : public PlatformEmbeddedFileWriterBase {\n public:\n  PlatformEmbeddedFileWriterMac(EmbeddedTargetArch target_arch,\n                                EmbeddedTargetOs target_os)\n      : target_arch_(target_arch), target_os_(target_os) {\n    USE(target_arch_);\n    USE(target_os_);\n    DCHECK_EQ(target_os_, EmbeddedTargetOs::kMac);\n  }\n\n  void SectionText() override;\n  void SectionRoData() override;\n\n  void AlignToCodeAlignment() override;\n  void AlignToPageSizeIfNeeded() override;\n  void AlignToDataAlignment() override;\n\n  void DeclareUint32(const char* name, uint32_t value) override;\n\n  void DeclareSymbolGlobal(const char* name) override;\n  void DeclareLabel(const char* name) override;\n\n  void SourceInfo(int fileid, const char* filename, int line) override;\n  void DeclareFunctionBegin(const char* name, uint32_t size) override;\n  void DeclareFunctionEnd(const char* name) override;\n\n  void Comment(const char* string) override;\n\n  void FilePrologue() override;\n  void DeclareExternalFilename(int fileid, const char* filename) override;\n  void FileEpilogue() override;\n\n  int IndentedDataDirective(DataDirective directive) override;\n\n private:\n  const EmbeddedTargetArch target_arch_;\n  const EmbeddedTargetOs target_os_;\n};"
+    }
+  ],
+  "dependencies": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "PlatformEmbeddedFileWriterBase",
+        "about": "Base class for platform-specific embedded file writers."
+      },
+      "code": "class PlatformEmbeddedFileWriterBase {};",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "enum",
+        "name": "EmbeddedTargetArch",
+        "about": "Enum for the target architecture."
+      },
+      "code": "enum class EmbeddedTargetArch {};",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "enum",
+        "name": "EmbeddedTargetOs",
+        "about": "Enum for the target operating system."
+      },
+      "code": "enum class EmbeddedTargetOs { kMac };",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "enum",
+        "name": "DataDirective",
+        "about": "Enum for data directives"
+      },
+      "code": "enum class DataDirective {};",
+      "type": "class"
+    }
+  ],
+  "file_path": "/home/kathirks_gc/v8_go/archive/codebase/src/snapshot/embedded/platform-embedded-file-writer-mac.h"
+}

@@ -1,0 +1,277 @@
+{
+  "file_path": "/home/kathirks_gc/v8_go/codebase/src/init/isolate-group.cc",
+  "imports": [
+    "src/init/isolate-group.h",
+    "src/base/bounded-page-allocator.h",
+    "src/base/platform/memory.h",
+    "src/base/platform/mutex.h",
+    "src/common/ptr-compr-inl.h",
+    "src/compiler-dispatcher/optimizing-compile-dispatcher.h",
+    "src/execution/isolate.h",
+    "src/heap/code-range.h",
+    "src/heap/read-only-heap.h",
+    "src/heap/read-only-spaces.h",
+    "src/heap/trusted-range.h",
+    "src/sandbox/code-pointer-table-inl.h",
+    "src/sandbox/sandbox.h",
+    "src/utils/memcopy.h",
+    "src/utils/utils.h"
+  ],
+  "classes": [
+    {
+      "name": "IsolateGroupAccessScope",
+      "properties": [
+        "previous_"
+      ],
+      "methods": [
+        {
+          "name": "IsolateGroupAccessScope",
+          "parameters": [
+            "IsolateGroup* group"
+          ],
+          "return_type": "void",
+          "logic": "Constructor. Sets the current IsolateGroup for the current thread and saves the previous one."
+        },
+        {
+          "name": "~IsolateGroupAccessScope",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Destructor. Restores the previous IsolateGroup for the current thread."
+        }
+      ]
+    },
+    {
+      "name": "PtrComprCageReservationParams",
+      "properties": [
+        "page_allocator",
+        "reservation_size",
+        "base_alignment",
+        "page_size",
+        "requested_start_hint",
+        "permissions",
+        "page_initialization_mode",
+        "page_freeing_mode"
+      ],
+      "methods": [
+        {
+          "name": "PtrComprCageReservationParams",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Constructor. Initializes parameters for reserving memory for the pointer compression cage."
+        }
+      ]
+    },
+    {
+      "name": "IsolateGroup",
+      "properties": [
+        "current_",
+        "default_isolate_group_",
+        "reference_count_",
+        "isolate_count_",
+        "mutex_",
+        "page_allocator_",
+        "reservation_",
+        "pointer_compression_cage_",
+        "trusted_pointer_compression_cage_",
+        "code_range_",
+        "read_only_artifacts_",
+        "optimizing_compile_task_executor_",
+        "js_dispatch_table_",
+        "init_code_range_",
+        "process_wide_",
+        "sandbox_",
+        "code_pointer_table_",
+        "shared_space_isolate_",
+        "is_shared_space_isolate_",
+        "owns_shareable_data_"
+      ],
+      "methods": [
+        {
+          "name": "current_non_inlined",
+          "parameters": [],
+          "return_type": "IsolateGroup*",
+          "logic": "Returns the current isolate group for the thread."
+        },
+        {
+          "name": "set_current_non_inlined",
+          "parameters": [
+            "IsolateGroup* group"
+          ],
+          "return_type": "void",
+          "logic": "Sets the current isolate group for the thread."
+        },
+        {
+          "name": "~IsolateGroup",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Destructor. Frees resources associated with the isolate group."
+        },
+        {
+          "name": "Initialize",
+          "parameters": [
+            "bool process_wide",
+            "Sandbox* sandbox"
+          ],
+          "return_type": "void",
+          "logic": "Initializes the isolate group with sandbox support by allocating memory for pointer compression and initializing other resources."
+        },
+        {
+          "name": "Initialize",
+          "parameters": [
+            "bool process_wide"
+          ],
+          "return_type": "void",
+          "logic": "Initializes the isolate group by allocating memory for pointer compression and initializing other resources (without sandbox)."
+        },
+        {
+          "name": "InitializeOncePerProcess",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Initializes the default isolate group for the entire process."
+        },
+        {
+          "name": "TearDownOncePerProcess",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Releases the default isolate group."
+        },
+        {
+          "name": "Release",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Decrements the reference count. Deletes the group if the reference count reaches zero."
+        },
+        {
+          "name": "EnsureCodeRange",
+          "parameters": [
+            "size_t requested_size"
+          ],
+          "return_type": "CodeRange*",
+          "logic": "Ensures that a CodeRange is initialized for the isolate group, creating one if it doesn't already exist. It manages the memory region where generated code resides."
+        },
+        {
+          "name": "InitializeReadOnlyArtifacts",
+          "parameters": [],
+          "return_type": "ReadOnlyArtifacts*",
+          "logic": "Initializes read-only artifacts."
+        },
+        {
+          "name": "GetBackingStorePageAllocator",
+          "parameters": [],
+          "return_type": "PageAllocator*",
+          "logic": "Returns the page allocator used for allocating backing store memory."
+        },
+        {
+          "name": "SetupReadOnlyHeap",
+          "parameters": [
+            "Isolate* isolate",
+            "SnapshotData* read_only_snapshot_data",
+            "bool can_rehash"
+          ],
+          "return_type": "void",
+          "logic": "Sets up the read-only heap for the isolate."
+        },
+        {
+          "name": "AddIsolate",
+          "parameters": [
+            "Isolate* isolate"
+          ],
+          "return_type": "void",
+          "logic": "Adds an isolate to the isolate group and ensures the optimizing compile task executor is initialized. Deals with shared heap ownership."
+        },
+        {
+          "name": "RemoveIsolate",
+          "parameters": [
+            "Isolate* isolate"
+          ],
+          "return_type": "void",
+          "logic": "Removes an isolate from the isolate group and resets the shared space isolate if it's the last isolate in the group."
+        },
+        {
+          "name": "New",
+          "parameters": [],
+          "return_type": "IsolateGroup*",
+          "logic": "Creates a new IsolateGroup instance."
+        },
+        {
+          "name": "ReleaseDefault",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Releases the default IsolateGroup."
+        },
+        {
+          "name": "GetSandboxedArrayBufferAllocator",
+          "parameters": [],
+          "return_type": "SandboxedArrayBufferAllocator*",
+          "logic": "Returns the SandboxedArrayBufferAllocator for the IsolateGroup."
+        },
+        {
+          "name": "optimizing_compile_task_executor",
+          "parameters": [],
+          "return_type": "OptimizingCompileTaskExecutor*",
+          "logic": "Returns the OptimizingCompileTaskExecutor."
+        }
+      ]
+    },
+    {
+      "name": "SandboxedArrayBufferAllocator",
+      "properties": [
+        "mutex_",
+        "sandbox_",
+        "region_alloc_",
+        "end_of_accessible_region_"
+      ],
+      "methods": [
+        {
+          "name": "LazyInitialize",
+          "parameters": [
+            "Sandbox* sandbox"
+          ],
+          "return_type": "void",
+          "logic": "Lazily initializes the allocator, reserving a large memory region for array buffers within a sandbox."
+        },
+        {
+          "name": "~SandboxedArrayBufferAllocator",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Destructor, freeing the allocated memory region."
+        },
+        {
+          "name": "Allocate",
+          "parameters": [
+            "size_t length"
+          ],
+          "return_type": "void*",
+          "logic": "Allocates a memory region of the given length. It grows the accessible region if necessary and zeroes out the allocated memory."
+        },
+        {
+          "name": "Free",
+          "parameters": [
+            "void* data"
+          ],
+          "return_type": "void",
+          "logic": "Frees the allocated memory region."
+        },
+        {
+          "name": "page_allocator",
+          "parameters": [],
+          "return_type": "PageAllocator*",
+          "logic": "Returns the page allocator used by the sandbox."
+        }
+      ]
+    }
+  ],
+  "functions": [
+    {
+      "name": "InitCodeRangeOnce",
+      "parameters": [
+        "std::unique_ptr<CodeRange>* code_range_member",
+        "v8::PageAllocator* page_allocator",
+        "size_t requested_size",
+        "bool immutable"
+      ],
+      "return_type": "void",
+      "logic": "Initializes the CodeRange member using CallOnce mechanism."
+    }
+  ]
+}

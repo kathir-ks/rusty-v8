@@ -1,0 +1,185 @@
+{
+  "metadata": {
+    "path": "/home/kathirks_gc/v8_go/archive/codebase/src/snapshot/embedded/embedded-data.h",
+    "file_name": "embedded-data.h",
+    "language": "cpp",
+    "purpose": "Defines the EmbeddedData class for managing embedded code and data blobs used for builtins and snapshots in V8."
+  },
+  "imports": {
+    "metadata": {
+      "language": "cpp",
+      "purpose": "Includes necessary V8 headers for base macros, builtins, globals, isolates, code ranges, and instruction streams."
+    },
+    "code": "#include \"src/base/macros.h\"\n#include \"src/builtins/builtins.h\"\n#include \"src/common/globals.h\"\n#include \"src/execution/isolate.h\"\n#include \"src/heap/code-range.h\"\n#include \"src/objects/instruction-stream.h\""
+  },
+  "classes": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "OffHeapInstructionStream",
+        "extends": "AllStatic",
+        "about": "Wraps an off-heap instruction stream.  TODO(jgruber,v8:6666): Remove this class.",
+        "attributes": [],
+        "dependencies": [
+          "Isolate",
+          "Address",
+          "Builtin"
+        ]
+      },
+      "code": "class OffHeapInstructionStream final : public AllStatic {\n public:\n  // Returns true, iff the given pc points into an off-heap instruction stream.\n  static bool PcIsOffHeap(Isolate* isolate, Address pc);\n\n  // If the address belongs to the embedded code blob, predictably converts it\n  // to uint32 by calculating offset from the embedded code blob start and\n  // returns true, and false otherwise.\n  static bool TryGetAddressForHashing(Isolate* isolate, Address address,\n                                      uint32_t* hashable_address);\n\n  // Returns the corresponding builtin ID if lookup succeeds, and kNoBuiltinId\n  // otherwise.\n  static Builtin TryLookupCode(Isolate* isolate, Address address);\n\n  // During snapshot creation, we first create an executable off-heap area\n  // containing all off-heap code. The area is guaranteed to be contiguous.\n  // Note that this only applies when building the snapshot, e.g. for\n  // mksnapshot. Otherwise, off-heap code is embedded directly into the binary.\n  static void CreateOffHeapOffHeapInstructionStream(Isolate* isolate,\n                                                    uint8_t** code,\n                                                    uint32_t* code_size,\n                                                    uint8_t** data,\n                                                    uint32_t* data_size);\n  static void FreeOffHeapOffHeapInstructionStream(uint8_t* code,\n                                                  uint32_t code_size,\n                                                  uint8_t* data,\n                                                  uint32_t data_size);\n};"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "EmbeddedData",
+        "about": "Manages embedded code and data blobs, providing access to builtins and snapshot data.",
+        "attributes": [
+          {
+            "name": "code_",
+            "type": "const uint8_t*",
+            "access": "private",
+            "purpose": "Pointer to the start of the embedded code section."
+          },
+          {
+            "name": "code_size_",
+            "type": "uint32_t",
+            "access": "private",
+            "purpose": "Size of the embedded code section."
+          },
+          {
+            "name": "data_",
+            "type": "const uint8_t*",
+            "access": "private",
+            "purpose": "Pointer to the start of the embedded data section."
+          },
+          {
+            "name": "data_size_",
+            "type": "uint32_t",
+            "access": "private",
+            "purpose": "Size of the embedded data section."
+          }
+        ],
+        "dependencies": [
+          "Isolate",
+          "CodeRange",
+          "Builtin",
+          "Address",
+          "InstructionStream",
+          "ReorderedBuiltinIndex"
+        ]
+      },
+      "code": "class EmbeddedData final {\n public:\n  // Create the embedded blob from the given Isolate's heap state.\n  static EmbeddedData NewFromIsolate(Isolate* isolate);\n\n  // Returns the global embedded blob (usually physically located in .text and\n  // .rodata).\n  static EmbeddedData FromBlob() {\n    return EmbeddedData(Isolate::CurrentEmbeddedBlobCode(),\n                        Isolate::CurrentEmbeddedBlobCodeSize(),\n                        Isolate::CurrentEmbeddedBlobData(),\n                        Isolate::CurrentEmbeddedBlobDataSize());\n  }\n\n  // Returns a potentially remapped embedded blob (see also\n  // MaybeRemapEmbeddedBuiltinsIntoCodeRange).\n  static EmbeddedData FromBlob(Isolate* isolate) {\n    return EmbeddedData(\n        isolate->embedded_blob_code(), isolate->embedded_blob_code_size(),\n        isolate->embedded_blob_data(), isolate->embedded_blob_data_size());\n  }\n\n  // Returns a potentially remapped embedded blob (see also\n  // MaybeRemapEmbeddedBuiltinsIntoCodeRange).\n  static EmbeddedData FromBlob(CodeRange* code_range) {\n    return EmbeddedData(code_range->embedded_blob_code_copy(),\n                        Isolate::CurrentEmbeddedBlobCodeSize(),\n                        Isolate::CurrentEmbeddedBlobData(),\n                        Isolate::CurrentEmbeddedBlobDataSize());\n  }\n\n  // When short builtin calls optimization is enabled for the Isolate, there\n  // will be two builtins instruction streams executed: the embedded one and\n  // the one un-embedded into the per-Isolate code range. In most of the cases,\n  // the per-Isolate instructions will be used but in some cases (like builtin\n  // calls from Wasm) the embedded instruction stream could be used.  If the\n  // requested PC belongs to the embedded code blob - it'll be returned, and\n  // the per-Isolate blob otherwise.\n  // See http://crbug.com/v8/11527 for details.\n  static EmbeddedData FromBlobForPc(Isolate* isolate,\n                                    Address maybe_builtin_pc) {\n    EmbeddedData d = EmbeddedData::FromBlob(isolate);\n    if (d.IsInCodeRange(maybe_builtin_pc)) return d;\n    if (isolate->is_short_builtin_calls_enabled()) {\n      EmbeddedData global_d = EmbeddedData::FromBlob();\n      // If the pc does not belong to the embedded code blob we should be using\n      // the un-embedded one.\n      if (global_d.IsInCodeRange(maybe_builtin_pc)) return global_d;\n    }\n#if defined(V8_COMPRESS_POINTERS_IN_SHARED_CAGE) && \\\n    defined(V8_SHORT_BUILTIN_CALLS)\n    // When shared pointer compression cage is enabled and it has the embedded\n    // code blob copy then it could have been used regardless of whether the\n    // isolate uses it or knows about it or not (see\n    // InstructionStream::OffHeapInstructionStart()).\n    // So, this blob has to be checked too.\n    CodeRange* code_range = IsolateGroup::current()->GetCodeRange();\n    if (code_range && code_range->embedded_blob_code_copy() != nullptr) {\n      EmbeddedData remapped_d = EmbeddedData::FromBlob(code_range);\n      // If the pc does not belong to the embedded code blob we should be\n      // using the un-embedded one.\n      if (remapped_d.IsInCodeRange(maybe_builtin_pc)) return remapped_d;\n    }\n#endif  // defined(V8_COMPRESS_POINTERS_IN_SHARED_CAGE) &&\n        // defined(V8_SHORT_BUILTIN_CALLS)\n    return d;\n  }\n\n  const uint8_t* code() const { return code_; }\n  uint32_t code_size() const { return code_size_; }\n  const uint8_t* data() const { return data_; }\n  uint32_t data_size() const { return data_size_; }\n\n  bool IsInCodeRange(Address pc) const {\n    Address start = reinterpret_cast<Address>(code_);\n    return (start <= pc) && (pc < start + code_size_);\n  }\n\n  void Dispose() {\n    delete[] code_;\n    code_ = nullptr;\n    delete[] data_;\n    data_ = nullptr;\n  }\n\n  inline Address InstructionStartOf(Builtin builtin) const;\n  inline Address InstructionEndOf(Builtin builtin) const;\n  inline uint32_t InstructionSizeOf(Builtin builtin) const;\n  inline Address InstructionStartOfBytecodeHandlers() const;\n  inline Address InstructionEndOfBytecodeHandlers() const;\n  inline Address MetadataStartOf(Builtin builtin) const;\n\n  uint32_t AddressForHashing(Address addr) {\n    DCHECK(IsInCodeRange(addr));\n    Address start = reinterpret_cast<Address>(code_);\n    return static_cast<uint32_t>(addr - start);\n  }\n\n  // Padded with kCodeAlignment.\n  inline uint32_t PaddedInstructionSizeOf(Builtin builtin) const;\n\n  size_t CreateEmbeddedBlobDataHash() const;\n  size_t CreateEmbeddedBlobCodeHash() const;\n  size_t EmbeddedBlobDataHash() const {\n    return *reinterpret_cast<const size_t*>(data_ +\n                                            EmbeddedBlobDataHashOffset());\n  }\n  size_t EmbeddedBlobCodeHash() const {\n    return *reinterpret_cast<const size_t*>(data_ +\n                                            EmbeddedBlobCodeHashOffset());\n  }\n\n  size_t IsolateHash() const {\n    return *reinterpret_cast<const size_t*>(data_ + IsolateHashOffset());\n  }\n\n  Builtin TryLookupCode(Address address) const;\n\n  // Blob layout information for a single instruction stream.\n  struct LayoutDescription {\n    // The offset and (unpadded) length of this builtin's instruction area\n    // from the start of the embedded code section.\n    uint32_t instruction_offset;\n    uint32_t instruction_length;\n    // The offset of this builtin's metadata area from the start of the\n    // embedded data section.\n    uint32_t metadata_offset;\n  };\n  static_assert(offsetof(LayoutDescription, instruction_offset) ==\n                0 * kUInt32Size);\n  static_assert(offsetof(LayoutDescription, instruction_length) ==\n                1 * kUInt32Size);\n  static_assert(offsetof(LayoutDescription, metadata_offset) ==\n                2 * kUInt32Size);\n\n  // The embedded code section stores builtins in the so-called\n  // 'embedded snapshot order' which is usually different from the order\n  // as defined by the Builtins enum ('builtin id order'), and determined\n  // through an algorithm based on collected execution profiles. The\n  // BuiltinLookupEntry struct maps from the 'embedded snapshot order' to\n  // the 'builtin id order' and additionally keeps a copy of instruction_end for\n  // each builtin since it is convenient for binary search.\n  struct BuiltinLookupEntry {\n    // The end offset (including padding) of builtin, the end_offset field\n    // should be in ascending order in the array in snapshot, because we will\n    // use it in TryLookupCode. It should be equal to\n    // LayoutDescription[builtin_id].instruction_offset +\n    // PadAndAlignCode(length)\n    uint32_t end_offset;\n    // The id of builtin.\n    uint32_t builtin_id;\n  };\n  static_assert(offsetof(BuiltinLookupEntry, end_offset) == 0 * kUInt32Size);\n  static_assert(offsetof(BuiltinLookupEntry, builtin_id) == 1 * kUInt32Size);\n\n  Builtin GetBuiltinId(ReorderedBuiltinIndex embedded_index) const;\n\n  // The layout of the blob is as follows:\n  //\n  // data:\n  // [0] hash of the data section\n  // [1] hash of the code section\n  // [2] hash of embedded-blob-relevant heap objects\n  // [3] layout description of builtin 0\n  // ... layout descriptions (builtin id order)\n  // [n] builtin lookup table where entries are sorted by offset_end in\n  //     ascending order. (embedded snapshot order)\n  // [x] metadata section of builtin 0\n  // ... metadata sections (builtin id order)\n  //\n  // code:\n  // [0] instruction section of builtin 0\n  // ... instruction sections (embedded snapshot order)\n\n  static constexpr uint32_t kTableSize = Builtins::kBuiltinCount;\n  static constexpr uint32_t EmbeddedBlobDataHashOffset() { return 0; }\n  static constexpr uint32_t EmbeddedBlobDataHashSize() { return kSizetSize; }\n  static constexpr uint32_t EmbeddedBlobCodeHashOffset() {\n    return EmbeddedBlobDataHashOffset() + EmbeddedBlobDataHashSize();\n  }\n  static constexpr uint32_t EmbeddedBlobCodeHashSize() { return kSizetSize; }\n  static constexpr uint32_t IsolateHashOffset() {\n    return EmbeddedBlobCodeHashOffset() + EmbeddedBlobCodeHashSize();\n  }\n  static constexpr uint32_t IsolateHashSize() { return kSizetSize; }\n  static constexpr uint32_t LayoutDescriptionTableOffset() {\n    return IsolateHashOffset() + IsolateHashSize();\n  }\n  static constexpr uint32_t LayoutDescriptionTableSize() {\n    return sizeof(struct LayoutDescription) * kTableSize;\n  }\n  static constexpr uint32_t BuiltinLookupEntryTableOffset() {\n    return LayoutDescriptionTableOffset() + LayoutDescriptionTableSize();\n  }\n  static constexpr uint32_t BuiltinLookupEntryTableSize() {\n    return sizeof(struct BuiltinLookupEntry) * kTableSize;\n  }\n  static constexpr uint32_t FixedDataSize() {\n    return BuiltinLookupEntryTableOffset() + BuiltinLookupEntryTableSize();\n  }\n  // The variable-size data section starts here.\n  static constexpr uint32_t RawMetadataOffset() { return FixedDataSize(); }\n\n  // Code is in its own dedicated section.\n  static constexpr uint32_t RawCodeOffset() { return 0; }\n\n private:\n  EmbeddedData(const uint8_t* code, uint32_t code_size, const uint8_t* data,\n               uint32_t data_size)\n      : code_(code), code_size_(code_size), data_(data), data_size_(data_size) {\n    DCHECK_NOT_NULL(code);\n    DCHECK_LT(0, code_size);\n    DCHECK_NOT_NULL(data);\n    DCHECK_LT(0, data_size);\n  }\n\n  const uint8_t* RawCode() const { return code_ + RawCodeOffset(); }\n\n  const LayoutDescription& LayoutDescription(Builtin builtin) const {\n    const struct LayoutDescription* descs =\n        reinterpret_cast<const struct LayoutDescription*>(\n            data_ + LayoutDescriptionTableOffset());\n    return descs[static_cast<int>(builtin)];\n  }\n\n  const BuiltinLookupEntry* BuiltinLookupEntry(\n      ReorderedBuiltinIndex index) const {\n    const struct BuiltinLookupEntry* entries =\n        reinterpret_cast<const struct BuiltinLookupEntry*>(\n            data_ + BuiltinLookupEntryTableOffset());\n    return entries + index;\n  }\n\n  const uint8_t* RawMetadata() const { return data_ + RawMetadataOffset(); }\n\n  static constexpr int PadAndAlignCode(int size) {\n    // Ensure we have at least one byte trailing the actual builtin\n    // instructions which we can later fill with int3.\n    return RoundUp<kCodeAlignment>(size + 1);\n  }\n  static constexpr int PadAndAlignData(int size) {\n    // Ensure we have at least one byte trailing the actual builtin\n    // instructions which we can later fill with int3.\n    return RoundUp<InstructionStream::kMetadataAlignment>(size);\n  }\n\n  void PrintStatistics() const;\n\n  // The code section contains instruction streams. It is guaranteed to have\n  // execute permissions, and may have read permissions.\n  const uint8_t* code_;\n  uint32_t code_size_;\n\n  // The data section contains both descriptions of the code section (hashes,\n  // offsets, sizes) and metadata describing InstructionStream objects (see\n  // InstructionStream::MetadataStart()). It is guaranteed to have read\n  // permissions.\n  const uint8_t* data_;\n  uint32_t data_size_;\n};"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "struct",
+        "name": "LayoutDescription",
+        "parent": "EmbeddedData",
+        "about": "Describes the layout of a single instruction stream within the embedded data blob.",
+        "attributes": [
+          {
+            "name": "instruction_offset",
+            "type": "uint32_t",
+            "access": "public",
+            "purpose": "Offset of the instruction area from the start of the embedded code section."
+          },
+          {
+            "name": "instruction_length",
+            "type": "uint32_t",
+            "access": "public",
+            "purpose": "Unpadded length of the instruction area."
+          },
+          {
+            "name": "metadata_offset",
+            "type": "uint32_t",
+            "access": "public",
+            "purpose": "Offset of the metadata area from the start of the embedded data section."
+          }
+        ],
+        "dependencies": []
+      },
+      "code": "struct LayoutDescription {\n    // The offset and (unpadded) length of this builtin's instruction area\n    // from the start of the embedded code section.\n    uint32_t instruction_offset;\n    uint32_t instruction_length;\n    // The offset of this builtin's metadata area from the start of the\n    // embedded data section.\n    uint32_t metadata_offset;\n  };"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "struct",
+        "name": "BuiltinLookupEntry",
+        "parent": "EmbeddedData",
+        "about": "Maps from the 'embedded snapshot order' of builtins to the 'builtin id order'.",
+        "attributes": [
+          {
+            "name": "end_offset",
+            "type": "uint32_t",
+            "access": "public",
+            "purpose": "End offset (including padding) of the builtin."
+          },
+          {
+            "name": "builtin_id",
+            "type": "uint32_t",
+            "access": "public",
+            "purpose": "The ID of the builtin."
+          }
+        ],
+        "dependencies": []
+      },
+      "code": "struct BuiltinLookupEntry {\n    // The end offset (including padding) of builtin, the end_offset field\n    // should be in ascending order in the array in snapshot, because we will\n    // use it in TryLookupCode. It should be equal to\n    // LayoutDescription[builtin_id].instruction_offset +\n    // PadAndAlignCode(length)\n    uint32_t end_offset;\n    // The id of builtin.\n    uint32_t builtin_id;\n  };"
+    }
+  ],
+  "functions": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "method",
+        "name": "IsInCodeRange",
+        "parent": "EmbeddedData",
+        "about": "Checks if a given address falls within the embedded code range.",
+        "logic": "Determines if the provided address is within the range defined by the start of the embedded code and its size.",
+        "parameters": [
+          {
+            "name": "pc",
+            "type": "Address",
+            "purpose": "The address to check."
+          }
+        ],
+        "return": {
+          "type": "bool",
+          "description": "True if the address is within the code range, false otherwise."
+        },
+        "dependencies": [
+          "Address"
+        ]
+      },
+      "code": "bool IsInCodeRange(Address pc) const {\n    Address start = reinterpret_cast<Address>(code_);\n    return (start <= pc) && (pc < start + code_size_);\n  }"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "method",
+        "name": "AddressForHashing",
+        "parent": "EmbeddedData",
+        "about": "Calculates a hashable address by subtracting the start address of the code section from the given address.",
+        "logic": "Asserts that the provided address is within the code range, then computes the offset from the start of the code section to the given address and returns it as a uint32_t.",
+        "parameters": [
+          {
+            "name": "addr",
+            "type": "Address",
+            "purpose": "The address to be converted to a hashable address."
+          }
+        ],
+        "return": {
+          "type": "uint32_t",
+          "description": "A hashable address represented as a uint32_t offset."
+        },
+        "dependencies": [
+          "Address"
+        ]
+      },
+      "code": "uint32_t AddressForHashing(Address addr) {\n    DCHECK(IsInCodeRange(addr));\n    Address start = reinterpret_cast<Address>(code_);\n    return static_cast<uint32_t>(addr - start);\n  }"
+    }
+  ],
+  "file_path": "/home/kathirks_gc/v8_go/archive/codebase/src/snapshot/embedded/embedded-data.h"
+}

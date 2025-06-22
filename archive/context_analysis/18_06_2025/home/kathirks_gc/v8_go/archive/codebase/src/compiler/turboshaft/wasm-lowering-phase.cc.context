@@ -1,0 +1,129 @@
+{
+  "metadata": {
+    "path": "/home/kathirks_gc/v8_go/archive/codebase/src/compiler/turboshaft/wasm-lowering-phase.cc",
+    "file_name": "wasm-lowering-phase.cc",
+    "language": "cpp",
+    "purpose": "Implements the Wasm lowering phase for the Turboshaft compiler."
+  },
+  "imports": {
+    "metadata": {
+      "language": "cpp",
+      "purpose": "Includes necessary header files for the Wasm lowering phase."
+    },
+    "code": "#include \"src/compiler/turboshaft/wasm-lowering-phase.h\"\n\n#include \"src/compiler/js-heap-broker.h\"\n#include \"src/compiler/turboshaft/copying-phase.h\"\n#include \"src/compiler/turboshaft/machine-optimization-reducer.h\"\n#include \"src/compiler/turboshaft/phase.h\"\n#include \"src/compiler/turboshaft/required-optimization-reducer.h\"\n#include \"src/compiler/turboshaft/variable-reducer.h\"\n#include \"src/compiler/turboshaft/wasm-lowering-reducer.h\"\n#include \"src/numbers/conversions-inl.h\""
+  },
+  "functions": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "method",
+        "name": "Run",
+        "parent": "WasmLoweringPhase",
+        "about": "Runs the Wasm lowering phase.",
+        "logic": "This function executes the Wasm lowering phase, which involves optimizing and transforming the Wasm code for better performance. It utilizes CopyingPhase with WasmLoweringReducer and MachineOptimizationReducer. It also uses UnparkedScopeIfNeeded which likely handles managing a scope where operations can be performed without being blocked or waiting for certain conditions.",
+        "parameters": [
+          {
+            "name": "data",
+            "type": "PipelineData*",
+            "purpose": "Pointer to the pipeline data containing information about the compilation process."
+          },
+          {
+            "name": "temp_zone",
+            "type": "Zone*",
+            "purpose": "Pointer to a temporary memory zone for allocations."
+          }
+        ],
+        "return": {
+          "type": "void",
+          "description": "No return value."
+        },
+        "dependencies": [
+          "UnparkedScopeIfNeeded",
+          "CopyingPhase",
+          "WasmLoweringReducer",
+          "MachineOptimizationReducer"
+        ]
+      },
+      "code": "void WasmLoweringPhase::Run(PipelineData* data, Zone* temp_zone) {\n  UnparkedScopeIfNeeded scope(data->broker(),\n                              v8_flags.turboshaft_trace_reduction);\n  // Also run the MachineOptimizationReducer as it can help the late load\n  // elimination that follows this phase eliminate more loads.\n  CopyingPhase<WasmLoweringReducer, MachineOptimizationReducer>::Run(data,\n                                                                     temp_zone);\n}"
+    }
+  ],
+  "classes": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "WasmLoweringPhase",
+        "about": "Represents the Wasm lowering phase in the Turboshaft compiler pipeline.",
+        "attributes": [],
+        "dependencies": [
+          "PipelineData",
+          "Zone"
+        ]
+      },
+      "code": "namespace v8::internal::compiler::turboshaft {\n\nvoid WasmLoweringPhase::Run(PipelineData* data, Zone* temp_zone) {\n  UnparkedScopeIfNeeded scope(data->broker(),\n                              v8_flags.turboshaft_trace_reduction);\n  // Also run the MachineOptimizationReducer as it can help the late load\n  // elimination that follows this phase eliminate more loads.\n  CopyingPhase<WasmLoweringReducer, MachineOptimizationReducer>::Run(data,\n                                                                     temp_zone);\n}\n\n}  // namespace v8::internal::compiler::turboshaft"
+    }
+  ],
+  "dependencies": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "PipelineData",
+        "about": "Carries data between compiler phases."
+      },
+      "code": "class PipelineData;",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "Zone",
+        "about": "A memory allocation zone."
+      },
+      "code": "class Zone;",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "UnparkedScopeIfNeeded",
+        "about": "A scope that manages unparking operations if needed."
+      },
+      "code": "class UnparkedScopeIfNeeded;",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "CopyingPhase",
+        "about": "A compiler phase that performs copying operations."
+      },
+      "code": "template <typename Reducer1, typename Reducer2>\n                class CopyingPhase;",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "WasmLoweringReducer",
+        "about": "Reducer for the Wasm lowering phase."
+      },
+      "code": "class WasmLoweringReducer;",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "MachineOptimizationReducer",
+        "about": "Reducer for machine optimization."
+      },
+      "code": "class MachineOptimizationReducer;",
+      "type": "class"
+    }
+  ],
+  "file_path": "/home/kathirks_gc/v8_go/archive/codebase/src/compiler/turboshaft/wasm-lowering-phase.cc"
+}

@@ -1,0 +1,260 @@
+{
+  "metadata": {
+    "path": "/home/kathirks_gc/v8_go/archive/codebase/src/codegen/riscv/extension-riscv-c.h",
+    "file_name": "extension-riscv-c.h",
+    "language": "cpp",
+    "purpose": "Declares the AssemblerRISCVC class, which provides methods for generating RISC-V C extension instructions."
+  },
+  "imports": {
+    "metadata": {
+      "language": "cpp",
+      "purpose": "Includes necessary headers for assembler functionality, RISC-V base assembler, constants, and register definitions."
+    },
+    "code": "#include \"src/codegen/assembler.h\"\n#include \"src/codegen/riscv/base-assembler-riscv.h\"\n#include \"src/codegen/riscv/constant-riscv-c.h\"\n#include \"src/codegen/riscv/register-riscv.h\""
+  },
+  "classes": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "AssemblerRISCVC",
+        "extends": "AssemblerRiscvBase",
+        "about": "Extends the base RISC-V assembler to provide methods for generating RISC-V C extension (compressed instruction set) instructions.",
+        "attributes": [],
+        "dependencies": [
+          "AssemblerRiscvBase",
+          "Register",
+          "FPURegister",
+          "Instr",
+          "Label"
+        ]
+      },
+      "code": "class AssemblerRISCVC : public AssemblerRiscvBase {\n  // RV64C Standard Extension\n public:\n  void c_nop();\n  void c_addi(Register rd, int8_t imm6);\n\n  void c_addi16sp(int16_t imm10);\n  void c_addi4spn(Register rd, int16_t uimm10);\n  void c_li(Register rd, int8_t imm6);\n  void c_lui(Register rd, int8_t imm6);\n  void c_slli(Register rd, uint8_t shamt6);\n  void c_lwsp(Register rd, uint16_t uimm8);\n  void c_jr(Register rs1);\n  void c_mv(Register rd, Register rs2);\n  void c_ebreak();\n  void c_jalr(Register rs1);\n  void c_j(int16_t imm12);\n  void c_add(Register rd, Register rs2);\n  void c_sub(Register rd, Register rs2);\n  void c_and(Register rd, Register rs2);\n  void c_xor(Register rd, Register rs2);\n  void c_or(Register rd, Register rs2);\n  void c_swsp(Register rs2, uint16_t uimm8);\n  void c_lw(Register rd, Register rs1, uint16_t uimm7);\n  void c_sw(Register rs2, Register rs1, uint16_t uimm7);\n  void c_bnez(Register rs1, int16_t imm9);\n  void c_beqz(Register rs1, int16_t imm9);\n  void c_srli(Register rs1, int8_t shamt6);\n  void c_srai(Register rs1, int8_t shamt6);\n  void c_andi(Register rs1, int8_t imm6);\n\n  void c_fld(FPURegister rd, Register rs1, uint16_t uimm8);\n  void c_fsd(FPURegister rs2, Register rs1, uint16_t uimm8);\n  void c_fldsp(FPURegister rd, uint16_t uimm9);\n  void c_fsdsp(FPURegister rs2, uint16_t uimm9);\n#ifdef V8_TARGET_ARCH_RISCV64\n  void c_ld(Register rd, Register rs1, uint16_t uimm8);\n  void c_sd(Register rs2, Register rs1, uint16_t uimm8);\n  void c_subw(Register rd, Register rs2);\n  void c_addw(Register rd, Register rs2);\n  void c_addiw(Register rd, int8_t imm6);\n  void c_ldsp(Register rd, uint16_t uimm9);\n  void c_sdsp(Register rs2, uint16_t uimm9);\n#endif\n\n  int CJumpOffset(Instr instr);\n\n  static bool IsCBranch(Instr instr);\n  static bool IsCJal(Instr instr);\n\n  inline int16_t cjump_offset(Label* L) {\n    return (int16_t)branch_offset_helper(L, OffsetSize::kOffset11);\n  }\n  inline int32_t cbranch_offset(Label* L) {\n    return branch_offset_helper(L, OffsetSize::kOffset9);\n  }\n\n  void c_j(Label* L) { c_j(cjump_offset(L)); }\n  void c_bnez(Register rs1, Label* L) { c_bnez(rs1, cbranch_offset(L)); }\n  void c_beqz(Register rs1, Label* L) { c_beqz(rs1, cbranch_offset(L)); }\n};"
+    }
+  ],
+  "functions": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "method",
+        "name": "cjump_offset",
+        "parent": "AssemblerRISCVC",
+        "about": "Calculates the offset for a compressed jump instruction.",
+        "logic": "Calls `branch_offset_helper` with `OffsetSize::kOffset11` to calculate the relative jump offset from the current instruction.  The result is cast to an int16_t.",
+        "parameters": [
+          {
+            "name": "L",
+            "type": "Label*",
+            "purpose": "The target label of the jump."
+          }
+        ],
+        "return": {
+          "type": "int16_t",
+          "description": "The relative offset to the target label, as a signed 16-bit integer."
+        },
+        "dependencies": [
+          "branch_offset_helper",
+          "OffsetSize"
+        ]
+      },
+      "code": "inline int16_t cjump_offset(Label* L) {\n    return (int16_t)branch_offset_helper(L, OffsetSize::kOffset11);\n  }"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "method",
+        "name": "cbranch_offset",
+        "parent": "AssemblerRISCVC",
+        "about": "Calculates the offset for a compressed branch instruction.",
+        "logic": "Calls `branch_offset_helper` with `OffsetSize::kOffset9` to calculate the relative branch offset from the current instruction. The result is a 32-bit integer.",
+        "parameters": [
+          {
+            "name": "L",
+            "type": "Label*",
+            "purpose": "The target label of the branch."
+          }
+        ],
+        "return": {
+          "type": "int32_t",
+          "description": "The relative offset to the target label, as a signed 32-bit integer."
+        },
+        "dependencies": [
+          "branch_offset_helper",
+          "OffsetSize"
+        ]
+      },
+      "code": "inline int32_t cbranch_offset(Label* L) {\n    return branch_offset_helper(L, OffsetSize::kOffset9);\n  }"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "method",
+        "name": "c_j",
+        "parent": "AssemblerRISCVC",
+        "about": "Emits a compressed jump instruction to the given label.",
+        "logic": "Calls the `c_j(int16_t imm12)` overload, passing the result of `cjump_offset(L)` as the immediate.",
+        "parameters": [
+          {
+            "name": "L",
+            "type": "Label*",
+            "purpose": "The target label of the jump."
+          }
+        ],
+        "return": {
+          "type": "void",
+          "description": "No return value."
+        },
+        "dependencies": [
+          "cjump_offset",
+          "c_j(int16_t imm12)"
+        ]
+      },
+      "code": "void c_j(Label* L) { c_j(cjump_offset(L)); }"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "method",
+        "name": "c_bnez",
+        "parent": "AssemblerRISCVC",
+        "about": "Emits a compressed branch-if-not-equal-to-zero instruction to the given label.",
+        "logic": "Calls the `c_bnez(Register rs1, int16_t imm9)` overload, passing the result of `cbranch_offset(L)` as the immediate.",
+        "parameters": [
+          {
+            "name": "rs1",
+            "type": "Register",
+            "purpose": "The register to check for non-zero value."
+          },
+          {
+            "name": "L",
+            "type": "Label*",
+            "purpose": "The target label of the branch."
+          }
+        ],
+        "return": {
+          "type": "void",
+          "description": "No return value."
+        },
+        "dependencies": [
+          "cbranch_offset",
+          "c_bnez(Register rs1, int16_t imm9)"
+        ]
+      },
+      "code": "void c_bnez(Register rs1, Label* L) { c_bnez(rs1, cbranch_offset(L)); }"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "method",
+        "name": "c_beqz",
+        "parent": "AssemblerRISCVC",
+        "about": "Emits a compressed branch-if-equal-to-zero instruction to the given label.",
+        "logic": "Calls the `c_beqz(Register rs1, int16_t imm9)` overload, passing the result of `cbranch_offset(L)` as the immediate.",
+        "parameters": [
+          {
+            "name": "rs1",
+            "type": "Register",
+            "purpose": "The register to check for zero value."
+          },
+          {
+            "name": "L",
+            "type": "Label*",
+            "purpose": "The target label of the branch."
+          }
+        ],
+        "return": {
+          "type": "void",
+          "description": "No return value."
+        },
+        "dependencies": [
+          "cbranch_offset",
+          "c_beqz(Register rs1, int16_t imm9)"
+        ]
+      },
+      "code": "void c_beqz(Register rs1, Label* L) { c_beqz(rs1, cbranch_offset(L)); }"
+    }
+  ],
+  "dependencies": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "AssemblerRiscvBase",
+        "about": "Base class for RISC-V assembler functionality."
+      },
+      "code": "class AssemblerRiscvBase {};",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "Register",
+        "about": "Represents a RISC-V register."
+      },
+      "code": "class Register {};",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "FPURegister",
+        "about": "Represents a RISC-V floating-point register."
+      },
+      "code": "class FPURegister {};",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "Label",
+        "about": "Represents a label in the assembly code."
+      },
+      "code": "class Label {};",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "enum",
+        "name": "OffsetSize",
+        "about": "Enumeration representing offset size",
+        "values": [
+          "kOffset9",
+          "kOffset11"
+        ]
+      },
+      "code": "enum class OffsetSize { kOffset9, kOffset11 };",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "function",
+        "name": "branch_offset_helper",
+        "about": "Helper function for calculating branch offsets.",
+        "parameters": [
+          {
+            "name": "L",
+            "type": "Label*",
+            "purpose": "The target label."
+          },
+          {
+            "name": "offset_size",
+            "type": "OffsetSize",
+            "purpose": "Size of offset"
+          }
+        ],
+        "return": {
+          "type": "int32_t",
+          "description": "The calculated branch offset."
+        }
+      },
+      "code": "int32_t branch_offset_helper(Label* L, OffsetSize offset_size);",
+      "type": "func"
+    }
+  ],
+  "file_path": "/home/kathirks_gc/v8_go/archive/codebase/src/codegen/riscv/extension-riscv-c.h"
+}

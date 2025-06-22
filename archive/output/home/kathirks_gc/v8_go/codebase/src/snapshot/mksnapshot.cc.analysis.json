@@ -1,0 +1,168 @@
+{
+  "file_path": "/home/kathirks_gc/v8_go/codebase/src/snapshot/mksnapshot.cc",
+  "imports": [
+    "<errno.h>",
+    "<signal.h>",
+    "<stdio.h>",
+    "<iomanip>",
+    "include/libplatform/libplatform.h",
+    "include/v8-initialization.h",
+    "src/base/platform/elapsed-timer.h",
+    "src/base/platform/platform.h",
+    "src/base/platform/wrappers.h",
+    "src/base/vector.h",
+    "src/codegen/cpu-features.h",
+    "src/common/globals.h",
+    "src/flags/flags.h",
+    "src/snapshot/embedded/embedded-file-writer.h",
+    "src/snapshot/snapshot.h",
+    "src/snapshot/static-roots-gen.h"
+  ],
+  "classes": [
+    {
+      "name": "SnapshotFileWriter",
+      "properties": [
+        "snapshot_cpp_path_",
+        "snapshot_blob_path_"
+      ],
+      "methods": [
+        {
+          "name": "SetSnapshotFile",
+          "parameters": [
+            "const char* snapshot_cpp_file"
+          ],
+          "return_type": "void",
+          "logic": "Sets the path to the C++ snapshot file."
+        },
+        {
+          "name": "SetStartupBlobFile",
+          "parameters": [
+            "const char* snapshot_blob_file"
+          ],
+          "return_type": "void",
+          "logic": "Sets the path to the binary snapshot blob file."
+        },
+        {
+          "name": "WriteSnapshot",
+          "parameters": [
+            "v8::StartupData blob"
+          ],
+          "return_type": "void",
+          "logic": "Writes the snapshot data to the C++ and binary blob files. Delegates to MaybeWriteSnapshotFile and MaybeWriteStartupBlob."
+        },
+        {
+          "name": "MaybeWriteStartupBlob",
+          "parameters": [
+            "v8::base::Vector<const uint8_t> blob"
+          ],
+          "return_type": "void",
+          "logic": "Writes the startup blob data to the specified file."
+        },
+        {
+          "name": "MaybeWriteSnapshotFile",
+          "parameters": [
+            "v8::base::Vector<const uint8_t> blob"
+          ],
+          "return_type": "void",
+          "logic": "Writes the snapshot data to the specified C++ file, including prefix, data, and suffix."
+        },
+        {
+          "name": "WriteSnapshotFilePrefix",
+          "parameters": [
+            "FILE* fp"
+          ],
+          "return_type": "void",
+          "logic": "Writes the C++ file header, including includes and namespace declarations."
+        },
+        {
+          "name": "WriteSnapshotFileSuffix",
+          "parameters": [
+            "FILE* fp"
+          ],
+          "return_type": "void",
+          "logic": "Writes the C++ file footer, including Snapshot::DefaultSnapshotBlob and Snapshot::ShouldVerifyChecksum."
+        },
+        {
+          "name": "WriteSnapshotFileData",
+          "parameters": [
+            "FILE* fp",
+            "v8::base::Vector<const uint8_t> blob"
+          ],
+          "return_type": "void",
+          "logic": "Writes the binary snapshot data as a C array within the C++ file."
+        },
+        {
+          "name": "WriteBinaryContentsAsCArray",
+          "parameters": [
+            "FILE* fp",
+            "v8::base::Vector<const uint8_t> blob"
+          ],
+          "return_type": "void",
+          "logic": "Writes the binary contents of the snapshot as a formatted C array."
+        },
+        {
+          "name": "GetFileDescriptorOrDie",
+          "parameters": [
+            "const char* filename"
+          ],
+          "return_type": "FILE*",
+          "logic": "Opens the specified file for writing, exiting the program if it fails."
+        }
+      ]
+    }
+  ],
+  "functions": [
+    {
+      "name": "GetExtraCode",
+      "parameters": [
+        "char* filename",
+        "const char* description"
+      ],
+      "return_type": "std::unique_ptr<char[]>",
+      "logic": "Loads a script from a file into a character array. Used to load embedding and warmup scripts."
+    },
+    {
+      "name": "CreateSnapshotDataBlob",
+      "parameters": [
+        "v8::SnapshotCreator& snapshot_creator",
+        "const char* embedded_source"
+      ],
+      "return_type": "v8::StartupData",
+      "logic": "Creates a snapshot data blob using the provided snapshot creator and embedded source code."
+    },
+    {
+      "name": "WarmUpSnapshotDataBlob",
+      "parameters": [
+        "v8::StartupData cold_snapshot_blob",
+        "const char* warmup_source"
+      ],
+      "return_type": "v8::StartupData",
+      "logic": "Warms up the snapshot data blob using the provided warmup source code."
+    },
+    {
+      "name": "WriteEmbeddedFile",
+      "parameters": [
+        "i::EmbeddedFileWriter* writer"
+      ],
+      "return_type": "void",
+      "logic": "Writes embedded data from a blob using an EmbeddedFileWriter."
+    },
+    {
+      "name": "MaybeSetCounterFunction",
+      "parameters": [
+        "v8::Isolate* isolate"
+      ],
+      "return_type": "void",
+      "logic": "Sets the counter function on the V8 isolate if the native_code_counters flag is enabled. The counter function returns distinct addresses for each counter name."
+    },
+    {
+      "name": "main",
+      "parameters": [
+        "int argc",
+        "char** argv"
+      ],
+      "return_type": "int",
+      "logic": "The main function of the mksnapshot tool.  It parses command line flags, initializes V8, creates a snapshot, and writes it to a file."
+    }
+  ]
+}

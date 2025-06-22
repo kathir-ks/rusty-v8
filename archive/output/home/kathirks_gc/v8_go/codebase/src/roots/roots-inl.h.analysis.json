@@ -1,0 +1,177 @@
+{
+  "file_path": "/home/kathirks_gc/v8_go/codebase/src/roots/roots-inl.h",
+  "imports": [
+    "src/common/ptr-compr-inl.h",
+    "src/execution/isolate.h",
+    "src/execution/local-isolate.h",
+    "src/handles/handles.h",
+    "src/heap/page-metadata-inl.h",
+    "src/heap/read-only-heap-inl.h",
+    "src/objects/api-callbacks.h",
+    "src/objects/cell.h",
+    "src/objects/descriptor-array.h",
+    "src/objects/feedback-vector.h",
+    "src/objects/heap-number.h",
+    "src/objects/hole.h",
+    "src/objects/literal-objects.h",
+    "src/objects/map.h",
+    "src/objects/oddball.h",
+    "src/objects/property-array.h",
+    "src/objects/property-cell.h",
+    "src/objects/scope-info.h",
+    "src/objects/slots.h",
+    "src/objects/string.h",
+    "src/objects/swiss-name-dictionary.h",
+    "src/objects/tagged.h",
+    "src/roots/roots.h",
+    "src/roots/static-roots.h",
+    "src/wasm/wasm-objects.h"
+  ],
+  "classes": [
+    {
+      "name": "RootsTable",
+      "properties": [],
+      "methods": [
+        {
+          "name": "IsRootHandleLocation",
+          "parameters": [
+            "Address* handle_location",
+            "RootIndex* index"
+          ],
+          "return_type": "bool",
+          "logic": "Checks if the given memory location is within the range of the roots table and sets the index if it is."
+        },
+        {
+          "name": "IsRootHandle",
+          "parameters": [
+            "IndirectHandle<T> handle",
+            "RootIndex* index"
+          ],
+          "return_type": "bool",
+          "logic": "Checks if the given handle points to a root in the roots table, and if so, returns the RootIndex. It avoids dereferencing the handle directly."
+        },
+        {
+          "name": "handle_at",
+          "parameters": [
+            "RootIndex index"
+          ],
+          "return_type": "IndirectHandle<Object>",
+          "logic": "Returns an IndirectHandle to the object at the given RootIndex within the roots table."
+        }
+      ]
+    },
+    {
+      "name": "ReadOnlyRoots",
+      "properties": [],
+      "methods": [
+        {
+          "name": "ReadOnlyRoots",
+          "parameters": [
+            "Heap* heap"
+          ],
+          "return_type": "ReadOnlyRoots",
+          "logic": "Constructor that initializes ReadOnlyRoots based on a Heap pointer."
+        },
+        {
+          "name": "ReadOnlyRoots",
+          "parameters": [
+            "const Isolate* isolate"
+          ],
+          "return_type": "ReadOnlyRoots",
+          "logic": "Constructor that initializes ReadOnlyRoots based on an Isolate pointer."
+        },
+        {
+          "name": "ReadOnlyRoots",
+          "parameters": [
+            "LocalIsolate* isolate"
+          ],
+          "return_type": "ReadOnlyRoots",
+          "logic": "Constructor that initializes ReadOnlyRoots based on a LocalIsolate pointer."
+        },
+        {
+          "name": "boolean_value",
+          "parameters": [
+            "bool value"
+          ],
+          "return_type": "Tagged<Boolean>",
+          "logic": "Returns the appropriate boolean value (true or false) from the read-only roots."
+        },
+        {
+          "name": "first_name_for_protector",
+          "parameters": [],
+          "return_type": "Address",
+          "logic": "Returns the address of the first name used for protector invalidation."
+        },
+        {
+          "name": "last_name_for_protector",
+          "parameters": [],
+          "return_type": "Address",
+          "logic": "Returns the address of the last name used for protector invalidation."
+        },
+        {
+          "name": "IsNameForProtector",
+          "parameters": [
+            "Tagged<HeapObject> object"
+          ],
+          "return_type": "bool",
+          "logic": "Checks if the given heap object's address falls within the range of names used for protector invalidation."
+        },
+        {
+          "name": "VerifyNameForProtectorsPages",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Verifies that the names used for protector invalidation reside on the same page, enabling fast range checks."
+        },
+        {
+          "name": "object_at",
+          "parameters": [
+            "RootIndex root_index"
+          ],
+          "return_type": "Tagged<Object>",
+          "logic": "Returns the tagged object at the given RootIndex within the read-only roots."
+        },
+        {
+          "name": "address_at",
+          "parameters": [
+            "RootIndex root_index"
+          ],
+          "return_type": "Address",
+          "logic": "Returns the memory address of the object stored at the given RootIndex. It uses either static roots or the read-only roots array based on compile-time configuration."
+        },
+        {
+          "name": "is_initialized",
+          "parameters": [
+            "RootIndex root_index"
+          ],
+          "return_type": "bool",
+          "logic": "Checks whether the root at the given index is initialized (not kNullAddress)."
+        }
+      ]
+    }
+  ],
+  "functions": [
+    {
+      "name": "operator<",
+      "parameters": [
+        "RootIndex lhs",
+        "RootIndex rhs"
+      ],
+      "return_type": "bool",
+      "logic": "Overloads the less-than operator for RootIndex enum. Compares two RootIndex values."
+    },
+    {
+      "name": "operator++",
+      "parameters": [
+        "RootIndex& index"
+      ],
+      "return_type": "RootIndex",
+      "logic": "Overloads the pre-increment operator for RootIndex enum. Increments the RootIndex."
+    },
+    {
+      "name": "GetReadOnlyRoots",
+      "parameters": [],
+      "return_type": "ReadOnlyRoots",
+      "logic": "Retrieves the read-only roots from the shared read-only heap of the current isolate group. Uses EarlyGetReadOnlyRoots during initialization."
+    }
+  ]
+}

@@ -1,0 +1,50 @@
+{
+  "metadata": {
+    "path": "/home/kathirks_gc/v8_go/archive/codebase/src/compiler/turboshaft/debug-feature-lowering-phase.cc",
+    "file_name": "debug-feature-lowering-phase.cc",
+    "language": "cpp",
+    "purpose": "Implements the DebugFeatureLoweringPhase for the Turboshaft compiler, which removes debug-only features from the graph when debug code is disabled."
+  },
+  "imports": {
+    "metadata": {
+      "language": "cpp",
+      "purpose": "Includes necessary headers for the debug feature lowering phase."
+    },
+    "code": "#include \"src/compiler/turboshaft/debug-feature-lowering-phase.h\"\n\n#include \"src/compiler/turboshaft/copying-phase.h\"\n#include \"src/compiler/turboshaft/debug-feature-lowering-reducer.h\""
+  },
+  "functions": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "method",
+        "name": "Run",
+        "parent": "DebugFeatureLoweringPhase",
+        "about": "Runs the debug feature lowering phase.",
+        "logic": "Conditionally executes the CopyingPhase with the DebugFeatureLoweringReducer if V8_ENABLE_DEBUG_CODE is defined.  This effectively removes debug-only nodes from the graph.",
+        "parameters": [
+          {
+            "name": "data",
+            "type": "PipelineData*",
+            "purpose": "Pipeline data for the compilation process."
+          },
+          {
+            "name": "temp_zone",
+            "type": "Zone*",
+            "purpose": "Temporary zone for allocations during the phase."
+          }
+        ],
+        "return": {
+          "type": "void",
+          "description": "No return value."
+        },
+        "dependencies": [
+          "CopyingPhase",
+          "DebugFeatureLoweringReducer",
+          "V8_ENABLE_DEBUG_CODE"
+        ]
+      },
+      "code": "void DebugFeatureLoweringPhase::Run(PipelineData* data, Zone* temp_zone) {\n#ifdef V8_ENABLE_DEBUG_CODE\n  turboshaft::CopyingPhase<turboshaft::DebugFeatureLoweringReducer>::Run(\n      data, temp_zone);\n#endif\n}"
+    }
+  ],
+  "file_path": "/home/kathirks_gc/v8_go/archive/codebase/src/compiler/turboshaft/debug-feature-lowering-phase.cc"
+}

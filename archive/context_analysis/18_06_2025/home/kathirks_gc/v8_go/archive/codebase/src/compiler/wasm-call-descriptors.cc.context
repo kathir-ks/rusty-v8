@@ -1,0 +1,122 @@
+{
+  "metadata": {
+    "path": "/home/kathirks_gc/v8_go/archive/codebase/src/compiler/wasm-call-descriptors.cc",
+    "file_name": "wasm-call-descriptors.cc",
+    "language": "cpp",
+    "purpose": "Defines the WasmCallDescriptors class, which manages call descriptors for WebAssembly built-in functions, especially for BigInt conversions, taking into account architecture-specific considerations (32-bit vs. 64-bit)."
+  },
+  "imports": {
+    "metadata": {
+      "language": "cpp",
+      "purpose": "Includes necessary header files for compiler, common globals, graph assembly and zone management functionalities."
+    },
+    "code": "#include \"src/compiler/wasm-call-descriptors.h\"\n\n#include \"src/common/globals.h\"\n#include \"src/compiler/wasm-graph-assembler.h\"\n#include \"src/zone/zone.h\""
+  },
+  "classes": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "WasmCallDescriptors",
+        "about": "Manages call descriptors for WebAssembly built-in functions, especially BigInt conversions, optimizing for different architectures.",
+        "attributes": [
+          {
+            "name": "zone_",
+            "type": "Zone*",
+            "access": "private",
+            "purpose": "Memory zone for allocating call descriptors."
+          },
+          {
+            "name": "bigint_to_i64_descriptor_",
+            "type": "compiler::CallDescriptor*",
+            "access": "private",
+            "purpose": "Call descriptor for BigInt to Int64 conversion."
+          },
+          {
+            "name": "bigint_to_i64_descriptor_with_framestate_",
+            "type": "compiler::CallDescriptor*",
+            "access": "private",
+            "purpose": "Call descriptor for BigInt to Int64 conversion with frame state."
+          },
+          {
+            "name": "bigint_to_i32pair_descriptor_",
+            "type": "compiler::CallDescriptor*",
+            "access": "private",
+            "purpose": "Call descriptor for BigInt to Int32 pair conversion (32-bit architecture)."
+          },
+          {
+            "name": "bigint_to_i32pair_descriptor_with_framestate_",
+            "type": "compiler::CallDescriptor*",
+            "access": "private",
+            "purpose": "Call descriptor for BigInt to Int32 pair conversion with frame state (32-bit architecture)."
+          }
+        ],
+        "dependencies": [
+          "Zone",
+          "compiler::CallDescriptor",
+          "compiler::GetBuiltinCallDescriptor",
+          "Builtin",
+          "AccountingAllocator",
+          "StubCallMode"
+        ]
+      },
+      "code": "namespace v8::internal::compiler {\n\nclass WasmCallDescriptors {\n public:\n  WasmCallDescriptors(AccountingAllocator* allocator);\n\n#if V8_TARGET_ARCH_32_BIT\n  compiler::CallDescriptor* GetLoweredCallDescriptor(\n      const compiler::CallDescriptor* original);\n#endif  // V8_TARGET_ARCH_32_BIT\n\n private:\n  std::unique_ptr<Zone> zone_;\n  compiler::CallDescriptor* bigint_to_i64_descriptor_;\n  compiler::CallDescriptor* bigint_to_i64_descriptor_with_framestate_;\n#if V8_TARGET_ARCH_32_BIT\n  compiler::CallDescriptor* bigint_to_i32pair_descriptor_;\n  compiler::CallDescriptor* bigint_to_i32pair_descriptor_with_framestate_;\n#endif  // V8_TARGET_ARCH_32_BIT\n};"
+    }
+  ],
+  "functions": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "method",
+        "name": "WasmCallDescriptors",
+        "parent": "WasmCallDescriptors",
+        "about": "Constructor for WasmCallDescriptors. Initializes call descriptors for BigInt conversions.",
+        "logic": "Allocates a new Zone for managing call descriptors. Creates call descriptors for BigInt to Int64 and, on 32-bit architectures, BigInt to Int32 pair conversions, using GetBuiltinCallDescriptor with appropriate Builtin enum values and stub call modes. Uses a unique_ptr to manage the Zone's lifetime.",
+        "parameters": [
+          {
+            "name": "allocator",
+            "type": "AccountingAllocator*",
+            "purpose": "Allocator used for allocating the Zone."
+          }
+        ],
+        "return": {
+          "type": "void",
+          "description": "No return value (constructor)"
+        },
+        "dependencies": [
+          "Zone",
+          "compiler::GetBuiltinCallDescriptor",
+          "Builtin",
+          "StubCallMode"
+        ]
+      },
+      "code": "WasmCallDescriptors::WasmCallDescriptors(AccountingAllocator* allocator)\n    : zone_(new Zone(allocator, \"wasm_call_descriptors\")) {\n  bigint_to_i64_descriptor_ = compiler::GetBuiltinCallDescriptor(\n      Builtin::kBigIntToI64, zone_.get(), StubCallMode::kCallBuiltinPointer);\n  bigint_to_i64_descriptor_with_framestate_ =\n      compiler::GetBuiltinCallDescriptor(Builtin::kBigIntToI64, zone_.get(),\n                                         StubCallMode::kCallBuiltinPointer,\n                                         true);\n#if V8_TARGET_ARCH_32_BIT\n  bigint_to_i32pair_descriptor_ =\n      compiler::GetBuiltinCallDescriptor(Builtin::kBigIntToI32Pair, zone_.get(),\n                                         StubCallMode::kCallBuiltinPointer);\n  bigint_to_i32pair_descriptor_with_framestate_ =\n      compiler::GetBuiltinCallDescriptor(Builtin::kBigIntToI32Pair, zone_.get(),\n                                         StubCallMode::kCallBuiltinPointer,\n                                         true);\n#endif  // V8_TARGET_ARCH_32_BIT\n}"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "method",
+        "name": "GetLoweredCallDescriptor",
+        "parent": "WasmCallDescriptors",
+        "about": "Returns a lowered call descriptor for 32-bit architectures if the original call descriptor is for BigInt to Int64 conversion. Otherwise, returns nullptr.",
+        "logic": "On 32-bit architectures, BigInt to Int64 conversions are lowered to BigInt to Int32 pair conversions. This method checks if the original call descriptor is for BigInt to Int64 conversion (with or without frame state) and returns the corresponding BigInt to Int32 pair call descriptor if so. Otherwise, returns nullptr. Only compiled on 32 bit.",
+        "parameters": [
+          {
+            "name": "original",
+            "type": "const compiler::CallDescriptor*",
+            "purpose": "The original call descriptor."
+          }
+        ],
+        "return": {
+          "type": "compiler::CallDescriptor*",
+          "description": "The lowered call descriptor, or nullptr if no lowering is needed."
+        },
+        "dependencies": [
+          "compiler::CallDescriptor"
+        ]
+      },
+      "code": "#if V8_TARGET_ARCH_32_BIT\ncompiler::CallDescriptor* WasmCallDescriptors::GetLoweredCallDescriptor(\n    const compiler::CallDescriptor* original) {\n  if (original == bigint_to_i64_descriptor_) {\n    return bigint_to_i32pair_descriptor_;\n  }\n  if (original == bigint_to_i64_descriptor_with_framestate_) {\n    return bigint_to_i32pair_descriptor_with_framestate_;\n  }\n  return nullptr;\n}\n#endif  // V8_TARGET_ARCH_32_BIT"
+    }
+  ],
+  "file_path": "/home/kathirks_gc/v8_go/archive/codebase/src/compiler/wasm-call-descriptors.cc"
+}

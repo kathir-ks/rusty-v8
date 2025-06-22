@@ -1,0 +1,732 @@
+{
+  "file_path": "/home/kathirks_gc/v8_go/codebase/src/compiler/backend/riscv/instruction-scheduler-riscv.cc",
+  "imports": [
+    "src/codegen/macro-assembler.h",
+    "src/compiler/backend/instruction-scheduler.h"
+  ],
+  "classes": [
+    {
+      "name": "InstructionScheduler",
+      "properties": [],
+      "methods": [
+        {
+          "name": "SchedulerSupported",
+          "parameters": [],
+          "return_type": "bool",
+          "logic": "Returns true, indicating that instruction scheduling is supported for the RISC-V architecture."
+        },
+        {
+          "name": "GetTargetInstructionFlags",
+          "parameters": [
+            "const Instruction* instr"
+          ],
+          "return_type": "int",
+          "logic": "Returns instruction flags based on the opcode of the given instruction.  This function uses a switch statement to determine if an instruction is a load operation or has side effects. It categorizes RISC-V instructions based on their behavior, assigning flags accordingly.  The function differentiates between RISCV64 and RISCV32 architectures using preprocessor directives, including specific instructions for each."
+        },
+        {
+          "name": "GetInstructionLatency",
+          "parameters": [
+            "const Instruction* instr"
+          ],
+          "return_type": "int",
+          "logic": "Returns the estimated latency (in cycles) for the given RISC-V instruction.  This function uses a switch statement to determine the latency of different RISC-V instructions. Latencies are estimates based on the type of instruction. Includes handling of common architecture instructions and C function calls, and it accounts for conditional compilation based on the RISCV64 and RISCV32 targets.  It determines the cycles based on instruction types."
+        }
+      ]
+    }
+  ],
+  "functions": [
+    {
+      "name": "LoadConstantLatency",
+      "parameters": [],
+      "return_type": "int",
+      "logic": "Returns the latency for loading a constant value. It's currently set to 1, but it has commented-out code showing different latencies depending on the architecture."
+    },
+    {
+      "name": "Add64Latency",
+      "parameters": [
+        "bool is_operand_register = true"
+      ],
+      "return_type": "int",
+      "logic": "Returns the latency for a 64-bit addition operation. If the operand is not in a register, it adds the load constant latency to the base latency."
+    },
+    {
+      "name": "Sub64Latency",
+      "parameters": [
+        "bool is_operand_register = true"
+      ],
+      "return_type": "int",
+      "logic": "Returns the latency for a 64-bit subtraction operation. It uses Add64Latency since subtraction often has a similar latency."
+    },
+    {
+      "name": "ShiftLatency",
+      "parameters": [
+        "bool is_operand_register = true"
+      ],
+      "return_type": "int",
+      "logic": "Returns the latency for a shift operation. It uses Add64Latency since shift operations often have a similar latency."
+    },
+    {
+      "name": "AndLatency",
+      "parameters": [
+        "bool is_operand_register = true"
+      ],
+      "return_type": "int",
+      "logic": "Returns the latency for a bitwise AND operation. It uses Add64Latency since AND operations often have a similar latency."
+    },
+    {
+      "name": "OrLatency",
+      "parameters": [
+        "bool is_operand_register = true"
+      ],
+      "return_type": "int",
+      "logic": "Returns the latency for a bitwise OR operation. It uses Add64Latency since OR operations often have a similar latency."
+    },
+    {
+      "name": "NorLatency",
+      "parameters": [
+        "bool is_operand_register = true"
+      ],
+      "return_type": "int",
+      "logic": "Returns the latency for a bitwise NOR operation. If the operand is not in a register, it adds the load constant latency to the base latency."
+    },
+    {
+      "name": "XorLatency",
+      "parameters": [
+        "bool is_operand_register = true"
+      ],
+      "return_type": "int",
+      "logic": "Returns the latency for a bitwise XOR operation. It uses Add64Latency since XOR operations often have a similar latency."
+    },
+    {
+      "name": "Mul32Latency",
+      "parameters": [
+        "bool is_operand_register = true"
+      ],
+      "return_type": "int",
+      "logic": "Returns the latency for a 32-bit multiplication operation. If the operand is not in a register, it adds 1 to the base latency (Latency::MULW)."
+    },
+    {
+      "name": "Mul64Latency",
+      "parameters": [
+        "bool is_operand_register = true"
+      ],
+      "return_type": "int",
+      "logic": "Returns the latency for a 64-bit multiplication operation. If the operand is not in a register, it adds the load constant latency to the base latency."
+    },
+    {
+      "name": "Mulh32Latency",
+      "parameters": [
+        "bool is_operand_register = true"
+      ],
+      "return_type": "int",
+      "logic": "Returns the latency for a 32-bit multiply high operation. It adds the shift latency and load constant latency (if needed) to the base latency (Latency::MULH)."
+    },
+    {
+      "name": "Mulhu32Latency",
+      "parameters": [
+        "bool is_operand_register = true"
+      ],
+      "return_type": "int",
+      "logic": "Returns the latency for a 32-bit unsigned multiply high operation. It adds the shift latency and load constant latency (if needed) to the base latency (Latency::MULHU)."
+    },
+    {
+      "name": "Mulh64Latency",
+      "parameters": [
+        "bool is_operand_register = true"
+      ],
+      "return_type": "int",
+      "logic": "Returns the latency for a 64-bit multiply high operation. If the operand is not in a register, it adds the load constant latency to the base latency."
+    },
+    {
+      "name": "Div32Latency",
+      "parameters": [
+        "bool is_operand_register = true"
+      ],
+      "return_type": "int",
+      "logic": "Returns the latency for a 32-bit division operation. Adds MovzLatency() and (if the operand is not a register) 1 to the base latency (Latency::DIVW)."
+    },
+    {
+      "name": "Divu32Latency",
+      "parameters": [
+        "bool is_operand_register = true"
+      ],
+      "return_type": "int",
+      "logic": "Returns the latency for a 32-bit unsigned division operation. Adds LoadConstantLatency() and MovzLatency()  to the base latency (Latency::DIVUW)."
+    },
+    {
+      "name": "Div64Latency",
+      "parameters": [
+        "bool is_operand_register = true"
+      ],
+      "return_type": "int",
+      "logic": "Returns the latency for a 64-bit division operation. If the operand is not in a register, it adds the load constant latency to the base latency. Also adds MovzLatency()."
+    },
+    {
+      "name": "Divu64Latency",
+      "parameters": [
+        "bool is_operand_register = true"
+      ],
+      "return_type": "int",
+      "logic": "Returns the latency for a 64-bit unsigned division operation. If the operand is not in a register, it adds the load constant latency to the base latency. Also adds MovzLatency()."
+    },
+    {
+      "name": "Mod32Latency",
+      "parameters": [
+        "bool is_operand_register = true"
+      ],
+      "return_type": "int",
+      "logic": "Returns the latency for a 32-bit modulus operation. If the operand is not in a register, it adds the load constant latency to the base latency (Latency::DIVW)."
+    },
+    {
+      "name": "Modu32Latency",
+      "parameters": [
+        "bool is_operand_register = true"
+      ],
+      "return_type": "int",
+      "logic": "Returns the latency for a 32-bit unsigned modulus operation. If the operand is not in a register, it adds the load constant latency to the base latency (Latency::DIVUW)."
+    },
+    {
+      "name": "Mod64Latency",
+      "parameters": [
+        "bool is_operand_register = true"
+      ],
+      "return_type": "int",
+      "logic": "Returns the latency for a 64-bit modulus operation. If the operand is not in a register, it adds the load constant latency to the base latency (Latency::DIV)."
+    },
+    {
+      "name": "Modu64Latency",
+      "parameters": [
+        "bool is_operand_register = true"
+      ],
+      "return_type": "int",
+      "logic": "Returns the latency for a 64-bit unsigned modulus operation. If the operand is not in a register, it adds the load constant latency to the base latency (Latency::DIV)."
+    },
+    {
+      "name": "MovzLatency",
+      "parameters": [],
+      "return_type": "int",
+      "logic": "Returns the latency for a movz instruction, which is 1."
+    },
+    {
+      "name": "MovnLatency",
+      "parameters": [],
+      "return_type": "int",
+      "logic": "Returns the latency for a movn instruction, which is 1."
+    },
+    {
+      "name": "CallLatency",
+      "parameters": [],
+      "return_type": "int",
+      "logic": "Returns the estimated latency for a function call."
+    },
+    {
+      "name": "JumpLatency",
+      "parameters": [],
+      "return_type": "int",
+      "logic": "Returns the estimated latency for a jump instruction."
+    },
+    {
+      "name": "SmiUntagLatency",
+      "parameters": [],
+      "return_type": "int",
+      "logic": "Returns the latency for untagging a Smi (small integer), which is 1."
+    },
+    {
+      "name": "PrepareForTailCallLatency",
+      "parameters": [],
+      "return_type": "int",
+      "logic": "Returns the estimated latency for preparing for a tail call."
+    },
+    {
+      "name": "AssemblePopArgumentsAdoptFrameLatency",
+      "parameters": [],
+      "return_type": "int",
+      "logic": "Returns the estimated latency for popping arguments and adopting a frame during assembly."
+    },
+    {
+      "name": "AssertLatency",
+      "parameters": [],
+      "return_type": "int",
+      "logic": "Returns the latency for an assert statement, which is 1."
+    },
+    {
+      "name": "PrepareCallCFunctionLatency",
+      "parameters": [],
+      "return_type": "int",
+      "logic": "Returns the latency for preparing a call to a C function. Considers frame alignment."
+    },
+    {
+      "name": "AdjustBaseAndOffsetLatency",
+      "parameters": [],
+      "return_type": "int",
+      "logic": "Returns the estimated latency for adjusting base and offset, which is 3."
+    },
+    {
+      "name": "AlignedMemoryLatency",
+      "parameters": [],
+      "return_type": "int",
+      "logic": "Returns the latency for an aligned memory access, which is AdjustBaseAndOffsetLatency() + 1."
+    },
+    {
+      "name": "UlhuLatency",
+      "parameters": [],
+      "return_type": "int",
+      "logic": "Returns the latency for an unaligned load halfword unsigned."
+    },
+    {
+      "name": "UlwLatency",
+      "parameters": [],
+      "return_type": "int",
+      "logic": "Returns the latency for an unaligned load word."
+    },
+    {
+      "name": "UlwuLatency",
+      "parameters": [],
+      "return_type": "int",
+      "logic": "Returns the latency for an unaligned load word unsigned."
+    },
+    {
+      "name": "UldLatency",
+      "parameters": [],
+      "return_type": "int",
+      "logic": "Returns the latency for an unaligned load doubleword."
+    },
+    {
+      "name": "ULoadFloatLatency",
+      "parameters": [],
+      "return_type": "int",
+      "logic": "Returns the latency for an unaligned load float."
+    },
+    {
+      "name": "ULoadDoubleLatency",
+      "parameters": [],
+      "return_type": "int",
+      "logic": "Returns the latency for an unaligned load double."
+    },
+    {
+      "name": "UshLatency",
+      "parameters": [],
+      "return_type": "int",
+      "logic": "Returns the latency for an unaligned store halfword."
+    },
+    {
+      "name": "UswLatency",
+      "parameters": [],
+      "return_type": "int",
+      "logic": "Returns the latency for an unaligned store word."
+    },
+    {
+      "name": "UsdLatency",
+      "parameters": [],
+      "return_type": "int",
+      "logic": "Returns the latency for an unaligned store doubleword."
+    },
+    {
+      "name": "UStoreFloatLatency",
+      "parameters": [],
+      "return_type": "int",
+      "logic": "Returns the latency for an unaligned store float."
+    },
+    {
+      "name": "UStoreDoubleLatency",
+      "parameters": [],
+      "return_type": "int",
+      "logic": "Returns the latency for an unaligned store double."
+    },
+    {
+      "name": "LoadFloatLatency",
+      "parameters": [],
+      "return_type": "int",
+      "logic": "Returns the latency for a load float."
+    },
+    {
+      "name": "StoreFloatLatency",
+      "parameters": [],
+      "return_type": "int",
+      "logic": "Returns the latency for a store float."
+    },
+    {
+      "name": "StoreDoubleLatency",
+      "parameters": [],
+      "return_type": "int",
+      "logic": "Returns the latency for a store double."
+    },
+    {
+      "name": "LoadDoubleLatency",
+      "parameters": [],
+      "return_type": "int",
+      "logic": "Returns the latency for a load double."
+    },
+    {
+      "name": "MultiPushLatency",
+      "parameters": [],
+      "return_type": "int",
+      "logic": "Returns the latency for pushing multiple registers onto the stack."
+    },
+    {
+      "name": "MultiPushFPULatency",
+      "parameters": [],
+      "return_type": "int",
+      "logic": "Returns the latency for pushing multiple FPU registers onto the stack."
+    },
+    {
+      "name": "PushCallerSavedLatency",
+      "parameters": [
+        "SaveFPRegsMode fp_mode"
+      ],
+      "return_type": "int",
+      "logic": "Returns the latency for pushing caller-saved registers onto the stack, considering the FPU registers to save or not."
+    },
+    {
+      "name": "MultiPopLatency",
+      "parameters": [],
+      "return_type": "int",
+      "logic": "Returns the latency for popping multiple registers from the stack."
+    },
+    {
+      "name": "MultiPopFPULatency",
+      "parameters": [],
+      "return_type": "int",
+      "logic": "Returns the latency for popping multiple FPU registers from the stack."
+    },
+    {
+      "name": "PopCallerSavedLatency",
+      "parameters": [
+        "SaveFPRegsMode fp_mode"
+      ],
+      "return_type": "int",
+      "logic": "Returns the latency for popping caller-saved registers from the stack, considering whether or not to restore FPU registers."
+    },
+    {
+      "name": "CallCFunctionHelperLatency",
+      "parameters": [],
+      "return_type": "int",
+      "logic": "Returns the estimated latency for a helper function call to C."
+    },
+    {
+      "name": "CallCFunctionLatency",
+      "parameters": [],
+      "return_type": "int",
+      "logic": "Returns the latency for a function call to C, including helper call latency."
+    },
+    {
+      "name": "AssembleArchJumpLatency",
+      "parameters": [],
+      "return_type": "int",
+      "logic": "Returns the estimated latency for an architectural jump."
+    },
+    {
+      "name": "GenerateSwitchTableLatency",
+      "parameters": [],
+      "return_type": "int",
+      "logic": "Returns the estimated latency for generating a switch table."
+    },
+    {
+      "name": "AssembleArchTableSwitchLatency",
+      "parameters": [],
+      "return_type": "int",
+      "logic": "Returns the estimated latency for assembling an architectural table switch."
+    },
+    {
+      "name": "DropAndRetLatency",
+      "parameters": [],
+      "return_type": "int",
+      "logic": "Returns the estimated latency for a drop and return sequence."
+    },
+    {
+      "name": "AssemblerReturnLatency",
+      "parameters": [],
+      "return_type": "int",
+      "logic": "Returns the estimated latency for assembler return sequence."
+    },
+    {
+      "name": "TryInlineTruncateDoubleToILatency",
+      "parameters": [],
+      "return_type": "int",
+      "logic": "Returns the latency for trying to inline truncate a double to an integer."
+    },
+    {
+      "name": "CallStubDelayedLatency",
+      "parameters": [],
+      "return_type": "int",
+      "logic": "Returns latency of delayed calls."
+    },
+    {
+      "name": "TruncateDoubleToIDelayedLatency",
+      "parameters": [],
+      "return_type": "int",
+      "logic": "Returns the latency for truncating a double to an integer with a delayed call to a stub."
+    },
+    {
+      "name": "CheckPageFlagLatency",
+      "parameters": [],
+      "return_type": "int",
+      "logic": "Returns the latency for checking a page flag."
+    },
+    {
+      "name": "SltuLatency",
+      "parameters": [
+        "bool is_operand_register = true"
+      ],
+      "return_type": "int",
+      "logic": "Returns the latency for a set less than unsigned instruction."
+    },
+    {
+      "name": "BranchShortHelperLatency",
+      "parameters": [],
+      "return_type": "int",
+      "logic": "Returns the estimated latency for short branch helper function."
+    },
+    {
+      "name": "BranchShortLatency",
+      "parameters": [],
+      "return_type": "int",
+      "logic": "Returns the estimated latency for a short branch."
+    },
+    {
+      "name": "MoveLatency",
+      "parameters": [],
+      "return_type": "int",
+      "logic": "Returns the latency for a move instruction."
+    },
+    {
+      "name": "MovToFloatParametersLatency",
+      "parameters": [],
+      "return_type": "int",
+      "logic": "Returns the latency for moving parameters to float registers."
+    },
+    {
+      "name": "MovFromFloatResultLatency",
+      "parameters": [],
+      "return_type": "int",
+      "logic": "Returns the latency for moving a result from a float register."
+    },
+    {
+      "name": "AddOverflow64Latency",
+      "parameters": [],
+      "return_type": "int",
+      "logic": "Returns the estimated latency for a 64-bit addition with overflow check."
+    },
+    {
+      "name": "SubOverflow64Latency",
+      "parameters": [],
+      "return_type": "int",
+      "logic": "Returns the estimated latency for a 64-bit subtraction with overflow check."
+    },
+    {
+      "name": "MulOverflow32Latency",
+      "parameters": [],
+      "return_type": "int",
+      "logic": "Returns the estimated latency for a 32-bit multiplication with overflow check."
+    },
+    {
+      "name": "MulOverflow64Latency",
+      "parameters": [],
+      "return_type": "int",
+      "logic": "Returns the estimated latency for a 64-bit multiplication with overflow check."
+    },
+    {
+      "name": "Clz64Latency",
+      "parameters": [],
+      "return_type": "int",
+      "logic": "Returns the estimated latency for a Count Leading Zeros (CLZ) operation on 64 bits."
+    },
+    {
+      "name": "Ctz32Latency",
+      "parameters": [],
+      "return_type": "int",
+      "logic": "Returns the estimated latency for a Count Trailing Zeros (CTZ) operation on 32 bits."
+    },
+    {
+      "name": "Ctz64Latency",
+      "parameters": [],
+      "return_type": "int",
+      "logic": "Returns the estimated latency for a Count Trailing Zeros (CTZ) operation on 64 bits."
+    },
+    {
+      "name": "Popcnt32Latency",
+      "parameters": [],
+      "return_type": "int",
+      "logic": "Returns the estimated latency for a Population Count (POPCNT) operation on 32 bits."
+    },
+    {
+      "name": "Popcnt64Latency",
+      "parameters": [],
+      "return_type": "int",
+      "logic": "Returns the estimated latency for a Population Count (POPCNT) operation on 64 bits."
+    },
+    {
+      "name": "CompareFLatency",
+      "parameters": [],
+      "return_type": "int",
+      "logic": "Returns the latency for comparing floating point numbers."
+    },
+    {
+      "name": "CompareF32Latency",
+      "parameters": [],
+      "return_type": "int",
+      "logic": "Returns the latency for comparing single-precision floating point numbers."
+    },
+    {
+      "name": "CompareF64Latency",
+      "parameters": [],
+      "return_type": "int",
+      "logic": "Returns the latency for comparing double-precision floating point numbers."
+    },
+    {
+      "name": "CompareIsNanFLatency",
+      "parameters": [],
+      "return_type": "int",
+      "logic": "Returns the latency for checking if a floating point number is NaN."
+    },
+    {
+      "name": "CompareIsNanF32Latency",
+      "parameters": [],
+      "return_type": "int",
+      "logic": "Returns the latency for checking if a single precision float is NaN."
+    },
+    {
+      "name": "CompareIsNanF64Latency",
+      "parameters": [],
+      "return_type": "int",
+      "logic": "Returns the latency for checking if a double precision float is NaN."
+    },
+    {
+      "name": "NegsLatency",
+      "parameters": [],
+      "return_type": "int",
+      "logic": "Returns the latency of NegS."
+    },
+    {
+      "name": "NegdLatency",
+      "parameters": [],
+      "return_type": "int",
+      "logic": "Returns the latency of NegD."
+    },
+    {
+      "name": "Float64RoundLatency",
+      "parameters": [],
+      "return_type": "int",
+      "logic": "Returns the estimated latency for floating point round operation."
+    },
+    {
+      "name": "Float32RoundLatency",
+      "parameters": [],
+      "return_type": "int",
+      "logic": "Returns the estimated latency for floating point round operation."
+    },
+    {
+      "name": "Float32MaxLatency",
+      "parameters": [],
+      "return_type": "int",
+      "logic": "Returns the maximum estimated latency for floating point"
+    },
+    {
+      "name": "Float64MaxLatency",
+      "parameters": [],
+      "return_type": "int",
+      "logic": "Returns the maximum estimated latency for double point"
+    },
+    {
+      "name": "Float32MinLatency",
+      "parameters": [],
+      "return_type": "int",
+      "logic": "Returns the minimum estimated latency for floating point"
+    },
+    {
+      "name": "Float64MinLatency",
+      "parameters": [],
+      "return_type": "int",
+      "logic": "Returns the minimum estimated latency for double point"
+    },
+    {
+      "name": "TruncLSLatency",
+      "parameters": [
+        "bool load_status"
+      ],
+      "return_type": "int",
+      "logic": "Returns the estimated latency for truncating long to single floating point."
+    },
+    {
+      "name": "TruncLDLatency",
+      "parameters": [
+        "bool load_status"
+      ],
+      "return_type": "int",
+      "logic": "Returns the estimated latency for truncating long to double floating point."
+    },
+    {
+      "name": "TruncUlSLatency",
+      "parameters": [],
+      "return_type": "int",
+      "logic": "Returns the estimated latency for TruncUlS."
+    },
+    {
+      "name": "TruncUlDLatency",
+      "parameters": [],
+      "return_type": "int",
+      "logic": "Returns the estimated latency for TruncUlD."
+    },
+    {
+      "name": "PushLatency",
+      "parameters": [],
+      "return_type": "int",
+      "logic": "Returns the estimated latency for Push."
+    },
+    {
+      "name": "ByteSwapSignedLatency",
+      "parameters": [],
+      "return_type": "int",
+      "logic": "Returns the estimated latency for ByteSwapSigned."
+    },
+    {
+      "name": "LlLatency",
+      "parameters": [
+        "int offset"
+      ],
+      "return_type": "int",
+      "logic": "Returns the estimated latency for Ll."
+    },
+    {
+      "name": "ExtractBitsLatency",
+      "parameters": [
+        "bool sign_extend",
+        "int size"
+      ],
+      "return_type": "int",
+      "logic": "Returns the estimated latency for extracting bit latency."
+    },
+    {
+      "name": "InsertBitsLatency",
+      "parameters": [],
+      "return_type": "int",
+      "logic": "Returns the estimated latency for inserting bit latency."
+    },
+    {
+      "name": "ScLatency",
+      "parameters": [
+        "int offset"
+      ],
+      "return_type": "int",
+      "logic": "Returns the estimated latency for Sc."
+    },
+    {
+      "name": "Word32AtomicExchangeLatency",
+      "parameters": [
+        "bool sign_extend",
+        "int size"
+      ],
+      "return_type": "int",
+      "logic": "Returns the estimated latency for atomic exchange latency."
+    },
+    {
+      "name": "Word32AtomicCompareExchangeLatency",
+      "parameters": [
+        "bool sign_extend",
+        "int size"
+      ],
+      "return_type": "int",
+      "logic": "Returns the estimated latency for atomic compare exchange latency."
+    }
+  ]
+}

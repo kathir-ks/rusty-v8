@@ -1,0 +1,195 @@
+{
+  "metadata": {
+    "path": "/home/kathirks_gc/v8_go/archive/codebase/src/compiler/simplified-operator-reducer.h",
+    "file_name": "simplified-operator-reducer.h",
+    "language": "cpp",
+    "purpose": "Declares the SimplifiedOperatorReducer class, which is responsible for performing operator simplification in the V8 compiler's simplified lowering phase."
+  },
+  "imports": {
+    "metadata": {
+      "language": "cpp",
+      "purpose": "Includes necessary header files for base classes, compiler operators, and graph reduction utilities."
+    },
+    "code": "#include \"src/base/compiler-specific.h\"\n#include \"src/compiler/common-operator.h\"\n#include \"src/compiler/graph-reducer.h\""
+  },
+  "classes": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "SimplifiedOperatorReducer",
+        "extends": "AdvancedReducer",
+        "about": "Reduces simplified operators in the compiler graph to more basic operators or constants.",
+        "attributes": [
+          {
+            "name": "jsgraph_",
+            "type": "JSGraph*",
+            "access": "private",
+            "purpose": "Pointer to the JSGraph, providing access to the graph structure."
+          },
+          {
+            "name": "broker_",
+            "type": "JSHeapBroker*",
+            "access": "private",
+            "purpose": "Pointer to the JSHeapBroker, providing access to heap objects and type feedback."
+          },
+          {
+            "name": "branch_semantics_",
+            "type": "BranchSemantics",
+            "access": "private",
+            "purpose": "Specifies the semantics of branches in the graph (e.g., whether they are predictable)."
+          }
+        ],
+        "dependencies": [
+          "AdvancedReducer",
+          "Editor",
+          "JSGraph",
+          "JSHeapBroker",
+          "BranchSemantics",
+          "Factory",
+          "Isolate",
+          "MachineOperatorBuilder",
+          "SimplifiedOperatorBuilder",
+          "Node",
+          "Operator",
+          "Reduction",
+          "TFGraph"
+        ]
+      },
+      "code": "class V8_EXPORT_PRIVATE SimplifiedOperatorReducer final\n    : public NON_EXPORTED_BASE(AdvancedReducer) {\n public:\n  SimplifiedOperatorReducer(Editor* editor, JSGraph* jsgraph,\n                            JSHeapBroker* broker,\n                            BranchSemantics branch_semantics);\n  ~SimplifiedOperatorReducer() final;\n  SimplifiedOperatorReducer(const SimplifiedOperatorReducer&) = delete;\n  SimplifiedOperatorReducer& operator=(const SimplifiedOperatorReducer&) =\n      delete;\n\n  const char* reducer_name() const override {\n    return \"SimplifiedOperatorReducer\";\n  }\n\n  Reduction Reduce(Node* node) final;\n\n private:\n  Reduction Change(Node* node, const Operator* op, Node* a);\n  Reduction ReplaceBoolean(bool value);\n  Reduction ReplaceFloat64(double value);\n  Reduction ReplaceInt32(int32_t value);\n  Reduction ReplaceUint32(uint32_t value) {\n    return ReplaceInt32(base::bit_cast<int32_t>(value));\n  }\n  Reduction ReplaceNumber(double value);\n  Reduction ReplaceNumber(int32_t value);\n\n  Factory* factory() const;\n  TFGraph* graph() const;\n  MachineOperatorBuilder* machine() const;\n  SimplifiedOperatorBuilder* simplified() const;\n\n  JSGraph* jsgraph() const { return jsgraph_; }\n  JSHeapBroker* broker() const { return broker_; }\n\n  JSGraph* const jsgraph_;\n  JSHeapBroker* const broker_;\n  BranchSemantics branch_semantics_;\n};"
+    }
+  ],
+  "dependencies": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "AdvancedReducer",
+        "about": "Base class for advanced reducers in the compiler."
+      },
+      "code": "class AdvancedReducer {};",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "Editor",
+        "about": "Interface for editing the compiler graph."
+      },
+      "code": "class Editor {};",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "JSGraph",
+        "about": "Represents the JavaScript graph in the compiler."
+      },
+      "code": "class JSGraph {};",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "JSHeapBroker",
+        "about": "Provides access to the JavaScript heap and type feedback."
+      },
+      "code": "class JSHeapBroker {};",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "Factory",
+        "about": "Manages the allocation of heap objects."
+      },
+      "code": "class Factory {};",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "Isolate",
+        "about": "Represents an isolated instance of the V8 JavaScript engine."
+      },
+      "code": "class Isolate {};",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "MachineOperatorBuilder",
+        "about": "Builds machine-level operators."
+      },
+      "code": "class MachineOperatorBuilder {};",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "SimplifiedOperatorBuilder",
+        "about": "Builds simplified operators."
+      },
+      "code": "class SimplifiedOperatorBuilder {};",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "Node",
+        "about": "Represents a node in the compiler graph."
+      },
+      "code": "class Node {};",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "Operator",
+        "about": "Represents an operator in the compiler graph."
+      },
+      "code": "class Operator {};",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "TFGraph",
+        "about": "Represents the TensorFlow graph."
+      },
+      "code": "class TFGraph {};",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "enum",
+        "name": "BranchSemantics",
+        "about": "Enumeration representing the semantics of branch nodes."
+      },
+      "code": "enum class BranchSemantics {};",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "Reduction",
+        "about": "Represents a reduction performed by the reducer."
+      },
+      "code": "class Reduction {};",
+      "type": "class"
+    }
+  ],
+  "file_path": "/home/kathirks_gc/v8_go/archive/codebase/src/compiler/simplified-operator-reducer.h"
+}

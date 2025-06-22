@@ -1,0 +1,46 @@
+{
+  "file_path": "/home/kathirks_gc/v8_go/codebase/src/compiler/wasm-compiler-definitions.cc",
+  "imports": [
+    "src/compiler/wasm-compiler-definitions.h",
+    "<optional>",
+    "src/base/strings.h",
+    "src/compiler/linkage.h",
+    "src/wasm/compilation-environment.h",
+    "src/wasm/wasm-linkage.h",
+    "src/wasm/wasm-module.h"
+  ],
+  "classes": [],
+  "functions": [
+    {
+      "name": "GetDebugName",
+      "parameters": [
+        "Zone* zone",
+        "const wasm::WasmModule* module",
+        "const wasm::WireBytesStorage* wire_bytes",
+        "int index"
+      ],
+      "return_type": "base::Vector<const char>",
+      "logic": "Retrieves a debug name for a wasm function. If tracing is enabled and the module contains function names, it extracts the name from the module. Otherwise, it constructs a default name like 'wasm-function#index'."
+    },
+    {
+      "name": "GetWasmCallDescriptor",
+      "parameters": [
+        "Zone* zone",
+        "const Signature<T>* fsig",
+        "WasmCallKind call_kind",
+        "bool need_frame_state"
+      ],
+      "return_type": "CallDescriptor*",
+      "logic": "Creates a CallDescriptor for a wasm function call. It builds the location signature, determines callee-saved registers, and sets the appropriate flags based on the call kind (e.g., kWasmFunction, kWasmIndirectFunction, kWasmImportWrapper, kWasmCapiFunction) and the need for a frame state. It also calculates the signature hash for indirect calls."
+    },
+    {
+      "name": "operator<<",
+      "parameters": [
+        "std::ostream& os",
+        "CheckForNull null_check"
+      ],
+      "return_type": "std::ostream&",
+      "logic": "Overloads the << operator for the CheckForNull enum. It prints 'no null check' if null_check is kWithoutNullCheck, and 'null check' otherwise. Used for debugging and logging."
+    }
+  ]
+}

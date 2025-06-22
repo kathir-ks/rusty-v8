@@ -1,0 +1,101 @@
+{
+  "metadata": {
+    "path": "/home/kathirks_gc/v8_go/archive/codebase/src/compiler/type-narrowing-reducer.h",
+    "file_name": "type-narrowing-reducer.h",
+    "language": "cpp",
+    "purpose": "Defines the TypeNarrowingReducer class, which refines the types of nodes in the graph based on operation properties."
+  },
+  "imports": {
+    "metadata": {
+      "language": "cpp",
+      "purpose": "Includes necessary headers for base utilities, graph reduction framework, and operation typing."
+    },
+    "code": "#include \"src/base/compiler-specific.h\"\n#include \"src/compiler/graph-reducer.h\"\n#include \"src/compiler/operation-typer.h\""
+  },
+  "classes": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "TypeNarrowingReducer",
+        "extends": "AdvancedReducer",
+        "about": "A reducer that refines node types in the graph.",
+        "attributes": [
+          {
+            "name": "jsgraph_",
+            "type": "JSGraph*",
+            "access": "private",
+            "purpose": "Pointer to the JSGraph, providing access to the JavaScript graph representation."
+          },
+          {
+            "name": "op_typer_",
+            "type": "OperationTyper",
+            "access": "private",
+            "purpose": "An OperationTyper instance used for determining the types of operations."
+          }
+        ],
+        "dependencies": [
+          "AdvancedReducer",
+          "JSGraph",
+          "OperationTyper",
+          "TFGraph",
+          "Zone"
+        ]
+      },
+      "code": "class V8_EXPORT_PRIVATE TypeNarrowingReducer final\n    : public NON_EXPORTED_BASE(AdvancedReducer) {\n public:\n  TypeNarrowingReducer(Editor* editor, JSGraph* jsgraph, JSHeapBroker* broker);\n  ~TypeNarrowingReducer() final;\n  TypeNarrowingReducer(const TypeNarrowingReducer&) = delete;\n  TypeNarrowingReducer& operator=(const TypeNarrowingReducer&) = delete;\n\n  const char* reducer_name() const override { return \"TypeNarrowingReducer\"; }\n\n  Reduction Reduce(Node* node) final;\n\n private:\n  JSGraph* jsgraph() const { return jsgraph_; }\n  TFGraph* graph() const;\n  Zone* zone() const;\n\n  JSGraph* const jsgraph_;\n  OperationTyper op_typer_;\n};"
+    }
+  ],
+  "dependencies": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "AdvancedReducer",
+        "about": "Base class for advanced reducers in the compiler."
+      },
+      "code": "class AdvancedReducer {};",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "JSGraph",
+        "about": "Represents the JavaScript graph."
+      },
+      "code": "class JSGraph {};",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "OperationTyper",
+        "about": "Provides functionality for determining the types of operations."
+      },
+      "code": "class OperationTyper {};",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "TFGraph",
+        "about": "Represents the TensorFlow graph (likely a V8 internal graph)."
+      },
+      "code": "class TFGraph {};",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "Zone",
+        "about": "Memory management zone."
+      },
+      "code": "class Zone {};",
+      "type": "class"
+    }
+  ],
+  "file_path": "/home/kathirks_gc/v8_go/archive/codebase/src/compiler/type-narrowing-reducer.h"
+}

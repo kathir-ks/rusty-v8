@@ -1,0 +1,81 @@
+{
+  "metadata": {
+    "path": "/home/kathirks_gc/v8_go/archive/codebase/src/compiler/backend/code-generator-impl.h",
+    "file_name": "code-generator-impl.h",
+    "language": "cpp",
+    "purpose": "Defines helper classes and structures used in the code generator backend of the V8 compiler, including operand conversion and out-of-line code generation."
+  },
+  "imports": {
+    "metadata": {
+      "language": "cpp",
+      "purpose": "Includes necessary header files for code generation, instruction representation, linkage information, and operation codes."
+    },
+    "code": "#include \"src/codegen/macro-assembler.h\"\n#include \"src/compiler/backend/code-generator.h\"\n#include \"src/compiler/backend/instruction.h\"\n#include \"src/compiler/linkage.h\"\n#include \"src/compiler/opcodes.h\""
+  },
+  "classes": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "InstructionOperandConverter",
+        "about": "Converts InstructionOperands to architecture-specific registers and operands after register allocation.",
+        "attributes": [],
+        "dependencies": [
+          "CodeGenerator",
+          "Instruction",
+          "Register",
+          "FloatRegister",
+          "DoubleRegister",
+          "Simd128Register",
+          "Simd256Register",
+          "ExternalReference",
+          "Code",
+          "Label",
+          "RpoNumber",
+          "Constant",
+          "Frame",
+          "FrameAccessState",
+          "Isolate",
+          "Linkage"
+        ]
+      },
+      "code": "class InstructionOperandConverter {\n public:\n  InstructionOperandConverter(CodeGenerator* gen, Instruction* instr)\n      : gen_(gen), instr_(instr) {}\n\n  // -- Instruction operand accesses with conversions --------------------------\n\n  Register InputRegister(size_t index) const {\n    return ToRegister(instr_->InputAt(index));\n  }\n\n  FloatRegister InputFloatRegister(size_t index) {\n    return ToFloatRegister(instr_->InputAt(index));\n  }\n\n  DoubleRegister InputDoubleRegister(size_t index) {\n    return ToDoubleRegister(instr_->InputAt(index));\n  }\n\n  Simd128Register InputSimd128Register(size_t index) {\n    return ToSimd128Register(instr_->InputAt(index));\n  }\n\n  double InputDouble(size_t index) { return ToDouble(instr_->InputAt(index)); }\n\n  float InputFloat32(size_t index) { return ToFloat32(instr_->InputAt(index)); }\n\n  int32_t InputInt32(size_t index) {\n    return ToConstant(instr_->InputAt(index)).ToInt32();\n  }\n\n  uint32_t InputUint32(size_t index) {\n    return base::bit_cast<uint32_t>(InputInt32(index));\n  }\n\n  int64_t InputInt64(size_t index) {\n    return ToConstant(instr_->InputAt(index)).ToInt64();\n  }\n\n  int8_t InputInt8(size_t index) {\n    return static_cast<int8_t>(InputInt32(index));\n  }\n\n  uint8_t InputUint8(size_t index) {\n    return base::bit_cast<uint8_t>(InputInt8(index));\n  }\n\n  int16_t InputInt16(size_t index) {\n    return static_cast<int16_t>(InputInt32(index));\n  }\n\n  uint8_t InputInt3(size_t index) {\n    return static_cast<uint8_t>(InputInt32(index) & 0x7);\n  }\n\n  uint8_t InputInt4(size_t index) {\n    return static_cast<uint8_t>(InputInt32(index) & 0xF);\n  }\n\n  uint8_t InputInt5(size_t index) {\n    return static_cast<uint8_t>(InputInt32(index) & 0x1F);\n  }\n\n  uint8_t InputInt6(size_t index) {\n    return static_cast<uint8_t>(InputInt32(index) & 0x3F);\n  }\n\n  CodeEntrypointTag InputCodeEntrypointTag(size_t index) {\n    // Tags are stored shifted to the right so they fit into 32-bits.\n    uint64_t shifted_tag = InputUint32(index);\n    return static_cast<CodeEntrypointTag>(shifted_tag\n                                          << kCodeEntrypointTagShift);\n  }\n\n  ExternalReference InputExternalReference(size_t index) {\n    return ToExternalReference(instr_->InputAt(index));\n  }\n\n  Handle<Code> InputCode(size_t index) {\n    return ToCode(instr_->InputAt(index));\n  }\n\n  Label* InputLabel(size_t index) { return ToLabel(instr_->InputAt(index)); }\n\n  RpoNumber InputRpo(size_t index) {\n    return ToRpoNumber(instr_->InputAt(index));\n  }\n\n  Register OutputRegister(size_t index = 0) const {\n    return ToRegister(instr_->OutputAt(index));\n  }\n\n  Register TempRegister(size_t index) {\n    return ToRegister(instr_->TempAt(index));\n  }\n\n  FloatRegister OutputFloatRegister(size_t index = 0) {\n    return ToFloatRegister(instr_->OutputAt(index));\n  }\n\n  DoubleRegister OutputDoubleRegister(size_t index = 0) {\n    return ToDoubleRegister(instr_->OutputAt(index));\n  }\n\n  DoubleRegister TempDoubleRegister(size_t index) {\n    return ToDoubleRegister(instr_->TempAt(index));\n  }\n\n  Simd128Register OutputSimd128Register() {\n    return ToSimd128Register(instr_->Output());\n  }\n\n  Simd128Register TempSimd128Register(size_t index) {\n    return ToSimd128Register(instr_->TempAt(index));\n  }\n\n#if defined(V8_TARGET_ARCH_X64)\n  Simd256Register InputSimd256Register(size_t index) {\n    return ToSimd256Register(instr_->InputAt(index));\n  }\n\n  Simd256Register OutputSimd256Register() {\n    return ToSimd256Register(instr_->Output());\n  }\n\n  Simd256Register TempSimd256Register(size_t index) {\n    return ToSimd256Register(instr_->TempAt(index));\n  }\n#endif\n\n  // -- Conversions for operands -----------------------------------------------\n\n  Label* ToLabel(InstructionOperand* op) {\n    return gen_->GetLabel(ToRpoNumber(op));\n  }\n\n  RpoNumber ToRpoNumber(InstructionOperand* op) {\n    return ToConstant(op).ToRpoNumber();\n  }\n\n  Register ToRegister(InstructionOperand* op) const {\n    return LocationOperand::cast(op)->GetRegister();\n  }\n\n  FloatRegister ToFloatRegister(InstructionOperand* op) {\n    return LocationOperand::cast(op)->GetFloatRegister();\n  }\n\n  DoubleRegister ToDoubleRegister(InstructionOperand* op) {\n    return LocationOperand::cast(op)->GetDoubleRegister();\n  }\n\n  Simd128Register ToSimd128Register(InstructionOperand* op) {\n    LocationOperand* loc_op = LocationOperand::cast(op);\n#ifdef V8_TARGET_ARCH_X64\n    if (loc_op->IsSimd256Register()) {\n      return loc_op->GetSimd256RegisterAsSimd128();\n    }\n#endif\n    return loc_op->GetSimd128Register();\n  }\n\n#if defined(V8_TARGET_ARCH_X64)\n  Simd256Register ToSimd256Register(InstructionOperand* op) {\n    return LocationOperand::cast(op)->GetSimd256Register();\n  }\n#endif\n\n  Constant ToConstant(InstructionOperand* op) const {\n    if (op->IsImmediate()) {\n      return gen_->instructions()->GetImmediate(ImmediateOperand::cast(op));\n    }\n    return gen_->instructions()->GetConstant(\n        ConstantOperand::cast(op)->virtual_register());\n  }\n\n  double ToDouble(InstructionOperand* op) {\n    return ToConstant(op).ToFloat64().value();\n  }\n\n  float ToFloat32(InstructionOperand* op) { return ToConstant(op).ToFloat32(); }\n\n  ExternalReference ToExternalReference(InstructionOperand* op) {\n    return ToConstant(op).ToExternalReference();\n  }\n\n  Handle<Code> ToCode(InstructionOperand* op) {\n    return ToConstant(op).ToCode();\n  }\n\n  const Frame* frame() const { return gen_->frame(); }\n  FrameAccessState* frame_access_state() const {\n    return gen_->frame_access_state();\n  }\n  Isolate* isolate() const { return gen_->isolate(); }\n  Linkage* linkage() const { return gen_->linkage(); }\n\n protected:\n  CodeGenerator* gen_;\n  Instruction* instr_;\n};"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "DeoptimizationExit",
+        "extends": "ZoneObject",
+        "about": "Represents a deoptimization exit point in the generated code.",
+        "attributes": [],
+        "dependencies": [
+          "SourcePosition",
+          "BytecodeOffset",
+          "DeoptimizeKind",
+          "DeoptimizeReason",
+          "NodeId",
+          "ImmediateOperand"
+        ]
+      },
+      "code": "class DeoptimizationExit : public ZoneObject {\n public:\n  explicit DeoptimizationExit(SourcePosition pos, BytecodeOffset bailout_id,\n                              int translation_id, int pc_offset,\n                              DeoptimizeKind kind, DeoptimizeReason reason,\n                              NodeId node_id)\n      : deoptimization_id_(kNoDeoptIndex),\n        pos_(pos),\n        bailout_id_(bailout_id),\n        translation_id_(translation_id),\n        pc_offset_(pc_offset),\n        kind_(kind),\n        reason_(reason),\n        node_id_(node_id),\n        immediate_args_(nullptr),\n        emitted_(false) {}\n\n  bool has_deoptimization_id() const {\n    return deoptimization_id_ != kNoDeoptIndex;\n  }\n  int deoptimization_id() const {\n    DCHECK(has_deoptimization_id());\n    return deoptimization_id_;\n  }\n  void set_deoptimization_id(int deoptimization_id) {\n    deoptimization_id_ = deoptimization_id;\n  }\n  SourcePosition pos() const { return pos_; }\n  // The label for the deoptimization call.\n  Label* label() { return &label_; }\n  // The label after the deoptimization check, which will resume execution.\n  Label* continue_label() { return &continue_label_; }\n  BytecodeOffset bailout_id() const { return bailout_id_; }\n  int translation_id() const { return translation_id_; }\n  int pc_offset() const { return pc_offset_; }\n  DeoptimizeKind kind() const { return kind_; }\n  DeoptimizeReason reason() const { return reason_; }\n  NodeId node_id() const { return node_id_; }\n  const ZoneVector<ImmediateOperand*>* immediate_args() const {\n    return immediate_args_;\n  }\n  void set_immediate_args(ZoneVector<ImmediateOperand*>* immediate_args) {\n    immediate_args_ = immediate_args;\n  }\n  // Returns whether the deopt exit has already been emitted. Most deopt exits\n  // are emitted contiguously at the end of the code, but unconditional deopt\n  // exits (kArchDeoptimize) may be inlined where they are encountered.\n  bool emitted() const { return emitted_; }\n  void set_emitted() { emitted_ = true; }\n\n private:\n  static const int kNoDeoptIndex = kMaxInt16 + 1;\n  int deoptimization_id_;\n  const SourcePosition pos_;\n  Label label_;\n  Label continue_label_;\n  const BytecodeOffset bailout_id_;\n  const int translation_id_;\n  const int pc_offset_;\n  const DeoptimizeKind kind_;\n  const DeoptimizeReason reason_;\n  const NodeId node_id_;\n  ZoneVector<ImmediateOperand*>* immediate_args_;\n  bool emitted_;\n};"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "OutOfLineCode",
+        "extends": "ZoneObject",
+        "about": "Abstract base class for generating out-of-line code (e.g., slow paths, deoptimization stubs).",
+        "attributes": [],
+        "dependencies": [
+          "CodeGenerator",
+          "Frame",
+          "MacroAssembler"
+        ]
+      },
+      "code": "class OutOfLineCode : public ZoneObject {\n public:\n  explicit OutOfLineCode(CodeGenerator* gen);\n  virtual ~OutOfLineCode();\n\n  virtual void Generate() = 0;\n\n  Label* entry() { return &entry_; }\n  Label* exit() { return &exit_; }\n  const Frame* frame() const { return frame_; }\n  MacroAssembler* masm() { return masm_; }\n  OutOfLineCode* next() const { return next_; }\n\n private:\n  Label entry_;\n  Label exit_;\n  const Frame* const frame_;\n  MacroAssembler* const masm_;\n  OutOfLineCode* const next_;\n};"
+    }
+  ],
+  "file_path": "/home/kathirks_gc/v8_go/archive/codebase/src/compiler/backend/code-generator-impl.h"
+}

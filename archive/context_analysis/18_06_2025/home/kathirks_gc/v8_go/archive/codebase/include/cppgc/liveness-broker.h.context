@@ -1,0 +1,109 @@
+{
+  "metadata": {
+    "path": "/home/kathirks_gc/v8_go/archive/codebase/include/cppgc/liveness-broker.h",
+    "file_name": "liveness-broker.h",
+    "language": "cpp",
+    "purpose": "Defines the LivenessBroker class, which allows querying the liveness of objects from weak callbacks."
+  },
+  "imports": {
+    "metadata": {
+      "language": "cpp",
+      "purpose": "Includes necessary headers for heap management, member pointers, sentinel pointers, tracing traits, and V8 configuration."
+    },
+    "code": "#include \"cppgc/heap.h\"\n#include \"cppgc/member.h\"\n#include \"cppgc/sentinel-pointer.h\"\n#include \"cppgc/trace-trait.h\"\n#include \"v8config.h\"  // NOLINT(build/include_directory)"
+  },
+  "classes": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "LivenessBroker",
+        "about": "Allows querying the liveness state of an object from weak callbacks.  References to non-live objects must be cleared when `IsHeapObjectAlive()` returns false.",
+        "attributes": [],
+        "dependencies": [
+          "Heap",
+          "Member",
+          "WeakMember",
+          "UntracedMember",
+          "SentinelPointer",
+          "TraceTrait",
+          "internal::LivenessBrokerFactory"
+        ]
+      },
+      "code": "class V8_EXPORT LivenessBroker final {\n public:\n  template <typename T>\n  bool IsHeapObjectAlive(const T* object) const {\n    // - nullptr objects are considered alive to allow weakness to be used from\n    // stack while running into a conservative GC. Treating nullptr as dead\n    // would mean that e.g. custom collections could not be strongified on\n    // stack.\n    // - Sentinel pointers are also preserved in weakness and not cleared.\n    return !object || object == kSentinelPointer ||\n           IsHeapObjectAliveImpl(\n               TraceTrait<T>::GetTraceDescriptor(object).base_object_payload);\n  }\n\n  template <typename T>\n  bool IsHeapObjectAlive(const WeakMember<T>& weak_member) const {\n    return IsHeapObjectAlive<T>(weak_member.Get());\n  }\n\n  template <typename T>\n  bool IsHeapObjectAlive(const UntracedMember<T>& untraced_member) const {\n    return IsHeapObjectAlive<T>(untraced_member.Get());\n  }\n\n private:\n  LivenessBroker() = default;\n\n  bool IsHeapObjectAliveImpl(const void*) const;\n\n  friend class internal::LivenessBrokerFactory;\n};"
+    }
+  ],
+  "dependencies": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "Heap",
+        "about": "Abstracts the garbage-collected heap."
+      },
+      "code": "class Heap {};",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "Member",
+        "about": "Represents a garbage-collected pointer."
+      },
+      "code": "template <typename T> class Member {};",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "WeakMember",
+        "about": "Represents a weak garbage-collected pointer."
+      },
+      "code": "template <typename T> class WeakMember {};",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "UntracedMember",
+        "about": "Represents a garbage-collected pointer that is not traced."
+      },
+      "code": "template <typename T> class UntracedMember {};",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "SentinelPointer",
+        "about": "A special pointer value used as a sentinel."
+      },
+      "code": "const void* kSentinelPointer;",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "TraceTrait",
+        "about": "Provides a way to get information needed to trace an object."
+      },
+      "code": "template <typename T> struct TraceTrait {\n                  struct TraceDescriptor { void* base_object_payload; };\n                  static TraceDescriptor GetTraceDescriptor(const T* object) {\n                      return {nullptr};\n                  }\n                };",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "internal::LivenessBrokerFactory",
+        "about": "Factory for creating LivenessBroker instances."
+      },
+      "code": "namespace internal { class LivenessBrokerFactory {}; }",
+      "type": "class"
+    }
+  ],
+  "file_path": "/home/kathirks_gc/v8_go/archive/codebase/include/cppgc/liveness-broker.h"
+}

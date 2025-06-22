@@ -1,0 +1,232 @@
+{
+  "metadata": {
+    "path": "/home/kathirks_gc/v8_go/archive/codebase/src/compiler/typed-optimization.h",
+    "file_name": "typed-optimization.h",
+    "language": "cpp",
+    "purpose": "Declares the TypedOptimization class, which performs type-based optimizations in the compiler."
+  },
+  "imports": {
+    "metadata": {
+      "language": "cpp",
+      "purpose": "Includes necessary headers for base compiler-specific definitions and graph reduction."
+    },
+    "code": "#include \"src/base/compiler-specific.h\"\n#include \"src/compiler/graph-reducer.h\""
+  },
+  "classes": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "TypedOptimization",
+        "extends": "AdvancedReducer",
+        "about": "Performs type-based optimizations on the graph.",
+        "attributes": [
+          {
+            "name": "dependencies_",
+            "type": "CompilationDependencies*",
+            "access": "private",
+            "purpose": "Dependencies for compilation."
+          },
+          {
+            "name": "jsgraph_",
+            "type": "JSGraph*",
+            "access": "private",
+            "purpose": "The JSGraph being optimized."
+          },
+          {
+            "name": "broker_",
+            "type": "JSHeapBroker*",
+            "access": "private",
+            "purpose": "Broker to access the JS heap."
+          },
+          {
+            "name": "true_type_",
+            "type": "Type",
+            "access": "private",
+            "purpose": "Represents the 'true' type."
+          },
+          {
+            "name": "false_type_",
+            "type": "Type",
+            "access": "private",
+            "purpose": "Represents the 'false' type."
+          },
+          {
+            "name": "type_cache_",
+            "type": "TypeCache const*",
+            "access": "private",
+            "purpose": "Cache for commonly used types."
+          }
+        ],
+        "dependencies": [
+          "AdvancedReducer",
+          "CompilationDependencies",
+          "JSGraph",
+          "JSHeapBroker",
+          "Type",
+          "TypeCache",
+          "SimplifiedOperatorBuilder",
+          "Factory",
+          "Isolate",
+          "StringRef",
+          "Operator",
+          "TFGraph"
+        ]
+      },
+      "code": "class V8_EXPORT_PRIVATE TypedOptimization final\n    : public NON_EXPORTED_BASE(AdvancedReducer) {\n public:\n  TypedOptimization(Editor* editor, CompilationDependencies* dependencies,\n                    JSGraph* jsgraph, JSHeapBroker* broker);\n  ~TypedOptimization() override;\n  TypedOptimization(const TypedOptimization&) = delete;\n  TypedOptimization& operator=(const TypedOptimization&) = delete;\n\n  const char* reducer_name() const override { return \"TypedOptimization\"; }\n\n  Reduction Reduce(Node* node) final;\n\n private:\n  Reduction ReduceConvertReceiver(Node* node);\n  Reduction ReduceMaybeGrowFastElements(Node* node);\n  Reduction ReduceCheckBounds(Node* node);\n  Reduction ReduceCheckHeapObject(Node* node);\n  Reduction ReduceCheckMaps(Node* node);\n  Reduction ReduceCheckNumber(Node* node);\n  Reduction ReduceCheckNumberFitsInt32(Node* node);\n  Reduction ReduceCheckString(Node* node);\n  Reduction ReduceCheckStringOrStringWrapper(Node* node);\n  Reduction ReduceCheckEqualsInternalizedString(Node* node);\n  Reduction ReduceCheckEqualsSymbol(Node* node);\n  Reduction ReduceLoadField(Node* node);\n  Reduction ReduceNumberFloor(Node* node);\n  Reduction ReduceNumberRoundop(Node* node);\n  Reduction ReduceNumberSilenceNaN(Node* node);\n  Reduction ReduceNumberToUint8Clamped(Node* node);\n  Reduction ReducePhi(Node* node);\n  Reduction ReduceReferenceEqual(Node* node);\n  Reduction ReduceStringComparison(Node* node);\n  Reduction ReduceStringLength(Node* node);\n  Reduction ReduceSameValue(Node* node);\n  Reduction ReduceSelect(Node* node);\n  Reduction ReduceSpeculativeToNumber(Node* node);\n  Reduction ReduceCheckNotTaggedHole(Node* node);\n  Reduction ReduceTypedArrayLength(Node* node);\n  Reduction ReduceTypeOf(Node* node);\n  Reduction ReduceToBoolean(Node* node);\n  Reduction ReduceSpeculativeNumberAdd(Node* node);\n  Reduction ReduceSpeculativeNumberMultiply(Node* node);\n  Reduction ReduceSpeculativeNumberPow(Node* node);\n  Reduction ReduceSpeculativeNumberBinop(Node* node);\n  Reduction ReduceSpeculativeNumberComparison(Node* node);\n  Reduction ReduceTransitionElementsKindOrCheckMap(Node* node);\n\n  Reduction TryReduceStringComparisonOfStringFromSingleCharCode(\n      Node* comparison, Node* from_char_code, Type constant_type,\n      bool inverted);\n  Reduction TryReduceStringComparisonOfStringFromSingleCharCodeToConstant(\n      Node* comparison, StringRef string, bool inverted);\n  const Operator* NumberComparisonFor(const Operator* op);\n\n  Node* ConvertPlainPrimitiveToNumber(Node* node);\n  Reduction ReduceJSToNumberInput(Node* input);\n\n  SimplifiedOperatorBuilder* simplified() const;\n  Factory* factory() const;\n  TFGraph* graph() const;\n\n  CompilationDependencies* dependencies() const { return dependencies_; }\n  JSGraph* jsgraph() const { return jsgraph_; }\n  JSHeapBroker* broker() const { return broker_; }\n\n  CompilationDependencies* const dependencies_;\n  JSGraph* const jsgraph_;\n  JSHeapBroker* broker_;\n  Type const true_type_;\n  Type const false_type_;\n  TypeCache const* type_cache_;\n};"
+    }
+  ],
+  "dependencies": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "AdvancedReducer",
+        "about": "Base class for advanced reducers in the compiler."
+      },
+      "code": "class AdvancedReducer {};",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "CompilationDependencies",
+        "about": "Manages compilation dependencies."
+      },
+      "code": "class CompilationDependencies {};",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "JSGraph",
+        "about": "Represents the JavaScript graph being compiled."
+      },
+      "code": "class JSGraph {};",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "JSHeapBroker",
+        "about": "Provides access to the JS heap during compilation."
+      },
+      "code": "class JSHeapBroker {};",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "Type",
+        "about": "Represents a type in the type system."
+      },
+      "code": "class Type {};",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "TypeCache",
+        "about": "Caches commonly used types."
+      },
+      "code": "class TypeCache {};",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "SimplifiedOperatorBuilder",
+        "about": "Helps build simplified operators."
+      },
+      "code": "class SimplifiedOperatorBuilder {};",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "Factory",
+        "about": "Factory for creating objects."
+      },
+      "code": "class Factory {};",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "Isolate",
+        "about": "Represents an isolated instance of the V8 JavaScript engine."
+      },
+      "code": "class Isolate {};",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "StringRef",
+        "about": "Represents a reference to a string."
+      },
+      "code": "class StringRef {};",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "Operator",
+        "about": "Represents an operator in the graph."
+      },
+      "code": "class Operator {};",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "TFGraph",
+        "about": "Represents a TurboFan graph."
+      },
+      "code": "class TFGraph {};",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "Editor",
+        "about": "Graph editor interface"
+      },
+      "code": "class Editor {};",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "Node",
+        "about": "Graph Node"
+      },
+      "code": "class Node {};",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "Reduction",
+        "about": "Graph reduction type"
+      },
+      "code": "class Reduction {};",
+      "type": "class"
+    }
+  ],
+  "file_path": "/home/kathirks_gc/v8_go/archive/codebase/src/compiler/typed-optimization.h"
+}

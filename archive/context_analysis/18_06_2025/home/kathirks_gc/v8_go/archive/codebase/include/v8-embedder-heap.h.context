@@ -1,0 +1,74 @@
+{
+  "metadata": {
+    "path": "/home/kathirks_gc/v8_go/archive/codebase/include/v8-embedder-heap.h",
+    "file_name": "v8-embedder-heap.h",
+    "language": "cpp",
+    "purpose": "Defines the EmbedderRootsHandler interface for managing embedder roots during garbage collection."
+  },
+  "imports": {
+    "metadata": {
+      "language": "cpp",
+      "purpose": "Includes necessary V8 headers for traced handles and configuration."
+    },
+    "code": "#include \"v8-traced-handle.h\"  // NOLINT(build/include_directory)\n#include \"v8config.h\"          // NOLINT(build/include_directory)"
+  },
+  "classes": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "EmbedderRootsHandler",
+        "about": "Handler for embedder roots on non-unified heap garbage collections.",
+        "attributes": [],
+        "dependencies": [
+          "v8::TracedReference",
+          "v8::Value"
+        ]
+      },
+      "code": "class V8_EXPORT EmbedderRootsHandler {\n public:\n  virtual ~EmbedderRootsHandler() = default;\n\n  EmbedderRootsHandler() = default;\n\n  /**\n   * Used in combination with |IsRoot|. Called by V8 when an\n   * object that is backed by a handle is reclaimed by a non-tracing garbage\n   * collection. It is up to the embedder to reset the original handle.\n   *\n   * Note that the |handle| is different from the handle that the embedder holds\n   * for retaining the object. It is up to the embedder to find the original\n   * handle via the object or class id.\n   */\n  virtual void ResetRoot(const v8::TracedReference<v8::Value>& handle) = 0;\n\n  /**\n   * Similar to |ResetRoot()|, but opportunistic. The function is called in\n   * parallel for different handles and as such must be thread-safe. In case,\n   * |false| is returned, |ResetRoot()| will be recalled for the same handle.\n   */\n  virtual bool TryResetRoot(const v8::TracedReference<v8::Value>& handle) {\n    return false;\n  }\n\n private:\n  friend class internal::TracedHandles;\n};"
+    }
+  ],
+  "dependencies": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "TracedReference",
+        "about": "A traced reference to a V8 value."
+      },
+      "code": "namespace v8 {\n                template <typename T>\n                class TracedReference;\n            }",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "Value",
+        "about": "The abstract base class for all JavaScript values."
+      },
+      "code": "namespace v8 {\n                class Value;\n            }",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "Isolate",
+        "about": "Represents an isolated instance of the V8 engine."
+      },
+      "code": "namespace v8 {\n                class Isolate;\n            }",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "TracedHandles",
+        "about": "Manages traced handles within the V8 internal namespace."
+      },
+      "code": "namespace v8 {\n                namespace internal {\n                    class TracedHandles;\n                }\n            }",
+      "type": "class"
+    }
+  ],
+  "file_path": "/home/kathirks_gc/v8_go/archive/codebase/include/v8-embedder-heap.h"
+}

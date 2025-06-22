@@ -1,0 +1,354 @@
+{
+  "file_path": "/home/kathirks_gc/v8_go/codebase/src/compiler/node-properties.cc",
+  "imports": [
+    "src/compiler/node-properties.h",
+    "<optional>",
+    "src/compiler/common-operator.h",
+    "src/compiler/js-heap-broker.h",
+    "src/compiler/map-inference.h",
+    "src/compiler/node-matchers.h",
+    "src/compiler/operator-properties.h",
+    "src/compiler/simplified-operator.h",
+    "src/compiler/turbofan-graph.h",
+    "src/compiler/verifier.h"
+  ],
+  "classes": [],
+  "functions": [
+    {
+      "name": "IsValueEdge",
+      "parameters": [
+        "Edge edge"
+      ],
+      "return_type": "bool",
+      "logic": "Checks if a given edge is a value edge within the graph."
+    },
+    {
+      "name": "IsContextEdge",
+      "parameters": [
+        "Edge edge"
+      ],
+      "return_type": "bool",
+      "logic": "Checks if a given edge is a context edge within the graph."
+    },
+    {
+      "name": "IsFrameStateEdge",
+      "parameters": [
+        "Edge edge"
+      ],
+      "return_type": "bool",
+      "logic": "Checks if a given edge is a frame state edge within the graph."
+    },
+    {
+      "name": "IsEffectEdge",
+      "parameters": [
+        "Edge edge"
+      ],
+      "return_type": "bool",
+      "logic": "Checks if a given edge is an effect edge within the graph."
+    },
+    {
+      "name": "IsControlEdge",
+      "parameters": [
+        "Edge edge"
+      ],
+      "return_type": "bool",
+      "logic": "Checks if a given edge is a control edge within the graph."
+    },
+    {
+      "name": "IsExceptionalCall",
+      "parameters": [
+        "Node* node",
+        "Node** out_exception"
+      ],
+      "return_type": "bool",
+      "logic": "Determines if a node represents an exceptional call (one that can throw an exception).  If the node has an exceptional control flow edge leading to an IfException node, it returns true and optionally sets out_exception to the IfException node."
+    },
+    {
+      "name": "FindSuccessfulControlProjection",
+      "parameters": [
+        "Node* node"
+      ],
+      "return_type": "Node*",
+      "logic": "Finds the control projection for the successful execution path of a node (IfSuccess). If the node cannot throw, it returns the node itself."
+    },
+    {
+      "name": "ReplaceValueInput",
+      "parameters": [
+        "Node* node",
+        "Node* value",
+        "int index"
+      ],
+      "return_type": "void",
+      "logic": "Replaces a specific value input of a node at the given index."
+    },
+    {
+      "name": "ReplaceValueInputs",
+      "parameters": [
+        "Node* node",
+        "Node* value"
+      ],
+      "return_type": "void",
+      "logic": "Replaces all value inputs of a node with a single given value."
+    },
+    {
+      "name": "ReplaceContextInput",
+      "parameters": [
+        "Node* node",
+        "Node* context"
+      ],
+      "return_type": "void",
+      "logic": "Replaces the context input of a node."
+    },
+    {
+      "name": "ReplaceControlInput",
+      "parameters": [
+        "Node* node",
+        "Node* control",
+        "int index"
+      ],
+      "return_type": "void",
+      "logic": "Replaces a specific control input of a node at the given index."
+    },
+    {
+      "name": "ReplaceEffectInput",
+      "parameters": [
+        "Node* node",
+        "Node* effect",
+        "int index"
+      ],
+      "return_type": "void",
+      "logic": "Replaces a specific effect input of a node at the given index."
+    },
+    {
+      "name": "ReplaceFrameStateInput",
+      "parameters": [
+        "Node* node",
+        "Node* frame_state"
+      ],
+      "return_type": "void",
+      "logic": "Replaces the frame state input of a node."
+    },
+    {
+      "name": "RemoveNonValueInputs",
+      "parameters": [
+        "Node* node"
+      ],
+      "return_type": "void",
+      "logic": "Removes all inputs from a node that are not value inputs, effectively truncating the input list after the last value input."
+    },
+    {
+      "name": "RemoveValueInputs",
+      "parameters": [
+        "Node* node"
+      ],
+      "return_type": "void",
+      "logic": "Removes all value inputs from a node."
+    },
+    {
+      "name": "MergeControlToEnd",
+      "parameters": [
+        "TFGraph* graph",
+        "CommonOperatorBuilder* common",
+        "Node* node"
+      ],
+      "return_type": "void",
+      "logic": "Adds a control node to the end of the graph, used to ensure control dependencies are maintained."
+    },
+    {
+      "name": "RemoveControlFromEnd",
+      "parameters": [
+        "TFGraph* graph",
+        "CommonOperatorBuilder* common",
+        "Node* node"
+      ],
+      "return_type": "void",
+      "logic": "Removes a control node from the end of the graph."
+    },
+    {
+      "name": "ReplaceUses",
+      "parameters": [
+        "Node* node",
+        "Node* value",
+        "Node* effect",
+        "Node* success",
+        "Node* exception"
+      ],
+      "return_type": "void",
+      "logic": "Replaces all uses of a node with the provided value, effect, success, and exception nodes based on the type of edge (value, effect, or control).  Used for replacing a node in the graph while maintaining correct dependencies."
+    },
+    {
+      "name": "ChangeOp",
+      "parameters": [
+        "Node* node",
+        "const Operator* new_op"
+      ],
+      "return_type": "void",
+      "logic": "Changes the operator of a node and verifies the node."
+    },
+    {
+      "name": "ChangeOpUnchecked",
+      "parameters": [
+        "Node* node",
+        "const Operator* new_op"
+      ],
+      "return_type": "void",
+      "logic": "Changes the operator of a node without verification."
+    },
+    {
+      "name": "FindFrameStateBefore",
+      "parameters": [
+        "Node* node",
+        "Node* unreachable_sentinel"
+      ],
+      "return_type": "Node*",
+      "logic": "Traverses back through effect inputs of a node until it finds a FrameState node before a Checkpoint node, or until it finds Dead or Unreachable nodes. Returns unreachable_sentinel if no FrameState node is found."
+    },
+    {
+      "name": "FindProjection",
+      "parameters": [
+        "Node* node",
+        "size_t projection_index"
+      ],
+      "return_type": "Node*",
+      "logic": "Finds a projection node that uses the provided node as input and has the given projection index."
+    },
+    {
+      "name": "CollectValueProjections",
+      "parameters": [
+        "Node* node",
+        "Node** projections",
+        "size_t projection_count"
+      ],
+      "return_type": "void",
+      "logic": "Collects all value projection nodes that use the provided node as input and stores them in the projections array, indexed by their projection index."
+    },
+    {
+      "name": "CollectControlProjections",
+      "parameters": [
+        "Node* node",
+        "Node** projections",
+        "size_t projection_count"
+      ],
+      "return_type": "void",
+      "logic": "Collects all control projection nodes (e.g., IfTrue, IfFalse, IfSuccess, IfException, IfValue, IfDefault) that use the provided node as input and stores them in the projections array, indexed by their projection index."
+    },
+    {
+      "name": "GetProjectionType",
+      "parameters": [
+        "Node const* projection"
+      ],
+      "return_type": "MachineRepresentation",
+      "logic": "Determines the machine representation (type) of a projection node based on the input node's opcode and the projection index."
+    },
+    {
+      "name": "IsSame",
+      "parameters": [
+        "Node* a",
+        "Node* b"
+      ],
+      "return_type": "bool",
+      "logic": "Checks if two nodes are the same, skipping CheckHeapObject and TypeGuard nodes in the comparison. Used for identifying the underlying node being protected by these type checking nodes."
+    },
+    {
+      "name": "GetJSCreateMap",
+      "parameters": [
+        "JSHeapBroker* broker",
+        "Node* receiver"
+      ],
+      "return_type": "OptionalMapRef",
+      "logic": "Retrieves the initial map of a JSCreate or JSCreateArray node, used to determine the map of newly created objects."
+    },
+    {
+      "name": "InferMapsUnsafe",
+      "parameters": [
+        "JSHeapBroker* broker",
+        "Node* receiver",
+        "Effect effect",
+        "ZoneRefSet<Map>* maps_out"
+      ],
+      "return_type": "NodeProperties::InferMapsResult",
+      "logic": "Infers the possible maps of a receiver node by traversing the effect chain. It identifies MapGuard, CheckMaps, TransitionElementsKindOrCheckMap and JSCreate nodes to determine potential map transitions. Returns kReliableMaps, kUnreliableMaps, or kNoMaps depending on the inference result."
+    },
+    {
+      "name": "NoObservableSideEffectBetween",
+      "parameters": [
+        "Node* effect",
+        "Node* dominator"
+      ],
+      "return_type": "bool",
+      "logic": "Checks if there are no observable side effects between an effect node and a dominator node by traversing the effect chain. Returns true if all nodes in the chain have the kNoWrite property, meaning they don't produce observable side effects."
+    },
+    {
+      "name": "CanBePrimitive",
+      "parameters": [
+        "JSHeapBroker* broker",
+        "Node* receiver",
+        "Effect effect"
+      ],
+      "return_type": "bool",
+      "logic": "Checks if a receiver node can be a primitive value by examining its opcode and inferring its potential maps. It accounts for cases where the receiver might be checked for being a receiver."
+    },
+    {
+      "name": "CanBeNullOrUndefined",
+      "parameters": [
+        "JSHeapBroker* broker",
+        "Node* receiver",
+        "Effect effect"
+      ],
+      "return_type": "bool",
+      "logic": "Checks if a receiver node can be null or undefined based on whether it can be primitive and its specific opcode or inferred map. Returns true if it's possible for the receiver to be null or undefined."
+    },
+    {
+      "name": "GetOuterContext",
+      "parameters": [
+        "Node* node",
+        "size_t* depth"
+      ],
+      "return_type": "Node*",
+      "logic": "Traverses up the context chain of a node to a specified depth, returning the context node at that depth. Used for accessing outer contexts in nested scopes."
+    },
+    {
+      "name": "GetTypeOrAny",
+      "parameters": [
+        "const Node* node"
+      ],
+      "return_type": "Type",
+      "logic": "Returns the type of a node if it is typed, otherwise returns the 'Any' type."
+    },
+    {
+      "name": "AllValueInputsAreTyped",
+      "parameters": [
+        "Node* node"
+      ],
+      "return_type": "bool",
+      "logic": "Checks if all value inputs of a node are typed. Returns true if all value inputs have a type associated with them."
+    },
+    {
+      "name": "IsInputRange",
+      "parameters": [
+        "Edge edge",
+        "int first",
+        "int num"
+      ],
+      "return_type": "bool",
+      "logic": "Checks if the index of a given edge falls within a specified range of input indices."
+    },
+    {
+      "name": "HashCode",
+      "parameters": [
+        "Node* node"
+      ],
+      "return_type": "size_t",
+      "logic": "Calculates the hash code for a node based on its operator, input count and input node ids."
+    },
+    {
+      "name": "Equals",
+      "parameters": [
+        "Node* a",
+        "Node* b"
+      ],
+      "return_type": "bool",
+      "logic": "Compares two nodes for equality based on their operator, input count, and input node ids."
+    }
+  ]
+}

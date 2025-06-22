@@ -1,0 +1,46 @@
+{
+  "metadata": {
+    "path": "/home/kathirks_gc/v8_go/archive/codebase/src/compiler/backend/unwinding-info-writer.h",
+    "file_name": "unwinding-info-writer.h",
+    "language": "cpp",
+    "purpose": "Declares the UnwindingInfoWriter class, which is responsible for generating unwinding information (e.g., eh_frame) for stack unwinding during exception handling or debugging.  The specific implementation is architecture-dependent and included via preprocessor directives.  If no architecture is supported, a stub implementation is provided."
+  },
+  "imports": {
+    "metadata": {
+      "language": "cpp",
+      "purpose": "Includes the logging header."
+    },
+    "code": "#include \"src/base/logging.h\""
+  },
+  "classes": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "UnwindingInfoWriter",
+        "about": "A placeholder implementation of UnwindingInfoWriter for unsupported architectures. Provides empty implementations of the methods.",
+        "attributes": [],
+        "dependencies": [
+          "EhFrameWriter",
+          "Zone",
+          "InstructionBlock"
+        ]
+      },
+      "code": "namespace v8 {\nnamespace internal {\n\nclass EhFrameWriter;\nclass Zone;\n\nnamespace compiler {\n\nclass InstructionBlock;\n\nstatic_assert(!v8_flags.perf_prof_unwinding_info.value(),\n              \"--perf-prof-unwinding-info should be statically disabled if not \"\n              \"supported\");\n\nclass UnwindingInfoWriter {\n public:\n  explicit UnwindingInfoWriter(Zone*) {}\n\n  void SetNumberOfInstructionBlocks(int number) {}\n\n  void BeginInstructionBlock(int pc_offset, const InstructionBlock*) {}\n\n  void EndInstructionBlock(const InstructionBlock*) {}\n\n  void Finish(int code_size) {}\n\n  EhFrameWriter* eh_frame_writer() { return nullptr; }\n};\n\n}  // namespace compiler\n}  // namespace internal\n}  // namespace v8"
+    }
+  ],
+  "dependencies": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "InstructionBlock",
+        "about": "Represents a block of instructions in the compiled code."
+      },
+      "code": "class InstructionBlock;",
+      "type": "class"
+    }
+  ],
+  "file_level_code_content": "#endif\n\n#endif  // V8_COMPILER_BACKEND_UNWINDING_INFO_WRITER_H_",
+  "file_path": "/home/kathirks_gc/v8_go/archive/codebase/src/compiler/backend/unwinding-info-writer.h"
+}

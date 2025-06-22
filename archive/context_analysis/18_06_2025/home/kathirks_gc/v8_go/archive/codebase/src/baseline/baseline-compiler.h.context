@@ -1,0 +1,96 @@
+{
+  "metadata": {
+    "path": "/home/kathirks_gc/v8_go/archive/codebase/src/baseline/baseline-compiler.h",
+    "file_name": "baseline-compiler.h",
+    "language": "cpp",
+    "purpose": "Declares the BaselineCompiler class, which is responsible for generating baseline code from bytecode."
+  },
+  "imports": {
+    "metadata": {
+      "language": "cpp",
+      "purpose": "Includes necessary headers for logging, pointer management, threaded lists, variable-length quantity encoding, baseline assembly, local isolates, handles, bytecode array iteration, interpreter intrinsics, counters, maps, tagged indices, and bit vectors."
+    },
+    "code": "#include \"src/base/logging.h\"\n#include \"src/base/pointer-with-payload.h\"\n#include \"src/base/threaded-list.h\"\n#include \"src/base/vlq.h\"\n#include \"src/baseline/baseline-assembler.h\"\n#include \"src/execution/local-isolate.h\"\n#include \"src/handles/handles.h\"\n#include \"src/interpreter/bytecode-array-iterator.h\"\n#include \"src/interpreter/bytecode-register.h\"\n#include \"src/interpreter/interpreter-intrinsics.h\"\n#include \"src/logging/counters.h\"\n#include \"src/objects/map.h\"\n#include \"src/objects/tagged-index.h\"\n#include \"src/utils/bit-vector.h\""
+  },
+  "classes": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "BytecodeOffsetTableBuilder",
+        "about": "Builds a table of bytecode offsets for debugging and profiling purposes.",
+        "attributes": [],
+        "dependencies": []
+      },
+      "code": "class BytecodeOffsetTableBuilder {\n public:\n  void AddPosition(size_t pc_offset) {\n    size_t pc_diff = pc_offset - previous_pc_;\n    DCHECK_GE(pc_diff, 0);\n    DCHECK_LE(pc_diff, std::numeric_limits<uint32_t>::max());\n    base::VLQEncodeUnsigned(&bytes_, static_cast<uint32_t>(pc_diff));\n    previous_pc_ = pc_offset;\n  }\n\n  template <typename IsolateT>\n  Handle<TrustedByteArray> ToBytecodeOffsetTable(IsolateT* isolate);\n\n  void Reserve(size_t size) { bytes_.reserve(size); }\n\n private:\n  size_t previous_pc_ = 0;\n  std::vector<uint8_t> bytes_;\n};"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "BaselineCompiler",
+        "about": "Compiles bytecode arrays to baseline code.",
+        "attributes": [],
+        "dependencies": [
+          "BytecodeArray",
+          "BytecodeOffsetTableBuilder",
+          "LocalIsolate",
+          "SharedFunctionInfo",
+          "BytecodeArrayIterator",
+          "Zone",
+          "MacroAssembler",
+          "BaselineAssembler",
+          "BitVector"
+        ]
+      },
+      "code": "class BaselineCompiler {\n public:\n  explicit BaselineCompiler(LocalIsolate* local_isolate,\n                            Handle<SharedFunctionInfo> shared_function_info,\n                            Handle<BytecodeArray> bytecode);\n\n  void GenerateCode();\n  MaybeHandle<Code> Build();\n  static int EstimateInstructionSize(Tagged<BytecodeArray> bytecode);\n\n private:\n  void Prologue();\n  void PrologueFillFrame();\n  void PrologueHandleOptimizationState(Register feedback_vector);\n\n  void PreVisitSingleBytecode();\n  void VisitSingleBytecode();\n\n  void VerifyFrame();\n  void VerifyFrameSize();\n\n  // Register operands.\n  interpreter::Register RegisterOperand(int operand_index);\n  void LoadRegister(Register output, int operand_index);\n  void StoreRegister(int operand_index, Register value);\n  void StoreRegisterPair(int operand_index, Register val0, Register val1);\n\n  // Constant pool operands.\n  template <typename Type>\n  Handle<Type> Constant(int operand_index);\n  Tagged<Smi> ConstantSmi(int operand_index);\n  template <typename Type>\n  void LoadConstant(Register output, int operand_index);\n\n  // Immediate value operands.\n  uint32_t Uint(int operand_index);\n  int32_t Int(int operand_index);\n  uint32_t Index(int operand_index);\n  uint32_t Flag8(int operand_index);\n  uint32_t Flag16(int operand_index);\n  uint32_t RegisterCount(int operand_index);\n  Tagged<TaggedIndex> IndexAsTagged(int operand_index);\n  Tagged<TaggedIndex> UintAsTagged(int operand_index);\n  Tagged<Smi> IndexAsSmi(int operand_index);\n  Tagged<Smi> IntAsSmi(int operand_index);\n  Tagged<Smi> UintAsSmi(int operand_index);\n  Tagged<Smi> Flag8AsSmi(int operand_index);\n  Tagged<Smi> Flag16AsSmi(int operand_index);\n\n  // Jump helpers.\n  Label* NewLabel();\n  Label* BuildForwardJumpLabel();\n  enum StackCheckBehavior {\n    kEnableStackCheck,\n    kDisableStackCheck,\n  };\n  void UpdateInterruptBudgetAndJumpToLabel(\n      int weight, Label* label, Label* skip_interrupt_label,\n      StackCheckBehavior stack_check_behavior);\n  void JumpIfRoot(RootIndex root);\n  void JumpIfNotRoot(RootIndex root);\n\n  // Feedback vector.\n  MemOperand FeedbackVector();\n  void LoadFeedbackVector(Register output);\n  void LoadClosureFeedbackArray(Register output);\n\n  // Position mapping.\n  void AddPosition();\n\n  // Misc. helpers.\n\n  // Select the root boolean constant based on the jump in the given\n  // `jump_func` -- the function should jump to the given label if we want to\n  // select \"true\", otherwise it should fall through.\n  void SelectBooleanConstant(\n      Register output, std::function<void(Label*, Label::Distance)> jump_func);\n\n  // Jumps based on calling ToBoolean on kInterpreterAccumulatorRegister.\n  void JumpIfToBoolean(bool do_jump_if_true, Label* label,\n                       Label::Distance distance = Label::kFar);\n\n  // Call helpers.\n  template <Builtin kBuiltin, typename... Args>\n  void CallBuiltin(Args... args);\n  template <typename... Args>\n  void CallRuntime(Runtime::FunctionId function, Args... args);\n\n  template <Builtin kBuiltin, typename... Args>\n  void TailCallBuiltin(Args... args);\n\n  template <ConvertReceiverMode kMode, typename... Args>\n  void BuildCall(uint32_t slot, uint32_t arg_count, Args... args);\n\n#ifdef V8_TRACE_UNOPTIMIZED\n  void TraceBytecode(Runtime::FunctionId function_id);\n#endif\n\n  // Single bytecode visitors.\n#define DECLARE_VISITOR(name, ...) void Visit##name();\n  BYTECODE_LIST(DECLARE_VISITOR, DECLARE_VISITOR)\n#undef DECLARE_VISITOR\n\n  // Intrinsic call visitors.\n#define DECLARE_VISITOR(name, ...) \\\n  void VisitIntrinsic##name(interpreter::RegisterList args);\n  INTRINSICS_LIST(DECLARE_VISITOR)\n#undef DECLARE_VISITOR\n\n  const interpreter::BytecodeArrayIterator& iterator() { return iterator_; }\n\n  LocalIsolate* local_isolate_;\n  RuntimeCallStats* stats_;\n  Handle<SharedFunctionInfo> shared_function_info_;\n  Handle<HeapObject> interpreter_data_;\n  Handle<BytecodeArray> bytecode_;\n  Zone zone_;\n  MacroAssembler masm_;\n  BaselineAssembler basm_;\n  interpreter::BytecodeArrayIterator iterator_;\n  BytecodeOffsetTableBuilder bytecode_offset_table_builder_;\n\n  // Mark location as a jump target reachable via indirect branches, required\n  // for CFI.\n  enum class MarkAsIndirectJumpTarget { kNo, kYes };\n\n  Label* EnsureLabel(int offset, MarkAsIndirectJumpTarget mark =\n                                     MarkAsIndirectJumpTarget::kNo) {\n    Label* label = &labels_[offset];\n    if (!label_tags_.Contains(offset * 2)) {\n      label_tags_.Add(offset * 2);\n      new (label) Label();\n    }\n    if (mark == MarkAsIndirectJumpTarget::kYes) {\n      MarkIndirectJumpTarget(offset);\n    }\n    return label;\n  }\n  bool IsJumpTarget(int offset) const {\n    return label_tags_.Contains(offset * 2);\n  }\n  bool IsIndirectJumpTarget(int offset) const {\n    return label_tags_.Contains(offset * 2 + 1);\n  }\n  void MarkIndirectJumpTarget(int offset) { label_tags_.Add(offset * 2 + 1); }\n\n  Label* labels_;\n  BitVector label_tags_;\n\n#ifdef DEBUG\n  friend class SaveAccumulatorScope;\n\n  struct EffectState {\n    bool may_have_deopted = false;\n    bool accumulator_on_stack = false;\n    bool safe_to_skip = false;\n\n    void MayDeopt() {\n      // If this check fails, you might need to update `BuiltinMayDeopt` if\n      // applicable.\n      DCHECK(!accumulator_on_stack);\n      may_have_deopted = true;\n    }\n\n    void CheckEffect() { DCHECK(!may_have_deopted || safe_to_skip); }\n\n    void clear() {\n      DCHECK(!accumulator_on_stack);\n      *this = EffectState();\n    }\n  } effect_state_;\n#endif\n};"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "SaveAccumulatorScope",
+        "about": "A helper class that saves and restores the accumulator register.",
+        "attributes": [],
+        "dependencies": [
+          "BaselineCompiler",
+          "BaselineAssembler"
+        ]
+      },
+      "code": "class SaveAccumulatorScope final {\n public:\n  SaveAccumulatorScope(BaselineCompiler* compiler,\n                       BaselineAssembler* assembler);\n\n  ~SaveAccumulatorScope();\n\n private:\n#ifdef DEBUG\n  BaselineCompiler* compiler_;\n#endif\n  BaselineAssembler* assembler_;\n};"
+    }
+  ],
+  "dependencies": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "LocalIsolate",
+        "about": "Represents a local isolate."
+      },
+      "code": "class LocalIsolate;",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "SharedFunctionInfo",
+        "about": "Stores shared function information."
+      },
+      "code": "class SharedFunctionInfo;",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "BytecodeArray",
+        "about": "Represents a bytecode array."
+      },
+      "code": "class BytecodeArray;",
+      "type": "class"
+    }
+  ],
+  "file_path": "/home/kathirks_gc/v8_go/archive/codebase/src/baseline/baseline-compiler.h"
+}

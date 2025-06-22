@@ -1,0 +1,192 @@
+{
+  "file_path": "/home/kathirks_gc/v8_go/codebase/src/torque/declaration-visitor.cc",
+  "imports": [
+    "src/torque/declaration-visitor.h",
+    "optional",
+    "src/torque/ast.h",
+    "src/torque/kythe-data.h",
+    "src/torque/server-data.h",
+    "src/torque/type-inference.h",
+    "src/torque/type-visitor.h"
+  ],
+  "classes": [
+    {
+      "name": "PredeclarationVisitor",
+      "properties": [],
+      "methods": [
+        {
+          "name": "Predeclare",
+          "parameters": [
+            "Declaration* decl"
+          ],
+          "return_type": "void",
+          "logic": "Entry point for predeclaring various AST nodes. Dispatches to specific handlers based on the node's kind (namespaces, generics, type declarations)."
+        },
+        {
+          "name": "ResolvePredeclarations",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Resolves all predeclared type aliases by computing their concrete types. Iterates through all declarables and resolves TypeAlias nodes."
+        }
+      ]
+    },
+    {
+      "name": "DeclarationVisitor",
+      "properties": [],
+      "methods": [
+        {
+          "name": "Visit",
+          "parameters": [
+            "Declaration* decl"
+          ],
+          "return_type": "void",
+          "logic": "Main entry point for visiting declaration nodes. It dispatches to specific Visit methods based on the type of the declaration."
+        },
+        {
+          "name": "CreateBuiltin",
+          "parameters": [
+            "BuiltinDeclaration* decl",
+            "std::string external_name",
+            "std::string readable_name",
+            "Signature signature",
+            "std::optional<std::string> use_counter_name",
+            "std::optional<Statement*> body"
+          ],
+          "return_type": "Builtin*",
+          "logic": "Creates a Builtin object based on the provided declaration and signature. Handles JavaScript-linkage, varargs, and custom interface descriptors. Performs various checks and validations related to parameter types and return types."
+        },
+        {
+          "name": "Visit",
+          "parameters": [
+            "ExternalBuiltinDeclaration* decl"
+          ],
+          "return_type": "void",
+          "logic": "Visits an ExternalBuiltinDeclaration node. Creates a Builtin object and declares it."
+        },
+        {
+          "name": "Visit",
+          "parameters": [
+            "ExternalRuntimeDeclaration* decl"
+          ],
+          "return_type": "void",
+          "logic": "Visits an ExternalRuntimeDeclaration node. Creates a RuntimeFunction object and declares it. Validates parameter and return types."
+        },
+        {
+          "name": "Visit",
+          "parameters": [
+            "ExternalMacroDeclaration* decl"
+          ],
+          "return_type": "void",
+          "logic": "Visits an ExternalMacroDeclaration node. Creates a Macro object and declares it."
+        },
+        {
+          "name": "Visit",
+          "parameters": [
+            "TorqueBuiltinDeclaration* decl"
+          ],
+          "return_type": "void",
+          "logic": "Visits a TorqueBuiltinDeclaration node. Creates a Builtin object and declares it. Performs use counter name validation."
+        },
+        {
+          "name": "Visit",
+          "parameters": [
+            "TorqueMacroDeclaration* decl"
+          ],
+          "return_type": "void",
+          "logic": "Visits a TorqueMacroDeclaration node. Creates a Macro object and declares it."
+        },
+        {
+          "name": "Visit",
+          "parameters": [
+            "IntrinsicDeclaration* decl"
+          ],
+          "return_type": "void",
+          "logic": "Visits an IntrinsicDeclaration node. Declares an intrinsic."
+        },
+        {
+          "name": "Visit",
+          "parameters": [
+            "ConstDeclaration* decl"
+          ],
+          "return_type": "void",
+          "logic": "Visits a ConstDeclaration node. Declares a namespace constant."
+        },
+        {
+          "name": "Visit",
+          "parameters": [
+            "SpecializationDeclaration* decl"
+          ],
+          "return_type": "void",
+          "logic": "Visits a SpecializationDeclaration node. Finds the matching generic callable based on the provided parameters and specializes it."
+        },
+        {
+          "name": "Visit",
+          "parameters": [
+            "ExternConstDeclaration* decl"
+          ],
+          "return_type": "void",
+          "logic": "Visits an ExternConstDeclaration node. Declares an extern constant."
+        },
+        {
+          "name": "Visit",
+          "parameters": [
+            "CppIncludeDeclaration* decl"
+          ],
+          "return_type": "void",
+          "logic": "Visits a CppIncludeDeclaration node. Adds a C++ include path to the global context."
+        },
+        {
+          "name": "DeclareSpecializedTypes",
+          "parameters": [
+            "const SpecializationKey<GenericCallable>& key"
+          ],
+          "return_type": "void",
+          "logic": "Declares type aliases for the specialized types in a generic callable specialization. Creates type aliases for generic type parameters."
+        },
+        {
+          "name": "MakeSpecializedSignature",
+          "parameters": [
+            "const SpecializationKey<GenericCallable>& key"
+          ],
+          "return_type": "Signature",
+          "logic": "Creates a specialized signature for a generic callable. It declares type aliases and utilizes TypeVisitor::MakeSignature on the original declaration."
+        },
+        {
+          "name": "SpecializeImplicit",
+          "parameters": [
+            "const SpecializationKey<GenericCallable>& key"
+          ],
+          "return_type": "Callable*",
+          "logic": "Specializes a generic callable implicitly. Handles the case when a specialization is not explicitly declared.  Declares the specialized types and sets the specialization requester."
+        },
+        {
+          "name": "Specialize",
+          "parameters": [
+            "const SpecializationKey<GenericCallable>& key",
+            "CallableDeclaration* declaration",
+            "std::optional<const SpecializationDeclaration*> explicit_specialization",
+            "std::optional<Statement*> body",
+            "SourcePosition position"
+          ],
+          "return_type": "Callable*",
+          "logic": "Specializes a generic callable explicitly. Creates a specialized Callable object, adds the specialization to the GenericCallable, and returns the created callable."
+        }
+      ]
+    },
+    {
+      "name": "SpecializationRequester",
+      "properties": [],
+      "methods": []
+    }
+  ],
+  "functions": [
+    {
+      "name": "GetOrCreateNamespace",
+      "parameters": [
+        "const std::string& name"
+      ],
+      "return_type": "Namespace*",
+      "logic": "Retrieves an existing namespace with the given name or creates a new one if it doesn't exist. Returns the existing or newly created Namespace object."
+    }
+  ]
+}

@@ -1,0 +1,475 @@
+{
+  "file_path": "/home/kathirks_gc/v8_go/codebase/src/compiler/backend/instruction-selector-impl.h",
+  "imports": [
+    "src/codegen/macro-assembler.h",
+    "src/compiler/backend/instruction-selector.h",
+    "src/compiler/backend/instruction.h",
+    "src/compiler/linkage.h",
+    "src/objects/tagged-index.h"
+  ],
+  "classes": [
+    {
+      "name": "CaseInfoT",
+      "properties": [
+        "value",
+        "order",
+        "branch"
+      ],
+      "methods": []
+    },
+    {
+      "name": "SwitchInfoT",
+      "properties": [
+        "cases_",
+        "min_value_",
+        "max_value_",
+        "value_range_",
+        "default_branch_"
+      ],
+      "methods": [
+        {
+          "name": "SwitchInfoT",
+          "parameters": [
+            "cases",
+            "min_value",
+            "max_value",
+            "default_branch"
+          ],
+          "return_type": "void",
+          "logic": "Constructor for SwitchInfoT. Initializes the member variables, including calculating the value range."
+        },
+        {
+          "name": "CasesSortedByValue",
+          "parameters": [],
+          "return_type": "std::vector<CaseInfo>",
+          "logic": "Returns a sorted vector of CaseInfo objects, sorted by their value."
+        },
+        {
+          "name": "CasesUnsorted",
+          "parameters": [],
+          "return_type": "const ZoneVector<CaseInfo>&",
+          "logic": "Returns a reference to the unsorted ZoneVector of CaseInfo objects."
+        },
+        {
+          "name": "min_value",
+          "parameters": [],
+          "return_type": "int32_t",
+          "logic": "Returns the minimum value of the cases."
+        },
+        {
+          "name": "max_value",
+          "parameters": [],
+          "return_type": "int32_t",
+          "logic": "Returns the maximum value of the cases."
+        },
+        {
+          "name": "value_range",
+          "parameters": [],
+          "return_type": "size_t",
+          "logic": "Returns the range of values in the cases (max_value - min_value + 1)."
+        },
+        {
+          "name": "case_count",
+          "parameters": [],
+          "return_type": "size_t",
+          "logic": "Returns the number of cases."
+        },
+        {
+          "name": "default_branch",
+          "parameters": [],
+          "return_type": "turboshaft::Block*",
+          "logic": "Returns the default branch for the switch statement."
+        }
+      ]
+    },
+    {
+      "name": "OperandGeneratorT",
+      "properties": [
+        "selector_"
+      ],
+      "methods": [
+        {
+          "name": "OperandGeneratorT",
+          "parameters": [
+            "selector"
+          ],
+          "return_type": "explicit OperandGeneratorT",
+          "logic": "Constructor for OperandGeneratorT. Initializes the selector_ member."
+        },
+        {
+          "name": "NoOutput",
+          "parameters": [],
+          "return_type": "InstructionOperand",
+          "logic": "Returns an invalid InstructionOperand, used when there is no output."
+        },
+        {
+          "name": "DefineAsRegister",
+          "parameters": [
+            "node"
+          ],
+          "return_type": "InstructionOperand",
+          "logic": "Defines an operand as a register, allocating a virtual register if needed."
+        },
+        {
+          "name": "DefineSameAsInput",
+          "parameters": [
+            "node",
+            "input_index"
+          ],
+          "return_type": "InstructionOperand",
+          "logic": "Defines an operand to be the same register as a given input operand."
+        },
+        {
+          "name": "DefineSameAsFirst",
+          "parameters": [
+            "node"
+          ],
+          "return_type": "InstructionOperand",
+          "logic": "Defines an operand to be the same register as the first input operand."
+        },
+        {
+          "name": "DefineAsFixed",
+          "parameters": [
+            "node",
+            "reg"
+          ],
+          "return_type": "InstructionOperand",
+          "logic": "Defines an operand to be a specific fixed register."
+        },
+        {
+          "name": "DefineAsFixed",
+          "parameters": [
+            "node",
+            "reg"
+          ],
+          "return_type": "InstructionOperand",
+          "logic": "Defines an operand to be a specific fixed floating-point register."
+        },
+        {
+          "name": "DefineAsConstant",
+          "parameters": [
+            "node"
+          ],
+          "return_type": "InstructionOperand",
+          "logic": "Defines an operand to be a constant value."
+        },
+        {
+          "name": "DefineAsLocation",
+          "parameters": [
+            "node",
+            "location"
+          ],
+          "return_type": "InstructionOperand",
+          "logic": "Defines an operand to be a specific memory location (e.g., a stack slot)."
+        },
+        {
+          "name": "DefineAsDualLocation",
+          "parameters": [
+            "node",
+            "primary_location",
+            "secondary_location"
+          ],
+          "return_type": "InstructionOperand",
+          "logic": "Defines an operand as a pair of locations (e.g. a register and a stack slot)."
+        },
+        {
+          "name": "Use",
+          "parameters": [
+            "node"
+          ],
+          "return_type": "InstructionOperand",
+          "logic": "Marks a node as used at the start with any location."
+        },
+        {
+          "name": "UseAnyAtEnd",
+          "parameters": [
+            "node"
+          ],
+          "return_type": "InstructionOperand",
+          "logic": "Marks a node as used at the end with a register or a slot."
+        },
+        {
+          "name": "UseAny",
+          "parameters": [
+            "node"
+          ],
+          "return_type": "InstructionOperand",
+          "logic": "Marks a node as used at the start with a register or a slot."
+        },
+        {
+          "name": "UseRegisterOrSlotOrConstant",
+          "parameters": [
+            "node"
+          ],
+          "return_type": "InstructionOperand",
+          "logic": "Marks a node as used as register, slot or constant."
+        },
+        {
+          "name": "UseUniqueRegisterOrSlotOrConstant",
+          "parameters": [
+            "node"
+          ],
+          "return_type": "InstructionOperand",
+          "logic": "Marks a node as used, as register, slot or constant, with unique register constraint."
+        },
+        {
+          "name": "UseRegister",
+          "parameters": [
+            "node"
+          ],
+          "return_type": "InstructionOperand",
+          "logic": "Marks a node as used, requiring it to be in a register."
+        },
+        {
+          "name": "UseRegisterAtEnd",
+          "parameters": [
+            "node"
+          ],
+          "return_type": "InstructionOperand",
+          "logic": "Marks a node as used at the end, requiring it to be in a register."
+        },
+        {
+          "name": "UseUniqueSlot",
+          "parameters": [
+            "node"
+          ],
+          "return_type": "InstructionOperand",
+          "logic": "Marks a node as used and requires it to be a unique slot."
+        },
+        {
+          "name": "UseUnique",
+          "parameters": [
+            "node"
+          ],
+          "return_type": "InstructionOperand",
+          "logic": "Marks a node as used, and allocating a unique register."
+        },
+        {
+          "name": "UseUniqueRegister",
+          "parameters": [
+            "node"
+          ],
+          "return_type": "InstructionOperand",
+          "logic": "Marks a node as used, allocating a unique register that is not aliased."
+        },
+        {
+          "name": "UseRegister",
+          "parameters": [
+            "node",
+            "unique_reg"
+          ],
+          "return_type": "InstructionOperand",
+          "logic": "Marks a node as used, potentially using a unique register depending on register_mode."
+        },
+        {
+          "name": "UseFixed",
+          "parameters": [
+            "node",
+            "reg"
+          ],
+          "return_type": "InstructionOperand",
+          "logic": "Marks a node as used, requiring it to be in a specific fixed register."
+        },
+        {
+          "name": "UseFixed",
+          "parameters": [
+            "node",
+            "reg"
+          ],
+          "return_type": "InstructionOperand",
+          "logic": "Marks a node as used, requiring it to be in a specific fixed floating-point register."
+        },
+        {
+          "name": "UseImmediate",
+          "parameters": [
+            "immediate"
+          ],
+          "return_type": "InstructionOperand",
+          "logic": "Returns an operand representing an immediate (integer) value."
+        },
+        {
+          "name": "UseImmediate64",
+          "parameters": [
+            "immediate"
+          ],
+          "return_type": "InstructionOperand",
+          "logic": "Returns an operand representing an immediate 64-bit value."
+        },
+        {
+          "name": "UseImmediate",
+          "parameters": [
+            "node"
+          ],
+          "return_type": "InstructionOperand",
+          "logic": "Marks a node as used and provides an immediate value extracted from it."
+        },
+        {
+          "name": "UseNegatedImmediate",
+          "parameters": [
+            "node"
+          ],
+          "return_type": "InstructionOperand",
+          "logic": "Returns an operand representing a negated immediate (integer) value extracted from node."
+        },
+        {
+          "name": "UseLocation",
+          "parameters": [
+            "node",
+            "location"
+          ],
+          "return_type": "InstructionOperand",
+          "logic": "Marks a node as used, requiring it to be at a specific memory location."
+        },
+        {
+          "name": "UsePointerLocation",
+          "parameters": [
+            "to_location",
+            "from_location"
+          ],
+          "return_type": "InstructionOperand",
+          "logic": "Used to force gap moves from the from_location to the to_location immediately before an instruction."
+        },
+        {
+          "name": "TempRegister",
+          "parameters": [],
+          "return_type": "InstructionOperand",
+          "logic": "Allocates a temporary register."
+        },
+        {
+          "name": "AllocateVirtualRegister",
+          "parameters": [],
+          "return_type": "int",
+          "logic": "Allocates a virtual register and returns its number."
+        },
+        {
+          "name": "DefineSameAsFirstForVreg",
+          "parameters": [
+            "vreg"
+          ],
+          "return_type": "InstructionOperand",
+          "logic": "Returns an operand defined as same as the first input for a specific virtual register."
+        },
+        {
+          "name": "DefineAsRegistertForVreg",
+          "parameters": [
+            "vreg"
+          ],
+          "return_type": "InstructionOperand",
+          "logic": "Returns an operand defined as a register for a specific virtual register."
+        },
+        {
+          "name": "UseRegisterForVreg",
+          "parameters": [
+            "vreg"
+          ],
+          "return_type": "InstructionOperand",
+          "logic": "Marks an operand as used register for a specific virtual register."
+        },
+        {
+          "name": "UseRegisterWithMode",
+          "parameters": [
+            "node",
+            "register_mode"
+          ],
+          "return_type": "InstructionOperand",
+          "logic": "Marks a node as used in a register, potentially using unique register constraint."
+        },
+        {
+          "name": "TempDoubleRegister",
+          "parameters": [],
+          "return_type": "InstructionOperand",
+          "logic": "Allocates a temporary register, forcing it to be a double-precision floating-point register."
+        },
+        {
+          "name": "TempSimd128Register",
+          "parameters": [],
+          "return_type": "InstructionOperand",
+          "logic": "Allocates a temporary register, forcing it to be a Simd128 register."
+        },
+        {
+          "name": "TempSimd256Register",
+          "parameters": [],
+          "return_type": "InstructionOperand",
+          "logic": "Allocates a temporary register, forcing it to be a Simd256 register."
+        },
+        {
+          "name": "TempRegister",
+          "parameters": [
+            "reg"
+          ],
+          "return_type": "InstructionOperand",
+          "logic": "Allocates a temporary register fixed to specified register."
+        },
+        {
+          "name": "TempRegister",
+          "parameters": [
+            "code"
+          ],
+          "return_type": "InstructionOperand",
+          "logic": "Allocates a temporary register fixed to specified register code."
+        },
+        {
+          "name": "TempFpRegister",
+          "parameters": [
+            "reg"
+          ],
+          "return_type": "InstructionOperand",
+          "logic": "Allocates a temporary register, forcing it to be a specified floating-point register."
+        },
+        {
+          "name": "TempImmediate",
+          "parameters": [
+            "imm"
+          ],
+          "return_type": "InstructionOperand",
+          "logic": "Returns an operand representing a temporary immediate value."
+        },
+        {
+          "name": "TempLocation",
+          "parameters": [
+            "location"
+          ],
+          "return_type": "InstructionOperand",
+          "logic": "Allocates a temporary memory location."
+        },
+        {
+          "name": "Label",
+          "parameters": [
+            "block"
+          ],
+          "return_type": "InstructionOperand",
+          "logic": "Creates label for the block."
+        },
+        {
+          "name": "selector",
+          "parameters": [],
+          "return_type": "InstructionSelectorT*",
+          "logic": "Returns pointer to the instruction selector."
+        },
+        {
+          "name": "sequence",
+          "parameters": [],
+          "return_type": "InstructionSequence*",
+          "logic": "Returns a pointer to the instruction sequence."
+        },
+        {
+          "name": "zone",
+          "parameters": [],
+          "return_type": "Zone*",
+          "logic": "Returns the memory zone."
+        }
+      ]
+    }
+  ],
+  "functions": [
+    {
+      "name": "operator<",
+      "parameters": [
+        "l",
+        "r"
+      ],
+      "return_type": "bool",
+      "logic": "Compares two CaseInfoT objects based on their order member."
+    }
+  ]
+}

@@ -1,0 +1,51 @@
+{
+  "file_path": "/home/kathirks_gc/v8_go/codebase/src/compiler/pair-load-store-reducer.cc",
+  "imports": [
+    "src/compiler/pair-load-store-reducer.h",
+    "<optional>",
+    "src/compiler/machine-graph.h"
+  ],
+  "classes": [
+    {
+      "name": "PairLoadStoreReducer",
+      "properties": [
+        "editor_",
+        "mcgraph_",
+        "isolate_"
+      ],
+      "methods": [
+        {
+          "name": "PairLoadStoreReducer",
+          "parameters": [
+            "Editor* editor",
+            "MachineGraph* mcgraph",
+            "Isolate* isolate"
+          ],
+          "return_type": "void",
+          "logic": "Constructor for the PairLoadStoreReducer class. Initializes the editor, machine graph, and isolate."
+        },
+        {
+          "name": "Reduce",
+          "parameters": [
+            "Node* cur"
+          ],
+          "return_type": "Reduction",
+          "logic": "Attempts to combine consecutive store operations into a single store pair operation.  Checks if the current node is a store, then checks if the previous effect node is also a store. If so, it uses `CanBePaired` to determine if the stores can be paired. If pairing is possible, it modifies the previous store node to represent the combined store, replaces the current store with the modified previous store, and kills the current store node."
+        }
+      ]
+    }
+  ],
+  "functions": [
+    {
+      "name": "CanBePaired",
+      "parameters": [
+        "Node* node1",
+        "Node* node2",
+        "MachineOperatorBuilder* machine",
+        "Isolate* isolate"
+      ],
+      "return_type": "std::optional<std::tuple<int, const Operator*>>",
+      "logic": "Checks if two store operations can be paired into a single store pair operation. It verifies that both nodes are stores, have the same base address, and have constant integer indices that differ by the element size. If all conditions are met, it returns the difference in indices and the combined operator. Otherwise, it returns an empty optional."
+    }
+  ]
+}

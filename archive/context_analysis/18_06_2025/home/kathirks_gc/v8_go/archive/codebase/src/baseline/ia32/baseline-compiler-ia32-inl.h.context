@@ -1,0 +1,92 @@
+{
+  "metadata": {
+    "path": "/home/kathirks_gc/v8_go/archive/codebase/src/baseline/ia32/baseline-compiler-ia32-inl.h",
+    "file_name": "baseline-compiler-ia32-inl.h",
+    "language": "cpp",
+    "purpose": "This file contains IA32-specific inline implementations for the BaselineCompiler, mainly related to function prologue and stack frame management."
+  },
+  "imports": {
+    "metadata": {
+      "language": "cpp",
+      "purpose": "Include necessary header files for macros, baseline compilation, and interface descriptors."
+    },
+    "code": "#include \"src/base/macros.h\"\n#include \"src/baseline/baseline-compiler.h\"\n#include \"src/codegen/interface-descriptors.h\""
+  },
+  "functions": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "method",
+        "name": "Prologue",
+        "parent": "BaselineCompiler",
+        "about": "Generates the function prologue for IA32 architecture.",
+        "logic": "Sets up the stack frame by calling the BaselineOutOfLinePrologue builtin. This includes saving the context, function, and argument count registers, as well as setting up the frame for local variables. Also calls PrologueFillFrame to initialize registers.",
+        "parameters": [],
+        "return": {
+          "type": "void",
+          "description": "No return value"
+        },
+        "dependencies": [
+          "Builtin",
+          "CallBuiltin",
+          "kJSFunctionRegister",
+          "kJavaScriptCallTargetRegister",
+          "kContextRegister",
+          "kJavaScriptCallArgCountRegister",
+          "kJavaScriptCallNewTargetRegister"
+        ]
+      },
+      "code": "void BaselineCompiler::Prologue() {\n  DCHECK_EQ(kJSFunctionRegister, kJavaScriptCallTargetRegister);\n  int max_frame_size = bytecode_->max_frame_size();\n  CallBuiltin<Builtin::kBaselineOutOfLinePrologue>(\n      kContextRegister, kJSFunctionRegister, kJavaScriptCallArgCountRegister,\n      max_frame_size, kJavaScriptCallNewTargetRegister, bytecode_);\n\n  PrologueFillFrame();\n}"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "method",
+        "name": "PrologueFillFrame",
+        "parent": "BaselineCompiler",
+        "about": "Fills the register frame with initial values (undefined) for the IA32 architecture.",
+        "logic": "Initializes the register frame by pushing the undefined value (from kInterpreterAccumulatorRegister) onto the stack for each register. It optimizes the process by unrolling the loop or using a loop with a scratch register if the frame is large enough. Also takes into account the presence of a new_target or generator register and pushes it onto the stack.",
+        "parameters": [],
+        "return": {
+          "type": "void",
+          "description": "No return value"
+        },
+        "dependencies": [
+          "kInterpreterAccumulatorRegister",
+          "kJavaScriptCallNewTargetRegister",
+          "RootIndex",
+          "RootIndex::kUndefinedValue",
+          "AbortReason",
+          "AbortReason::kUnexpectedValue",
+          "bytecode_",
+          "interpreter::Register",
+          "BaselineAssembler::ScratchRegisterScope"
+        ]
+      },
+      "code": "void BaselineCompiler::PrologueFillFrame() {\n  ASM_CODE_COMMENT(&masm_);\n  // Inlined register frame fill\n  interpreter::Register new_target_or_generator_register =\n      bytecode_->incoming_new_target_or_generator_register();\n  if (v8_flags.debug_code) {\n    __ masm()->CompareRoot(kInterpreterAccumulatorRegister,\n                           RootIndex::kUndefinedValue);\n    __ masm()->Assert(equal, AbortReason::kUnexpectedValue);\n  }\n  int register_count = bytecode_->register_count();\n  // Magic value\n  const int kLoopUnrollSize = 8;\n  const int new_target_index = new_target_or_generator_register.index();\n  const bool has_new_target = new_target_index != kMaxInt;\n  if (has_new_target) {\n    DCHECK_LE(new_target_index, register_count);\n    for (int i = 0; i < new_target_index; i++) {\n      __ Push(kInterpreterAccumulatorRegister);\n    }\n    // Push new_target_or_generator.\n    __ Push(kJavaScriptCallNewTargetRegister);\n    register_count -= new_target_index + 1;\n  }\n  if (register_count < 2 * kLoopUnrollSize) {\n    // If the frame is small enough, just unroll the frame fill completely.\n    for (int i = 0; i < register_count; ++i) {\n      __ Push(kInterpreterAccumulatorRegister);\n    }\n  } else {\n    // Extract the first few registers to round to the unroll size.\n    int first_registers = register_count % kLoopUnrollSize;\n    for (int i = 0; i < first_registers; ++i) {\n      __ Push(kInterpreterAccumulatorRegister);\n    }\n    BaselineAssembler::ScratchRegisterScope scope(&basm_);\n    Register scratch = scope.AcquireScratch();\n    __ Move(scratch, register_count / kLoopUnrollSize);\n    // We enter the loop unconditionally, so make sure we need to loop at least\n    // once.\n    DCHECK_GT(register_count / kLoopUnrollSize, 0);\n    Label loop;\n    __ Bind(&loop);\n    for (int i = 0; i < kLoopUnrollSize; ++i) {\n      __ Push(kInterpreterAccumulatorRegister);\n    }\n    __ masm()->dec(scratch);\n    __ masm()->j(greater, &loop);\n  }\n}"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "method",
+        "name": "VerifyFrameSize",
+        "parent": "BaselineCompiler",
+        "about": "Verifies the size of the stack frame during debugging for IA32 architecture.",
+        "logic": "Compares the current stack pointer (ESP) with the expected value based on the frame size and fixed frame size constants. It uses xmm0 to temporarily store the value of eax because eax gets overwritten during the function, and its initial value is expected to be preserved by the caller.",
+        "parameters": [],
+        "return": {
+          "type": "void",
+          "description": "No return value"
+        },
+        "dependencies": [
+          "InterpreterFrameConstants::kFixedFrameSizeFromFp",
+          "bytecode_",
+          "AbortReason",
+          "AbortReason::kUnexpectedStackPointer"
+        ]
+      },
+      "code": "void BaselineCompiler::VerifyFrameSize() {\n  __ masm()->movd(xmm0, eax);\n  __ Move(eax, esp);\n  __ masm()->add(eax,\n                 Immediate(InterpreterFrameConstants::kFixedFrameSizeFromFp +\n                           bytecode_->frame_size()));\n  __ masm()->cmp(eax, ebp);\n  __ masm()->Assert(equal, AbortReason::kUnexpectedStackPointer);\n  __ masm()->movd(eax, xmm0);\n}"
+    }
+  ],
+  "file_path": "/home/kathirks_gc/v8_go/archive/codebase/src/baseline/ia32/baseline-compiler-ia32-inl.h"
+}

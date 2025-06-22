@@ -1,0 +1,279 @@
+{
+  "metadata": {
+    "path": "/home/kathirks_gc/v8_go/archive/codebase/src/compiler/turboshaft/access-builder.h",
+    "file_name": "access-builder.h",
+    "language": "cpp",
+    "purpose": "Defines utility classes and functions for building memory access descriptors (FieldAccess and ElementAccess) within the Turboshaft compiler."
+  },
+  "imports": {
+    "metadata": {
+      "language": "cpp",
+      "purpose": "Includes necessary headers for compiler-specific features, global definitions, base access builder, turboshaft index, and type caching."
+    },
+    "code": "#include \"src/base/compiler-specific.h\"\n#include \"src/common/globals.h\"\n#include \"src/compiler/access-builder.h\"\n#include \"src/compiler/turboshaft/index.h\"\n#include \"src/compiler/type-cache.h\""
+  },
+  "classes": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "AccessBuilderTS",
+        "extends": "AllStatic",
+        "about": "Provides static methods for creating FieldAccessTS and ElementAccessTS objects, which describe how to access fields and elements in memory.  Wraps the compiler::AccessBuilder functionality.",
+        "attributes": [],
+        "dependencies": [
+          "FieldAccessTS",
+          "ElementAccessTS",
+          "compiler::AccessBuilder",
+          "String",
+          "Word32",
+          "Name",
+          "HeapNumber",
+          "Float64",
+          "Object",
+          "Map",
+          "WriteBarrierKind",
+          "kMapWriteBarrier",
+          "FeedbackVector",
+          "FixedArray",
+          "SeqOneByteString",
+          "SeqTwoByteString",
+          "Union",
+          "Oddball",
+          "Hole",
+          "TypeCache",
+          "IsTagged"
+        ]
+      },
+      "code": "class AccessBuilderTS : public AllStatic {\n public:\n  template <typename Class>\n  static constexpr bool is_array_buffer_v = std::is_same_v<Class, ArrayBuffer>;\n\n#define TF_FIELD_ACCESS(Class, T, name)                              \\\n  static FieldAccessTS<Class, T> name() {                            \\\n    return FieldAccessTS<Class, T>(compiler::AccessBuilder::name()); \\\n  }\n  TF_FIELD_ACCESS(String, Word32, ForStringLength)\n  TF_FIELD_ACCESS(Name, Word32, ForNameRawHashField)\n  TF_FIELD_ACCESS(HeapNumber, Float64, ForHeapNumberValue)\n  TF_FIELD_ACCESS(HeapNumber, Word32, ForHeapInt32Value)\n  using HeapNumberOrOddballOrHole = Union<HeapNumber, Oddball, Hole>;\n  TF_FIELD_ACCESS(HeapNumberOrOddballOrHole, Float64,\n                  ForHeapNumberOrOddballOrHoleValue)\n#undef TF_ACCESS\n  static FieldAccessTS<Object, Map> ForMap(\n      WriteBarrierKind write_barrier = kMapWriteBarrier) {\n    return FieldAccessTS<Object, Map>(\n        compiler::AccessBuilder::ForMap(write_barrier));\n  }\n  static FieldAccessTS<FeedbackVector, Word32> ForFeedbackVectorLength() {\n    return FieldAccessTS<FeedbackVector, Word32>(compiler::FieldAccess{\n        BaseTaggedness::kTaggedBase, FeedbackVector::kLengthOffset,\n        Handle<Name>(), OptionalMapRef(), TypeCache::Get()->kInt32,\n        MachineType::Int32(), WriteBarrierKind::kNoWriteBarrier});\n  }\n\n#define TF_ELEMENT_ACCESS(Class, T, name)                                     \\\n  static ElementAccessTS<Class, T> name() {                                   \\\n    return ElementAccessTS<Class, T>{compiler::AccessBuilder::name(), false}; \\\n  }\n  TF_ELEMENT_ACCESS(SeqOneByteString, Word32, ForSeqOneByteStringCharacter)\n  TF_ELEMENT_ACCESS(SeqTwoByteString, Word32, ForSeqTwoByteStringCharacter)\n  TF_ELEMENT_ACCESS(Object, Object, ForOrderedHashMapEntryValue)\n#undef TF_ELEMENT_ACCESS\n\n  template <IsTagged T>\n  static ElementAccessTS<FixedArray, T> ForFixedArrayElement() {\n    static_assert(!is_array_buffer_v<FixedArray>);\n    return ElementAccessTS<FixedArray, T>{\n        compiler::AccessBuilder::ForFixedArrayElement(), false};\n  }\n};"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "struct",
+        "name": "FieldAccessTS",
+        "extends": "compiler::FieldAccess",
+        "about": "A template struct that inherits from compiler::FieldAccess and adds a type alias.  Used to represent access to a field of a specific type in a class.",
+        "attributes": [],
+        "dependencies": [
+          "compiler::FieldAccess"
+        ]
+      },
+      "code": "template <typename Class, typename T>\nstruct FieldAccessTS : public compiler::FieldAccess {\n  using type = T;\n\n private:\n  friend class AccessBuilderTS;\n  explicit FieldAccessTS(const compiler::FieldAccess& base)\n      : compiler::FieldAccess(base) {}\n};"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "struct",
+        "name": "ElementAccessTS",
+        "extends": "compiler::ElementAccess",
+        "about": "A template struct that inherits from compiler::ElementAccess and adds a type alias and a flag indicating if the access is an array buffer load. Used to represent access to an element of a specific type in a class.",
+        "attributes": [
+          {
+            "name": "is_array_buffer_load",
+            "type": "bool",
+            "access": "public",
+            "purpose": "Indicates whether the element access is for an array buffer load."
+          }
+        ],
+        "dependencies": [
+          "compiler::ElementAccess"
+        ]
+      },
+      "code": "template <typename Class, typename T>\nstruct ElementAccessTS : public compiler::ElementAccess {\n  using type = T;\n\n  const bool is_array_buffer_load;\n\n private:\n  friend class AccessBuilderTS;\n  explicit ElementAccessTS(const compiler::ElementAccess& base,\n                           bool is_array_buffer_load)\n      : compiler::ElementAccess(base),\n        is_array_buffer_load(is_array_buffer_load) {}\n};"
+    }
+  ],
+  "dependencies": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "ArrayBuffer",
+        "about": "Represents an ArrayBuffer in V8"
+      },
+      "code": "class ArrayBuffer {};",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "String",
+        "about": "Represents a String in V8"
+      },
+      "code": "class String {};",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "Name",
+        "about": "Represents a Name in V8"
+      },
+      "code": "class Name {};",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "HeapNumber",
+        "about": "Represents a HeapNumber in V8"
+      },
+      "code": "class HeapNumber {};",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "Object",
+        "about": "Represents a Object in V8"
+      },
+      "code": "class Object {};",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "Map",
+        "about": "Represents a Map in V8"
+      },
+      "code": "class Map {};",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "FeedbackVector",
+        "about": "Represents a FeedbackVector in V8"
+      },
+      "code": "class FeedbackVector {};",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "FixedArray",
+        "about": "Represents a FixedArray in V8"
+      },
+      "code": "class FixedArray {};",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "SeqOneByteString",
+        "about": "Represents a SeqOneByteString in V8"
+      },
+      "code": "class SeqOneByteString {};",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "SeqTwoByteString",
+        "about": "Represents a SeqTwoByteString in V8"
+      },
+      "code": "class SeqTwoByteString {};",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "Oddball",
+        "about": "Represents an Oddball in V8"
+      },
+      "code": "class Oddball {};",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "Hole",
+        "about": "Represents a Hole in V8"
+      },
+      "code": "class Hole {};",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "typedef",
+        "name": "Word32",
+        "about": "Represents a 32-bit unsigned integer"
+      },
+      "code": "typedef uint32_t Word32;",
+      "type": "typedef"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "typedef",
+        "name": "Float64",
+        "about": "Represents a 64-bit floating point number"
+      },
+      "code": "typedef double Float64;",
+      "type": "typedef"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "enum",
+        "name": "WriteBarrierKind",
+        "about": "Enum that represents different write barrier kinds."
+      },
+      "code": "enum class WriteBarrierKind {\n                    kNoWriteBarrier,\n                    kMapWriteBarrier\n                };",
+      "type": "enum"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "function",
+        "name": "TypeCache::Get",
+        "about": "Gets the TypeCache instance"
+      },
+      "code": "class TypeCache {\n                    public:\n                    static TypeCache* Get();\n                    int kInt32;\n                };",
+      "type": "func"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "Union",
+        "about": "A type that represents a union of types."
+      },
+      "code": "template <typename... Types>\n               struct Union {};",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "OptionalMapRef",
+        "about": "A type that represents an optional map reference."
+      },
+      "code": "class OptionalMapRef {};",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "enum",
+        "name": "BaseTaggedness",
+        "about": "Enum that represents different base taggedness."
+      },
+      "code": "enum class BaseTaggedness {\n                    kTaggedBase\n                };",
+      "type": "enum"
+    }
+  ],
+  "file_path": "/home/kathirks_gc/v8_go/archive/codebase/src/compiler/turboshaft/access-builder.h"
+}

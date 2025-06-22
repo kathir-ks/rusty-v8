@@ -1,0 +1,180 @@
+{
+  "metadata": {
+    "path": "/home/kathirks_gc/v8_go/archive/codebase/src/compiler/wasm-gc-lowering.h",
+    "file_name": "wasm-gc-lowering.h",
+    "language": "cpp",
+    "purpose": "Declares the WasmGCLowering class, which performs lowering of WebAssembly GC (Garbage Collection) instructions within the compiler."
+  },
+  "imports": {
+    "metadata": {
+      "language": "cpp",
+      "purpose": "Includes necessary headers for graph reduction, WebAssembly compilation definitions, and graph assembly."
+    },
+    "code": "#include \"src/compiler/graph-reducer.h\"\n#include \"src/compiler/wasm-compiler-definitions.h\"\n#include \"src/compiler/wasm-graph-assembler.h\""
+  },
+  "classes": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "WasmGCLowering",
+        "extends": "AdvancedReducer",
+        "about": "Performs lowering of WebAssembly GC instructions. This involves replacing high-level GC operations with lower-level machine-specific operations.",
+        "attributes": [
+          {
+            "name": "null_check_strategy_",
+            "type": "NullCheckStrategy",
+            "access": "private",
+            "purpose": "Strategy for performing null checks."
+          },
+          {
+            "name": "gasm_",
+            "type": "WasmGraphAssembler",
+            "access": "private",
+            "purpose": "Assembler for building the graph."
+          },
+          {
+            "name": "module_",
+            "type": "const wasm::WasmModule*",
+            "access": "private",
+            "purpose": "Pointer to the WebAssembly module being compiled."
+          },
+          {
+            "name": "dead_",
+            "type": "Node*",
+            "access": "private",
+            "purpose": "A 'dead' node, likely used as a sentinel or placeholder."
+          },
+          {
+            "name": "mcgraph_",
+            "type": "const MachineGraph*",
+            "access": "private",
+            "purpose": "Pointer to the machine graph."
+          },
+          {
+            "name": "source_position_table_",
+            "type": "SourcePositionTable*",
+            "access": "private",
+            "purpose": "Table for storing source position information."
+          }
+        ],
+        "dependencies": [
+          "AdvancedReducer",
+          "Editor",
+          "MachineGraph",
+          "wasm::WasmModule",
+          "SourcePositionTable",
+          "WasmGraphAssembler",
+          "Node",
+          "wasm::ValueType",
+          "ExternalPointerTag",
+          "NullCheckStrategy"
+        ]
+      },
+      "code": "class WasmGCLowering final : public AdvancedReducer {\n public:\n  WasmGCLowering(Editor* editor, MachineGraph* mcgraph,\n                 const wasm::WasmModule* module, bool disable_trap_handler,\n                 SourcePositionTable* source_position_table);\n\n  const char* reducer_name() const override { return \"WasmGCLowering\"; }\n\n  Reduction Reduce(Node* node) final;\n\n private:\n  Reduction ReduceWasmTypeCheck(Node* node);\n  Reduction ReduceWasmTypeCheckAbstract(Node* node);\n  Reduction ReduceWasmTypeCast(Node* node);\n  Reduction ReduceWasmTypeCastAbstract(Node* node);\n  Reduction ReduceAssertNotNull(Node* node);\n  Reduction ReduceNull(Node* node);\n  Reduction ReduceIsNull(Node* node);\n  Reduction ReduceIsNotNull(Node* node);\n  Reduction ReduceRttCanon(Node* node);\n  Reduction ReduceTypeGuard(Node* node);\n  Reduction ReduceWasmAnyConvertExtern(Node* node);\n  Reduction ReduceWasmExternConvertAny(Node* node);\n  Reduction ReduceWasmStructGet(Node* node);\n  Reduction ReduceWasmStructSet(Node* node);\n  Reduction ReduceWasmArrayGet(Node* node);\n  Reduction ReduceWasmArraySet(Node* node);\n  Reduction ReduceWasmArrayLength(Node* node);\n  Reduction ReduceWasmArrayInitializeLength(Node* node);\n  Reduction ReduceStringAsWtf16(Node* node);\n  Reduction ReduceStringPrepareForGetCodeunit(Node* node);\n  Node* Null(wasm::ValueType type);\n  Node* IsNull(Node* object, wasm::ValueType type);\n  Node* BuildLoadExternalPointerFromObject(Node* object, int offset,\n                                           ExternalPointerTag tag);\n  void UpdateSourcePosition(Node* new_node, Node* old_node);\n  NullCheckStrategy null_check_strategy_;\n  WasmGraphAssembler gasm_;\n  const wasm::WasmModule* module_;\n  Node* dead_;\n  const MachineGraph* mcgraph_;\n  SourcePositionTable* source_position_table_;\n};"
+    }
+  ],
+  "dependencies": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "AdvancedReducer",
+        "about": "Base class for advanced reducers in the compiler pipeline."
+      },
+      "code": "class AdvancedReducer {\n public:\n  virtual ~AdvancedReducer() = default;\n};",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "Editor",
+        "about": "Provides editing capabilities for the graph."
+      },
+      "code": "class Editor {};",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "MachineGraph",
+        "about": "Represents the machine-level graph."
+      },
+      "code": "class MachineGraph {};",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "SourcePositionTable",
+        "about": "Stores the source position of nodes."
+      },
+      "code": "class SourcePositionTable {};",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "WasmGraphAssembler",
+        "about": "Helper class for assembling the WebAssembly graph."
+      },
+      "code": "class WasmGraphAssembler {};",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "Node",
+        "about": "Represents a node in the graph."
+      },
+      "code": "class Node {};",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "Reduction",
+        "about": "Represents the result of a reduction operation."
+      },
+      "code": "class Reduction {};",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "enum",
+        "name": "ExternalPointerTag",
+        "about": "Tag to define the type of external pointer."
+      },
+      "code": "enum class ExternalPointerTag {};",
+      "type": "enum"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "enum",
+        "name": "NullCheckStrategy",
+        "about": "Strategy for checking for null values."
+      },
+      "code": "enum class NullCheckStrategy {};",
+      "type": "enum"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "namespace",
+        "name": "wasm",
+        "about": "Namespace for WebAssembly related code."
+      },
+      "code": "namespace wasm {\n    enum class ValueType {};\n    class WasmModule {};\n}",
+      "type": "namespace"
+    }
+  ],
+  "file_path": "/home/kathirks_gc/v8_go/archive/codebase/src/compiler/wasm-gc-lowering.h"
+}

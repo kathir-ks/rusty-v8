@@ -1,0 +1,181 @@
+{
+  "metadata": {
+    "path": "/home/kathirks_gc/v8_go/archive/codebase/src/compiler/operator-properties.cc",
+    "file_name": "operator-properties.cc",
+    "language": "cpp",
+    "purpose": "Provides utility functions to query properties of operators in the V8 compiler, such as whether they have a context input or frame state input."
+  },
+  "imports": {
+    "metadata": {
+      "language": "cpp",
+      "purpose": "Includes necessary headers for operator properties, JS operators, linkage, opcodes, and runtime functionality."
+    },
+    "code": "#include \"src/compiler/operator-properties.h\"\n\n            #include \"src/compiler/js-operator.h\"\n            #include \"src/compiler/linkage.h\"\n            #include \"src/compiler/opcodes.h\"\n            #include \"src/runtime/runtime.h\""
+  },
+  "classes": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "OperatorProperties",
+        "about": "Provides static methods to determine properties of operators.",
+        "attributes": [],
+        "dependencies": [
+          "Operator",
+          "IrOpcode",
+          "Runtime",
+          "CallRuntimeParameters",
+          "CreateArgumentsType",
+          "CallRuntimeParametersOf",
+          "CreateArgumentsTypeOf",
+          "Linkage"
+        ]
+      },
+      "code": "namespace v8 {\n            namespace internal {\n            namespace compiler {\n\n            // static\n            class OperatorProperties {\n            public:\n              static bool HasContextInput(const Operator* op);\n              static bool NeedsExactContext(const Operator* op);\n              static bool HasFrameStateInput(const Operator* op);\n              static int GetTotalInputCount(const Operator* op);\n              static bool IsBasicBlockBegin(const Operator* op);\n            };"
+    }
+  ],
+  "functions": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "function",
+        "name": "HasContextInput",
+        "parent": "OperatorProperties",
+        "about": "Determines if an operator has a context input.",
+        "logic": "Checks if the operator's opcode is a Javascript operator.",
+        "parameters": [
+          {
+            "name": "op",
+            "type": "const Operator*",
+            "purpose": "The operator to check."
+          }
+        ],
+        "return": {
+          "type": "bool",
+          "description": "True if the operator has a context input, false otherwise."
+        },
+        "dependencies": [
+          "IrOpcode",
+          "IrOpcode::IsJsOpcode"
+        ]
+      },
+      "code": "// static\n            bool OperatorProperties::HasContextInput(const Operator* op) {\n              IrOpcode::Value opcode = static_cast<IrOpcode::Value>(op->opcode());\n              return IrOpcode::IsJsOpcode(opcode);\n            }"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "function",
+        "name": "NeedsExactContext",
+        "parent": "OperatorProperties",
+        "about": "Determines if an operator needs an exact context.",
+        "logic": "Uses a switch statement based on the operator's opcode to check if it requires an exact context. Many JS operators only need a context for exceptions or native context lookups, so any context is fine. Some, especially those dealing with context allocation or access, require the exact context.",
+        "parameters": [
+          {
+            "name": "op",
+            "type": "const Operator*",
+            "purpose": "The operator to check."
+          }
+        ],
+        "return": {
+          "type": "bool",
+          "description": "True if the operator needs an exact context, false otherwise."
+        },
+        "dependencies": [
+          "DCHECK",
+          "HasContextInput",
+          "IrOpcode",
+          "Runtime",
+          "CallRuntimeParametersOf",
+          "CallRuntimeParameters",
+          "CreateArgumentsTypeOf",
+          "CreateArgumentsType"
+        ]
+      },
+      "code": "// static\n            bool OperatorProperties::NeedsExactContext(const Operator* op) {\n              DCHECK(HasContextInput(op));\n              IrOpcode::Value const opcode = static_cast<IrOpcode::Value>(op->opcode());\n              switch (opcode) {\n        #define CASE(Name, ...) case IrOpcode::k##Name:\n                // Binary/unary operators, calls and constructor calls only\n                // need the context to generate exceptions or lookup fields\n                // on the native context, so passing any context is fine.\n                JS_SIMPLE_BINOP_LIST(CASE)\n                JS_CALL_OP_LIST(CASE)\n                JS_CONSTRUCT_OP_LIST(CASE)\n                JS_SIMPLE_UNOP_LIST(CASE)\n        #undef CASE\n                case IrOpcode::kJSCloneObject:\n                case IrOpcode::kJSCreate:\n                case IrOpcode::kJSCreateLiteralArray:\n                case IrOpcode::kJSCreateEmptyLiteralArray:\n                case IrOpcode::kJSCreateLiteralObject:\n                case IrOpcode::kJSCreateEmptyLiteralObject:\n                case IrOpcode::kJSCreateArrayFromIterable:\n                case IrOpcode::kJSCreateLiteralRegExp:\n                case IrOpcode::kJSGetTemplateObject:\n                case IrOpcode::kJSForInEnumerate:\n                case IrOpcode::kJSForInNext:\n                case IrOpcode::kJSForInPrepare:\n                case IrOpcode::kJSGeneratorRestoreContext:\n                case IrOpcode::kJSGeneratorRestoreContinuation:\n                case IrOpcode::kJSGeneratorRestoreInputOrDebugPos:\n                case IrOpcode::kJSGeneratorRestoreRegister:\n                case IrOpcode::kJSGetSuperConstructor:\n                case IrOpcode::kJSLoadGlobal:\n                case IrOpcode::kJSLoadMessage:\n                case IrOpcode::kJSStackCheck:\n                case IrOpcode::kJSStoreMessage:\n                case IrOpcode::kJSGetIterator:\n                  return false;\n\n                case IrOpcode::kJSCallRuntime:\n                  return Runtime::NeedsExactContext(CallRuntimeParametersOf(op).id());\n\n                case IrOpcode::kJSCreateArguments:\n                  // For mapped arguments we need to access slots of context-allocated\n                  // variables if there's aliasing with formal parameters.\n                  return CreateArgumentsTypeOf(op) == CreateArgumentsType::kMappedArguments;\n\n                case IrOpcode::kJSCreateBlockContext:\n                case IrOpcode::kJSCreateClosure:\n                case IrOpcode::kJSCreateFunctionContext:\n                case IrOpcode::kJSCreateGeneratorObject:\n                case IrOpcode::kJSCreateCatchContext:\n                case IrOpcode::kJSCreateWithContext:\n                case IrOpcode::kJSDebugger:\n                case IrOpcode::kJSDefineKeyedOwnProperty:\n                case IrOpcode::kJSDeleteProperty:\n                case IrOpcode::kJSGeneratorStore:\n                case IrOpcode::kJSGetImportMeta:\n                case IrOpcode::kJSHasProperty:\n                case IrOpcode::kJSHasContextExtension:\n                case IrOpcode::kJSLoadContext:\n                case IrOpcode::kJSLoadScriptContext:\n                case IrOpcode::kJSLoadModule:\n                case IrOpcode::kJSLoadNamed:\n                case IrOpcode::kJSLoadNamedFromSuper:\n                case IrOpcode::kJSLoadProperty:\n                case IrOpcode::kJSStoreContext:\n                case IrOpcode::kJSStoreScriptContext:\n                case IrOpcode::kJSDefineKeyedOwnPropertyInLiteral:\n                case IrOpcode::kJSStoreGlobal:\n                case IrOpcode::kJSStoreInArrayLiteral:\n                case IrOpcode::kJSStoreModule:\n                case IrOpcode::kJSSetNamedProperty:\n                case IrOpcode::kJSDefineNamedOwnProperty:\n                case IrOpcode::kJSSetKeyedProperty:\n                case IrOpcode::kJSFindNonDefaultConstructorOrConstruct:\n                  return true;\n\n                case IrOpcode::kJSAsyncFunctionEnter:\n                case IrOpcode::kJSAsyncFunctionReject:\n                case IrOpcode::kJSAsyncFunctionResolve:\n                case IrOpcode::kJSCreateArrayIterator:\n                case IrOpcode::kJSCreateAsyncFunctionObject:\n                case IrOpcode::kJSCreateBoundFunction:\n                case IrOpcode::kJSCreateCollectionIterator:\n                case IrOpcode::kJSCreateIterResultObject:\n                case IrOpcode::kJSCreateStringIterator:\n                case IrOpcode::kJSCreateKeyValueArray:\n                case IrOpcode::kJSCreateObject:\n                case IrOpcode::kJSCreateStringWrapper:\n                case IrOpcode::kJSCreatePromise:\n                case IrOpcode::kJSCreateTypedArray:\n                case IrOpcode::kJSCreateArray:\n                case IrOpcode::kJSFulfillPromise:\n                case IrOpcode::kJSObjectIsArray:\n                case IrOpcode::kJSPerformPromiseThen:\n                case IrOpcode::kJSPromiseResolve:\n                case IrOpcode::kJSRegExpTest:\n                case IrOpcode::kJSRejectPromise:\n                case IrOpcode::kJSResolvePromise:\n                  // These operators aren't introduced by BytecodeGraphBuilder and\n                  // thus we don't bother checking them. If you ever introduce one\n                  // of these early in the BytecodeGraphBuilder make sure to check\n                  // whether they are context-sensitive.\n                  break;\n\n        #define CASE(Name) case IrOpcode::k##Name:\n                  // Non-JavaScript operators don't have a notion of \"context\".\n                  COMMON_OP_LIST(CASE)\n                  CONTROL_OP_LIST(CASE)\n                  MACHINE_OP_LIST(CASE)\n                  MACHINE_SIMD128_OP_LIST(CASE)\n                  IF_WASM(MACHINE_SIMD256_OP_LIST, CASE)\n                  SIMPLIFIED_OP_LIST(CASE)\n                  break;\n        #undef CASE\n              }\n              UNREACHABLE();\n            }"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "function",
+        "name": "HasFrameStateInput",
+        "parent": "OperatorProperties",
+        "about": "Determines if an operator has a frame state input.",
+        "logic": "Uses a switch statement based on the operator's opcode to check if it requires a frame state input, which is needed for lazy deoptimization.",
+        "parameters": [
+          {
+            "name": "op",
+            "type": "const Operator*",
+            "purpose": "The operator to check."
+          }
+        ],
+        "return": {
+          "type": "bool",
+          "description": "True if the operator has a frame state input, false otherwise."
+        },
+        "dependencies": [
+          "IrOpcode",
+          "CallRuntimeParametersOf",
+          "CallRuntimeParameters",
+          "Linkage",
+          "Linkage::NeedsFrameStateInput"
+        ]
+      },
+      "code": "// static\n            bool OperatorProperties::HasFrameStateInput(const Operator* op) {\n              switch (op->opcode()) {\n                case IrOpcode::kCheckpoint:\n                case IrOpcode::kFrameState:\n                  return true;\n                case IrOpcode::kJSCallRuntime: {\n                  const CallRuntimeParameters& p = CallRuntimeParametersOf(op);\n                  return Linkage::NeedsFrameStateInput(p.id());\n                }\n\n                // Strict equality cannot lazily deoptimize.\n                case IrOpcode::kJSStrictEqual:\n                  return false;\n\n                // Generator creation cannot call back into arbitrary JavaScript.\n                case IrOpcode::kJSCreateGeneratorObject:\n                  return false;\n\n                // Binary operations\n                case IrOpcode::kJSAdd:\n                case IrOpcode::kJSSubtract:\n                case IrOpcode::kJSMultiply:\n                case IrOpcode::kJSDivide:\n                case IrOpcode::kJSModulus:\n                case IrOpcode::kJSExponentiate:\n\n                // Bitwise operations\n                case IrOpcode::kJSBitwiseOr:\n                case IrOpcode::kJSBitwiseXor:\n                case IrOpcode::kJSBitwiseAnd:\n\n                // Shift operations\n                case IrOpcode::kJSShiftLeft:\n                case IrOpcode::kJSShiftRight:\n                case IrOpcode::kJSShiftRightLogical:\n\n                // Compare operations\n                case IrOpcode::kJSEqual:\n                case IrOpcode::kJSGreaterThan:\n                case IrOpcode::kJSGreaterThanOrEqual:\n                case IrOpcode::kJSLessThan:\n                case IrOpcode::kJSLessThanOrEqual:\n                case IrOpcode::kJSHasProperty:\n                case IrOpcode::kJSHasInPrototypeChain:\n                case IrOpcode::kJSInstanceOf:\n                case IrOpcode::kJSOrdinaryHasInstance:\n\n                // Object operations\n                case IrOpcode::kJSCreate:\n                case IrOpcode::kJSCreateArguments:\n                case IrOpcode::kJSCreateArray:\n                case IrOpcode::kJSCreateTypedArray:\n                case IrOpcode::kJSCreateLiteralArray:\n                case IrOpcode::kJSCreateArrayFromIterable:\n                case IrOpcode::kJSCreateLiteralObject:\n                case IrOpcode::kJSCreateLiteralRegExp:\n                case IrOpcode::kJSCreateObject:\n                case IrOpcode::kJSCloneObject:\n\n                // Property access operations\n                case IrOpcode::kJSDeleteProperty:\n                case IrOpcode::kJSLoadGlobal:\n                case IrOpcode::kJSLoadNamed:\n                case IrOpcode::kJSLoadNamedFromSuper:\n                case IrOpcode::kJSLoadProperty:\n                case IrOpcode::kJSDefineKeyedOwnPropertyInLiteral:\n                case IrOpcode::kJSStoreInArrayLiteral:\n                case IrOpcode::kJSStoreGlobal:\n                case IrOpcode::kJSSetNamedProperty:\n                case IrOpcode::kJSDefineNamedOwnProperty:\n                case IrOpcode::kJSSetKeyedProperty:\n                case IrOpcode::kJSDefineKeyedOwnProperty:\n\n                // Conversions\n                case IrOpcode::kJSToLength:\n                case IrOpcode::kJSToName:\n                case IrOpcode::kJSToNumber:\n                case IrOpcode::kJSToNumberConvertBigInt:\n                case IrOpcode::kJSToBigInt:\n                case IrOpcode::kJSToBigIntConvertNumber:\n                case IrOpcode::kJSToNumeric:\n                case IrOpcode::kJSToObject:\n                case IrOpcode::kJSToString:\n                case IrOpcode::kJSParseInt:\n\n                // Call operations\n                case IrOpcode::kJSConstructForwardVarargs:\n                case IrOpcode::kJSConstruct:\n                case IrOpcode::kJSConstructWithArrayLike:\n                case IrOpcode::kJSConstructWithSpread:\n                case IrOpcode::kJSConstructForwardAllArgs:\n                case IrOpcode::kJSCallForwardVarargs:\n                case IrOpcode::kJSCall:\n                case IrOpcode::kJSCallWithArrayLike:\n                case IrOpcode::kJSCallWithSpread:\n#if V8_ENABLE_WEBASSEMBLY\n                case IrOpcode::kJSWasmCall:\n#endif  // V8_ENABLE_WEBASSEMBLY\n\n                // Misc operations\n                case IrOpcode::kJSAsyncFunctionEnter:\n                case IrOpcode::kJSAsyncFunctionReject:\n                case IrOpcode::kJSAsyncFunctionResolve:\n                case IrOpcode::kJSForInEnumerate:\n                case IrOpcode::kJSForInNext:\n                case IrOpcode::kJSStackCheck:\n                case IrOpcode::kJSDebugger:\n                case IrOpcode::kJSGetSuperConstructor:\n                case IrOpcode::kJSFindNonDefaultConstructorOrConstruct:\n                case IrOpcode::kJSBitwiseNot:\n                case IrOpcode::kJSDecrement:\n                case IrOpcode::kJSIncrement:\n                case IrOpcode::kJSNegate:\n                case IrOpcode::kJSPromiseResolve:\n                case IrOpcode::kJSRejectPromise:\n                case IrOpcode::kJSResolvePromise:\n                case IrOpcode::kJSPerformPromiseThen:\n                case IrOpcode::kJSObjectIsArray:\n                case IrOpcode::kJSRegExpTest:\n                case IrOpcode::kJSGetImportMeta:\n\n                // Iterator protocol operations\n                case IrOpcode::kJSGetIterator:\n                  return true;\n\n                default:\n                  return false;\n              }\n            }"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "function",
+        "name": "GetTotalInputCount",
+        "parent": "OperatorProperties",
+        "about": "Calculates the total number of inputs for a given operator.",
+        "logic": "Sums the value, context, frame state, effect, and control input counts.",
+        "parameters": [
+          {
+            "name": "op",
+            "type": "const Operator*",
+            "purpose": "The operator to get the input count for."
+          }
+        ],
+        "return": {
+          "type": "int",
+          "description": "The total number of inputs for the operator."
+        },
+        "dependencies": [
+          "Operator",
+          "GetContextInputCount",
+          "GetFrameStateInputCount"
+        ]
+      },
+      "code": "// static\n            int OperatorProperties::GetTotalInputCount(const Operator* op) {\n              return op->ValueInputCount() + GetContextInputCount(op) +\n                     GetFrameStateInputCount(op) + op->EffectInputCount() +\n                     op->ControlInputCount();\n            }"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "function",
+        "name": "IsBasicBlockBegin",
+        "parent": "OperatorProperties",
+        "about": "Determines if an operator marks the beginning of a basic block.",
+        "logic": "Checks if the operator's opcode corresponds to a basic block beginning, such as Start, End, Loop, Merge, etc.",
+        "parameters": [
+          {
+            "name": "op",
+            "type": "const Operator*",
+            "purpose": "The operator to check."
+          }
+        ],
+        "return": {
+          "type": "bool",
+          "description": "True if the operator marks the beginning of a basic block, false otherwise."
+        },
+        "dependencies": [
+          "Operator",
+          "IrOpcode"
+        ]
+      },
+      "code": "// static\n            bool OperatorProperties::IsBasicBlockBegin(const Operator* op) {\n              Operator::Opcode const opcode = op->opcode();\n              return opcode == IrOpcode::kStart || opcode == IrOpcode::kEnd ||\n                     opcode == IrOpcode::kDead || opcode == IrOpcode::kLoop ||\n                     opcode == IrOpcode::kMerge || opcode == IrOpcode::kIfTrue ||\n                     opcode == IrOpcode::kIfFalse || opcode == IrOpcode::kIfSuccess ||\n                     opcode == IrOpcode::kIfException || opcode == IrOpcode::kIfValue ||\n                     opcode == IrOpcode::kIfDefault;\n            }"
+    }
+  ],
+  "file_level_code_content": "}  // namespace compiler\n        }  // namespace internal\n        }  // namespace v8",
+  "file_path": "/home/kathirks_gc/v8_go/archive/codebase/src/compiler/operator-properties.cc"
+}

@@ -1,0 +1,354 @@
+{
+  "file_path": "/home/kathirks_gc/v8_go/codebase/src/snapshot/read-only-serializer.cc",
+  "imports": [
+    "src/snapshot/read-only-serializer.h",
+    "src/common/globals.h",
+    "src/heap/heap-inl.h",
+    "src/heap/read-only-heap.h",
+    "src/heap/visit-object.h",
+    "src/objects/objects-inl.h",
+    "src/objects/slots.h",
+    "src/snapshot/read-only-serializer-deserializer.h"
+  ],
+  "classes": [
+    {
+      "name": "ObjectPreProcessor",
+      "properties": [
+        "isolate_",
+        "extref_encoder_"
+      ],
+      "methods": [
+        {
+          "name": "ObjectPreProcessor",
+          "parameters": [
+            "Isolate* isolate"
+          ],
+          "return_type": "explicit ObjectPreProcessor",
+          "logic": "Constructor. Initializes the isolate and external reference encoder."
+        },
+        {
+          "name": "PreProcessIfNeeded",
+          "parameters": [
+            "Tagged<HeapObject> o"
+          ],
+          "return_type": "void",
+          "logic": "Checks the object's type and calls the appropriate pre-processing function if needed. Dispatches to specific PreProcess methods based on the object's instance type."
+        },
+        {
+          "name": "EncodeExternalPointerSlot",
+          "parameters": [
+            "ExternalPointerSlot slot"
+          ],
+          "return_type": "void",
+          "logic": "Encodes the external pointer slot. It loads the address from the slot and uses the `ExternalReferenceEncoder` to get an encoded value. Then replaces the content of the slot with index for serialization"
+        },
+        {
+          "name": "EncodeExternalPointerSlot",
+          "parameters": [
+            "ExternalPointerSlot slot",
+            "Address value"
+          ],
+          "return_type": "void",
+          "logic": "Encodes the external pointer slot, encoding a specific address value into the slot. Then replaces the content of the slot with index for serialization"
+        },
+        {
+          "name": "PreProcessAccessorInfo",
+          "parameters": [
+            "Tagged<AccessorInfo> o"
+          ],
+          "return_type": "void",
+          "logic": "Pre-processes an AccessorInfo object for serialization. Encodes getter and setter ExternalPointerSlots."
+        },
+        {
+          "name": "PreProcessFunctionTemplateInfo",
+          "parameters": [
+            "Tagged<FunctionTemplateInfo> o"
+          ],
+          "return_type": "void",
+          "logic": "Pre-processes a FunctionTemplateInfo object for serialization.  Encodes callback ExternalPointerSlot."
+        },
+        {
+          "name": "PreProcessCode",
+          "parameters": [
+            "Tagged<Code> o"
+          ],
+          "return_type": "void",
+          "logic": "Pre-processes a Code object for serialization. Clears the instruction start and checks for the absence of source position tables, bytecode offset tables, deoptimization data and interpreter data. Also checks JS dispatch handle if leap tiering is enabled."
+        }
+      ]
+    },
+    {
+      "name": "ReadOnlySegmentForSerialization",
+      "properties": [
+        "page",
+        "segment_start",
+        "segment_size",
+        "segment_offset",
+        "contents",
+        "tagged_slots"
+      ],
+      "methods": [
+        {
+          "name": "ReadOnlySegmentForSerialization",
+          "parameters": [
+            "Isolate* isolate",
+            "const ReadOnlyPageMetadata* page",
+            "Address segment_start",
+            "size_t segment_size",
+            "ObjectPreProcessor* pre_processor"
+          ],
+          "return_type": "ReadOnlySegmentForSerialization",
+          "logic": "Constructor. Copies a segment of the read-only heap to off-heap memory, pre-processes objects within the segment, and encodes tagged slots."
+        },
+        {
+          "name": "PreProcessSegment",
+          "parameters": [
+            "ObjectPreProcessor* pre_processor"
+          ],
+          "return_type": "void",
+          "logic": "Iterates through objects in the segment and calls `PreProcessIfNeeded` on each object."
+        },
+        {
+          "name": "EncodeTaggedSlots",
+          "parameters": [
+            "Isolate* isolate"
+          ],
+          "return_type": "void",
+          "logic": "Encodes and records tagged slots in the segment, which are object pointers that need to be relocated during deserialization."
+        }
+      ]
+    },
+    {
+      "name": "EncodeRelocationsVisitor",
+      "properties": [
+        "isolate_",
+        "segment_"
+      ],
+      "methods": [
+        {
+          "name": "EncodeRelocationsVisitor",
+          "parameters": [
+            "Isolate* isolate",
+            "ReadOnlySegmentForSerialization* segment"
+          ],
+          "return_type": "EncodeRelocationsVisitor",
+          "logic": "Constructor for the visitor that encodes and records tagged slots in the segment."
+        },
+        {
+          "name": "VisitPointers",
+          "parameters": [
+            "Tagged<HeapObject> host",
+            "ObjectSlot start",
+            "ObjectSlot end"
+          ],
+          "return_type": "void",
+          "logic": "Visits all object slots in the given range and processes them."
+        },
+        {
+          "name": "VisitPointers",
+          "parameters": [
+            "Tagged<HeapObject> host",
+            "MaybeObjectSlot start",
+            "MaybeObjectSlot end"
+          ],
+          "return_type": "void",
+          "logic": "Visits all maybe-object slots in the given range and processes them."
+        },
+        {
+          "name": "VisitMapPointer",
+          "parameters": [
+            "Tagged<HeapObject> host"
+          ],
+          "return_type": "void",
+          "logic": "Visits the map pointer of the heap object."
+        },
+        {
+          "name": "VisitInstructionStreamPointer",
+          "parameters": [
+            "Tagged<Code> host",
+            "InstructionStreamSlot slot"
+          ],
+          "return_type": "void",
+          "logic": "Sanity-checks the instruction stream pointer. It asserts that ro space contains only builtin Code objects."
+        },
+        {
+          "name": "VisitCodeTarget",
+          "parameters": [
+            "Tagged<InstructionStream>",
+            "RelocInfo*"
+          ],
+          "return_type": "void",
+          "logic": "Unreachable."
+        },
+        {
+          "name": "VisitEmbeddedPointer",
+          "parameters": [
+            "Tagged<InstructionStream>",
+            "RelocInfo*"
+          ],
+          "return_type": "void",
+          "logic": "Unreachable."
+        },
+        {
+          "name": "VisitExternalReference",
+          "parameters": [
+            "Tagged<InstructionStream>",
+            "RelocInfo*"
+          ],
+          "return_type": "void",
+          "logic": "Unreachable."
+        },
+        {
+          "name": "VisitInternalReference",
+          "parameters": [
+            "Tagged<InstructionStream>",
+            "RelocInfo*"
+          ],
+          "return_type": "void",
+          "logic": "Unreachable."
+        },
+        {
+          "name": "VisitOffHeapTarget",
+          "parameters": [
+            "Tagged<InstructionStream>",
+            "RelocInfo*"
+          ],
+          "return_type": "void",
+          "logic": "Unreachable."
+        },
+        {
+          "name": "VisitExternalPointer",
+          "parameters": [
+            "Tagged<HeapObject>",
+            "ExternalPointerSlot slot"
+          ],
+          "return_type": "void",
+          "logic": "Checks the correctness of the Encoded ExternalPointerSlot values."
+        }
+      ]
+    },
+    {
+      "name": "ReadOnlyHeapImageSerializer",
+      "properties": [
+        "isolate_",
+        "sink_",
+        "pre_processor_"
+      ],
+      "methods": [
+        {
+          "name": "Serialize",
+          "parameters": [
+            "Isolate* isolate",
+            "SnapshotByteSink* sink",
+            "const std::vector<MemoryRegion>& unmapped_regions"
+          ],
+          "return_type": "static void",
+          "logic": "Static entry point to serialize the read-only heap image."
+        },
+        {
+          "name": "ReadOnlyHeapImageSerializer",
+          "parameters": [
+            "Isolate* isolate",
+            "SnapshotByteSink* sink"
+          ],
+          "return_type": "ReadOnlyHeapImageSerializer",
+          "logic": "Constructor. Initializes isolate, sink and pre-processor."
+        },
+        {
+          "name": "SerializeImpl",
+          "parameters": [
+            "const std::vector<MemoryRegion>& unmapped_regions"
+          ],
+          "return_type": "void",
+          "logic": "Serializes the read-only heap by iterating through pages, allocating pages, serializing page content and writing metadata (roots table). It divides the pages into segments based on unmapped regions."
+        },
+        {
+          "name": "IndexOf",
+          "parameters": [
+            "const ReadOnlyPageMetadata* page"
+          ],
+          "return_type": "uint32_t",
+          "logic": "Returns the index of the given page within the read-only space."
+        },
+        {
+          "name": "EmitAllocatePage",
+          "parameters": [
+            "const ReadOnlyPageMetadata* page",
+            "const std::vector<MemoryRegion>& unmapped_regions"
+          ],
+          "return_type": "void",
+          "logic": "Emits bytecode to allocate a page during deserialization. Writes the page index and size into the sink."
+        },
+        {
+          "name": "SerializePage",
+          "parameters": [
+            "const ReadOnlyPageMetadata* page",
+            "const std::vector<MemoryRegion>& unmapped_regions"
+          ],
+          "return_type": "void",
+          "logic": "Serializes the content of a single read-only page, splitting it into segments based on unmapped regions.  Calls EmitSegment for each segment."
+        },
+        {
+          "name": "EmitSegment",
+          "parameters": [
+            "const ReadOnlySegmentForSerialization* segment"
+          ],
+          "return_type": "void",
+          "logic": "Emits bytecode to indicate a segment. Serializes segment metadata (page index, offset, size) and its contents to the sink, including tagged slot information if not static roots."
+        },
+        {
+          "name": "EmitReadOnlyRootsTable",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Emits the read-only roots table, which contains references to frequently used objects."
+        }
+      ]
+    },
+    {
+      "name": "ReadOnlySerializer",
+      "properties": [],
+      "methods": [
+        {
+          "name": "ReadOnlySerializer",
+          "parameters": [
+            "Isolate* isolate",
+            "Snapshot::SerializerFlags flags"
+          ],
+          "return_type": "ReadOnlySerializer",
+          "logic": "Constructor for the ReadOnlySerializer. Initializes the base class with read-only root index."
+        },
+        {
+          "name": "~ReadOnlySerializer",
+          "parameters": [],
+          "return_type": "ReadOnlySerializer",
+          "logic": "Destructor for the ReadOnlySerializer. Outputs statistics."
+        },
+        {
+          "name": "Serialize",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Serializes the read-only heap by calling `ReadOnlyHeapImageSerializer::Serialize` and collects statistics if enabled.  Iterates through the read-only heap objects to check rehashability and count allocation."
+        }
+      ]
+    }
+  ],
+  "functions": [
+    {
+      "name": "Encode",
+      "parameters": [
+        "Isolate* isolate",
+        "Tagged<HeapObject> o"
+      ],
+      "return_type": "ro::EncodedTagged",
+      "logic": "Encodes a HeapObject into an ro::EncodedTagged, representing its location within the read-only heap."
+    },
+    {
+      "name": "GetUnmappedRegions",
+      "parameters": [
+        "Isolate* isolate"
+      ],
+      "return_type": "std::vector<ReadOnlyHeapImageSerializer::MemoryRegion>",
+      "logic": "Detects unmapped regions in the read-only heap (specifically related to WasmNull's padding and payload) and returns a vector of memory regions to be skipped during serialization. Only relevant when V8_STATIC_ROOTS is defined."
+    }
+  ]
+}

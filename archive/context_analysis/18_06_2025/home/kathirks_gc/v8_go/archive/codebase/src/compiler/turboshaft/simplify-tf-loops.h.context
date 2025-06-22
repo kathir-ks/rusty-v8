@@ -1,0 +1,84 @@
+{
+  "metadata": {
+    "path": "/home/kathirks_gc/v8_go/archive/codebase/src/compiler/turboshaft/simplify-tf-loops.h",
+    "file_name": "simplify-tf-loops.h",
+    "language": "cpp",
+    "purpose": "Header file for the SimplifyTFLoops class, which simplifies TurboFan loops in the compiler."
+  },
+  "imports": {
+    "metadata": {
+      "language": "cpp",
+      "purpose": "Includes the GraphReducer class definition, which is likely used as a base class for SimplifyTFLoops, as well as other required utilities."
+    },
+    "code": "#include \"src/compiler/graph-reducer.h\""
+  },
+  "classes": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "SimplifyTFLoops",
+        "extends": "AdvancedReducer",
+        "about": "This class constrains loop nodes in the TurboFan graph to have at most two inputs by introducing additional merges as needed.",
+        "attributes": [
+          {
+            "name": "mcgraph_",
+            "type": "MachineGraph*",
+            "access": "private",
+            "purpose": "A pointer to the MachineGraph being processed."
+          }
+        ],
+        "dependencies": [
+          "AdvancedReducer",
+          "Editor",
+          "MachineGraph",
+          "Node"
+        ]
+      },
+      "code": "class SimplifyTFLoops final : public AdvancedReducer {\n public:\n  SimplifyTFLoops(Editor* editor, MachineGraph* mcgraph)\n      : AdvancedReducer(editor), mcgraph_(mcgraph) {}\n\n  const char* reducer_name() const override { return \"SimplifyTFLoops\"; }\n\n  Reduction Reduce(Node* node) final;\n\n private:\n  MachineGraph* const mcgraph_;\n};"
+    }
+  ],
+  "dependencies": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "AdvancedReducer",
+        "about": "Base class for advanced reducers in the compiler."
+      },
+      "code": "class AdvancedReducer {};",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "Editor",
+        "about": "Editor class for modifying the graph."
+      },
+      "code": "class Editor {};",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "MachineGraph",
+        "about": "Represents the machine-level graph."
+      },
+      "code": "class MachineGraph {};",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "Node",
+        "about": "Represents a node in the graph."
+      },
+      "code": "class Node {};",
+      "type": "class"
+    }
+  ],
+  "file_path": "/home/kathirks_gc/v8_go/archive/codebase/src/compiler/turboshaft/simplify-tf-loops.h"
+}

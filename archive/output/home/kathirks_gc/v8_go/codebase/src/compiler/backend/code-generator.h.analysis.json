@@ -1,0 +1,552 @@
+{
+  "file_path": "/home/kathirks_gc/v8_go/codebase/src/compiler/backend/code-generator.h",
+  "imports": [
+    "<memory>",
+    "<optional>",
+    "src/codegen/macro-assembler.h",
+    "src/codegen/optimized-compilation-info.h",
+    "src/codegen/safepoint-table.h",
+    "src/codegen/source-position-table.h",
+    "src/compiler/backend/gap-resolver.h",
+    "src/compiler/backend/instruction.h",
+    "src/compiler/backend/unwinding-info-writer.h",
+    "src/compiler/osr.h",
+    "src/deoptimizer/deoptimizer.h",
+    "src/objects/code-kind.h",
+    "src/objects/deoptimization-data.h",
+    "src/trap-handler/trap-handler.h"
+  ],
+  "classes": [
+    {
+      "name": "BranchInfo",
+      "properties": [
+        "condition",
+        "true_label",
+        "false_label",
+        "fallthru"
+      ],
+      "methods": []
+    },
+    {
+      "name": "InstructionOperandIterator",
+      "properties": [
+        "instr_",
+        "pos_"
+      ],
+      "methods": [
+        {
+          "name": "InstructionOperandIterator",
+          "parameters": [
+            "Instruction* instr",
+            "size_t pos"
+          ],
+          "return_type": "void",
+          "logic": "Constructor that initializes the iterator with an instruction and a starting position."
+        },
+        {
+          "name": "instruction",
+          "parameters": [],
+          "return_type": "Instruction*",
+          "logic": "Returns the instruction being iterated over."
+        },
+        {
+          "name": "Advance",
+          "parameters": [],
+          "return_type": "InstructionOperand*",
+          "logic": "Advances the iterator to the next operand and returns it."
+        }
+      ]
+    },
+    {
+      "name": "TurbolizerCodeOffsetsInfo",
+      "properties": [
+        "code_start_register_check",
+        "deopt_check",
+        "blocks_start",
+        "out_of_line_code",
+        "deoptimization_exits",
+        "pools",
+        "jump_tables"
+      ],
+      "methods": []
+    },
+    {
+      "name": "TurbolizerInstructionStartInfo",
+      "properties": [
+        "gap_pc_offset",
+        "arch_instr_pc_offset",
+        "condition_pc_offset"
+      ],
+      "methods": []
+    },
+    {
+      "name": "CodeGenerator",
+      "properties": [
+        "zone_",
+        "isolate_",
+        "frame_access_state_",
+        "linkage_",
+        "instructions_",
+        "unwinding_info_writer_",
+        "info_",
+        "labels_",
+        "return_label_",
+        "current_block_",
+        "start_source_position_",
+        "current_source_position_",
+        "masm_",
+        "resolver_",
+        "safepoints_",
+        "handlers_",
+        "next_deoptimization_id_",
+        "deopt_exit_start_offset_",
+        "eager_deopt_count_",
+        "lazy_deopt_count_",
+        "deoptimization_exits_",
+        "protected_deoptimization_literals_",
+        "deoptimization_literals_",
+        "inlined_function_count_",
+        "translations_",
+        "handler_table_offset_",
+        "jump_deoptimization_entry_labels_",
+        "max_unoptimized_frame_height_",
+        "max_pushed_argument_count_",
+        "parameter_count_",
+        "caller_registers_saved_",
+        "fp_mode_",
+        "jump_tables_",
+        "ools_",
+        "osr_helper_",
+        "osr_pc_offset_",
+        "source_position_table_builder_",
+        "protected_instructions_",
+        "result_",
+        "block_starts_",
+        "offsets_info_",
+        "instr_starts_",
+        "move_cycle_",
+        "debug_name_"
+      ],
+      "methods": [
+        {
+          "name": "CodeGenerator",
+          "parameters": [
+            "Zone* codegen_zone",
+            "Frame* frame",
+            "Linkage* linkage",
+            "InstructionSequence* instructions",
+            "OptimizedCompilationInfo* info",
+            "Isolate* isolate",
+            "std::optional<OsrHelper> osr_helper",
+            "int start_source_position",
+            "JumpOptimizationInfo* jump_opt",
+            "const AssemblerOptions& options",
+            "Builtin builtin",
+            "size_t max_unoptimized_frame_height",
+            "size_t max_pushed_argument_count",
+            "const char* debug_name"
+          ],
+          "return_type": "explicit CodeGenerator",
+          "logic": "Constructor for the CodeGenerator class. Initializes the code generation process."
+        },
+        {
+          "name": "AssembleCode",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Generates native code from the instruction sequence."
+        },
+        {
+          "name": "FinalizeCode",
+          "parameters": [],
+          "return_type": "MaybeHandle<Code>",
+          "logic": "Finalizes the generated code and produces a Code object."
+        },
+        {
+          "name": "GenerateWasmDeoptimizationData",
+          "parameters": [],
+          "return_type": "base::OwnedVector<uint8_t>",
+          "logic": "Generates deoptimization data for WebAssembly code."
+        },
+        {
+          "name": "GetSourcePositionTable",
+          "parameters": [],
+          "return_type": "base::OwnedVector<uint8_t>",
+          "logic": "Retrieves the source position table."
+        },
+        {
+          "name": "GetProtectedInstructionsData",
+          "parameters": [],
+          "return_type": "base::OwnedVector<uint8_t>",
+          "logic": "Retrieves data related to protected instructions."
+        },
+        {
+          "name": "instructions",
+          "parameters": [],
+          "return_type": "InstructionSequence*",
+          "logic": "Returns the instruction sequence being processed."
+        },
+        {
+          "name": "frame_access_state",
+          "parameters": [],
+          "return_type": "FrameAccessState*",
+          "logic": "Returns the frame access state."
+        },
+        {
+          "name": "frame",
+          "parameters": [],
+          "return_type": "const Frame*",
+          "logic": "Returns the frame."
+        },
+        {
+          "name": "isolate",
+          "parameters": [],
+          "return_type": "Isolate*",
+          "logic": "Returns the isolate."
+        },
+        {
+          "name": "linkage",
+          "parameters": [],
+          "return_type": "Linkage*",
+          "logic": "Returns the linkage."
+        },
+        {
+          "name": "GetLabel",
+          "parameters": [
+            "RpoNumber rpo"
+          ],
+          "return_type": "Label*",
+          "logic": "Returns a Label object for a given RpoNumber."
+        },
+        {
+          "name": "RecordProtectedInstruction",
+          "parameters": [
+            "uint32_t instr_offset"
+          ],
+          "return_type": "void",
+          "logic": "Records the offset of a protected instruction."
+        },
+        {
+          "name": "start_source_position",
+          "parameters": [],
+          "return_type": "SourcePosition",
+          "logic": "Returns the starting source position."
+        },
+        {
+          "name": "AssembleSourcePosition",
+          "parameters": [
+            "Instruction* instr"
+          ],
+          "return_type": "void",
+          "logic": "Assembles the source position information for a given instruction."
+        },
+        {
+          "name": "AssembleSourcePosition",
+          "parameters": [
+            "SourcePosition source_position"
+          ],
+          "return_type": "void",
+          "logic": "Assembles the source position information."
+        },
+        {
+          "name": "RecordSafepoint",
+          "parameters": [
+            "ReferenceMap* references",
+            "int pc_offset"
+          ],
+          "return_type": "void",
+          "logic": "Records a safepoint with the given pointer map."
+        },
+        {
+          "name": "zone",
+          "parameters": [],
+          "return_type": "Zone*",
+          "logic": "Returns the zone."
+        },
+        {
+          "name": "masm",
+          "parameters": [],
+          "return_type": "MacroAssembler*",
+          "logic": "Returns the macro assembler."
+        },
+        {
+          "name": "safepoint_table_builder",
+          "parameters": [],
+          "return_type": "SafepointTableBuilder*",
+          "logic": "Returns the safepoint table builder."
+        },
+        {
+          "name": "handler_table_offset",
+          "parameters": [],
+          "return_type": "size_t",
+          "logic": "Returns the offset of the handler table."
+        },
+        {
+          "name": "block_starts",
+          "parameters": [],
+          "return_type": "const ZoneVector<int>&",
+          "logic": "Returns a vector of block starts."
+        },
+        {
+          "name": "instr_starts",
+          "parameters": [],
+          "return_type": "const ZoneVector<TurbolizerInstructionStartInfo>&",
+          "logic": "Returns a vector of instruction starts for turbofan."
+        },
+        {
+          "name": "offsets_info",
+          "parameters": [],
+          "return_type": "const TurbolizerCodeOffsetsInfo&",
+          "logic": "Returns the code offsets info for turbofan."
+        },
+        {
+          "name": "IsWasm",
+          "parameters": [],
+          "return_type": "bool",
+          "logic": "Returns if the generated code is WASM."
+        },
+        {
+          "name": "ShouldApplyOffsetToStackCheck",
+          "parameters": [
+            "Instruction* instr",
+            "uint32_t* offset"
+          ],
+          "return_type": "bool",
+          "logic": "Determines if a stack check needs an offset and sets the offset value."
+        },
+        {
+          "name": "GetStackCheckOffset",
+          "parameters": [],
+          "return_type": "uint32_t",
+          "logic": "Returns the stack check offset."
+        },
+        {
+          "name": "code_kind",
+          "parameters": [],
+          "return_type": "CodeKind",
+          "logic": "Returns the code kind."
+        },
+        {
+          "name": "AssembleMove",
+          "parameters": [
+            "InstructionOperand* source",
+            "InstructionOperand* destination"
+          ],
+          "return_type": "void",
+          "logic": "Assembles a move instruction."
+        },
+        {
+          "name": "AssembleSwap",
+          "parameters": [
+            "InstructionOperand* source",
+            "InstructionOperand* destination"
+          ],
+          "return_type": "void",
+          "logic": "Assembles a swap instruction."
+        },
+        {
+          "name": "Push",
+          "parameters": [
+            "InstructionOperand* src"
+          ],
+          "return_type": "AllocatedOperand",
+          "logic": "Pushes an operand onto the stack."
+        },
+        {
+          "name": "Pop",
+          "parameters": [
+            "InstructionOperand* src",
+            "MachineRepresentation rep"
+          ],
+          "return_type": "void",
+          "logic": "Pops an operand from the stack."
+        },
+        {
+          "name": "PopTempStackSlots",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Pops temporary stack slots."
+        },
+        {
+          "name": "MoveToTempLocation",
+          "parameters": [
+            "InstructionOperand* src",
+            "MachineRepresentation rep"
+          ],
+          "return_type": "void",
+          "logic": "Moves an operand to a temporary location."
+        },
+        {
+          "name": "MoveTempLocationTo",
+          "parameters": [
+            "InstructionOperand* dst",
+            "MachineRepresentation rep"
+          ],
+          "return_type": "void",
+          "logic": "Moves an operand from a temporary location."
+        },
+        {
+          "name": "SetPendingMove",
+          "parameters": [
+            "MoveOperands* move"
+          ],
+          "return_type": "void",
+          "logic": "Sets a pending move."
+        },
+        {
+          "name": "AddJumpTable",
+          "parameters": [
+            "base::Vector<Label*> targets"
+          ],
+          "return_type": "Label*",
+          "logic": "Adds a jump table to the code generator."
+        },
+        {
+          "name": "AssembleJumpTable",
+          "parameters": [
+            "base::Vector<Label*> targets"
+          ],
+          "return_type": "void",
+          "logic": "Assembles the jump table."
+        },
+        {
+          "name": "RecordCallPosition",
+          "parameters": [
+            "Instruction* instr"
+          ],
+          "return_type": "void",
+          "logic": "Records the position of a call instruction."
+        },
+        {
+          "name": "RecordDeoptInfo",
+          "parameters": [
+            "Instruction* instr",
+            "int pc_offset"
+          ],
+          "return_type": "void",
+          "logic": "Records deoptimization information."
+        },
+        {
+          "name": "GenerateDeoptimizationData",
+          "parameters": [],
+          "return_type": "Handle<DeoptimizationData>",
+          "logic": "Generates deoptimization data."
+        },
+        {
+          "name": "DefineProtectedDeoptimizationLiteral",
+          "parameters": [
+            "IndirectHandle<TrustedObject> object"
+          ],
+          "return_type": "int",
+          "logic": "Defines a protected deoptimization literal."
+        },
+        {
+          "name": "DefineDeoptimizationLiteral",
+          "parameters": [
+            "DeoptimizationLiteral literal"
+          ],
+          "return_type": "int",
+          "logic": "Defines a deoptimization literal."
+        },
+        {
+          "name": "HasProtectedDeoptimizationLiteral",
+          "parameters": [
+            "IndirectHandle<TrustedObject> object"
+          ],
+          "return_type": "bool",
+          "logic": "Checks if a protected deoptimization literal exists."
+        },
+        {
+          "name": "GetDeoptimizationEntry",
+          "parameters": [
+            "Instruction* instr",
+            "size_t frame_state_offset"
+          ],
+          "return_type": "DeoptimizationEntry const&",
+          "logic": "Retrieves a deoptimization entry."
+        },
+        {
+          "name": "BuildTranslationForFrameStateDescriptor",
+          "parameters": [
+            "FrameStateDescriptor* descriptor",
+            "InstructionOperandIterator* iter",
+            "OutputFrameStateCombine state_combine"
+          ],
+          "return_type": "void",
+          "logic": "Builds the translation for a frame state descriptor."
+        },
+        {
+          "name": "TranslateStateValueDescriptor",
+          "parameters": [
+            "StateValueDescriptor* desc",
+            "StateValueList* nested",
+            "InstructionOperandIterator* iter"
+          ],
+          "return_type": "void",
+          "logic": "Translates a state value descriptor."
+        },
+        {
+          "name": "TranslateFrameStateDescriptorOperands",
+          "parameters": [
+            "FrameStateDescriptor* desc",
+            "InstructionOperandIterator* iter"
+          ],
+          "return_type": "void",
+          "logic": "Translates the operands for a frame state descriptor."
+        },
+        {
+          "name": "AddTranslationForOperand",
+          "parameters": [
+            "Instruction* instr",
+            "InstructionOperand* op",
+            "MachineType type"
+          ],
+          "return_type": "void",
+          "logic": "Adds a translation for an operand."
+        },
+        {
+          "name": "PrepareForDeoptimizationExits",
+          "parameters": [
+            "ZoneDeque<DeoptimizationExit*>* exits"
+          ],
+          "return_type": "void",
+          "logic": "Prepares for deoptimization exits."
+        },
+        {
+          "name": "AddDeoptimizationExit",
+          "parameters": [
+            "Instruction* instr",
+            "size_t frame_state_offset",
+            "size_t immediate_args_count"
+          ],
+          "return_type": "DeoptimizationExit*",
+          "logic": "Adds a deoptimization exit."
+        }
+      ]
+    },
+    {
+      "name": "CodeGenerator::MoveType",
+      "properties": [],
+      "methods": [
+        {
+          "name": "InferMove",
+          "parameters": [
+            "InstructionOperand* source",
+            "InstructionOperand* destination"
+          ],
+          "return_type": "Type",
+          "logic": "Infers the type of a move operation based on source and destination operands."
+        },
+        {
+          "name": "InferSwap",
+          "parameters": [
+            "InstructionOperand* source",
+            "InstructionOperand* destination"
+          ],
+          "return_type": "Type",
+          "logic": "Infers the type of a swap operation based on source and destination operands."
+        }
+      ]
+    }
+  ],
+  "functions": []
+}

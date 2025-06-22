@@ -1,0 +1,259 @@
+{
+  "metadata": {
+    "path": "/home/kathirks_gc/v8_go/archive/codebase/src/logging/counters-scopes.h",
+    "file_name": "counters-scopes.h",
+    "language": "cpp",
+    "purpose": "Defines classes for scoping timed histograms, providing a convenient way to measure and log execution times."
+  },
+  "imports": {
+    "metadata": {
+      "language": "cpp",
+      "purpose": "Includes necessary headers for isolate management, counters, logging, and time measurement."
+    },
+    "code": "#include \"src/execution/isolate.h\"\n            #include \"src/logging/counters.h\"\n            #include \"src/logging/log.h\""
+  },
+  "classes": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "BaseTimedHistogramScope",
+        "extends": null,
+        "implements": [],
+        "about": "Base class for timed histogram scopes.  Provides common functionality for starting and stopping timers and recording elapsed times in a histogram.",
+        "attributes": [
+          {
+            "name": "timer_",
+            "type": "base::ElapsedTimer",
+            "access": "private",
+            "purpose": "Measures the elapsed time within the scope."
+          },
+          {
+            "name": "histogram_",
+            "type": "TimedHistogram*",
+            "access": "protected",
+            "purpose": "The histogram to record the elapsed time in."
+          }
+        ],
+        "dependencies": [
+          "TimedHistogram",
+          "base::ElapsedTimer",
+          "base::TimeDelta",
+          "Isolate",
+          "V8FileLogger",
+          "v8::LogEventStatus"
+        ]
+      },
+      "code": "class BaseTimedHistogramScope {\n            protected:\n            explicit BaseTimedHistogramScope(TimedHistogram* histogram)\n                : histogram_(histogram) {}\n\n            void StartInternal() {\n                DCHECK(histogram_->ToggleRunningState(true));\n                timer_.Start();\n            }\n\n            base::TimeDelta StopInternal() {\n                DCHECK(histogram_->ToggleRunningState(false));\n                base::TimeDelta elapsed = timer_.Elapsed();\n                histogram_->AddTimedSample(elapsed);\n                timer_.Stop();\n                return elapsed;\n            }\n\n            V8_INLINE void Start() {\n                if (histogram_->Enabled()) StartInternal();\n            }\n\n            // Stops the timer, records the elapsed time in the histogram, and also\n            // returns the elapsed time if the histogram was enabled. Otherwise, returns\n            // a time of -1 microsecond. This behavior should match kTimeNotMeasured in\n            // v8-script.h.\n            V8_INLINE base::TimeDelta Stop() {\n                if (histogram_->Enabled()) return StopInternal();\n                return base::TimeDelta::FromMicroseconds(-1);\n            }\n\n            V8_INLINE void LogStart(Isolate* isolate) {\n                V8FileLogger::CallEventLogger(isolate, histogram_->name(),\n                                            v8::LogEventStatus::kStart, true);\n            }\n\n            V8_INLINE void LogEnd(Isolate* isolate) {\n                V8FileLogger::CallEventLogger(isolate, histogram_->name(),\n                                            v8::LogEventStatus::kEnd, true);\n            }\n\n            base::ElapsedTimer timer_;\n            TimedHistogram* histogram_;\n            };"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "TimedHistogramScope",
+        "extends": "BaseTimedHistogramScope",
+        "implements": [],
+        "about": "Helper class for scoping a TimedHistogram.  Automatically starts and stops the timer, recording the elapsed time in the histogram.  Optionally takes an Isolate and a pointer to store the elapsed time in microseconds.",
+        "attributes": [
+          {
+            "name": "isolate_",
+            "type": "Isolate* const",
+            "access": "private",
+            "purpose": "The isolate to use for logging (optional)."
+          },
+          {
+            "name": "result_in_microseconds_",
+            "type": "int64_t*",
+            "access": "private",
+            "purpose": "A pointer to store the elapsed time in microseconds (optional)."
+          }
+        ],
+        "dependencies": [
+          "BaseTimedHistogramScope",
+          "TimedHistogram",
+          "Isolate"
+        ]
+      },
+      "code": "// Helper class for scoping a TimedHistogram.\n            class V8_NODISCARD TimedHistogramScope : public BaseTimedHistogramScope {\n            public:\n            explicit TimedHistogramScope(TimedHistogram* histogram,\n                                        Isolate* isolate = nullptr,\n                                        int64_t* result_in_microseconds = nullptr)\n                : BaseTimedHistogramScope(histogram),\n                isolate_(isolate),\n                result_in_microseconds_(result_in_microseconds) {\n                Start();\n                if (isolate_) LogStart(isolate_);\n            }\n\n            ~TimedHistogramScope() {\n                int64_t elapsed = Stop().InMicroseconds();\n                if (isolate_) LogEnd(isolate_);\n                if (result_in_microseconds_) {\n                *result_in_microseconds_ = elapsed;\n                }\n            }\n\n            private:\n            Isolate* const isolate_;\n            int64_t* result_in_microseconds_;\n\n            DISALLOW_IMPLICIT_CONSTRUCTORS(TimedHistogramScope);\n            };"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "OptionalTimedHistogramScope",
+        "extends": "BaseTimedHistogramScope",
+        "implements": [],
+        "about": "Helper class for scoping a TimedHistogram. It will not take time for mode = DONT_TAKE_TIME.",
+        "attributes": [
+          {
+            "name": "isolate_",
+            "type": "Isolate* const",
+            "access": "private",
+            "purpose": "The isolate to use for logging."
+          },
+          {
+            "name": "mode_",
+            "type": "const OptionalTimedHistogramScopeMode",
+            "access": "private",
+            "purpose": "Determines if the timer should be started and stopped."
+          }
+        ],
+        "dependencies": [
+          "BaseTimedHistogramScope",
+          "TimedHistogram",
+          "Isolate",
+          "OptionalTimedHistogramScopeMode"
+        ]
+      },
+      "code": "// Helper class for scoping a TimedHistogram.\n            // It will not take time for mode = DONT_TAKE_TIME.\n            class V8_NODISCARD OptionalTimedHistogramScope\n                : public BaseTimedHistogramScope {\n            public:\n            OptionalTimedHistogramScope(TimedHistogram* histogram, Isolate* isolate,\n                                        OptionalTimedHistogramScopeMode mode)\n                : BaseTimedHistogramScope(histogram), isolate_(isolate), mode_(mode) {\n                if (mode != OptionalTimedHistogramScopeMode::TAKE_TIME) return;\n                Start();\n                LogStart(isolate_);\n            }\n\n            ~OptionalTimedHistogramScope() {\n                if (mode_ != OptionalTimedHistogramScopeMode::TAKE_TIME) return;\n                Stop();\n                LogEnd(isolate_);\n            }\n\n            private:\n            Isolate* const isolate_;\n            const OptionalTimedHistogramScopeMode mode_;\n            DISALLOW_IMPLICIT_CONSTRUCTORS(OptionalTimedHistogramScope);\n            };"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "LazyTimedHistogramScope",
+        "extends": "BaseTimedHistogramScope",
+        "implements": [],
+        "about": "Helper class for scoping a TimedHistogram, where the histogram is selected at stop time rather than start time.",
+        "attributes": [
+          {
+            "name": "result_in_microseconds_",
+            "type": "int64_t*",
+            "access": "private",
+            "purpose": "A pointer to store the elapsed time in microseconds."
+          }
+        ],
+        "dependencies": [
+          "BaseTimedHistogramScope",
+          "TimedHistogram"
+        ]
+      },
+      "code": "// Helper class for scoping a TimedHistogram, where the histogram is selected at\n            // stop time rather than start time.\n            class V8_NODISCARD LazyTimedHistogramScope : public BaseTimedHistogramScope {\n            public:\n            explicit LazyTimedHistogramScope(int64_t* result_in_microseconds)\n                : BaseTimedHistogramScope(nullptr),\n                result_in_microseconds_(result_in_microseconds) {\n                timer_.Start();\n            }\n            ~LazyTimedHistogramScope() {\n                // We should set the histogram before this scope exits.\n                int64_t elapsed = Stop().InMicroseconds();\n                if (result_in_microseconds_) {\n                *result_in_microseconds_ = elapsed;\n                }\n            }\n\n            void set_histogram(TimedHistogram* histogram) {\n                DCHECK_IMPLIES(histogram->Enabled(), histogram->ToggleRunningState(true));\n                histogram_ = histogram;\n            }\n\n            private:\n            int64_t* result_in_microseconds_;\n            };"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "NestedTimedHistogramScope",
+        "extends": "BaseTimedHistogramScope",
+        "implements": [],
+        "about": "Helper class for scoping a NestedHistogramTimer.",
+        "attributes": [
+          {
+            "name": "previous_scope_",
+            "type": "NestedTimedHistogramScope*",
+            "access": "private",
+            "purpose": "Pointer to the previous scope in the nested histogram."
+          },
+          {
+            "name": "isolate_",
+            "type": "Isolate*",
+            "access": "private",
+            "purpose": "The isolate to use for logging."
+          }
+        ],
+        "dependencies": [
+          "BaseTimedHistogramScope",
+          "NestedTimedHistogram",
+          "Isolate",
+          "base::TimeTicks",
+          "base::TimeDelta"
+        ]
+      },
+      "code": "// Helper class for scoping a NestedHistogramTimer.\n            class V8_NODISCARD NestedTimedHistogramScope : public BaseTimedHistogramScope {\n            public:\n            explicit NestedTimedHistogramScope(NestedTimedHistogram* histogram,\n                                                Isolate* isolate = nullptr)\n                : BaseTimedHistogramScope(histogram), isolate_(isolate) {\n                Start();\n            }\n            ~NestedTimedHistogramScope() { Stop(); }\n\n            private:\n            friend NestedTimedHistogram;\n            friend PauseNestedTimedHistogramScope;\n\n            void StartInteral() {\n                previous_scope_ = timed_histogram()->Enter(this);\n                base::TimeTicks now = base::TimeTicks::Now();\n                if (previous_scope_) previous_scope_->Pause(now);\n                timer_.Start(now);\n            }\n\n            void StopInternal() {\n                timed_histogram()->Leave(previous_scope_);\n                base::TimeTicks now = base::TimeTicks::Now();\n                base::TimeDelta elapsed = timer_.Elapsed(now);\n                histogram_->AddTimedSample(elapsed);\n                if (isolate_) RecordLongTaskTime(elapsed);\n            #ifdef DEBUG\n                // StopInternal() is called in the destructor and don't access timer_\n                // after that.\n                timer_.Stop();\n            #endif\n                if (previous_scope_) previous_scope_->Resume(now);\n            }\n\n            V8_INLINE void Start() {\n                if (histogram_->Enabled()) StartInteral();\n                LogStart(timed_histogram()->counters()->isolate());\n            }\n\n            V8_INLINE void Stop() {\n                if (histogram_->Enabled()) StopInternal();\n                LogEnd(timed_histogram()->counters()->isolate());\n            }\n\n            void Pause(base::TimeTicks now) {\n                DCHECK(histogram_->Enabled());\n                timer_.Pause(now);\n            }\n\n            void Resume(base::TimeTicks now) {\n                DCHECK(histogram_->Enabled());\n                timer_.Resume(now);\n            }\n\n            void RecordLongTaskTime(base::TimeDelta elapsed) const {\n                if (histogram_ == isolate_->counters()->execute()) {\n                isolate_->GetCurrentLongTaskStats()->v8_execute_us +=\n                    elapsed.InMicroseconds();\n                }\n            }\n\n            NestedTimedHistogram* timed_histogram() {\n                return static_cast<NestedTimedHistogram*>(histogram_);\n            }\n\n            NestedTimedHistogramScope* previous_scope_;\n            Isolate* isolate_;\n            };"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "PauseNestedTimedHistogramScope",
+        "extends": null,
+        "implements": [],
+        "about": "Temporarily pause a NestedTimedHistogram when for instance leaving V8 for external callbacks.",
+        "attributes": [
+          {
+            "name": "histogram_",
+            "type": "NestedTimedHistogram*",
+            "access": "private",
+            "purpose": "The nested timed histogram to pause."
+          },
+          {
+            "name": "previous_scope_",
+            "type": "NestedTimedHistogramScope*",
+            "access": "private",
+            "purpose": "The previous scope in the nested histogram."
+          }
+        ],
+        "dependencies": [
+          "NestedTimedHistogram",
+          "NestedTimedHistogramScope",
+          "base::TimeTicks"
+        ]
+      },
+      "code": "// Temporarily pause a NestedTimedHistogram when for instance leaving V8 for\n            // external callbacks.\n            class V8_NODISCARD PauseNestedTimedHistogramScope {\n            public:\n            explicit PauseNestedTimedHistogramScope(NestedTimedHistogram* histogram)\n                : histogram_(histogram) {\n                previous_scope_ = histogram_->Enter(nullptr);\n                if (isEnabled()) {\n                previous_scope_->Pause(base::TimeTicks::Now());\n                }\n            }\n            ~PauseNestedTimedHistogramScope() {\n                histogram_->Leave(previous_scope_);\n                if (isEnabled()) {\n                previous_scope_->Resume(base::TimeTicks::Now());\n                }\n            }\n\n            private:\n            bool isEnabled() const { return previous_scope_ && histogram_->Enabled(); }\n            NestedTimedHistogram* histogram_;\n            NestedTimedHistogramScope* previous_scope_;\n            };"
+    }
+  ],
+  "dependencies": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "TimedHistogram",
+        "about": "Abstracts the collection of timing data."
+      },
+      "code": "class TimedHistogram {\n                public:\n                    bool Enabled() const;\n                    bool ToggleRunningState(bool running);\n                    void AddTimedSample(base::TimeDelta elapsed);\n                    const char* name() const;\n                };",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "NestedTimedHistogram",
+        "about": "Manages histograms that can be nested."
+      },
+      "code": "class NestedTimedHistogram : public TimedHistogram {\n                public:\n                    NestedTimedHistogramScope* Enter(NestedTimedHistogramScope* scope);\n                    void Leave(NestedTimedHistogramScope* scope);\n                    class Counters* counters() { return nullptr; }\n                };",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "Isolate",
+        "about": "Represents an isolated instance of the V8 JavaScript engine."
+      },
+      "code": "class Isolate {\n                public:\n                    class Counters* counters() { return nullptr; }\n                    class CurrentLongTaskStats* GetCurrentLongTaskStats() { return nullptr; }\n                };",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "V8FileLogger",
+        "about": "Used for logging V8 events to a file."
+      },
+      "code": "class V8FileLogger {\n                public:\n                    static void CallEventLogger(Isolate* isolate, const char* name, v8::LogEventStatus status, bool flag);\n                };",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "namespace",
+        "name": "v8",
+        "about": "V8 namespace"
+      },
+      "code": "namespace v8 {\n                  enum class LogEventStatus {\n                    kStart,\n                    kEnd\n                  };\n                }",
+      "type": "namespace"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "namespace",
+        "name": "base",
+        "about": "Base namespace"
+      },
+      "code": "namespace base {\n                  class ElapsedTimer {\n                    public:\n                        void Start();\n                        base::TimeDelta Elapsed();\n                        void Stop();\n                        void Start(base::TimeTicks now);\n                        base::TimeDelta Elapsed(base::TimeTicks now);\n                        void Pause(base::TimeTicks now);\n                        void Resume(base::TimeTicks now);\n                  };\n                  class TimeDelta {\n                    public:\n                        int64_t InMicroseconds() const;\n                        static TimeDelta FromMicroseconds(int64_t microseconds);\n                  };\n                  class TimeTicks {\n                    public:\n                        static TimeTicks Now();\n                  };\n                }",
+      "type": "namespace"
+    }
+  ],
+  "file_path": "/home/kathirks_gc/v8_go/archive/codebase/src/logging/counters-scopes.h"
+}

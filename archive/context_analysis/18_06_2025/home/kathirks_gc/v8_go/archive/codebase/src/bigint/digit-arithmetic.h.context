@@ -1,0 +1,288 @@
+{
+  "metadata": {
+    "path": "/home/kathirks_gc/v8_go/archive/codebase/src/bigint/digit-arithmetic.h",
+    "file_name": "digit-arithmetic.h",
+    "language": "cpp",
+    "purpose": "Defines helper functions for performing arithmetic operations on individual digits of BigInts."
+  },
+  "imports": {
+    "metadata": {
+      "language": "cpp",
+      "purpose": "Includes the BigInt class definition and related utilities."
+    },
+    "code": "#include \"src/bigint/bigint.h\"\n#include \"src/bigint/util.h\""
+  },
+  "classes": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "namespace",
+        "name": "v8::bigint",
+        "about": "Namespace for BigInt related functionality within the V8 JavaScript engine."
+      },
+      "code": "namespace v8 {\nnamespace bigint {"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "namespace",
+        "name": "v8::bigint",
+        "about": "Closing namespace for BigInt related functionality within the V8 JavaScript engine."
+      },
+      "code": "}  // namespace bigint\n}  // namespace v8"
+    }
+  ],
+  "functions": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "function",
+        "name": "digit_ismax",
+        "parent": "v8::bigint",
+        "about": "Checks if a digit is the maximum possible value for its type.",
+        "logic": "Compares the input digit to the bitwise negation of itself; if equal, then all bits are set.",
+        "parameters": [
+          {
+            "name": "x",
+            "type": "digit_t",
+            "purpose": "The digit to check."
+          }
+        ],
+        "return": {
+          "type": "bool",
+          "description": "True if the digit is the maximum value, false otherwise."
+        },
+        "dependencies": []
+      },
+      "code": "constexpr bool digit_ismax(digit_t x) { return static_cast<digit_t>(~x) == 0; }"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "function",
+        "name": "digit_add2",
+        "parent": "v8::bigint",
+        "about": "Adds two digits and returns the result and the carry.",
+        "logic": "Uses a wider type (twodigit_t) if available to prevent overflow during addition.  If not, it checks if the result is less than the first operand to determine if a carry occurred.",
+        "parameters": [
+          {
+            "name": "a",
+            "type": "digit_t",
+            "purpose": "The first digit."
+          },
+          {
+            "name": "b",
+            "type": "digit_t",
+            "purpose": "The second digit."
+          },
+          {
+            "name": "carry",
+            "type": "digit_t*",
+            "purpose": "Pointer to store the carry (0 or 1)."
+          }
+        ],
+        "return": {
+          "type": "digit_t",
+          "description": "The sum of the two digits (without the carry)."
+        },
+        "dependencies": []
+      },
+      "code": "inline digit_t digit_add2(digit_t a, digit_t b, digit_t* carry) {\n#if HAVE_TWODIGIT_T\n  twodigit_t result = twodigit_t{a} + b;\n  *carry = result >> kDigitBits;\n  return static_cast<digit_t>(result);\n#else\n  digit_t result = a + b;\n  *carry = (result < a) ? 1 : 0;\n  return result;\n#endif\n}"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "function",
+        "name": "digit_add3",
+        "parent": "v8::bigint",
+        "about": "Adds three digits and returns the result and the carry.",
+        "logic": "Uses a wider type (twodigit_t) if available to prevent overflow during addition. If not, it adds the first two digits, checks for carry, then adds the third digit, checking for carry again.",
+        "parameters": [
+          {
+            "name": "a",
+            "type": "digit_t",
+            "purpose": "The first digit."
+          },
+          {
+            "name": "b",
+            "type": "digit_t",
+            "purpose": "The second digit."
+          },
+          {
+            "name": "c",
+            "type": "digit_t",
+            "purpose": "The third digit."
+          },
+          {
+            "name": "carry",
+            "type": "digit_t*",
+            "purpose": "Pointer to store the carry (0 or 1)."
+          }
+        ],
+        "return": {
+          "type": "digit_t",
+          "description": "The sum of the three digits (without the carry)."
+        },
+        "dependencies": []
+      },
+      "code": "inline digit_t digit_add3(digit_t a, digit_t b, digit_t c, digit_t* carry) {\n#if HAVE_TWODIGIT_T\n  twodigit_t result = twodigit_t{a} + b + c;\n  *carry = result >> kDigitBits;\n  return static_cast<digit_t>(result);\n#else\n  digit_t result = a + b;\n  *carry = (result < a) ? 1 : 0;\n  result += c;\n  if (result < c) *carry += 1;\n  return result;\n#endif\n}"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "function",
+        "name": "digit_sub",
+        "parent": "v8::bigint",
+        "about": "Subtracts one digit from another and returns the result and the borrow.",
+        "logic": "Uses a wider type (twodigit_t) if available to prevent underflow. If not, it checks if the result is greater than the first operand to determine if a borrow occurred.",
+        "parameters": [
+          {
+            "name": "a",
+            "type": "digit_t",
+            "purpose": "The first digit (minuend)."
+          },
+          {
+            "name": "b",
+            "type": "digit_t",
+            "purpose": "The second digit (subtrahend)."
+          },
+          {
+            "name": "borrow",
+            "type": "digit_t*",
+            "purpose": "Pointer to store the borrow (0 or 1)."
+          }
+        ],
+        "return": {
+          "type": "digit_t",
+          "description": "The difference of the two digits (without the borrow)."
+        },
+        "dependencies": []
+      },
+      "code": "inline digit_t digit_sub(digit_t a, digit_t b, digit_t* borrow) {\n#if HAVE_TWODIGIT_T\n  twodigit_t result = twodigit_t{a} - b;\n  *borrow = (result >> kDigitBits) & 1;\n  return static_cast<digit_t>(result);\n#else\n  digit_t result = a - b;\n  *borrow = (result > a) ? 1 : 0;\n  return result;\n#endif\n}"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "function",
+        "name": "digit_sub2",
+        "parent": "v8::bigint",
+        "about": "Subtracts one digit from another, taking into account a borrow-in and returning the result and the borrow-out.",
+        "logic": "Uses a wider type (twodigit_t) if available to prevent underflow. If not, it first subtracts the second digit, checks for borrow, and then subtracts the borrow-in, checking for borrow again.",
+        "parameters": [
+          {
+            "name": "a",
+            "type": "digit_t",
+            "purpose": "The first digit (minuend)."
+          },
+          {
+            "name": "b",
+            "type": "digit_t",
+            "purpose": "The second digit (subtrahend)."
+          },
+          {
+            "name": "borrow_in",
+            "type": "digit_t",
+            "purpose": "The borrow-in value (0 or 1)."
+          },
+          {
+            "name": "borrow_out",
+            "type": "digit_t*",
+            "purpose": "Pointer to store the borrow-out value (0 or 1)."
+          }
+        ],
+        "return": {
+          "type": "digit_t",
+          "description": "The difference of the two digits (without the borrow)."
+        },
+        "dependencies": []
+      },
+      "code": "inline digit_t digit_sub2(digit_t a, digit_t b, digit_t borrow_in,\n                          digit_t* borrow_out) {\n#if HAVE_TWODIGIT_T\n  twodigit_t subtrahend = twodigit_t{b} + borrow_in;\n  twodigit_t result = twodigit_t{a} - subtrahend;\n  *borrow_out = (result >> kDigitBits) & 1;\n  return static_cast<digit_t>(result);\n#else\n  digit_t result = a - b;\n  *borrow_out = (result > a) ? 1 : 0;\n  if (result < borrow_in) *borrow_out += 1;\n  result -= borrow_in;\n  return result;\n#endif\n}"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "function",
+        "name": "digit_mul",
+        "parent": "v8::bigint",
+        "about": "Multiplies two digits and returns the low half of the result and the high half through a pointer.",
+        "logic": "Uses a wider type (twodigit_t) if available. Otherwise, it splits each digit into two halves, multiplies the halves, and combines the results with careful handling of carries.",
+        "parameters": [
+          {
+            "name": "a",
+            "type": "digit_t",
+            "purpose": "The first digit."
+          },
+          {
+            "name": "b",
+            "type": "digit_t",
+            "purpose": "The second digit."
+          },
+          {
+            "name": "high",
+            "type": "digit_t*",
+            "purpose": "Pointer to store the high half of the result."
+          }
+        ],
+        "return": {
+          "type": "digit_t",
+          "description": "The low half of the result."
+        },
+        "dependencies": []
+      },
+      "code": "inline digit_t digit_mul(digit_t a, digit_t b, digit_t* high) {\n#if HAVE_TWODIGIT_T\n  twodigit_t result = twodigit_t{a} * b;\n  *high = result >> kDigitBits;\n  return static_cast<digit_t>(result);\n#else\n  // Multiply in half-pointer-sized chunks.\n  // For inputs [AH AL]*[BH BL], the result is:\n  //\n  //            [AL*BL]  // r_low\n  //    +    [AL*BH]     // r_mid1\n  //    +    [AH*BL]     // r_mid2\n  //    + [AH*BH]        // r_high\n  //    = [R4 R3 R2 R1]  // high = [R4 R3], low = [R2 R1]\n  //\n  // Where of course we must be careful with carries between the columns.\n  digit_t a_low = a & kHalfDigitMask;\n  digit_t a_high = a >> kHalfDigitBits;\n  digit_t b_low = b & kHalfDigitMask;\n  digit_t b_high = b >> kHalfDigitBits;\n\n  digit_t r_low = a_low * b_low;\n  digit_t r_mid1 = a_low * b_high;\n  digit_t r_mid2 = a_high * b_low;\n  digit_t r_high = a_high * b_high;\n\n  digit_t carry = 0;\n  digit_t low = digit_add3(r_low, r_mid1 << kHalfDigitBits,\n                           r_mid2 << kHalfDigitBits, &carry);\n  *high =\n      (r_mid1 >> kHalfDigitBits) + (r_mid2 >> kHalfDigitBits) + r_high + carry;\n  return low;\n#endif\n}"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "function",
+        "name": "digit_div",
+        "parent": "v8::bigint",
+        "about": "Divides a two-digit number by a single-digit divisor and returns the quotient and the remainder.",
+        "logic": "Uses inline assembly for x86-64 and i386 architectures for performance.  Otherwise, it implements a division algorithm adapted from Hacker's Delight, which involves shifting, splitting digits into halves, and iterative refinement of the quotient.",
+        "parameters": [
+          {
+            "name": "high",
+            "type": "digit_t",
+            "purpose": "The high digit of the dividend."
+          },
+          {
+            "name": "low",
+            "type": "digit_t",
+            "purpose": "The low digit of the dividend."
+          },
+          {
+            "name": "divisor",
+            "type": "digit_t",
+            "purpose": "The divisor."
+          },
+          {
+            "name": "remainder",
+            "type": "digit_t*",
+            "purpose": "Pointer to store the remainder."
+          }
+        ],
+        "return": {
+          "type": "digit_t",
+          "description": "The quotient of the division."
+        },
+        "dependencies": [
+          "CountLeadingZeros"
+        ]
+      },
+      "code": "static inline digit_t digit_div(digit_t high, digit_t low, digit_t divisor,\n                                digit_t* remainder) {\n#if defined(DCHECK)\n  DCHECK(high < divisor);\n  DCHECK(divisor != 0);\n#endif\n#if __x86_64__ && (__GNUC__ || __clang__)\n  digit_t quotient;\n  digit_t rem;\n  __asm__(\"divq  %[divisor]\"\n          // Outputs: {quotient} will be in rax, {rem} in rdx.\n          : \"=a\"(quotient), \"=d\"(rem)\n          // Inputs: put {high} into rdx, {low} into rax, and {divisor} into\n          // any register or stack slot.\n          : \"d\"(high), \"a\"(low), [divisor] \"rm\"(divisor));\n  *remainder = rem;\n  return quotient;\n#elif __i386__ && (__GNUC__ || __clang__)\n  digit_t quotient;\n  digit_t rem;\n  __asm__(\"divl  %[divisor]\"\n          // Outputs: {quotient} will be in eax, {rem} in edx.\n          : \"=a\"(quotient), \"=d\"(rem)\n          // Inputs: put {high} into edx, {low} into eax, and {divisor} into\n          // any register or stack slot.\n          : \"d\"(high), \"a\"(low), [divisor] \"rm\"(divisor));\n  *remainder = rem;\n  return quotient;\n#else\n  // Adapted from Warren, Hacker's Delight, p. 152.\n  int s = CountLeadingZeros(divisor);\n#if defined(DCHECK)\n  DCHECK(s != kDigitBits);  // {divisor} is not 0.\n#endif\n  divisor <<= s;\n\n  digit_t vn1 = divisor >> kHalfDigitBits;\n  digit_t vn0 = divisor & kHalfDigitMask;\n  // {s} can be 0. {low >> kDigitBits} would be undefined behavior, so\n  // we mask the shift amount with {kShiftMask}, and the result with\n  // {s_zero_mask} which is 0 if s == 0 and all 1-bits otherwise.\n  static_assert(sizeof(intptr_t) == sizeof(digit_t),\n                \"intptr_t and digit_t must have the same size\");\n  const int kShiftMask = kDigitBits - 1;\n  digit_t s_zero_mask =\n      static_cast<digit_t>(static_cast<intptr_t>(-s) >> (kDigitBits - 1));\n  digit_t un32 =\n      (high << s) | ((low >> ((kDigitBits - s) & kShiftMask)) & s_zero_mask);\n  digit_t un10 = low << s;\n  digit_t un1 = un10 >> kHalfDigitBits;\n  digit_t un0 = un10 & kHalfDigitMask;\n  digit_t q1 = un32 / vn1;\n  digit_t rhat = un32 - q1 * vn1;\n\n  while (q1 >= kHalfDigitBase || q1 * vn0 > rhat * kHalfDigitBase + un1) {\n    q1--;\n    rhat += vn1;\n    if (rhat >= kHalfDigitBase) break;\n  }\n\n  digit_t un21 = un32 * kHalfDigitBase + un1 - q1 * divisor;\n  digit_t q0 = un21 / vn1;\n  rhat = un21 - q0 * vn1;\n\n  while (q0 >= kHalfDigitBase || q0 * vn0 > rhat * kHalfDigitBase + un0) {\n    q0--;\n    rhat += vn1;\n    if (rhat >= kHalfDigitBase) break;\n  }\n\n  *remainder = (un21 * kHalfDigitBase + un0 - q0 * divisor) >> s;\n  return q1 * kHalfDigitBase + q0;\n#endif\n}"
+    }
+  ],
+  "dependencies": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "function",
+        "name": "CountLeadingZeros",
+        "about": "Counts the number of leading zero bits in a digit_t."
+      },
+      "code": "int CountLeadingZeros(digit_t value);",
+      "type": "func"
+    }
+  ],
+  "file_path": "/home/kathirks_gc/v8_go/archive/codebase/src/bigint/digit-arithmetic.h"
+}

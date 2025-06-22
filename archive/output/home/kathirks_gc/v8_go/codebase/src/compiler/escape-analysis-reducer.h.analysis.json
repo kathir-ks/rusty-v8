@@ -1,0 +1,219 @@
+{
+  "file_path": "/home/kathirks_gc/v8_go/codebase/src/compiler/escape-analysis-reducer.h",
+  "imports": [
+    "src/base/compiler-specific.h",
+    "src/common/globals.h",
+    "src/compiler/escape-analysis.h",
+    "src/compiler/graph-reducer.h"
+  ],
+  "classes": [
+    {
+      "name": "NodeHashCache",
+      "properties": [
+        "graph_",
+        "cache_",
+        "temp_nodes_"
+      ],
+      "methods": [
+        {
+          "name": "NodeHashCache",
+          "parameters": [
+            "TFGraph* graph",
+            "Zone* zone"
+          ],
+          "return_type": "void",
+          "logic": "Constructor for NodeHashCache, initializes the graph, cache, and temporary node storage."
+        },
+        {
+          "name": "Query",
+          "parameters": [
+            "Node* node"
+          ],
+          "return_type": "Node*",
+          "logic": "Queries the cache for an existing node equivalent to the given node."
+        },
+        {
+          "name": "Insert",
+          "parameters": [
+            "Node* node"
+          ],
+          "return_type": "void",
+          "logic": "Inserts a node into the cache."
+        }
+      ]
+    },
+    {
+      "name": "NodeHashCache::Constructor",
+      "properties": [
+        "node_cache_",
+        "from_",
+        "tmp_"
+      ],
+      "methods": [
+        {
+          "name": "Constructor",
+          "parameters": [
+            "NodeHashCache* cache",
+            "Node* from"
+          ],
+          "return_type": "void",
+          "logic": "Constructor for creating a new node as a clone of an existing node."
+        },
+        {
+          "name": "Constructor",
+          "parameters": [
+            "NodeHashCache* cache",
+            "const Operator* op",
+            "int input_count",
+            "Node** inputs",
+            "Type type"
+          ],
+          "return_type": "void",
+          "logic": "Constructor for creating a new node from scratch with given operator, inputs, and type."
+        },
+        {
+          "name": "ReplaceValueInput",
+          "parameters": [
+            "Node* input",
+            "int i"
+          ],
+          "return_type": "void",
+          "logic": "Replaces a value input of the node at a given index."
+        },
+        {
+          "name": "ReplaceInput",
+          "parameters": [
+            "Node* input",
+            "int i"
+          ],
+          "return_type": "void",
+          "logic": "Replaces an input of the node at a given index."
+        },
+        {
+          "name": "Get",
+          "parameters": [],
+          "return_type": "Node*",
+          "logic": "Retrieves the mutated node or a cached copy. Invalidates the constructor."
+        },
+        {
+          "name": "MutableNode",
+          "parameters": [],
+          "return_type": "Node*",
+          "logic": "Internal helper function to obtain a mutable node, either a temporary recycled node or a clone of the original node."
+        }
+      ]
+    },
+    {
+      "name": "EscapeAnalysisReducer",
+      "properties": [
+        "jsgraph_",
+        "broker_",
+        "analysis_result_",
+        "object_id_cache_",
+        "node_cache_",
+        "arguments_elements_",
+        "zone_"
+      ],
+      "methods": [
+        {
+          "name": "EscapeAnalysisReducer",
+          "parameters": [
+            "Editor* editor",
+            "JSGraph* jsgraph",
+            "JSHeapBroker* broker",
+            "EscapeAnalysisResult analysis_result",
+            "Zone* zone"
+          ],
+          "return_type": "void",
+          "logic": "Constructor for the EscapeAnalysisReducer. Initializes the reducer with the necessary context."
+        },
+        {
+          "name": "Reduce",
+          "parameters": [
+            "Node* node"
+          ],
+          "return_type": "Reduction",
+          "logic": "Reduces a given node in the graph based on escape analysis results."
+        },
+        {
+          "name": "reducer_name",
+          "parameters": [],
+          "return_type": "const char*",
+          "logic": "Returns the name of the reducer for debugging purposes."
+        },
+        {
+          "name": "Finalize",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Performs any necessary finalization steps after the reduction process."
+        },
+        {
+          "name": "VerifyReplacement",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Verifies that all virtual allocation nodes have been dealt with."
+        },
+        {
+          "name": "ReduceFrameStateInputs",
+          "parameters": [
+            "Node* node"
+          ],
+          "return_type": "void",
+          "logic": "Reduces the inputs of a FrameState node."
+        },
+        {
+          "name": "ReduceDeoptState",
+          "parameters": [
+            "Node* node",
+            "Node* effect",
+            "Deduplicator* deduplicator"
+          ],
+          "return_type": "Node*",
+          "logic": "Reduces a deoptimization state node using the provided effect and deduplicator."
+        },
+        {
+          "name": "ObjectIdNode",
+          "parameters": [
+            "const VirtualObject* vobject"
+          ],
+          "return_type": "Node*",
+          "logic": "Retrieves or creates an object ID node for a given virtual object."
+        },
+        {
+          "name": "ReplaceNode",
+          "parameters": [
+            "Node* original",
+            "Node* replacement"
+          ],
+          "return_type": "Reduction",
+          "logic": "Replaces a node in the graph with a replacement node."
+        },
+        {
+          "name": "jsgraph",
+          "parameters": [],
+          "return_type": "JSGraph*",
+          "logic": "Returns the JSGraph associated with this reducer."
+        },
+        {
+          "name": "isolate",
+          "parameters": [],
+          "return_type": "Isolate*",
+          "logic": "Returns the isolate associated with this reducer."
+        },
+        {
+          "name": "analysis_result",
+          "parameters": [],
+          "return_type": "EscapeAnalysisResult",
+          "logic": "Returns the escape analysis result used by this reducer."
+        },
+        {
+          "name": "zone",
+          "parameters": [],
+          "return_type": "Zone*",
+          "logic": "Returns the zone associated with this reducer."
+        }
+      ]
+    }
+  ],
+  "functions": []
+}

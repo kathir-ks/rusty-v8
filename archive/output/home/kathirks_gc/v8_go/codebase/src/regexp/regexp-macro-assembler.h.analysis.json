@@ -1,0 +1,763 @@
+{
+  "file_path": "/home/kathirks_gc/v8_go/codebase/src/regexp/regexp-macro-assembler.h",
+  "imports": [
+    "src/base/strings.h",
+    "src/execution/frame-constants.h",
+    "src/objects/fixed-array.h",
+    "src/regexp/regexp-ast.h",
+    "src/regexp/regexp.h"
+  ],
+  "classes": [
+    {
+      "name": "RegExpMacroAssembler",
+      "properties": [
+        "kMaxRegisterCount",
+        "kMaxRegister",
+        "kMaxCaptures",
+        "kMaxCPOffset",
+        "kMinCPOffset",
+        "kTableSizeBits",
+        "kTableSize",
+        "kTableMask",
+        "kUseCharactersValue",
+        "slow_safe_compiler_",
+        "backtrack_limit_",
+        "can_fallback_",
+        "global_mode_",
+        "isolate_",
+        "zone_"
+      ],
+      "methods": [
+        {
+          "name": "RegExpMacroAssembler",
+          "parameters": [
+            "Isolate* isolate",
+            "Zone* zone"
+          ],
+          "return_type": "constructor",
+          "logic": "Constructor for the RegExpMacroAssembler class. Initializes isolate and zone members."
+        },
+        {
+          "name": "~RegExpMacroAssembler",
+          "parameters": [],
+          "return_type": "virtual destructor",
+          "logic": "Virtual destructor for the RegExpMacroAssembler class. Uses default implementation."
+        },
+        {
+          "name": "GetCode",
+          "parameters": [
+            "DirectHandle<String> source",
+            "RegExpFlags flags"
+          ],
+          "return_type": "DirectHandle<HeapObject>",
+          "logic": "Abstract method to get the generated code for a regular expression."
+        },
+        {
+          "name": "AbortedCodeGeneration",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Virtual method called when code generation is aborted. Allows cleanup of internal data structures.  Has default implementation."
+        },
+        {
+          "name": "stack_limit_slack_slot_count",
+          "parameters": [],
+          "return_type": "int",
+          "logic": "Virtual method to get the maximal number of pushes between stack checks."
+        },
+        {
+          "name": "CanReadUnaligned",
+          "parameters": [],
+          "return_type": "bool",
+          "logic": "Virtual method to check if unaligned memory reads are allowed."
+        },
+        {
+          "name": "AdvanceCurrentPosition",
+          "parameters": [
+            "int by"
+          ],
+          "return_type": "void",
+          "logic": "Virtual method to advance the current position by a given offset."
+        },
+        {
+          "name": "AdvanceRegister",
+          "parameters": [
+            "int reg",
+            "int by"
+          ],
+          "return_type": "void",
+          "logic": "Virtual method to advance a register by a given offset."
+        },
+        {
+          "name": "Backtrack",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Virtual method to backtrack to a previous position based on the backtrack stack."
+        },
+        {
+          "name": "Bind",
+          "parameters": [
+            "Label* label"
+          ],
+          "return_type": "void",
+          "logic": "Virtual method to bind a label to the current position in the code."
+        },
+        {
+          "name": "CheckCharacter",
+          "parameters": [
+            "unsigned c",
+            "Label* on_equal"
+          ],
+          "return_type": "void",
+          "logic": "Virtual method to check if the current character is equal to a given character.  Jumps to on_equal if true."
+        },
+        {
+          "name": "CheckCharacterAfterAnd",
+          "parameters": [
+            "unsigned c",
+            "unsigned and_with",
+            "Label* on_equal"
+          ],
+          "return_type": "void",
+          "logic": "Virtual method to bitwise AND the current character with and_with, then check if it is equal to c. Jumps to on_equal if true."
+        },
+        {
+          "name": "CheckCharacterGT",
+          "parameters": [
+            "base::uc16 limit",
+            "Label* on_greater"
+          ],
+          "return_type": "void",
+          "logic": "Virtual method to check if the current character is greater than a given limit. Jumps to on_greater if true."
+        },
+        {
+          "name": "CheckCharacterLT",
+          "parameters": [
+            "base::uc16 limit",
+            "Label* on_less"
+          ],
+          "return_type": "void",
+          "logic": "Virtual method to check if the current character is less than a given limit. Jumps to on_less if true."
+        },
+        {
+          "name": "CheckGreedyLoop",
+          "parameters": [
+            "Label* on_tos_equals_current_position"
+          ],
+          "return_type": "void",
+          "logic": "Virtual method to check if the current position is equal to the top of the stack. Jumps to on_tos_equals_current_position if true."
+        },
+        {
+          "name": "CheckAtStart",
+          "parameters": [
+            "int cp_offset",
+            "Label* on_at_start"
+          ],
+          "return_type": "void",
+          "logic": "Virtual method to check if the given offset from the current position is at the start of the input. Jumps to on_at_start if true."
+        },
+        {
+          "name": "CheckNotAtStart",
+          "parameters": [
+            "int cp_offset",
+            "Label* on_not_at_start"
+          ],
+          "return_type": "void",
+          "logic": "Virtual method to check if the given offset from the current position is NOT at the start of the input. Jumps to on_not_at_start if true."
+        },
+        {
+          "name": "CheckNotBackReference",
+          "parameters": [
+            "int start_reg",
+            "bool read_backward",
+            "Label* on_no_match"
+          ],
+          "return_type": "void",
+          "logic": "Virtual method to check if a backreference does not match. Jumps to on_no_match if it doesn't."
+        },
+        {
+          "name": "CheckNotBackReferenceIgnoreCase",
+          "parameters": [
+            "int start_reg",
+            "bool read_backward",
+            "bool unicode",
+            "Label* on_no_match"
+          ],
+          "return_type": "void",
+          "logic": "Virtual method to check if a backreference does not match (case-insensitive). Jumps to on_no_match if it doesn't."
+        },
+        {
+          "name": "CheckNotCharacter",
+          "parameters": [
+            "unsigned c",
+            "Label* on_not_equal"
+          ],
+          "return_type": "void",
+          "logic": "Virtual method to check if the current character is NOT equal to a given character. Jumps to on_not_equal if true."
+        },
+        {
+          "name": "CheckNotCharacterAfterAnd",
+          "parameters": [
+            "unsigned c",
+            "unsigned and_with",
+            "Label* on_not_equal"
+          ],
+          "return_type": "void",
+          "logic": "Virtual method to bitwise AND the current character with and_with, then check if it is NOT equal to c. Jumps to on_not_equal if true."
+        },
+        {
+          "name": "CheckNotCharacterAfterMinusAnd",
+          "parameters": [
+            "base::uc16 c",
+            "base::uc16 minus",
+            "base::uc16 and_with",
+            "Label* on_not_equal"
+          ],
+          "return_type": "void",
+          "logic": "Virtual method to subtract minus from the current character, then AND the result with and_with, then check if it is NOT equal to c. Jumps to on_not_equal if true."
+        },
+        {
+          "name": "CheckCharacterInRange",
+          "parameters": [
+            "base::uc16 from",
+            "base::uc16 to",
+            "Label* on_in_range"
+          ],
+          "return_type": "void",
+          "logic": "Virtual method to check if the current character is within the given range (inclusive). Jumps to on_in_range if true."
+        },
+        {
+          "name": "CheckCharacterNotInRange",
+          "parameters": [
+            "base::uc16 from",
+            "base::uc16 to",
+            "Label* on_not_in_range"
+          ],
+          "return_type": "void",
+          "logic": "Virtual method to check if the current character is NOT within the given range (inclusive). Jumps to on_not_in_range if true."
+        },
+        {
+          "name": "CheckCharacterInRangeArray",
+          "parameters": [
+            "const ZoneList<CharacterRange>* ranges",
+            "Label* on_in_range"
+          ],
+          "return_type": "bool",
+          "logic": "Virtual method to check if the current character is within any of the ranges in the given array. Jumps to on_in_range if true. Returns true if the check was emitted, false otherwise."
+        },
+        {
+          "name": "CheckCharacterNotInRangeArray",
+          "parameters": [
+            "const ZoneList<CharacterRange>* ranges",
+            "Label* on_not_in_range"
+          ],
+          "return_type": "bool",
+          "logic": "Virtual method to check if the current character is NOT within any of the ranges in the given array. Jumps to on_not_in_range if true. Returns true if the check was emitted, false otherwise."
+        },
+        {
+          "name": "CheckBitInTable",
+          "parameters": [
+            "Handle<ByteArray> table",
+            "Label* on_bit_set"
+          ],
+          "return_type": "void",
+          "logic": "Virtual method to check if a bit is set in the table for the current character. Jumps to on_bit_set if true."
+        },
+        {
+          "name": "SkipUntilBitInTable",
+          "parameters": [
+            "int cp_offset",
+            "Handle<ByteArray> table",
+            "Handle<ByteArray> nibble_table",
+            "int advance_by"
+          ],
+          "return_type": "void",
+          "logic": "Virtual method to skip until a bit is set in the table, starting at the given offset."
+        },
+        {
+          "name": "SkipUntilBitInTableUseSimd",
+          "parameters": [
+            "int advance_by"
+          ],
+          "return_type": "bool",
+          "logic": "Virtual method to potentially use SIMD for the SkipUntilBitInTable operation"
+        },
+        {
+          "name": "CheckPosition",
+          "parameters": [
+            "int cp_offset",
+            "Label* on_outside_input"
+          ],
+          "return_type": "void",
+          "logic": "Virtual method to check if a position is outside the input. Jumps to on_outside_input if it is."
+        },
+        {
+          "name": "CheckSpecialClassRanges",
+          "parameters": [
+            "StandardCharacterSet type",
+            "Label* on_no_match"
+          ],
+          "return_type": "bool",
+          "logic": "Virtual method to check if the current character matches a standard character class. Jumps to on_no_match if there's no match, or no custom support is implemented."
+        },
+        {
+          "name": "BindJumpTarget",
+          "parameters": [
+            "Label* label"
+          ],
+          "return_type": "void",
+          "logic": "Binds a jump target label. Implemented as a simple call to Bind."
+        },
+        {
+          "name": "Fail",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Virtual method to indicate failure."
+        },
+        {
+          "name": "GoTo",
+          "parameters": [
+            "Label* label"
+          ],
+          "return_type": "void",
+          "logic": "Virtual method to jump to a given label."
+        },
+        {
+          "name": "IfRegisterGE",
+          "parameters": [
+            "int reg",
+            "int comparand",
+            "Label* if_ge"
+          ],
+          "return_type": "void",
+          "logic": "Virtual method to check if a register is greater than or equal to a given value. Jumps to if_ge if true."
+        },
+        {
+          "name": "IfRegisterLT",
+          "parameters": [
+            "int reg",
+            "int comparand",
+            "Label* if_lt"
+          ],
+          "return_type": "void",
+          "logic": "Virtual method to check if a register is less than a given value. Jumps to if_lt if true."
+        },
+        {
+          "name": "IfRegisterEqPos",
+          "parameters": [
+            "int reg",
+            "Label* if_eq"
+          ],
+          "return_type": "void",
+          "logic": "Virtual method to check if a register is equal to the current position. Jumps to if_eq if true."
+        },
+        {
+          "name": "LoadCurrentCharacter",
+          "parameters": [
+            "int cp_offset",
+            "Label* on_end_of_input",
+            "bool check_bounds",
+            "int characters",
+            "int eats_at_least"
+          ],
+          "return_type": "void",
+          "logic": "Loads the current character at the given offset. Public interface that calls LoadCurrentCharacterImpl."
+        },
+        {
+          "name": "LoadCurrentCharacterImpl",
+          "parameters": [
+            "int cp_offset",
+            "Label* on_end_of_input",
+            "bool check_bounds",
+            "int characters",
+            "int eats_at_least"
+          ],
+          "return_type": "void",
+          "logic": "Virtual method that implements the loading of the current character."
+        },
+        {
+          "name": "PopCurrentPosition",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Virtual method to pop the current position from the stack."
+        },
+        {
+          "name": "PopRegister",
+          "parameters": [
+            "int register_index"
+          ],
+          "return_type": "void",
+          "logic": "Virtual method to pop a register from the stack."
+        },
+        {
+          "name": "PushBacktrack",
+          "parameters": [
+            "Label* label"
+          ],
+          "return_type": "void",
+          "logic": "Virtual method to push a label onto the backtrack stack."
+        },
+        {
+          "name": "PushCurrentPosition",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Virtual method to push the current position onto the stack."
+        },
+        {
+          "name": "PushRegister",
+          "parameters": [
+            "int register_index",
+            "StackCheckFlag check_stack_limit"
+          ],
+          "return_type": "void",
+          "logic": "Virtual method to push a register onto the stack, with optional stack limit check."
+        },
+        {
+          "name": "ReadCurrentPositionFromRegister",
+          "parameters": [
+            "int reg"
+          ],
+          "return_type": "void",
+          "logic": "Virtual method to read the current position from a register."
+        },
+        {
+          "name": "ReadStackPointerFromRegister",
+          "parameters": [
+            "int reg"
+          ],
+          "return_type": "void",
+          "logic": "Virtual method to read the stack pointer from a register."
+        },
+        {
+          "name": "SetCurrentPositionFromEnd",
+          "parameters": [
+            "int by"
+          ],
+          "return_type": "void",
+          "logic": "Virtual method to set the current position from the end of the input."
+        },
+        {
+          "name": "SetRegister",
+          "parameters": [
+            "int register_index",
+            "int to"
+          ],
+          "return_type": "void",
+          "logic": "Virtual method to set the value of a register."
+        },
+        {
+          "name": "Succeed",
+          "parameters": [],
+          "return_type": "bool",
+          "logic": "Virtual method to indicate success."
+        },
+        {
+          "name": "WriteCurrentPositionToRegister",
+          "parameters": [
+            "int reg",
+            "int cp_offset"
+          ],
+          "return_type": "void",
+          "logic": "Virtual method to write the current position to a register."
+        },
+        {
+          "name": "ClearRegisters",
+          "parameters": [
+            "int reg_from",
+            "int reg_to"
+          ],
+          "return_type": "void",
+          "logic": "Virtual method to clear a range of registers."
+        },
+        {
+          "name": "WriteStackPointerToRegister",
+          "parameters": [
+            "int reg"
+          ],
+          "return_type": "void",
+          "logic": "Virtual method to write the stack pointer to a register."
+        },
+        {
+          "name": "CheckNotInSurrogatePair",
+          "parameters": [
+            "int cp_offset",
+            "Label* on_failure"
+          ],
+          "return_type": "void",
+          "logic": "Checks if the current position is not in a surrogate pair, jumps to on_failure otherwise."
+        },
+        {
+          "name": "ImplementationToString",
+          "parameters": [
+            "IrregexpImplementation impl"
+          ],
+          "return_type": "const char*",
+          "logic": "Converts an IrregexpImplementation enum value to a string."
+        },
+        {
+          "name": "Implementation",
+          "parameters": [],
+          "return_type": "IrregexpImplementation",
+          "logic": "Virtual method to get the implementation type."
+        },
+        {
+          "name": "CaseInsensitiveCompareNonUnicode",
+          "parameters": [
+            "Address byte_offset1",
+            "Address byte_offset2",
+            "size_t byte_length",
+            "Isolate* isolate"
+          ],
+          "return_type": "int",
+          "logic": "Compares two non-unicode strings case-insensitively."
+        },
+        {
+          "name": "CaseInsensitiveCompareUnicode",
+          "parameters": [
+            "Address byte_offset1",
+            "Address byte_offset2",
+            "size_t byte_length",
+            "Isolate* isolate"
+          ],
+          "return_type": "int",
+          "logic": "Compares two unicode strings case-insensitively."
+        },
+        {
+          "name": "IsCharacterInRangeArray",
+          "parameters": [
+            "uint32_t current_char",
+            "Address raw_byte_array"
+          ],
+          "return_type": "uint32_t",
+          "logic": "Checks if a character is within a range array."
+        },
+        {
+          "name": "set_slow_safe",
+          "parameters": [
+            "bool ssc"
+          ],
+          "return_type": "void",
+          "logic": "Sets the slow_safe_compiler_ flag."
+        },
+        {
+          "name": "slow_safe",
+          "parameters": [],
+          "return_type": "bool",
+          "logic": "Returns the value of slow_safe_compiler_ flag."
+        },
+        {
+          "name": "set_backtrack_limit",
+          "parameters": [
+            "uint32_t backtrack_limit"
+          ],
+          "return_type": "void",
+          "logic": "Sets the maximum number of backtracks before aborting."
+        },
+        {
+          "name": "set_can_fallback",
+          "parameters": [
+            "bool val"
+          ],
+          "return_type": "void",
+          "logic": "Sets whether the engine can fall back to the experimental engine."
+        },
+        {
+          "name": "set_global_mode",
+          "parameters": [
+            "GlobalMode mode"
+          ],
+          "return_type": "void",
+          "logic": "Sets the global mode of the regular expression."
+        },
+        {
+          "name": "global",
+          "parameters": [],
+          "return_type": "bool",
+          "logic": "Checks if the regular expression is global."
+        },
+        {
+          "name": "global_with_zero_length_check",
+          "parameters": [],
+          "return_type": "bool",
+          "logic": "Checks if the regular expression is global and requires zero-length check."
+        },
+        {
+          "name": "global_unicode",
+          "parameters": [],
+          "return_type": "bool",
+          "logic": "Checks if the regular expression is global with unicode flag."
+        },
+        {
+          "name": "isolate",
+          "parameters": [],
+          "return_type": "Isolate*",
+          "logic": "Returns the isolate associated with the RegExpMacroAssembler."
+        },
+        {
+          "name": "zone",
+          "parameters": [],
+          "return_type": "Zone*",
+          "logic": "Returns the zone associated with the RegExpMacroAssembler."
+        },
+        {
+          "name": "has_backtrack_limit",
+          "parameters": [],
+          "return_type": "bool",
+          "logic": "Checks if a backtrack limit is set."
+        },
+        {
+          "name": "backtrack_limit",
+          "parameters": [],
+          "return_type": "uint32_t",
+          "logic": "Returns the backtrack limit."
+        },
+        {
+          "name": "can_fallback",
+          "parameters": [],
+          "return_type": "bool",
+          "logic": "Returns whether the engine can fall back to the experimental engine."
+        }
+      ]
+    },
+    {
+      "name": "NativeRegExpMacroAssembler",
+      "properties": [
+        "range_array_cache_",
+        "word_character_map"
+      ],
+      "methods": [
+        {
+          "name": "NativeRegExpMacroAssembler",
+          "parameters": [
+            "Isolate* isolate",
+            "Zone* zone"
+          ],
+          "return_type": "constructor",
+          "logic": "Constructor for the NativeRegExpMacroAssembler class."
+        },
+        {
+          "name": "~NativeRegExpMacroAssembler",
+          "parameters": [],
+          "return_type": "virtual destructor",
+          "logic": "Virtual destructor for the NativeRegExpMacroAssembler class. Uses default implementation."
+        },
+        {
+          "name": "Match",
+          "parameters": [
+            "DirectHandle<IrRegExpData> regexp_data",
+            "DirectHandle<String> subject",
+            "int* offsets_vector",
+            "int offsets_vector_length",
+            "int previous_index",
+            "Isolate* isolate"
+          ],
+          "return_type": "int",
+          "logic": "Matches the given subject against the compiled RegExp code."
+        },
+        {
+          "name": "ExecuteForTesting",
+          "parameters": [
+            "Tagged<String> input",
+            "int start_offset",
+            "const uint8_t* input_start",
+            "const uint8_t* input_end",
+            "int* output",
+            "int output_size",
+            "Isolate* isolate",
+            "Tagged<JSRegExp> regexp"
+          ],
+          "return_type": "int",
+          "logic": "Executes the regular expression for testing purposes."
+        },
+        {
+          "name": "CanReadUnaligned",
+          "parameters": [],
+          "return_type": "bool",
+          "logic": "Overrides the virtual method to check if unaligned memory reads are allowed."
+        },
+        {
+          "name": "LoadCurrentCharacterImpl",
+          "parameters": [
+            "int cp_offset",
+            "Label* on_end_of_input",
+            "bool check_bounds",
+            "int characters",
+            "int eats_at_least"
+          ],
+          "return_type": "void",
+          "logic": "Overrides the virtual method that implements the loading of the current character."
+        },
+        {
+          "name": "LoadCurrentCharacterUnchecked",
+          "parameters": [
+            "int cp_offset",
+            "int character_count"
+          ],
+          "return_type": "void",
+          "logic": "Virtual method to load a number of characters at the given offset without any checks."
+        },
+        {
+          "name": "GrowStack",
+          "parameters": [
+            "Isolate* isolate"
+          ],
+          "return_type": "Address",
+          "logic": "Grows the backtrack stack when the limit is hit.  Called from generated code."
+        },
+        {
+          "name": "CheckStackGuardState",
+          "parameters": [
+            "Isolate* isolate",
+            "int start_index",
+            "RegExp::CallOrigin call_origin",
+            "Address* return_address",
+            "Tagged<InstructionStream> re_code",
+            "Address* subject",
+            "const uint8_t** input_start",
+            "const uint8_t** input_end",
+            "uintptr_t gap"
+          ],
+          "return_type": "int",
+          "logic": "Checks the stack guard state during regular expression execution.  Called from generated code."
+        },
+        {
+          "name": "word_character_map_address",
+          "parameters": [],
+          "return_type": "Address",
+          "logic": "Returns the address of the word character map."
+        },
+        {
+          "name": "GetOrAddRangeArray",
+          "parameters": [
+            "const ZoneList<CharacterRange>* ranges"
+          ],
+          "return_type": "Handle<ByteArray>",
+          "logic": "Gets or creates a byte array for the given character ranges."
+        },
+        {
+          "name": "Execute",
+          "parameters": [
+            "Tagged<String> input",
+            "int start_offset",
+            "const uint8_t* input_start",
+            "const uint8_t* input_end",
+            "int* output",
+            "int output_size",
+            "Isolate* isolate",
+            "Tagged<IrRegExpData> regexp_data"
+          ],
+          "return_type": "int",
+          "logic": "Executes the regular expression with the given input. Returns a result sentinel or number of matches."
+        }
+      ]
+    }
+  ],
+  "functions": [],
+  "constants": [
+    "kLeadSurrogateStart",
+    "kLeadSurrogateEnd",
+    "kTrailSurrogateStart",
+    "kTrailSurrogateEnd",
+    "kNonBmpStart",
+    "kNonBmpEnd"
+  ]
+}

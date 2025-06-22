@@ -1,0 +1,242 @@
+{
+  "file_path": "/home/kathirks_gc/v8_go/codebase/src/compiler/turboshaft/deopt-data.h",
+  "imports": [
+    "src/base/small-vector.h",
+    "src/common/globals.h",
+    "src/compiler/frame-states.h",
+    "src/compiler/turboshaft/index.h",
+    "src/compiler/turboshaft/representations.h"
+  ],
+  "classes": [
+    {
+      "name": "FrameStateData",
+      "properties": [
+        "frame_state_info",
+        "instructions",
+        "machine_types",
+        "int_operands"
+      ],
+      "methods": [
+        {
+          "name": "iterator",
+          "parameters": [
+            "state_values"
+          ],
+          "return_type": "Iterator",
+          "logic": "Creates and returns an Iterator object initialized with the FrameStateData's instruction, machine_type, int_operand, and state_values data."
+        }
+      ]
+    },
+    {
+      "name": "FrameStateData::Builder",
+      "properties": [
+        "instructions_",
+        "machine_types_",
+        "int_operands_",
+        "inputs_",
+        "inlined_"
+      ],
+      "methods": [
+        {
+          "name": "AddParentFrameState",
+          "parameters": [
+            "parent"
+          ],
+          "return_type": "void",
+          "logic": "Adds a parent frame state, indicating inlining, and stores the parent in the inputs_ vector."
+        },
+        {
+          "name": "AddInput",
+          "parameters": [
+            "type",
+            "input"
+          ],
+          "return_type": "void",
+          "logic": "Adds an input to the frame state data, storing the instruction type, machine type, and input index."
+        },
+        {
+          "name": "AddUnusedRegister",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Adds an unused register indicator to the frame state data."
+        },
+        {
+          "name": "AddDematerializedObjectReference",
+          "parameters": [
+            "id"
+          ],
+          "return_type": "void",
+          "logic": "Adds a dematerialized object reference to the frame state data, storing the ID."
+        },
+        {
+          "name": "AddDematerializedObject",
+          "parameters": [
+            "id",
+            "field_count"
+          ],
+          "return_type": "void",
+          "logic": "Adds a dematerialized object to the frame state data, storing the ID and field count."
+        },
+        {
+          "name": "AddDematerializedStringConcat",
+          "parameters": [
+            "id"
+          ],
+          "return_type": "void",
+          "logic": "Adds a dematerialized string concatenation to the frame state data, storing the ID."
+        },
+        {
+          "name": "AddDematerializedStringConcatReference",
+          "parameters": [
+            "id"
+          ],
+          "return_type": "void",
+          "logic": "Adds a dematerialized string concatenation reference to the frame state data, storing the ID."
+        },
+        {
+          "name": "AddArgumentsElements",
+          "parameters": [
+            "type"
+          ],
+          "return_type": "void",
+          "logic": "Adds an arguments elements indicator to the frame state data, storing the type."
+        },
+        {
+          "name": "AddArgumentsLength",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Adds an arguments length indicator to the frame state data."
+        },
+        {
+          "name": "AddRestLength",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Adds a rest length indicator to the frame state data."
+        },
+        {
+          "name": "AllocateFrameStateData",
+          "parameters": [
+            "info",
+            "zone"
+          ],
+          "return_type": "const FrameStateData*",
+          "logic": "Allocates a FrameStateData object in the provided zone, cloning the instruction, machine_type, and int_operand data from the builder."
+        },
+        {
+          "name": "Inputs",
+          "parameters": [],
+          "return_type": "base::Vector<const OpIndex>",
+          "logic": "Returns the vector of input OpIndices"
+        },
+        {
+          "name": "inlined",
+          "parameters": [],
+          "return_type": "bool",
+          "logic": "Returns whether the frame state data is inlined."
+        }
+      ]
+    },
+    {
+      "name": "FrameStateData::Iterator",
+      "properties": [
+        "instructions",
+        "machine_types",
+        "int_operands",
+        "inputs"
+      ],
+      "methods": [
+        {
+          "name": "has_more",
+          "parameters": [],
+          "return_type": "bool",
+          "logic": "Checks if there are more instructions to process in the iterator."
+        },
+        {
+          "name": "current_instr",
+          "parameters": [],
+          "return_type": "Instr",
+          "logic": "Returns the current instruction in the iterator."
+        },
+        {
+          "name": "ConsumeInput",
+          "parameters": [
+            "machine_type",
+            "input"
+          ],
+          "return_type": "void",
+          "logic": "Consumes an input instruction, updating the iterator's pointers and outputting the machine type and input index."
+        },
+        {
+          "name": "ConsumeUnusedRegister",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Consumes an unused register instruction, updating the iterator's pointer."
+        },
+        {
+          "name": "ConsumeDematerializedObject",
+          "parameters": [
+            "id",
+            "field_count"
+          ],
+          "return_type": "void",
+          "logic": "Consumes a dematerialized object instruction, updating the iterator's pointers and outputting the ID and field count."
+        },
+        {
+          "name": "ConsumeDematerializedObjectReference",
+          "parameters": [
+            "id"
+          ],
+          "return_type": "void",
+          "logic": "Consumes a dematerialized object reference instruction, updating the iterator's pointers and outputting the ID."
+        },
+        {
+          "name": "ConsumeDematerializedStringConcat",
+          "parameters": [
+            "id"
+          ],
+          "return_type": "void",
+          "logic": "Consumes a dematerialized string concat instruction, updating the iterator's pointers and outputting the ID."
+        },
+        {
+          "name": "ConsumeDematerializedStringConcatReference",
+          "parameters": [
+            "id"
+          ],
+          "return_type": "void",
+          "logic": "Consumes a dematerialized string concat reference instruction, updating the iterator's pointers and outputting the ID."
+        },
+        {
+          "name": "ConsumeArgumentsElements",
+          "parameters": [
+            "type"
+          ],
+          "return_type": "void",
+          "logic": "Consumes an arguments elements instruction, updating the iterator's pointers and outputting the type."
+        },
+        {
+          "name": "ConsumeArgumentsLength",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Consumes an arguments length instruction, updating the iterator's pointer."
+        },
+        {
+          "name": "ConsumeRestLength",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Consumes a rest length instruction, updating the iterator's pointer."
+        }
+      ]
+    }
+  ],
+  "functions": [
+    {
+      "name": "operator==",
+      "parameters": [
+        "lhs",
+        "rhs"
+      ],
+      "return_type": "bool",
+      "logic": "Compares two FrameStateData objects for equality by comparing their frame_state_info, instructions, machine_types, and int_operands members."
+    }
+  ]
+}

@@ -1,0 +1,67 @@
+{
+  "metadata": {
+    "path": "/home/kathirks_gc/v8_go/archive/codebase/src/compiler/osr.h",
+    "file_name": "osr.h",
+    "language": "cpp",
+    "purpose": "Declares the OsrHelper class, which encapsulates logic related to On-Stack Replacement (OSR) compilations and handles frame layout details."
+  },
+  "imports": {
+    "metadata": {
+      "language": "cpp",
+      "purpose": "Includes standard C++ headers and V8-specific headers for size definitions and macros."
+    },
+    "code": "#include <stddef.h>\n\n            #include \"src/base/macros.h\""
+  },
+  "classes": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "OsrHelper",
+        "about": "Encapsulates logic relating to OSR compilations and handles frame layout details.",
+        "attributes": [
+          {
+            "name": "parameter_count_",
+            "type": "size_t",
+            "access": "private",
+            "purpose": "Stores the number of parameters."
+          },
+          {
+            "name": "stack_slot_count_",
+            "type": "size_t",
+            "access": "private",
+            "purpose": "Stores the number of stack slots in the unoptimized frame."
+          }
+        ],
+        "dependencies": [
+          "OptimizedCompilationInfo",
+          "Frame"
+        ]
+      },
+      "code": "class OsrHelper {\n            public:\n            explicit OsrHelper(OptimizedCompilationInfo* info);\n\n            // Prepares the frame w.r.t. OSR.\n            V8_EXPORT_PRIVATE void SetupFrame(Frame* frame);\n\n            // Returns the number of unoptimized frame slots for this OSR.\n            size_t UnoptimizedFrameSlots() { return stack_slot_count_; }\n\n            // Returns the environment index of the first stack slot.\n            static int FirstStackSlotIndex(int parameter_count) {\n                // TurboFan environments do not contain the context.\n                return 1 + parameter_count;  // receiver + params\n            }\n\n            private:\n            size_t parameter_count_;\n            size_t stack_slot_count_;\n            };"
+    }
+  ],
+  "dependencies": [
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "OptimizedCompilationInfo",
+        "about": "Provides information about the optimized compilation process."
+      },
+      "code": "class OptimizedCompilationInfo;",
+      "type": "class"
+    },
+    {
+      "metadata": {
+        "language": "cpp",
+        "type": "class",
+        "name": "Frame",
+        "about": "Represents a stack frame."
+      },
+      "code": "class Frame;",
+      "type": "class"
+    }
+  ],
+  "file_path": "/home/kathirks_gc/v8_go/archive/codebase/src/compiler/osr.h"
+}

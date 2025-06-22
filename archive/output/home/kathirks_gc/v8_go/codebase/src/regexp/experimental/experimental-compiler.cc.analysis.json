@@ -1,0 +1,851 @@
+{
+  "file_path": "/home/kathirks_gc/v8_go/codebase/src/regexp/experimental/experimental-compiler.cc",
+  "imports": [
+    "src/regexp/experimental/experimental-compiler.h",
+    "src/flags/flags.h",
+    "src/regexp/experimental/experimental.h",
+    "src/regexp/regexp-ast.h",
+    "src/zone/zone-containers.h",
+    "src/zone/zone-list-inl.h"
+  ],
+  "classes": [
+    {
+      "name": "CanBeHandledVisitor",
+      "properties": [
+        "replication_factor_",
+        "result_",
+        "flags_"
+      ],
+      "methods": [
+        {
+          "name": "Check",
+          "parameters": [
+            "RegExpTree* tree",
+            "RegExpFlags flags",
+            "int capture_count"
+          ],
+          "return_type": "bool",
+          "logic": "Static method to check if a RegExpTree can be handled by the experimental engine. Creates a CanBeHandledVisitor and traverses the tree, returning true if all nodes can be handled, false otherwise."
+        },
+        {
+          "name": "CanBeHandledVisitor",
+          "parameters": [
+            "RegExpFlags flags"
+          ],
+          "return_type": "explicit",
+          "logic": "Constructor for CanBeHandledVisitor. Initializes the flags_ member."
+        },
+        {
+          "name": "AreSuitableFlags",
+          "parameters": [
+            "RegExpFlags flags"
+          ],
+          "return_type": "bool",
+          "logic": "Static method to check if the given RegExpFlags are suitable for the experimental engine. Checks against a set of allowed flags."
+        },
+        {
+          "name": "VisitDisjunction",
+          "parameters": [
+            "RegExpDisjunction* node",
+            "void*"
+          ],
+          "return_type": "void*",
+          "logic": "Visits a RegExpDisjunction node, recursively visiting each alternative. Returns nullptr if any alternative cannot be handled."
+        },
+        {
+          "name": "VisitAlternative",
+          "parameters": [
+            "RegExpAlternative* node",
+            "void*"
+          ],
+          "return_type": "void*",
+          "logic": "Visits a RegExpAlternative node, recursively visiting each child node. Returns nullptr if any child cannot be handled."
+        },
+        {
+          "name": "VisitClassRanges",
+          "parameters": [
+            "RegExpClassRanges* node",
+            "void*"
+          ],
+          "return_type": "void*",
+          "logic": "Visits a RegExpClassRanges node. Always returns nullptr (implementation is incomplete, always returns null)."
+        },
+        {
+          "name": "VisitClassSetOperand",
+          "parameters": [
+            "RegExpClassSetOperand* node",
+            "void*"
+          ],
+          "return_type": "void*",
+          "logic": "Visits a RegExpClassSetOperand node, setting result_ to false if the node has strings. Returns nullptr."
+        },
+        {
+          "name": "VisitClassSetExpression",
+          "parameters": [
+            "RegExpClassSetExpression* node",
+            "void*"
+          ],
+          "return_type": "void*",
+          "logic": "Visits a RegExpClassSetExpression node, always setting result_ to false. Returns nullptr."
+        },
+        {
+          "name": "VisitAssertion",
+          "parameters": [
+            "RegExpAssertion* node",
+            "void*"
+          ],
+          "return_type": "void*",
+          "logic": "Visits a RegExpAssertion node. Always returns nullptr."
+        },
+        {
+          "name": "VisitAtom",
+          "parameters": [
+            "RegExpAtom* node",
+            "void*"
+          ],
+          "return_type": "void*",
+          "logic": "Visits a RegExpAtom node. Always returns nullptr."
+        },
+        {
+          "name": "VisitText",
+          "parameters": [
+            "RegExpText* node",
+            "void*"
+          ],
+          "return_type": "void*",
+          "logic": "Visits a RegExpText node, recursively visiting each TextElement. Returns nullptr if any TextElement cannot be handled."
+        },
+        {
+          "name": "VisitQuantifier",
+          "parameters": [
+            "RegExpQuantifier* node",
+            "void*"
+          ],
+          "return_type": "void*",
+          "logic": "Visits a RegExpQuantifier node. Checks if the quantifier's min and max values are within limits and if the quantifier type is supported (greedy or non-greedy). Updates the replication factor. Recursively visits the quantifier's body. Returns nullptr if the quantifier cannot be handled."
+        },
+        {
+          "name": "VisitCapture",
+          "parameters": [
+            "RegExpCapture* node",
+            "void*"
+          ],
+          "return_type": "void*",
+          "logic": "Visits a RegExpCapture node, recursively visiting the capture's body.  Returns nullptr."
+        },
+        {
+          "name": "VisitGroup",
+          "parameters": [
+            "RegExpGroup* node",
+            "void*"
+          ],
+          "return_type": "void*",
+          "logic": "Visits a RegExpGroup node. Checks if the group's flags are supported. Recursively visits the group's body. Returns nullptr if the group cannot be handled."
+        },
+        {
+          "name": "VisitLookaround",
+          "parameters": [
+            "RegExpLookaround* node",
+            "void*"
+          ],
+          "return_type": "void*",
+          "logic": "Visits a RegExpLookaround node. Checks if global or sticky flags are set, or if capturing lookbehinds are enabled. Recursively visits the lookaround's body. Returns nullptr if the lookaround cannot be handled."
+        },
+        {
+          "name": "VisitBackReference",
+          "parameters": [
+            "RegExpBackReference* node",
+            "void*"
+          ],
+          "return_type": "void*",
+          "logic": "Visits a RegExpBackReference node, immediately setting result_ to false. Returns nullptr."
+        },
+        {
+          "name": "VisitEmpty",
+          "parameters": [
+            "RegExpEmpty* node",
+            "void*"
+          ],
+          "return_type": "void*",
+          "logic": "Visits a RegExpEmpty node. Always returns nullptr."
+        },
+        {
+          "name": "flags",
+          "parameters": [],
+          "return_type": "RegExpFlags",
+          "logic": "Getter for the flags_ member."
+        }
+      ]
+    },
+    {
+      "name": "Label",
+      "properties": [],
+      "methods": [
+        {
+          "name": "Label",
+          "parameters": [],
+          "return_type": "",
+          "logic": "Constructor for the Label struct, initializes to UNBOUND state."
+        },
+        {
+          "name": "~Label",
+          "parameters": [],
+          "return_type": "",
+          "logic": "Destructor for the Label struct. Asserts that the label is BOUND."
+        }
+      ]
+    },
+    {
+      "name": "BytecodeAssembler",
+      "properties": [
+        "zone_",
+        "code_"
+      ],
+      "methods": [
+        {
+          "name": "BytecodeAssembler",
+          "parameters": [
+            "Zone* zone"
+          ],
+          "return_type": "explicit",
+          "logic": "Constructor for the BytecodeAssembler. Initializes the zone_ and code_ members."
+        },
+        {
+          "name": "IntoCode",
+          "parameters": [],
+          "return_type": "ZoneList<RegExpInstruction> &&",
+          "logic": "Moves the compiled bytecode (code_) into a ZoneList and returns it."
+        },
+        {
+          "name": "Accept",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Adds an Accept instruction to the bytecode."
+        },
+        {
+          "name": "Assertion",
+          "parameters": [
+            "RegExpAssertion::Type t"
+          ],
+          "return_type": "void",
+          "logic": "Adds an Assertion instruction to the bytecode."
+        },
+        {
+          "name": "ClearRegister",
+          "parameters": [
+            "int32_t register_index"
+          ],
+          "return_type": "void",
+          "logic": "Adds a ClearRegister instruction to the bytecode."
+        },
+        {
+          "name": "ConsumeRange",
+          "parameters": [
+            "base::uc16 from",
+            "base::uc16 to"
+          ],
+          "return_type": "void",
+          "logic": "Adds a ConsumeRange instruction to the bytecode."
+        },
+        {
+          "name": "ConsumeAnyChar",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Adds a ConsumeAnyChar instruction to the bytecode."
+        },
+        {
+          "name": "RangeCount",
+          "parameters": [
+            "int32_t num_ranges"
+          ],
+          "return_type": "void",
+          "logic": "Adds a RangeCount instruction to the bytecode."
+        },
+        {
+          "name": "Fork",
+          "parameters": [
+            "Label& target"
+          ],
+          "return_type": "void",
+          "logic": "Adds a Fork instruction to the bytecode, referencing a Label."
+        },
+        {
+          "name": "Jmp",
+          "parameters": [
+            "Label& target"
+          ],
+          "return_type": "void",
+          "logic": "Adds a Jmp instruction to the bytecode, referencing a Label."
+        },
+        {
+          "name": "SetRegisterToCp",
+          "parameters": [
+            "int32_t register_index"
+          ],
+          "return_type": "void",
+          "logic": "Adds a SetRegisterToCp instruction to the bytecode."
+        },
+        {
+          "name": "BeginLoop",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Adds a BeginLoop instruction to the bytecode."
+        },
+        {
+          "name": "EndLoop",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Adds an EndLoop instruction to the bytecode."
+        },
+        {
+          "name": "StartLookaround",
+          "parameters": [
+            "int lookaround_index",
+            "bool is_positive",
+            "RegExpLookaround::Type type"
+          ],
+          "return_type": "void",
+          "logic": "Adds a StartLookaround instruction to the bytecode."
+        },
+        {
+          "name": "EndLookaround",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Adds an EndLookaround instruction to the bytecode."
+        },
+        {
+          "name": "WriteLookaroundTable",
+          "parameters": [
+            "int index"
+          ],
+          "return_type": "void",
+          "logic": "Adds a WriteLookTable instruction to the bytecode."
+        },
+        {
+          "name": "ReadLookaroundTable",
+          "parameters": [
+            "int index",
+            "bool is_positive",
+            "RegExpLookaround::Type type"
+          ],
+          "return_type": "void",
+          "logic": "Adds a ReadLookTable instruction to the bytecode."
+        },
+        {
+          "name": "SetQuantifierToClock",
+          "parameters": [
+            "int32_t quantifier_id"
+          ],
+          "return_type": "void",
+          "logic": "Adds a SetQuantifierToClock instruction to the bytecode."
+        },
+        {
+          "name": "FilterQuantifier",
+          "parameters": [
+            "int32_t quantifier_id"
+          ],
+          "return_type": "void",
+          "logic": "Adds a FilterQuantifier instruction to the bytecode."
+        },
+        {
+          "name": "FilterGroup",
+          "parameters": [
+            "int32_t group_id"
+          ],
+          "return_type": "void",
+          "logic": "Adds a FilterGroup instruction to the bytecode."
+        },
+        {
+          "name": "FilterLookaround",
+          "parameters": [
+            "int32_t lookaround_id"
+          ],
+          "return_type": "void",
+          "logic": "Adds a FilterLookaround instruction to the bytecode."
+        },
+        {
+          "name": "FilterChild",
+          "parameters": [
+            "Label& target"
+          ],
+          "return_type": "void",
+          "logic": "Adds a FilterChild instruction to the bytecode, referencing a Label."
+        },
+        {
+          "name": "Bind",
+          "parameters": [
+            "Label& target"
+          ],
+          "return_type": "void",
+          "logic": "Binds a Label to the current bytecode position, patching any forward references."
+        },
+        {
+          "name": "Fail",
+          "parameters": [],
+          "return_type": "void",
+          "logic": "Adds a Fail instruction to the bytecode."
+        }
+      ]
+    },
+    {
+      "name": "FilterGroupsCompileVisitor",
+      "properties": [
+        "zone_",
+        "assembler_",
+        "nodes_",
+        "can_compile_node_",
+        "quantifier_id_remapping_",
+        "lookaround_id_remapping_"
+      ],
+      "methods": [
+        {
+          "name": "CompileFilter",
+          "parameters": [
+            "Zone* zone",
+            "RegExpTree* tree",
+            "BytecodeAssembler& assembler",
+            "const ZoneMap<int, int>& quantifier_id_remapping",
+            "const ZoneMap<int, int>& lookaround_id_remapping"
+          ],
+          "return_type": "static void",
+          "logic": "Static method to compile filter instructions for groups and quantifiers in a regular expression tree. It traverses the AST in breadth-first order, generating FILTER_GROUP, FILTER_QUANTIFIER, and FILTER_CHILD instructions. It uses a queue (nodes_) to store nodes to be compiled later."
+        },
+        {
+          "name": "FilterGroupsCompileVisitor",
+          "parameters": [
+            "BytecodeAssembler& assembler",
+            "Zone* zone",
+            "const ZoneMap<int, int>& quantifier_id_remapping",
+            "const ZoneMap<int, int>& lookaround_id_remapping"
+          ],
+          "return_type": "explicit",
+          "logic": "Constructor for FilterGroupsCompileVisitor. Initializes the members of the class, including the assembler, zone, nodes queue, quantifier ID remapping, and the `can_compile_node_` flag."
+        },
+        {
+          "name": "VisitDisjunction",
+          "parameters": [
+            "RegExpDisjunction* node",
+            "void*"
+          ],
+          "return_type": "void*",
+          "logic": "Visits a RegExpDisjunction node, recursively visiting each alternative."
+        },
+        {
+          "name": "VisitAlternative",
+          "parameters": [
+            "RegExpAlternative* node",
+            "void*"
+          ],
+          "return_type": "void*",
+          "logic": "Visits a RegExpAlternative node, recursively visiting each child node."
+        },
+        {
+          "name": "VisitClassRanges",
+          "parameters": [
+            "RegExpClassRanges* node",
+            "void*"
+          ],
+          "return_type": "void*",
+          "logic": "Visits a RegExpClassRanges node. Does nothing."
+        },
+        {
+          "name": "VisitClassSetOperand",
+          "parameters": [
+            "RegExpClassSetOperand* node",
+            "void*"
+          ],
+          "return_type": "void*",
+          "logic": "Visits a RegExpClassSetOperand node. Does nothing."
+        },
+        {
+          "name": "VisitClassSetExpression",
+          "parameters": [
+            "RegExpClassSetExpression* node",
+            "void*"
+          ],
+          "return_type": "void*",
+          "logic": "Visits a RegExpClassSetExpression node. Does nothing."
+        },
+        {
+          "name": "VisitAssertion",
+          "parameters": [
+            "RegExpAssertion* node",
+            "void*"
+          ],
+          "return_type": "void*",
+          "logic": "Visits a RegExpAssertion node. Does nothing."
+        },
+        {
+          "name": "VisitAtom",
+          "parameters": [
+            "RegExpAtom* node",
+            "void*"
+          ],
+          "return_type": "void*",
+          "logic": "Visits a RegExpAtom node. Does nothing."
+        },
+        {
+          "name": "VisitText",
+          "parameters": [
+            "RegExpText* node",
+            "void*"
+          ],
+          "return_type": "void*",
+          "logic": "Visits a RegExpText node. Does nothing."
+        },
+        {
+          "name": "VisitQuantifier",
+          "parameters": [
+            "RegExpQuantifier* node",
+            "void*"
+          ],
+          "return_type": "void*",
+          "logic": "Visits a RegExpQuantifier node. If can_compile_node_ is true, it compiles a FILTER_QUANTIFIER instruction. Otherwise, it adds the node to the nodes_ queue."
+        },
+        {
+          "name": "VisitCapture",
+          "parameters": [
+            "RegExpCapture* node",
+            "void*"
+          ],
+          "return_type": "void*",
+          "logic": "Visits a RegExpCapture node. If can_compile_node_ is true, it compiles a FILTER_GROUP instruction. Otherwise, it adds the node to the nodes_ queue."
+        },
+        {
+          "name": "VisitGroup",
+          "parameters": [
+            "RegExpGroup* node",
+            "void*"
+          ],
+          "return_type": "void*",
+          "logic": "Visits a RegExpGroup node, recursively visiting its body."
+        },
+        {
+          "name": "VisitLookaround",
+          "parameters": [
+            "RegExpLookaround* node",
+            "void*"
+          ],
+          "return_type": "void*",
+          "logic": "Visits a RegExpLookaround node. If can_compile_node_ is true, it compiles a FILTER_LOOKAROUND instruction. Otherwise, it adds the node to the nodes_ queue."
+        },
+        {
+          "name": "VisitBackReference",
+          "parameters": [
+            "RegExpBackReference* node",
+            "void*"
+          ],
+          "return_type": "void*",
+          "logic": "Visits a RegExpBackReference node. Does nothing."
+        },
+        {
+          "name": "VisitEmpty",
+          "parameters": [
+            "RegExpEmpty* node",
+            "void*"
+          ],
+          "return_type": "void*",
+          "logic": "Visits a RegExpEmpty node. Does nothing."
+        }
+      ]
+    },
+    {
+      "name": "BFEntry",
+      "properties": [
+        "label",
+        "node"
+      ],
+      "methods": [
+        {
+          "name": "BFEntry",
+          "parameters": [
+            "RegExpTree* node"
+          ],
+          "return_type": "explicit",
+          "logic": "Constructor for BFEntry struct"
+        }
+      ]
+    },
+    {
+      "name": "CompileVisitor",
+      "properties": [
+        "zone_",
+        "lookarounds_",
+        "quantifier_id_remapping_",
+        "lookaround_id_remapping_",
+        "assembler_",
+        "reverse_",
+        "ignore_captures_",
+        "ignore_lookarounds_"
+      ],
+      "methods": [
+        {
+          "name": "Compile",
+          "parameters": [
+            "RegExpTree* tree",
+            "RegExpFlags flags",
+            "Zone* zone"
+          ],
+          "return_type": "static ZoneList<RegExpInstruction>",
+          "logic": "Static method to compile a RegExpTree into bytecode. Creates a CompileVisitor, performs an initial `.*?` preamble if unanchored, sets the registers to capture groups, visits the tree to generate bytecode, and then performs filter group compilation."
+        },
+        {
+          "name": "CompileVisitor",
+          "parameters": [
+            "Zone* zone"
+          ],
+          "return_type": "explicit",
+          "logic": "Constructor for CompileVisitor. Initializes members of the class, including the assembler, zone, lookbehinds queue, quantifier ID remapping, and various flags."
+        },
+        {
+          "name": "CompileLookaround",
+          "parameters": [
+            "RegExpLookaround* lookaround"
+          ],
+          "return_type": "void",
+          "logic": "Compiles all of the bytecode sections required to filter a lookaround."
+        },
+        {
+          "name": "CompileDisjunction",
+          "parameters": [
+            "int alt_num",
+            "F&& gen_alt"
+          ],
+          "return_type": "void",
+          "logic": "Compiles a disjunction of code fragments generated by a function `gen_alt`."
+        },
+        {
+          "name": "VisitDisjunction",
+          "parameters": [
+            "RegExpDisjunction* node",
+            "void*"
+          ],
+          "return_type": "void*",
+          "logic": "Visits a RegExpDisjunction node, calling CompileDisjunction to handle the alternatives."
+        },
+        {
+          "name": "VisitAlternative",
+          "parameters": [
+            "RegExpAlternative* node",
+            "void*"
+          ],
+          "return_type": "void*",
+          "logic": "Visits a RegExpAlternative node, recursively visiting the children in order, or reverse order if reverse_ is set."
+        },
+        {
+          "name": "VisitAssertion",
+          "parameters": [
+            "RegExpAssertion* node",
+            "void*"
+          ],
+          "return_type": "void*",
+          "logic": "Visits a RegExpAssertion node, adding an Assertion instruction to the bytecode."
+        },
+        {
+          "name": "CompileCharacterRanges",
+          "parameters": [
+            "ZoneList<CharacterRange>* ranges",
+            "bool negated"
+          ],
+          "return_type": "void",
+          "logic": "Compiles a set of character ranges into bytecode, handling negation and range consolidation."
+        },
+        {
+          "name": "VisitClassRanges",
+          "parameters": [
+            "RegExpClassRanges* node",
+            "void*"
+          ],
+          "return_type": "void*",
+          "logic": "Visits a RegExpClassRanges node, calling CompileCharacterRanges to handle the character ranges."
+        },
+        {
+          "name": "VisitClassSetOperand",
+          "parameters": [
+            "RegExpClassSetOperand* node",
+            "void*"
+          ],
+          "return_type": "void*",
+          "logic": "Visits a RegExpClassSetOperand node, calling CompileCharacterRanges to handle the character ranges."
+        },
+        {
+          "name": "VisitClassSetExpression",
+          "parameters": [
+            "RegExpClassSetExpression* node",
+            "void*"
+          ],
+          "return_type": "void*",
+          "logic": "Visits a RegExpClassSetExpression node. Unreachable."
+        },
+        {
+          "name": "VisitAtom",
+          "parameters": [
+            "RegExpAtom* node",
+            "void*"
+          ],
+          "return_type": "void*",
+          "logic": "Visits a RegExpAtom node, adding ConsumeRange instructions for each character in the atom."
+        },
+        {
+          "name": "ClearRegisters",
+          "parameters": [
+            "Interval indices"
+          ],
+          "return_type": "void",
+          "logic": "Clears registers specified by an Interval by adding ClearRegister instructions to the bytecode."
+        },
+        {
+          "name": "CompileGreedyStar",
+          "parameters": [
+            "F&& emit_body"
+          ],
+          "return_type": "void",
+          "logic": "Emits bytecode corresponding to /<emit_body>*/.  This is a greedy star."
+        },
+        {
+          "name": "CompileNonGreedyStar",
+          "parameters": [
+            "F&& emit_body"
+          ],
+          "return_type": "void",
+          "logic": "Emits bytecode corresponding to /<emit_body>*?/. This is a non-greedy star."
+        },
+        {
+          "name": "CompileGreedyRepetition",
+          "parameters": [
+            "F&& emit_body",
+            "int max_repetition_num"
+          ],
+          "return_type": "void",
+          "logic": "Emits bytecode corresponding to /<emit_body>{0, max_repetition_num}/.  This is a greedy repetition."
+        },
+        {
+          "name": "CompileNonGreedyRepetition",
+          "parameters": [
+            "F&& emit_body",
+            "int max_repetition_num"
+          ],
+          "return_type": "void",
+          "logic": "Emits bytecode corresponding to /<emit_body>{0, max_repetition_num}?/. This is a non-greedy repetition."
+        },
+        {
+          "name": "CompileNonNullableGreedyPlus",
+          "parameters": [
+            "F&& emit_body"
+          ],
+          "return_type": "void",
+          "logic": "Emits bytecode corresponding to /<emit_body>+/, where <emit_body> is not nullable.  This is a greedy plus with non-nullable body."
+        },
+        {
+          "name": "CompileNonNullableNonGreedyPlus",
+          "parameters": [
+            "F&& emit_body"
+          ],
+          "return_type": "void",
+          "logic": "Emits bytecode corresponding to /<emit_body>+?/, where <emit_body> is not nullable.  This is a non-greedy plus with non-nullable body."
+        },
+        {
+          "name": "VisitQuantifier",
+          "parameters": [
+            "RegExpQuantifier* node",
+            "void*"
+          ],
+          "return_type": "void*",
+          "logic": "Visits a RegExpQuantifier node, handling the quantifier based on its type (greedy, non-greedy, possessive), min, and max values."
+        },
+        {
+          "name": "VisitCapture",
+          "parameters": [
+            "RegExpCapture* node",
+            "void*"
+          ],
+          "return_type": "void*",
+          "logic": "Visits a RegExpCapture node, setting the start and end registers to capture the group."
+        },
+        {
+          "name": "VisitGroup",
+          "parameters": [
+            "RegExpGroup* node",
+            "void*"
+          ],
+          "return_type": "void*",
+          "logic": "Visits a RegExpGroup node, recursively visiting the group's body."
+        },
+        {
+          "name": "VisitLookaround",
+          "parameters": [
+            "RegExpLookaround* node",
+            "void*"
+          ],
+          "return_type": "void*",
+          "logic": "Visits a RegExpLookaround node, reads the lookaround table, and adds the lookaround to the queue for later processing."
+        },
+        {
+          "name": "VisitBackReference",
+          "parameters": [
+            "RegExpBackReference* node",
+            "void*"
+          ],
+          "return_type": "void*",
+          "logic": "Visits a RegExpBackReference node. Unreachable."
+        },
+        {
+          "name": "VisitEmpty",
+          "parameters": [
+            "RegExpEmpty* node",
+            "void*"
+          ],
+          "return_type": "void*",
+          "logic": "Visits a RegExpEmpty node. Does nothing."
+        },
+        {
+          "name": "VisitText",
+          "parameters": [
+            "RegExpText* node",
+            "void*"
+          ],
+          "return_type": "void*",
+          "logic": "Visits a RegExpText node, recursively visiting each TextElement."
+        },
+        {
+          "name": "RemapQuantifier",
+          "parameters": [
+            "int id"
+          ],
+          "return_type": "int",
+          "logic": "Remaps quantifier ID to make them contiguous and stores the value in a map"
+        },
+        {
+          "name": "RemapLookaround",
+          "parameters": [
+            "int id"
+          ],
+          "return_type": "int",
+          "logic": "Remaps the lookaround ID to make sure the lookaround table doesn't have holes when certain nodes are optimized out. Returns the remapped ID."
+        }
+      ]
+    }
+  ],
+  "functions": [
+    {
+      "name": "ExperimentalRegExpCompiler::CanBeHandled",
+      "parameters": [
+        "RegExpTree* tree",
+        "RegExpFlags flags",
+        "int capture_count"
+      ],
+      "return_type": "bool",
+      "logic": "Checks if a RegExpTree can be handled by the experimental regular expression engine using the CanBeHandledVisitor."
+    },
+    {
+      "name": "ExperimentalRegExpCompiler::Compile",
+      "parameters": [
+        "RegExpTree* tree",
+        "RegExpFlags flags",
+        "Zone* zone"
+      ],
+      "return_type": "ZoneList<RegExpInstruction>",
+      "logic": "Compiles a RegExpTree into a list of RegExpInstructions using the CompileVisitor."
+    }
+  ]
+}
