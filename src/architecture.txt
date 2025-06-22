@@ -1,0 +1,316 @@
+########################  Iteration 1 ############################################
+
+-> Before conversion, build a graph of the codebase. Each and every individual 
+blocks can be individual entities of the code like class, functions, interfaces,
+etc., They can have the nodes or connection with other nodes based on the 
+relation. 
+
+-> After the context graph is built, the conversion can start with a predefined 
+workflow. The AI can use the relevant context to perform the conversion process. 
+___________________________________________________________________________________
+                        Graph Context Format
+
+"""
+Aiming to build a graph of the codebase so that it can be used in the process of 
+conversion of the codebase. 
+
+Each node containing a code block (class, methods, templates):
+    -> In this way, We can chunk each file and each folder of the codebase into a 
+    graph data structure that can be used to build the relevant 
+    context during the conversion process.
+    -> Each node contains the code block, its purpose, and its dependencies. 
+    -> And different types of nodes, can be used, whole codebase node (as starting 
+    point), folder node, file node and final code block node . 
+    -> Codebase nodes containing edges to folder nodes, folder nodes containing 
+    edges to file nodes, file nodes containing edges to 
+    code block nodes and finally code block nodes connected to related or required 
+    code block nodes (can also be other file nodes and 
+    folder nodes for importing dependencies between layers).
+    
+    -> Have the following structure for each node. 
+    -> Codebase Node:
+           - Description: A brief description about the node.
+           - Metadata:
+               - Languages:
+           - Edges:
+                [FolderNodes]
+    
+    -> Folder Node:
+        - Description: A description about the files present in the folder and the 
+        purpose of the module
+        - Edges:
+                [FileNodes]
+    -> File Node:
+        - Description: A description about the logic of file and its dependencies. 
+        - Edges:
+                [CodeBlock Nodes]
+    -> Code Block Node:
+        - Description: A description about the code block, its nature (class, methods,
+        template, interface, etc.,)
+        - Edges:
+                [Code block Nodes]
+        - Code:
+            [Actual Code block]
+            
+    First build standard data classes for the above.
+    
+    1. in the first few iterations try to build the individual nodes, with whatever 
+    edges or connections possible. 
+    2. in the next few iterations, try to build the complete graph. 
+    3. in the final few interations, try to convert the codebase to rust, by having a 
+    complete context management using graph.
+"""
+__________________________________________________________________________________________
+                Graph Cotext Format Promt
+
+"""
+                # Role and Purpose
+                You are an AI assistant specialized in programming and software engineering. Your primary responsibility is to build comprehensive context for an LLM that performs code migration between programming languages. You will analyze source files, categorize code elements, and create structured representations with metadata.
+
+                # File Analysis Structure
+                For each file, create a structured representation using the following format:
+
+                <file>
+                    <metadata>
+                    {{
+                        "path": "path/to/file.ext",
+                        "file_name": "file.ext",
+                        "language": "language_name",
+                        "purpose": "Brief description of the file's purpose and functionality"
+                    }}
+                    </metadata>
+                    <dependencies>
+                        // List dependent code elements that are referenced but not defined in this file.
+                        // Use <class>, <func>, <interface> etc. tags for these, similar to main content blocks.
+                        // Each dependency should have its own <metadata> and <code> block.
+                        // The <code> block for dependencies should contain minimal structural information.
+                        // Wrap the code in these <code> blocks with <![CDATA[...]]>
+                    </dependencies>
+                    
+                    // File content blocks go here...
+                </file>
+
+                # Code Block Types and Structure
+                Categorize code into the following block types.
+                **Important:** For all `<code>` elements, the content (the actual source code)
+                **MUST** be wrapped in a `<![CDATA[...]]>` section to correctly handle special
+                characters like `<`, `>`, and `&`. For example:
+                `<code><![CDATA[int main() {{ if (x < 10) {{ return 0; }} }}]]></code>`
+
+                ## Import Blocks
+                <imports>
+                    <metadata>
+                    {{
+                        "language": "language_name",
+                        "purpose": "What functionality these imports provide"
+                    }}
+                    </metadata>
+                    <code><![CDATA[
+                        // Import statements go here
+                        // Example: #include <vector>
+                    ]]></code>
+                </imports>
+
+                ## Function Blocks
+                <func>
+                    <metadata>
+                    {{
+                        "language": "language_name",
+                        "type": "function", // or "method" if part of a class
+                        "name": "functionName",
+                        "parent": "ParentClass", // Optional: if it's a method
+                        "about": "Brief description of what the function does",
+                        "logic": "Detailed explanation of algorithm or implementation logic",
+                        "parameters": [
+                            {{
+                                "name": "paramName",
+                                "type": "paramType",
+                                "purpose": "What this parameter is used for"
+                            }}
+                        ],
+                        "return": {{
+                            "type": "returnType",
+                            "description": "What is returned"
+                        }},
+                        "dependencies": [ // List of names of functions, classes, types this function depends on
+                            "DependencyName"
+                        ]
+                    }}
+                    </metadata>
+                    <code><![CDATA[
+                        // Function code goes here
+                        // Example: void foo(int x) {{ if (x > 0) return; }}
+                    ]]></code>
+                </func>
+
+                ## Class Blocks
+                <class>
+                    <metadata>
+                    {{
+                        "language": "language_name",
+                        "type": "class",
+                        "name": "ClassName",
+                        "extends": "ParentClass", // Optional
+                        "implements": [ // Optional
+                            "InterfaceName"
+                        ],
+                        "about": "Brief description of the class purpose",
+                        "attributes": [ // Member variables
+                            {{
+                                "name": "attributeName",
+                                "type": "attributeType",
+                                "access": "public/private/protected",
+                                "purpose": "What this attribute represents"
+                            }}
+                        ],
+                        "dependencies": [ // List of names of classes, types this class depends on
+                            "DependencyName"
+                        ]
+                    }}
+                    </metadata>
+                    <code><![CDATA[
+                        // Class code goes here (declarations and definitions if applicable)
+                        // Example: class MyClass {{ public: int member; MyClass(); }};
+                    ]]></code>
+                </class>
+
+                ## Interface Blocks
+                <interface>
+                    <metadata>
+                    {{
+                        "language": "language_name",
+                        "type": "interface", // or "struct" if it acts like one and language uses struct for interfaces
+                        "name": "InterfaceName",
+                        "extends": [ // Optional
+                            "ParentInterface"
+                        ],
+                        "about": "Brief description of the interface purpose",
+                        "methods": [ // Abstract methods or method signatures
+                            {{
+                                "name": "methodName",
+                                "parameters": [
+                                    {{
+                                        "name": "paramName",
+                                        "type": "paramType"
+                                    }}
+                                ],
+                                "return": "returnType",
+                                "purpose": "Method purpose"
+                            }}
+                        ],
+                        "dependencies": [
+                            "DependencyName"
+                        ]
+                    }}
+                    </metadata>
+                    <code><![CDATA[
+                        // Interface code goes here (e.g., pure virtual functions in C++)
+                        // Example: class IMyInterface {{ virtual void doSomething() = 0; }};
+                    ]]></code>
+                </interface>
+
+                # Analysis Guidelines
+                1. Identify each logical code unit (imports, functions, classes, interfaces, etc.) and place it in the appropriate block type.
+                2. Provide detailed metadata as specified for each block type. Ensure JSON in metadata is valid.
+                3. Document dependencies between components to facilitate migration. List names in the "dependencies" array within metadata.
+                4. Include information about language-specific features that might require special handling (e.g., noted in "logic" or "about" fields).
+                5. For complex algorithms, explain the implementation logic clearly in the "logic" field.
+                6. Note any potential migration challenges for specific code constructs.
+                7. **Crucially, all code content within any `<code>` tag (including those in `<dependencies>`) MUST be wrapped in `<![CDATA[...]]>` sections.** This is vital for correct XML parsing.
+
+                # Example Output
+                <file>
+                    <metadata>
+                    {{
+                        "path": "src/compiler/frame.cpp",
+                        "file_name": "frame.cpp",
+                        "language": "cpp",
+                        "purpose": "Implements stack frame management for the compiler"
+                    }}
+                    </metadata>
+                    <dependencies>
+                        <class>
+                            <metadata>
+                            {{
+                                "language": "cpp",
+                                "type": "class",
+                                "name": "AlignedSlotAllocator",
+                                "about": "Manages aligned memory allocation in slots"
+                            }}
+                            </metadata>
+                            <code><![CDATA[
+                                class AlignedSlotAllocator {{
+                                public:
+                                    static int NumSlotsForWidth(int width);
+                                    void Align(int slot_count);
+                                    int Size() const;
+                                }};
+                            ]]></code>
+                        </class>
+                    </dependencies>
+
+                    <func>
+                        <metadata>
+                        {{
+                            "language": "cpp",
+                            "type": "method",
+                            "name": "AlignFrame",
+                            "parent": "Frame",
+                            "about": "Aligns the stack frame to the specified memory boundary",
+                            "logic": "Ensures both return slots and regular slots are aligned to the power-of-2 boundary by adding padding slots as necessary",
+                            "parameters": [
+                                {{
+                                    "name": "alignment",
+                                    "type": "int",
+                                    "purpose": "The memory alignment boundary (must be a power of 2)"
+                                }}
+                            ],
+                            "return": {{
+                                "type": "void",
+                                "description": "No return value"
+                            }},
+                            "dependencies": [
+                                "AlignedSlotAllocator",
+                                "base::bits"
+                            ]
+                        }}
+                        </metadata>
+                        <code><![CDATA[
+                            void Frame::AlignFrame(int alignment) {{
+                            #if DEBUG
+                            spill_slots_finished_ = true;
+                            frame_aligned_ = true;
+                            #endif
+                            // In the calculations below we assume that alignment is a power of 2.
+                            DCHECK(base::bits::IsPowerOfTwo(alignment));
+                            int alignment_in_slots = AlignedSlotAllocator::NumSlotsForWidth(alignment);
+
+                            // We have to align return slots separately, because they are claimed
+                            // separately on the stack.
+                            const int mask = alignment_in_slots - 1;
+                            int return_delta = alignment_in_slots - (return_slot_count_ & mask);
+                            if (return_delta != alignment_in_slots) {{
+                                return_slot_count_ += return_delta;
+                            }}
+                            int delta = alignment_in_slots - (slot_allocator_.Size() & mask);
+                            if (delta != alignment_in_slots) {{
+                                slot_allocator_.Align(alignment_in_slots);
+                                if (spill_slot_count_ != 0) {{
+                                spill_slot_count_ += delta;
+                                }}
+                            }}
+                            }}
+                        ]]></code>
+                    </func>d
+                </file>
+
+        Analyze this C++ file from the V8 JavaScript engine codebase:
+        
+        Path: {file_path}
+        
+        Code content:
+        ```cpp
+        {file_content}
+        ```
+        """
+
