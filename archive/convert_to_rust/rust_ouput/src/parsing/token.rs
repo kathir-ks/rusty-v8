@@ -1,0 +1,755 @@
+// Converted from V8 C++ source files:
+// Header: token.h
+// Implementation: token.cc
+// 
+// This file combines both header and implementation into idiomatic Rust code.
+
+pub mod token {
+    pub enum TokenValue {
+        kTemplateSpan,
+        kTemplateTail,
+        kPeriod,
+        kLeftBracket,
+        kQuestionPeriod,
+        kLeftParen,
+        kRightParen,
+        kRightBracket,
+        kLeftBrace,
+        kColon,
+        kEllipsis,
+        kConditional,
+        kSemicolon,
+        kRightBrace,
+        kEos,
+        kArrow,
+        kInit,
+        kAssign,
+        kAssignNullish,
+        kAssignOr,
+        kAssignAnd,
+        kAssignBitOr,
+        kAssignBitXor,
+        kAssignBitAnd,
+        kAssignShl,
+        kAssignSar,
+        kAssignShr,
+        kAssignMul,
+        kAssignDiv,
+        kAssignMod,
+        kAssignExp,
+        kAssignAdd,
+        kAssignSub,
+        kComma,
+        kNullish,
+        kOr,
+        kAnd,
+        kBitOr,
+        kBitXor,
+        kBitAnd,
+        kShl,
+        kSar,
+        kShr,
+        kMul,
+        kDiv,
+        kMod,
+        kExp,
+        kAdd,
+        kSub,
+        kNot,
+        kBitNot,
+        kDelete,
+        kTypeOf,
+        kVoid,
+        kInc,
+        kDec,
+        kEq,
+        kEqStrict,
+        kNotEq,
+        kNotEqStrict,
+        kLessThan,
+        kGreaterThan,
+        kLessThanEq,
+        kGreaterThanEq,
+        kInstanceOf,
+        kIn,
+        kBreak,
+        kCase,
+        kCatch,
+        kContinue,
+        kDebugger,
+        kDefault,
+        kDo,
+        kElse,
+        kFinally,
+        kFor,
+        kFunction,
+        kIf,
+        kNew,
+        kReturn,
+        kSwitch,
+        kThrow,
+        kTry,
+        kVar,
+        kWhile,
+        kWith,
+        kThis,
+        kNullLiteral,
+        kTrueLiteral,
+        kFalseLiteral,
+        kNumber,
+        kSmi,
+        kBigInt,
+        kString,
+        kSuper,
+        kIdentifier,
+        kGet,
+        kSet,
+        kUsing,
+        kOf,
+        kAccessor,
+        kAsync,
+        kAwait,
+        kYield,
+        kLet,
+        kStatic,
+        kFutureStrictReservedWord,
+        kEscapedStrictReservedWord,
+        kEnum,
+        kClass,
+        kConst,
+        kExport,
+        kExtends,
+        kImport,
+        kPrivateName,
+        kIllegal,
+        kEscapedKeyword,
+        kWhitespace,
+        kUninitialized,
+        kRegExpLiteral,
+        kNumTokens,
+    }
+
+    impl TokenValue {
+        pub fn as_u8(&self) -> u8 {
+            match self {
+                TokenValue::kTemplateSpan => 0,
+                TokenValue::kTemplateTail => 1,
+                TokenValue::kPeriod => 2,
+                TokenValue::kLeftBracket => 3,
+                TokenValue::kQuestionPeriod => 4,
+                TokenValue::kLeftParen => 5,
+                TokenValue::kRightParen => 6,
+                TokenValue::kRightBracket => 7,
+                TokenValue::kLeftBrace => 8,
+                TokenValue::kColon => 9,
+                TokenValue::kEllipsis => 10,
+                TokenValue::kConditional => 11,
+                TokenValue::kSemicolon => 12,
+                TokenValue::kRightBrace => 13,
+                TokenValue::kEos => 14,
+                TokenValue::kArrow => 15,
+                TokenValue::kInit => 16,
+                TokenValue::kAssign => 17,
+                TokenValue::kAssignNullish => 18,
+                TokenValue::kAssignOr => 19,
+                TokenValue::kAssignAnd => 20,
+                TokenValue::kAssignBitOr => 21,
+                TokenValue::kAssignBitXor => 22,
+                TokenValue::kAssignBitAnd => 23,
+                TokenValue::kAssignShl => 24,
+                TokenValue::kAssignSar => 25,
+                TokenValue::kAssignShr => 26,
+                TokenValue::kAssignMul => 27,
+                TokenValue::kAssignDiv => 28,
+                TokenValue::kAssignMod => 29,
+                TokenValue::kAssignExp => 30,
+                TokenValue::kAssignAdd => 31,
+                TokenValue::kAssignSub => 32,
+                TokenValue::kComma => 33,
+                TokenValue::kNullish => 34,
+                TokenValue::kOr => 35,
+                TokenValue::kAnd => 36,
+                TokenValue::kBitOr => 37,
+                TokenValue::kBitXor => 38,
+                TokenValue::kBitAnd => 39,
+                TokenValue::kShl => 40,
+                TokenValue::kSar => 41,
+                TokenValue::kShr => 42,
+                TokenValue::kMul => 43,
+                TokenValue::kDiv => 44,
+                TokenValue::kMod => 45,
+                TokenValue::kExp => 46,
+                TokenValue::kAdd => 47,
+                TokenValue::kSub => 48,
+                TokenValue::kNot => 49,
+                TokenValue::kBitNot => 50,
+                TokenValue::kDelete => 51,
+                TokenValue::kTypeOf => 52,
+                TokenValue::kVoid => 53,
+                TokenValue::kInc => 54,
+                TokenValue::kDec => 55,
+                TokenValue::kEq => 56,
+                TokenValue::kEqStrict => 57,
+                TokenValue::kNotEq => 58,
+                TokenValue::kNotEqStrict => 59,
+                TokenValue::kLessThan => 60,
+                TokenValue::kGreaterThan => 61,
+                TokenValue::kLessThanEq => 62,
+                TokenValue::kGreaterThanEq => 63,
+                TokenValue::kInstanceOf => 64,
+                TokenValue::kIn => 65,
+                TokenValue::kBreak => 66,
+                TokenValue::kCase => 67,
+                TokenValue::kCatch => 68,
+                TokenValue::kContinue => 69,
+                TokenValue::kDebugger => 70,
+                TokenValue::kDefault => 71,
+                TokenValue::kDo => 72,
+                TokenValue::kElse => 73,
+                TokenValue::kFinally => 74,
+                TokenValue::kFor => 75,
+                TokenValue::kFunction => 76,
+                TokenValue::kIf => 77,
+                TokenValue::kNew => 78,
+                TokenValue::kReturn => 79,
+                TokenValue::kSwitch => 80,
+                TokenValue::kThrow => 81,
+                TokenValue::kTry => 82,
+                TokenValue::kVar => 83,
+                TokenValue::kWhile => 84,
+                TokenValue::kWith => 85,
+                TokenValue::kThis => 86,
+                TokenValue::kNullLiteral => 87,
+                TokenValue::kTrueLiteral => 88,
+                TokenValue::kFalseLiteral => 89,
+                TokenValue::kNumber => 90,
+                TokenValue::kSmi => 91,
+                TokenValue::kBigInt => 92,
+                TokenValue::kString => 93,
+                TokenValue::kSuper => 94,
+                TokenValue::kIdentifier => 95,
+                TokenValue::kGet => 96,
+                TokenValue::kSet => 97,
+                TokenValue::kUsing => 98,
+                TokenValue::kOf => 99,
+                TokenValue::kAccessor => 100,
+                TokenValue::kAsync => 101,
+                TokenValue::kAwait => 102,
+                TokenValue::kYield => 103,
+                TokenValue::kLet => 104,
+                TokenValue::kStatic => 105,
+                TokenValue::kFutureStrictReservedWord => 106,
+                TokenValue::kEscapedStrictReservedWord => 107,
+                TokenValue::kEnum => 108,
+                TokenValue::kClass => 109,
+                TokenValue::kConst => 110,
+                TokenValue::kExport => 111,
+                TokenValue::kExtends => 112,
+                TokenValue::kImport => 113,
+                TokenValue::kPrivateName => 114,
+                TokenValue::kIllegal => 115,
+                TokenValue::kEscapedKeyword => 116,
+                TokenValue::kWhitespace => 117,
+                TokenValue::kUninitialized => 118,
+                TokenValue::kRegExpLiteral => 119,
+                TokenValue::kNumTokens => 120,
+            }
+        }
+    }
+
+    pub struct Token {
+        value: TokenValue,
+    }
+
+    impl Token {
+        pub fn new(value: TokenValue) -> Self {
+            Token { value }
+        }
+
+        pub fn name(token: TokenValue) -> &'static str {
+            match token {
+                TokenValue::kTemplateSpan => "kTemplateSpan",
+                TokenValue::kTemplateTail => "kTemplateTail",
+                TokenValue::kPeriod => "kPeriod",
+                TokenValue::kLeftBracket => "kLeftBracket",
+                TokenValue::kQuestionPeriod => "kQuestionPeriod",
+                TokenValue::kLeftParen => "kLeftParen",
+                TokenValue::kRightParen => "kRightParen",
+                TokenValue::kRightBracket => "kRightBracket",
+                TokenValue::kLeftBrace => "kLeftBrace",
+                TokenValue::kColon => "kColon",
+                TokenValue::kEllipsis => "kEllipsis",
+                TokenValue::kConditional => "kConditional",
+                TokenValue::kSemicolon => "kSemicolon",
+                TokenValue::kRightBrace => "kRightBrace",
+                TokenValue::kEos => "kEos",
+                TokenValue::kArrow => "kArrow",
+                TokenValue::kInit => "kInit",
+                TokenValue::kAssign => "kAssign",
+                TokenValue::kAssignNullish => "kAssignNullish",
+                TokenValue::kAssignOr => "kAssignOr",
+                TokenValue::kAssignAnd => "kAssignAnd",
+                TokenValue::kAssignBitOr => "kAssignBitOr",
+                TokenValue::kAssignBitXor => "kAssignBitXor",
+                TokenValue::kAssignBitAnd => "kAssignBitAnd",
+                TokenValue::kAssignShl => "kAssignShl",
+                TokenValue::kAssignSar => "kAssignSar",
+                TokenValue::kAssignShr => "kAssignShr",
+                TokenValue::kAssignMul => "kAssignMul",
+                TokenValue::kAssignDiv => "kAssignDiv",
+                TokenValue::kAssignMod => "kAssignMod",
+                TokenValue::kAssignExp => "kAssignExp",
+                TokenValue::kAssignAdd => "kAssignAdd",
+                TokenValue::kAssignSub => "kAssignSub",
+                TokenValue::kComma => "kComma",
+                TokenValue::kNullish => "kNullish",
+                TokenValue::kOr => "kOr",
+                TokenValue::kAnd => "kAnd",
+                TokenValue::kBitOr => "kBitOr",
+                TokenValue::kBitXor => "kBitXor",
+                TokenValue::kBitAnd => "kBitAnd",
+                TokenValue::kShl => "kShl",
+                TokenValue::kSar => "kSar",
+                TokenValue::kShr => "kShr",
+                TokenValue::kMul => "kMul",
+                TokenValue::kDiv => "kDiv",
+                TokenValue::kMod => "kMod",
+                TokenValue::kExp => "kExp",
+                TokenValue::kAdd => "kAdd",
+                TokenValue::kSub => "kSub",
+                TokenValue::kNot => "kNot",
+                TokenValue::kBitNot => "kBitNot",
+                TokenValue::kDelete => "kDelete",
+                TokenValue::kTypeOf => "kTypeOf",
+                TokenValue::kVoid => "kVoid",
+                TokenValue::kInc => "kInc",
+                TokenValue::kDec => "kDec",
+                TokenValue::kEq => "kEq",
+                TokenValue::kEqStrict => "kEqStrict",
+                TokenValue::kNotEq => "kNotEq",
+                TokenValue::kNotEqStrict => "kNotEqStrict",
+                TokenValue::kLessThan => "kLessThan",
+                TokenValue::kGreaterThan => "kGreaterThan",
+                TokenValue::kLessThanEq => "kLessThanEq",
+                TokenValue::kGreaterThanEq => "kGreaterThanEq",
+                TokenValue::kInstanceOf => "kInstanceOf",
+                TokenValue::kIn => "kIn",
+                TokenValue::kBreak => "kBreak",
+                TokenValue::kCase => "kCase",
+                TokenValue::kCatch => "kCatch",
+                TokenValue::kContinue => "kContinue",
+                TokenValue::kDebugger => "kDebugger",
+                TokenValue::kDefault => "kDefault",
+                TokenValue::kDo => "kDo",
+                TokenValue::kElse => "kElse",
+                TokenValue::kFinally => "kFinally",
+                TokenValue::kFor => "kFor",
+                TokenValue::kFunction => "kFunction",
+                TokenValue::kIf => "kIf",
+                TokenValue::kNew => "kNew",
+                TokenValue::kReturn => "kReturn",
+                TokenValue::kSwitch => "kSwitch",
+                TokenValue::kThrow => "kThrow",
+                TokenValue::kTry => "kTry",
+                TokenValue::kVar => "kVar",
+                TokenValue::kWhile => "kWhile",
+                TokenValue::kWith => "kWith",
+                TokenValue::kThis => "kThis",
+                TokenValue::kNullLiteral => "kNullLiteral",
+                TokenValue::kTrueLiteral => "kTrueLiteral",
+                TokenValue::kFalseLiteral => "kFalseLiteral",
+                TokenValue::kNumber => "kNumber",
+                TokenValue::kSmi => "kSmi",
+                TokenValue::kBigInt => "kBigInt",
+                TokenValue::kString => "kString",
+                TokenValue::kSuper => "kSuper",
+                TokenValue::kIdentifier => "kIdentifier",
+                TokenValue::kGet => "kGet",
+                TokenValue::kSet => "kSet",
+                TokenValue::kUsing => "kUsing",
+                TokenValue::kOf => "kOf",
+                TokenValue::kAccessor => "kAccessor",
+                TokenValue::kAsync => "kAsync",
+                TokenValue::kAwait => "kAwait",
+                TokenValue::kYield => "kYield",
+                TokenValue::kLet => "kLet",
+                TokenValue::kStatic => "kStatic",
+                TokenValue::kFutureStrictReservedWord => "kFutureStrictReservedWord",
+                TokenValue::kEscapedStrictReservedWord => "kEscapedStrictReservedWord",
+                TokenValue::kEnum => "kEnum",
+                TokenValue::kClass => "kClass",
+                TokenValue::kConst => "kConst",
+                TokenValue::kExport => "kExport",
+                TokenValue::kExtends => "kExtends",
+                TokenValue::kImport => "kImport",
+                TokenValue::kPrivateName => "kPrivateName",
+                TokenValue::kIllegal => "kIllegal",
+                TokenValue::kEscapedKeyword => "kEscapedKeyword",
+                TokenValue::kWhitespace => "kWhitespace",
+                TokenValue::kUninitialized => "kUninitialized",
+                TokenValue::kRegExpLiteral => "kRegExpLiteral",
+                TokenValue::kNumTokens => "kNumTokens",
+            }
+        }
+
+        pub fn is_keyword(token: TokenValue) -> bool {
+            Self::is_keyword_bits_decode(Self::token_flags(token))
+        }
+
+        pub fn is_property_name(token: TokenValue) -> bool {
+            Self::is_property_name_bits_decode(Self::token_flags(token))
+        }
+
+        pub fn is_valid_identifier(
+            token: TokenValue,
+            language_mode: super::LanguageMode,
+            is_generator: bool,
+            disallow_await: bool,
+        ) -> bool {
+            if Self::is_in_range(token, TokenValue::kIdentifier, TokenValue::kAsync) {
+                return true;
+            }
+            if token == TokenValue::kAwait {
+                return !disallow_await;
+            }
+            if token == TokenValue::kYield {
+                return !is_generator && is_sloppy(language_mode);
+            }
+            Self::is_strict_reserved_word(token) && is_sloppy(language_mode)
+        }
+
+        pub fn is_callable(token: TokenValue) -> bool {
+            Self::is_in_range(token, TokenValue::kSuper, TokenValue::kEscapedStrictReservedWord)
+        }
+
+        pub fn is_auto_semicolon(token: TokenValue) -> bool {
+            Self::is_in_range(token, TokenValue::kSemicolon, TokenValue::kEos)
+        }
+
+        pub fn is_any_identifier(token: TokenValue) -> bool {
+            Self::is_in_range(token, TokenValue::kIdentifier, TokenValue::kEscapedStrictReservedWord)
+        }
+
+        pub fn is_strict_reserved_word(token: TokenValue) -> bool {
+            Self::is_in_range(token, TokenValue::kYield, TokenValue::kEscapedStrictReservedWord)
+        }
+
+        pub fn is_literal(token: TokenValue) -> bool {
+            Self::is_in_range(token, TokenValue::kNullLiteral, TokenValue::kString)
+        }
+
+        pub fn is_template(token: TokenValue) -> bool {
+            Self::is_in_range(token, TokenValue::kTemplateSpan, TokenValue::kTemplateTail)
+        }
+
+        pub fn is_member(token: TokenValue) -> bool {
+            Self::is_in_range(token, TokenValue::kTemplateSpan, TokenValue::kLeftBracket)
+        }
+
+        pub fn is_property(token: TokenValue) -> bool {
+            Self::is_in_range(token, TokenValue::kPeriod, TokenValue::kLeftBracket)
+        }
+
+        pub fn is_property_or_call(token: TokenValue) -> bool {
+            Self::is_in_range(token, TokenValue::kTemplateSpan, TokenValue::kLeftParen)
+        }
+
+        pub fn is_arrow_or_assignment_op(token: TokenValue) -> bool {
+            Self::is_in_range(token, TokenValue::kArrow, TokenValue::kAssignSub)
+        }
+
+        pub fn is_assignment_op(token: TokenValue) -> bool {
+            Self::is_in_range(token, TokenValue::kInit, TokenValue::kAssignSub)
+        }
+
+        pub fn is_logical_assignment_op(token: TokenValue) -> bool {
+            Self::is_in_range(token, TokenValue::kAssignNullish, TokenValue::kAssignAnd)
+        }
+
+        pub fn is_binary_op(op: TokenValue) -> bool {
+            Self::is_in_range(op, TokenValue::kComma, TokenValue::kSub)
+        }
+
+        pub fn is_compare_op(op: TokenValue) -> bool {
+            Self::is_in_range(op, TokenValue::kEq, TokenValue::kIn)
+        }
+
+        pub fn is_ordered_relational_compare_op(op: TokenValue) -> bool {
+            Self::is_in_range(op, TokenValue::kLessThan, TokenValue::kGreaterThanEq)
+        }
+
+        pub fn is_equality_op(op: TokenValue) -> bool {
+            Self::is_in_range(op, TokenValue::kEq, TokenValue::kEqStrict)
+        }
+
+        pub fn binary_op_for_assignment(op: TokenValue) -> TokenValue {
+            assert!(Self::is_in_range(op, TokenValue::kAssignNullish, TokenValue::kAssignSub));
+            let result =
+                unsafe { std::mem::transmute((op.as_u8() - TokenValue::kAssignNullish.as_u8() + TokenValue::kNullish.as_u8()) as u8) };
+            let result = unsafe { std::mem::transmute(result) };
+            assert!(Self::is_binary_op(result));
+            result
+        }
+
+        pub fn is_bit_op(op: TokenValue) -> bool {
+            Self::is_in_range(op, TokenValue::kBitOr, TokenValue::kShr) || op == TokenValue::kBitNot
+        }
+
+        pub fn is_unary_op(op: TokenValue) -> bool {
+            Self::is_in_range(op, TokenValue::kAdd, TokenValue::kVoid)
+        }
+        pub fn is_count_op(op: TokenValue) -> bool {
+            Self::is_in_range(op, TokenValue::kInc, TokenValue::kDec)
+        }
+        pub fn is_unary_or_count_op(op: TokenValue) -> bool {
+            Self::is_in_range(op, TokenValue::kAdd, TokenValue::kDec)
+        }
+        pub fn is_shift_op(op: TokenValue) -> bool {
+            Self::is_in_range(op, TokenValue::kShl, TokenValue::kShr)
+        }
+
+        pub fn string(token: TokenValue) -> &'static str {
+            match token {
+                TokenValue::kTemplateSpan => std::ptr::null::<char>() as &str,
+                TokenValue::kTemplateTail => std::ptr::null::<char>() as &str,
+                TokenValue::kPeriod => ".",
+                TokenValue::kLeftBracket => "[",
+                TokenValue::kQuestionPeriod => "?.",
+                TokenValue::kLeftParen => "(",
+                TokenValue::kRightParen => ")",
+                TokenValue::kRightBracket => "]",
+                TokenValue::kLeftBrace => "{",
+                TokenValue::kColon => ":",
+                TokenValue::kEllipsis => "...",
+                TokenValue::kConditional => "?",
+                TokenValue::kSemicolon => ";",
+                TokenValue::kRightBrace => "}",
+                TokenValue::kEos => "EOS",
+                TokenValue::kArrow => "=>",
+                TokenValue::kInit => "=init",
+                TokenValue::kAssign => "=",
+                TokenValue::kAssignNullish => "??=",
+                TokenValue::kAssignOr => "||=",
+                TokenValue::kAssignAnd => "&&=",
+                TokenValue::kAssignBitOr => "|=",
+                TokenValue::kAssignBitXor => "^=",
+                TokenValue::kAssignBitAnd => "&=",
+                TokenValue::kAssignShl => "<<=",
+                TokenValue::kAssignSar => ">>=",
+                TokenValue::kAssignShr => ">>>=",
+                TokenValue::kAssignMul => "*=",
+                TokenValue::kAssignDiv => "/=",
+                TokenValue::kAssignMod => "%=",
+                TokenValue::kAssignExp => "**=",
+                TokenValue::kAssignAdd => "+=",
+                TokenValue::kAssignSub => "-=",
+                TokenValue::kComma => ",",
+                TokenValue::kNullish => "??",
+                TokenValue::kOr => "||",
+                TokenValue::kAnd => "&&",
+                TokenValue::kBitOr => "|",
+                TokenValue::kBitXor => "^",
+                TokenValue::kBitAnd => "&",
+                TokenValue::kShl => "<<",
+                TokenValue::kSar => ">>",
+                TokenValue::kShr => ">>>",
+                TokenValue::kMul => "*",
+                TokenValue::kDiv => "/",
+                TokenValue::kMod => "%",
+                TokenValue::kExp => "**",
+                TokenValue::kAdd => "+",
+                TokenValue::kSub => "-",
+                TokenValue::kNot => "!",
+                TokenValue::kBitNot => "~",
+                TokenValue::kDelete => "delete",
+                TokenValue::kTypeOf => "typeof",
+                TokenValue::kVoid => "void",
+                TokenValue::kInc => "++",
+                TokenValue::kDec => "--",
+                TokenValue::kEq => "==",
+                TokenValue::kEqStrict => "===",
+                TokenValue::kNotEq => "!=",
+                TokenValue::kNotEqStrict => "!==",
+                TokenValue::kLessThan => "<",
+                TokenValue::kGreaterThan => ">",
+                TokenValue::kLessThanEq => "<=",
+                TokenValue::kGreaterThanEq => ">=",
+                TokenValue::kInstanceOf => "instanceof",
+                TokenValue::kIn => "in",
+                TokenValue::kBreak => "break",
+                TokenValue::kCase => "case",
+                TokenValue::kCatch => "catch",
+                TokenValue::kContinue => "continue",
+                TokenValue::kDebugger => "debugger",
+                TokenValue::kDefault => "default",
+                TokenValue::kDo => "do",
+                TokenValue::kElse => "else",
+                TokenValue::kFinally => "finally",
+                TokenValue::kFor => "for",
+                TokenValue::kFunction => "function",
+                TokenValue::kIf => "if",
+                TokenValue::kNew => "new",
+                TokenValue::kReturn => "return",
+                TokenValue::kSwitch => "switch",
+                TokenValue::kThrow => "throw",
+                TokenValue::kTry => "try",
+                TokenValue::kVar => "var",
+                TokenValue::kWhile => "while",
+                TokenValue::kWith => "with",
+                TokenValue::kThis => "this",
+                TokenValue::kNullLiteral => "null",
+                TokenValue::kTrueLiteral => "true",
+                TokenValue::kFalseLiteral => "false",
+                TokenValue::kNumber => std::ptr::null::<char>() as &str,
+                TokenValue::kSmi => std::ptr::null::<char>() as &str,
+                TokenValue::kBigInt => std::ptr::null::<char>() as &str,
+                TokenValue::kString => std::ptr::null::<char>() as &str,
+                TokenValue::kSuper => "super",
+                TokenValue::kIdentifier => std::ptr::null::<char>() as &str,
+                TokenValue::kGet => "get",
+                TokenValue::kSet => "set",
+                TokenValue::kUsing => "using",
+                TokenValue::kOf => "of",
+                TokenValue::kAccessor => "accessor",
+                TokenValue::kAsync => "async",
+                TokenValue::kAwait => "await",
+                TokenValue::kYield => "yield",
+                TokenValue::kLet => "let",
+                TokenValue::kStatic => "static",
+                TokenValue::kFutureStrictReservedWord => std::ptr::null::<char>() as &str,
+                TokenValue::kEscapedStrictReservedWord => std::ptr::null::<char>() as &str,
+                TokenValue::kEnum => "enum",
+                TokenValue::kClass => "class",
+                TokenValue::kConst => "const",
+                TokenValue::kExport => "export",
+                TokenValue::kExtends => "extends",
+                TokenValue::kImport => "import",
+                TokenValue::kPrivateName => std::ptr::null::<char>() as &str,
+                TokenValue::kIllegal => "ILLEGAL",
+                TokenValue::kEscapedKeyword => std::ptr::null::<char>() as &str,
+                TokenValue::kWhitespace => std::ptr::null::<char>() as &str,
+                TokenValue::kUninitialized => std::ptr::null::<char>() as &str,
+                TokenValue::kRegExpLiteral => std::ptr::null::<char>() as &str,
+                TokenValue::kNumTokens => "kNumTokens",
+            }
+        }
+
+        pub fn string_length(token: TokenValue) -> u8 {
+            match token {
+                TokenValue::kTemplateSpan => 0,
+                TokenValue::kTemplateTail => 0,
+                TokenValue::kPeriod => 1,
+                TokenValue::kLeftBracket => 1,
+                TokenValue::kQuestionPeriod => 2,
+                TokenValue::kLeftParen => 1,
+                TokenValue::kRightParen => 1,
+                TokenValue::kRightBracket => 1,
+                TokenValue::kLeftBrace => 1,
+                TokenValue::kColon => 1,
+                TokenValue::kEllipsis => 3,
+                TokenValue::kConditional => 1,
+                TokenValue::kSemicolon => 1,
+                TokenValue::kRightBrace => 1,
+                TokenValue::kEos => 3,
+                TokenValue::kArrow => 2,
+                TokenValue::kInit => 5,
+                TokenValue::kAssign => 1,
+                TokenValue::kAssignNullish => 3,
+                TokenValue::kAssignOr => 3,
+                TokenValue::kAssignAnd => 3,
+                TokenValue::kAssignBitOr => 2,
+                TokenValue::kAssignBitXor => 2,
+                TokenValue::kAssignBitAnd => 2,
+                TokenValue::kAssignShl => 3,
+                TokenValue::kAssignSar => 3,
+                TokenValue::kAssignShr => 4,
+                TokenValue::kAssignMul => 2,
+                TokenValue::kAssignDiv => 2,
+                TokenValue::kAssignMod => 2,
+                TokenValue::kAssignExp => 3,
+                TokenValue::kAssignAdd => 2,
+                TokenValue::kAssignSub => 2,
+                TokenValue::kComma => 1,
+                TokenValue::kNullish => 2,
+                TokenValue::kOr => 2,
+                TokenValue::kAnd => 2,
+                TokenValue::kBitOr => 1,
+                TokenValue::kBitXor => 1,
+                TokenValue::kBitAnd => 1,
+                TokenValue::kShl => 2,
+                TokenValue::kSar => 2,
+                TokenValue::kShr => 3,
+                TokenValue::kMul => 1,
+                TokenValue::kDiv => 1,
+                TokenValue::kMod => 1,
+                TokenValue::kExp => 2,
+                TokenValue::kAdd => 1,
+                TokenValue::kSub => 1,
+                TokenValue::kNot => 1,
+                TokenValue::kBitNot => 1,
+                TokenValue::kDelete => 6,
+                TokenValue::kTypeOf => 6,
+                TokenValue::kVoid => 4,
+                TokenValue::kInc => 2,
+                TokenValue::kDec => 2,
+                TokenValue::kEq => 2,
+                TokenValue::kEqStrict => 3,
+                TokenValue::kNotEq => 2,
+                TokenValue::kNotEqStrict => 3,
+                TokenValue::kLessThan => 1,
+                TokenValue::kGreaterThan => 1,
+                TokenValue::kLessThanEq => 2,
+                TokenValue::kGreaterThanEq => 2,
+                TokenValue::kInstanceOf => 10,
+                TokenValue::kIn => 2,
+                TokenValue::kBreak => 5,
+                TokenValue::kCase => 4,
+                TokenValue::kCatch => 5,
+                TokenValue::kContinue => 8,
+                TokenValue::kDebugger => 8,
+                TokenValue::kDefault => 7,
+                TokenValue::kDo => 2,
+                TokenValue::kElse => 4,
+                TokenValue::kFinally => 7,
+                TokenValue::kFor => 3,
+                TokenValue::kFunction => 8,
+                TokenValue::kIf => 2,
+                TokenValue::kNew => 3,
+                TokenValue::kReturn => 6,
+                TokenValue::kSwitch => 6,
+                TokenValue::kThrow => 5,
+                TokenValue::kTry => 3,
+                TokenValue::kVar => 3,
+                TokenValue::kWhile => 5,
+                TokenValue::kWith => 4,
+                TokenValue::kThis => 4,
+                TokenValue::kNullLiteral => 4,
+                TokenValue::kTrueLiteral => 4,
+                TokenValue::kFalseLiteral => 5,
+                TokenValue::kNumber => 0,
+                TokenValue::kSmi => 0,
+                TokenValue::kBigInt => 0,
+                TokenValue::kString => 0,
+                TokenValue::kSuper => 5,
+                TokenValue::kIdentifier => 0,
+                TokenValue::kGet => 3,
+                TokenValue::kSet => 3,
+                TokenValue::kUsing => 5,
+                TokenValue::kOf => 2,
+                TokenValue::kAccessor => 8,
+                TokenValue::kAsync => 5,
+                TokenValue::kAwait => 5,
+                TokenValue::kYield => 5,
+                TokenValue::kLet => 3,
+                TokenValue::kStatic => 6,
+                TokenValue::kFutureStrictReservedWord => 0,
+                TokenValue::kEscapedStrictReservedWord => 0,
+                TokenValue::kEnum => 4,
+                TokenValue::kClass => 5,
+                TokenValue::kConst => 5,
+                TokenValue::kExport => 6,
+                TokenValue::kExtends => 7,
+                TokenValue::kImport => 6,
+                TokenValue::kPrivateName => 0,
+                TokenValue::kIllegal => 7,
+                
