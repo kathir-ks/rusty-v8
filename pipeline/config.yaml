@@ -1,0 +1,41 @@
+# V8 C++ to Rust Conversion Pipeline — Configuration
+
+source:
+  root: "../codebase"
+  include_dir: "include"
+  src_dir: "src"
+  extensions: [".h", ".cc", ".cpp"]
+  exclude_patterns:
+    - "**/test/**"
+    - "**/testing/**"
+    - "**/*_unittest*"
+    - "**/*_test.*"
+    - "**/*-test.*"
+
+output:
+  root: "../output/v8-rust"
+
+cache:
+  dir: "../.pipeline-cache"
+
+model:
+  # Provider: "claude" or "gemini"
+  provider: "gemini"
+  # Model name (provider-specific)
+  name: "gemini-2.0-flash"
+  # Environment variable holding the API key
+  api_key_env: "GEMINI_API_KEY"
+  # Maximum tokens per response
+  max_tokens: 8192
+
+conversion:
+  # Max files to convert per AI call
+  batch_size: 5
+  # Max parallel conversion workers (for future use)
+  max_concurrent: 4
+  # Retry failed API calls up to N times
+  max_retries: 3
+  # Max file size in bytes before truncation
+  max_file_size: 150000
+  # Delay between retries (seconds, multiplied by attempt number)
+  retry_delay: 5
