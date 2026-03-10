@@ -2,7 +2,7 @@
 
 Converts modules in the order defined by the conversion plan, passing
 already-converted dependency context to each subsequent module.
-Files within large modules are batched to stay within token limits.
+Files are batched by estimated token count to respect API token limits.
 """
 
 import logging
@@ -12,7 +12,7 @@ from pathlib import Path
 
 from converter.config import PipelineConfig
 from converter.graph.types import ConversionPlan, ModuleInfo
-from converter.models.provider import ModelProvider
+from converter.models.provider import ModelProvider, estimate_tokens
 from converter.models.prompts import SYSTEM_PROMPT, module_conversion_prompt
 from converter.utils.cache import PipelineCache
 
@@ -144,6 +144,55 @@ def write_crate(
     (src_dir / "lib.rs").write_text("\n".join(lib_lines))
 
 
+def create_token_batches(
+    source_files: list[dict],
+    dep_context: str,
+    module_name: str,
+    crate_name: str,
+    max_batch_files: int,
+    max_input_tokens: int = 100_000,
+) -> list[list[dict]]:
+    """Split source files into batches that fit within the token budget.
+
+    Each batch is sized so that the full prompt (system + files + context)
+    stays under max_input_tokens.  Falls back to single-file batches for
+    very large files.
+    """
+    # Fixed overhead: system prompt + dependency context + prompt template
+    overhead = estimate_tokens(SYSTEM_PROMPT) + estimate_tokens(dep_context) + 500
+
+    batches: list[list[dict]] = []
+    current_batch: list[dict] = []
+    current_tokens = overhead
+
+    for f in source_files:
+        file_tokens = estimate_tokens(f["content"]) + 50  # +50 for the file header
+        # If a single file exceeds the budget, it gets its own batch (truncated later)
+        if file_tokens + overhead > max_input_tokens:
+            if current_batch:
+                batches.append(current_batch)
+                current_batch = []
+                current_tokens = overhead
+            batches.append([f])
+            continue
+
+        # Would adding this file exceed the budget or max file count?
+        if (current_tokens + file_tokens > max_input_tokens
+                or len(current_batch) >= max_batch_files):
+            if current_batch:
+                batches.append(current_batch)
+            current_batch = [f]
+            current_tokens = overhead + file_tokens
+        else:
+            current_batch.append(f)
+            current_tokens += file_tokens
+
+    if current_batch:
+        batches.append(current_batch)
+
+    return batches
+
+
 def convert_module(
     config: PipelineConfig,
     module: ModuleInfo,
@@ -162,20 +211,34 @@ def convert_module(
         logger.warning(f"  [{module.name}] No source files found, skipping")
         return {}
 
-    batch_size = config.conversion.batch_size
+    dep_context = build_dependency_context(module, converted)
+
+    # Token-aware batching: keep each prompt under ~100K input tokens
+    # to leave room for output within the 250K TPM window
+    batches = create_token_batches(
+        source_files=source_files,
+        dep_context=dep_context,
+        module_name=module.name,
+        crate_name=module.crate_name,
+        max_batch_files=config.conversion.batch_size,
+        max_input_tokens=100_000,
+    )
+
+    total_tokens = sum(estimate_tokens(f["content"]) for f in source_files)
+    logger.info(
+        f"  [{module.name}] {len(source_files)} files, "
+        f"~{total_tokens:,} tokens -> {len(batches)} batches"
+    )
+
     all_output_files: dict[str, str] = {}
 
-    for batch_start in range(0, len(source_files), batch_size):
-        batch = source_files[batch_start:batch_start + batch_size]
-        batch_num = batch_start // batch_size + 1
-        total_batches = (len(source_files) + batch_size - 1) // batch_size
-
+    for batch_num, batch in enumerate(batches, 1):
+        batch_tokens = sum(estimate_tokens(f["content"]) for f in batch)
         logger.info(
-            f"  [{module.name}] batch {batch_num}/{total_batches} "
-            f"({len(batch)} files)"
+            f"  [{module.name}] batch {batch_num}/{len(batches)} "
+            f"({len(batch)} files, ~{batch_tokens:,} tokens)"
         )
 
-        dep_context = build_dependency_context(module, converted)
         prompt = module_conversion_prompt(
             module_name=module.name,
             source_files=batch,
@@ -246,4 +309,9 @@ def run(
             logger.warning(f"  [{module.name}] No output produced")
 
     logger.info(f"Conversion complete: {len(converted)}/{total} modules")
+
+    # Print quota usage if using a rotating provider
+    if hasattr(provider, "usage_summary"):
+        logger.info(provider.usage_summary())
+
     return converted

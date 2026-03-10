@@ -19,18 +19,24 @@ cache:
   dir: "../.pipeline-cache"
 
 model:
-  # Provider: "claude", "gemini", or "openrouter"
-  provider: "gemini"
-  # Model name (provider-specific)
-  # OpenRouter free models (often rate-limited):
-  #   qwen/qwen3-coder:free
-  #   qwen/qwen3-235b-a22b:free
-  #   meta-llama/llama-4-maverick:free
-  #   google/gemma-3-27b-it:free
-  name: "gemini-2.0-flash"
-  # Environment variable holding the API key
+  # Providers: "claude", "gemini", "gemini-rotating", "openrouter"
+  #
+  # "gemini-rotating" — Recommended for free-tier usage.
+  #   Rotates across all free Gemini models to maximize daily throughput:
+  #     gemini-2.5-flash-lite : 15 RPM, 1,000 RPD
+  #     gemini-2.5-flash      : 10 RPM,   250 RPD
+  #     gemini-2.5-pro        :  5 RPM,   100 RPD
+  #     gemini-2.0-flash      :  5 RPM,   100 RPD
+  #   Total: ~1,350 free requests/day (~6,750 files at batch_size=5)
+  #
+  # "gemini" — Single Gemini model (no rotation).
+  # "claude" — Anthropic Claude (paid).
+  # "openrouter" — OpenRouter (free models often rate-limited):
+  #     qwen/qwen3-coder:free, meta-llama/llama-4-maverick:free
+  #
+  provider: "gemini-rotating"
+  name: "auto"
   api_key_env: "GEMINI_API_KEY"
-  # Maximum tokens per response
   max_tokens: 8192
 
 conversion:
