@@ -25,6 +25,8 @@ def module_conversion_prompt(
     source_files: list[dict],
     dependency_context: str = "",
     crate_name: str = "",
+    type_inventory: str = "",
+    prior_batch_context: str = "",
 ) -> str:
     crate = crate_name or f"v8_{module_name.replace('-', '_')}"
 
@@ -43,10 +45,41 @@ Use them directly — do not redefine them.
 {dependency_context}
 """
 
+    type_section = ""
+    if type_inventory:
+        type_section = f"""
+## Module Type Inventory
+
+The following C++ types, enums, and constants are defined across ALL files in
+the `{module_name}` module (not just the files in this batch). Use this
+inventory to ensure consistent type usage. When you encounter a reference to
+one of these types, use the same Rust name consistently. Define shared types
+in the file where they are most naturally used, and `use` them in other files.
+
+```cpp
+{type_inventory}
+```
+"""
+
+    prior_section = ""
+    if prior_batch_context:
+        prior_section = f"""
+## Already Converted in This Module (prior batches)
+
+The following Rust types, functions, and constants have already been generated
+by earlier batches of this same module. Do NOT redefine them — instead, import
+them with `use crate::<module>::<item>`. Ensure your code is compatible with
+these existing definitions.
+
+```rust
+{prior_batch_context}
+```
+"""
+
     return f"""\
 Convert the following C++ files from V8's `{module_name}` module to Rust.
 The output will be part of the `{crate}` crate.
-{dep_section}
+{dep_section}{type_section}{prior_section}
 ## C++ Source Files
 {files_section}
 

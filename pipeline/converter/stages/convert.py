@@ -15,6 +15,7 @@ from converter.graph.types import ConversionPlan, ModuleInfo
 from converter.models.provider import ModelProvider, estimate_tokens
 from converter.models.prompts import SYSTEM_PROMPT, module_conversion_prompt
 from converter.utils.cache import PipelineCache
+from converter.utils.cpp_parser import extract_type_inventory
 
 logger = logging.getLogger(__name__)
 
@@ -123,7 +124,7 @@ def write_crate(
         f'[package]\nname = "{module.crate_name}"\nversion = "0.1.0"\n'
         f'edition = "2021"\n\n[dependencies]\n{deps_toml}\n'
     )
-    (crate_dir / "Cargo.toml").write_text(cargo_toml)
+    (crate_dir / "Cargo.toml").write_text(cargo_toml, encoding="utf-8")
 
     # Write source files
     mod_names = []
@@ -134,14 +135,14 @@ def write_crate(
         if mod_name not in ("lib", "mod"):
             mod_names.append(mod_name)
 
-        (src_dir / safe).write_text(content)
+        (src_dir / safe).write_text(content, encoding="utf-8")
 
     # lib.rs with module declarations
     lib_lines = ["// Auto-generated — do not edit by hand", ""]
     for mod_name in sorted(set(mod_names)):
         lib_lines.append(f"pub mod {mod_name};")
     lib_lines.append("")
-    (src_dir / "lib.rs").write_text("\n".join(lib_lines))
+    (src_dir / "lib.rs").write_text("\n".join(lib_lines), encoding="utf-8")
 
 
 def create_token_batches(
@@ -151,6 +152,8 @@ def create_token_batches(
     crate_name: str,
     max_batch_files: int,
     max_input_tokens: int = 100_000,
+    type_inventory: str = "",
+    prior_batch_context: str = "",
 ) -> list[list[dict]]:
     """Split source files into batches that fit within the token budget.
 
@@ -158,8 +161,15 @@ def create_token_batches(
     stays under max_input_tokens.  Falls back to single-file batches for
     very large files.
     """
-    # Fixed overhead: system prompt + dependency context + prompt template
-    overhead = estimate_tokens(SYSTEM_PROMPT) + estimate_tokens(dep_context) + 500
+    # Fixed overhead: system prompt + dependency context + type inventory
+    # + prior batch context + prompt template boilerplate
+    overhead = (
+        estimate_tokens(SYSTEM_PROMPT)
+        + estimate_tokens(dep_context)
+        + estimate_tokens(type_inventory)
+        + estimate_tokens(prior_batch_context)
+        + 500
+    )
 
     batches: list[list[dict]] = []
     current_batch: list[dict] = []
@@ -193,6 +203,28 @@ def create_token_batches(
     return batches
 
 
+def extract_pub_items(files: dict[str, str]) -> str:
+    """Extract pub signatures from already-converted Rust files.
+
+    Used by Feature B (cumulative batch context) so that later batches
+    within the same module can see what earlier batches defined.
+    """
+    parts: list[str] = []
+
+    for filename, content in sorted(files.items()):
+        pub_lines = []
+        for line in content.split("\n"):
+            stripped = line.strip()
+            # Capture pub type/fn/struct/enum/const/trait/mod/use declarations
+            if stripped.startswith("pub "):
+                pub_lines.append(stripped)
+        if pub_lines:
+            parts.append(f"// {filename}")
+            parts.extend(pub_lines[:30])  # cap per file to keep context lean
+
+    return "\n".join(parts)
+
+
 def convert_module(
     config: PipelineConfig,
     module: ModuleInfo,
@@ -213,8 +245,18 @@ def convert_module(
 
     dep_context = build_dependency_context(module, converted)
 
+    # Feature C: extract a type inventory from ALL source files in the module
+    # so every batch knows what types, enums, and constants exist module-wide.
+    type_inventory = extract_type_inventory(source_files)
+    if type_inventory:
+        inv_tokens = estimate_tokens(type_inventory)
+        logger.info(f"  [{module.name}] Type inventory: ~{inv_tokens:,} tokens")
+
     # Token-aware batching: keep each prompt under ~100K input tokens
-    # to leave room for output within the 250K TPM window
+    # to leave room for output within the 250K TPM window.
+    # Note: type_inventory is included in overhead; prior_batch_context
+    # grows per batch but we estimate with an initial empty value here.
+    # Individual batches may be slightly larger as prior context grows.
     batches = create_token_batches(
         source_files=source_files,
         dep_context=dep_context,
@@ -222,6 +264,7 @@ def convert_module(
         crate_name=module.crate_name,
         max_batch_files=config.conversion.batch_size,
         max_input_tokens=100_000,
+        type_inventory=type_inventory,
     )
 
     total_tokens = sum(estimate_tokens(f["content"]) for f in source_files)
@@ -239,11 +282,24 @@ def convert_module(
             f"({len(batch)} files, ~{batch_tokens:,} tokens)"
         )
 
+        # Feature B: build cumulative context from prior batches in this module
+        prior_batch_context = ""
+        if all_output_files:
+            prior_batch_context = extract_pub_items(all_output_files)
+            if prior_batch_context:
+                ctx_tokens = estimate_tokens(prior_batch_context)
+                logger.info(
+                    f"  [{module.name}] Prior batch context: "
+                    f"~{ctx_tokens:,} tokens from {len(all_output_files)} files"
+                )
+
         prompt = module_conversion_prompt(
             module_name=module.name,
             source_files=batch,
             dependency_context=dep_context,
             crate_name=module.crate_name,
+            type_inventory=type_inventory,
+            prior_batch_context=prior_batch_context,
         )
 
         for attempt in range(config.conversion.max_retries):
