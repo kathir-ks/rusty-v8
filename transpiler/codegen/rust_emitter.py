@@ -373,14 +373,20 @@ class RustEmitter:
         source = re.sub(r'(\w+)\+\+\s*;', r'\1 += 1;', source)
         source = re.sub(r'(\w+)--\s*;', r'\1 -= 1;', source)
 
-        # 13. Fix remaining raw DCHECK/CHECK/RUNTIME_FUNCTION calls
+        # 13. Fix remaining raw DCHECK/CHECK/RUNTIME_FUNCTION/UNREACHABLE calls
         source = re.sub(r'\bDCHECK\(([^)]+)\)', r'debug_assert!(\1)', source)
         source = re.sub(r'\bCHECK\(([^)]+)\)', r'assert!(\1)', source)
         source = re.sub(r'\bRUNTIME_FUNCTION\(([^)]+)\)', r'/* RUNTIME_FUNCTION(\1) */', source)
+        source = re.sub(r'\bruntime_function\(([^)]+)\)', r'/* runtime_function(\1) */', source)
+        source = re.sub(r'\bUNREACHABLE\(\)', r'unreachable!()', source)
+        source = re.sub(r'\bcheck\(([^)]+)\)', r'assert!(\1)', source)
+        # V8 macros without parens at statement level
+        source = re.sub(r'^\s*UNREACHABLE\s*;', '    unreachable!();', source, flags=re.MULTILINE)
 
-        # 14. Fix C++ stream output: cerr/cout
+        # 14. Fix C++ stream output: cerr/cout/ostream
         source = re.sub(r'\bcerr\b', 'eprintln!', source)
         source = re.sub(r'\bcout\b', 'println!', source)
+        source = re.sub(r'\bstd::ostream\b', 'ostream', source)
 
         # 15. Strip C++ digit separators: 0x0010'0000'0000'0000 → 0x0010_0000_0000_0000
         #     Must also match hex digits (a-fA-F)
@@ -394,7 +400,29 @@ class RustEmitter:
         # 17. Fix C-style array declarations: Type[] → Vec<Type>
         source = re.sub(r'(\w+)\[\]', r'Vec<\1>', source)
 
-        # 18. Fix `value as Type <<` being parsed as generics
+        # 18. Fix chained comparisons: `a == 1 == a == 3` → `a == 1 || a == 3`
+        #     Apply repeatedly until no more matches.
+        for _ in range(20):  # max iterations to prevent infinite loop
+            new = re.sub(
+                r'(\w+)\s*==\s*(\w+)\s*==\s*(\1)\s*==',
+                r'\1 == \2 || \3 ==',
+                source,
+            )
+            if new == source:
+                break
+            source = new
+        # Also fix <= / >= chains: `a <= b <= a` → `a <= b && a`
+        for _ in range(20):
+            new = re.sub(
+                r'(\w+)\s*(<=|>=)\s*(\w+)\s*\2\s*',
+                r'\1 \2 \3 && ',
+                source,
+            )
+            if new == source:
+                break
+            source = new
+
+        # 19. Fix `value as Type <<` being parsed as generics
         #     Wrap `expr as Type` in parens when followed by <<
         source = re.sub(r'(\w+)\s+as\s+(\w+)\s*<<', r'(\1 as \2) <<', source)
         source = re.sub(r'(\w+)\s+as\s+(\w+)\s*>>', r'(\1 as \2) >>', source)
