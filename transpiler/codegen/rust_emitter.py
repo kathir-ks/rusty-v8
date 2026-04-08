@@ -400,22 +400,13 @@ class RustEmitter:
         # 17. Fix C-style array declarations: Type[] → Vec<Type>
         source = re.sub(r'(\w+)\[\]', r'Vec<\1>', source)
 
-        # 18. Fix chained comparisons: `a == 1 == a == 3` → `a == 1 || a == 3`
+        # 18. Fix chained == comparisons: `a == 1 == a == 3` → `a == 1 || a == 3`
+        #     Only fix `==` chains where the same variable repeats.
         #     Apply repeatedly until no more matches.
-        for _ in range(20):  # max iterations to prevent infinite loop
+        for _ in range(20):
             new = re.sub(
                 r'(\w+)\s*==\s*(\w+)\s*==\s*(\1)\s*==',
                 r'\1 == \2 || \3 ==',
-                source,
-            )
-            if new == source:
-                break
-            source = new
-        # Also fix <= / >= chains: `a <= b <= a` → `a <= b && a`
-        for _ in range(20):
-            new = re.sub(
-                r'(\w+)\s*(<=|>=)\s*(\w+)\s*\2\s*',
-                r'\1 \2 \3 && ',
                 source,
             )
             if new == source:
