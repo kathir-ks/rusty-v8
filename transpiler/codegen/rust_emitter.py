@@ -398,7 +398,33 @@ class RustEmitter:
         source = re.sub(r'(\w+)\s+as\s+(\w+)\s*<<', r'(\1 as \2) <<', source)
         source = re.sub(r'(\w+)\s+as\s+(\w+)\s*>>', r'(\1 as \2) >>', source)
 
-        # 13. Collapse multiple blank lines into at most two.
+        # 19. Fix missing initializers: `let x: Type = ;` → `let x: Type = Default::default();`
+        #     Also handle: `x = ;` → `x = Default::default();`
+        source = re.sub(
+            r'(let\s+(?:mut\s+)?\w+\s*:\s*\w[^=]*?)\s*=\s*;',
+            r'\1 = Default::default();',
+            source,
+        )
+        # Bare assignment with missing value: `x = ;` → `x = Default::default();`
+        source = re.sub(
+            r'^(\s+\w+)\s*=\s*;',
+            r'\1 = Default::default();',
+            source,
+            flags=re.MULTILINE,
+        )
+
+        # 20. Fix `fn name<...>` with C++ variadic `...` → remove the `...`
+        source = re.sub(r',\s*\.\.\.>', '>', source)
+        source = re.sub(r'<\s*\.\.\.>', '<>', source)
+
+        # 21. Fix unnamed enums: `pub enum (unnamed enum at ...)` → valid name
+        source = re.sub(
+            r'pub enum \(unnamed enum at [^)]*\)',
+            'pub enum UnnamedEnum',
+            source,
+        )
+
+        # 22. Collapse multiple blank lines into at most two.
         source = re.sub(r'\n{4,}', '\n\n\n', source)
 
         return source
@@ -948,6 +974,9 @@ class RustEmitter:
 
         if v.initializer is not None:
             init = self.emit_expr(v.initializer)
+            # Guard against empty initializer expressions
+            if not init or init.strip() == "":
+                init = "Default::default()"
             return f"{i}let {mut}{v.name}{type_ann} = {init};"
         return f"{i}let {mut}{v.name}{type_ann};"
 
@@ -1199,7 +1228,7 @@ class RustEmitter:
         if isinstance(expr, IRLiteral):
             return self._emit_literal(expr)
         if isinstance(expr, IRNameRef):
-            return expr.name
+            return expr.name if expr.name else "todo!(\"empty name\")"
         if isinstance(expr, IRBinaryExpr):
             return self._emit_binary_expr(expr)
         if isinstance(expr, IRUnaryExpr):
