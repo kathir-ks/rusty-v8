@@ -241,8 +241,15 @@ class RustEmitter:
 
         # 4. Fix debug_assert!/assert! with string literal + expression pattern
         #    from DCHECK expansion: debug_assert!("...", EXPR, "") → debug_assert!(EXPR)
+        #    Broadened to match any string-prefixed assert pattern.
         source = re.sub(
-            r'(debug_assert(?:_eq|_ne)?!)\s*\("(?:DCHECK|CHECK|SLOW_DCHECK)[^"]*",\s*([^,]+),\s*""\)',
+            r'(debug_assert(?:_eq|_ne)?!)\s*\("[^"]*",\s*([^,]+),\s*""\)',
+            r'\1(\2)',
+            source,
+        )
+        # Also handle: assert!("...", EXPR, "")
+        source = re.sub(
+            r'(assert(?:_eq|_ne)?!)\s*\("[^"]*",\s*([^,]+),\s*""\)',
             r'\1(\2)',
             source,
         )
@@ -315,7 +322,27 @@ class RustEmitter:
         source = re.sub(r'\bSIZE_MAX\b', 'usize::MAX', source)
         source = re.sub(r'\bnullptr\b', 'std::ptr::null()', source)
 
-        # 10. Collapse multiple blank lines into at most two.
+        # 10. Fix operator names leaked into call arguments
+        #     Pattern: func(operator++, ) → { func += 1; func }
+        source = re.sub(r'(\w+)\(operator\+\+,?\s*\)', r'{ \1 += 1; \1 }', source)
+        source = re.sub(r'(\w+)\(operator--,?\s*\)', r'{ \1 -= 1; \1 }', source)
+        #     Pattern: x(operator=, expr) → x = expr
+        source = re.sub(r'(\w+)\(operator=,\s*(.+?)\)', r'\1 = \2', source)
+        #     Pattern: x(operator., ...) → x.method(...)  (keep as todo for now)
+        source = re.sub(r'(\w+)\(operator\.,\s*', r'\1.todo_op(', source)
+
+        # 11. Fix leading/trailing commas in function call arguments
+        #     Pattern: func(, arg) → func(arg)
+        source = re.sub(r'\(\s*,\s*', '(', source)
+        #     Pattern: func(arg, ) → func(arg)
+        source = re.sub(r',\s*\)', ')', source)
+
+        # 12. Fix remaining postfix i++ in expression context
+        #     Pattern: expr++ at end of statement → expr += 1
+        source = re.sub(r'(\w+)\+\+\s*;', r'\1 += 1;', source)
+        source = re.sub(r'(\w+)--\s*;', r'\1 -= 1;', source)
+
+        # 13. Collapse multiple blank lines into at most two.
         source = re.sub(r'\n{4,}', '\n\n\n', source)
 
         return source
