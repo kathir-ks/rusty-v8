@@ -274,11 +274,41 @@ class RustEmitter:
         #    We protect lines containing `fn ... ) ->` and replace all others.
         _RET_ARROW = '\x00RET_ARROW\x00'
         # Protect return-type arrows: `fn name(...) -> RetType`
-        source = re.sub(
-            r'(fn\s+\w+\s*(?:<[^>]*>)?\s*\([^)]*\))\s*->',
-            lambda m: m.group().replace('->', _RET_ARROW),
-            source,
-        )
+        # Use a function to handle nested parens in parameter lists
+        def _protect_fn_arrows(source_text):
+            result = []
+            i = 0
+            while i < len(source_text):
+                # Look for `fn ` keyword
+                if source_text[i:i+3] == 'fn ' and (i == 0 or not source_text[i-1].isalnum()):
+                    # Find the opening paren of params
+                    j = source_text.find('(', i + 3)
+                    if j == -1:
+                        result.append(source_text[i])
+                        i += 1
+                        continue
+                    # Match balanced parens
+                    depth = 1
+                    k = j + 1
+                    while k < len(source_text) and depth > 0:
+                        if source_text[k] == '(':
+                            depth += 1
+                        elif source_text[k] == ')':
+                            depth -= 1
+                        k += 1
+                    # k is now past the closing paren. Check for ->
+                    while k < len(source_text) and source_text[k] in ' \t':
+                        k += 1
+                    if k + 1 < len(source_text) and source_text[k:k+2] == '->':
+                        result.append(source_text[i:k])
+                        result.append(_RET_ARROW)
+                        i = k + 2
+                        continue
+                result.append(source_text[i])
+                i += 1
+            return ''.join(result)
+
+        source = _protect_fn_arrows(source)
         source = source.replace('->', '.')
         source = source.replace(_RET_ARROW, '->')
 
@@ -350,6 +380,23 @@ class RustEmitter:
         # 14. Fix C++ stream output: cerr/cout
         source = re.sub(r'\bcerr\b', 'eprintln!', source)
         source = re.sub(r'\bcout\b', 'println!', source)
+
+        # 15. Strip C++ digit separators: 0x0010'0000'0000'0000 → 0x0010_0000_0000_0000
+        #     Must also match hex digits (a-fA-F)
+        source = re.sub(r"([0-9a-fA-F])'([0-9a-fA-F])", r'\1_\2', source)
+
+        # 16. Fix operator<< / operator>> function names → shift_left / shift_right
+        source = re.sub(r'\boperator<<', 'shift_left', source)
+        source = re.sub(r'\boperator>>', 'shift_right', source)
+        source = re.sub(r'\boperator!', 'not_op', source)
+
+        # 17. Fix C-style array declarations: Type[] → Vec<Type>
+        source = re.sub(r'(\w+)\[\]', r'Vec<\1>', source)
+
+        # 18. Fix `value as Type <<` being parsed as generics
+        #     Wrap `expr as Type` in parens when followed by <<
+        source = re.sub(r'(\w+)\s+as\s+(\w+)\s*<<', r'(\1 as \2) <<', source)
+        source = re.sub(r'(\w+)\s+as\s+(\w+)\s*>>', r'(\1 as \2) >>', source)
 
         # 13. Collapse multiple blank lines into at most two.
         source = re.sub(r'\n{4,}', '\n\n\n', source)
@@ -1132,11 +1179,12 @@ class RustEmitter:
 
     def _emit_raw_stmt(self, r: IRRawStmt) -> str:
         i = self._i()
-        # Emit raw C++ as a comment followed by todo!() so the code compiles
-        source = (r.cpp_source or "").replace('"', r'\"').replace('\n', ' ')
-        if len(source) > 100:
-            source = source[:100] + "..."
-        comment = r.comment or "raw C++"
+        # Emit raw C++ as a comment + todo!() so the code compiles.
+        # Strip all characters that could break the Rust string literal.
+        source = (r.cpp_source or "").replace('\n', ' ').replace('\\', '/').replace('"', "'")
+        if len(source) > 80:
+            source = source[:80] + "..."
+        comment = (r.comment or "raw C++").replace('"', "'").replace('\\', '/')
         return f'{i}todo!("{comment}: {source}"); // raw C++ statement'
 
     # -----------------------------------------------------------------------
@@ -1536,8 +1584,9 @@ class RustEmitter:
     def _emit_raw_expr(self, r: IRRawExpr) -> str:
         # Emit as todo!() — always valid Rust syntax, unlike /* comments */
         # which break when inside call arguments or expressions.
-        source = (r.cpp_source or "").replace('"', r'\"').replace('\n', ' ')
-        if len(source) > 100:
-            source = source[:100] + "..."
-        comment = r.comment or "manually translate"
+        # Strip all characters that could break the Rust string literal.
+        source = (r.cpp_source or "").replace('\n', ' ').replace('\\', '/').replace('"', "'")
+        if len(source) > 80:
+            source = source[:80] + "..."
+        comment = (r.comment or "manually translate").replace('"', "'").replace('\\', '/')
         return f'todo!("{comment}: {source}")'
