@@ -1096,12 +1096,12 @@ class RustEmitter:
 
     def _emit_raw_stmt(self, r: IRRawStmt) -> str:
         i = self._i()
-        parts: List[str] = []
-        if r.comment:
-            parts.append(f"{i}// {r.comment}")
-        for line in r.cpp_source.splitlines():
-            parts.append(f"{i}// {line}")
-        return "\n".join(parts) if parts else f"{i}// (empty raw statement)"
+        # Emit raw C++ as a comment followed by todo!() so the code compiles
+        source = (r.cpp_source or "").replace('"', r'\"').replace('\n', ' ')
+        if len(source) > 100:
+            source = source[:100] + "..."
+        comment = r.comment or "raw C++"
+        return f'{i}todo!("{comment}: {source}"); // raw C++ statement'
 
     # -----------------------------------------------------------------------
     # Expression emission
@@ -1164,8 +1164,13 @@ class RustEmitter:
             if not (val.startswith("'") and val.endswith("'")):
                 val = f"'{val}'"
             return val
-        # INT / FLOAT — pass through as-is (e.g., "42", "3.14f64")
-        return lit.value
+        # INT / FLOAT — strip C++ literal suffixes (ULL, LL, UL, U, u, L, f, F)
+        val = lit.value
+        if lit.kind == LiteralKind.INT:
+            val = re.sub(r'(?i)(?:ULL|LLU|LL|UL|LU|L|U)$', '', val)
+        elif lit.kind == LiteralKind.FLOAT:
+            val = re.sub(r'(?i)[fFlL]$', '', val)
+        return val
 
     # -- binary expression ---------------------------------------------------
 
@@ -1493,6 +1498,10 @@ class RustEmitter:
     # -- raw expression ------------------------------------------------------
 
     def _emit_raw_expr(self, r: IRRawExpr) -> str:
-        comment = r.comment or "TODO: manually translate"
-        source = r.cpp_source.replace("*/", "* /")
-        return f"/* {comment}: {source} */"
+        # Emit as todo!() — always valid Rust syntax, unlike /* comments */
+        # which break when inside call arguments or expressions.
+        source = (r.cpp_source or "").replace('"', r'\"').replace('\n', ' ')
+        if len(source) > 100:
+            source = source[:100] + "..."
+        comment = r.comment or "manually translate"
+        return f'todo!("{comment}: {source}")'

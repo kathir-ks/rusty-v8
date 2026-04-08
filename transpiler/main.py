@@ -9,6 +9,51 @@ from pathlib import Path
 
 from config import TranspilerConfig
 
+import re
+
+_INCLUDE_RE = re.compile(r'#include\s+"src/([^/]+)/')
+
+
+def _scan_include_deps(files, current_module, config):
+    """Scan C++ files for #include "src/MODULE/..." to find inter-module deps."""
+    deps = set()
+    for filepath in files:
+        try:
+            text = filepath.read_text(encoding="utf-8", errors="ignore")
+            for m in _INCLUDE_RE.finditer(text):
+                dep_module = m.group(1)
+                if dep_module != current_module:
+                    deps.add(config.module_to_crate_name(dep_module))
+        except Exception:
+            pass
+    return sorted(deps)
+
+
+def _break_dependency_cycles(all_deps):
+    """Detect and break circular dependencies between crates.
+
+    Modifies all_deps in place by removing back-edges from cycles.
+    Returns a list of detected cycles for logging.
+    """
+    cycles_found = []
+
+    # Simple cycle detection: for each pair (A→B), check if B→A exists
+    edges_to_remove = []
+    for crate_a, deps_a in all_deps.items():
+        for crate_b in deps_a:
+            if crate_b in all_deps and crate_a in all_deps[crate_b]:
+                # Mutual dependency — break by removing the edge from the
+                # crate that comes later alphabetically
+                if crate_a > crate_b:
+                    edges_to_remove.append((crate_a, crate_b))
+                    cycles_found.append((crate_a, crate_b))
+
+    for src, dst in edges_to_remove:
+        if dst in all_deps.get(src, []):
+            all_deps[src] = [d for d in all_deps[src] if d != dst]
+
+    return cycles_found
+
 
 def cmd_extract(args, config: TranspilerConfig):
     """Run Clang AST extraction on the codebase."""
@@ -119,11 +164,28 @@ def cmd_transpile(args, config: TranspilerConfig):
 
     config.output_root.mkdir(parents=True, exist_ok=True)
 
+    # Pre-scan: collect all inter-module dependencies and break cycles
+    print(f"Scanning dependencies for {len(modules)} modules...")
+    all_deps = {}
+    module_files = {}
+    for module in modules:
+        files = config.get_module_files(module)
+        if not files:
+            continue
+        module_files[module] = files
+        crate_name = config.module_to_crate_name(module)
+        deps = _scan_include_deps(files, module, config)
+        all_deps[crate_name] = deps
+
+    cycles = _break_dependency_cycles(all_deps)
+    if cycles:
+        print(f"  Broke {len(cycles)} dependency cycle(s): {cycles}")
+
     print(f"Transpiling {len(modules)} modules...")
     start = time.time()
 
     for module in modules:
-        files = config.get_module_files(module)
+        files = module_files.get(module)
         if not files:
             continue
 
@@ -137,6 +199,10 @@ def cmd_transpile(args, config: TranspilerConfig):
         # Phase 2-3: Map to IR
         print(f"  [{module}] Mapping to Rust IR...")
         ir_module = class_mapper.map_module(module, parsed, config)
+
+        # Phase 3.5: Use pre-scanned (cycle-free) dependencies
+        crate_name = config.module_to_crate_name(module)
+        ir_module.dependencies = all_deps.get(crate_name, [])
 
         # Phase 4: Emit Rust source + Cargo.toml
         print(f"  [{module}] Emitting Rust code...")

@@ -490,6 +490,45 @@ class StmtConverter:
                 comment="TODO: C++ throw expression",
             )
 
+        # -- Overloaded declaration reference (operator++, operator<< etc.) --
+        if kind == CursorKind.OVERLOADED_DECL_REF:
+            return IRNameRef(name=cursor.spelling or "operator")
+
+        # -- Type reference (type name in templates, casts, etc.) ----------
+        if kind == CursorKind.TYPE_REF:
+            ref = cursor.referenced
+            name = (ref.spelling if ref else cursor.spelling) or ""
+            return IRNameRef(name=name)
+
+        # -- Template reference -------------------------------------------
+        if kind == CursorKind.TEMPLATE_REF:
+            ref = cursor.referenced
+            name = (ref.spelling if ref else cursor.spelling) or ""
+            return IRNameRef(name=name)
+
+        # -- Namespace reference ------------------------------------------
+        if kind == CursorKind.NAMESPACE_REF:
+            return IRNameRef(name=cursor.spelling or "")
+
+        # -- GNU null expression (__null) ---------------------------------
+        if kind == CursorKind.GNU_NULL_EXPR:
+            return IRLiteral(value="None", kind=LiteralKind.NULL)
+
+        # -- Materialize temporary (implicit temp object) -----------------
+        if hasattr(CursorKind, 'MATERIALIZE_TEMPORARY_EXPR') and kind == CursorKind.MATERIALIZE_TEMPORARY_EXPR:
+            return self._unwrap_single_child_expr(cursor)
+
+        # -- Expression with cleanups (RAII destructors) ------------------
+        if hasattr(CursorKind, 'EXPR_WITH_CLEANUPS') and kind == CursorKind.EXPR_WITH_CLEANUPS:
+            return self._unwrap_single_child_expr(cursor)
+
+        # -- Default argument expression ----------------------------------
+        if hasattr(CursorKind, 'CXX_DEFAULT_ARG_EXPR') and kind == CursorKind.CXX_DEFAULT_ARG_EXPR:
+            children = _children(cursor)
+            if children:
+                return self.convert_expr(children[0])
+            return IRNameRef(name="Default::default()")
+
         # Not a recognised expression kind.
         return None
 

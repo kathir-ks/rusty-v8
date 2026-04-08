@@ -315,6 +315,16 @@ class ModuleEmitter:
             lines.append(prelude_line)
         lines.append("")
 
+        # Re-export types from dependency crates so cross-module types
+        # are available without explicit imports.
+        if ir_module.dependencies:
+            lines.append("// ── Cross-crate type imports ──")
+            for dep_crate in sorted(ir_module.dependencies):
+                # Convert crate name to Rust identifier (hyphens → underscores)
+                dep_ident = dep_crate.replace("-", "_")
+                lines.append(f"pub use {dep_ident}::*;")
+            lines.append("")
+
         # Collect top-level modules and sub-directory modules from the written
         # file paths.  A path like ``foo.rs`` becomes ``pub mod foo;`` and a
         # path like ``platform/linux.rs`` means we need ``pub mod platform;``
