@@ -241,15 +241,16 @@ class RustEmitter:
 
         # 4. Fix debug_assert!/assert! with string literal + expression pattern
         #    from DCHECK expansion: debug_assert!("...", EXPR, "") → debug_assert!(EXPR)
-        #    Broadened to match any string-prefixed assert pattern.
+        #    Match: assert!("any string", <anything>, "")
+        #    The EXPR can contain commas (function calls), so use a greedy match
+        #    with the `", "")` anchor at the end.
         source = re.sub(
-            r'(debug_assert(?:_eq|_ne)?!)\s*\("[^"]*",\s*([^,]+),\s*""\)',
+            r'(debug_assert(?:_eq|_ne)?!)\s*\("[^"]*",\s*(.+?),\s*""\)',
             r'\1(\2)',
             source,
         )
-        # Also handle: assert!("...", EXPR, "")
         source = re.sub(
-            r'(assert(?:_eq|_ne)?!)\s*\("[^"]*",\s*([^,]+),\s*""\)',
+            r'(assert(?:_eq|_ne)?!)\s*\("[^"]*",\s*(.+?),\s*""\)',
             r'\1(\2)',
             source,
         )
@@ -1390,6 +1391,11 @@ class RustEmitter:
         func = self.emit_expr(c.function)
         args_exprs = [self.emit_expr(a) for a in c.args]
 
+        # If the function is a todo!() (from IRRawExpr), don't try to call it —
+        # just return the todo!() itself. Calling todo!()(args) gives E0618.
+        if func.startswith("todo!("):
+            return func
+
         # Handle V8 macros
         if func in self._V8_MACRO_MAP:
             rust_macro = self._V8_MACRO_MAP[func]
@@ -1511,6 +1517,9 @@ class RustEmitter:
         # If the object resolved to "()" it was likely an implicit this
         if obj == "()":
             return f"self.{member}"
+        # If the object is a todo!(), don't chain .member on it
+        if obj.startswith("todo!("):
+            return obj
         # In Rust, both . and -> become .
         return f"{obj}.{member}"
 
