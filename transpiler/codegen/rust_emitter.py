@@ -342,6 +342,15 @@ class RustEmitter:
         source = re.sub(r'(\w+)\+\+\s*;', r'\1 += 1;', source)
         source = re.sub(r'(\w+)--\s*;', r'\1 -= 1;', source)
 
+        # 13. Fix remaining raw DCHECK/CHECK/RUNTIME_FUNCTION calls
+        source = re.sub(r'\bDCHECK\(([^)]+)\)', r'debug_assert!(\1)', source)
+        source = re.sub(r'\bCHECK\(([^)]+)\)', r'assert!(\1)', source)
+        source = re.sub(r'\bRUNTIME_FUNCTION\(([^)]+)\)', r'/* RUNTIME_FUNCTION(\1) */', source)
+
+        # 14. Fix C++ stream output: cerr/cout
+        source = re.sub(r'\bcerr\b', 'eprintln!', source)
+        source = re.sub(r'\bcout\b', 'println!', source)
+
         # 13. Collapse multiple blank lines into at most two.
         source = re.sub(r'\n{4,}', '\n\n\n', source)
 
