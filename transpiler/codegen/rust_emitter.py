@@ -413,6 +413,26 @@ class RustEmitter:
                 break
             source = new
 
+        # 18b. Fix `!expr >= val` → `!(expr >= val)` (NOT operator precedence)
+        #      In C++, `!(x >= 1)` sometimes loses parens during AST conversion.
+        #      Match at statement/condition level to safely close parens.
+        source = re.sub(
+            r'\bif\s+!(\w+)\s*(>=|<=|>|<|==|!=)\s*(\S+)',
+            r'if !(\1 \2 \3)',
+            source,
+        )
+        source = re.sub(
+            r'\bwhile\s+!(\w+)\s*(>=|<=|>|<|==|!=)\s*(\S+)',
+            r'while !(\1 \2 \3)',
+            source,
+        )
+        # General expression level: `--!expr op val` → wrap negation
+        source = re.sub(
+            r'([^a-zA-Z0-9_])!(\w+)\s*(>=|<=|>|<)\s*(\w+)',
+            r'\1!(\2 \3 \4)',
+            source,
+        )
+
         # 19. Fix `value as Type <<` being parsed as generics
         #     Wrap `expr as Type` in parens when followed by <<
         source = re.sub(r'(\w+)\s+as\s+(\w+)\s*<<', r'(\1 as \2) <<', source)
