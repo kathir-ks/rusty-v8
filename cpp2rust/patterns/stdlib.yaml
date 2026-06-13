@@ -1,0 +1,89 @@
+# Standard library C++ → Rust pattern mappings
+patterns:
+  - cpp: "std::make_unique<$T>($args)"
+    rust: "Box::new($T::new($args))"
+    kind: call
+
+  - cpp: "std::make_shared<$T>($args)"
+    rust: "std::sync::Arc::new($T::new($args))"
+    kind: call
+
+  - cpp: "std::move($x)"
+    rust: "$x"
+    kind: call
+
+  - cpp: "std::forward<$T>($x)"
+    rust: "$x"
+    kind: call
+
+  - cpp: "std::nullptr"
+    rust: "None"
+    kind: expr
+
+  - cpp: "nullptr"
+    rust: "std::ptr::null()"
+    kind: expr
+
+  - cpp: "static_cast<$T>($x)"
+    rust: "$x as $T"
+    kind: call
+
+  - cpp: "reinterpret_cast<$T>($x)"
+    rust: "unsafe { std::mem::transmute::<_, $T>($x) }"
+    kind: call
+
+  - cpp: "bit_cast<$T>($x)"
+    rust: "unsafe { std::mem::transmute::<_, $T>($x) }"
+    kind: call
+
+  - cpp: "sizeof($T)"
+    rust: "std::mem::size_of::<$T>()"
+    kind: call
+
+  - cpp: "alignof($T)"
+    rust: "std::mem::align_of::<$T>()"
+    kind: call
+
+  - cpp: "std::min($a, $b)"
+    rust: "$a.min($b)"
+    kind: call
+
+  - cpp: "std::max($a, $b)"
+    rust: "$a.max($b)"
+    kind: call
+
+  - cpp: "std::swap($a, $b)"
+    rust: "std::mem::swap(&mut $a, &mut $b)"
+    kind: call
+
+  - cpp: "std::fill($begin, $end, $val)"
+    rust: "$begin.fill($val)"
+    kind: call
+
+  - cpp: "std::copy($src_begin, $src_end, $dst)"
+    rust: "$dst.copy_from_slice($src_begin)"
+    kind: call
+
+  - cpp: "std::memset($ptr, $val, $n)"
+    rust: "unsafe { std::ptr::write_bytes($ptr, $val, $n) }"
+    kind: call
+
+  - cpp: "std::memcpy($dst, $src, $n)"
+    rust: "unsafe { std::ptr::copy_nonoverlapping($src, $dst, $n) }"
+    kind: call
+
+  - cpp: "std::memmove($dst, $src, $n)"
+    rust: "unsafe { std::ptr::copy($src, $dst, $n) }"
+    kind: call
+
+  - cpp: "std::abort()"
+    rust: "std::process::abort()"
+    kind: call
+
+  - cpp: "std::exit($code)"
+    rust: "std::process::exit($code)"
+    kind: call
+
+  - cpp: "std::terminate()"
+    rust: "std::process::abort()"
+    kind: call

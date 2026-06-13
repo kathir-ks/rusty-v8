@@ -1,0 +1,34 @@
+# bytecode-gen layer manifest.
+#
+# Declares a real V8 stage-dump oracle: d8 --print-bytecode emits the Ignition
+# bytecode for a script. When d8 is available on PATH the harness compares
+# transpiled-Rust output against this oracle on identical input; when it is not
+# (current environment), the harness falls back to the golden .expected file and
+# reports "golden(oracle-unavailable)" — never silently claiming differential.
+
+layer: bytecode-gen
+
+source_set:
+  - codebase/src/interpreter/bytecode-generator.cc
+  - codebase/src/interpreter/bytecode-array-builder.cc
+
+output_format: bytecode-listing
+
+oracle:
+  kind: v8-dump
+  # {input} is replaced with the fixture path; d8 prints bytecode to stdout.
+  command: ["d8", "--print-bytecode", "--no-print-bytecode-toplevel-headers", "{input}"]
+  # Bytecode dumps carry addresses and constant-pool ids that vary per run.
+  normalize: [strip-addresses, strip-ids, collapse-blank-lines]
+
+groups:
+  - name: bytecode-core
+    members: [bytecode-generator.cc, bytecode-array-builder.cc]
+    independently_testable: false
+
+fixtures_dir: fixtures
+
+reuse_real_v8: true
+reuse_note: >-
+  Oracle is V8's own d8 --print-bytecode. Golden .expected files are captured
+  from that dump (normalized) and serve as the fallback when d8 is absent.

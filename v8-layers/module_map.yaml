@@ -1,0 +1,32 @@
+# Authoritative V8 module/directory -> validation-layer mapping.
+#
+# Consumed by cpp2rust/validation/module_map.py. Every V8 source path targeted
+# for validation MUST resolve here to exactly one layer; a path matching no
+# entry is reported as UNASSIGNED (which fails validation) rather than silently
+# defaulting. Matching is by longest directory-prefix under codebase/.
+
+mappings:
+  # source-intake & scanner both live under src/parsing/; scanner files are
+  # disambiguated by the more specific prefix below.
+  - prefix: src/parsing/scanner          # scanner*.cc/.h
+    layer: scanner
+  - prefix: src/parsing/preparser        # preparser
+    layer: parser
+  - prefix: src/parsing/parser           # parser.cc
+    layer: parser
+  - prefix: src/parsing                  # remaining stream/intake plumbing
+    layer: source-intake
+  - prefix: src/ast
+    layer: ast
+  - prefix: src/interpreter/bytecode-generator
+    layer: bytecode-gen
+  - prefix: src/interpreter
+    layer: interpreter
+  - prefix: src/numbers
+    layer: runtime-support
+  - prefix: src/strings
+    layer: runtime-support
+  - prefix: src/utils
+    layer: runtime-support
+  - prefix: src/bigint                    # bigint is the proven smoke-test module
+    layer: runtime-support

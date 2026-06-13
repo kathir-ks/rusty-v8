@@ -1,0 +1,25 @@
+# parser layer manifest. Parser + AST validate as a group (parser emits AST nodes).
+
+layer: parser
+
+source_set:
+  - codebase/src/parsing/parser.cc
+  - codebase/src/parsing/preparser.cc
+
+output_format: ast-sexpr
+
+oracle:
+  kind: none
+  normalize: []
+
+groups:
+  - name: parser-core
+    members: [parser.cc, preparser.cc]
+    independently_testable: false
+
+fixtures_dir: fixtures
+
+reuse_real_v8: false
+reuse_note: >-
+  Authored AST s-expression fixtures (no local d8 --print-ast). Structurally
+  modeled on V8 parser output for the snippets.

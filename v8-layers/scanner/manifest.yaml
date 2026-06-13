@@ -1,0 +1,31 @@
+# scanner layer manifest.
+#
+# Source set: V8's lexer. No compile_commands shim exists for these files yet
+# (task 6.x / future), so transpile currently reports skip — but the layer loads,
+# its fixtures are valid, and it appears in the scorecard.
+
+layer: scanner
+
+source_set:
+  - codebase/src/parsing/scanner.cc
+  - codebase/src/parsing/scanner-character-streams.cc
+
+output_format: token-stream
+
+# No local d8 to dump real token streams; fixtures are authored. Once a scanner
+# driver or d8 is available, set oracle.kind: v8-dump and reuse real output.
+oracle:
+  kind: none
+  normalize: []
+
+groups:
+  - name: scanner-core
+    members: [scanner.cc, scanner-character-streams.cc]
+    independently_testable: false
+
+fixtures_dir: fixtures
+
+reuse_real_v8: false
+reuse_note: >-
+  Authored token-stream fixtures (no local V8 binary to dump real streams).
+  Inputs are small, standard JS snippets analogous to V8 cctest scanner cases.

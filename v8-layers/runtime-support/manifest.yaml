@@ -1,0 +1,29 @@
+# runtime-support layer manifest.
+#
+# Doubles as the harness smoke test: bigint is the one V8 module already proven
+# to transpile, build clean, and leak no todo!(). Running this layer exercises
+# the full transpile -> no-todo -> build cycle against known-good source.
+
+layer: runtime-support
+
+# Concrete source set: the proven bigint compile_commands.
+compile_commands: ../../cpp2rust/bigint_compile_commands.json
+module: bigint
+
+# Expected-output format for this layer's golden fixtures.
+output_format: stdout-text
+
+# No differential oracle available locally (no d8 / V8 binary); golden-only.
+oracle:
+  kind: none
+
+# bigint has no internal grouping constraints for validation purposes.
+groups: []
+
+fixtures_dir: fixtures
+
+reuse_real_v8: false
+reuse_note: >-
+  Smoke-test layer; bigint transpilation is validated by build + no-todo, not by
+  behavioral fixtures yet (no per-layer runner binary). Behavioral fixtures to be
+  added once a bigint driver crate exists.

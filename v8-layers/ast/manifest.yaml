@@ -1,0 +1,26 @@
+# ast layer manifest. Validates the AST node model / visitor canonicalization.
+
+layer: ast
+
+source_set:
+  - codebase/src/ast/ast.cc
+  - codebase/src/ast/scopes.cc
+  - codebase/src/ast/variables.cc
+
+output_format: ast-sexpr
+
+oracle:
+  kind: none
+  normalize: []
+
+groups:
+  - name: ast-core
+    members: [ast.cc, scopes.cc, variables.cc]
+    independently_testable: false
+
+fixtures_dir: fixtures
+
+reuse_real_v8: false
+reuse_note: >-
+  Authored fixtures: input is a parse-tree s-expression, expected is its
+  canonical (visited) form. Reuse of real V8 AST dumps deferred until d8 access.
